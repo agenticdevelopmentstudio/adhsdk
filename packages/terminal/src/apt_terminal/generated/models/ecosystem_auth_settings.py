@@ -47,10 +47,10 @@ class EcosystemAuthSettings:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "signupMode": signup_mode,
-                "loginEnabled": login_enabled,
-                "passwordEnabled": password_enabled,
-                "allowedProviders": allowed_providers,
+                "signup_mode": signup_mode,
+                "login_enabled": login_enabled,
+                "password_enabled": password_enabled,
+                "allowed_providers": allowed_providers,
             }
         )
 
@@ -59,11 +59,11 @@ class EcosystemAuthSettings:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        signup_mode = EcosystemAuthSettingsSignupMode(d.pop("signupMode"))
+        signup_mode = EcosystemAuthSettingsSignupMode(d.pop("signup_mode"))
 
-        login_enabled = d.pop("loginEnabled")
+        login_enabled = d.pop("login_enabled")
 
-        password_enabled = d.pop("passwordEnabled")
+        password_enabled = d.pop("password_enabled")
 
         def _parse_allowed_providers(data: object) -> list[str] | None:
             if data is None:
@@ -78,7 +78,7 @@ class EcosystemAuthSettings:
                 pass
             return cast(list[str] | None, data)
 
-        allowed_providers = _parse_allowed_providers(d.pop("allowedProviders"))
+        allowed_providers = _parse_allowed_providers(d.pop("allowed_providers"))
 
         ecosystem_auth_settings = cls(
             signup_mode=signup_mode,

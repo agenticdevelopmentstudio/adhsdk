@@ -20,7 +20,7 @@ struct PermissionMetadataTests {
         #expect(Permission.notifications.displayName == "Notifications")
         #expect(Permission.automation(targetBundleID: "com.googlecode.iterm2").displayName == "Automation")
         // Exact string match matters here beyond cosmetics: MacPermissionGateTests'
-        // ScriptedChecker (in the OlyloCore superproject) keys its answers by
+        // ScriptedChecker (in the Timeline superproject) keys its answers by
         // this displayName, so a drift here would silently answer .undetermined
         // for every location query there.
         #expect(Permission.location.displayName == "Location")
@@ -83,5 +83,29 @@ struct PermissionMetadataTests {
         #expect(Permission.keychain(service: "Claude Code-credentials").settingsPaneURL == nil)
         #expect(Permission.keychain(service: "Claude Code-credentials").actionTitle == "Allow\u{2026}")
         #expect(Permission.accessibility.actionTitle == "Open Settings")
+    }
+
+    @Test("Full Disk Access metadata")
+    func testFullDiskAccessMetadata() {
+        let permission = Permission.fullDiskAccess(statusFilePath: "/tmp/notifyd-access.json")
+        #expect(permission.displayName == "Full Disk Access")
+        #expect(permission.identifierToken == "full-disk-access")
+        #expect(permission.systemImageName == "externaldrive.badge.checkmark")
+        #expect(
+            permission.settingsPaneURL?.absoluteString
+                == "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles"
+        )
+        #expect(permission.actionTitle == "Open Settings")
+        #expect(
+            permission.explanation
+                == "Lets a helper read data other apps keep, such as Notification Center's history."
+        )
+    }
+
+    /// The notifications row is shared by every host, so its explanation must
+    /// not describe one host's notifications (it once spoke of "sessions").
+    @Test("Notifications explanation names no host's own events")
+    func testNotificationsExplanationIsHostNeutral() {
+        #expect(Permission.notifications.explanation == "Lets this app show its notifications in Notification Center.")
     }
 }

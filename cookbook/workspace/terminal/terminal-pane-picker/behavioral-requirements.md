@@ -1,0 +1,35 @@
+
+- **panel-title**: The panel MUST be titled "Connect to Terminal".
+- **panel-style**: The panel MUST be a titled utility panel, 320 by 110 points initially, that floats above the host window, can be moved by dragging its background, stays visible when the app is not active and is not released when closed.
+- **panel-key-only-if-needed**: The panel MUST become the key window only if needed.
+- **initial-message**: The panel MUST initially show the centered message "Click on a terminal to connect to." in a label 280 points wide.
+- **initial-button**: The panel MUST initially show a rounded button titled "Cancel" whose key equivalent is Escape.
+- **panel-layout**: The message and button MUST be stacked vertically, centered horizontally, 14 points apart, inside insets of 18 points top, 20 leading, 16 bottom and 20 trailing.
+- **begin-placement**: WHEN the pick begins, the panel MUST be centered over the host window's frame and ordered to the front.
+- **begin-catches-clicks**: WHEN the pick begins, the picker MUST install a local monitor for left mouse-down and key-down events.
+- **begin-no-window**: WHEN the pick begins and the host window no longer exists, the picker MUST finish at once without putting the panel up.
+- **host-window-weak**: The picker MUST NOT keep the host window alive.
+- **click-in-host-window**: WHILE no pick has been made, a left click whose window is the host window MUST be handled as a choice and MUST NOT be delivered to the window.
+- **click-elsewhere-passes**: A left click in any other window MUST pass through unchanged, and so MUST a left click in the host window after a pick has been made.
+- **panes-asked-live**: The picker MUST ask for the panes on offer each time a click is handled, so the answer follows the layout.
+- **hit-test**: A click MUST choose the first offered pane whose view is loaded, is in the host window and contains the click point; a click outside every such pane MUST be ignored, and the picker MUST keep waiting.
+- **not-a-terminal**: WHEN the clicked pane's content is not terminal-pane-connectable, the message MUST change to "That isn't a terminal. Click on a terminal to connect to." and the picker MUST keep waiting.
+- **running-not-required**: A pane whose content is terminal-pane-connectable MUST be pickable whether or not its terminal is running.
+- **pick-effect**: WHEN a connectable pane is clicked, the picker MUST mark the pick as made, outline the pane, set the message to "Connected to <pane title>.", set the button title to "OK", and make Return its key equivalent.
+- **pick-report**: WHEN a connectable pane is clicked, the picker MUST report the pane and its connectable content through its pick callback.
+- **pick-once**: The picker MUST accept only one pick; further clicks in the host window after the pick MUST pass through.
+- **outline-style**: The outline MUST be a ring 3 points wide with a corner radius of 4 points in the system accent color, over a fill of the accent color at 8 percent opacity, covering the picked pane's bounds and resizing with it.
+- **outline-transparent**: The outline MUST let every click through and MUST NOT be an accessibility element.
+- **escape-ends**: WHEN the Escape key (key code 53) is pressed anywhere, the picker MUST finish without a choice and MUST consume the key.
+- **return-ends-after-pick**: WHEN a pick has been made and Return or keypad Enter (key codes 36 and 76) is pressed anywhere, the picker MUST finish and MUST consume the key.
+- **other-keys-pass**: Any other key MUST pass through unchanged, and Return before a pick MUST pass through.
+- **button-ends**: Pressing the panel's button, labeled Cancel before a pick and OK after, MUST finish the picker.
+- **cancel-api**: The picker MUST offer a cancel call that ends it without a choice, as the button does.
+- **finish-cleanup**: WHEN the picker finishes, it MUST remove the event monitor, remove the outline, take the panel off screen, clear the pick callback and clear the finish callback.
+- **finish-callback-once**: WHEN the picker finishes, it MUST call the finish callback exactly once, after cleanup.
+- **finish-idempotent**: Finishing a second time MUST NOT call the finish callback again.
+- **identifiers**: The panel, message and button MUST carry the accessibility identifiers "terminalPanePicker", "terminalPanePicker.message" and "terminalPanePicker.button".
+- **main-actor**: The picker MUST be used on the main actor.
+- **no-coder-init**: The outline view MUST NOT be creatable from an archive.
+- **message-announcement**: NEEDS REVIEW: Not implemented in source. The picker changes its message text on a wrong click and on a pick but never posts an accessibility announcement; a check that assistive technology reads the changed message would settle whether the label announces its changes.
+

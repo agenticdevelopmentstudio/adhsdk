@@ -10,7 +10,7 @@ This logic provides:
 - **The row-text function** and **the rows-text function** — clipboard serialization, one tab-separated line per row (used by the activity panel view's copy button).
 - **The commit-URL function** — a GitHub commit URL or null.
 - **The state-label table** — the problem state to status-word table.
-- **The unconfirmed floor**, **the unconfirmed-window function** and **the deploy-unconfirmed function** — the client's only remaining freshness clock, applied to raw deploy records by the deploy list view and the deploy view logic, never to a row.
+- **No freshness clock**: this logic never judges how old a row is. The server states an unconfirmed phase as verb `"unknown"`, tone `"stale"`, and supplies each deploy's `unconfirmedAt` deadline (read by the deploy view logic).
 
 Every export is pure and synchronous. This logic performs no I/O, holds no state, and is covered by the implementation's test suite (see Platform Notes).
 

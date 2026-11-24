@@ -7,11 +7,12 @@ describe("toTeam", () => {
       id: "1",
       name: "Platform",
       slug: "com.acme.platform",
-      createdAt: "c",
-      updatedAt: "u",
+      created: 1700000000,
+      updated: 1700000100,
     });
     expect(t.displayName).toBe("Platform");
     expect(t.identifier).toBe("com.acme.platform");
+    expect(t.createdAt).toBe("2023-11-14T22:13:20.000Z");
   });
 });
 

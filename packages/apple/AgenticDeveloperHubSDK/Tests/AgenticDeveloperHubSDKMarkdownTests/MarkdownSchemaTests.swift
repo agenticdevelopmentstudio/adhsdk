@@ -23,7 +23,7 @@ struct MarkdownSchemaTests {
     /// lists it once — a per-table literal below would repeat it nine times
     /// and let a typo hide in the repetition.
     private let commonColumns = [
-        "id", "customer_id", "ecosystem_id",
+        "id", "owner_kind", "owner_id", "ecosystem_id",
         "created_at", "updated_at", "deleted_at",
         "sync_version", "sync_stamped_at", "sync_txid"
     ]
@@ -76,7 +76,7 @@ struct MarkdownSchemaTests {
         try expect("markdown", adds: [
             "title", "content", "frontmatter", "content_hash", "size_bytes",
             "current_version", "latest_version_id", "is_deleted", "public_route",
-            "visibility", "stage", "owner_kind", "owner_id"
+            "visibility", "stage", "author_kind", "author_id"
         ], in: try migrated())
     }
 
@@ -187,8 +187,9 @@ struct MarkdownSchemaTests {
         try database.write { conn in
             try conn.execute(
                 sql: """
-                    INSERT INTO markdown (id, title, content, frontmatter, created_at, updated_at)
-                    VALUES ('m1', 't', 'c', '{"adh_source":"handbook"}',
+                    INSERT INTO markdown (id, author_kind, author_id, title, content, frontmatter,
+                                          created_at, updated_at)
+                    VALUES ('m1', 'customer', 'c1', 't', 'c', '{"adh_source":"handbook"}',
                             '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')
                     """)
         }
@@ -196,11 +197,71 @@ struct MarkdownSchemaTests {
             try database.write { conn in
                 try conn.execute(
                     sql: """
-                        INSERT INTO markdown (id, title, content, frontmatter, created_at, updated_at)
-                        VALUES ('m2', 't', 'c', '{"adh_source":"handbook"}',
+                        INSERT INTO markdown (id, author_kind, author_id, title, content, frontmatter,
+                                              created_at, updated_at)
+                        VALUES ('m2', 'customer', 'c1', 't', 'c', '{"adh_source":"handbook"}',
                                 '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')
                         """)
             }
+        }
+    }
+
+    /// A database made before sync schemaVersion 2 has `customer_id` on every table. The v6
+    /// migration rebuilds them: `customer_id` becomes the owner id (kind `customer`), and on
+    /// `markdown` also the author id, with the document's own owner pair carried across.
+    @Test("a pre-owner-pair database is rebuilt with the owner and author pairs")
+    func legacyCustomerIDBecomesOwnerPair() throws {
+        let database = try BoundedDatabase(path: ":memory:")
+        let tail = """
+            created_at TEXT NOT NULL, updated_at TEXT NOT NULL, deleted_at TEXT,
+            sync_version INTEGER NOT NULL DEFAULT 0, sync_stamped_at TEXT,
+            sync_txid INTEGER NOT NULL DEFAULT 0
+            """
+        let head = "id TEXT PRIMARY KEY NOT NULL, customer_id TEXT NOT NULL DEFAULT '', "
+            + "ecosystem_id TEXT NOT NULL DEFAULT ''"
+        let target = "target_kind TEXT NOT NULL, target_id TEXT NOT NULL"
+        let legacy: [String: String] = [
+            "markdown": "title TEXT NOT NULL, content TEXT NOT NULL, "
+                + "owner_kind TEXT NOT NULL DEFAULT 'customer', owner_id TEXT NOT NULL DEFAULT ''",
+            "notes": "markdown_id TEXT NOT NULL", "docs": "markdown_id TEXT NOT NULL",
+            "papers": "markdown_id TEXT NOT NULL",
+            "categories": "name TEXT NOT NULL",
+            "category_edges": "parent_id TEXT NOT NULL, child_id TEXT NOT NULL",
+            "category_items": "category_id TEXT NOT NULL, \(target)",
+            "keywords": "label TEXT NOT NULL",
+            "keyword_items": "keyword_id TEXT NOT NULL, \(target)"
+        ]
+        try database.write { conn in
+            for table in MarkdownSchema.tables {
+                try conn.execute(sql: "CREATE TABLE \(table) (\(head), \(legacy[table] ?? ""), \(tail))")
+            }
+            // v1 to v5 already ran on this database, so GRDB must only run v6.
+            try conn.execute(sql: "CREATE TABLE grdb_migrations (identifier TEXT NOT NULL PRIMARY KEY)")
+            for id in ["markdown-v1", "markdown-v2-outbox-order", "markdown-v3-frontmatter-owner",
+                       "markdown-v4-release-title-claims", "markdown-v5-outbox-claim"] {
+                try conn.execute(sql: "INSERT INTO grdb_migrations (identifier) VALUES (?)", arguments: [id])
+            }
+            try conn.execute(sql: """
+                INSERT INTO markdown (id, customer_id, title, content, owner_kind, owner_id,
+                                      created_at, updated_at)
+                VALUES ('m1', 'cust-1', 't', 'c', 'organization', 'org-1',
+                        '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z');
+                INSERT INTO keywords (id, customer_id, label, created_at, updated_at)
+                VALUES ('k1', 'cust-1', 'tag', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z');
+                """)
+        }
+        try MarkdownSchema.migrate(database)
+        #expect(try !columns("markdown", in: database).contains("customer_id"))
+        try database.read { conn in
+            let doc = try Row.fetchOne(
+                conn, sql: "SELECT owner_kind, owner_id, author_kind, author_id FROM markdown WHERE id = 'm1'")
+            #expect(doc?["owner_kind"] as String? == "organization")
+            #expect(doc?["owner_id"] as String? == "org-1")
+            #expect(doc?["author_kind"] as String? == "customer")
+            #expect(doc?["author_id"] as String? == "cust-1")
+            let keyword = try Row.fetchOne(conn, sql: "SELECT owner_kind, owner_id FROM keywords WHERE id = 'k1'")
+            #expect(keyword?["owner_kind"] as String? == "customer")
+            #expect(keyword?["owner_id"] as String? == "cust-1")
         }
     }
 

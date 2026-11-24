@@ -84,21 +84,21 @@ class TeamMember:
         field_dict.update(
             {
                 "id": id,
-                "teamId": team_id,
-                "memberKind": member_kind,
-                "userId": user_id,
+                "team_id": team_id,
+                "member_kind": member_kind,
+                "user_id": user_id,
                 "role": role,
-                "addedAt": added_at,
+                "added_at": added_at,
             }
         )
         if email is not UNSET:
             field_dict["email"] = email
         if display_name is not UNSET:
-            field_dict["displayName"] = display_name
+            field_dict["display_name"] = display_name
         if persona_slug is not UNSET:
-            field_dict["personaSlug"] = persona_slug
+            field_dict["persona_slug"] = persona_slug
         if persona_name is not UNSET:
-            field_dict["personaName"] = persona_name
+            field_dict["persona_name"] = persona_name
 
         return field_dict
 
@@ -107,15 +107,15 @@ class TeamMember:
         d = dict(src_dict)
         id = d.pop("id")
 
-        team_id = d.pop("teamId")
+        team_id = d.pop("team_id")
 
-        member_kind = TeamMemberMemberKind(d.pop("memberKind"))
+        member_kind = TeamMemberMemberKind(d.pop("member_kind"))
 
-        user_id = d.pop("userId")
+        user_id = d.pop("user_id")
 
         role = d.pop("role")
 
-        added_at = d.pop("addedAt")
+        added_at = d.pop("added_at")
 
         def _parse_email(data: object) -> None | str | Unset:
             if data is None:
@@ -133,7 +133,7 @@ class TeamMember:
                 return data
             return cast(None | str | Unset, data)
 
-        display_name = _parse_display_name(d.pop("displayName", UNSET))
+        display_name = _parse_display_name(d.pop("display_name", UNSET))
 
         def _parse_persona_slug(data: object) -> None | str | Unset:
             if data is None:
@@ -142,7 +142,7 @@ class TeamMember:
                 return data
             return cast(None | str | Unset, data)
 
-        persona_slug = _parse_persona_slug(d.pop("personaSlug", UNSET))
+        persona_slug = _parse_persona_slug(d.pop("persona_slug", UNSET))
 
         def _parse_persona_name(data: object) -> None | str | Unset:
             if data is None:
@@ -151,7 +151,7 @@ class TeamMember:
                 return data
             return cast(None | str | Unset, data)
 
-        persona_name = _parse_persona_name(d.pop("personaName", UNSET))
+        persona_name = _parse_persona_name(d.pop("persona_name", UNSET))
 
         team_member = cls(
             id=id,

@@ -47,12 +47,3 @@
   discards whatever was present, so an ignored field's contract is
   "invisible," not "present but nulled."
   **Approved**: pending
-
-- **Decision**: `Loggable.swift` retains a large `#if false` block of
-  authoring notes and usage examples after its real declarations.
-  **Rationale**: this is a documented fact about the file's actual
-  contents, not a convention to imitate — the block never compiles and has
-  zero runtime effect; it is preserved here for source fidelity rather than
-  silently dropped or treated as executable guidance.
-  **Approved**: pending
-

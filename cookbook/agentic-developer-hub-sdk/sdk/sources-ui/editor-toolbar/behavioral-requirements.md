@@ -1,0 +1,18 @@
+
+- **mode-selector**: The component MUST render a segmented control displaying all modes in `availableModes`.
+- **hide-mode-selector-single-mode**: The component MUST hide the segmented control when `availableModes` contains fewer than 2 entries.
+- **empty-mode-list**: When `availableModes` is empty, the component MUST render the segmented control with zero segments and MUST hide it under **hide-mode-selector-single-mode**, with no segment selected. `rebuildModeControl` inserts one segment per entry and sets `isHidden` when there are fewer than 2, and `syncSelection` finds no matching mode and sets no selected segment.
+- **help-button**: The component MUST render a help button labeled "?" by default.
+- **help-button-visibility**: The component MUST respect the `showsHelpButton` property and hide the button when set to false.
+- **import-button**: The component MUST render an import button labeled "Open…" by default.
+- **import-button-visibility**: The component MUST respect the `showsImportButton` property and hide the button when set to false.
+- **mode-change-callback**: The component MUST call `onModeChange` with the newly selected mode when the user taps a mode segment.
+- **mode-change-callback-scope**: `onModeChange` MUST fire for each user tap that the platform control reports to the toolbar's handler, and MUST NOT fire when `mode` is set programmatically, since the `mode` property's `didSet` only re-syncs the control's selection (**sync-selection**) and never invokes the tap handler. The handler applies no equality check, so on macOS, where `NSSegmentedControl` sends its action on every click, a tap on the already-selected segment fires `onModeChange` again with the same mode. On iOS a non-momentary `UISegmentedControl` does not send `.valueChanged` for a tap on the already-selected segment, so it does not fire.
+- **sync-selection**: The component MUST update the segmented control's selected segment when the `mode` property changes programmatically.
+- **help-callback**: The component MUST call `onSyntaxHelpRequested` when the user taps the help button.
+- **import-callback**: The component MUST call `onImport` when the user taps the import button.
+- **theme-background**: The component MUST apply the `elevatedSurface` color from a `SemanticPalette` to its background when `applyTheme(_:)` is called.
+- **theme-button-tint** (iOS): On iOS the component MUST apply the `accent` color from a `SemanticPalette` to the help and import buttons' tint color when `applyTheme(_:)` is called; macOS `applyTheme(_:)` sets only the background.
+- **accessibility-labels-macos**: On macOS the mode control, help button and import button MUST carry explicit accessibility labels ("Editor Mode", "Markdown Syntax Help", "Open Markdown File") and the identifiers `markdown-editor.mode`, `markdown-editor.help` and `markdown-editor.import`.
+- **keyboard-activation**: Every button MUST be keyboard-focusable and activatable via Return/Space, through the platform control's default behavior.
+- **selection-announcement**: A change of the segmented control's selection MUST be exposed to assistive technology through the platform segmented control's own accessibility behavior; the source posts no explicit announcement.

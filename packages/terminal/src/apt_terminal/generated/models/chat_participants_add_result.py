@@ -45,7 +45,7 @@ class ChatParticipantsAddResult:
             {
                 "chat": chat,
                 "added": added,
-                "skippedPersonaIds": skipped_persona_ids,
+                "skipped_persona_ids": skipped_persona_ids,
             }
         )
 
@@ -66,7 +66,7 @@ class ChatParticipantsAddResult:
 
             added.append(added_item)
 
-        skipped_persona_ids = cast(list[str], d.pop("skippedPersonaIds"))
+        skipped_persona_ids = cast(list[str], d.pop("skipped_persona_ids"))
 
         chat_participants_add_result = cls(
             chat=chat,

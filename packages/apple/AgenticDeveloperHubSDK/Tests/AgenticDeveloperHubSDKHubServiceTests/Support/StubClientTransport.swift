@@ -101,6 +101,16 @@ final class StubClientTransport: ClientTransport, @unchecked Sendable {
         return (http, HTTPBody(Data(response.json.utf8)))
     }
 
+    /// A `/v1` list envelope around already-encoded rows.
+    static func list(_ rows: [String], hasMore: Bool = false, url: String = "/v1/list") -> String {
+        #"{"object":"list","data":[\#(rows.joined(separator: ","))],"has_more":\#(hasMore),"url":"\#(url)"}"#
+    }
+
+    /// A `/v1` error envelope.
+    static func error(_ message: String, type: String = "invalid_request_error") -> String {
+        #"{"error":{"type":"\#(type)","message":"\#(message)"}}"#
+    }
+
     static func key(_ method: HTTPRequest.Method, _ path: String) -> String {
         "\(method.rawValue) \(pathOnly(path))"
     }

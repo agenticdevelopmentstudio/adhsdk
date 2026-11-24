@@ -62,6 +62,21 @@ final class ProcessEnvTests: XCTestCase {
                                           parentOf: unknown.parentOf, namesOf: unknown.namesOf))
     }
 
+    func testV12_unreadableEnvironmentAndPidOneWalkAreNil() {
+        XCTAssertNil(ProcessEnv.environment(forPid: 2_000_000))
+        XCTAssertNil(ProcessEnv.oauthTokenWalkingUp(from: 1))
+    }
+
+    func testV13_processNamesOfUnreadablePidIsEmpty() {
+        XCTAssertTrue(ProcessEnv.processNames(of: 2_000_000).isEmpty)
+    }
+
+    func testV16_claudePidIsNilWhenTheShellHasNoParent() {
+        let orphan = table([600: (0, ["sh"])])
+        XCTAssertNil(ProcessEnv.claudePid(aboveHookParent: 600,
+                                          parentOf: { _ in nil }, namesOf: orphan.namesOf))
+    }
+
     func testProcessNamesOfThisProcessIncludeItsExecutable() {
         let names = ProcessEnv.processNames(of: getpid())
         let exe = (CommandLine.arguments[0] as NSString).lastPathComponent

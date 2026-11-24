@@ -206,6 +206,7 @@ extension ComposableSettings {
         /// the help drawer — not into the card.
         public func addSettingSubview(_ view: NSView, style: CardRowStyle = .row) {
             if let note = Self.helpNote(for: view) { helpNotes.append(note) }
+            Self.identifyControls(in: view)
             let row = CardRow(content: view, style: style)
             if let selfHiding = view as? any SelfHidingSettingsView {
                 selfHiding.onVisibilityChange = { [weak self, weak row] in
@@ -216,6 +217,22 @@ extension ComposableSettings {
             append(row)
         }
 
+        /// Decorates the row holding `view`, which must already have been added
+        /// with ``addSettingSubview(_:style:)``: `leadingAccessory` sits in the
+        /// card's leading inset, centred on the row, so it marks the row without
+        /// moving its label; `contextMenu` is what a right-click anywhere on the
+        /// row shows. Either may be nil, which removes what was there.
+        ///
+        /// A hook rather than a row type of its own, because what a row is marked
+        /// with — a scoped settings sheet's "this overrides the global value"
+        /// dot, say — is the caller's meaning, and every existing row view should
+        /// be able to carry it without a subclass apiece.
+        public func setRowDecoration(leadingAccessory: NSView?, contextMenu: NSMenu?, for view: NSView) {
+            guard let row = rows.first(where: { $0.content === view }) else { return }
+            row.setLeadingAccessory(leadingAccessory)
+            row.menu = contextMenu
+        }
+
         private func append(_ row: CardRow) {
             rows.append(row)
             rowStack.addArrangedSubview(row)
@@ -224,6 +241,44 @@ extension ComposableSettings {
         }
 
         /// `view`'s view-model explanation as a help note, or nil when it has none.
+        /// The accessibility identifier a titled row's first control gets when it
+        /// set none: `settings.<slug of the row's title>`. Further controls in the
+        /// same row get `.2`, `.3` and so on. Static labels and scroll bars are
+        /// not controls here; an editable text view is, though it is no
+        /// `NSControl`, so a text-area row's editor gets the name rather than
+        /// the scroller of the scroll view around it.
+        ///
+        /// Done once, here, so every row type is reachable by a UI driver without
+        /// each one carrying its own identifier code; a row or panel that sets its
+        /// own identifiers keeps them.
+        static func identifyControls(in view: NSView) {
+            guard let titled = view as? any ExplainedSettingsView,
+                  let title = titled.settingTitle, !title.isEmpty else { return }
+            let base = "settings.\(AccessibilityID.slug(title))"
+            var index = 0
+            for control in interactiveControls(in: view) {
+                index += 1
+                guard control.accessibilityIdentifier().isEmpty else { continue }
+                control.setAccessibilityIdentifier(index == 1 ? base : "\(base).\(index)")
+            }
+        }
+
+        private static func interactiveControls(in view: NSView) -> [NSView] {
+            var found: [NSView] = []
+            for subview in view.subviews {
+                if let field = subview as? NSTextField, !field.isEditable { continue }
+                if subview is NSScroller { continue }
+                if let editor = subview as? NSTextView {
+                    if editor.isEditable { found.append(editor) }
+                } else if let control = subview as? NSControl {
+                    found.append(control)
+                } else {
+                    found += interactiveControls(in: subview)
+                }
+            }
+            return found
+        }
+
         private static func helpNote(for view: NSView) -> HelpNote? {
             guard let explained = view as? any ExplainedSettingsView,
                   let text = explained.settingExplanation?.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -318,6 +373,23 @@ extension ComposableSettings {
 
         required init?(coder: NSCoder) {
             fatalError("init(coder:) has not been implemented")
+        }
+
+        private var leadingAccessory: NSView?
+
+        /// Puts `accessory` in the leading inset, centred on the content, or
+        /// takes the current one away.
+        func setLeadingAccessory(_ accessory: NSView?) {
+            leadingAccessory?.removeFromSuperview()
+            leadingAccessory = accessory
+            guard let accessory else { return }
+            accessory.translatesAutoresizingMaskIntoConstraints = false
+            addSubview(accessory)
+            let gap = ComposableSettings.SettingsLayout.default[.cardHorizontalInset] / 2
+            NSLayoutConstraint.activate([
+                accessory.centerXAnchor.constraint(equalTo: leadingAnchor, constant: gap),
+                accessory.centerYAnchor.constraint(equalTo: content.centerYAnchor)
+            ])
         }
 
         /// Takes the row's visibility from its content's, so a stack that

@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "61c7b509-78d1-4407-9a4e-25b155f06fbb",
     "title": "Window Manager",
-    "domain": "adhsdk://cookbook/ui/windows/window-manager",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",
@@ -24,18 +23,18 @@
       "recents"
     ],
     "depends-on": [
-      "adhsdk://cookbook/foundation/settings-storage",
-      "adhsdk://cookbook/ui/windows/screen-manager",
-      "adhsdk://cookbook/ui/windows/single-window-controller"
+      "6363b5ff-f511-4e21-9ba7-6850787dba62",
+      "1e58add7-d85d-4e62-b857-c5e3203795be",
+      "3f6268b8-410d-4d3c-979c-2a9f9f1534f3"
     ],
     "related": [
-      "adhsdk://cookbook/ui/windows/window-recents"
+      "e71918a5-9874-48eb-927a-cea5e9b51cdc"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "19b1db1f9510acaa",
+  "synced": "1406300344442958",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -54,7 +53,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

@@ -1,5 +1,5 @@
-// Applications settings client — wired to the real backend generic CRUD over
-// `ecosystems.applications` (/api/ecosystem/applications).
+// Applications settings client — wired to the /v1 applications routes
+// (/api/v1/applications).
 //
 // NOTE: the file/export still carries the "prototype" name for now to avoid
 // churning the three consuming components; it is NO LONGER a localStorage
@@ -13,20 +13,20 @@
 // NOT-NULL `slug` column has no UI field, so it is derived from the identifier.
 //
 // Field mapping (UI <-> backend row):
-//   identifier / id  <->  id (rdid)            name  <->  displayName
-//   ecosystemId      <->  ecosystemId
+//   identifier / id  <->  id (rdid)            name  <->  display_name
+//   ecosystemId      <->  ecosystem_id         createdAt/updatedAt <-> created/updated (unix seconds)
 //
-// The row's `consumerKind` is not modelled: nothing reads it. A create sends the fixed
+// The row's `consumer_kind` is not modelled: nothing reads it. A create sends the fixed
 // CONSUMER_KIND the backend's NOT NULL column needs; an update never sends it.
 //
 // schemaGrants are PERSISTED (no longer session-only): an application's schema permissions ARE its
-// per-app bucket access-groups (the model `canBucketAccess` enforces), managed via the hand-written
-// /ecosystem/applications/:id/schema-grants route (backend routes/applicationSchemaGrants.ts). This
+// per-app bucket access-groups (the model `canBucketAccess` enforces), managed through the `schema_grants` include of /v1/applications/{id} (read with
+// `include[]=schema_grants`, written as a `schema_grants` field of the update). This
 // client maps the UI's `Crud` objects ↔ the route's "C,R,U,D" wire and loads/saves them alongside
 // the application row. (tokens remain a separate real backend — AccessTokensSection.)
 
 import type { RequestBody, SuccessBody } from "@adh-sdk/adh-api-types";
-import { authedJson, authedRequest } from "@adh-sdk/auth/client";
+import { authedJson, listAllV1, unixToIso, withV1Query } from "@adh-sdk/auth/client";
 import { rethrowConflict } from "@adh-sdk/data";
 import { identifiersApi } from "@adh-sdk/data/ecosystems";
 import {
@@ -76,25 +76,26 @@ export interface ApplicationInput {
   schemaGrants: SchemaGrant[];
 }
 
-const BASE = "/api/ecosystem/applications";
+const BASE = "/api/v1/applications";
 
-// The backend `ecosystems.applications` row, sourced from the OpenAPI spec.
+// The /v1 application, sourced from the OpenAPI spec.
 // (`id` is the rdid — the backend swaps the uuid for the rdid on the way out.)
-type ApplicationRow = SuccessBody<"/ecosystem/applications", "get">[number];
+type ApplicationRow = SuccessBody<"/v1/applications", "get">["data"][number];
+type ApplicationWithGrants = SuccessBody<"/v1/applications/{id}", "get">;
 
 export function toApp(r: ApplicationRow, schemaGrants: SchemaGrant[] = []): PrototypeApplication {
   return {
     id: r.id,
     identifier: r.id,
-    name: r.displayName,
+    name: r.display_name,
     platform: narrow(r.platform, APPLICATION_PLATFORMS, "web"),
     schemaGrants,
     // Tokens are fetched on demand by the detail's AccessTokensSection (real backend),
     // not carried on the list row — avoids an N+1 token fetch across the list.
     tokens: [],
-    ecosystemId: r.ecosystemId,
-    createdAt: r.createdAt,
-    updatedAt: r.updatedAt,
+    ecosystemId: r.ecosystem_id,
+    createdAt: unixToIso(r.created),
+    updatedAt: unixToIso(r.updated),
   };
 }
 
@@ -117,55 +118,57 @@ function crudFromWire(s: string): Crud {
     delete: s.includes("D"),
   };
 }
-interface SchemaGrantWire {
-  schemaId: string;
-  crud: string;
-  tables: { tableId: string; crud: string }[];
+const itemUrl = (appId: string) => `${BASE}/${enc(appId)}`;
+const withGrants = (appId: string) => withV1Query(itemUrl(appId), { include: ["schema_grants"] });
+
+/** The UI's grants for an application read with `include[]=schema_grants`. */
+function grantsOf(row: ApplicationWithGrants): SchemaGrant[] {
+  return (row.schema_grants?.grants ?? []).map((g) => ({
+    schemaId: g.schema_id,
+    permissions: crudFromWire(g.crud),
+    tables: Object.fromEntries(
+      g.tables.map((t) => [t.table_id, { level: "table" as const, permissions: crudFromWire(t.crud) }]),
+    ),
+  }));
 }
-const grantsBase = (appId: string) => `${BASE}/${enc(appId)}/schema-grants`;
 
 /** Load an application's schema grants (empty on any error — grants are secondary to the row). */
 async function getGrants(appId: string): Promise<SchemaGrant[]> {
   try {
-    const body = await authedJson<{ grants: SchemaGrantWire[] }>(grantsBase(appId));
-    return body.grants.map((g) => ({
-      schemaId: g.schemaId,
-      permissions: crudFromWire(g.crud),
-      tables: Object.fromEntries(
-        g.tables.map((t) => [t.tableId, { level: "table" as const, permissions: crudFromWire(t.crud) }]),
-      ),
-    }));
+    return grantsOf(await authedJson<ApplicationWithGrants>(withGrants(appId)));
   } catch {
     return [];
   }
 }
-/** Reconcile an application's schema grants to `grants` (drops no-access tables — no grant row). */
-async function putGrants(appId: string, grants: SchemaGrant[]): Promise<void> {
-  const body = {
+/** The update body's `schema_grants` field: reconcile to `grants` (drops no-access tables — no grant row). */
+function grantsBody(grants: SchemaGrant[]) {
+  return {
     grants: grants.map((g) => ({
-      schemaId: g.schemaId,
+      schema_id: g.schemaId,
       crud: crudToWire(g.permissions),
       tables: Object.entries(g.tables)
-        .map(([tableId, tg]) => ({ tableId, crud: crudToWire(tg.permissions) }))
+        .map(([tableId, tg]) => ({ table_id: tableId, crud: crudToWire(tg.permissions) }))
         .filter((t) => t.crud !== ""),
     })),
   };
-  await authedRequest(grantsBase(appId), { method: "PUT", body: JSON.stringify(body) });
+}
+/** Reconcile an application's schema grants alone (an update carrying only `schema_grants`). */
+async function putGrants(appId: string, grants: SchemaGrant[]): Promise<void> {
+  await authedJson<unknown>(itemUrl(appId), {
+    method: "POST",
+    body: JSON.stringify({ schema_grants: grantsBody(grants) }),
+  });
 }
 
-// auth.api_tokens metadata the backend returns for an application token. The mint
+// The /v1 token the backend returns for an application token. The mint
 // response additionally carries the raw `token` (revealed exactly once).
-interface ApiTokenRow {
-  id: string;
-  name: string;
-  prefix: string;
-  createdAt: string;
-}
+type ApiTokenRow = SuccessBody<"/v1/applications/{id}/tokens", "get">["data"][number];
+type ApiTokenCreated = SuccessBody<"/v1/applications/{id}/tokens", "post", 201>;
 const toToken = (r: ApiTokenRow): AccessToken => ({
   id: r.id,
   prefix: r.prefix,
   name: r.name,
-  createdAt: r.createdAt,
+  createdAt: unixToIso(r.created),
 });
 const tokensBase = (appId: string) => `${BASE}/${enc(appId)}/tokens`;
 
@@ -174,8 +177,8 @@ export const applicationsPrototypeApi = {
     // No server-side list filter, so narrow to the chosen ecosystem here. The editor reads
     // schemaGrants off the list row (useMasterDetailForm.toInput), so load each app's grants here —
     // one call per app, in parallel. Fine at settings volume (a handful of apps).
-    const rows = await authedJson<ApplicationRow[]>(BASE);
-    const scoped = scopeByOwner(rows, ecosystemId, (r) => r.ecosystemId);
+    const rows = await listAllV1<ApplicationRow>(BASE);
+    const scoped = scopeByOwner(rows, ecosystemId, (r) => r.ecosystem_id);
     const apps = await Promise.all(scoped.map(async (r) => toApp(r, await getGrants(r.id))));
     return sortByText(apps, (a) => a.name);
   },
@@ -183,7 +186,7 @@ export const applicationsPrototypeApi = {
   async get(id: string): Promise<PrototypeApplication | null> {
     try {
       const [row, grants] = await Promise.all([
-        authedJson<ApplicationRow>(`${BASE}/${enc(id)}`),
+        authedJson<ApplicationRow>(itemUrl(id)),
         getGrants(id),
       ]);
       return toApp(row, grants);
@@ -200,13 +203,13 @@ export const applicationsPrototypeApi = {
       // (the leaf the user chose) + the ecosystem, not a client-built id. `id` is sent for
       // type-compat but ignored server-side for applications (the deriver is authoritative).
       const leaf = input.identifier.slice(input.identifier.lastIndexOf(".") + 1);
-      const appBody: RequestBody<"/ecosystem/applications", "post"> = {
+      const appBody: RequestBody<"/v1/applications", "post"> = {
         id: input.identifier,
         slug: leaf.slice(0, 64),
-        displayName: input.name,
-        consumerKind: CONSUMER_KIND,
+        display_name: input.name,
+        consumer_kind: CONSUMER_KIND,
         platform: input.platform,
-        ecosystemId: ecosystemId || undefined, // absent → caller's ecosystem
+        ecosystem_id: ecosystemId || undefined, // absent → caller's ecosystem
       };
       const row = await authedJson<ApplicationRow>(BASE, {
         method: "POST",
@@ -237,12 +240,12 @@ export const applicationsPrototypeApi = {
       await identifiersApi.rename(id, nextId);
     }
     const effectiveId = nextId ?? id;
-    const fields: Partial<RequestBody<"/ecosystem/applications/{id}", "put">> = {
-      displayName: input.name,
+    const fields: Partial<RequestBody<"/v1/applications/{id}", "post">> = {
+      display_name: input.name,
       platform: input.platform,
     };
-    const row = await authedJson<ApplicationRow>(`${BASE}/${enc(effectiveId)}`, {
-      method: "PUT",
+    const row = await authedJson<ApplicationRow>(itemUrl(effectiveId), {
+      method: "POST",
       body: JSON.stringify(compact(fields)),
     });
     if (nextId) {
@@ -257,18 +260,18 @@ export const applicationsPrototypeApi = {
   async delete(id: string): Promise<void> {
     // Drop the app's schema-grant groups first — no FK cascade from a group member to the app row.
     await putGrants(id, []).catch(() => {});
-    await authedRequest(`${BASE}/${enc(id)}`, { method: "DELETE" });
+    await authedJson<unknown>(itemUrl(id), { method: "DELETE" });
   },
 
-  // ── Access tokens — real backend (/ecosystem/applications/:appId/tokens) ──────
+  // ── Access tokens — real backend (/v1/applications/{id}/tokens) ──────
   async listTokens(appId: string): Promise<AccessToken[]> {
-    const rows = await authedJson<ApiTokenRow[]>(tokensBase(appId));
+    const rows = await listAllV1<ApiTokenRow>(tokensBase(appId));
     return rows.map(toToken);
   },
 
   /** Mint a token; the raw `secret` is returned exactly once (reveal-once UX). */
   async createToken(appId: string, name: string): Promise<{ token: AccessToken; secret: string }> {
-    const row = await authedJson<ApiTokenRow & { token: string }>(tokensBase(appId), {
+    const row = await authedJson<ApiTokenCreated>(tokensBase(appId), {
       method: "POST",
       body: JSON.stringify({ name: name.trim() || "Token" }),
     });
@@ -276,6 +279,6 @@ export const applicationsPrototypeApi = {
   },
 
   async revokeToken(appId: string, tokenId: string): Promise<void> {
-    await authedRequest(`${tokensBase(appId)}/${enc(tokenId)}`, { method: "DELETE" });
+    await authedJson<unknown>(`${tokensBase(appId)}/${enc(tokenId)}`, { method: "DELETE" });
   },
 };

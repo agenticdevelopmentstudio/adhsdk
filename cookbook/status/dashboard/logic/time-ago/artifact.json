@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "66b7f642-d41d-4d84-aea7-624a5f47eef3",
     "title": "Status Web Time Ago",
-    "domain": "adhsdk://cookbook/status/dashboard/logic/time-ago",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -24,9 +23,9 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/status/service/monitor/time-ago",
-      "adhsdk://cookbook/status/dashboard/state/now",
-      "adhsdk://cookbook/status/dashboard/session-client"
+      "839f5416-d1e3-43fb-91a0-4829abdff427",
+      "0b171409-02f8-4ad2-97d3-8f4b1adfa340",
+      "5935b39d-9451-48c1-8b99-bd510d66d1a0"
     ],
     "references": [
       "packages/web/packages/status-web/src/lib/time-ago.ts (adhsdk)",
@@ -35,7 +34,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "dcc3e9e66701aaff",
+  "synced": "3b7f83c199902894",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -54,7 +53,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

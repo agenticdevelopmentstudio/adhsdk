@@ -32,16 +32,16 @@ export function unattributedLast(rows: readonly BreakdownRow[]): BreakdownRow[] 
   ];
 }
 
-const tokensOf = (row: BreakdownRow) => llmTokenTotal(row.llmTokens);
+const tokensOf = (row: BreakdownRow) => llmTokenTotal(row.llm_tokens);
 
 /**
  * A row's direct cost. `null` is unpriced — "Unpriced", never `$0.00`; a priced row that still has
  * unpriced lines is a floor, `≥`, the same marks the Costs pane uses.
  */
 export function DirectCell({ row }: { row: BreakdownRow }) {
-  if (row.directMicros === null) return <span className="text-apt-orange">Unpriced</span>;
+  if (row.direct_micros === null) return <span className="text-apt-orange">Unpriced</span>;
   return (
-    <span className="tabular-nums">{formatMicrosFloor(row.directMicros, row.unpricedLines > 0)}</span>
+    <span className="tabular-nums">{formatMicrosFloor(row.direct_micros, row.unpriced_lines > 0)}</span>
   );
 }
 
@@ -51,12 +51,12 @@ export function DirectCell({ row }: { row: BreakdownRow }) {
  * "Unpriced" rather than "≥ $0.00".
  */
 export function EstimatedCell({ row }: { row: BreakdownRow }) {
-  if (row.directMicros === null && row.hostingShareMicros === 0) {
+  if (row.direct_micros === null && row.hosting_share_micros === 0) {
     return <span className="text-apt-orange">Unpriced</span>;
   }
   return (
     <span className="tabular-nums text-apt-text-muted">
-      {formatMicrosFloor(row.estimatedMicros, row.directMicros === null || row.unpricedLines > 0)}
+      {formatMicrosFloor(row.estimated_micros, row.direct_micros === null || row.unpriced_lines > 0)}
     </span>
   );
 }
@@ -118,7 +118,7 @@ export function BreakdownTable({
         align: "end",
         width: "9rem",
         render: (row) => (
-          <span className="tabular-nums">{formatDuration(row.serverMs + row.dbMs)}</span>
+          <span className="tabular-nums">{formatDuration(row.server_ms + row.db_ms)}</span>
         ),
       },
       {

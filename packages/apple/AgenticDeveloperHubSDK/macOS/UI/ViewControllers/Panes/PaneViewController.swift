@@ -56,6 +56,27 @@ open class PaneViewController: NSViewController {
         }
     }
 
+    /// Whether the pane shows its title bar (and so its gear and window
+    /// controls). Off for a pane whose container already names it — an editor
+    /// inside a Documents tab, where the tab is the document and the editor
+    /// carries its own navigation row.
+    ///
+    /// Hiding the bar is not enough on its own: its required 26pt height would
+    /// still hold the content down, so the content is pinned to the top of the
+    /// pane instead. Settable at any time, before or after the view loads — the
+    /// split that owns the pane stamps it whenever it builds one.
+    public var showsTitleBar = true {
+        didSet {
+            guard showsTitleBar != oldValue else { return }
+            applyTitleBarVisibility()
+        }
+    }
+
+    /// The content's top pinned under the title bar, and pinned to the pane's
+    /// own top; exactly one is active, as `showsTitleBar` says.
+    private var contentTopToTitleBar: NSLayoutConstraint?
+    private var contentTopToContainer: NSLayoutConstraint?
+
     /// The content this pane wraps, held as a child so AppKit keeps it alive,
     /// routes appearance callbacks to it, and puts it in the responder chain.
     public private(set) var contentViewController: NSViewController?
@@ -141,6 +162,10 @@ open class PaneViewController: NSViewController {
     /// What the title bar says when the content does not name itself.
     open var fallbackTitle: String { "Pane" }
 
+    /// The icon the title bar shows when the content has none of its own;
+    /// `nil` shows none.
+    open var fallbackIcon: NSImage? { nil }
+
     /// How far the content is held off the container's edges. A subclass that
     /// draws a border on the container needs room for it.
     open var contentInset: CGFloat { 0 }
@@ -172,6 +197,16 @@ open class PaneViewController: NSViewController {
         (contentViewController as? PaneMenuProviding)?.makePaneMenuItems() ?? []
     }
 
+    /// What the title bar's Move button drops down: the directions this pane
+    /// may move in, each enabled against the layout at the click. Empty — the
+    /// default — hides the button, for a pane whose host cannot rearrange.
+    open func makeMoveMenuItems() -> [NSMenuItem] { [] }
+
+    /// Whether this pane offers Move at all. Asked once, at load, to decide
+    /// whether the button is shown; which directions are open is asked per
+    /// click, through `makeMoveMenuItems()`.
+    open var offersMove: Bool { false }
+
     // MARK: - Loading
 
     open override func loadView() {
@@ -187,17 +222,24 @@ open class PaneViewController: NSViewController {
         let titleBarTrailing = container.trailingAnchor.constraint(
             equalTo: titleBar.trailingAnchor, constant: contentInset)
         self.titleBarTrailing = titleBarTrailing
+        contentTopToTitleBar = contentContainer.topAnchor.constraint(equalTo: titleBar.bottomAnchor)
+        contentTopToContainer = contentContainer.topAnchor.constraint(
+            equalTo: container.topAnchor, constant: contentInset)
 
         NSLayoutConstraint.activate([
             titleBar.topAnchor.constraint(equalTo: container.topAnchor, constant: contentInset),
             titleBar.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: contentInset),
             titleBarTrailing,
 
-            contentContainer.topAnchor.constraint(equalTo: titleBar.bottomAnchor),
             contentContainer.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: contentInset),
             container.trailingAnchor.constraint(equalTo: contentContainer.trailingAnchor, constant: contentInset),
             container.bottomAnchor.constraint(equalTo: contentContainer.bottomAnchor, constant: contentInset)
         ])
+        // The view is set below, so `applyTitleBarVisibility()` cannot run yet;
+        // the same three switches, done by hand.
+        contentTopToTitleBar?.isActive = showsTitleBar
+        contentTopToContainer?.isActive = !showsTitleBar
+        titleBar.isHidden = !showsTitleBar
 
         if let content = makeContentViewController() {
             addChild(content)
@@ -250,6 +292,21 @@ open class PaneViewController: NSViewController {
         titleBar.controls.onMinimize = { [weak self] anchor in
             self?.presentMinimizePicker(from: anchor)
         }
+        if offersMove {
+            titleBar.controls.onMove = { [weak self] anchor in
+                self?.presentMoveMenu(from: anchor)
+            }
+        }
+    }
+
+    /// Drops the directions below the button, the way a pull-down does.
+    /// `autoenablesItems` is off for the same reason as the gear's menu.
+    private func presentMoveMenu(from anchor: NSButton) {
+        let menu = NSMenu()
+        menu.autoenablesItems = false
+        for item in makeMoveMenuItems() { menu.addItem(item) }
+        guard !menu.items.isEmpty else { return }
+        menu.popUp(positioning: nil, at: NSPoint(x: 0, y: anchor.bounds.maxY + 2), in: anchor)
     }
 
     /// The two capabilities that push rather than being pulled. Both are
@@ -398,6 +455,10 @@ open class PaneViewController: NSViewController {
         (contentViewController as? PaneTitleProviding)?.paneTitle ?? fallbackTitle
     }
 
+    public var resolvedIcon: NSImage? {
+        (contentViewController as? PaneIconProviding)?.paneIcon ?? fallbackIcon
+    }
+
     /// What the content has selected, or `nil` — in which case a display path
     /// stops at this pane rather than showing an empty trailing segment.
     public var selectionDescription: String? {
@@ -421,6 +482,7 @@ open class PaneViewController: NSViewController {
     /// called when it opened.
     public func refreshTitle() {
         titleBar.title = resolvedTitle
+        titleBar.icon = resolvedIcon
         optionsSheet?.heading = resolvedTitle
         onTitleChange?()
     }
@@ -446,6 +508,13 @@ open class PaneViewController: NSViewController {
         let edges = host?.availableMinimizeEdges(for: self) ?? []
         titleBar.controls.canMinimize = !edges.isEmpty
         titleBar.controls.canClose = host?.canClose(self) ?? true
+        titleBar.controls.canZoom = host?.canZoom(self) ?? true
+        if offersMove {
+            // A pane not yet on screen cannot ask its split, and answers no
+            // directions; leave the button live until it can really ask.
+            let items = makeMoveMenuItems()
+            titleBar.controls.canMove = items.isEmpty || items.contains { $0.isEnabled }
+        }
         refreshGearVisibility()
     }
 
@@ -538,6 +607,20 @@ open class PaneViewController: NSViewController {
     /// `minimizedEdge` and the store are already written by the time this is
     /// called, so skipping is lossless: whenever the view does load,
     /// `restorePersistedState()` applies exactly this.
+    /// Shows or hides the title bar and re-pins the content's top to match.
+    /// Deactivate before activate, so the two top pins never both hold.
+    private func applyTitleBarVisibility() {
+        guard isViewLoaded else { return }
+        if showsTitleBar {
+            contentTopToContainer?.isActive = false
+            contentTopToTitleBar?.isActive = true
+        } else {
+            contentTopToTitleBar?.isActive = false
+            contentTopToContainer?.isActive = true
+        }
+        applyMinimizedAppearance()
+    }
+
     private func applyMinimizedAppearance() {
         guard isViewLoaded else { return }
         titleBar.controls.isMinimized = minimizedEdge != nil
@@ -546,7 +629,7 @@ open class PaneViewController: NSViewController {
         titleBarTrailing?.isActive = !(minimizedEdge?.isHorizontal ?? false)
 
         guard let edge = minimizedEdge else {
-            titleBar.isHidden = false
+            titleBar.isHidden = !showsTitleBar
             contentContainer.isHidden = false
             contentViewController?.view.isHidden = false
             setContentEdgeConstraints(active: true)
@@ -568,7 +651,9 @@ open class PaneViewController: NSViewController {
         setContentEdgeConstraints(active: false)
 
         guard edge.isHorizontal else {
-            titleBar.isHidden = false
+            // A pane without a bar has nothing to show docked to a top or
+            // bottom edge; it stays bar-less rather than growing one.
+            titleBar.isHidden = !showsTitleBar
             minimizedStrip?.removeFromSuperview()
             minimizedStrip = nil
             builtStripEdge = nil

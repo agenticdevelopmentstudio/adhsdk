@@ -1,0 +1,31 @@
+
+- **label-value**: `ADKDIdentifiers.label` MUST be `com.agenticdevelopmentstudio.adkd`.
+- **subsystem-is-label**: `ADKDIdentifiers.subsystem` MUST equal `label`.
+- **subsystem-suffix**: `ADKDIdentifiers.subsystem(_:)` MUST return the label, a dot and the given suffix, with no escaping or validation of the suffix.
+- **keychain-service**: `ADKDIdentifiers.keychainService` MUST be the label followed by `.daemon`.
+- **http-port**: `ADKDIdentifiers.httpPort` MUST be `22849`.
+- **http-base-url**: `ADKDIdentifiers.httpBaseURL` MUST be `http://127.0.0.1:` followed by `httpPort`, so the URL always carries the port constant.
+- **hook-marker**: `ADKDIdentifiers.hookMarker` MUST be `# adkd-hook`, the text that marks a hook command as installed by this daemon.
+- **hook-name**: `ADKDIdentifiers.hookName` MUST be `adkd`, the name its hook and status-line entries carry in Claude Code's settings.
+- **hook-lock-name**: `ADKDIdentifiers.ownHookLockName` MUST be `.adkd-hooks.lock`, the lock file that serialises edits to Claude Code's hook settings.
+- **cli-name**: `ADKDIdentifiers.cliName` MUST be `adk`, the tool at `Contents/Helpers/adk` in the app bundle.
+- **daemon-executable-name**: `ADKDIdentifiers.daemonExecutableName` MUST be `adkd`, the executable at `Contents/MacOS/adkd` in the app bundle.
+- **no-collision-with-stenographer**: Each of the following MUST differ from its Stenographer counterpart, and this list is the full contract: label, HTTP port, keychain service, hook marker, database file name, support directory, logs directory, launch-agent plist, drop directory name, socket file name and hook lock name.
+- **storage-token**: `ADKDPaths.storageToken` MUST be `AgenticDeveloperKitchen`, the app's display name with non-alphanumerics dropped.
+- **storage-token-duplicated**: The storage token is spelled in `ADKDPaths` because Core cannot import the database layer that derives it; the two spellings MUST agree.
+- **storage-token-agreement-test**: A port MUST carry a test that asserts its spelled storage token equals the value the database layer derives from the display name.
+- **display-name**: `ADKDPaths.displayName` MUST be `Agentic Developer Kitchen`, the name of the app's folder under Application Support.
+- **file-names**: The database file MUST be named `adkd.db`, the ingest spool `ingest.db`, the launchd output files `stdout.log` and `stderr.log`, and the user-stop marker `daemon-stopped-by-user`. The type defines only the two launchd output file names (`launchdStdoutLogName`, `launchdStderrLogName`), not a path for them; callers choose the directory.
+- **home-injection**: `ADKDPaths.init(home:)` MUST take the home directory as a parameter defaulting to the current user's home directory, and every path property MUST be derived from it.
+- **storage-directory**: `storageDirectory` MUST be `.` followed by the lowercased storage token, directly under home (`~/.agenticdeveloperkitchen`).
+- **support-directory**: `supportDirectory` MUST be the `adkd` directory under `storageDirectory`.
+- **data-file-locations**: `databaseURL` and `spoolURL` MUST be the database and spool files inside `supportDirectory`, and `errorsDirectory` MUST be its `errors` subdirectory.
+- **plugin-directories**: `pluginDirectories` MUST return exactly one URL: `Library/Application Support/Agentic Developer Kitchen/Plugins` under home.
+- **claude-directory**: `claudeDirectory` MUST be `.claude` directly under home.
+- **drop-directory**: `dropDirectory` MUST be `adkd-events` under `claudeDirectory`, where Claude Code's hooks drop events for the daemon to ingest.
+- **socket-url**: `socketURL` MUST be `adkd.sock` under `claudeDirectory`.
+- **logs-directory**: `logsDirectory` MUST be `Library/Logs/` followed by the label, under home.
+- **launch-agent-plist**: `launchAgentPlist` MUST be `Library/LaunchAgents/` followed by the label and `.plist`, under home.
+- **stop-marker-location**: `stopMarkerURL` MUST be the stop-marker file inside `supportDirectory`, beside the data the daemon owns.
+- **pure-derivation**: The paths MUST be computed without touching the file system; nothing in the type creates, reads or checks a file or directory.
+

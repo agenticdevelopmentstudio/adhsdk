@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactElement, type ReactNode } from 'react'
 import { reportAuthError, reportUnexpectedAuthError } from './report'
 import { configureAuth } from './config'
-import { hasCapability, type AuthTokens, type AuthUser } from './types'
+import { hasCapability, userFromV1, type AuthTokens, type AuthUser, type V1User } from './types'
 import { authedJson, exchangeSsoCode, responseError, AuthHttpError, DEFAULT_EXCHANGE_PATH } from './client'
 import { tokensFromResponse, type BackendTokenFields } from './tokens'
 import { clearTokens, readTokens, readUser, writeTokens, writeUser } from './tokens'
@@ -14,6 +14,7 @@ import {
   requestLoginSms,
   type MfaChallenge,
   type MfaCodeMethod,
+  type MfaMethod,
 } from './mfa'
 import { invalidateRefresh, refreshAccessToken } from './refresh'
 import {
@@ -79,22 +80,20 @@ export interface AuthProviderProps<U extends AuthUser> {
 
 const AuthContext = createContext<AuthContextValue<AuthUser> | null>(null)
 
-type BackendAuthResponse = BackendTokenFields & { user: AuthUser }
-
 async function revokeSession(): Promise<void> {
   try {
-    const res = await fetch('/api/auth/revoke', {
+    const res = await fetch('/api/v1/auth/sessions/revoke', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: '{}',
       keepalive: true,
     })
-    if (!res.ok) console.error(`/api/auth/revoke failed: HTTP ${res.status}`)
+    if (!res.ok) console.error(`/api/v1/auth/sessions/revoke failed: HTTP ${res.status}`)
   } catch (err) {
     // Network failure logging out — the central session may not be invalidated
     // server-side, so this is worth surfacing.
-    console.error('/api/auth/revoke network error', err)
+    console.error('/api/v1/auth/sessions/revoke network error', err)
     reportAuthError(err, { feature: 'auth', step: 'revokeSession' })
   }
 }
@@ -131,7 +130,7 @@ export function AuthProvider<U extends AuthUser = AuthUser>({
 
   // The bootstrap effect must run once on mount. Read the latest mapping via a
   // ref so an inline `mapUser` prop (a fresh identity each render) can't land in
-  // the effect's dep array and retrigger /api/auth/me on every render.
+  // the effect's dep array and retrigger /api/v1/account on every render.
   const toUserRef = useRef(toUser)
   toUserRef.current = toUser
 
@@ -159,7 +158,7 @@ export function AuthProvider<U extends AuthUser = AuthUser>({
   // next cold load's optimistic restore": setUser and writeUser always move
   // together here, so the cache can't drift from what's on screen. Every trusted
   // set-user path (credential login, in-place SSO exchange, loginWithTokens, the
-  // /api/auth/me revalidation) goes through this — a future set-user site that
+  // /api/v1/account revalidation) goes through this — a future set-user site that
   // forgets to cache is the bug this prevents. The optimistic READ deliberately
   // does NOT use this (it only reads the cache, nothing to re-persist).
   const applyUser = useCallback((raw: AuthUser): U => {
@@ -204,7 +203,7 @@ export function AuthProvider<U extends AuthUser = AuthUser>({
 
     // Optimistic restore: a returning visitor already holds this site's tokens
     // and a cached user from a prior visit. Render the signed-in UI immediately
-    // from that cache and let the /api/auth/me check below revalidate in the
+    // from that cache and let the /api/v1/account check below revalidate in the
     // background — so auth-gated content no longer waits out a backend
     // round-trip behind a "Loading…" gate. Skipped when an inbound SSO code is
     // about to swap the session, and on capability-gated sites (admin), where a
@@ -310,7 +309,7 @@ export function AuthProvider<U extends AuthUser = AuthUser>({
       }
 
       try {
-        const me = await authedJson<AuthUser>('/api/auth/me')
+        const me = userFromV1(await authedJson<V1User>('/api/v1/account'))
         if (cancelled) return
         await ensureAllowed(me)
         if (cancelled) return
@@ -370,34 +369,38 @@ export function AuthProvider<U extends AuthUser = AuthUser>({
         // only the former. AuthHttpError extends Error, so `.message` consumers work.
         throw await responseError(res, failMsg)
       }
-      const data = (await res.json()) as BackendAuthResponse & Partial<MfaChallenge>
+      const data = (await res.json()) as BackendTokenFields & {
+        user: V1User
+        mfa_required?: boolean
+        methods?: MfaMethod[]
+      }
       // A 202 with `mfaRequired` is NOT a session — the account owes a second factor.
       // Hand the challenge back to the caller (do NOT adopt the pending token as an
       // access token); the login UI completes it via sendMfaSms / completeMfa*.
-      if (res.status === 202 && data.mfaRequired) {
+      if (res.status === 202 && data.mfa_required) {
         return { mfaRequired: true, token: data.token ?? '', methods: data.methods ?? [] }
       }
       // Gate capability BEFORE persisting tokens (so a rejected user never leaves
       // an access token in localStorage), then persist + set the user — the same
       // ordering the in-place SSO exchange uses, via the shared commitRawSession.
-      return commitRawSession(data.user, tokensFromResponse(data))
+      return commitRawSession(userFromV1(data.user), tokensFromResponse(data))
     },
     [commitRawSession],
   )
 
   const login = useCallback(
     // The generic `identifier` key (email, user id/slug, or E.164 phone) — the
-    // backend's /auth/login classifies it; the legacy `email` key would pin the
+    // backend's POST /v1/auth/sessions classifies it; the legacy `email` key would pin the
     // lookup to email-only and break slug/phone logins.
     (identifier: string, password: string) =>
-      postCredentials('/api/auth/login', { identifier, password }, 'Login failed'),
+      postCredentials('/api/v1/auth/sessions', { method: 'password', identifier, password }, 'Login failed'),
     [postCredentials],
   )
 
   const register = useCallback(
     async (email: string, password: string, name: string): Promise<U> => {
       if (!enableRegister) throw new Error('Registration is disabled.')
-      const out = await postCredentials('/api/auth/register', { email, password, name }, 'Registration failed')
+      const out = await postCredentials('/api/v1/auth/registrations', { email, password, name }, 'Registration failed')
       // Registration never gates on MFA (the account has no factor yet).
       if ('mfaRequired' in out) throw new Error('Unexpected second-factor challenge during registration')
       return out
@@ -445,12 +448,12 @@ export function AuthProvider<U extends AuthUser = AuthUser>({
       // commitRawSession the credential + SSO-exchange paths use, so the ordering
       // can't drift across the three "trust this user" sites.
       if (knownUser) return commitRawSession(knownUser, tokens)
-      // Without a known user we must adopt first: the /api/auth/me fetch needs
+      // Without a known user we must adopt first: the /api/v1/account fetch needs
       // the Bearer token in storage. dropTokens() on throw cleans up that path.
       // (This branch gates AFTER adopting, so it can't use commitRawSession.)
       adoptTokens(tokens)
       try {
-        const raw = await authedJson<AuthUser>('/api/auth/me')
+        const raw = userFromV1(await authedJson<V1User>('/api/v1/account'))
         await ensureAllowed(raw)
         return applyUser(raw)
       } catch (err) {

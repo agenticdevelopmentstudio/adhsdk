@@ -5,12 +5,12 @@
   reject it before any network call. Resolving the workspace default
   ecosystem id with an empty result list MUST resolve to nothing, never an
   undefined/absent-marker value or a thrown error
-  (hub-domain-ecosystems-031); resolving an ecosystem id for a slug then
+  (ecosystems-031); resolving an ecosystem id for a slug then
   falls back to the raw scan, and MUST resolve to nothing only when that
-  scan is also empty (hub-domain-ecosystems-051).
+  scan is also empty (ecosystems-051).
 - **Boundary/malformed values**: A slug at exactly 64 characters — MUST be
   accepted; at 65 — MUST be rejected with the fixed message
-  (hub-domain-ecosystems-015). A non-rdid identifier passed to create/update
+  (ecosystems-015). A non-rdid identifier passed to create/update
   (no `.` at all) — the client MUST pass its whole value through as `slug`
   unmodified via the leaf-extraction fallback, deliberately letting the
   SERVER reject the malformed address rather than fabricating a
@@ -45,16 +45,16 @@
   specific case: sending the handle's own current value as the new
   identifier is a genuine slug change (matching the stale handle) that a
   naive diff-against-id would have silently skipped
-  (update-slug-sent-on-presence, hub-domain-ecosystems-026).
+  (#requirements/update-slug-sent-on-presence, ecosystems-026).
 - **Feature removal already done**: a removal whose delete request reports
   not-found (a double-click, a stale list, a second tab racing the same
   removal) MUST resolve as success, and inside a batch apply it MUST count
-  as a successful removal (hub-domain-ecosystems-037, -041).
+  as a successful removal (ecosystems-037, -041).
 - **Feature batch partial failure**: A batch apply whose adds succeed but
   some removals fail with a non-not-found error MUST keep the adds, still
   attempt every other removal, reject naming only the failed keys, and
-  invalidate the provisioned list (hub-domain-ecosystems-040). A failed add
-  MUST reject before any removal is sent (hub-domain-ecosystems-047);
+  invalidate the provisioned list (ecosystems-040). A failed add
+  MUST reject before any removal is sent (ecosystems-047);
   whether the backend's batch transaction rolls back whole is the
   backend's contract, which this client relies on and does not verify.
 - **Empty feature change**: A batch apply with nothing to add MUST send no
@@ -72,7 +72,7 @@
   client-side refusal.
 - **Feature hooks with no ecosystem id**: the provisioned-features query
   MUST NOT fetch while the id is nothing/undefined/empty; the mutations do
-  not guard it (see the features-mutation-null-id-unguarded requirement).
+  not guard it today, though they SHOULD (see #requirements/features-mutation-null-id-unguarded).
 - **Concurrent feature changes**: the removals inside one batch apply run
   in parallel; they touch distinct keys, so their completion order does not
   affect the result, and the list is re-read once on settle. Two sessions

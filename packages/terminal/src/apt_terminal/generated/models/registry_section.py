@@ -22,8 +22,8 @@ class RegistrySection:
         label (str):
         description (str):
         sort_order (int):
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
         sync_version (int):
         deleted_at (None | str | Unset):
     """
@@ -35,8 +35,8 @@ class RegistrySection:
     label: str
     description: str
     sort_order: int
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     sync_version: int
     deleted_at: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -56,9 +56,9 @@ class RegistrySection:
 
         sort_order = self.sort_order
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         sync_version = self.sync_version
 
@@ -73,19 +73,19 @@ class RegistrySection:
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
-                "registryId": registry_id,
+                "ecosystem_id": ecosystem_id,
+                "registry_id": registry_id,
                 "key": key,
                 "label": label,
                 "description": description,
-                "sortOrder": sort_order,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
-                "syncVersion": sync_version,
+                "sort_order": sort_order,
+                "created": created,
+                "updated": updated,
+                "sync_version": sync_version,
             }
         )
         if deleted_at is not UNSET:
-            field_dict["deletedAt"] = deleted_at
+            field_dict["deleted_at"] = deleted_at
 
         return field_dict
 
@@ -94,9 +94,9 @@ class RegistrySection:
         d = dict(src_dict)
         id = d.pop("id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        registry_id = d.pop("registryId")
+        registry_id = d.pop("registry_id")
 
         key = d.pop("key")
 
@@ -104,13 +104,13 @@ class RegistrySection:
 
         description = d.pop("description")
 
-        sort_order = d.pop("sortOrder")
+        sort_order = d.pop("sort_order")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
-        sync_version = d.pop("syncVersion")
+        sync_version = d.pop("sync_version")
 
         def _parse_deleted_at(data: object) -> None | str | Unset:
             if data is None:
@@ -119,7 +119,7 @@ class RegistrySection:
                 return data
             return cast(None | str | Unset, data)
 
-        deleted_at = _parse_deleted_at(d.pop("deletedAt", UNSET))
+        deleted_at = _parse_deleted_at(d.pop("deleted_at", UNSET))
 
         registry_section = cls(
             id=id,
@@ -129,8 +129,8 @@ class RegistrySection:
             label=label,
             description=description,
             sort_order=sort_order,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
             sync_version=sync_version,
             deleted_at=deleted_at,
         )

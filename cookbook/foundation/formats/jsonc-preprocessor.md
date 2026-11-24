@@ -1,13 +1,12 @@
 ---
 id: 2e71f72e-88d7-417e-9969-a414e1ab1a10
 title: "JSONC Preprocessor"
-domain: adhsdk://cookbook/foundation/formats/jsonc-preprocessor
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-09-27
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -22,9 +21,9 @@ tags:
   - encoding-detection
 depends-on: []
 related:
-  - adhsdk://cookbook/workspace/extensions/manifest/extension-manifest-localization
-  - adhsdk://cookbook/workspace/extensions/registry/extension-registry
-  - adhsdk://cookbook/workspace/extensions/registry/vsix-installer
+  - 24e1710c-a805-4f6e-b720-fbd869472ca9
+  - 4b6f3e1a-9c2d-4e7a-8b3f-1d5a6c9e2f70
+  - 35dd47a6-23f3-4306-9c81-e3823b79a7a3
 references: []
 approved-by: ""
 approved-date: ""
@@ -161,7 +160,7 @@ visual component.
 | foundation-json-016 | jsonobject-rejects-top-level-fragments | Perform the parse-to-object operation on the bytes for `42` — a bare top-level number, already strict JSON. | Throws — a document whose root is a scalar is rejected even though the bytes are otherwise valid JSON. |
 | foundation-json-017 | jsondata-passthrough-when-already-strict | Perform the normalize-to-strict-JSON operation on the bytes for `42`. | Returns those same bytes unchanged — the top-level scalar is accepted directly and the re-encode path never runs. |
 | foundation-json-018 | jsondata-passthrough-when-already-strict | Perform the normalize-to-strict-JSON operation on the bytes for `{"a":1e3}`. | Returns the exact original bytes, byte-for-byte, including `1e3` — not a re-serialized `{"a":1000}` — because the passthrough check succeeds and no re-encode ever runs. |
-| foundation-json-019 | jsondata-reencodes-when-not-strict | Perform the normalize-to-strict-JSON operation on the bytes for `{"a": 1, }` (a trailing comma, so not strict JSON). | Returns re-serialized bytes that parse to `{"a": 1}` — the bytes differ from the input because the trailing comma forced the parse-and-re-serialize path. |
+| foundation-json-019 | jsondata-reencodes-when-not-strict | Perform the normalize-to-strict-JSON operation on the bytes for `{"a": 1 /* note */}` (a block comment, so not strict JSON; a trailing comma is not used because newer Foundation releases accept it). | Returns re-serialized bytes that parse to `{"a": 1}` — the bytes differ from the input because the comment forced the parse-and-re-serialize path. |
 | foundation-json-020 | jsondata-propagates-jsonobject-errors | Perform the normalize-to-strict-JSON operation on the bytes for `{"a": 1` (unterminated, and not strict). | Throws — the failure originates in the parse-to-object operation's fallback attempt and passes through unmodified. |
 | foundation-json-021 | stateless-concurrency-safety | Issue fifty concurrent calls to the strip operation and the parse-to-object operation, each with a distinct input, from many threads at once. | Every call returns the result matching its own input, with no cross-talk between calls — there is no shared state for two calls to interleave through. |
 | foundation-json-022 | no-side-effects | Call the parse-to-object and normalize-to-strict-JSON operations with valid JSONC bytes in a test with no filesystem, network, or notification observers configured. | The call succeeds or throws based only on the bytes given it; no file is created, no request is issued, no notification is posted. |
@@ -348,9 +347,9 @@ kind.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/JSON/JSONCPreprocessor.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/JSON/JSONCPreprocessor.swift` | confirmed (1.1.1) |
 
 ## Design Decisions
 
@@ -415,23 +414,18 @@ patched around.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
-| [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
+| [adc.check.internationalization.unicode-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d255b8aa-7379-52ef-b4e8-b08386ba6aac) | passed | Internationalization |
 
 Notes: `separation-of-concerns` passes because the JSONC preprocessor
 addresses exactly one concern — turning JSONC bytes/text into strict JSON —
 with no theme, snippet, extension-manifest, or presentation logic of its
 own; it was extracted from a color-theme importer specifically to keep that
 concern from being duplicated across readers. `unit-test-coverage` is
-partial: the strip operation and the parse-to-object operation are
-exercised directly and thoroughly (comments, string-awareness, trailing
-commas, all encoding paths, byte-order-mark handling, pass-through, and
-both failure cases), but the normalize-to-strict-JSON operation has no
-dedicated test anywhere in the repository, even though production code
-calls it. `explicit-error-handling` passes because every failure path
+partial: 21 of 23 vectors have a test, all in `JSONCPreprocessorTests.swift`. The strip, parse-to-object and normalize-to-strict-JSON operations are covered (comments, string-awareness, trailing commas, encodings, byte-order-mark handling, pass-through, re-encoding, both failure cases and concurrent calls). Skipped: foundation-json-022 (the absence of side effects cannot be observed from a unit test) and foundation-json-023 (a compile-time property: a call site passing an encoding list does not build). `explicit-error-handling` passes because every failure path
 rethrows the underlying JSON-parsing error unchanged, with no
 swallow-and-continue anywhere the final result is concerned — internal
 attempts exist only to test a candidate before committing to it, and each
@@ -456,3 +450,4 @@ punctuation.
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: removed source line-number citations; recipes cite files and symbols, not lines. |
 | 1.0.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to foundation/formats/. |
+| 1.1.1 | 2026-11-14 | Mike Fullerton | Conformance tests added (JSONCPreprocessorTests.swift, 21 of 23 vectors); unit-test-coverage now partial. |

@@ -18,16 +18,16 @@ class ChatConversation:
         title (str):
         model (str):
         persona_slug (None | str):
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
     """
 
     id: UUID
     title: str
     model: str
     persona_slug: None | str
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -40,9 +40,9 @@ class ChatConversation:
         persona_slug: None | str
         persona_slug = self.persona_slug
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -51,9 +51,9 @@ class ChatConversation:
                 "id": id,
                 "title": title,
                 "model": model,
-                "personaSlug": persona_slug,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
+                "persona_slug": persona_slug,
+                "created": created,
+                "updated": updated,
             }
         )
 
@@ -73,19 +73,19 @@ class ChatConversation:
                 return data
             return cast(None | str, data)
 
-        persona_slug = _parse_persona_slug(d.pop("personaSlug"))
+        persona_slug = _parse_persona_slug(d.pop("persona_slug"))
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         chat_conversation = cls(
             id=id,
             title=title,
             model=model,
             persona_slug=persona_slug,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
         )
 
         chat_conversation.additional_properties = d

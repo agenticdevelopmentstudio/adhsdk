@@ -128,6 +128,6 @@
   window's trailing edge as the WinUI substitute for the AppKit help
   drawer — WinUI has no drawer primitive of its own, so `SplitView` is the
   standard stand-in, matching the pattern
-  `adhsdk://cookbook/ui/layout/composable-tabs/tabs-window` already uses
+  [adhsdk.ingredient.ui.layout.composable-tabs.tabs-window](cookbook:55a394e6-9934-404b-941d-25bebbf71378) already uses
   for its own drawer translation.
 

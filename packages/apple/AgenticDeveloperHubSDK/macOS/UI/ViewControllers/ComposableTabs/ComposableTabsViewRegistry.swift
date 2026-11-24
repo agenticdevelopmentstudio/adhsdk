@@ -150,6 +150,15 @@ public final class ComposableTabsViewRegistry {
 
     private var entries: [ComposableTabsViewID: Entry] = [:]
 
+    /// Builds a view's topic for the project settings sheet, or `nil` when it
+    /// has nothing to show for this project.
+    public typealias ProjectSettingsTopicFactory =
+        @MainActor (ProjectWorkspace) -> ComposableSettings.SettingsPanelViewController?
+
+    /// Project-settings topics, in the order their views contributed them.
+    /// Keyed by view so unregistering a view takes its topic with it.
+    private var projectSettingsTopics: [(viewID: ComposableTabsViewID, factory: ProjectSettingsTopicFactory)] = []
+
     public init() {
         registerPlaceholder()
     }
@@ -186,7 +195,34 @@ public final class ComposableTabsViewRegistry {
                 "Refusing to unregister \(viewID.rawValue, privacy: .public) — every registry resolves it")
             return false
         }
+        projectSettingsTopics.removeAll { $0.viewID == viewID }
         return entries.removeValue(forKey: viewID) != nil
+    }
+
+    /// Adds a topic a registered view contributes to the project settings
+    /// sheet, after the sheet's own. The sheet knows only that it has topics,
+    /// never which views they come from, so a new view's settings need no
+    /// change to the sheet (`open-closed`). Registering again for the same
+    /// view replaces its factory.
+    public func registerProjectSettingsTopic(
+        for viewID: ComposableTabsViewID,
+        factory: @escaping ProjectSettingsTopicFactory
+    ) {
+        if let index = projectSettingsTopics.firstIndex(where: { $0.viewID == viewID }) {
+            projectSettingsTopics[index].factory = factory
+        } else {
+            projectSettingsTopics.append((viewID, factory))
+        }
+    }
+
+    /// The contributed topics for one project's settings sheet, in
+    /// contribution order. Only views still registered contribute.
+    public func makeProjectSettingsTopics(
+        for project: ProjectWorkspace
+    ) -> [ComposableSettings.SettingsPanelViewController] {
+        projectSettingsTopics
+            .filter { isRegistered($0.viewID) }
+            .compactMap { $0.factory(project) }
     }
 
     public var registeredViewIDs: [ComposableTabsViewID] {

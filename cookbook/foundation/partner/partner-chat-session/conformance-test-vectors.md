@@ -1,0 +1,31 @@
+
+Vectors 001 to 005 are the cases asserted in `PartnerChatSessionTests` (named in the Input column); vectors 006 onward are derived from the `PartnerChatSession` source and are asserted by tests whose display names carry the vector id, except 022, which needs a Thread Sanitizer run.
+
+| ID | Requirements | Input | Expected |
+|----|-------------|-------|----------|
+| partner-chat-session-001 | assistant-text-block, assistant-text-events, apply-returns-persistable | Subscribe, then `apply` an assistant message with one text block "hello" (`assistantTextBecomesAStreamedMessage`) | Returns one `.assistant` message with text "hello"; the stream carries a `.responseDelta` whose text is "hello" |
+| partner-chat-session-002 | tool-use-started, tool-name-registry, tool-result-completed | Subscribe; `apply` an assistant toolUse block (name "n", id "t1"); then `apply` a user message with a toolResult block (toolUseID "t1") (`toolUseThenToolResultEmitStartedAndCompleted`) | Events include `.toolCall(_, "n", .started)` and `.toolCall(_, "n", .completed)` |
+| partner-chat-session-003 | result-failure-text, result-failure-retryable, result-ready | Subscribe; `apply` a `.result` with isError true, subtype "error_max_turns", resultText "boom" (`errorResultEmitsTurnFailedAndReadyState`) | After the leading `.transcriptLoaded`, the next event is `.turnFailed(ChatError(message: "boom", isRetryable: true))` and the one after is `.stateChanged(.ready)` |
+| partner-chat-session-004 | transcript-seed, events-replay-transcript | Session created with one earlier user message; first event of `events()` (`initialTranscriptIsReplayedOnSubscribe`) | First event equals `.transcriptLoaded` with that message |
+| partner-chat-session-005 | user-other-blocks-ignored, note-user-message | Subscribe; `apply` a `.user` message with one text block "hi", then `noteUserMessage` with a user message "hi" (`ownerEchoProducesNothingAndUserNoteEmits`) | `apply` returns an empty array and emits nothing; the event after the leading `.transcriptLoaded` equals `.userMessage` with the noted message |
+| partner-chat-session-006 | send-forwarding, send-no-local-effect | Session with a recording send closure; call `send("go")` | Closure called once with "go"; transcript unchanged; no event after `.transcriptLoaded` |
+| partner-chat-session-007 | interrupt-forwarding | Call `interrupt()` | Interrupt closure called once; no event emitted |
+| partner-chat-session-008 | close-signals-closed, close-detaches, close-keeps-transcript | Subscribe; call `close()`; then `apply` an assistant text block | Stream yields `.stateChanged(.closed)` then ends; the later events reach no stream; the transcript still holds the reply |
+| partner-chat-session-009 | close-without-stream-silent | Call `close()` twice with one stream attached | Second call emits nothing and does not fail |
+| partner-chat-session-010 | events-single-subscriber | Call `events()` twice, then `noteUserMessage` | First stream ends; only the second stream receives `.userMessage` |
+| partner-chat-session-011 | events-no-buffer-without-subscriber, state-not-replayed | Call `setState(.responding)` and `noteUserMessage` with no stream attached, then call `events()` | The new stream's first event is `.transcriptLoaded` containing the noted message; no `.stateChanged(.responding)` is delivered |
+| partner-chat-session-012 | assistant-empty-text-skipped | `apply` an assistant message with text blocks "" and nil | Returns empty; transcript and stream unchanged |
+| partner-chat-session-013 | assistant-text-block, apply-returns-persistable | `apply` an assistant message with text blocks "a" and "b" | Returns two messages in order; three response events per message; transcript has both |
+| partner-chat-session-014 | tool-result-completed | `apply` a user toolResult block whose toolUseID was never registered, and one with a nil toolUseID | Each emits `.toolCall` with name "tool" and phase `.completed` |
+| partner-chat-session-015 | tool-name-registry, tool-use-started | `apply` an assistant toolUse block with a name but no id | Emits `.toolCall` started with that name; a later toolResult cannot resolve it and reports "tool" |
+| partner-chat-session-016 | fresh-message-id, result-ends-turn | `apply` a toolUse block with no earlier text, then another toolUse, then a `.result`, then another toolUse | The first two events share one UUID-string id with no `.responseStarted`; after the result the next tool event carries a different id |
+| partner-chat-session-017 | result-failure-text | `apply` an error `.result` with resultText nil and subtype "error_max_turns"; then one with both nil | Messages are "error_max_turns" and "error" |
+| partner-chat-session-018 | result-ready | `apply` a `.result` with isError false | Only `.stateChanged(.ready)` is emitted |
+| partner-chat-session-019 | system-init-and-other-ignored, assistant-other-blocks-ignored | `apply` a `.systemInit` message, an `.other` message and an assistant message holding only a thinking block | All return empty and emit nothing |
+| partner-chat-session-020 | transcript-never-cleared | Add a noted message, call `clear()`, then call `events()` | First event is `.transcriptLoaded` with the message still present |
+| partner-chat-session-021 | set-state-emits | Subscribe, call `setState(.responding)` | Stream yields `.stateChanged(.responding)` |
+| partner-chat-session-022 | lock-guarded-state, yield-outside-lock | Call `noteUserMessage` from many tasks while a consumer reads the stream | Run under Thread Sanitizer: no data race is reported, and exactly one `.userMessage` per call is delivered |
+| partner-chat-session-023 | result-failure-text | `apply` an error `.result` with resultText nil, subtype nil and errors ["x"] | Message is "error", not "x" |
+| partner-chat-session-024 | events-never-throw | `apply` an error `.result`, then `noteUserMessage` | Stream stays open and delivers the later `.userMessage` |
+| partner-chat-session-025 | transcript-grows-by-owner-lines, transcript-grows-by-assistant-text | `noteUserMessage` then an assistant text `apply`; open a new stream | `.transcriptLoaded` holds both messages in call order when the calls are made from one thread |
+

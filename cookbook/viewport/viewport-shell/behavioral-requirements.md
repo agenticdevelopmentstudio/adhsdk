@@ -1,0 +1,10 @@
+
+- **page-lock**: Consumers MUST import the package's `base.css` once at the app root. It sets `html, body { margin: 0; height: 100%; overflow: hidden; overscroll-behavior: none }`, which is what prevents the page from scrolling. The component itself does not set or restore these styles, so mounting, unmounting, or nesting multiple `<ViewportShell>` instances has no effect on them.
+- **render-children**: The component MUST render its `children` prop as the content of a flex container.
+- **keyboard-inset**: The component MUST call `useKeyboardInset()` on every render; the hook's work runs in a `useEffect` after mount. The hook MUST write the `--kb-inset` CSS custom property, in pixels, onto `document.documentElement`: once on mount, before any event fires, and again on every `window.visualViewport` `resize` and `scroll` event. The value is `Math.max(0, window.innerHeight - visualViewport.height - visualViewport.offsetTop)`, so it is never negative. When `window.visualViewport` is absent, including during server-side rendering, the hook MUST do nothing. On unmount it MUST remove both listeners and MUST leave the last written `--kb-inset` value in place; `base.css` declares the `:root` default of `0px`. Descendants read the current inset via `var(--kb-inset)` (e.g. `ViewportComposer`'s `.vp-composer` bottom padding).
+- **root-class**: The component MUST apply the CSS class `viewport-shell` to its root element.
+- **clip-prop**: The component MUST accept a `clip` boolean prop that defaults to `true`. `.viewport-shell` sets `overflow: hidden`, so the default clips the shell's own overflow.
+- **open-class**: When `clip` is `false`, the component MUST also apply the CSS class `vp-shell--open` to its root element. `.viewport-shell.vp-shell--open` sets `overflow: visible`.
+- **class-name-merge**: The component MUST accept an optional `className` prop and append it to the root element's class list.
+- **ignore-empty-class-name**: When `className` is falsy (`undefined` or the empty string `''`), the component MUST NOT add it to the class list.
+

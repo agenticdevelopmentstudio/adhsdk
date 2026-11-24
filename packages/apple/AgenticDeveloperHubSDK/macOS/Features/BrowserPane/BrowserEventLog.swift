@@ -1,0 +1,228 @@
+//
+//  BrowserEventLog.swift
+//  AgenticDeveloperHubSDK
+//
+
+import AppKit
+import Combine
+
+/// One line of a browser pane's event log: what happened, on which channel,
+/// and whether it reached the page.
+public struct BrowserEventLogEntry: Sendable, Equatable {
+
+    /// What became of the event.
+    public enum Decision: String, Sendable {
+        /// The user's event reached the page.
+        case delivered
+        /// The event was held back from the page.
+        case withheld
+        /// The agent's own event reached the page.
+        case synthesized
+        /// Not an input decision: a navigation, a window change, a setting.
+        case info
+    }
+
+    public var date: Date
+    public var channel: String
+    public var event: String
+    public var decision: Decision
+    public var detail: String
+    /// How many identical events this one line stands for (see
+    /// `BrowserEventLog.coalescedEvents`).
+    public var count: Int
+
+    public init(date: Date, channel: String, event: String, decision: Decision, detail: String, count: Int = 1) {
+        self.date = date
+        self.channel = channel
+        self.event = event
+        self.decision = decision
+        self.detail = detail
+        self.count = count
+    }
+}
+
+/// What a browser pane delivered to its page, withheld from it, and did
+/// around it (spec section 12): an in-memory ring buffer owned by the pane.
+///
+/// Nothing here is ever written to disk, and typed characters are never
+/// recorded — the key detail names named keys only, and calls every printable
+/// character `"character"` (`keyDetail(for:)`), because characters typed into
+/// a password field would otherwise sit in the log. It exists in release
+/// builds too, so the recording code has one path; only debug builds show it.
+@MainActor
+public final class BrowserEventLog {
+
+    /// Events that arrive in floods. A run of identical ones inside
+    /// `coalescingWindow` is one line with a count, or the log would be
+    /// nothing but pointer moves.
+    static let coalescedEvents: Set<String> = ["mouseMoved", "scrollWheel"]
+
+    /// The text-input calls an input method makes for a keystroke it handles
+    /// asynchronously, after the keyDown the gate already decided. The same
+    /// keystroke, reported twice, so it is folded into the keyDown's line.
+    static let textInputEvents: Set<String> = [
+        "insertText:", "insertText:replacementRange:", "setMarkedText:selectedRange:replacementRange:"
+    ]
+
+    /// How close in time two events must be to share a line.
+    static let coalescingWindow: TimeInterval = 0.5
+
+    public let capacity: Int
+
+    /// The lines, oldest first. Assembled from the ring on each read, which
+    /// only the log pane does, a few times a second at most.
+    public var entries: [BrowserEventLogEntry] {
+        guard storage.count == capacity, head > 0 else { return storage }
+        return Array(storage[head...] + storage[..<head])
+    }
+
+    /// Fires after every change to `entries`.
+    public let changes: AnyPublisher<Void, Never>
+
+    /// The ring: grows to `capacity`, then each new line overwrites the slot
+    /// at `head`, the oldest.
+    private var storage: [BrowserEventLogEntry] = []
+    private var head = 0
+    /// How many lines were ever appended since the last clear. A line's
+    /// sequence number is its position in that count; while it is still in
+    /// the ring its slot is `sequence % capacity`.
+    private var appended = 0
+    /// The newest keyboard keyDown line, by sequence number, so an input
+    /// method's later text call can be folded into it even when a keyUp or a
+    /// pointer move was recorded in between.
+    private var lastKeyDown: Int?
+
+    private let subject = PassthroughSubject<Void, Never>()
+    private let now: () -> Date
+
+    /// - Parameters:
+    ///   - capacity: How many lines are kept; the oldest go first.
+    ///   - now: The clock. Injected by tests of the coalescing window.
+    public init(capacity: Int = 2000, now: @escaping () -> Date = Date.init) {
+        self.capacity = max(1, capacity)
+        self.now = now
+        changes = subject.eraseToAnyPublisher()
+    }
+
+    /// Appends a line, or folds the event into an earlier one:
+    ///
+    /// - a flood event (`coalescedEvents`) identical to the last line, detail
+    ///   included, adds to that line's count. The line takes the newest
+    ///   event's date, so its Time is when the run last fired, and the
+    ///   window slides with the run.
+    /// - an input method's text call (`textInputEvents`) is the second report
+    ///   of a keystroke whose keyDown line, a printable key with the same
+    ///   decision, is less than `coalescingWindow` old. It adds nothing, not
+    ///   even a count. Only the user's own printable keystroke absorbs one
+    ///   (`isUserCharacterKey`): a named key's keyDown (Return, Tab, …) does
+    ///   not, so Dictation or the character viewer inserting text just after
+    ///   a Return still gets its own line, and neither does an agent's
+    ///   keyDown, so the user's text never hides behind the agent's line. The
+    ///   price: an input method's conversion (Space) and commit (Return) each
+    ///   show their text call as a second line.
+    public func record(
+        channel: String,
+        event: String,
+        decision: BrowserEventLogEntry.Decision,
+        detail: String = ""
+    ) {
+        let date = now()
+        if Self.coalescedEvents.contains(event), let slot = slot(of: appended - 1) {
+            let last = storage[slot]
+            if date.timeIntervalSince(last.date) <= Self.coalescingWindow, last.channel == channel,
+               last.event == event, last.decision == decision, last.detail == detail {
+                storage[slot].count += 1
+                storage[slot].date = date
+                subject.send()
+                return
+            }
+        }
+        if Self.textInputEvents.contains(event), let sequence = lastKeyDown, let slot = slot(of: sequence) {
+            let keyDown = storage[slot]
+            if date.timeIntervalSince(keyDown.date) <= Self.coalescingWindow, keyDown.channel == channel,
+               keyDown.decision == decision, Self.isUserCharacterKey(keyDown.detail) {
+                return
+            }
+        }
+        append(BrowserEventLogEntry(date: date, channel: channel, event: event, decision: decision, detail: detail))
+        if event == "keyDown" { lastKeyDown = appended - 1 }
+        subject.send()
+    }
+
+    /// Empties the log. Always announces itself, even when already empty,
+    /// because a pane being discarded relies on it to tell its log pane.
+    public func clear() {
+        storage.removeAll(keepingCapacity: true)
+        head = 0
+        appended = 0
+        lastKeyDown = nil
+        subject.send()
+    }
+
+    /// Whether a keyDown's detail is the user's printable key: modifier
+    /// symbols, then `"character"`, as `keyDetail(for:)` writes it. An agent's
+    /// key carries an `agent` prefix and is not one.
+    static func isUserCharacterKey(_ detail: String) -> Bool {
+        detail.drop { "⌃⌥⇧⌘".contains($0) } == "character"
+    }
+
+    private func append(_ entry: BrowserEventLogEntry) {
+        if storage.count < capacity {
+            storage.append(entry)
+        } else {
+            storage[head] = entry
+            head = (head + 1) % capacity
+        }
+        appended += 1
+    }
+
+    /// The slot holding the line with `sequence`, or nil once it has been
+    /// overwritten (or never was).
+    private func slot(of sequence: Int) -> Int? {
+        guard sequence >= 0, sequence < appended, sequence >= appended - storage.count else { return nil }
+        return sequence % capacity
+    }
+
+    // MARK: - Key detail
+
+    /// Named keys by their `charactersIgnoringModifiers` scalar.
+    private static let namedKeys: [UInt32: String] = {
+        var names: [UInt32: String] = [
+            0x0D: "Return", 0x03: "Enter", 0x09: "Tab", 0x19: "Tab", 0x1B: "Escape",
+            0x20: "Space", 0x7F: "Delete",
+            UInt32(NSUpArrowFunctionKey): "Up", UInt32(NSDownArrowFunctionKey): "Down",
+            UInt32(NSLeftArrowFunctionKey): "Left", UInt32(NSRightArrowFunctionKey): "Right",
+            UInt32(NSDeleteFunctionKey): "Forward Delete",
+            UInt32(NSHomeFunctionKey): "Home", UInt32(NSEndFunctionKey): "End",
+            UInt32(NSPageUpFunctionKey): "Page Up", UInt32(NSPageDownFunctionKey): "Page Down"
+        ]
+        for index in 0..<35 { names[UInt32(NSF1FunctionKey) + UInt32(index)] = "F\(index + 1)" }
+        return names
+    }()
+
+    /// The modifiers held, as the menu bar writes them.
+    static func modifierSymbols(_ flags: NSEvent.ModifierFlags) -> String {
+        var symbols = ""
+        if flags.contains(.control) { symbols += "⌃" }
+        if flags.contains(.option) { symbols += "⌥" }
+        if flags.contains(.shift) { symbols += "⇧" }
+        if flags.contains(.command) { symbols += "⌘" }
+        return symbols
+    }
+
+    /// A key event's detail: the modifiers, then the key's name for a named
+    /// key and `"character"` for anything else. The character itself is never
+    /// returned. A flagsChanged event, which has no key, is its modifiers.
+    public static func keyDetail(for event: NSEvent) -> String {
+        let modifiers = modifierSymbols(event.modifierFlags.intersection(.deviceIndependentFlagsMask))
+        guard event.type == .keyDown || event.type == .keyUp else { return modifiers }
+        let key: String
+        if let scalar = event.charactersIgnoringModifiers?.unicodeScalars.first,
+           let name = namedKeys[scalar.value] {
+            key = name
+        } else {
+            key = "character"
+        }
+        return modifiers + key
+    }
+}

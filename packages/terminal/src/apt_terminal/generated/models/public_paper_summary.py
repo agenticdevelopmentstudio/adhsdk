@@ -17,14 +17,14 @@ class PublicPaperSummary:
         title (str):
         category (None | str):
         tags (list[str]):
-        updated_at (str):
+        updated (int): Unix timestamp, in seconds.
     """
 
     route: str
     title: str
     category: None | str
     tags: list[str]
-    updated_at: str
+    updated: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -37,7 +37,7 @@ class PublicPaperSummary:
 
         tags = self.tags
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -47,7 +47,7 @@ class PublicPaperSummary:
                 "title": title,
                 "category": category,
                 "tags": tags,
-                "updatedAt": updated_at,
+                "updated": updated,
             }
         )
 
@@ -69,14 +69,14 @@ class PublicPaperSummary:
 
         tags = cast(list[str], d.pop("tags"))
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         public_paper_summary = cls(
             route=route,
             title=title,
             category=category,
             tags=tags,
-            updated_at=updated_at,
+            updated=updated,
         )
 
         public_paper_summary.additional_properties = d

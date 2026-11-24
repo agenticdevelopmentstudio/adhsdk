@@ -7,3 +7,4 @@
 | 1.1.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/containers/. |
 | 1.3.0 | 2026-10-04 | Mike Fullerton | Wrote coder-init-unavailable as a platform-neutral requirement with vector 010; resolved the minimum-contrast-ratio NEEDS REVIEW marker as current behavior (no contrast floor) with vector 011 and a pending decision; added separation-of-concerns and unit-test-coverage compliance rows. Added the confines-to-ui-thread requirement and vector. |
+| 1.3.1 | 2026-11-15 | Mike Fullerton | Conformance tests added (HelpContentTests.swift, 10 of 12 vectors); unit-test-coverage now partial. |

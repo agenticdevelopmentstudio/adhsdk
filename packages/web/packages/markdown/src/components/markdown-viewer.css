@@ -271,7 +271,8 @@
 }
 
 /* `wrap`: long code lines wrap at the pane's edge instead of scrolling sideways.
- * Every <pre>, not `pre.shiki`: the rendered <pre> carries no shiki class. */
+ * Every <pre>, not just `pre.shiki`: a highlighted block keeps its shiki class, but a
+ * fence with no language, or one shiki cannot load, renders a plain <pre>. */
 /* measure="fill": prose runs the container's full width (a tool pane showing a file), not the
    reading column above. */
 .adh-mv-prose--fill {

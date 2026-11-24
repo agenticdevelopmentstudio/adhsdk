@@ -59,10 +59,10 @@ class GamificationSummary:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "subjectType": subject_type,
-                "subjectId": subject_id,
-                "totalPoints": total_points,
-                "optedOut": opted_out,
+                "subject_type": subject_type,
+                "subject_id": subject_id,
+                "total_points": total_points,
+                "opted_out": opted_out,
                 "badges": badges,
             }
         )
@@ -76,13 +76,13 @@ class GamificationSummary:
         from ..models.gamification_subject_badge import GamificationSubjectBadge
 
         d = dict(src_dict)
-        subject_type = d.pop("subjectType")
+        subject_type = d.pop("subject_type")
 
-        subject_id = d.pop("subjectId")
+        subject_id = d.pop("subject_id")
 
-        total_points = d.pop("totalPoints")
+        total_points = d.pop("total_points")
 
-        opted_out = d.pop("optedOut")
+        opted_out = d.pop("opted_out")
 
         badges = []
         _badges = d.pop("badges")

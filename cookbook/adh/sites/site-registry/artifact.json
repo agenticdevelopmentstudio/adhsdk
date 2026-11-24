@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "9069ccf9-0357-4311-9671-91ee2793adae",
     "title": "Site Registry",
-    "domain": "adhsdk://cookbook/adh/sites/site-registry",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -32,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "317e37015b8d7e40",
+  "synced": "d9a4b770c619f39a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -51,7 +50,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

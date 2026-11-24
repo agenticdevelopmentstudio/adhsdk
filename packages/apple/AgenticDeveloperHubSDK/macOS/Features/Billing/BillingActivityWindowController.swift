@@ -105,6 +105,7 @@ public final class BillingActivityWindowController: SingleWindowController {
         super.init(windowID: "billing.activity", contentViewController: viewController)
 
         windowTitle = "Billing Activity"
+        windowTitleSymbolName = "dollarsign.circle"
         windowStyleMask = [.titled, .closable, .resizable, .miniaturizable]
         windowSpec = WindowSpec(
             defaultSize: NSSize(width: 900, height: 640),

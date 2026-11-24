@@ -1,0 +1,5 @@
+
+- **Background**: Tone-dependent. `dark` uses `background: var(--lp-ground, #101010)` with `color: var(--lp-ink, #ededed)`; `soft` uses `background: var(--lp-tone-soft, #171717)` with the same `--lp-ink`; `paper` uses `background: var(--lp-tone-paper, #f4f4f4)` with `color: var(--lp-paper-ink, #171717)` and overrides `--lp-ink-dim` to `var(--lp-paper-dim, #5c5c5c)` for children that read it directly.
+- **Spacing**: Band height equals its content height. Vertical rhythm (`padding-top`/`padding-bottom`) comes from `--lp-band-pad` (default `clamp(4.5rem, 9vw, 8rem)`) on `.lp-band` itself, not from `Wrap`; the last band in a flow adds `--lp-dock-clear` to its bottom padding. `Wrap` controls horizontal centering and max measure only — see **wrap-children**.
+- **Seam styling**: Diagonal cut uses CSS `clip-path` with angle and depth set by `--lp-seam` (default `4.5vw`); see **apply-seam-when-true** and **paper-cuts-foot** for the exact formulas. The negative margin pulls the cutting band by the same amount so the wedge reveals the neighboring band rather than the page background.
+

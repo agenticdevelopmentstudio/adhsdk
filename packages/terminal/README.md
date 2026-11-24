@@ -1,10 +1,15 @@
 # apt
 
 CLI for the Agentic Developer backend (`api.agenticdeveloperhub.com`),
-built on a generated `openapi-python-client` client.
+built on a generated `openapi-python-client` client of the Stripe-style `/v1`
+API (spec: https://api.agenticdeveloperhub.com/v1/openapi.json). Lists read
+every page (`limit=100` + `starting_after`); errors come from the `/v1`
+`{"error": {...}}` envelope; `created`/`updated` are unix seconds on the wire
+and shown as UTC in tables.
 
 ## Auth
-    apt auth login            # email/password → JWT (stored per profile)
+    apt auth login            # identifier/password → JWT (stored per profile);
+                              # prompts for a TOTP/SMS/recovery code when MFA is on
     apt auth whoami
     apt auth tokens list | create --set name=ci | delete <id>
     apt auth logout
@@ -33,6 +38,12 @@ pip install -e ".[dev]"
 ```
 
 This puts `apt` on your `$PATH`.
+
+## Regenerate
+
+```bash
+python3 scripts/generate.py --spec /abs/path/to/adhbackend/src/adh/openapi.v1.json
+```
 
 ## Develop
 

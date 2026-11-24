@@ -79,7 +79,7 @@ interface CrudDataBrowserCommon {
   workspace?: string
   /** The ecosystem (rdid or uuid) whose data this browser shows — narrower than `workspace`,
    *  which spans every ecosystem the workspace owns. Every list and every write is sent
-   *  `?ecosystemId=<id>`, a new row starts pinned to it, and the rail keeps only
+   *  `?ecosystem_id=<id>`, a new row starts pinned to it, and the rail keeps only
    *  ecosystem-columned tables: an owner-pair table has no ecosystem to narrow by, so under an
    *  ecosystem it would show the workspace's rows, not this ecosystem's.
    *  "ONLY THE ECOSYSTEMS TABLES SHOULD SHOW - this is a huge huge huge data leak" (Mike,
@@ -127,14 +127,14 @@ function railItems(
 
 /** Whether `meta`'s rows belong to an ecosystem — the only tables an ecosystem scope can narrow. */
 function hasEcosystemColumn(meta: CrudTableMeta): boolean {
-  return meta.columns.some((c) => c.name === 'ecosystemId')
+  return meta.columns.some((c) => c.name === 'ecosystem_id')
 }
 
 /** Whether the backend can narrow `meta`'s list to one workspace: it scopes an ecosystem-columned
  *  table to the workspace's ecosystems, and an owner-pair table to the workspace's owner. */
 function isWorkspaceScopable(meta: CrudTableMeta): boolean {
   const names = new Set(meta.columns.map((c) => c.name))
-  return names.has('ecosystemId') || (names.has('ownerKind') && names.has('ownerId'))
+  return names.has('ecosystem_id') || (names.has('owner_kind') && names.has('owner_id'))
 }
 
 /**
@@ -200,7 +200,7 @@ export function CrudDataBrowser(props: CrudDataBrowserProps) {
     if (!workspace && !ecosystemId) return undefined
     const f: Record<string, string> = {}
     if (workspace) f.workspace = workspace
-    if (ecosystemId) f.ecosystemId = ecosystemId
+    if (ecosystemId) f.ecosystem_id = ecosystemId
     return f
   }, [workspace, ecosystemId])
   // Selection comes from the URL (activeSchema/activeTable) or, when embedded, the host's
@@ -391,7 +391,7 @@ export function CrudDataBrowser(props: CrudDataBrowserProps) {
     // Under an ecosystem the WRITES are scoped too, not just the list: without it a row created
     // from one ecosystem's Storage ▸ All Data was stamped with the caller's JWT ecosystem (every
     // hub JWT is ecosystem zero), and the re-list, filtered to this ecosystem, dropped it; and a
-    // non-admin's edit or delete on a `?ecosystemId=`-scoped table, whose row was listed only
+    // non-admin's edit or delete on a `?ecosystem_id=`-scoped table, whose row was listed only
     // through that scope, was refused. The create default is pinned, as SchemasPane's bucket
     // view pins its own.
     <CrudDataView
@@ -399,7 +399,7 @@ export function CrudDataBrowser(props: CrudDataBrowserProps) {
       meta={tableSelected}
       filter={listFilter}
       scopeEcosystemId={ecosystemId}
-      createDefaults={ecosystemId ? { ecosystemId } : undefined}
+      createDefaults={ecosystemId ? { ecosystem_id: ecosystemId } : undefined}
       onGuardChange={registerGuard}
     />
   ) : !ready ? (

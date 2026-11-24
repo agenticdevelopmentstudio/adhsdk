@@ -1,0 +1,15 @@
+
+- **titled-header**: The component MUST render a header row containing the `title`, preceded by `icon` when provided and immediately followed by `titleAfter` when provided.
+- **count-when-positive**: The component MUST render the `count` after the title only when it is provided and greater than zero, and MUST hide it otherwise.
+- **header-slot-placement**: The component MUST place `center` in a centered, flexible header slot and `actions` in a right-justified header slot.
+- **actions-right-justified-without-center**: When `actions` is present and `center` is absent, the component MUST push the actions to the right edge of the header.
+- **shared-header-height**: The component MUST give the header a minimum height equal to `INFO_PANEL_HEADER_HEIGHT` so sibling panels' headers align.
+- **content-sized-by-default**: By default (`scroll` false) the component MUST size the panel to its content and MUST NOT scroll the body.
+- **fill-and-scroll-on-scroll**: When `scroll` is true, the component MUST let the panel flex to fill its track and MUST make the body scroll vertically when its content overflows.
+- **body-ref-exposure**: The component MUST attach `bodyRef` to the scrolling body element so the host can tail or anchor it.
+- **label-region**: The component MUST expose the panel as a labeled region whenever an accessible name can be computed, taking the first available of: the `ariaLabel` prop, then a raw `aria-label` passed through the host attributes, then `title` when it is a string. It leaves the region unnamed only when none of the three is available (a non-string `title`, no `ariaLabel` and no raw `aria-label`; see Edge Cases, "Non-string title").
+- **mode-default-padding**: The component MUST apply body padding defaulting by mode (card vs scroll) and MUST use `bodyPadding` when provided.
+- **layout-prop-passthrough**: The component MUST apply caller-supplied `flex` and `maxHeight` to the outer element for host-controlled sizing.
+- **host-attribute-passthrough**: The component MUST spread remaining host attributes (`data-*`, `id`, event handlers) onto the outer `<section>`, without overriding the computed accessible name: an explicit `ariaLabel` prop takes precedence over a raw `aria-label` present in the spread attributes, which in turn takes precedence over the string `title` fallback.
+- **decorative-icon**: The component MUST mark the `icon` slot `aria-hidden` so assistive tech reads the title rather than an unlabeled glyph.
+- **style-precedence**: The component MUST merge caller-supplied `style` onto the outer `<section>` after the computed `flex` and `maxHeight`, so a `style.flex` or `style.maxHeight` wins over the `flex`/`maxHeight` props; and MUST append `className` after the base classes and merge them as utility classes (conflicting utilities resolve in favor of `className`).

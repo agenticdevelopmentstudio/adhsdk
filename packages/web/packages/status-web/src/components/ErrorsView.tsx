@@ -14,7 +14,7 @@ import { useNow } from "../hooks/use-now";
 import { ERROR_CHART_COLOR } from "../lib/colors";
 import { bucketDetail, bucketLabel } from "../lib/dashboard-format";
 import type { DashboardSections, ErrorIssue, ErrorsSectionData, ErrorsViews } from "../telemetry/dashboard-types";
-import { DashboardPanel, formatAge, WrappedCell } from "./DashboardParts";
+import { DashboardPanel, formatAge, VIEWS_MISSING, viewsMissing, WrappedCell } from "./DashboardParts";
 import { ErrorsSitePage } from "./ErrorsSitePage";
 import { useStatusHost } from "./StatusHost";
 
@@ -26,7 +26,8 @@ const EMPTY_SECTIONS: DashboardSections<ErrorsSectionData> = {
 };
 
 // Before the first answer: nothing listed, nothing failed. Nothing reads this as a verdict, because
-// every panel that draws from it is gated on its section having answered.
+// every panel that draws from it is gated on its section having answered, and an answer without
+// views (an older server) is said to be that rather than drawn from this.
 const EMPTY_VIEWS: ErrorsViews = { sites: [], mostErrors: [], mostErrorsLimit: 0, siteReports: {}, siteFailures: [] };
 
 type IssueView = "active" | "backlog" | "all";
@@ -116,6 +117,7 @@ export function ErrorsView({ site, onSite }: ErrorsViewProps): ReactElement {
 
   const body = query.data;
   const sections = body?.sections ?? EMPTY_SECTIONS;
+  const noViews = viewsMissing(body);
   const views = body?.views ?? EMPTY_VIEWS;
   // A failed read keeps the last body (TanStack Query holds on to it), and that body may have
   // been taken mid-refresh: claiming it is still filling in would leave skeletons up for a
@@ -186,8 +188,13 @@ export function ErrorsView({ site, onSite }: ErrorsViewProps): ReactElement {
 
         {site !== null ? (
           // With no answer at all there is nothing to say about the site: drawing the page from empty
-          // sections would claim it is clean. The alert above is the whole story.
-          (body || refreshing) && (
+          // sections would claim it is clean. The alert above is the whole story. The page is drawn
+          // from the views, so an answer without them is said to be that, the same way.
+          noViews ? (
+            <p role="alert" className="m-0 font-mono text-xs text-apt-gold">
+              {VIEWS_MISSING}
+            </p>
+          ) : (body || refreshing) && (
             <ErrorsSitePage
               key={site}
               site={site}
@@ -333,6 +340,7 @@ export function ErrorsView({ site, onSite }: ErrorsViewProps): ReactElement {
                 section={sections.sites}
                 configured={posthogOn}
                 refreshing={refreshing}
+                unavailable={noViews ? VIEWS_MISSING : undefined}
                 note={`Production only. The ${views.mostErrorsLimit} sites that reported the most errors to PostHog, not GlitchTip issues: GlitchTip no longer holds the event data to attribute an issue to a site. Open one for its page.`}
               >
                 {() => (

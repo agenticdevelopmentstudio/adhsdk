@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, TypeVar, cast
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
+from ..models.project_template_author_kind import ProjectTemplateAuthorKind
 from ..models.project_template_kind import ProjectTemplateKind
 from ..models.project_template_owner_kind import ProjectTemplateOwnerKind
 from ..types import UNSET, Unset
@@ -32,10 +33,12 @@ class ProjectTemplate:
         name (str): unique among the workspace’s live templates OF THIS KIND
         description (str):
         body (ProjectTemplateBody | WorkItemTemplateBody): the stored shape, read against `kind`
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
         is_deleted (bool):
-        customer_id (str | Unset): the customer (user) who created the template
+        author_kind (ProjectTemplateAuthorKind | Unset): Kind of principal that created the template; null when nobody
+            did (a storage token).
+        author_id (None | str | Unset): Id of that principal.
         created_by (None | str | Unset):
         deleted_at (None | str | Unset):
         sync_version (int | Unset):
@@ -49,10 +52,11 @@ class ProjectTemplate:
     name: str
     description: str
     body: ProjectTemplateBody | WorkItemTemplateBody
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     is_deleted: bool
-    customer_id: str | Unset = UNSET
+    author_kind: ProjectTemplateAuthorKind | Unset = UNSET
+    author_id: None | str | Unset = UNSET
     created_by: None | str | Unset = UNSET
     deleted_at: None | str | Unset = UNSET
     sync_version: int | Unset = UNSET
@@ -81,13 +85,21 @@ class ProjectTemplate:
         else:
             body = self.body.to_dict()
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         is_deleted = self.is_deleted
 
-        customer_id = self.customer_id
+        author_kind: str | Unset = UNSET
+        if not isinstance(self.author_kind, Unset):
+            author_kind = self.author_kind.value
+
+        author_id: None | str | Unset
+        if isinstance(self.author_id, Unset):
+            author_id = UNSET
+        else:
+            author_id = self.author_id
 
         created_by: None | str | Unset
         if isinstance(self.created_by, Unset):
@@ -108,26 +120,28 @@ class ProjectTemplate:
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
-                "ownerKind": owner_kind,
-                "ownerId": owner_id,
+                "ecosystem_id": ecosystem_id,
+                "owner_kind": owner_kind,
+                "owner_id": owner_id,
                 "kind": kind,
                 "name": name,
                 "description": description,
                 "body": body,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
-                "isDeleted": is_deleted,
+                "created": created,
+                "updated": updated,
+                "is_deleted": is_deleted,
             }
         )
-        if customer_id is not UNSET:
-            field_dict["customerId"] = customer_id
+        if author_kind is not UNSET:
+            field_dict["author_kind"] = author_kind
+        if author_id is not UNSET:
+            field_dict["author_id"] = author_id
         if created_by is not UNSET:
-            field_dict["createdBy"] = created_by
+            field_dict["created_by"] = created_by
         if deleted_at is not UNSET:
-            field_dict["deletedAt"] = deleted_at
+            field_dict["deleted_at"] = deleted_at
         if sync_version is not UNSET:
-            field_dict["syncVersion"] = sync_version
+            field_dict["sync_version"] = sync_version
 
         return field_dict
 
@@ -139,11 +153,11 @@ class ProjectTemplate:
         d = dict(src_dict)
         id = d.pop("id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        owner_kind = ProjectTemplateOwnerKind(d.pop("ownerKind"))
+        owner_kind = ProjectTemplateOwnerKind(d.pop("owner_kind"))
 
-        owner_id = d.pop("ownerId")
+        owner_id = d.pop("owner_id")
 
         kind = ProjectTemplateKind(d.pop("kind"))
 
@@ -168,13 +182,27 @@ class ProjectTemplate:
 
         body = _parse_body(d.pop("body"))
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
-        is_deleted = d.pop("isDeleted")
+        is_deleted = d.pop("is_deleted")
 
-        customer_id = d.pop("customerId", UNSET)
+        _author_kind = d.pop("author_kind", UNSET)
+        author_kind: ProjectTemplateAuthorKind | Unset
+        if isinstance(_author_kind, Unset):
+            author_kind = UNSET
+        else:
+            author_kind = ProjectTemplateAuthorKind(_author_kind)
+
+        def _parse_author_id(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        author_id = _parse_author_id(d.pop("author_id", UNSET))
 
         def _parse_created_by(data: object) -> None | str | Unset:
             if data is None:
@@ -183,7 +211,7 @@ class ProjectTemplate:
                 return data
             return cast(None | str | Unset, data)
 
-        created_by = _parse_created_by(d.pop("createdBy", UNSET))
+        created_by = _parse_created_by(d.pop("created_by", UNSET))
 
         def _parse_deleted_at(data: object) -> None | str | Unset:
             if data is None:
@@ -192,9 +220,9 @@ class ProjectTemplate:
                 return data
             return cast(None | str | Unset, data)
 
-        deleted_at = _parse_deleted_at(d.pop("deletedAt", UNSET))
+        deleted_at = _parse_deleted_at(d.pop("deleted_at", UNSET))
 
-        sync_version = d.pop("syncVersion", UNSET)
+        sync_version = d.pop("sync_version", UNSET)
 
         project_template = cls(
             id=id,
@@ -205,10 +233,11 @@ class ProjectTemplate:
             name=name,
             description=description,
             body=body,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
             is_deleted=is_deleted,
-            customer_id=customer_id,
+            author_kind=author_kind,
+            author_id=author_id,
             created_by=created_by,
             deleted_at=deleted_at,
             sync_version=sync_version,

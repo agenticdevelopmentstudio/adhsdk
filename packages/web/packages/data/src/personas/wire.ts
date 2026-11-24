@@ -1,10 +1,12 @@
-// Wire types for the personas domain — package-local mirrors of the OpenAPI-generated
-// request/response shapes the hub previously imported as `RequestBody`/`SuccessBody` from
-// `@adh-sdk/adh-api-types`. The persona GRANT surfaces (tools/user-tools/may-act) now live under
-// `/access/personas/*`, approvals under `/processing/personas/*`, token-mint under
-// `/persona/personas/*` (moved out of the old `/registry/personas/*` base by the schema reorg).
-// These carry full backend-schema fidelity (not just the fields today's call sites touch) so the
-// toolkit stays decoupled from the hub's generated types without narrowing what a caller can rely on.
+// Types for the personas domain. Two layers live here:
+//
+//   * the DOMAIN types (`MeRow`, `PersonaRow`, `ServiceRow`, ... — camelCase, ISO timestamps) that
+//     components consume and that stay stable across wire changes;
+//   * the /v1 WIRE types (`V1*`, snake_case, `created`/`updated` in unix seconds) at the bottom of
+//     the file, which only `./mappers` reads. The persona GRANT surfaces live under
+//     `/v1/personas/{id}/{tools,actors,user_tools}`, approvals under `/v1/processing/persona_approvals`.
+// The domain types carry full backend-schema fidelity (not just the fields today's call sites touch)
+// so the toolkit stays decoupled from the hub's generated types.
 
 /** A persona-action approval row (the human-in-the-loop decision queue). */
 export interface ApprovalRow {
@@ -391,4 +393,305 @@ export interface SpecialInterestRow {
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+/* ── /v1 wire shapes (snake_case; read only by ./mappers) ───────────────────── */
+
+/** `connection_spec` on the wire: declared keys are snake_case, the two string maps
+ *  (`default_query`, `extra_headers`) pass through unchanged. */
+export interface V1ConnectionSpec {
+  spec_version: 1;
+  url_vars?: ConnectionSpecUrlVar[];
+  header_vars?: ConnectionSpecHeaderVar[];
+  auth?: {
+    type: "bearer" | "header" | "sigv4" | "oauth2";
+    header?: string;
+    scheme?: "bearer" | "raw";
+    region?: string;
+    token_url?: string;
+  };
+  default_query?: Record<string, string>;
+  extra_headers?: Record<string, string>;
+}
+
+/** `GET /v1/account` (and the `POST /v1/account` echo). */
+export interface V1Account {
+  object?: "account";
+  id: string;
+  email: string;
+  name: string;
+  avatar_url: string;
+  slug: string | null;
+  public_profile_enabled: boolean;
+  capabilities: string[];
+}
+
+/** `POST /v1/account` profile body. */
+export interface V1AccountPatchBody {
+  name?: string;
+  slug?: string;
+  avatar_url?: string;
+  public_profile_enabled?: boolean;
+}
+
+/** `GET /v1/handles/{handle}`. */
+export interface V1Handle {
+  object?: "handle";
+  available: boolean;
+  reason?: "format" | "taken";
+}
+
+export interface V1PublicOwner {
+  slug: string;
+  display_name: string | null;
+  avatar_url: string | null;
+}
+
+/** `GET /v1/users?handle=` — one public profile card. */
+export interface V1PublicUser {
+  object?: "user";
+  slug: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  created: number;
+  social_links: PublicSocialLinkRow[];
+  emails: string[];
+  phones: string[];
+  addresses: {
+    label: string;
+    line1: string;
+    line2: string;
+    city: string;
+    region: string;
+    postal_code: string;
+    country: string;
+  }[];
+  personas: {
+    slug: string;
+    name: string;
+    description: string | null;
+    visibility: "public" | "hub";
+    created: number;
+    owner: V1PublicOwner | null;
+  }[];
+}
+
+/** `GET /v1/personas?slug=` / `?owner=&slug=` — one public persona. */
+export interface V1PublicPersona {
+  object?: "persona";
+  slug: string;
+  name: string;
+  description: string | null;
+  model_prompt: string;
+  provider: string | null;
+  model: string;
+  avatar_url: string | null;
+  voice: string | null;
+  character: string | null;
+  examples: string | null;
+  visibility: "public" | "hub";
+  created: number;
+  owner: V1PublicOwner | null;
+  demo_enabled: boolean;
+  chat_status?: ChatStatusConfig | null;
+}
+
+/** `/v1/personas` row. `canned_chat` / `chat_status` are JSON columns: their inner keys
+ *  pass through the gateway unchanged (camelCase). */
+export interface V1Persona {
+  object?: "persona";
+  id: string;
+  user_id: string | null;
+  owner_kind: string;
+  owner_id: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  visibility: string;
+  model: string;
+  service_id: string | null;
+  app_id: string | null;
+  avatar_attachment_id: string | null;
+  model_prompt: string;
+  voice: string | null;
+  character: string | null;
+  examples: string | null;
+  canned_chat?: CannedChatConfig | null;
+  chat_status?: ChatStatusConfig | null;
+  created: number;
+  updated: number;
+  owned_ecosystem_id?: string | null;
+  corpus_ecosystem_id?: string | null;
+}
+
+/** `POST /v1/personas` / `POST /v1/personas/{id}` body. */
+export interface V1PersonaBody {
+  slug: string;
+  name: string;
+  description?: string | null;
+  visibility?: string;
+  model?: string | null;
+  service_id?: string | null;
+  avatar_attachment_id?: string | null;
+  model_prompt: string;
+  voice?: string | null;
+  character?: string | null;
+  examples?: string | null;
+  canned_chat?: CannedChatConfig | null;
+  chat_status?: ChatStatusConfig | null;
+}
+
+export interface V1TemplateModel {
+  id: string;
+  name: string;
+  description: string | null;
+  metadata: Record<string, unknown> | null;
+  source: "curated" | "synced";
+  last_synced_at: string | null;
+  created: number;
+}
+
+/** `GET /v1/provider_templates` row. */
+export interface V1ProviderTemplate {
+  object?: "provider_template";
+  id: string;
+  provider_kind: string;
+  name: string;
+  base_url: string;
+  documentation_url: string | null;
+  status_url: string | null;
+  connection_spec: V1ConnectionSpec | null;
+  available_via?: TemplateAvailableVia | null;
+  modalities?: string[] | null;
+  models: V1TemplateModel[];
+  created: number;
+  updated: number;
+}
+
+/** `/v1/ai_services` row (also what `connect` and `refresh_models` answer). */
+export interface V1AiService {
+  object?: "ai_service" | "refresh_model";
+  id: string;
+  template_id?: string | null;
+  provider_kind: string;
+  name: string;
+  base_url: string;
+  has_api_key: boolean;
+  connection_spec?: V1ConnectionSpec | null;
+  connect_status: string;
+  connect_error?: string | null;
+  last_connected_at?: string | null;
+  documentation_url?: string | null;
+  status_url?: string | null;
+  models: (string | Record<string, unknown>)[];
+  models_fetched_at?: string | null;
+}
+
+/** `POST /v1/ai_services` body. */
+export interface V1AiServiceCreateBody {
+  template_id?: string;
+  name: string;
+  provider_kind: string;
+  base_url: string;
+  api_key?: string;
+  connection_spec?: V1ConnectionSpec | null;
+}
+
+/** `POST /v1/ai_services/{id}` body. */
+export interface V1AiServicePatchBody {
+  name?: string;
+  base_url?: string;
+  api_key?: string;
+  connection_spec?: V1ConnectionSpec | null;
+}
+
+/** `/v1/special_interests` row. */
+export interface V1SpecialInterest {
+  object?: "special_interest";
+  id: string;
+  persona_id: string;
+  slug: string;
+  general: string;
+  topical: string | null;
+  specific: string | null;
+  stances: string | null;
+  position: number;
+  bucket_id: string | null;
+  bucket_type_id?: string | null;
+  is_deleted: boolean;
+  created: number;
+  updated: number;
+}
+
+/** `/v1/processing/persona_approvals` row. */
+export interface V1PersonaApproval {
+  object?: "processing.persona_approval";
+  id: string;
+  persona_id: string;
+  subject_kind: "self" | "user" | "team" | "org";
+  subject_id?: string | null;
+  subject_eco: string;
+  tool_name: string;
+  args: Record<string, unknown>;
+  status: "pending" | "approved" | "rejected";
+  requested_by?: string | null;
+  decided_by?: string | null;
+  decided_at?: string | null;
+  result?: Record<string, unknown> | null;
+  created: number;
+}
+
+/** `/v1/personas/{id}/tools` row. */
+export interface V1PersonaTool {
+  object?: "tool";
+  tool_name: string;
+  source: string | null;
+  display_name: string;
+  description: string;
+  read_only: boolean;
+  granted: boolean;
+  autonomous: boolean;
+}
+
+/** `POST /v1/personas/{id}/tools/{tool_name}` — the autonomy update's echo. */
+export interface V1PersonaToolGrant {
+  object?: "tool";
+  tool_name: string;
+  autonomous: boolean;
+  created: number;
+}
+
+/** `/v1/personas/{id}/user_tools` row. */
+export interface V1UserTool {
+  object?: "user_tool";
+  tool_name: string;
+  source: string | null;
+  display_name: string;
+  description: string;
+  read_only: boolean;
+  allowed: boolean;
+}
+
+/** `POST /v1/personas/{id}/user_tools` answer. */
+export interface V1UserToolsSet {
+  object?: "user_tool";
+  tools: V1UserTool[];
+}
+
+/** `/v1/personas/{id}/actors` answer. */
+export interface V1Actors {
+  object?: "actor";
+  kinds: ("self" | "user" | "team" | "org")[];
+}
+
+/** `POST /v1/personas/preview` answer. */
+export interface V1PersonaPreview {
+  object?: "persona";
+  text: string | null;
+  on_script: boolean;
+  sign_in_line: boolean;
+  budget_exhausted: boolean;
+  choices: { text: string; keywords: string[]; off_script: boolean }[];
+  diagnostics: { severity: "error" | "warning" | "info"; line: number | null; message: string }[];
+  tag_placement_hint: string;
 }

@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "01f6f7b6-4bc5-4f35-a46a-1e80fe470097",
     "title": "Board Staleness",
-    "domain": "adhsdk://cookbook/status/dashboard/logic/board-staleness",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -21,13 +20,13 @@
     "tags": [],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/status/dashboard/state/board"
+      "7610ef55-32c9-43b6-8a70-aaa247cc4899"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "ad52e471a1cc5e24",
+  "synced": "c079414bfc017b7b",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -46,7 +45,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

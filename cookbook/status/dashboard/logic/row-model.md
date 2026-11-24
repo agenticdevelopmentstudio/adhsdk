@@ -1,13 +1,12 @@
 ---
 id: a0ae2ae1-7d51-4639-8f3b-062dcf750b66
 title: "Status Row Model"
-domain: adhsdk://cookbook/status/dashboard/logic/row-model
 type: ingredient
-version: 1.2.0
+version: 2.0.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -17,11 +16,11 @@ platforms:
   - web
 tags: []
 depends-on:
-  - adhsdk://cookbook/status/dashboard/logic/board-types
-  - adhsdk://cookbook/status/dashboard/logic/format
-  - adhsdk://cookbook/status/dashboard/logic/deploy-status
-  - adhsdk://cookbook/status/dashboard/logic/colors
-  - adhsdk://cookbook/status/dashboard/logic/issue-sources
+  - 15c61cfc-543c-493d-b686-c605b773be83
+  - 564c6102-e100-41ad-9c92-14606a33c394
+  - 4b068644-9e3a-42bf-bce8-4f3068dea7e3
+  - 63f8a602-58f8-4fdc-9461-b959be427a4d
+  - 2d763e2e-ef33-4d49-957e-6b8ced23218e
 related: []
 references: []
 approved-by: ""
@@ -43,7 +42,7 @@ This logic provides:
 - **The row-text function** and **the rows-text function** — clipboard serialization, one tab-separated line per row (used by the activity panel view's copy button).
 - **The commit-URL function** — a GitHub commit URL or null.
 - **The state-label table** — the problem state to status-word table.
-- **The unconfirmed floor**, **the unconfirmed-window function** and **the deploy-unconfirmed function** — the client's only remaining freshness clock, applied to raw deploy records by the deploy list view and the deploy view logic, never to a row.
+- **No freshness clock**: this logic never judges how old a row is. The server states an unconfirmed phase as verb `"unknown"`, tone `"stale"`, and supplies each deploy's `unconfirmedAt` deadline (read by the deploy view logic).
 
 Every export is pure and synchronous. This logic performs no I/O, holds no state, and is covered by the implementation's test suite (see Platform Notes).
 
@@ -116,19 +115,14 @@ Every export is pure and synchronous. This logic performs no I/O, holds no state
 - **text-field-escaping**: Row text MUST be produced with the same number of tab-separated fields on every row, taking `name`, `detail`, `statusWord`, `environment` and the URLs as given. The serializer neither escapes nor strips tab or newline characters inside a field, so such a character adds a column or splits the row; callers rely on the server supplying tab-free values.
 - **rows-text**: The rows-text function MUST return each row's row-text joined by a single line feed, in input order, with no trailing line feed; an empty list MUST yield the empty string.
 
-### Deploy demotion clock
+### Unconfirmed phases
 
-- **unconfirmed-floor**: The unconfirmed floor MUST equal 600000 milliseconds (10 minutes).
-- **unconfirmed-window**: The unconfirmed-window function MUST return the larger of the unconfirmed floor and five times the probe interval, treating an absent interval as 0.
-- **dto-terminal-never-demoted**: The deploy-unconfirmed function MUST return `false` when the deploy's `status` is not in flight; only `"building"` and `"queued"` are in flight.
-- **dto-clock-source**: The deploy-unconfirmed function MUST measure from the deploy's `phaseConfirmedAt`, falling back to `createdAt` when `phaseConfirmedAt` is null or absent.
-- **dto-fail-closed**: The deploy-unconfirmed function MUST return `true` for an in-flight deploy whose clock string does not parse to a finite time.
-- **dto-threshold**: The deploy-unconfirmed function MUST return `true` for an in-flight deploy when the current time minus the confirmed time is strictly greater than the unconfirmed window, and `false` when it is less than or equal.
-- **row-never-clocked**: This logic MUST NOT apply a freshness clock to a row; an unconfirmed activity phase arrives already expired by the server (outside this logic) as verb `"unknown"`, tone `"stale"`.
+- **row-never-clocked**: This logic MUST NOT apply a freshness clock to a row: the builders and the display adapter render `statusWord` and `tone` as given, and `nowMs` is used for the time label alone. An unconfirmed activity phase arrives already expired by the server (outside this logic) as verb `"unknown"`, tone `"stale"`; it passes through the activity-to-row builder verbatim and the display adapter renders it in the muted stale color.
+- **no-deploy-demotion**: This logic MUST NOT export a function that judges a deploy record's freshness. The server supplies each deploy's `unconfirmedAt` deadline, and the deploy view logic (outside this logic) reads it.
 
 ### Module-wide
 
-- **pure-synchronous**: Every exported function MUST be pure and synchronous: it MUST NOT read a clock (time is passed in as `nowMs`), perform I/O or mutate its inputs.
+- **pure-synchronous**: Every exported function MUST be pure and synchronous: it MUST NOT read a clock (time is passed in as `nowMs`, used only for time labels), perform I/O or mutate its inputs.
 - **single-threaded**: This logic MUST run synchronously to completion; each call completes before another starts, so there is no ordering or locking contract.
 
 ## Appearance
@@ -173,12 +167,8 @@ Not applicable — this is a data model and adapter module, not a visual compone
 | row-model-024 | text-columns, text-time, text-env, text-source, text-commit-precedence, text-url | the row-text function applied to a row with `at` 18:00:00, current time 18:01:00, `environment: "production"`, `source: "cloudflare-pages"`, `name: "adh"`, `statusWord: "deployed"`, `sha: "abc1234"`, `message: "fix"`, `detail: "x"`, `liveUrl: null`, `sourceUrl: "https://src"` | `"1m"`, `"PROD"`, `"Cloudflare"`, `"adh"`, `"deployed"`, `"abc1234 fix"`, `"https://src"` joined by tabs |
 | row-model-025 | text-source, text-commit-precedence, text-url, text-env | the row-text function applied to a row with `source: "deploy"`, `environment: null`, `sha: null`, `message: null`, `detail: "HTTP 503"`, both URLs null | source column `"deploy"`, env column `""`, commit column `"HTTP 503"`, URL column `""`; seven columns (six tabs) |
 | row-model-026 | rows-text | the rows-text function called with an empty list; with a two-row list `[r1, r2]` | `""`; the row-text of `r1` plus `"\n"` plus the row-text of `r2` |
-| row-model-027 | unconfirmed-floor, unconfirmed-window | the unconfirmed-window function called with an absent interval; with `60000`; with `300000` | 600000; 600000; 1500000 (from the implementation's test suite) |
-| row-model-028 | dto-threshold | the deploy-unconfirmed function applied to a deploy with `status: "building"`, `phaseConfirmedAt` T, with the current time T + 599999; then T + 600001 | `false`; `true` (from the implementation's test suite) |
-| row-model-029 | dto-terminal-never-demoted | the deploy-unconfirmed function applied to a deploy with `status: "success"`, with the current time 30 days after `phaseConfirmedAt` | `false` (from the implementation's test suite) |
-| row-model-030 | dto-clock-source, dto-fail-closed | the deploy-unconfirmed function applied to a deploy with `status: "building"`, no `phaseConfirmedAt`, `createdAt` T, with the current time T + 600001; then with `createdAt: "nope"`, current time T | `true`; `true` (from the implementation's test suite) |
-| row-model-031 | unconfirmed-window, dto-threshold | the deploy-unconfirmed function applied to a deploy with `status: "building"`, `probeIntervalMs` 360000, with the current time T + 600001; then T + 1800001 | `false`; `true` (from the implementation's test suite) |
-| row-model-032 | dto-threshold | the deploy-unconfirmed function applied to a deploy with `status: "queued"`, with the current time exactly T + 600000 | `false` (strictly greater is required) |
+| row-model-027 | row-never-clocked, activity-verb-tone | the activity-to-row builder applied to an activity with `verb: "unknown"`, `tone: "stale"` | `statusWord` `"unknown"`, `tone` `"stale"` (verbatim) |
+| row-model-028 | row-never-clocked, props-tone-color, props-bold, props-verbatim-word | the display adapter applied to a row with `statusWord: "unknown"`, `tone: "stale"`, with the current time 30 days after `at` | `statusWord` `"unknown"`, `statusColor` `var(--color-apt-text-muted)`, `statusBold` `false` |
 | row-model-033 | text-field-escaping | the row-text function applied to a row with `detail: "a\tb"`, no `sha` or `message` | eight tab-separated fields; the open question on text-field-escaping decides the conformant output |
 | row-model-034 | pure-synchronous, single-threaded | call each exported function twice with the same arguments | identical results; inputs unmodified; no deferred (asynchronous) result returned |
 
@@ -190,9 +180,7 @@ Not applicable — this is a data model and adapter module, not a visual compone
 - **Unknown source**: A row's `source` that is not a known issue-source identifier (an activity row's `kind` fallback) MUST appear verbatim in the clipboard source column (row-model-025).
 - **Malformed `at`**: A row's `at` is documented as an ISO timestamp. An unparseable value makes the relative-time calculation produce a non-numeric duration and render `"NaNd"`; this MUST be treated as a caller precondition violation, not handled here.
 - **Future `at`**: A timestamp later than the current time gives a negative elapsed time and MUST render `"just now"`.
-- **Boundary of the demotion window**: Elapsed time exactly equal to the window MUST NOT demote (row-model-032); one millisecond more MUST (row-model-028).
-- **Missing probe interval**: An absent `probeIntervalMs` (older backend) MUST use the 10-minute floor; an interval of 120000 ms or less also yields the floor because five times it is at most 600000.
-- **Unparseable deploy clock**: An in-flight deploy whose `phaseConfirmedAt` (or fallback `createdAt`) does not parse MUST demote — fail closed (row-model-030). A terminal deploy with an unparseable clock MUST NOT demote, since the in-flight test runs first.
+- **Unconfirmed activity phase**: A row with verb `"unknown"` and tone `"stale"` MUST keep that word and tone however old `at` is, and render in the muted stale color, not bold (row-model-027, row-model-028).
 - **Tabs and newlines in clipboard fields**: Not escaped; see the open question on text-field-escaping (row-model-033).
 - **Commit subject over 200 characters**: `message` MUST be the first 200 characters with no ellipsis, while `commitBody` and the search-text function keep the full text.
 - **Concurrent access**: Not applicable — every export is pure and synchronous, so calls cannot interleave.
@@ -200,15 +188,11 @@ Not applicable — this is a data model and adapter module, not a visual compone
 - **Offline or disconnected state**: Not applicable — no network is involved; freshness of the server data is judged elsewhere, by other logic outside this module.
 
 ## Configuration
-
 | Option | Type | Default | Description |
 |--------|------|---------|--------------|
-| `nowMs` (used by the display adapter, the row-text function, the rows-text function, and the deploy-unconfirmed function) | number | none (required) | Epoch milliseconds used for relative time labels and the demotion clock; injected so the functions stay pure. |
-| `probeIntervalMs` (used by the unconfirmed-window function and the deploy-unconfirmed function) | number or absent | absent, treated as 0 | The backend probe cadence (from the board's `probeIntervalMs`); the window is five times it, floored at 10 minutes. |
-| the unconfirmed floor | constant number | `600000` | Floor of the unconfirmed window. |
+| `nowMs` (used by the display adapter, the row-text function and the rows-text function) | number | none (required) | Epoch milliseconds used for relative time labels only; injected so the functions stay pure. |
 
 There are no environment variables, settings keys or injected services.
-
 ## Deep Linking
 
 Not applicable: this logic defines no routes; it only copies provider and GitHub URLs (`sourceUrl`, `liveUrl`, `commitUrl`) onto rows.
@@ -251,17 +235,17 @@ Not applicable: this logic contains no logging calls.
 
 ## Platform Notes
 
-- **SwiftUI**: Model `Row` as a `struct Row: Sendable, Hashable, Identifiable` (id = `key`) and `RowTone` as a `String`-backed `enum`; builders become `init(problem:)` and `init(activity:)`. Map tones to `Color` assets rather than CSS variables, and bold via `.fontWeight(.bold)` when tone is `.bad`. Use `RelativeDateTimeFormatter` only if you accept its different wording; to match `timeAgo` port the four thresholds by hand. Parse ISO dates with `ISO8601DateFormatter` (enable fractional seconds) and treat a nil parse as the fail-closed path. Clipboard: `UIPasteboard.general.string` or `NSPasteboard`.
-- **Compose**: A Kotlin `data class Row` and `enum class RowTone`; builders as extension functions `Problem.toRow()`. Tone colors map to `MaterialTheme` or app color tokens. `Instant.parse` throws on bad input, unlike `Date.parse`'s `NaN`, so catch `DateTimeParseException` and return `true` to keep dto-fail-closed. Clipboard via `ClipboardManager.setText(AnnotatedString(...))`.
-- **React/Web**: The source is `packages/web/packages/status-web/src/lib/row-model.ts`, tested by `row-model.test.ts` (Vitest). `rowToStatusRowProps` feeds `components/StatusRow.tsx`; `ActivityPanel.tsx` uses `rowSearchText` and `rowsToText` (through `CopyButton`); `DeployList.tsx` and `deploy-view.ts` call `deployDtoUnconfirmed`. Tone colors are CSS custom properties (`--color-apt-*`) resolved by the theme. `STATE_LABEL` is a plain JavaScript object; a state spelled like an inherited object member (for example `"constructor"`) would resolve to that inherited value rather than falling back — the server's documented state vocabulary contains no such names, so this is a latent risk rather than an observed bug. The single-threaded guarantee noted under Concurrent access comes from the JavaScript runtime. Time labels, environment badges and source labels are supplied by `time-ago.ts`, `colors.ts` and `issue-sources.ts` respectively. The freshness-elsewhere note under Offline/disconnected refers to `board-staleness.ts` and `snapshot-staleness.ts`.
+- **SwiftUI**: Model `Row` as a `struct Row: Sendable, Hashable, Identifiable` (id = `key`) and `RowTone` as a `String`-backed `enum`; builders become `init(problem:)` and `init(activity:)`. Map tones to `Color` assets rather than CSS variables, and bold via `.fontWeight(.bold)` when tone is `.bad`. Use `RelativeDateTimeFormatter` only if you accept its different wording; to match `timeAgo` port the four thresholds by hand. Parse ISO dates with `ISO8601DateFormatter` (enable fractional seconds). Clipboard: `UIPasteboard.general.string` or `NSPasteboard`.
+- **Compose**: A Kotlin `data class Row` and `enum class RowTone`; builders as extension functions `Problem.toRow()`. Tone colors map to `MaterialTheme` or app color tokens. Clipboard via `ClipboardManager.setText(AnnotatedString(...))`.
+- **React/Web**: The source is `packages/web/packages/status-web/src/lib/row-model.ts`, tested by `row-model.test.ts` (Vitest). `rowToStatusRowProps` feeds `components/StatusRow.tsx`; `ActivityPanel.tsx` uses `rowSearchText` and `rowsToText` (through `CopyButton`); deploy freshness is judged in `deploy-view.ts` from the server's `unconfirmedAt`, not here. Tone colors are CSS custom properties (`--color-apt-*`) resolved by the theme. `STATE_LABEL` is a plain JavaScript object; a state spelled like an inherited object member (for example `"constructor"`) would resolve to that inherited value rather than falling back — the server's documented state vocabulary contains no such names, so this is a latent risk rather than an observed bug. The single-threaded guarantee noted under Concurrent access comes from the JavaScript runtime. Time labels, environment badges and source labels are supplied by `time-ago.ts`, `colors.ts` and `issue-sources.ts` respectively. The freshness-elsewhere note under Offline/disconnected refers to `board-staleness.ts` and `snapshot-staleness.ts`.
 - **AppKit / UIKit**: Same Swift model as SwiftUI; tone colors become `NSColor`/`UIColor` named assets, and the adapter output drives an `NSTableCellView` or `UICollectionViewListCell` content configuration. Clipboard via `NSPasteboard.general.setString(_:forType: .string)` or `UIPasteboard.general.string`.
-- **WinUI 3**: Put `Row` in a shared .NET class library as a `sealed record Row` with a `RowTone` enum, and `ProblemToRow`/`ActivityToRow` as static factory methods over DTOs deserialized with `System.Text.Json` (use `JsonStringEnumConverter` with camel-case naming for `tone`). The `StatusRowProps` adapter becomes a view-model type implementing `INotifyPropertyChanged` (or CommunityToolkit.Mvvm `ObservableObject`), exposing `StatusBrush` as a `SolidColorBrush` looked up from `Application.Current.Resources` theme resources (for example `SystemFillColorSuccessBrush`, `SystemFillColorCriticalBrush`, `SystemFillColorCautionBrush`, `TextFillColorSecondaryBrush`) and `StatusWeight` as `FontWeights.Bold` or `FontWeights.Normal`; bind a `ListView` to an `ObservableCollection<RowViewModel>`. Parse timestamps with `DateTimeOffset.TryParse(..., CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var t)` and return `true` on failure to keep dto-fail-closed. `rowsToText` maps to `string.Join("\n", rows.Select(RowToText))`; write it with `DataPackage.SetText` and `Clipboard.SetContent`. Pass `nowMs` as a `DateTimeOffset` or inject `TimeProvider` so the functions stay testable. Keep `STATE_LABEL` in a `.resw` file if localizing, which the source does not do.
+- **WinUI 3**: Put `Row` in a shared .NET class library as a `sealed record Row` with a `RowTone` enum, and `ProblemToRow`/`ActivityToRow` as static factory methods over DTOs deserialized with `System.Text.Json` (use `JsonStringEnumConverter` with camel-case naming for `tone`). The `StatusRowProps` adapter becomes a view-model type implementing `INotifyPropertyChanged` (or CommunityToolkit.Mvvm `ObservableObject`), exposing `StatusBrush` as a `SolidColorBrush` looked up from `Application.Current.Resources` theme resources (for example `SystemFillColorSuccessBrush`, `SystemFillColorCriticalBrush`, `SystemFillColorCautionBrush`, `TextFillColorSecondaryBrush`) and `StatusWeight` as `FontWeights.Bold` or `FontWeights.Normal`; bind a `ListView` to an `ObservableCollection<RowViewModel>`. `rowsToText` maps to `string.Join("\n", rows.Select(RowToText))`; write it with `DataPackage.SetText` and `Clipboard.SetContent`. Pass `nowMs` as a `DateTimeOffset` or inject `TimeProvider` so the functions stay testable. Keep `STATE_LABEL` in a `.resw` file if localizing, which the source does not do.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-web/src/lib/row-model.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-web/src/lib/row-model.ts` | confirmed (2.0.0) |
 
 ## Design Decisions
 
@@ -273,8 +257,8 @@ Not applicable: this logic contains no logging calls.
 **Rationale**: "The server has already decided what is a problem, what happened, and when — these builders only spell the row." A removed client-side `displayStatus` step that demoted aged rows to "last seen building" was unreachable and could only disagree with the server's own expiry (`rowToStatusRowProps` doc comment and the C3 regression tests).
 **Approved**: pending
 
-**Decision**: The only client freshness clock judges raw `DeploymentDTO`s, scaled to five times the probe interval with a 10-minute floor, and fails closed.
-**Rationale**: The panels that render DTOs directly are "the last place the client still holds a phase the server has not already ruled on"; scaling mirrors `snapshotStaleMs` so a slower poller does not false-demote, and an unreadable date must not assert live progress.
+**Decision**: This logic holds no freshness clock; the server decides when a phase is unconfirmed.
+**Rationale**: A client clock in `row-model.ts` (an unconfirmed-window function and a deploy-unconfirmed function, five times the probe interval with a 10-minute floor, failing closed) was removed. The server now supplies each deploy's `unconfirmedAt` deadline (read in `deploy-view.ts`) and states an unconfirmed activity phase as verb `"unknown"`, tone `"stale"`, so the client has no window of its own to disagree with the server's.
 **Approved**: pending
 
 **Decision**: A commit sha is shown only when it links to GitHub.
@@ -301,19 +285,20 @@ Not applicable: this logic contains no logging calls.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | best-practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | best-practices |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | reliability |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | partial | reliability |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | best-practices |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | reliability |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | reliability |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | internationalization |
 
-The module separates row shaping from rendering (`StatusRow`) and from the server's judgments, so separation-of-concerns passes. Unit-test-coverage is partial: `row-model.test.ts` covers both builders, the adapter, search text, `commitUrlOf` and the demotion clock, but has no test for `rowToText` or `rowsToText`. Explicit-error-handling passes: nothing is caught or swallowed, and the one failure path (an unparseable deploy clock) is an explicit fail-closed branch. Graceful-degradation passes because the demotion clock degrades an unconfirmed in-flight deploy to "unknown" even when server healers are down. Data-integrity is partial because clipboard serialization promises aligned columns but does not escape tabs or newlines inside fields. No-hardcoded-strings fails because `STATE_LABEL` holds English status words inline.
+The module separates row shaping from rendering (`StatusRow`) and from the server's judgments, so separation-of-concerns passes. Unit-test-coverage is partial: `row-model.test.ts` and `row-model.vectors.test.ts` cover vectors row-model-001 to 028 and 033 to 034 (both builders, the adapter, search text, `commitUrlOf`, `rowToText`, `rowsToText`). Explicit-error-handling passes: nothing is caught or swallowed, and no function throws for well-formed input. Graceful-degradation passes because the module renders the server's already-expired "unknown" phases as given, so it needs no clock of its own to degrade correctly. Data-integrity is partial because clipboard serialization promises aligned columns but does not escape tabs or newlines inside fields. No-hardcoded-strings fails because `STATE_LABEL` holds English status words inline.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 2.0.0 | 2026-11-14 | Mike Fullerton | Match recipe to source: drop removed unconfirmed-window and deploy-unconfirmed clock |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolved text-field-escaping marker as current behavior plus pending decision |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to status/dashboard/logic/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

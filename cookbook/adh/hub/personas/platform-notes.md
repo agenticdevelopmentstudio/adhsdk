@@ -3,7 +3,7 @@
   final class` conforming to `HTDVDataSource` — the navigation data source contract described
   neutrally above resolves here to `rootLevel()`/`child(for:)` returning `.level`/`.detail`/
   `.empty` cases, driving `FormSpec`/`FormSheet`/`FormViewController` from `AgenticDeveloperHubSDKHTDV`
-  (see `adhsdk://cookbook/ui/navigation/htdv`); shared Hub support types (`HubError`,
+  (see [adhsdk.ingredient.ui.navigation.htdv](cookbook:faa2c3f3-1ff7-45fb-b6da-efed3cc1d451)); shared Hub support types (`HubError`,
   `HubText`, `RailPath`, `Slug`, `JSONValue`, `FormDetails`) are reused rather than reimplemented
   per feature. `PersonasDataSource` is `Sendable` and exposes `list()`, `get(id:)`, `create(_:)`,
   `update(id:_:)`, `delete(id:)`, and `listServices()`, all `async throws`; the app repo

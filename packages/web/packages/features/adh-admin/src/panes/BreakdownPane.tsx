@@ -104,7 +104,7 @@ export function BreakdownPane() {
       {data && (
         <p className="mt-2 px-2 text-sm text-apt-text-muted">
           Estimated total, an estimate: {ESTIMATE_HINT}. Fixed hosting over this range:{" "}
-          {formatMicros(data.fixedMicros)}.
+          {formatMicros(data.fixed_micros)}.
         </p>
       )}
 

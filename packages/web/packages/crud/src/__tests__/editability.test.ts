@@ -15,8 +15,8 @@ const meta: CrudTableMeta = {
   key: 'demo/widgets',
   schema: 'demo',
   table: 'widgets',
-  basePath: '/demo/widgets',
-  itemPath: '/demo/widgets/{id}',
+  basePath: '/v1/demo/widgets',
+  itemPath: '/v1/demo/widgets/{id}',
   pkParams: ['id'],
   exposure: 'owner',
   columns: [],
@@ -30,8 +30,8 @@ describe('isRelationalColumn', () => {
     expect(isRelationalColumn(meta, col('id'))).toBe(true)
     expect(isRelationalColumn(meta, col('rdid'))).toBe(true)
   })
-  it('flags id-reference and rdid suffixes (camel + snake)', () => {
-    for (const name of ['ownerId', 'owner_id', 'customerId', 'userId', 'personaRdid', 'src_rdid']) {
+  it('flags id-reference and rdid suffixes (snake_case, as /v1 serves them)', () => {
+    for (const name of ['owner_id', 'customer_id', 'user_id', 'persona_rdid', 'src_rdid']) {
       expect(isRelationalColumn(meta, col(name)), name).toBe(true)
     }
   })
@@ -46,29 +46,29 @@ describe('isColumnEditable', () => {
   it('locks relational columns on edit but allows them on create (client-supplied key/FK)', () => {
     // A required client-supplied key must be settable when inserting the row, and
     // frozen once it exists — otherwise junction / client-keyed tables can't be created.
-    expect(isColumnEditable(meta, col('ownerId'), 'edit')).toBe(false)
-    expect(isColumnEditable(meta, col('ownerId', { required: true }), 'create')).toBe(true)
+    expect(isColumnEditable(meta, col('owner_id'), 'edit')).toBe(false)
+    expect(isColumnEditable(meta, col('owner_id', { required: true }), 'create')).toBe(true)
     expect(isColumnEditable({ ...meta, pkParams: ['code'] }, col('code'), 'create')).toBe(true)
     expect(isColumnEditable({ ...meta, pkParams: ['code'] }, col('code'), 'edit')).toBe(false)
   })
   it('never edits a relational column, even an override that says true', () => {
     const m: CrudTableMeta = { ...meta, key: 'demo/forced' }
-    EDITABLE_OVERRIDES['demo/forced'] = { ownerId: true }
+    EDITABLE_OVERRIDES['demo/forced'] = { owner_id: true }
     try {
       // The override cannot govern a relational key — it stays create-only.
-      expect(isColumnEditable(m, col('ownerId'), 'edit')).toBe(false)
+      expect(isColumnEditable(m, col('owner_id'), 'edit')).toBe(false)
     } finally {
       delete EDITABLE_OVERRIDES['demo/forced']
     }
   })
   it('locks server-managed columns in every mode, even with an override', () => {
-    expect(isColumnEditable(meta, col('createdAt', { serverManaged: true }), 'edit')).toBe(false)
+    expect(isColumnEditable(meta, col('created', { serverManaged: true }), 'edit')).toBe(false)
     const m: CrudTableMeta = { ...meta, key: 'demo/sm' }
-    EDITABLE_OVERRIDES['demo/sm'] = { createdAt: true }
+    EDITABLE_OVERRIDES['demo/sm'] = { created: true }
     try {
       // A server-managed column is off-limits (it's also hidden) — the override can't lift it.
-      expect(isColumnEditable(m, col('createdAt', { serverManaged: true }), 'edit')).toBe(false)
-      expect(isColumnEditable(m, col('createdAt', { serverManaged: true }), 'create')).toBe(false)
+      expect(isColumnEditable(m, col('created', { serverManaged: true }), 'edit')).toBe(false)
+      expect(isColumnEditable(m, col('created', { serverManaged: true }), 'create')).toBe(false)
     } finally {
       delete EDITABLE_OVERRIDES['demo/sm']
     }

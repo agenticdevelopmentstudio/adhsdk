@@ -74,9 +74,9 @@ class GameInstance:
         field_dict.update(
             {
                 "id": id,
-                "definitionId": definition_id,
-                "locationType": location_type,
-                "locationId": location_id,
+                "definition_id": definition_id,
+                "location_type": location_type,
+                "location_id": location_id,
                 "quantity": quantity,
                 "depth": depth,
             }
@@ -95,11 +95,11 @@ class GameInstance:
         d = dict(src_dict)
         id = d.pop("id")
 
-        definition_id = d.pop("definitionId")
+        definition_id = d.pop("definition_id")
 
-        location_type = GameInstanceLocationType(d.pop("locationType"))
+        location_type = GameInstanceLocationType(d.pop("location_type"))
 
-        location_id = d.pop("locationId")
+        location_id = d.pop("location_id")
 
         quantity = d.pop("quantity")
 

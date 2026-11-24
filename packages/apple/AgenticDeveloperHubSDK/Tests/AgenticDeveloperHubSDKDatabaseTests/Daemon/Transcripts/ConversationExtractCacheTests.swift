@@ -3,38 +3,37 @@ import XCTest
 
 final class ConversationExtractCacheTests: XCTestCase {
 
-    private func userLine(_ text: String) -> String {
-        #"{"type":"user","message":{"role":"user","content":"\#(text)"}}"#
+    private func lines(_ cache: ConversationExtractCache, _ id: Int64, _ text: String) -> [ConversationExtractor.Line] {
+        cache.lines(messageId: id, role: "user", text: text, attrsJSON: "{}")
     }
 
     func testExtractCacheReturnsWhatTheExtractorReturns() {
         let cache = ConversationExtractCache()
-        let raw = userLine("hello there")
 
-        XCTAssertEqual(cache.lines(lineId: 1, rawJSON: raw), ConversationExtractor.extract(rawJSON: raw))
-        XCTAssertEqual(cache.lines(lineId: 1, rawJSON: raw).first?.text, "hello there")
-        XCTAssertEqual(cache.lines(lineId: 2, rawJSON: "{not json"), [])
+        XCTAssertEqual(lines(cache, 1, "hello there"),
+                       ConversationExtractor.extract(role: "user", text: "hello there", attrsJSON: "{}"))
+        XCTAssertEqual(lines(cache, 1, "hello there").first?.text, "hello there")
+        XCTAssertEqual(cache.lines(messageId: 2, role: "assistant", text: "", attrsJSON: "{not json"), [])
     }
 
-    func testExtractCacheNeverServesAReusedIdAnotherLinesText() {
+    func testExtractCacheNeverServesAReusedIdAnotherMessagesText() {
         let cache = ConversationExtractCache()
-        _ = cache.lines(lineId: 7, rawJSON: userLine("first"))
+        _ = lines(cache, 7, "first")
 
-        let reused = cache.lines(lineId: 7, rawJSON: userLine("a different line"))
+        let reused = lines(cache, 7, "a different line")
 
         XCTAssertEqual(reused.first?.text, "a different line")
     }
 
     func testExtractCacheStaysBoundedAndKeepsWhatIsStillRead() {
         let cache = ConversationExtractCache(capacity: 4)
-        let hot = userLine("hot")
-        _ = cache.lines(lineId: 0, rawJSON: hot)
+        _ = lines(cache, 0, "hot")
         for id in 1...20 {
-            _ = cache.lines(lineId: id, rawJSON: userLine("line \(id)"))
-            _ = cache.lines(lineId: 0, rawJSON: hot)   // a poll keeps reading it
+            _ = lines(cache, Int64(id), "line \(id)")
+            _ = lines(cache, 0, "hot")   // a poll keeps reading it
         }
 
         XCTAssertLessThanOrEqual(cache.count, 4, "never more than `capacity`")
-        XCTAssertEqual(cache.lines(lineId: 0, rawJSON: hot).first?.text, "hot")
+        XCTAssertEqual(lines(cache, 0, "hot").first?.text, "hot")
     }
 }

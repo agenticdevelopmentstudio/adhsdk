@@ -57,13 +57,13 @@ class BillingEvent:
         field_dict.update(
             {
                 "id": id,
-                "stripeEventId": stripe_event_id,
+                "stripe_event_id": stripe_event_id,
                 "type": type_,
-                "receivedAt": received_at,
+                "received_at": received_at,
             }
         )
         if processed_at is not UNSET:
-            field_dict["processedAt"] = processed_at
+            field_dict["processed_at"] = processed_at
         if error is not UNSET:
             field_dict["error"] = error
 
@@ -74,11 +74,11 @@ class BillingEvent:
         d = dict(src_dict)
         id = d.pop("id")
 
-        stripe_event_id = d.pop("stripeEventId")
+        stripe_event_id = d.pop("stripe_event_id")
 
         type_ = d.pop("type")
 
-        received_at = d.pop("receivedAt")
+        received_at = d.pop("received_at")
 
         def _parse_processed_at(data: object) -> None | str | Unset:
             if data is None:
@@ -87,7 +87,7 @@ class BillingEvent:
                 return data
             return cast(None | str | Unset, data)
 
-        processed_at = _parse_processed_at(d.pop("processedAt", UNSET))
+        processed_at = _parse_processed_at(d.pop("processed_at", UNSET))
 
         def _parse_error(data: object) -> None | str | Unset:
             if data is None:

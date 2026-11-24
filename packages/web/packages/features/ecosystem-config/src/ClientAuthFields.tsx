@@ -51,21 +51,27 @@ function SettingRow({
 }
 
 /**
- * The sign-in POLICY controls: sign-in, email + password, sign-up mode, and a switch per OAuth
- * provider. The ecosystem's Settings pane draws these; the policy is the ecosystem's alone.
- * Controlled; `idPrefix` keeps two sets on one page from sharing element ids.
+ * The sign-in POLICY controls: sign-in, email + password, who may sign in, sign-up mode, and a
+ * switch per OAuth provider. The ecosystem's Settings pane draws these; the policy is the
+ * ecosystem's alone. Controlled; `idPrefix` keeps two sets on one page from sharing element ids.
+ *
+ * The allowed-email editor keeps its own rows (see UrlRowsEditor). `generation` is part of its key,
+ * so a Cancel or a save that re-seeds the draft also resets the rows.
  */
 export function ClientAuthPolicyFields({
   policy,
   providers,
   onChange,
   idPrefix,
+  generation = 0,
 }: {
   policy: ClientAuthPolicy;
   providers: readonly AuthProviderChoice[];
   onChange: (patch: Partial<ClientAuthPolicy>) => void;
   idPrefix: string;
+  generation?: number;
 }) {
+  const listed = policy.loginAllowedEmails;
   const onCount = providers.filter((p) => providerOn(policy, p.slug)).length;
   return (
     <>
@@ -94,6 +100,41 @@ export function ClientAuthPolicyFields({
                 onCheckedChange={(passwordEnabled) => onChange({ passwordEnabled })}
               />
             </SettingRow>
+          </CardContent>
+        </Card>
+      </DetailSection>
+
+      <DetailSection title="Who can sign in">
+        <Card>
+          <CardContent className="flex flex-col gap-5">
+            <SettingRow
+              id={`${idPrefix}-allow-list`}
+              label="Only listed people"
+              help={
+                listed === null
+                  ? "Everyone can sign in."
+                  : "Only the people listed here can sign in. An empty list lets no one in."
+              }
+            >
+              <Switch
+                id={`${idPrefix}-allow-list`}
+                checked={listed !== null}
+                // On starts with one blank row to type into; a blank row saves as nobody.
+                onCheckedChange={(on) => onChange({ loginAllowedEmails: on ? [""] : null })}
+              />
+            </SettingRow>
+            {listed !== null && (
+              <UrlRowsEditor
+                key={`allow-list-${generation}`}
+                label="People"
+                helpText="Email addresses. A person matches when they sign in with a provider that has verified this address, or have verified it on their account. Someone you invite who is not listed still joins, but can't sign in until you add them."
+                placeholder="name@example.com"
+                addLabel="Add person"
+                removeLabel="Remove person"
+                values={listed}
+                onChange={(loginAllowedEmails) => onChange({ loginAllowedEmails })}
+              />
+            )}
           </CardContent>
         </Card>
       </DetailSection>

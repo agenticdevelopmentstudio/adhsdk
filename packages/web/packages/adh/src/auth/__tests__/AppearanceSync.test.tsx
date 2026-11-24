@@ -86,17 +86,17 @@ describe('AppearanceSync — whose theme is it?', () => {
   it('signed IN: the saved pref beats the system setting', async () => {
     systemPrefersDark(true) // OS says dark …
     auth = { isAuthenticated: true, isLoading: false, user: { id: 'u1' } }
-    authedJson.mockResolvedValue({ prefs: { colorMode: 'light' } }) // … the user says light
+    authedJson.mockResolvedValue({ object: 'account', appearance: { prefs: { color_mode: 'light' } } }) // … the user says light
     await renderSync()
     await waitFor(() => expect(isDark()).toBe(false))
-    expect(authedJson).toHaveBeenCalledWith('/api/me/appearance')
+    expect(authedJson).toHaveBeenCalledWith('/api/v1/account?include[]=appearance')
     expect(html().dataset.colorMode).toBe('light')
   })
 
   it('signed IN with no saved pref: back to the system setting', async () => {
     systemPrefersDark(true)
     auth = { isAuthenticated: true, isLoading: false, user: { id: 'u1' } }
-    authedJson.mockResolvedValue({ prefs: {} }) // a fresh account
+    authedJson.mockResolvedValue({ object: 'account', appearance: { prefs: {} } }) // a fresh account
     await renderSync()
     await waitFor(() => expect(html().dataset.colorMode).toBe('auto'))
     expect(isDark()).toBe(true)

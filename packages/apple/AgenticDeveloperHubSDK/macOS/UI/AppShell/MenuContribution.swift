@@ -16,8 +16,19 @@ public struct MenuContribution {
         case app
         /// File menu — typically New / Open / Close / Save.
         case file
+        /// File menu's "New" section — the commands that open a new window of
+        /// some kind (web browser, terminal, File Browser). Kept apart from
+        /// `.file` so the app can put them together under its own "New" item.
+        case fileNew
+        /// Projects menu, after View — the project commands (open, scan,
+        /// project settings, adding a panel to the key project window).
+        case projects
         /// View menu — typically Toggle Sidebar / Enter Full Screen.
         case view
+        /// Browser menu, after View — the commands for the browser pane in
+        /// the key window (Reload, Stop, Back, Forward) and the browser's own
+        /// windows and toolbars.
+        case browser
         /// Notes menu, between View and Window — the commands that open the
         /// notes windows.
         case notes
@@ -26,6 +37,9 @@ public struct MenuContribution {
         /// windows (chat, partner, sessions, logs). Named for the menu's title.
         case ai
         // swiftlint:enable identifier_name
+        /// Git menu, after AI and before Window — the git window's commands
+        /// that act on the key repository (Undo Last Git Action).
+        case git
         // There is deliberately no Window slot. The Window menu holds the
         // window verbs (Minimize, Zoom, Bring All to Front) and AppKit's list
         // of the windows already open; a command that opens a window belongs
@@ -63,6 +77,24 @@ public struct MenuContribution {
     /// when the title is too long or too likely to change to name the item.
     /// `nil` — the default — slugs the title.
     public let identifier: String?
+    /// The title of the submenu the item goes in, or `nil` (the default) for
+    /// an item directly in its slot's menu. The host puts every contribution
+    /// of one group naming the same submenu into one submenu item with that
+    /// title, placed where the lowest `order` among them would be — View ▸
+    /// Tab Position ▸ Top, Left, Right, Bottom.
+    public let submenu: String?
+    /// The id of a `KeyCommandRegistry` command whose binding the item shows
+    /// as its key equivalent, or `nil` (the default) for an item that keeps
+    /// its own fixed `key`. The host hands such an item to
+    /// `KeyCommandMenuBridge`, so the displayed key follows a rebind in
+    /// Settings › Keyboard without the menu being rebuilt; `key` and
+    /// `modifiers` are then ignored.
+    public let keyCommandID: String?
+    /// The item's title as it should read right now, asked each time its menu
+    /// opens; `nil` (the default) keeps `title` for good. For an item whose
+    /// wording follows state — Show Privacy Toolbar / Hide Privacy Toolbar.
+    /// `title` is still what the item is built with.
+    public let dynamicTitle: (() -> String)?
     /// What to do when the user activates the item.
     public let action: () -> Void
 
@@ -76,6 +108,9 @@ public struct MenuContribution {
         isHidden: (() -> Bool)? = nil,
         isChecked: (() -> Bool)? = nil,
         identifier: String? = nil,
+        submenu: String? = nil,
+        keyCommandID: String? = nil,
+        dynamicTitle: (() -> String)? = nil,
         action: @escaping () -> Void
     ) {
         self.slot = slot
@@ -87,6 +122,9 @@ public struct MenuContribution {
         self.isHidden = isHidden
         self.isChecked = isChecked
         self.identifier = identifier
+        self.submenu = submenu
+        self.keyCommandID = keyCommandID
+        self.dynamicTitle = dynamicTitle
         self.action = action
     }
 
@@ -154,6 +192,9 @@ public struct MenuContribution {
         self.isHidden = isHidden
         self.isChecked = nil
         self.identifier = nil
+        self.submenu = nil
+        self.keyCommandID = nil
+        self.dynamicTitle = nil
         self.isEnabled = { registry.isEnabled(id: commandID) }
         self.action = {
             do {

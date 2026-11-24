@@ -49,34 +49,34 @@ class IntegrationActionBroadcast:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "audienceId": audience_id,
+                "audience_id": audience_id,
                 "subject": subject,
-                "bodyHtml": body_html,
+                "body_html": body_html,
             }
         )
         if from_name is not UNSET:
-            field_dict["fromName"] = from_name
+            field_dict["from_name"] = from_name
         if reply_to is not UNSET:
-            field_dict["replyTo"] = reply_to
+            field_dict["reply_to"] = reply_to
         if body_text is not UNSET:
-            field_dict["bodyText"] = body_text
+            field_dict["body_text"] = body_text
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        audience_id = d.pop("audienceId")
+        audience_id = d.pop("audience_id")
 
         subject = d.pop("subject")
 
-        body_html = d.pop("bodyHtml")
+        body_html = d.pop("body_html")
 
-        from_name = d.pop("fromName", UNSET)
+        from_name = d.pop("from_name", UNSET)
 
-        reply_to = d.pop("replyTo", UNSET)
+        reply_to = d.pop("reply_to", UNSET)
 
-        body_text = d.pop("bodyText", UNSET)
+        body_text = d.pop("body_text", UNSET)
 
         integration_action_broadcast = cls(
             audience_id=audience_id,

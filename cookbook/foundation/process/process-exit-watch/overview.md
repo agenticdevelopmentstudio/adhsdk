@@ -1,0 +1,7 @@
+
+Process Exit Watch tells a caller that a child process has exited, by the one route that always arrives: a termination handler installed on the process before it is launched. It exists because the obvious route does not always arrive. The doc comment on the `ProcessExitWatch` type in `ProcessExitWatch.swift` records that on macOS 26.6 a blocking wait-until-exit call can miss its wake-up for a child that exits within a few milliseconds, and park its thread for good: about one call in five against `/usr/bin/true`. The child is already reaped by then, so a timeout that polls `isRunning` never fires either. The termination handler, posted by the same reaping, was not seen to miss in 500 runs where the blocking wait missed 89. One missed wake-up can hold a caller's operation open for good and freeze everything queued behind it.
+
+The type offers three things: installing the watch (`init`), a bounded wait (`waitForExit(timeout:)`), and an ending sequence (`stop(_:)`): terminate, a grace, kill, a second grace. `CommandRunner` is the whole-output form built on it. A caller that owns the process's streams (a pty transcript it scans as it arrives, or a stdout passed straight through) uses this type directly. See [adhsdk.ingredient.foundation.processes.command-runner](cookbook:705082e9-8fad-4c20-95a3-4cf843cc6b97), the ingredient for the command runner.
+
+It is a final class, `ProcessExitWatch`, declared `@unchecked Sendable`, in the core framework.
+

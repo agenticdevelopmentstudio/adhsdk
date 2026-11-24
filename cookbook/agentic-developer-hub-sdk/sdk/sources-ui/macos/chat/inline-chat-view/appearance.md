@@ -1,0 +1,21 @@
+
+- **Transcript container**: Transparent background (Apple `drawsBackground = false`), vertical NSStackView with 12pt line spacing (Apple) or CSS gap default.
+- **Transcript insets**: 20pt vertical, 16pt horizontal (Apple edges `NSEdgeInsets(top: 20, left: 16, bottom: 20, right: 16)`).
+- **Transcript scrollbar**: Vertical scrollbar shown (Apple `hasVerticalScroller = true`); style per platform default.
+- **Message bubbles**: Bubble views use `MessageBubbleView` (Apple) or `Transcript` component (web); max width 75% of scroll container (min 200pt); aligned right for local user, left for remote.
+- **Bubble spacing**: 12pt vertical gap between consecutive bubbles (Apple `transcriptStack.spacing = 12`).
+- **Bubble side inset**: 16pt left and right margin outside bubble (Apple `Self.bubbleSideInset = 16`).
+- **Thinking indicator**: Single row above input, inset 12pt left and right (Apple); text and animation per `ThinkingIndicatorView`.
+- **Typing indicator animation**: Three pulsing dots (default) or custom glyph rotation.
+- **Input row height**: Minimum 44pt touch target (Apple send button 18pt SF symbol + padding).
+- **Input row insets**: 14pt vertical, 16pt horizontal (Apple `NSEdgeInsets(top: 14, left: 16, bottom: 14, right: 16)`).
+- **Input field**: Single-line text view with optional corner radius (Apple `chrome.inputCornerRadius`), optional 1pt border (Apple `chrome.showsInputBorder`), block or bar caret per `blinksCaret` setting.
+- **Input field placeholder**: Text and color per input styling; default `placeholder` prop value.
+- **Prompt glyph**: "❯" (U+276F) by default (Apple), positioned left of input with baseline-drop alignment to center glyph ink on text center; hidden if not configured (Apple `chrome.promptGlyph == nil`).
+- **Prompt text color**: User text color from palette (Apple `palette.nsColor(.userText)`).
+- **Send button**: Icon `arrow.up.circle.fill` (18pt regular, Apple) or custom glyph; tint per `palette.nsColor(.sendButton)`.
+- **Divider**: 1pt line between typing row and input row (Apple `ThemedSeparatorView`); hidden if not configured (Apple `chrome.showsDivider`).
+- **Surface fill**: Opaque background color from theme palette (Apple `palette.nsColor(.chatSurface)`), thinned by `surfaceTransparency` multiplier.
+- **Backdrop**: Optional NSView behind surface, click-through, pinned to all edges.
+- **Min content width**: 232pt (Apple `minContentWidth = minBubbleWidth (200) + bubbleSideInset (16) × 2`).
+

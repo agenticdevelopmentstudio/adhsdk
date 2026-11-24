@@ -17,15 +17,15 @@ public enum SessionRefreshOutcome: Sendable, Equatable {
 }
 
 /// Attaches the session's bearer to every request and, when a JWT session
-/// gets a 401, rotates it through `POST /auth/refresh` and retries the
+/// gets a 401, rotates it through `POST /v1/auth/sessions/refresh` and retries the
 /// original request once. Replaces `AuthenticationMiddleware` for callers
 /// that hold a `SessionStore`.
 ///
 /// Decision table:
 /// - no session → forward unchanged;
 /// - non-401 → returned as-is;
-/// - 401 on an exempt operation (the login family, refresh itself, and the
-///   raw revoke `signOut` sends), an API-token session, or a session with no
+/// - 401 on an exempt operation (the sign-in family, refresh itself, and the
+///   raw exchange and revoke), an API-token session, or a session with no
 ///   refresh token → returned as-is;
 /// - 401 otherwise → refresh; `.refreshed` retries once with the new bearer,
 ///   `.rejected` clears the store and calls `onSessionExpired`, `.unavailable`
@@ -46,25 +46,21 @@ public struct SessionRefreshMiddleware: ClientMiddleware {
     ///
     /// Every entry is the generated `Operations.X.id`, never a hand-written
     /// literal: the runtime hands `intercept` exactly that string, and the
-    /// generator emits it path-style (`"post/auth/login"`, not the Swift
-    /// method name `postAuthLogin`), so literals silently rot into dead
-    /// entries. Deriving them from the generated constants makes a drift
-    /// impossible — a renamed or removed operation fails to compile.
+    /// generator emits it as the /v1 `operationId` (`"postV1AuthSessions"`), so literals
+    /// silently rot into dead entries. Deriving them from the generated
+    /// constants makes a drift impossible — a renamed or removed operation
+    /// fails to compile.
     ///
-    /// `signOut`'s revoke rides ``ADHClient/rawJSON(method:path:query:body:)``
-    /// rather than the generated operation (see the call site), so its
-    /// exemption is derived from the same helper that builds its
-    /// `operationID`.
+    /// `signOut`'s revoke and the OAuth exchange ride
+    /// ``ADHClient/rawJSON(method:path:query:body:headers:)`` rather than a
+    /// generated operation (see their call sites), so their exemptions are
+    /// derived from the same helper that builds their `operationID`.
     public static let exemptOperationIDs: Set<String> = [
-        Operations.PostAuthLogin.id,
-        Operations.PostAuthLoginMfa.id,
-        Operations.PostAuthLoginMfaSmsSend.id,
-        Operations.PostAuthLoginMfaWebauthn.id,
-        Operations.PostAuthLoginMfaWebauthnOptions.id,
-        Operations.PostAuthLoginWebauthn.id,
-        Operations.PostAuthLoginWebauthnOptions.id,
-        Operations.PostAuthRefresh.id,
-        Operations.PostOauthSigninExchange.id,
+        Operations.PostV1AuthSessions.id,
+        Operations.PostV1AuthSmsCodes.id,
+        Operations.PostV1AuthPasskeyChallenges.id,
+        Operations.PostV1AuthSessionsRefresh.id,
+        ADHClient.oauthExchangeRawOperationID,
         ADHClient.revokeRawOperationID,
     ]
 
@@ -130,19 +126,21 @@ public struct SessionRefreshMiddleware: ClientMiddleware {
         let refreshToken: String
     }
 
-    private struct RefreshResponseBody: Decodable {
-        let token: String
-        let refreshToken: String
-    }
+    /// `POST /v1/auth/sessions/refresh`. Its request body is undeclared in the
+    /// /v1 document, so the gateway hands the `refreshToken` key to the route
+    /// unrenamed; the answer is the /v1 `RefreshResult`, snake_case.
+    static let refreshPath = "/v1/auth/sessions/refresh"
 
-    /// One `POST /auth/refresh` round-trip through `next` (so it rides the
-    /// same transport the failing request used — daemon or direct).
+    /// One `POST /v1/auth/sessions/refresh` round-trip through `next` (so it
+    /// rides the same transport the failing request used — daemon or direct).
+    /// It is sent by hand, not through the generated operation, because the
+    /// middleware sits below the generated client and only has `next`.
     static func performRefresh(
         refreshToken: String,
         baseURL: URL,
         next: @Sendable (HTTPRequest, HTTPBody?, URL) async throws -> (HTTPResponse, HTTPBody?)
     ) async -> SessionRefreshOutcome {
-        var request = HTTPRequest(method: .post, scheme: nil, authority: nil, path: "/auth/refresh")
+        var request = HTTPRequest(method: .post, scheme: nil, authority: nil, path: refreshPath)
         request.headerFields[.contentType] = "application/json"
         request.headerFields[.accept] = "application/json"
         let body: Data
@@ -156,7 +154,7 @@ public struct SessionRefreshMiddleware: ClientMiddleware {
             switch response.status.code {
             case 200:
                 let data = try await Data(collecting: responseBody ?? HTTPBody(), upTo: ADHBodyLimit.maxBuffered)
-                let decoded = try JSONDecoder().decode(RefreshResponseBody.self, from: data)
+                let decoded = try JSONDecoder().decode(Components.Schemas.RefreshResult.self, from: data)
                 return .refreshed(HubSession(
                     credentials: Credentials(token: decoded.token, kind: .jwt),
                     refreshToken: decoded.refreshToken

@@ -14,8 +14,10 @@ import type {
 import {
   buildReport,
   ERROR_ISSUE_CAP,
+  firstLine,
   glitchtipListCurrent,
   issueKeys,
+  newestPerTarget,
   RUNTIME_GROUP_CAP,
   type MonitorInput,
   type ReportInputs,
@@ -175,6 +177,7 @@ function errorsDashboard(over: Partial<ErrorsDashboardResponse["sections"]> = {}
   return {
     generatedAt: "x",
     refreshing: false,
+    refreshingSources: { glitchtip: false, posthog: false },
     configured: { glitchtip: true, posthog: true, vercel: true },
     sections,
     views: errorsViews(sections, { posthog: true }),
@@ -293,7 +296,7 @@ function group(over: Partial<RuntimeErrorGroup>): RuntimeErrorGroup {
 }
 
 describe("buildReport — ported digest rules", () => {
-  it("a healthy fleet is healthy and complete", () => {
+  it("report-rules-001: a healthy fleet is healthy and complete", () => {
     const report = build();
     expect(report.verdict).toBe("healthy");
     expect(report.complete).toBe(true);
@@ -304,13 +307,13 @@ describe("buildReport — ported digest rules", () => {
     expect(report.generatedAt).toBe(NOW.toISOString());
   });
 
-  it("an unconfigured provider is disclosed but does not clear complete", () => {
+  it("report-rules-002: an unconfigured provider is disclosed but does not clear complete", () => {
     const report = build();
     expect(report.coverage.deploys.unconfigured).toEqual(["cloudflare-pages"]);
     expect(report.complete).toBe(true);
   });
 
-  it("a failed source is never healthy", () => {
+  it("report-rules-003: a failed source is never healthy", () => {
     const report = build({ errors: { ok: false, error: "GlitchTip timed out" } });
     expect(report.complete).toBe(false);
     expect(report.coverage.errors).toEqual({ ok: false, error: "GlitchTip timed out" });
@@ -324,14 +327,14 @@ describe("buildReport — ported digest rules", () => {
     });
   });
 
-  it("a failed dashboard section makes the report incomplete", () => {
+  it("report-rules-004: a failed dashboard section makes the report incomplete", () => {
     const report = build({ errors: ok(errorsDashboard({ issues: { data: null, error: "GlitchTip 500", updatedAt: null } })) });
     expect(report.complete).toBe(false);
     expect(report.coverage.errors.notes).toContain("glitchtip issues: GlitchTip 500");
     expect(report.verdict).toBe("unknown");
   });
 
-  it("open issues become findings with the issues-show key", () => {
+  it("report-rules-005: open issues become findings with the issues-show key", () => {
     const p = problem({ detail: "Build failed\nmore", sourceUrl: "https://vercel.com/x" });
     const report = build({
       monitor: ok({ ...MONITOR, snapshot: { ...SNAPSHOT, overall: "degraded", openIssues: [openIssue(p)] }, problems: [p] }),
@@ -350,7 +353,7 @@ describe("buildReport — ported digest rules", () => {
     expect(report.verdict).toBe("degraded");
   });
 
-  it("a down endpoint is critical through the board's problem", () => {
+  it("report-rules-006: a down endpoint is critical through the board's problem", () => {
     const snapshot = { ...SNAPSHOT, services: [service({ slug: "s", name: "Shop", status: "down", error: "timeout" })] };
     const down = problem({ target: "s", source: "http", name: "Shop", severity: "critical", state: "down", detail: "timeout" });
     const report = build({ monitor: ok({ ...MONITOR, snapshot, problems: [down] }) });
@@ -359,7 +362,7 @@ describe("buildReport — ported digest rules", () => {
     expect(report.findings[0]).toMatchObject({ severity: "critical", source: "monitor:http", title: "Shop production: http down", detail: "timeout" });
   });
 
-  it("a non-healthy service the board holds back is counted, not a finding", () => {
+  it("report-rules-007: a non-healthy service the board holds back is counted, not a finding", () => {
     // monitorHttp off reads 'down'; a slow probe inside its confirm window reads 'degraded'.
     const snapshot = {
       ...SNAPSHOT,
@@ -374,7 +377,7 @@ describe("buildReport — ported digest rules", () => {
     expect(report.sections.monitor!.byStatus).toEqual({ degraded: 1, down: 1 });
   });
 
-  it("failing deploys are the board's failed deploy problems, newest build first", () => {
+  it("report-rules-008: failing deploys are the board's failed deploy problems, newest build first", () => {
     const problems = [
       problem({ target: "a", name: "a", deployment: { id: "d1", createdAt: "2026-11-06T09:00:00Z" } }),
       problem({
@@ -407,7 +410,7 @@ describe("buildReport — ported digest rules", () => {
     });
   });
 
-  it("the feed's newest row does not decide what is failing", () => {
+  it("report-rules-009: the feed's newest row does not decide what is failing", () => {
     // The board holds d1's failure. In the feed a NEWER canceled row sits on its target,
     // and a failed preview the board ignores is the newest row of another; neither moves
     // the list, and a failure the feed no longer holds at all is still listed.
@@ -428,14 +431,14 @@ describe("buildReport — ported digest rules", () => {
     expect(report.sections.deploys!.deployTargets).toBe(2);
   });
 
-  it("with no board to read, nothing is listed as failing and a note says why", () => {
+  it("report-rules-010: with no board to read, nothing is listed as failing and a note says why", () => {
     const live = { ...LIVE, deployments: [deployment({ id: "d1", status: "failed" })] };
     const report = build({ monitor: { ok: false, error: "monitor down" }, deploys: ok({ live }) });
     expect(report.sections.deploys!.failing).toEqual([]);
     expect(report.coverage.deploys.notes).toContain("failing deploys come from the board, which could not be read");
   });
 
-  it("an unconfirmed in-flight deploy is not counted as in flight (the /live demotion)", () => {
+  it("report-rules-011: an unconfirmed in-flight deploy is not counted as in flight (the /live demotion)", () => {
     const live = {
       ...LIVE,
       deployments: [
@@ -446,7 +449,7 @@ describe("buildReport — ported digest rules", () => {
     expect(build({ deploys: ok({ live }) }).sections.deploys!.inFlight).toBe(1);
   });
 
-  it("a stalled monitor is a major finding and incomplete", () => {
+  it("report-rules-012: a stalled monitor is a major finding and incomplete", () => {
     const report = build({ monitor: ok({ ...MONITOR, lastCycleAt: "2026-11-06T11:00:00Z", stale: true }) });
     expect(report.complete).toBe(false);
     expect(report.coverage.monitor.notes?.[0]).toMatch(/^monitor data is stale/);
@@ -456,7 +459,7 @@ describe("buildReport — ported digest rules", () => {
     expect(report.sections.monitor!.stale).toBe(true);
   });
 
-  it("active GlitchTip issues surface, fatal first, and are capped", () => {
+  it("report-rules-013: active GlitchTip issues surface, fatal first, and are capped", () => {
     const issues = Array.from({ length: 20 }, (_, n) => issue({ id: String(n), title: `Err ${n}`, count: n }));
     issues.push(issue({ id: "x", title: "Quiet", active: false }));
     issues.push(issue({ id: "f", title: "Fatal", project: "api", level: "fatal" }));
@@ -473,10 +476,14 @@ describe("buildReport — ported digest rules", () => {
     expect(glitch.every((f) => f.title !== "web: Quiet")).toBe(true);
   });
 
-  it("PostHog site errors and low uptime are minor findings", () => {
+  it("report-rules-014: PostHog site errors and low uptime are minor findings", () => {
     const sites = [
       { host: "a.dev", errors: 3, requests: 50, failures: 2, p95Ms: 800 },
       { host: "b.dev", errors: 0, requests: 9, failures: 0, p95Ms: null },
+      // One aborted request in 100,000 is under the 5% line: not a finding.
+      { host: "c.dev", errors: 0, requests: 100_000, failures: 1, p95Ms: null },
+      // Errors with no requests to weigh them against still are.
+      { host: "d.dev", errors: 2, requests: 0, failures: 0, p95Ms: null },
     ];
     const uptime: UptimeResponse = {
       days: 7, overallUptimePercent: null, overallUptimeTone: "unknown",
@@ -487,10 +494,12 @@ describe("buildReport — ported digest rules", () => {
     expect(titles).toContain("a.dev: 3 client errors, 2 failed of 50 requests");
     expect(titles).toContain("Shop: 97.50% up over 7d");
     expect(titles.some((t) => t.startsWith("b.dev"))).toBe(false);
+    expect(titles.some((t) => t.startsWith("c.dev"))).toBe(false);
+    expect(titles).toContain("d.dev: 2 client errors, 0 failed of 0 requests");
     expect(report.verdict).toBe("attention");
   });
 
-  it("a dashboard still refreshing at the deadline is incomplete", () => {
+  it("report-rules-015: a dashboard still refreshing at the deadline is incomplete", () => {
     const report = build({ analytics: ok({ ...analyticsDashboard(), refreshing: true }) });
     expect(report.complete).toBe(false);
     expect(report.coverage.analytics.notes).toContain("analytics dashboard still refreshing at the deadline");
@@ -499,7 +508,7 @@ describe("buildReport — ported digest rules", () => {
 });
 
 describe("buildReport — rules the server adds", () => {
-  it("counts a GlitchTip error once: the board's error problem yields to the issue list", () => {
+  it("report-rules-016: counts a GlitchTip error once: the board's error problem yields to the issue list", () => {
     const err = problem({ target: "errors|web", source: "glitchtip", name: "web", environment: null, severity: "minor", state: "erroring" });
     const base = errorsDashboard();
     const listed = build({
@@ -514,7 +523,7 @@ describe("buildReport — rules the server adds", () => {
     expect(unlisted.findings.find((f) => f.source === "monitor:glitchtip")!.issueKey).toBeUndefined();
   });
 
-  it("a GlitchTip list that is not current does not stand in for the board's error problem", () => {
+  it("report-rules-017: a GlitchTip list that is not current does not stand in for the board's error problem", () => {
     // The cached list predates a new crash: a failed refresh, one still running at the deadline
     // (every due read with wait=0), or a list not read to the end. The board's problem stays.
     const err = problem({ target: "errors|web", source: "glitchtip", name: "web", environment: null, severity: "major", state: "erroring" });
@@ -522,7 +531,7 @@ describe("buildReport — rules the server adds", () => {
     const cached = base.sections.issues.data!;
     const cases: Record<string, ErrorsDashboardResponse> = {
       "failed refresh": errorsDashboard({ issues: { data: cached, error: "GlitchTip 500", updatedAt: "2026-11-06T09:00:00Z" } }),
-      "still refreshing": { ...base, refreshing: true },
+      "still refreshing": { ...base, refreshing: true, refreshingSources: { glitchtip: true, posthog: false } },
       "read partway": errorsDashboard({ issues: section({ ...cached, summary: { ...cached.summary, complete: false } }) }),
     };
     for (const [why, data] of Object.entries(cases)) {
@@ -534,14 +543,28 @@ describe("buildReport — rules the server adds", () => {
     expect(glitchtipListCurrent(base)).toBe(true);
   });
 
-  it("an unreachable provider is one major finding, not also its board problem", () => {
+  it("report-rules-017: a PostHog refresh leaves the GlitchTip list current, so a crash is counted once", () => {
+    const err = problem({ target: "errors|web", source: "glitchtip", name: "web", environment: null, severity: "major", state: "erroring" });
+    const data = { ...errorsDashboard(), refreshing: true, refreshingSources: { glitchtip: false, posthog: true } };
+    expect(glitchtipListCurrent(data)).toBe(true);
+    const report = build({ monitor: ok({ ...MONITOR, problems: [err] }), errors: ok(data) });
+    expect(report.findings.map((f) => f.source)).not.toContain("monitor:glitchtip");
+  });
+
+  it("report-rules-018: an unreachable provider is one finding at the board's severity, not also its board problem", () => {
     const platform = problem({ target: "platform-health|vercel", source: "vercel", name: "Vercel", environment: null, severity: "minor", state: "unreachable" });
     const live = { ...LIVE, providers: { ...LIVE.providers, vercel: { configured: true, ok: false } } };
     const report = build({ monitor: ok({ ...MONITOR, problems: [platform] }), deploys: ok({ live }) });
-    expect(report.findings).toEqual([{ severity: "major", source: "provider:vercel", title: "vercel API unreachable from the monitor" }]);
+    expect(report.findings).toEqual([{ severity: "minor", source: "provider:vercel", title: "vercel API unreachable from the monitor" }]);
+    expect(report.verdict).toBe("attention");
+
+    // With no board problem to follow (the board unread, or not yet graded) it is minor too.
+    expect(build({ deploys: ok({ live }) }).findings).toEqual([
+      { severity: "minor", source: "provider:vercel", title: "vercel API unreachable from the monitor" },
+    ]);
   });
 
-  it("a stale deploy keeps the board's severity: major in production, minor in testing", () => {
+  it("report-rules-019: a stale deploy keeps the board's severity: major in production, minor in testing", () => {
     // The board grades staleness by tier (staleProdProblems); the report must not re-grade it.
     const prod = problem({ state: "stale", severity: "major", target: "vercel|prj_2|" });
     const testing = problem({ state: "stale", severity: "minor", target: "vercel|prj_3|testing", name: "hub-help", environment: "testing" });
@@ -553,7 +576,7 @@ describe("buildReport — rules the server adds", () => {
     expect(report.verdict).toBe("degraded");
   });
 
-  it("a testing-tier stale deploy alone is attention, not degraded", () => {
+  it("report-rules-019: a testing-tier stale deploy alone is attention, not degraded", () => {
     const testing = problem({ state: "stale", severity: "minor", target: "vercel|prj_3|testing", name: "hub-help", environment: "testing" });
     const report = build({ monitor: ok({ ...MONITOR, problems: [testing] }) });
     expect(report.findings).toHaveLength(1);
@@ -561,7 +584,7 @@ describe("buildReport — rules the server adds", () => {
     expect(report.verdict).toBe("attention");
   });
 
-  it("an issue key is the target when two open issues share a name", () => {
+  it("report-rules-020: an issue key is the target when two open issues share a name", () => {
     const a = problem({ target: "vercel|p1|", source: "vercel" });
     const b = problem({ target: "railway|p2|production", source: "railway" });
     const keys = issueKeys([openIssue(a), openIssue(b)]);
@@ -570,7 +593,7 @@ describe("buildReport — rules the server adds", () => {
     expect(issueKeys([openIssue(a)]).get(a.target)).toBe("zork");
   });
 
-  it("integration error is major, warn is minor, unconfigured is disclosed with its unset env", () => {
+  it("report-rules-021: integration error is major, warn is minor, unconfigured is disclosed with its unset env", () => {
     const integrations: IntegrationsResponse = {
       generatedAt: "x",
       overall: "error",
@@ -590,7 +613,7 @@ describe("buildReport — rules the server adds", () => {
     expect(report.sections.integrations!.checks[0]!.detail).toBe("missed");
   });
 
-  it("an integration in error is a finding even when it reports itself unconfigured", () => {
+  it("report-rules-022: an integration in error is a finding even when it reports itself unconfigured", () => {
     // checkCloudflare with a token but no discoverable account, and the fallback for a check
     // that threw, both say configured:false with state 'error'; the board shows them red.
     const integrations: IntegrationsResponse = {
@@ -614,7 +637,7 @@ describe("buildReport — rules the server adds", () => {
     expect(report.verdict).toBe("degraded");
   });
 
-  it("runtime errors: fatal or a frequent 5xx is major, majors are listed first, and the rest is counted", () => {
+  it("report-rules-023: runtime errors: fatal or a frequent 5xx is major, majors are listed first, and the rest is counted", () => {
     const groups = [
       ...Array.from({ length: 20 }, (_, i) => group({ key: `m${i}`, status: 404, level: "error", count: 50 })),
       group({ key: "fatal", level: "fatal", status: null, path: null, method: null, source: "edge" }),
@@ -635,7 +658,7 @@ describe("buildReport — rules the server adds", () => {
     expect(report.verdict).toBe("degraded");
   });
 
-  it("a cap that hides a fatal GlitchTip issue is itself major", () => {
+  it("report-rules-024: a cap that hides a fatal GlitchTip issue is itself major", () => {
     const fatal = Array.from({ length: ERROR_ISSUE_CAP + 2 }, (_, n) =>
       issue({ id: String(n), title: `Fatal ${n}`, level: "fatal", count: 100 - n }),
     );
@@ -647,7 +670,7 @@ describe("buildReport — rules the server adds", () => {
     expect(more.severity).toBe("major");
   });
 
-  it("a cap that hides a major runtime group is itself major", () => {
+  it("report-rules-025: a cap that hides a major runtime group is itself major", () => {
     const groups = Array.from({ length: RUNTIME_GROUP_CAP + 3 }, (_, i) =>
       group({ key: `f${i}`, level: "fatal", status: null }),
     );
@@ -656,14 +679,14 @@ describe("buildReport — rules the server adds", () => {
     expect(more.severity).toBe("major");
   });
 
-  it("runtime errors are dated by the read, not by the report", () => {
+  it("report-rules-026: runtime errors are dated by the read, not by the report", () => {
     const report = build();
     expect(report.coverage.runtimeErrors.updatedAt).toBe("2026-11-06T11:50:00Z");
     expect(report.coverage.runtimeErrors.notes).toBeUndefined();
     expect(report.sections.runtimeErrors).toMatchObject({ readAt: "2026-11-06T11:50:00Z", complete: true });
   });
 
-  it("a cut-short, failing or missing runtime read is a note", () => {
+  it("report-rules-026: a cut-short, failing or missing runtime read is a note", () => {
     const cut = build({ runtimeErrors: ok({ ...RUNTIME, report: { ...RUNTIME.report, complete: false } }) });
     expect(cut.coverage.runtimeErrors.notes).toEqual([
       "vercel runtime read was cut short; there may be more groups than listed",
@@ -679,27 +702,27 @@ describe("buildReport — rules the server adds", () => {
     expect(never.coverage.runtimeErrors.updatedAt).toBeNull();
   });
 
-  it("runtime errors with no Vercel token are unconfigured, not a gap", () => {
+  it("report-rules-027: runtime errors with no Vercel token are unconfigured, not a gap", () => {
     const report = build({ runtimeErrors: ok({ ...RUNTIME, configured: false }) });
     expect(report.coverage.runtimeErrors.unconfigured).toEqual(["vercel"]);
     expect(report.complete).toBe(true);
   });
 
-  it("the monitor having never cycled is a note, not a finding", () => {
+  it("report-rules-028: the monitor having never cycled is a note, not a finding", () => {
     const report = build({ monitor: ok({ ...MONITOR, lastCycleAt: null }) });
     expect(report.findings).toEqual([]);
     expect(report.coverage.monitor.notes).toEqual(["monitor has not completed a probe cycle"]);
     expect(report.verdict).toBe("unknown");
   });
 
-  it("vercel analytics projects that could not be read are a note", () => {
+  it("report-rules-029: vercel analytics projects that could not be read are a note", () => {
     const analytics = analyticsDashboard();
     analytics.sections.vercel = section({ ...analytics.sections.vercel.data!, failed: 2 });
     const report = build({ analytics: ok(analytics) });
     expect(report.coverage.analytics.notes).toEqual(["vercel web analytics: 2 projects could not be read"]);
   });
 
-  it("failing deploys carry their log tail or why there is none", () => {
+  it("report-rules-030: failing deploys carry their log tail or why there is none", () => {
     const problems = [
       problem({ target: "a", name: "a", deployment: { id: "a", createdAt: "2026-11-06T10:00:00Z" } }),
       problem({ target: "b", name: "b", deployment: { id: "b", createdAt: "2026-11-06T09:00:00Z" } }),
@@ -714,7 +737,7 @@ describe("buildReport — rules the server adds", () => {
     expect(byId.b).toMatchObject({ logError: "no build log" });
   });
 
-  it("findings sort by severity, then source, then title, and counts add up", () => {
+  it("report-rules-031: findings sort by severity, then source, then title, and counts add up", () => {
     const report = build({
       uptime: ok({ days: 7, overallUptimePercent: null, overallUptimeTone: "unknown", services: [{ slug: "s", name: "Shop", uptimePercent: 90, totalChecks: 1 } as UptimeResponse["services"][number]] }),
       integrations: { ok: false, error: "x" },
@@ -728,11 +751,96 @@ describe("buildReport — rules the server adds", () => {
     expect(report.counts).toEqual({ critical: 1, major: 1, minor: 1 });
   });
 
-  it("every source is covered, and a section is null exactly when its source failed", () => {
+  it("report-rules-032: every source is covered, and a section is null exactly when its source failed", () => {
     const report = build({ uptime: { ok: false, error: "db" } });
     expect(Object.keys(report.coverage)).toEqual(["monitor", "deploys", "integrations", "errors", "runtimeErrors", "analytics", "uptime"]);
     for (const [name, cov] of Object.entries(report.coverage)) {
       expect(report.sections[name as keyof typeof report.sections] === null).toBe(!cov.ok);
     }
+  });
+});
+
+describe("buildReport — helper edges", () => {
+  it("report-rules-033: firstLine drops blank text, takes the first line, and cuts at the width", () => {
+    expect(firstLine("  \n")).toBeNull();
+    expect(firstLine("a\nb")).toBe("a");
+    const cut = firstLine("x".repeat(200))!;
+    expect(cut).toBe(`${"x".repeat(159)}…`);
+    expect(cut).toHaveLength(160);
+  });
+
+  it("report-rules-034: a stale monitor that never cycled says so in its note", () => {
+    const report = build({ monitor: ok({ ...MONITOR, lastCycleAt: null, stale: true }) });
+    expect(report.coverage.monitor.notes?.[0]).toBe("monitor data is stale: no cycle has completed since the loop started");
+  });
+
+  it("report-rules-035: a config fallback with no reason is noted as reason unknown", () => {
+    const report = build({ deploys: ok({ live: { ...LIVE, configDegraded: true, configReason: null } }) });
+    expect(report.coverage.deploys.notes).toContain("monitor config fell back to the static list: reason unknown");
+  });
+
+  it("report-rules-036: only an uptime strictly below 99.5 is a finding", () => {
+    const row = (name: string, uptimePercent: number | null) =>
+      ({ slug: name, name, uptimePercent, totalChecks: 10 }) as UptimeResponse["services"][number];
+    const uptime: UptimeResponse = {
+      days: 7,
+      overallUptimePercent: null,
+      overallUptimeTone: "unknown",
+      services: [row("Exact", 99.5), row("Low", 99.49), row("None", null)],
+    };
+    const report = build({ uptime: ok(uptime) });
+    expect(report.findings.map((f) => f.title)).toEqual(["Low: 99.49% up over 7d"]);
+  });
+
+  it("report-rules-037: newestPerTarget keeps only the newest deployment of a target", () => {
+    const older = deployment({ id: "old", status: "failed", createdAt: "2026-11-06T09:00:00Z" });
+    const newer = deployment({ id: "new", status: "success", createdAt: "2026-11-06T10:00:00Z" });
+    expect(newestPerTarget([older, newer]).map((d) => d.id)).toEqual(["new"]);
+    expect(newestPerTarget([newer, older]).map((d) => d.id)).toEqual(["new"]);
+  });
+
+  it("report-rules-038: a finding carries only the optional keys it has a value for", () => {
+    const down = problem({
+      target: "s",
+      source: "http",
+      name: "Shop",
+      environment: "production",
+      severity: "critical",
+      state: "down",
+      detail: "",
+      since: "",
+      sourceUrl: null,
+      liveUrl: null,
+    });
+    const report = build({ monitor: ok({ ...MONITOR, problems: [down] }) });
+    expect(report.findings).toHaveLength(1);
+    expect(Object.keys(report.findings[0]!).sort()).toEqual(["severity", "source", "title"]);
+    expect(report.findings[0]).toEqual({ severity: "critical", source: "monitor:http", title: "Shop production: http down" });
+  });
+
+  it("report-rules-039: a site is troubled at a 5.00% failure rate, not at 4.95%", () => {
+    const sites = [
+      { host: "five.dev", errors: 3, requests: 100, failures: 2, p95Ms: null },
+      { host: "under.dev", errors: 5, requests: 101, failures: 0, p95Ms: null },
+      { host: "edge.dev", errors: 0, requests: 20, failures: 1, p95Ms: null },
+    ];
+    const report = build({ errors: ok(errorsDashboard({ sites: section(sites) })) });
+    const hosts = report.findings.filter((f) => f.source === "posthog").map((f) => f.title.split(":")[0]);
+    expect(hosts.sort()).toEqual(["edge.dev", "five.dev"]);
+  });
+
+  it("report-rules-040: exactly 15 active issues have no overflow finding; 16 add a minor one", () => {
+    const withIssues = (n: number) => {
+      const issues = Array.from({ length: n }, (_, i) => issue({ id: String(i), title: `Err ${i}`, count: i + 1 }));
+      const base = errorsDashboard();
+      return build({ errors: ok(errorsDashboard({ issues: section({ ...base.sections.issues.data!, issues }) })) });
+    };
+    const exact = withIssues(ERROR_ISSUE_CAP).findings.filter((f) => f.source === "glitchtip");
+    expect(exact).toHaveLength(15);
+    expect(exact.some((f) => f.title.includes("more active GlitchTip issues"))).toBe(false);
+
+    const over = withIssues(ERROR_ISSUE_CAP + 1).findings.filter((f) => f.source === "glitchtip");
+    expect(over).toHaveLength(16);
+    expect(over.find((f) => f.title === "1 more active GlitchTip issues not listed")).toMatchObject({ severity: "minor" });
   });
 });

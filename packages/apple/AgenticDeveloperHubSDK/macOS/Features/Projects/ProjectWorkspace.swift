@@ -50,20 +50,19 @@ public final class ProjectWorkspace {
     public let arrangementSourceID: UUID?
 
     /// What this project's first tabs are built from when it has none of its
-    /// own: the source project's arrangement, divider positions and enabled
-    /// edges. Read once, so the window's first install and the checkout
-    /// reconcile that follows it build the same thing — two reads could
-    /// straddle the source window being re-arranged and disagree.
-    private lazy var firstOpenSeed: (arrangement: LayoutNode?, enabledEdges: [Edge]) = {
+    /// own: the source project's arrangement and divider positions. Not its
+    /// edges — a project with no Tab Bars choice of its own follows the
+    /// app-wide tab positions, and seeding must not make a choice for it.
+    /// Read once, so the window's first install and the checkout reconcile
+    /// that follows it build the same thing — two reads could straddle the
+    /// source window being re-arranged and disagree.
+    private lazy var firstOpenArrangement: LayoutNode? = {
         guard let sourceID = arrangementSourceID, sourceID != repo.id,
-              let loaded = try? database.loadTabs(repoID: sourceID), !loaded.tabs.isEmpty else {
-            return (nil, [.top])
-        }
+              let loaded = try? database.loadTabs(repoID: sourceID), !loaded.tabs.isEmpty else { return nil }
         let arrangement = ProjectTabReconciler.arrangement(of: loaded.tabs, activeTabID: loaded.activeTabID)
         // The source's tree is repaired against this project's spec exactly as
         // a stored tree of its own would be (see `initialTabs()`).
-        let edges: [Edge] = loaded.enabledEdges.isEmpty ? [.top] : loaded.enabledEdges
-        return (arrangement.map { layout.spec.reconcile($0) }, edges)
+        return arrangement.map { layout.spec.reconcile($0) }
     }()
 
     /// A `[URL: Object]` whose entries live exactly as long as something else
@@ -125,6 +124,10 @@ public final class ProjectWorkspace {
         self.arrangementSourceID = arrangementSourceID
     }
 
+    /// Posted on the main thread, with the workspace as its object, after
+    /// `persistTabs` has saved.
+    public nonisolated static let didPersistTabsNotification = Notification.Name("ProjectWorkspace.didPersistTabs")
+
     public var id: UUID { repo.id }
     public var displayName: String { repo.name }
     /// The repository's own folder — the root every pane defaults to.
@@ -169,7 +172,9 @@ public final class ProjectWorkspace {
     public struct StoredTabs {
         public let tabs: [TabRecord]
         public let activeTabID: UUID?
-        public let enabledEdges: [Edge]
+        /// The user's Tab Bars choice for this project, or `nil` when they
+        /// never made one and the window follows the app-wide tab positions.
+        public let enabledEdges: [Edge]?
     }
 
     /// The persisted tabs, or `nil` when there is nothing stored to read
@@ -179,30 +184,35 @@ public final class ProjectWorkspace {
         return StoredTabs(tabs: loaded.tabs, activeTabID: loaded.activeTabID, enabledEdges: loaded.enabledEdges)
     }
 
-    /// The edges a project with no stored tabs turns on: the arrangement
-    /// source's, or the top edge alone.
-    public var firstOpenEnabledEdges: [Edge] { firstOpenSeed.enabledEdges }
+    /// The edges a project with no Tab Bars choice of its own shows: the
+    /// app-wide tab positions (`UserSettings.tabsPositions`) in
+    /// `Edge.allCases` order, the order the project window enables its edges in.
+    public static var globalEnabledEdges: [Edge] {
+        let edges = UserSettings.tabsPositions.value.edges
+        return Edge.allCases.filter(edges.contains)
+    }
 
     /// A fresh tree for a project with no tab of its own to copy: the
     /// arrangement source's, in ids nobody is using, or the layout's
     /// blueprint. A factory, for the reason `ProjectTabReconciler.makeRecords`
     /// gives — every member needs its own node ids.
     public func firstOpenBlueprint() -> LayoutNode {
-        firstOpenSeed.arrangement?.inFreshIDs() ?? layout.blueprint()
+        firstOpenArrangement?.inFreshIDs() ?? layout.blueprint()
     }
 
-    /// The tabs the window controller should display: the stored set, or one
-    /// default tab for a project being opened for the first time — arranged
-    /// like the window the user last worked in (`firstOpenSeed`), so a new
-    /// project window does not throw away the tab sides and panes they chose.
-    public func initialTabs() -> (tabs: [TabRecord], activeTabID: UUID, enabledEdges: [Edge]) {
+    /// The tabs the window controller should display — the stored set, or one
+    /// default tab for a project being opened for the first time, arranged
+    /// like the window the user last worked in (`firstOpenArrangement`) — and
+    /// the project's Tab Bars choice, `nil` when it has none. A project with
+    /// no choice gets its first tabs on the app-wide tab positions.
+    public func initialTabs() -> (tabs: [TabRecord], activeTabID: UUID, enabledEdges: [Edge]?) {
         guard let stored = storedTabs() else {
-            let edges = firstOpenEnabledEdges
+            let edges = Self.globalEnabledEdges
             let groupID = UUID()
             let tabs = edges.map { edge in
                 TabRecord(groupID: groupID, edge: edge, title: "Tab 1", root: firstOpenBlueprint())
             }
-            return (tabs, tabs[0].id, edges)
+            return (tabs, tabs[0].id, nil)
         }
         // A stored tree can outlive the spec that made it, so it is repaired on
         // the way in rather than allowed to contradict the rules the split menu
@@ -240,12 +250,20 @@ public final class ProjectWorkspace {
         return (shared, stored.activeTabID ?? shared[0].id, stored.enabledEdges)
     }
 
-    /// Persists the current tabs, which one is active, and the enabled edges.
-    /// Called whenever a tab is added/removed/reordered, an edge is toggled, or
-    /// the split layout inside a tab changes.
-    public func persistTabs(_ tabs: [TabRecord], activeTabID: UUID?, enabledEdges: [Edge]) {
+    /// Persists the current tabs, which one is active, and the user's Tab Bars
+    /// choice — `nil` when they made none, which writes no edges (see
+    /// `ProjectDatabase.saveTabs`). Called whenever a tab is
+    /// added/removed/reordered, an edge is toggled, or the split layout inside
+    /// a tab changes.
+    ///
+    /// Posts `didPersistTabsNotification` after a save that succeeded: a save
+    /// is the moment panes stop existing as far as the database is concerned,
+    /// so it is when work keyed to dead panes — the browser's storage jars —
+    /// can be collected, by whoever cares, without this class knowing them.
+    public func persistTabs(_ tabs: [TabRecord], activeTabID: UUID?, enabledEdges: [Edge]?) {
         do {
             try database.saveTabs(tabs, activeTabID: activeTabID, enabledEdges: enabledEdges, repoID: repo.id)
+            NotificationCenter.default.post(name: Self.didPersistTabsNotification, object: self)
         } catch {
             Self.logger.error("Failed to save project tabs: \(error.localizedDescription, privacy: .public)")
         }

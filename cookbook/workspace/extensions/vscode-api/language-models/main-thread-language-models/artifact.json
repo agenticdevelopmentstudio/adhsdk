@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "2beaca09-67b4-4e19-b4a4-f66f048687b8",
     "title": "VS Code Language Models Bridge",
-    "domain": "adhsdk://cookbook/workspace/extensions/vscode-api/language-models/main-thread-language-models",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -26,8 +25,8 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/workspace/extensions/vscode-api/language-models/ai-plugin-language-model-provider",
-      "adhsdk://cookbook/workspace/extensions/host/extension-event"
+      "a602608c-c061-44b6-a7ab-829e798d6b0c",
+      "8e0d1a9d-27a1-4b5b-9a7d-5b9f9a5f7f2e"
     ],
     "references": [
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadLanguageModels.swift (adhsdk)",
@@ -44,7 +43,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "93869c2b5f6e09fa",
+  "synced": "2bb97b43c431cc78",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -63,7 +62,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

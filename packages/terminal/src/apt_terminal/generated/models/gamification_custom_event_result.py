@@ -46,9 +46,9 @@ class GamificationCustomEventResult:
         field_dict.update(
             {
                 "ingested": ingested,
-                "statKey": stat_key,
-                "newBadges": new_badges,
-                "xpGained": xp_gained,
+                "stat_key": stat_key,
+                "new_badges": new_badges,
+                "xp_gained": xp_gained,
             }
         )
 
@@ -61,16 +61,16 @@ class GamificationCustomEventResult:
         d = dict(src_dict)
         ingested = d.pop("ingested")
 
-        stat_key = d.pop("statKey")
+        stat_key = d.pop("stat_key")
 
         new_badges = []
-        _new_badges = d.pop("newBadges")
+        _new_badges = d.pop("new_badges")
         for new_badges_item_data in _new_badges:
             new_badges_item = GamificationBadge.from_dict(new_badges_item_data)
 
             new_badges.append(new_badges_item)
 
-        xp_gained = d.pop("xpGained")
+        xp_gained = d.pop("xp_gained")
 
         gamification_custom_event_result = cls(
             ingested=ingested,

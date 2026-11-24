@@ -26,8 +26,8 @@ class GameDefinition:
         key (str):
         name (str):
         status (GameDefinitionStatus):
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
         description (None | str | Unset):
         author_customer_id (None | str | Unset):
         data (GameDefinitionDataType0 | None | Unset):
@@ -39,8 +39,8 @@ class GameDefinition:
     key: str
     name: str
     status: GameDefinitionStatus
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     description: None | str | Unset = UNSET
     author_customer_id: None | str | Unset = UNSET
     data: GameDefinitionDataType0 | None | Unset = UNSET
@@ -61,9 +61,9 @@ class GameDefinition:
 
         status = self.status.value
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         description: None | str | Unset
         if isinstance(self.description, Unset):
@@ -90,19 +90,19 @@ class GameDefinition:
         field_dict.update(
             {
                 "id": id,
-                "gameId": game_id,
+                "game_id": game_id,
                 "kind": kind,
                 "key": key,
                 "name": name,
                 "status": status,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
+                "created": created,
+                "updated": updated,
             }
         )
         if description is not UNSET:
             field_dict["description"] = description
         if author_customer_id is not UNSET:
-            field_dict["authorCustomerId"] = author_customer_id
+            field_dict["author_customer_id"] = author_customer_id
         if data is not UNSET:
             field_dict["data"] = data
 
@@ -115,7 +115,7 @@ class GameDefinition:
         d = dict(src_dict)
         id = d.pop("id")
 
-        game_id = d.pop("gameId")
+        game_id = d.pop("game_id")
 
         kind = d.pop("kind")
 
@@ -125,9 +125,9 @@ class GameDefinition:
 
         status = GameDefinitionStatus(d.pop("status"))
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         def _parse_description(data: object) -> None | str | Unset:
             if data is None:
@@ -145,7 +145,7 @@ class GameDefinition:
                 return data
             return cast(None | str | Unset, data)
 
-        author_customer_id = _parse_author_customer_id(d.pop("authorCustomerId", UNSET))
+        author_customer_id = _parse_author_customer_id(d.pop("author_customer_id", UNSET))
 
         def _parse_data(data: object) -> GameDefinitionDataType0 | None | Unset:
             if data is None:
@@ -171,8 +171,8 @@ class GameDefinition:
             key=key,
             name=name,
             status=status,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
             description=description,
             author_customer_id=author_customer_id,
             data=data,

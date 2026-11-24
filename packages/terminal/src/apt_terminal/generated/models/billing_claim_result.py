@@ -35,8 +35,8 @@ class BillingClaimResult:
         field_dict.update(
             {
                 "ok": ok,
-                "ecosystemId": ecosystem_id,
-                "offerId": offer_id,
+                "ecosystem_id": ecosystem_id,
+                "offer_id": offer_id,
             }
         )
 
@@ -47,9 +47,9 @@ class BillingClaimResult:
         d = dict(src_dict)
         ok = d.pop("ok")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        offer_id = d.pop("offerId")
+        offer_id = d.pop("offer_id")
 
         billing_claim_result = cls(
             ok=ok,

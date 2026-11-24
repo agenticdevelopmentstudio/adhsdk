@@ -1,0 +1,6 @@
+
+| Version | Date | Author | Summary |
+|---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: correct the States table to the real `.lp-contact a.lp-mail` / `:hover` selectors and drop the unsupported visited/focus/active rows, rename requirements to subject-only kebab-case, state that the mail link and colophon are appended to Closer's children after the caller's `children` in that order and fix contact-004 to match, strengthen colophon rendering to a MUST, require both `lp-closer` and `lp-contact` on the composed element with a compound-selector test vector, add `mail.label` non-empty and `mail.href` mailto-scheme requirements with test vectors, reformat Design Decisions into Decision/Rationale/Approved form and move the compound-selector MUST into Behavioral Requirements, add a Compliance table, rewrite Platform Notes so each platform composes its own Closer port and replace the deprecated Compose `ClickableText`, add `Closer` to `depends-on`, and drop the quoted `modified` date. |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

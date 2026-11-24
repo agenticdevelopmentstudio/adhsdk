@@ -7,6 +7,6 @@
 - **Corrected deploy metadata**: When `deployments.created_at`, `project_name` or `branch` is corrected after first render, the row `id` MUST NOT change. MUST.
 - **Exhausted history**: `nextCursor: null` MUST mean no older page exists. MUST.
 - **Drift under test runs**: `pnpm test` transpiles without typechecking, so drift is caught only by `pnpm typecheck` in this package and by the dashboard host's `web` typecheck, which names the parity test under `files`. SHOULD run both in CI; a test-only run cannot detect drift.
-- **Malformed payload**: A response that does not match `Board` is not detected by this module; behavior is owned by the consumer that parses it (see [useBoard](adhsdk://cookbook/status/dashboard/state/board)). MUST (fact of the contract).
+- **Malformed payload**: A response that does not match `Board` is not detected by this module; behavior is owned by the consumer that parses it (see useBoard ([adhsdk.ingredient.status.dashboard.state.board](cookbook:7610ef55-32c9-43b6-8a70-aaa247cc4899))). MUST (fact of the contract).
 - **Concurrency, network, offline, cancellation, timeouts**: Not applicable; the module has no runtime behavior.
 

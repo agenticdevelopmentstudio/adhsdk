@@ -1,0 +1,59 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "d80699f9-1020-4f8a-85ce-f6406e765631",
+    "title": "Site Footer",
+    "type": "ingredient",
+    "version": "1.1.1",
+    "status": "review",
+    "language": "en",
+    "created": "2026-09-22",
+    "modified": "2026-09-25",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "A semantic footer landmark that wraps page footer content in a constrained layout column.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "footer",
+      "landmark",
+      "layout",
+      "landing"
+    ],
+    "depends-on": [
+      "51d3b1ba-ced7-4c08-8a63-c83094d91299"
+    ],
+    "related": [
+      "e0b59d60-0a56-4bf4-85cb-fb0e58170f8e"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "55b0410fad46463c",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

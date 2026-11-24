@@ -26,8 +26,8 @@ class ProjectArtifact:
         direction (ProjectArtifactDirection): whether the project INGESTED or PRODUCED this target
         target_kind (str): the target's registry, e.g. 'content.markdown'
         target_id (str): the opaque target id
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
         target (None | TargetDescriptor):
         deleted_at (None | str | Unset): set when un-linked (soft delete); null for a live link
     """
@@ -38,8 +38,8 @@ class ProjectArtifact:
     direction: ProjectArtifactDirection
     target_kind: str
     target_id: str
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     target: None | TargetDescriptor
     deleted_at: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -59,9 +59,9 @@ class ProjectArtifact:
 
         target_id = self.target_id
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         target: dict[str, Any] | None
         if isinstance(self.target, TargetDescriptor):
@@ -80,18 +80,18 @@ class ProjectArtifact:
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
-                "projectId": project_id,
+                "ecosystem_id": ecosystem_id,
+                "project_id": project_id,
                 "direction": direction,
-                "targetKind": target_kind,
-                "targetId": target_id,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
+                "target_kind": target_kind,
+                "target_id": target_id,
+                "created": created,
+                "updated": updated,
                 "target": target,
             }
         )
         if deleted_at is not UNSET:
-            field_dict["deletedAt"] = deleted_at
+            field_dict["deleted_at"] = deleted_at
 
         return field_dict
 
@@ -102,19 +102,19 @@ class ProjectArtifact:
         d = dict(src_dict)
         id = d.pop("id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        project_id = d.pop("projectId")
+        project_id = d.pop("project_id")
 
         direction = ProjectArtifactDirection(d.pop("direction"))
 
-        target_kind = d.pop("targetKind")
+        target_kind = d.pop("target_kind")
 
-        target_id = d.pop("targetId")
+        target_id = d.pop("target_id")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         def _parse_target(data: object) -> None | TargetDescriptor:
             if data is None:
@@ -138,7 +138,7 @@ class ProjectArtifact:
                 return data
             return cast(None | str | Unset, data)
 
-        deleted_at = _parse_deleted_at(d.pop("deletedAt", UNSET))
+        deleted_at = _parse_deleted_at(d.pop("deleted_at", UNSET))
 
         project_artifact = cls(
             id=id,
@@ -147,8 +147,8 @@ class ProjectArtifact:
             direction=direction,
             target_kind=target_kind,
             target_id=target_id,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
             target=target,
             deleted_at=deleted_at,
         )

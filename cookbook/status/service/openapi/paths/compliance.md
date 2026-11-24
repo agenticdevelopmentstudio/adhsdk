@@ -1,24 +1,25 @@
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [api-design-conventions](agenticdevelopercookbook://compliance/access-patterns#api-design-conventions) | passed | Access Patterns |
-| [error-response-handling](agenticdevelopercookbook://compliance/access-patterns#error-response-handling) | partial | Access Patterns |
-| [data-minimization](agenticdevelopercookbook://compliance/privacy-and-data#data-minimization) | passed | Privacy and Data |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.access-patterns.api-design-conventions](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b6745c95-4ef2-5ab4-8791-00ffc1d7b82d) | passed | Access Patterns |
+| [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | partial | Access Patterns |
+| [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | Privacy and Data |
 
 `separation-of-concerns` passes: all 14 modules and `shared.ts` build a static
 document; no module handles a real request, touches storage, or enforces auth —
 those live one layer up in `src/routes/*`, `src/storage/*`, and `src/middleware/*`,
 documented in the sibling recipes this one's `related` field points at.
-`unit-test-coverage` is partial: `test/openapi.test.ts` exercises the ASSEMBLED
-behavior with meaningful, specific assertions (the drift guard's two set
-differences, the security-scheme shape, and the committed-`openapi.json`
-snapshot), but no test targets `shared.ts`'s individual helpers directly —
-`errors()` called with zero arguments, `zodJson`'s catch-fallback branch, and
-`pathParam`/`queryParam`'s fixed shapes have no dedicated unit test of their own,
-only indirect coverage through whichever operations happen to call them.
+`unit-test-coverage` is passed: all 12 conformance vectors have a passing test.
+`test/openapi.test.ts` covers the assembled behavior (vectors 001-004: the drift
+guard's two set differences, the security-scheme shape, and the committed-`openapi.json`
+snapshot) and `test/openapi-paths.test.ts` reads the hand-written modules directly
+(vectors 005-012: the activity cursor pair, the provider webhooks, `PeerRow`
+redaction, the one-time token value, the SVG badge, the `/live/check` 503, the
+reconcile 403 and the single owner of `ActivityRow`). The `shared.ts` helpers are
+covered by the sibling `status/service/openapi` recipe's vectors.
 `explicit-error-handling` passes: the one place this component could swallow an
 error, `zodJson`'s `try`/`catch`, converts the exception into an explicit,
 documented fallback value instead of ignoring it or leaving it `undefined`.

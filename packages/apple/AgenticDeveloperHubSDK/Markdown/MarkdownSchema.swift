@@ -35,7 +35,8 @@ public enum MarkdownSchema {
     /// The head every mirrored table carries.
     private static let commonHead = """
             id TEXT PRIMARY KEY NOT NULL,
-            customer_id TEXT NOT NULL DEFAULT '',
+            owner_kind TEXT NOT NULL DEFAULT 'customer',
+            owner_id TEXT NOT NULL DEFAULT '',
             ecosystem_id TEXT NOT NULL DEFAULT ''
         """
 
@@ -43,8 +44,8 @@ public enum MarkdownSchema {
     /// upstream apart from the name, so they are generated rather than
     /// transcribed three times.
     ///
-    /// adh has an `inherit_customer` trigger on `papers` alone. It is not
-    /// ported: `MarkdownStore` sets `customer_id` explicitly on all three,
+    /// adh has an `inherit_owner` trigger on `papers` alone. It is not
+    /// ported: `MarkdownStore` sets the owner pair explicitly on all three,
     /// which is what the trigger exists to guarantee.
     private static func markerTable(_ name: String) -> String {
         """
@@ -57,8 +58,8 @@ public enum MarkdownSchema {
         );
         CREATE UNIQUE INDEX IF NOT EXISTS uq_\(name)_markdown
             ON \(name)(markdown_id) WHERE deleted_at IS NULL;
-        CREATE INDEX IF NOT EXISTS ix_\(name)_tenant_user
-            ON \(name)(ecosystem_id, customer_id);
+        CREATE INDEX IF NOT EXISTS ix_\(name)_tenant_owner
+            ON \(name)(ecosystem_id, owner_kind, owner_id);
         """
     }
 
@@ -156,7 +157,76 @@ public enum MarkdownSchema {
         migrator.registerMigration("markdown-v5-outbox-claim") { conn in
             try conn.execute(sql: "ALTER TABLE _markdown_outbox ADD COLUMN claimed_at TEXT")
         }
+        // `markdown-v6-owner-pair`: adh dropped `customer_id` from every table
+        // (sync schemaVersion 2). The nine mirrored tables carry the owner pair
+        // instead, and `content.markdown` also carries the author pair.
+        //
+        // SQLite cannot drop a column that an index or a UNIQUE constraint
+        // names, and `customer_id` is in both, so each table is rebuilt: its
+        // rows are parked in a temp table, the table is dropped and recreated
+        // from the current DDL, and the rows are copied back with the old
+        // `customer_id` as the owner id (`'customer'` kind) and, on `markdown`,
+        // as the author id. A database created at v1 by this build already has
+        // the new shape, so the migration finds no `customer_id` and does nothing.
+        migrator.registerMigration("markdown-v6-owner-pair") { conn in
+            try rebuildForOwnerPair(in: conn)
+        }
         return migrator
+    }
+
+    /// The v6 rebuild. See `markdown-v6-owner-pair`.
+    private static func rebuildForOwnerPair(in conn: Database) throws {
+        let legacy = try Row.fetchAll(conn, sql: "PRAGMA table_info(markdown)")
+            .contains { ($0["name"] as String) == "customer_id" }
+        guard legacy else { return }
+
+        // Parent-first order is `tables`' own order; children are dropped first.
+        for name in tables.reversed() {
+            try conn.execute(sql: "ALTER TABLE \(name) RENAME TO _v5_\(name)")
+        }
+        // The renamed tables keep their index names, which the recreate below
+        // reuses; drop them so `CREATE INDEX IF NOT EXISTS` makes the new ones.
+        let stale = try String.fetchAll(
+            conn,
+            sql: """
+                SELECT name FROM sqlite_master
+                WHERE type = 'index' AND substr(tbl_name, 1, 4) = '_v5_'
+                  AND sql IS NOT NULL
+                """)
+        for index in stale {
+            try conn.execute(sql: "DROP INDEX IF EXISTS \"\(index)\"")
+        }
+        try conn.execute(sql: documentDDL)
+        for name in ["notes", "docs", "papers"] {
+            try conn.execute(sql: markerTable(name))
+        }
+        try conn.execute(sql: taxonomyDDL)
+
+        for name in tables {
+            let old = "_v5_\(name)"
+            let oldColumns = try Row.fetchAll(conn, sql: "PRAGMA table_info(\(old))")
+                .map { $0["name"] as String }
+            let newColumns = try Row.fetchAll(conn, sql: "PRAGMA table_info(\(name))")
+                .map { $0["name"] as String }
+            // Columns present in both, other than the ones this migration reshapes.
+            let carried = newColumns.filter { oldColumns.contains($0) && $0 != "owner_kind" && $0 != "owner_id" }
+            var into = carried + (name == "markdown" ? [] : ["owner_kind", "owner_id"])
+            var from = carried
+            if name == "markdown" {
+                // The owner pair already existed on `markdown`; `customer_id` becomes its author.
+                into += ["owner_kind", "owner_id", "author_kind", "author_id"]
+                from += ["owner_kind", "owner_id", "'customer'", "customer_id"]
+            } else {
+                from += ["'customer'", "customer_id"]
+            }
+            try conn.execute(sql: """
+                INSERT INTO \(name) (\(into.joined(separator: ", ")))
+                SELECT \(from.joined(separator: ", ")) FROM \(old)
+                """)
+        }
+        for name in tables.reversed() {
+            try conn.execute(sql: "DROP TABLE _v5_\(name)")
+        }
     }
 
     /// Runs the migration against a `BoundedDatabase`, turning foreign keys on
@@ -204,26 +274,30 @@ public enum MarkdownSchema {
                 CHECK (visibility IN ('private', 'public')),
             stage TEXT NOT NULL DEFAULT 'draft'
                 CHECK (stage IN ('draft', 'final')),
-            owner_kind TEXT NOT NULL DEFAULT 'customer'
-                CHECK (owner_kind IN ('customer', 'organization')),   -- markdown_owner_kind_chk
-            owner_id TEXT NOT NULL DEFAULT '',
+            -- The author pair: who wrote the document, as opposed to who owns it.
+            -- Nullable, as in adh; `MarkdownStore` always stamps it.
+            author_kind TEXT,
+            author_id TEXT,
         \(commonTail),
-            UNIQUE (ecosystem_id, id)
+            UNIQUE (ecosystem_id, id),
+            -- LOCAL: adh constrains markdown's owner to a customer or an
+            -- organization (markdown_owner_kind_chk).
+            CHECK (owner_kind IN ('customer', 'organization'))
         );
         CREATE INDEX IF NOT EXISTS idx_markdown_content_hash ON markdown(content_hash);
         CREATE INDEX IF NOT EXISTS idx_markdown_owner ON markdown(owner_kind, owner_id);
         CREATE INDEX IF NOT EXISTS idx_markdown_updated
-            ON markdown(ecosystem_id, customer_id, updated_at) WHERE is_deleted = 0;
+            ON markdown(ecosystem_id, owner_kind, owner_id, updated_at) WHERE is_deleted = 0;
         CREATE INDEX IF NOT EXISTS idx_markdown_public_updated
             ON markdown(updated_at) WHERE visibility = 'public' AND is_deleted = 0;
-        CREATE UNIQUE INDEX IF NOT EXISTS uq_markdown_author_route
-            ON markdown(customer_id, public_route)
+        CREATE UNIQUE INDEX IF NOT EXISTS uq_markdown_author_pair_route
+            ON markdown(author_kind, author_id, public_route)
             WHERE public_route IS NOT NULL AND is_deleted = 0;
         -- The index that makes a document's *kind* real without a kind column.
         -- SQLite's json_extract over a partial expression index is the direct
         -- analogue of PG's `frontmatter ->> 'adh_source'`.
         CREATE UNIQUE INDEX IF NOT EXISTS uq_markdown_adh_source
-            ON markdown(customer_id, json_extract(frontmatter, '$.adh_source'))
+            ON markdown(author_kind, author_id, json_extract(frontmatter, '$.adh_source'))
             WHERE json_extract(frontmatter, '$.adh_source') IS NOT NULL AND is_deleted = 0;
         """
 
@@ -240,8 +314,8 @@ public enum MarkdownSchema {
         \(commonTail),
             UNIQUE (ecosystem_id, id)
         );
-        CREATE INDEX IF NOT EXISTS ix_categories_tenant_user
-            ON categories(ecosystem_id, customer_id);
+        CREATE INDEX IF NOT EXISTS ix_categories_tenant_owner
+            ON categories(ecosystem_id, owner_kind, owner_id);
 
         CREATE TABLE IF NOT EXISTS category_edges (
         \(commonHead),
@@ -278,8 +352,8 @@ public enum MarkdownSchema {
         );
         CREATE INDEX IF NOT EXISTS ix_category_items_target
             ON category_items(target_kind, target_id);
-        CREATE INDEX IF NOT EXISTS ix_category_items_tenant_user
-            ON category_items(ecosystem_id, customer_id);
+        CREATE INDEX IF NOT EXISTS ix_category_items_tenant_owner
+            ON category_items(ecosystem_id, owner_kind, owner_id);
 
         CREATE TABLE IF NOT EXISTS keywords (
         \(commonHead),
@@ -288,7 +362,7 @@ public enum MarkdownSchema {
             description TEXT NOT NULL DEFAULT '',
         \(commonTail),
             UNIQUE (ecosystem_id, id),
-            UNIQUE (customer_id, ecosystem_id, label)
+            UNIQUE (owner_kind, owner_id, ecosystem_id, label)
         );
 
         CREATE TABLE IF NOT EXISTS keyword_items (
@@ -304,8 +378,8 @@ public enum MarkdownSchema {
         );
         CREATE INDEX IF NOT EXISTS ix_keyword_items_target
             ON keyword_items(target_kind, target_id);
-        CREATE INDEX IF NOT EXISTS ix_keyword_items_tenant_user
-            ON keyword_items(ecosystem_id, customer_id);
+        CREATE INDEX IF NOT EXISTS ix_keyword_items_tenant_owner
+            ON keyword_items(ecosystem_id, owner_kind, owner_id);
         """
 
     // MARK: - The local REST queue

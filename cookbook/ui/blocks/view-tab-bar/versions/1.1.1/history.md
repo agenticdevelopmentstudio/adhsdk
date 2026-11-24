@@ -1,0 +1,5 @@
+
+| Version | Date | Author | Summary |
+|---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case; reformatted Design Decisions to Decision/Rationale/Approved; rewrote Compliance as a real, linked check table instead of an ad hoc "Passed" list; corrected the SwiftUI/Compose/AppKit-UIKit/WinUI 3 platform notes to real native APIs; resolved the onChange/value contradiction between Configuration and Edge Cases; rewrote the incoherent duplicate-value, single-item, and impossible-null-href edge cases; fixed the Deep Linking claim that contradicted the plain-`<a>` source; added the Tabs recipe to `related`; dropped "scrollable" from the summary (no overflow handling exists); removed the undefined "Rule 15" reference; reworded the layout/item-styling requirements and vectors to assert observable/computed outcomes instead of literal Tailwind class strings; added test vectors for the both-empty-arrays case and for `className`/`px-4` merging. |

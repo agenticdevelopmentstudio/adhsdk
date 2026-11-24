@@ -181,7 +181,7 @@ final class ConversationsFeed {
             let term = dto.termProgram.isEmpty ? "an unknown terminal" : dto.termProgram
             return "Typing into a session needs iTerm2 or Terminal.app; this one runs in \(term)."
         }
-        let result = TerminalTextInjector.inject(
+        let result = await TerminalTextInjector.inject(
             text, termProgram: dto.termProgram,
             termSessionId: dto.termSessionId, pid: dto.pid
         )
@@ -193,45 +193,10 @@ final class ConversationsFeed {
 
     // MARK: - Row action
 
-    /// Brings the clicked row's session forward — the terminal tab it is
-    /// running in, found the way the Sessions window finds it. Nil when it
-    /// went there, or the reason it could not.
-    ///
-    /// Always `.activateWindow`, whatever `UserSettings.clickAction` says: that
-    /// pref is the Sessions list's, and it can name actions — open a fresh
-    /// terminal, run a command — that are the wrong answer to "take me there"
-    /// from a feed row.
-    ///
-    /// The handler is left on its default of no Accessibility, as the Sessions
-    /// window's is: an iTerm2 or Terminal.app session's tab is selected by
-    /// Apple Event, and any other terminal is brought forward whole. Checking
-    /// for an Accessibility grant Stenographer never asks for stalls tccd, and
-    /// with it the whole machine, for ~10s.
+    /// Brings the clicked row's session forward. Nil when it went there, or the
+    /// reason it could not — ``SessionActivation/activate(id:service:)``, the
+    /// toolkit's one route from a session id to the session.
     func activateSession(id: String) async -> String? {
-        // The feed carries only a session id; the activation needs the
-        // session's terminal identity (pid, term program, tab id), which
-        // lives on the session record.
-        // One row by id — not the whole session list searched client-side,
-        // which read and encoded up to 10,000 sessions to find this one.
-        // No event count: activation never reads it, and counting walks
-        // every event the session logged.
-        guard let found = await service.session(id: id, includeCounts: false) else {
-            return "Couldn't reach the daemon — it may be restarting. Try again."
-        }
-        guard let dto = found else {
-            return "The daemon has no record of this session any more."
-        }
-        let handler = SessionWatcher.SessionWatcherActionHandler(
-            settingsStore: UserSettings.shared,
-            usesAccessibility: false
-        )
-        let result = handler.execute(
-            action: .activateWindow,
-            for: StenographerSessionListSource.session(from: dto)
-        )
-        if case .failure(let error) = result {
-            return error.localizedDescription
-        }
-        return nil
+        await SessionActivation.activate(id: id, service: service)
     }
 }

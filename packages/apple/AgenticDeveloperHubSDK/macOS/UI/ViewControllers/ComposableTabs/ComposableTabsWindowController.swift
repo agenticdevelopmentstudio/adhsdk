@@ -149,7 +149,7 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     /// the delegate has been asked for it, and a test with no window on screen
     /// has to do the asking itself.
     lazy var toolbarDelegate = WindowToolbarBuilder.Delegate(
-        items: shelfToolbarItems + [
+        items: shelfToolbarItems + extraToolbarItems + [
             .flexibleSpace,
             .search(identifier: .projectSearch, placeholder: "Search"),
             .button(
@@ -164,6 +164,10 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
             self?.applySearchAvailability(to: field)
         }
     )
+
+    /// The window's own toolbar items, after the shelf's and before the
+    /// flexible space; each a `.targetedButton` aimed at whatever answers it.
+    private let extraToolbarItems: [WindowToolbarItem]
 
     /// The titlebar search field, once the toolbar has built it.
     public var searchField: NSSearchField? { toolbarDelegate.searchField }
@@ -198,6 +202,28 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
 
     /// Project-level tabs, in creation order.
     private var tabGroups: [TabGroup] = []
+
+    /// The path of the directory the window is working in, drawn at the
+    /// leading edge of the footer: `~ › Development › app`. It is chrome, not
+    /// a pane strip, so it has no border of its own.
+    private lazy var titleBreadcrumb: BreadcrumbView = {
+        let crumbs = BreadcrumbView(rootURL: project.directoryURL, style: .homeRelative)
+        crumbs.translatesAutoresizingMaskIntoConstraints = false
+        crumbs.heightAnchor.constraint(equalToConstant: 18).isActive = true
+        crumbs.setAccessibilityIdentifier("project.title.breadcrumb")
+        crumbs.onSelect = { [weak self] url in self?.openFromTitleBreadcrumb(url) }
+        return crumbs
+    }()
+
+    /// The directory the branch in the title was last read for, so a refresh
+    /// that changes nothing does not run git again.
+    private var titleDirectory: URL?
+
+    /// The branch last read for each directory the title has named, so the
+    /// title is drawn whole at once rather than as the name alone and then the
+    /// name and branch a moment later. `.some(nil)` is a directory outside any
+    /// repository.
+    private var branchNames: [URL: String?] = [:]
 
     /// Set for the duration of `reloadTabs()`'s removal loop. `removeTab`
     /// fires `didSelectTab` for whichever member it activates next, and none
@@ -261,6 +287,11 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     /// when the mirror is done.
     private var isMirroringArrangement = false
 
+    /// True while `adopt(_:)` puts another window's configuration on this one:
+    /// every tab reshaped would otherwise write a
+    /// half-adopted project. `adopt` writes once, when it is done.
+    private var isAdoptingConfiguration = false
+
     private var titlebarAccessory: NSTitlebarAccessoryViewController?
     private let arrangeButton = ArrangeModeTitlebarButton(accessibilityID: "project-window.arrange-button")
     private var cancellables = Set<AnyCancellable>()
@@ -268,6 +299,15 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     /// Keeps the room around the panes following the setting while the window
     /// is open, so the Spacing panel previews on the window behind its sheet.
     private var spacingObservers: [UserSettingObserver<Int>] = []
+
+    /// Whether the user picked this project's Tab Bars. Until they do, the
+    /// window follows the app-wide tab positions (`UserSettings.tabsPositions`)
+    /// live and persists no edges; once they do, their choice is stored and
+    /// the window stops following.
+    private var hasExplicitEdgeChoice = false
+
+    /// Re-applies the app-wide tab positions while there is no explicit choice.
+    private var tabPositionsObserver: UserSettingObserver<TabPositions>?
 
     /// The tree holding its panes' shares while the shelf moves, if any. See
     /// `ComposableTabsViewController.holdThicknessFractions()`.
@@ -296,19 +336,37 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     ///   none.
     /// - Parameter shelf: The project shelf, wired by the caller. With none,
     ///   the window has no shelf and no toggle for one.
+    /// - Parameter showsTabBars: false for a window with one fixed
+    ///   arrangement and no top-level tabs to switch (the File Browser window).
+    /// - Parameter showsPaneChrome: false for a window that is one pane and
+    ///   nothing else (a Document window): no pane title bar, no pane outline
+    ///   or active-pane border, and no frame spacing around the pane.
+    /// - Parameter showsFooter: false for a window with no footer bar (a
+    ///   Document window, for now).
+    /// - Parameter extraToolbarItems: the window's own items, placed after the
+    ///   shelf's and before the flexible space (the Git window's verbs).
     public init(
         project: ProjectWorkspace,
         tabItemDataSource: ComposableTabsTabItemDataSource? = nil,
-        shelf: ProjectShelfViewController? = nil
+        shelf: ProjectShelfViewController? = nil,
+        showsTabBars: Bool = true,
+        showsPaneChrome: Bool = true,
+        showsFooter: Bool = true,
+        extraToolbarItems: [WindowToolbarItem] = []
     ) {
         self.project = project
         self.shelf = shelf
+        self.showsPaneChrome = showsPaneChrome
+        self.extraToolbarItems = extraToolbarItems
         // Locals first: a stored property cannot be read back before
         // `super.init`, and the host needs the tab controller to wrap.
         let tabbed = MultiTabbedViewController()
+        tabbed.showsTabBars = showsTabBars
+        tabbed.showsCenterOutline = showsPaneChrome
         let content = WindowFooterContentViewController(
             contentViewController: tabbed,
-            accessibilityPrefix: "project.footer"
+            accessibilityPrefix: "project.footer",
+            showsFooter: showsFooter
         )
         let windowContent = ProjectWindowSplitViewController(content: content, shelf: shelf)
         self.tabbed = tabbed
@@ -323,13 +381,14 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
             persistsFrame: true
         )
         self.windowTitle = project.displayName
+        self.windowTitleSymbolName = project.repo.kind.isDocument ? "doc" : "folder"
         // Full-size content: the panes' backdrop runs up behind a clear
         // titlebar, as Settings' does — see `configureWindow(_:)`.
         self.windowStyleMask = [.titled, .closable, .resizable, .miniaturizable, .fullSizeContentView]
         self.minSize = NSSize(width: 400, height: 300)
 
         tabbed.delegate = self
-        Self.applyPaneSpacing(PaneSpacing.contentInsets, to: tabbed)
+        Self.applyPaneSpacing(frameSpacing, to: tabbed)
         backdropObserver = ThemePaletteObserver(host: tabbed.view) { [weak self] palette in
             self?.tabbed.centerBackgroundColor = NSColor(palette.projectPaneBackdrop)
             self?.tabbed.centerOutlineColor = NSColor(palette.projectPaneOutline)
@@ -358,12 +417,15 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
         }
         spacingObservers = PaneSpacing.edgeSettings.values.map { setting in
             UserSettingObserver(setting) { [weak self] _ in
-                guard let tabbed = self?.tabbed else { return }
-                Self.applyPaneSpacing(PaneSpacing.contentInsets, to: tabbed)
+                guard let self else { return }
+                Self.applyPaneSpacing(frameSpacing, to: tabbed)
             }
         }
         self.tabItemDataSource = tabItemDataSource
         installInitialTabs()
+        tabPositionsObserver = UserSettingObserver(UserSettings.tabsPositions) { [weak self] _ in
+            self?.followGlobalTabPositions()
+        }
 
         // The pane the user is working in is tracked once for the whole app;
         // this window only cares when the change is its own.
@@ -380,6 +442,34 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
             .store(in: &cancellables)
 
         refreshActivePaneChrome()
+    }
+
+    /// Whether this window's panes wear their chrome — see `init`.
+    private let showsPaneChrome: Bool
+
+    /// The room left around the panes: the user's frame spacing, or none for
+    /// a window whose one pane runs to its edges.
+    private var frameSpacing: NSEdgeInsets {
+        showsPaneChrome ? PaneSpacing.contentInsets : NSEdgeInsetsZero
+    }
+
+    /// A tree root built for this window, stripped of pane chrome when the
+    /// window shows none. Both properties stamp down the subtree.
+    private func applyPaneChrome(to root: ComposableTabsViewController) {
+        guard !showsPaneChrome else { return }
+        root.showsPaneTitleBars = false
+        root.showsPaneOutlines = false
+    }
+
+    /// The file a Document window is showing, set by whoever follows its
+    /// Document pane's focus. The window's title is this file's name; `nil`
+    /// falls back to the project's display name.
+    public var titleDocumentURL: URL? {
+        didSet {
+            guard titleDocumentURL != oldValue else { return }
+            titleDirectory = nil
+            refreshTitle()
+        }
     }
 
     /// Hands the window's spacing to the tabs: the room around the panes, and
@@ -449,16 +539,19 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     @available(macOS, deprecated: 10.13, message: "Builds the NSDrawer-backed help presenter")
     public override func configureWindow(_ window: NSWindow) {
         super.configureWindow(window)
+        if shelf != nil {
+            footer.leadingAccessory = titleBreadcrumb
+        }
+        toolbarDelegate.titleSymbolName = windowTitleSymbolName
         window.toolbar = toolbarDelegate.makeToolbar(identifier: "project.toolbar")
         // Settings' seamless titlebar, shared with the Coding Partner window.
         // The title stays — see above.
         WindowTitlebarAccessory.applyIntegratedTitlebar(to: window)
-        if shelf != nil {
-            // The toolbar draws the title after the shelf instead — see
-            // `WindowToolbarItem.projectShelfItems`.
-            window.titleVisibility = .hidden
-            toolbarDelegate.titleWindow = window
-        }
+        // The toolbar draws the title — after the shelf toggle when there is
+        // a shelf, first when there is none — so it is the same size and on
+        // the same line as the toolbar's controls in every window.
+        window.titleVisibility = .hidden
+        toolbarDelegate.titleWindow = window
 
         // The window, not `self.window`: this runs *during* `loadWindow()`, so
         // the controller's own property is not pointing at it yet.
@@ -480,6 +573,7 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
         super.showWindow(sender)
         installFirstResponderObserverIfNeeded()
         installTitlebarAccessoryIfNeeded()
+        installTitlebarBorderIfNeeded()
         restoreFocusedLeafForActiveTab(unlessShelfHasFocus: true)
         refreshActivePaneChrome()
         refreshHelpButtonAppearance()
@@ -501,9 +595,10 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
 
     // MARK: - Project shelf
 
-    /// The toggle, when there is a shelf to toggle.
+    /// The shelf toggle and the title after it, or the title alone in a
+    /// window with no shelf.
     private var shelfToolbarItems: [WindowToolbarItem] {
-        guard shelf != nil else { return [] }
+        guard shelf != nil else { return [.windowTitle(identifier: .projectTitle)] }
         return WindowToolbarItem.projectShelfItems(
             toggleAction: #selector(ComposableTabsWindowController.toggleShelf),
             splitView: { [weak self] in self?.windowContent.splitView })
@@ -518,6 +613,10 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     /// Opens or closes the shelf on `panel` — ⌘0 and ⌘1.
     public func toggleShelfPanel(_ panel: ProjectShelfPanel) {
         windowContent.toggleShelfPanel(panel)
+    }
+
+    public func setProjectAreaBusy(_ busy: Bool) {
+        windowContent.setContentBusy(busy)
     }
 
     /// The shelf's visibility and width, for the window swapped in for this
@@ -552,6 +651,32 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     /// settings. Which tab bars a window shows moved into those settings — it
     /// is a property of the project, not a thing to flick on and off from the
     /// titlebar while working.
+    /// A one-point line under the title bar, so the title and its controls
+    /// read as a bar of their own above the panes. A view, not
+    /// `titlebarSeparatorStyle`: a transparent titlebar over full-size content
+    /// draws no separator at all.
+    private var titlebarBorder: NSView?
+
+    private func installTitlebarBorderIfNeeded() {
+        guard titlebarBorder == nil, let window, let content = window.contentView,
+              let guide = window.contentLayoutGuide as? NSLayoutGuide else { return }
+        let border = NSView()
+        border.wantsLayer = true
+        border.translatesAutoresizingMaskIntoConstraints = false
+        content.addSubview(border, positioned: .above, relativeTo: nil)
+        border.observeTheme { border, palette in
+            border.layer?.backgroundColor = palette.nsColor(.outline).cgColor
+        }
+        NSLayoutConstraint.activate([
+            border.leadingAnchor.constraint(equalTo: content.leadingAnchor),
+            border.trailingAnchor.constraint(equalTo: content.trailingAnchor),
+            border.topAnchor.constraint(equalTo: guide.topAnchor),
+            border.heightAnchor.constraint(equalToConstant: 1)
+        ])
+        border.setAccessibilityIdentifier("project-window.titlebar-border")
+        titlebarBorder = border
+    }
+
     private func installTitlebarAccessoryIfNeeded() {
         guard titlebarAccessory == nil, let window else { return }
 
@@ -585,6 +710,72 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
         return true
     }
 
+    /// Whether `addPaneBesideActivePane(showing:)` would add `viewID` now.
+    public func canAddPaneBesideActivePane(showing viewID: ComposableTabsViewID) -> Bool {
+        guard let pane = activePane, let split = pane.parent as? ComposableTabsViewController else { return false }
+        return split.allowedInsertions(beside: pane).contains { $0.viewID == viewID }
+    }
+
+    /// Every pane type this project's registry can build, placeholder aside,
+    /// sorted by title — what Projects ▸ Add Project Panel lists. Whether
+    /// one fits beside the active pane right now is
+    /// `canAddPaneBesideActivePane(showing:)`'s to say.
+    public var addablePaneChoices: [(viewID: ComposableTabsViewID, title: String, symbolName: String?)] {
+        let registry = project.layout.registry
+        return registry.registeredViewIDs
+            .filter { $0 != .placeholder && !project.layout.spec.retiredViews.contains($0) }
+            .map { viewID in
+                let descriptor = registry.descriptor(for: viewID)
+                return (viewID, descriptor.displayName, descriptor.symbolName)
+            }
+            .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
+    }
+
+    // MARK: - Tab commands (File menu)
+
+    /// What Reopen Tab brings back: the last tab closed in each project,
+    /// keyed by project so a project window never reopens another project's
+    /// tab. In memory only — a closed tab is not worth a schema.
+    private struct ClosedTab {
+        let title: String
+        let workingDirectory: URL
+    }
+    private static var lastClosedTabByProject: [UUID: ClosedTab] = [:]
+
+    /// File ▸ New Tab: a new project-level tab, exactly as the tab bar's "+"
+    /// makes one.
+    public func addTab() {
+        addTabGroup()
+    }
+
+    /// The last tab stays — closing it is Close Window's job.
+    public var canCloseActiveTab: Bool {
+        tabGroups.count > 1 && tabbed.activeTabID != nil
+    }
+
+    /// File ▸ Close Tab: closes the active tab's whole group.
+    public func closeActiveTab() {
+        guard let id = tabbed.activeTabID else { return }
+        closeTabGroup(containing: id)
+    }
+
+    /// The active tab's layout tree — `ComposableTabsViewContext.treeID` of
+    /// every pane in it — so a host can reach what it keyed by tab.
+    public var activeTreeID: UUID? {
+        activeSplit?.nodeID
+    }
+
+    public var canReopenClosedTab: Bool {
+        Self.lastClosedTabByProject[project.id] != nil
+    }
+
+    /// File ▸ Reopen Tab: a new tab with the closed one's title and working
+    /// directory, wearing the window's current arrangement like every tab.
+    public func reopenClosedTab() {
+        guard let closed = Self.lastClosedTabByProject.removeValue(forKey: project.id) else { return }
+        addTabGroup(title: closed.title, workingDirectory: closed.workingDirectory)
+    }
+
     // MARK: - Arrange mode and project settings
 
     /// Also the target of the Window ▸ Arrange menu item, reached down the
@@ -608,29 +799,73 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
         guard let contentViewController = window?.contentViewController else { return }
         let settings = ComposableTabsSettingsViewController(
             isEdgeEnabled: { [weak self] edge in self?.tabbed.isEdgeEnabled(edge) ?? false },
-            setEdgeEnabled: { [weak self] edge, enabled in self?.setEdgeEnabled(edge, enabled) }
+            setEdgeEnabled: { [weak self] edge, enabled in self?.setEdgeEnabled(edge, enabled) },
+            useGlobalTabPositions: { [weak self] in self?.useGlobalTabPositions() },
+            topics: project.layout.registry.makeProjectSettingsTopics(for: project)
         )
         contentViewController.presentAsSheet(settings)
     }
 
-    /// Single entry point for edge toggling (project settings and Cocoa
-    /// Scripting alike) so a freshly enabled edge is always topped up to
+    /// Single entry point for the user's edge toggling (project settings and
+    /// Cocoa Scripting alike) so a freshly enabled edge is always topped up to
     /// the global tab count and the edge set is persisted. Disabling keeps
-    /// the edge's members so re-enabling restores them.
+    /// the edge's members so re-enabling restores them. A toggle that changes
+    /// anything is the project's explicit Tab Bars choice: from then on the
+    /// window keeps its own edges rather than following the app-wide ones.
     public func setEdgeEnabled(_ edge: Edge, _ enabled: Bool) {
-        guard tabbed.isEdgeEnabled(edge) != enabled else { return }
+        guard applyEdge(edge, enabled) else { return }
+        hasExplicitEdgeChoice = true
+        persistAllTabs()
+    }
+
+    /// Drops the project's own Tab Bars choice, so the window follows the
+    /// app-wide tab positions again, live, as a project that never chose does.
+    /// The stored choice is cleared first (`enabledEdges: []` writes "no
+    /// choice"), then the global edges are applied; that save writes no edges,
+    /// so the cleared choice stays cleared.
+    public func useGlobalTabPositions() {
+        guard !isReloadingTabs, !isClosing else { return }
+        hasExplicitEdgeChoice = false
+        persistAllTabs(clearingEdgeChoice: true)
+        followGlobalTabPositions()
+    }
+
+    /// Turns `edge` on or off and tops a newly enabled edge up, without making
+    /// or persisting a choice. Returns whether anything changed.
+    @discardableResult
+    private func applyEdge(_ edge: Edge, _ enabled: Bool) -> Bool {
+        guard tabbed.isEdgeEnabled(edge) != enabled else { return false }
         // The last enabled edge stays enabled. A window with no tab bar has no
         // tabs, therefore no panes, and no control anywhere in it to bring one
         // back — the only way out would be the titlebar settings button
         // (`principle-of-least-astonishment`).
         guard enabled || Edge.allCases.contains(where: { $0 != edge && tabbed.isEdgeEnabled($0) }) else {
-            return
+            return false
         }
         tabbed.setEdgeEnabled(edge, enabled)
         if enabled {
             topUpTabs(on: edge)
         }
-        persistAllTabs()
+        return true
+    }
+
+    /// Puts the app-wide tab positions on a window with no Tab Bars choice of
+    /// its own — every enable before any disable, for the reason
+    /// `enabledTabEdgeNames` gives — and saves the tabs any newly enabled edge
+    /// gained. The save writes no edges, so the project keeps following.
+    /// Internal for tests, which cannot see the setting's live delivery: the
+    /// static setting is bound to the `UserSettings.shared` of its first use.
+    func followGlobalTabPositions() {
+        guard !hasExplicitEdgeChoice, !isReloadingTabs, !isClosing else { return }
+        let wanted = ProjectWorkspace.globalEnabledEdges
+        var changed = false
+        for edge in Edge.allCases where wanted.contains(edge) {
+            changed = applyEdge(edge, true) || changed
+        }
+        for edge in Edge.allCases where !wanted.contains(edge) {
+            changed = applyEdge(edge, false) || changed
+        }
+        if changed { persistAllTabs() }
     }
 
     /// Gives `edge` one member tab per group so its count matches the
@@ -659,11 +894,12 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     }
 
     /// Creates a project-level tab: one member per enabled edge, all
-    /// sharing a title, and activates the first member.
-    private func addTabGroup() {
-        let title = "Tab \(tabGroups.count + 1)"
+    /// sharing a title, and activates the member on the primary edge.
+    private func addTabGroup(title: String? = nil, workingDirectory: URL? = nil) {
+        let title = title ?? "Tab \(tabGroups.count + 1)"
         var group = TabGroup(
-            id: UUID(), title: title, members: [:], workingDirectory: project.directoryURL)
+            id: UUID(), title: title, members: [:],
+            workingDirectory: workingDirectory ?? project.directoryURL)
         for edge in Edge.allCases where tabbed.isEdgeEnabled(edge) {
             let id = UUID()
             // The group's directory, never `project.directoryURL` again: the
@@ -686,11 +922,11 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
             group.members[edge] = id
         }
         tabGroups.append(group)
-        for edge in Edge.allCases {
-            if let id = group.members[edge] {
-                tabbed.selectTab(id: id, on: edge)
-                break
-            }
+        // The member on the primary edge — the first enabled one in top,
+        // left, right, bottom order — is the one that comes up in front.
+        let primary = tabbed.primaryEdge
+        if let id = group.members[primary] {
+            tabbed.selectTab(id: id, on: primary)
         }
         persistAllTabs()
         // `selectTab(id:on:)` above already fired `activeTabDidChange`, and
@@ -730,6 +966,7 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
             workingDirectory: workingDirectory,
             isRoot: true
         )
+        applyPaneChrome(to: split)
         wireLayoutCallback(on: split, tabID: tabID)
         splitControllersByTabID[tabID] = split
         return split
@@ -875,6 +1112,15 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
         }
     }
 
+    /// The working directory of the tab a pane is on — the project's own
+    /// directory for a tab with none of its own, a worktree's for a worktree
+    /// tab — or `nil` for a pane this window does not have. What a tool
+    /// called from a pane resolves "here" to (`notations_current`).
+    public func workingDirectory(ofTabContaining pane: ComposableTabsPaneViewController) -> URL? {
+        guard let group = tabGroup(containing: pane) else { return nil }
+        return tabGroups.first { $0.id == group.id }?.workingDirectory ?? project.directoryURL
+    }
+
     /// Splits `pane`, adding a pane that shows `viewID`, and returns the new
     /// pane. `nil` when `pane` is not in this window or the spec refuses.
     ///
@@ -894,6 +1140,25 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
         adding viewID: ComposableTabsViewID,
         direction: ComposableTabsViewController.Direction
     ) -> ComposableTabsPaneViewController? {
+        guard let (root, split) = splitHolding(pane, adding: viewID) else { return nil }
+        let before = Set(root.allLeaves().map(\.nodeID))
+        split.split(pane, adding: viewID, direction: direction)
+        guard let added = root.allLeaves().first(where: { !before.contains($0.nodeID) }) else { return nil }
+        _ = added.view
+        return added
+    }
+
+    /// Whether `splitPane(_:adding:direction:)` would add `viewID` beside
+    /// `pane`: the pane is in one of this window's tabs and the spec has room.
+    public func canSplitPane(_ pane: ComposableTabsPaneViewController, adding viewID: ComposableTabsViewID) -> Bool {
+        splitHolding(pane, adding: viewID) != nil
+    }
+
+    /// The tab's root and the split holding `pane`, when the spec allows
+    /// `viewID` beside it.
+    private func splitHolding(
+        _ pane: ComposableTabsPaneViewController, adding viewID: ComposableTabsViewID
+    ) -> (root: ComposableTabsViewController, split: ComposableTabsViewController)? {
         guard let root = splitControllersByTabID.values.first(where: { controller in
             controller.allLeaves().contains { $0 === pane }
         }),
@@ -901,11 +1166,7 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
                 ?? (pane.host as? ComposableTabsViewController),
             split.allowedInsertions(beside: pane).contains(where: { $0.viewID == viewID })
         else { return nil }
-        let before = Set(root.allLeaves().map(\.nodeID))
-        split.split(pane, adding: viewID, direction: direction)
-        guard let added = root.allLeaves().first(where: { !before.contains($0.nodeID) }) else { return nil }
-        _ = added.view
-        return added
+        return (root, split)
     }
 
     private func leaves(of group: ScriptingTab) -> [ComposableTabsPaneViewController] {
@@ -1160,7 +1421,8 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
 
     /// The display path for the window's current state: the project, the tab
     /// in front, the pane the user is working in, and what that pane says is
-    /// selected.
+    /// selected. A window without tab bars has no tab the user can see, so its
+    /// path skips the tab and its default "Tab 1" never reaches the footer.
     ///
     /// `internal`, and a computed property rather than a stored string, so a
     /// test can read it without a window on screen and so there is exactly one
@@ -1169,7 +1431,7 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
         let pane = activePane
         return PaneDisplayPath.format([
             project.displayName,
-            activeTabTitle,
+            tabbed.showsTabBars ? activeTabTitle : nil,
             pane?.resolvedTitle,
             pane?.selectionDescription
         ])
@@ -1186,6 +1448,122 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     func refreshActivePaneChrome() {
         refreshFooterStatus()
         refreshSearchAvailability()
+        refreshTitle()
+    }
+
+    // MARK: - Title
+
+    /// The directory of the tab in front — a worktree tab's own checkout, else
+    /// the project's.
+    var activeWorkingDirectory: URL {
+        guard let activeTabID = tabbed.activeTabID else { return project.directoryURL }
+        return tabGroups.first { $0.members.values.contains(activeTabID) }?.workingDirectory
+            ?? project.directoryURL
+    }
+
+    /// The title for the window's kind over the active directory's path
+    /// (`title(kind:name:directory:branch:)`). The branch is read off the main
+    /// thread (it runs git); until it arrives the title has no branch.
+    private func refreshTitle() {
+        let directory = activeWorkingDirectory
+        // A window that is one file's shows that file, not its folder.
+        let kind = project.repo.kind
+        if kind.isDocument, let titleDocumentURL {
+            titleBreadcrumb.fileURL = titleDocumentURL
+        } else {
+            titleBreadcrumb.fileURL = kind == .document ? URL(fileURLWithPath: project.repo.path) : directory
+        }
+        guard directory != titleDirectory else { return }
+        titleDirectory = directory
+        // A Document window is named for the file it is showing; until its
+        // pane reports one, for its row (the file it was opened on, or
+        // "Documents").
+        guard !kind.isDocument else {
+            setTitle(titleDocumentURL?.lastPathComponent ?? project.displayName)
+            return
+        }
+        let name = project.displayName
+        setTitle(Self.title(kind: kind, name: name, directory: directory, branch: branchNames[directory] ?? nil))
+        // A File Browser window names no branch, so it never asks for one.
+        guard kind != .fileBrowser else { return }
+        // Read again even when known: the checkout may have switched branch.
+        Task.detached(priority: .userInitiated) { [weak self] in
+            let branch = GitProjectRoot.currentBranchName(at: directory.path)
+            await MainActor.run {
+                guard let self else { return }
+                self.branchNames[directory] = .some(branch)
+                guard self.titleDirectory == directory else { return }
+                self.setTitle(Self.title(kind: kind, name: name, directory: directory, branch: branch))
+            }
+        }
+    }
+
+    /// Reads the active directory's branch again and retitles the window: the
+    /// checkout's branch moved under it (a Git window's refs changed).
+    public func refreshTitleBranch() {
+        titleDirectory = nil
+        refreshTitle()
+    }
+
+    private func setTitle(_ title: String) {
+        guard windowTitle != title || window?.title != title else { return }
+        windowTitle = title
+        window?.title = title
+    }
+
+    /// Everything the window needs before it is put on screen, without
+    /// waiting on git: the title names `knownBranch` — the last known branch
+    /// of the active directory, from the project's cached state — and
+    /// `refreshTitle()` corrects it once git answers. Then a layout pass at the
+    /// frame it will show at, so it appears laid out.
+    public func prepareForDisplay(knownBranch: (URL) -> String? = { _ in nil }) {
+        if window == nil { loadWindow() }
+        let directory = activeWorkingDirectory
+        if branchNames[directory] == nil, let branch = knownBranch(directory) {
+            branchNames[directory] = .some(branch)
+        }
+        titleDirectory = nil
+        refreshTitle()
+        window?.contentView?.layoutSubtreeIfNeeded()
+    }
+
+    /// What a window of `kind` is called: a project's `Code: adkitchen → main`,
+    /// a Git window's `Git: adkitchen → main` (either with the name alone
+    /// outside a repository or before the branch is known), a File Browser
+    /// window's `Files: <directory>`, and a Document window's bare name
+    /// (`refreshTitle` names it for its file before it gets here).
+    nonisolated static func title(kind: GitRepo.Kind, name: String, directory: URL, branch: String?) -> String {
+        let prefix: String
+        switch kind {
+        case .fileBrowser: return "Files: \(directory.lastPathComponent)"
+        case .document, .documentTabs: return name
+        case .project: prefix = "Code"
+        case .gitWindow: prefix = "Git"
+        }
+        guard let branch, !branch.isEmpty else { return "\(prefix): \(name)" }
+        return "\(prefix): \(name) \u{2192} \(branch)"
+    }
+
+    /// A file chosen in the title's breadcrumb opens in the active tab's
+    /// document view when it has one, as choosing it in a file tree would;
+    /// otherwise in the app the system assigns to it.
+    private func openFromTitleBreadcrumb(_ url: URL) {
+        var isDirectory: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory),
+              !isDirectory.boolValue else { return }
+        if let documents = activeSplit.flatMap({ Self.firstDocumentTabs(in: $0) }) {
+            documents.openInSelectedPane(url)
+        } else {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
+    private static func firstDocumentTabs(in controller: NSViewController) -> DocumentTabsViewController? {
+        if let documents = controller as? DocumentTabsViewController { return documents }
+        for child in controller.children {
+            if let found = firstDocumentTabs(in: child) { return found }
+        }
+        return nil
     }
 
     /// The field means "search *this* pane": it is disabled over a pane that
@@ -1274,9 +1652,13 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
 
     private func installInitialTabs() {
         let initial = project.initialTabs()
-        // Enable edges before adding tabs so members land on live bars.
+        // The project's own Tab Bars choice, or the app-wide tab positions
+        // when it never made one. Enable edges before adding tabs so members
+        // land on live bars.
+        hasExplicitEdgeChoice = initial.enabledEdges != nil
+        let enabledEdges = initial.enabledEdges ?? ProjectWorkspace.globalEnabledEdges
         for edge in Edge.allCases {
-            tabbed.setEdgeEnabled(edge, initial.enabledEdges.contains(edge))
+            tabbed.setEdgeEnabled(edge, enabledEdges.contains(edge))
         }
         // Rebuild groups in stored order: group order is first-seen record
         // order, per-edge member order is record order.
@@ -1289,6 +1671,7 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
                 workingDirectory: directory,
                 isRoot: true
             )
+            applyPaneChrome(to: split)
             wireLayoutCallback(on: split, tabID: record.id)
             splitControllersByTabID[record.id] = split
             if let focusedNodeID = record.focusedNodeID {
@@ -1455,8 +1838,12 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
         guard !isMirroringArrangement, !isReloadingTabs, !isClosing else { return }
         isMirroringArrangement = true
         defer { isMirroringArrangement = false }
+        reshapeTabs(toMatch: arrangement, except: tabID)
+    }
 
-        for (otherTabID, other) in splitControllersByTabID where otherTabID != tabID {
+    /// Puts `arrangement`'s shape and sizes on every tab but `excluded`.
+    private func reshapeTabs(toMatch arrangement: LayoutNode, except excluded: UUID?) {
+        for (otherTabID, other) in splitControllersByTabID where otherTabID != excluded {
             let current = other.snapshotNode()
             let wanted = current.reshaped(toMatch: arrangement)
             if current.hasSameStructure(as: wanted) {
@@ -1465,6 +1852,25 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
                 other.rebuild(from: wanted)
             }
         }
+    }
+
+    /// This window's tab configuration, for another project window to adopt.
+    public var tabConfiguration: ProjectTabConfiguration {
+        ProjectTabConfiguration(
+            arrangement: tabbed.activeTabID.flatMap { splitControllersByTabID[$0]?.snapshotNode() })
+    }
+
+    /// Takes on `configuration` and writes the result once.
+    public func adopt(_ configuration: ProjectTabConfiguration) {
+        guard !isReloadingTabs, !isClosing else { return }
+        isAdoptingConfiguration = true
+        if let arrangement = configuration.arrangement {
+            isMirroringArrangement = true
+            reshapeTabs(toMatch: project.layout.spec.reconcile(arrangement), except: nil)
+            isMirroringArrangement = false
+        }
+        isAdoptingConfiguration = false
+        persistAllTabs()
     }
 
     /// Snapshots every tab's split tree (on every edge, enabled or not)
@@ -1481,12 +1887,21 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     /// the mirror dresses calls back, and a write per tab would put a
     /// half-mirrored project in the database. The mirror's caller writes once,
     /// for all of them, when the mirror is done.
-    private func persistAllTabs() {
-        guard !isReloadingTabs, !isClosing, !isMirroringArrangement else { return }
+    private func persistAllTabs(clearingEdgeChoice: Bool = false) {
+        guard !isReloadingTabs, !isClosing, !isMirroringArrangement, !isAdoptingConfiguration else { return }
+        let edges: [Edge]?
+        if clearingEdgeChoice {
+            // An empty list is stored as "no choice".
+            edges = []
+        } else {
+            // Edges are written only once the user has chosen them; until
+            // then `nil` writes none, and the project keeps following.
+            edges = hasExplicitEdgeChoice ? Edge.allCases.filter { tabbed.isEdgeEnabled($0) } : nil
+        }
         project.persistTabs(
             currentTabRecords().map(\.record),
             activeTabID: tabbed.activeTabID,
-            enabledEdges: Edge.allCases.filter { tabbed.isEdgeEnabled($0) }
+            enabledEdges: edges
         )
     }
 
@@ -1686,11 +2101,20 @@ extension ComposableTabsWindowController: MultiTabbedViewControllerDelegate {
         didRequestCloseTab id: UUID,
         on edge: Edge
     ) {
-        // Closing any member closes its whole group. Refuse to close the
-        // last group (mirrors Safari/Terminal keeping one tab).
+        closeTabGroup(containing: id)
+    }
+
+    /// Closing any member closes its whole group, from the tab bar's close
+    /// button and File ▸ Close Tab alike. Refuses the last group (mirrors
+    /// Safari/Terminal keeping one tab), and records what it closed for
+    /// Reopen Tab.
+    func closeTabGroup(containing id: UUID) {
+        let controller = tabbed
         guard let groupIndex = tabGroups.firstIndex(where: { $0.members.values.contains(id) }) else { return }
         guard tabGroups.count > 1 else { return }
         let group = tabGroups.remove(at: groupIndex)
+        Self.lastClosedTabByProject[project.id] = ClosedTab(
+            title: group.title, workingDirectory: group.workingDirectory)
         // Remove the clicked member first: if it is active, the controller
         // activates its neighbor on the same edge before the rest of the
         // group disappears.

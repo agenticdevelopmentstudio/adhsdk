@@ -63,6 +63,21 @@ final class ProjectDatabaseTests: XCTestCase {
         XCTAssertThrowsError(try database.insert(GitRepo(path: "/tmp/alpha", name: "alpha again")))
     }
 
+    /// A folder can be a project and have a File Browser window: the kind is
+    /// part of the key, each lookup finds its own row, and the project list
+    /// never shows the File Browser one.
+    func testAFileBrowserRowSharesAPathWithAProjectButIsNeverListed() throws {
+        let database = try makeDatabase()
+        let project = GitRepo(path: "/tmp/alpha", name: "alpha")
+        let browser = GitRepo(path: "/tmp/alpha", name: "alpha", kind: .fileBrowser)
+        try database.insert(project)
+        try database.insert(browser)
+
+        XCTAssertEqual(try database.repo(path: "/tmp/alpha")?.id, project.id)
+        XCTAssertEqual(try database.repo(path: "/tmp/alpha", kind: .fileBrowser)?.id, browser.id)
+        XCTAssertEqual(try database.allRepos().map(\.id), [project.id])
+    }
+
     func testListingIsSortedByNameCaseInsensitively() throws {
         let database = try makeDatabase()
         try database.insert(GitRepo(path: "/tmp/one", name: "zebra"))
@@ -132,6 +147,40 @@ final class ProjectDatabaseTests: XCTestCase {
         let tab = TabRecord(title: "Code", root: LayoutNode.leaf(contentType: ComposableTabsViewID("test.editor")))
         try reopened.saveTabs([tab], activeTabID: tab.id, repoID: repo.id)
         XCTAssertEqual(try reopened.loadTabs(repoID: repo.id).tabs.map(\.title), ["Code"])
+    }
+
+    /// A project saved before the global tab position wrote `'top'` as the
+    /// old default, which read as a choice; migration 7 makes it follow the
+    /// global position, and leaves a real multi-edge choice alone (final
+    /// review C-I1).
+    func testOldDefaultTopEdgesFollowTheGlobalPositionAfterUpgrade() throws {
+        let path = tempRoot.appendingPathComponent("edges.db").path
+        let defaulted = GitRepo(path: "/tmp/defaulted", name: "defaulted")
+        let chosen = GitRepo(path: "/tmp/chosen", name: "chosen")
+        try autoreleasepool {
+            let database = try ProjectDatabase(path: path)
+            try database.insert(defaulted)
+            try database.insert(chosen)
+            for repo in [defaulted, chosen] {
+                let leaf = LayoutNode.leaf(contentType: ComposableTabsViewID("test.editor"))
+                let tab = TabRecord(title: "Code", root: leaf)
+                try database.saveTabs([tab], activeTabID: tab.id, repoID: repo.id)
+            }
+        }
+        // As the pre-branch build left them: the default written out.
+        let update = "UPDATE project_state SET enabled_edges"
+        try executeRaw("\(update) = 'top' WHERE repo_id = '\(defaulted.id.uuidString)'", at: path)
+        try executeRaw("\(update) = 'top,left' WHERE repo_id = '\(chosen.id.uuidString)'", at: path)
+        try executeRaw("DELETE FROM schema_migrations WHERE version = 7", at: path)
+
+        let reopened = try ProjectDatabase(path: path)
+        XCTAssertNil(try reopened.loadTabs(repoID: defaulted.id).enabledEdges)
+        XCTAssertEqual(try reopened.loadTabs(repoID: chosen.id).enabledEdges, [.top, .left])
+        // After the upgrade, choosing top alone is a choice and stays one.
+        let leaf = LayoutNode.leaf(contentType: ComposableTabsViewID("test.editor"))
+        let tab = TabRecord(title: "Code", root: leaf)
+        try reopened.saveTabs([tab], activeTabID: tab.id, enabledEdges: [.top], repoID: defaulted.id)
+        XCTAssertEqual(try reopened.loadTabs(repoID: defaulted.id).enabledEdges, [.top])
     }
 
     /// The same thing at its limit: every version row gone, so the whole chain

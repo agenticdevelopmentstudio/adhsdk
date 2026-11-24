@@ -1,0 +1,77 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "d1036253-b5c6-4ce5-a285-b91bae4b9f2f",
+    "title": "Landing Page Blocks",
+    "type": "ingredient",
+    "version": "1.0.1",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-14",
+    "modified": "2026-11-14",
+    "author": "mfullerton",
+    "copyright": "2026 mfullerton",
+    "license": "MIT",
+    "summary": "Shared landing-page block renderer: maps each LandingBlock kind to its kit component, builds prose bodies, and lists section index rows.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "landing",
+      "page",
+      "blocks"
+    ],
+    "depends-on": [
+      "811cc18f-e33a-42bb-bd2d-dfc3dc21bc77",
+      "79093eb5-83e8-46d8-9efe-3cc6ff88d8db",
+      "7e4a2c5b-8f3d-4a7e-b9f2-1c5e8d3b6a2f",
+      "01947259-4883-44e1-a047-6b4e463cb422",
+      "91db9191-1ab2-4d09-a9a8-b0dc23669066",
+      "335f37a4-cd9e-4575-a78a-8717b34e5a2d",
+      "53a37583-e86d-41ca-8dd2-8394ba530091",
+      "b0ce8cbb-31ac-425a-889c-68e699d24578",
+      "ba2377b1-f831-4ef8-bf2c-d8393e5eb2c1",
+      "4cd07922-a00d-4029-8cb5-2307463129cc",
+      "a63de97e-d75c-4733-a875-bad20e001fcb",
+      "98444e89-1044-43a7-9ec5-75da579c528a",
+      "12cc7564-cb08-4b62-9785-c3b1cc0c46f0",
+      "5182f5ec-186b-4605-8c40-ea70a49262c2",
+      "42e7a2ea-f138-4edb-899f-43c1946e4ef8",
+      "688cd8dc-2927-4a8a-9931-807fe283ed01",
+      "f98e53f7-ac16-48b0-afa5-544d05bf3f70",
+      "1675b18e-34d5-4d8e-987f-92697539a5e6",
+      "e7060a14-3f66-429a-9ea5-288f1fe5a76f"
+    ],
+    "related": [
+      "05930e64-fa82-49ef-b50d-22d87fa7d182",
+      "6f5f455d-b744-425d-a21e-494fc18caaf2"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "a00d76efc2351cdd",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

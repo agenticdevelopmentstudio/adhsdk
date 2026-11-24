@@ -21,16 +21,16 @@ class Theme:
         label (str):
         based_on (None | str):
         data (ThemeData):
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
     """
 
     key: str
     label: str
     based_on: None | str
     data: ThemeData
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -43,9 +43,9 @@ class Theme:
 
         data = self.data.to_dict()
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -53,10 +53,10 @@ class Theme:
             {
                 "key": key,
                 "label": label,
-                "basedOn": based_on,
+                "based_on": based_on,
                 "data": data,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
+                "created": created,
+                "updated": updated,
             }
         )
 
@@ -76,21 +76,21 @@ class Theme:
                 return data
             return cast(None | str, data)
 
-        based_on = _parse_based_on(d.pop("basedOn"))
+        based_on = _parse_based_on(d.pop("based_on"))
 
         data = ThemeData.from_dict(d.pop("data"))
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         theme = cls(
             key=key,
             label=label,
             based_on=based_on,
             data=data,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
         )
 
         theme.additional_properties = d

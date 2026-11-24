@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "da18e58b-c2d9-4798-8143-2dd30b5976fc",
     "title": "Status Server Monitor Reconcile Stuck Deploys",
-    "domain": "adhsdk://cookbook/status/service/monitor/reconcile-stuck-deploys",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -27,14 +26,14 @@
       "server"
     ],
     "depends-on": [
-      "agenticdevelopercookbook://guidelines/implementing/networking/timeouts",
-      "agenticdevelopercookbook://guidelines/implementing/networking/retry-and-resilience",
-      "agenticdevelopercookbook://guidelines/implementing/networking/rate-limiting"
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c3883e6e-3bce-4bb9-a3be-61509a139288",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/cef41f52-bfc6-4ff0-bb67-eb52521c7391",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c84400d9-83b3-4c4c-83d4-325dfa989202"
     ],
     "related": [
-      "adhsdk://cookbook/status/service/monitor/enrich-deploy-errors",
-      "adhsdk://cookbook/status/service/monitor/deploy-status",
-      "adhsdk://cookbook/status/service/monitor/provider-conn"
+      "e029def6-7d5d-4e52-b565-e2a6612179bb",
+      "96009fcc-e32e-4a40-9b3c-8b4f83f1cfec",
+      "4aad9d0a-4984-4021-ad1f-d8aa6a15b066"
     ],
     "references": [
       "packages/web/packages/status-server/src/monitor/reconcile-stuck-deploys.ts (adhsdk)",
@@ -52,7 +51,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "7139e25f86b5c269",
+  "synced": "ee1ec3b451e05bee",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -71,7 +70,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

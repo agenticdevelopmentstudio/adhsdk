@@ -61,14 +61,14 @@ class DmMessage:
         field_dict.update(
             {
                 "id": id,
-                "chatId": chat_id,
-                "senderParticipantId": sender_participant_id,
-                "senderUserId": sender_user_id,
+                "chat_id": chat_id,
+                "sender_participant_id": sender_participant_id,
+                "sender_user_id": sender_user_id,
                 "seq": seq,
                 "role": role,
                 "body": body,
                 "state": state,
-                "dateSent": date_sent,
+                "date_sent": date_sent,
             }
         )
 
@@ -79,16 +79,16 @@ class DmMessage:
         d = dict(src_dict)
         id = d.pop("id")
 
-        chat_id = d.pop("chatId")
+        chat_id = d.pop("chat_id")
 
         def _parse_sender_participant_id(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        sender_participant_id = _parse_sender_participant_id(d.pop("senderParticipantId"))
+        sender_participant_id = _parse_sender_participant_id(d.pop("sender_participant_id"))
 
-        sender_user_id = d.pop("senderUserId")
+        sender_user_id = d.pop("sender_user_id")
 
         seq = d.pop("seq")
 
@@ -98,7 +98,7 @@ class DmMessage:
 
         state = d.pop("state")
 
-        date_sent = d.pop("dateSent")
+        date_sent = d.pop("date_sent")
 
         dm_message = cls(
             id=id,

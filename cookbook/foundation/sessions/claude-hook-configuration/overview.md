@@ -1,0 +1,5 @@
+
+`ClaudeHookConfiguration` is a `Sendable`, `Equatable` struct of plain values that describes one daemon's registration in Claude Code's `settings.json`. Its fields are listed in [Configuration](#configuration).
+
+Claude Code runs every matching hook entry, so two daemons install their own configuration into the same `settings.json` and coexist: each recognises, updates and removes only the entries carrying its own marker. This type only carries the values and derives a few defaults and paths from them; `ClaudeHookInstaller` ([adhsdk.ingredient.foundation.claude-hooks.claude-hook-installer](cookbook:fc622208-1504-421f-8892-c5869820550c)) is the code that reads settings and acts on them; `HookDropWriter` ([adhsdk.ingredient.foundation.claude-hooks.hook-drop-writer](cookbook:f3326f3a-cccd-4ac5-8dc1-84d660ed4581)) derives the drop-directory override variable, and `ClaudeStatusLine` ([adhsdk.ingredient.foundation.claude-hooks.claude-status-line](cookbook:517adfce-44e7-404e-8a7b-b1e304da32e7)) owns the status-line files. `LegacyHookForms`, declared in the same file, lists the retired registration forms an owner still replaces on install and removes on uninstall.
+

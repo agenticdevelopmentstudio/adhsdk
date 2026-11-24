@@ -27,7 +27,7 @@ class EntityHistoryEntry:
         action (str): Free text, not an enum — each subsystem names its own. Emitted today: request_received,
             invite_sent, note_added, status_changed, accepted, notes_updated.
         detail (EntityHistoryEntryDetailType0 | None): Action-specific payload; the shape is whatever emitted the entry.
-        created_at (str):
+        created (int): Unix timestamp, in seconds.
     """
 
     id: str
@@ -38,7 +38,7 @@ class EntityHistoryEntry:
     actor_label: None | str
     action: str
     detail: EntityHistoryEntryDetailType0 | None
-    created_at: str
+    created: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -68,21 +68,21 @@ class EntityHistoryEntry:
         else:
             detail = self.detail
 
-        created_at = self.created_at
+        created = self.created
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
-                "subjectTable": subject_table,
-                "subjectId": subject_id,
-                "actorId": actor_id,
-                "actorLabel": actor_label,
+                "ecosystem_id": ecosystem_id,
+                "subject_table": subject_table,
+                "subject_id": subject_id,
+                "actor_id": actor_id,
+                "actor_label": actor_label,
                 "action": action,
                 "detail": detail,
-                "createdAt": created_at,
+                "created": created,
             }
         )
 
@@ -97,25 +97,25 @@ class EntityHistoryEntry:
         d = dict(src_dict)
         id = d.pop("id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        subject_table = d.pop("subjectTable")
+        subject_table = d.pop("subject_table")
 
-        subject_id = d.pop("subjectId")
+        subject_id = d.pop("subject_id")
 
         def _parse_actor_id(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        actor_id = _parse_actor_id(d.pop("actorId"))
+        actor_id = _parse_actor_id(d.pop("actor_id"))
 
         def _parse_actor_label(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        actor_label = _parse_actor_label(d.pop("actorLabel"))
+        actor_label = _parse_actor_label(d.pop("actor_label"))
 
         action = d.pop("action")
 
@@ -134,7 +134,7 @@ class EntityHistoryEntry:
 
         detail = _parse_detail(d.pop("detail"))
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
         entity_history_entry = cls(
             id=id,
@@ -145,7 +145,7 @@ class EntityHistoryEntry:
             actor_label=actor_label,
             action=action,
             detail=detail,
-            created_at=created_at,
+            created=created,
         )
 
         entity_history_entry.additional_properties = d

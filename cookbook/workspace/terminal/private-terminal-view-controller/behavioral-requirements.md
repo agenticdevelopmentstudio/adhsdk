@@ -1,0 +1,44 @@
+
+- **session-private**: The controller MUST create its session with `isPrivate` true and the name "Private Terminal", with the working directory and environment it was given and an empty environment by default.
+- **screen-default-up**: The privacy screen MUST be visible and the terminal view hidden when the pane is first shown, with `isRevealed` false.
+- **reveal-authenticates**: `reveal()` MUST ask the vault to authenticate with the reason "show the private terminal" and MUST NOT lift the screen unless that succeeds.
+- **reveal-every-time**: Every lift of the privacy screen MUST require a new authentication; the controller keeps no unlocked state across a hide.
+- **reveal-no-stack**: `reveal()` MUST do nothing while the pane is already revealed or an authentication is on screen, so a second click does not stack another.
+- **reveal-failure-message**: When authentication fails, the screen MUST stay up and the screen message MUST show the error's localized description.
+- **reveal-starts-shell**: A successful reveal MUST give the session the vault's filter if one exists, which starts the shell the first time, before setting `isRevealed` true.
+- **hide-no-auth**: `hide()` MUST put the privacy screen back up without asking for authentication.
+- **reveal-state-views**: When `isRevealed` changes, the privacy screen MUST be hidden exactly when revealed, the terminal view MUST be hidden exactly when not revealed, and the concealed container's reveal flag MUST equal `isRevealed`.
+- **reveal-focus**: On reveal the controller MUST make the terminal view the window's first responder on the next main-queue turn.
+- **hide-resigns-focus**: On hide, when the window's first responder is a view inside the concealed container, the controller MUST clear the first responder so keystrokes do not go into a terminal nobody can see.
+- **screen-message**: The screen message MUST read "Click the eye to show this terminal." when the shell has started and "Click the eye to start this private terminal." when it has not.
+- **start-when-visible**: The first time the pane appears and the shell has not started, the controller MUST try once to start it with the words read from the keychain without a prompt.
+- **start-silent-miss**: When the silent load yields no words, the pane MUST wait with the screen up and start nothing.
+- **start-load-error**: When the silent load throws, the screen message MUST show the error's localized description.
+- **start-once-per-appearance**: The silent start MUST be attempted at most once from appearing; later appearances MUST NOT retry it.
+- **words-follow-vault**: When the vault publishes a non-nil filter and the shell has started or the pane has asked to start, the controller MUST hand the filter to the session, so a running shell takes new words from the next byte.
+- **words-wait-until-asked**: A filter published before the pane has appeared or been asked to start MUST NOT start the shell.
+- **started-announces**: When handing a filter starts the shell for the first time, the controller MUST refresh its reveal state and post the terminal-pane-connectable-changed notification with itself as the object.
+- **no-notify-on-update**: Handing a filter to a shell already started MUST NOT post that notification.
+- **accessory-toggle**: The controller MUST offer one pane accessory button, an eye beside the gear, titled "Hide the private terminal" with the open-eye symbol when revealed and "Show the private terminal" with the crossed-out symbol when not, that reveals or hides on press.
+- **accessory-refresh**: Whenever the reveal state changes, the controller MUST ask its parent pane to refresh its accessories.
+- **options-edit-words**: The controller MUST offer one option row holding an Edit Privacy Words button and a note that the words are kept in the keychain and opening them asks for authentication.
+- **edit-words-authenticates**: Pressing Edit Privacy Words MUST dismiss the options dialog and then ask the vault to authenticate with the reason "edit the privacy words" before presenting the editor on the window.
+- **edit-words-no-stack**: Pressing Edit Privacy Words while an authentication is on screen MUST do nothing beyond dismissing the options dialog.
+- **edit-words-failure-alert**: When that authentication fails and the pane has a window, the controller MUST show a sheet titled "The privacy words could not be opened." with the error's localized description.
+- **connectable-while-running**: The connectable terminal MUST be the session while it is running and nil otherwise.
+- **connect-starts-shell**: Starting the connectable terminal MUST mark the pane as asked to start, load the words through the vault's upgrade-if-needed load, give the session the filter if one exists, and return the connectable terminal, without revealing the screen.
+- **connect-already-started**: When the shell has already started, starting the connectable terminal MUST return the connectable terminal without loading words.
+- **connect-error-propagates**: An error thrown by the vault's upgrade-if-needed load MUST propagate to the caller.
+- **teardown-terminates**: When the pane content is about to be discarded the controller MUST terminate the session's process.
+- **removal-confirmation**: The removal confirmation message MUST be "This pane has a running private terminal session. Removing the pane ends it." when the session has started and is running, and nil otherwise.
+- **conceal-container**: The terminal view MUST sit inside a concealed container and the privacy screen MUST sit outside it, on top, so the eye is reachable by a screen reader.
+- **eye-accessible**: The eye on the screen MUST carry the accessibility label "Show the private terminal", the tooltip of the same text and the accessibility identifier `privateTerminal.reveal`.
+- **frame-held**: The terminal view MUST be wrapped in a frame-holding view so it is not resized on every frame while a shelf slides beside the pane.
+- **appearance-apply**: The controller MUST apply the theme palette to the terminal view on load and again when the theme changes, and MUST re-apply on a change to any setting in the terminal appearance setting keys.
+- **padding-from-theme**: The gap between the pane and the terminal view MUST be set on all four edges from the terminal appearance's resolved padding for the theme: the theme's own terminal padding override where it has one, otherwise the pane content spacing setting.
+- **pane-spacing-ignored**: Applying pane spacing MUST only re-apply appearance, because the terminal insets its own grid; the passed spacing value MUST NOT be used (the resolved padding still falls back to the global pane content spacing setting).
+- **no-scripting-surface**: The controller MUST NOT provide an AppleScript object or a URL that opens the pane.
+- **no-coder-init**: The coder initializer MUST be unavailable.
+- **main-actor**: The controller MUST be used only from the main actor.
+- **auto-hide**: NEEDS REVIEW: Not implemented in source. Nothing puts the privacy screen back up on its own when the window loses focus, goes to the background, the Mac sleeps or a time passes; evidence that settles it is a product decision on whether an idle or lock event should lower the screen.
+

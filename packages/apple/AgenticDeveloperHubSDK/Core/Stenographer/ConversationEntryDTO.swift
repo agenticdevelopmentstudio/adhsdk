@@ -1,7 +1,7 @@
 import Foundation
 
 /// One line of the conversation between a human and an observed Claude session,
-/// extracted from the captured transcript (`transcript_lines`) rather than from
+/// extracted from the captured transcript (the event store's messages) rather than from
 /// any summarization pass — the transcript already *is* the conversation, and a
 /// summary would be one sentence per ended session, not a running feed.
 ///
@@ -13,8 +13,8 @@ import Foundation
 /// feed spans many sessions, so a row without it cannot be labelled, and the
 /// join that supplies it costs nothing at query time.
 public struct ConversationEntryDTO: Codable, Sendable, Equatable {
-    /// Stable row identity: `transcript_lines.id * 1000` plus the block's index
-    /// within that entry, because one captured entry can yield more than one
+    /// Stable row identity: the event store's `messages.id * 1000` plus the
+    /// block's index within that message, because one message can yield more than one
     /// line. The index is the block's position in the *unfiltered* entry, so it
     /// doesn't move when the caller changes what it asks to see. Identity only —
     /// pages are cut on ``timestamp``, not on this.
@@ -29,7 +29,10 @@ public struct ConversationEntryDTO: Codable, Sendable, Equatable {
     /// exclusive and a boolean triple would admit states that cannot happen.
     public let kind: String
     public let text: String
-    /// ISO-8601, as written in the transcript.
+    /// The message time as ISO-8601 UTC with milliseconds
+    /// (`2026-09-01T10:00:00.000Z`) — rendered from the stored time, not the
+    /// transcript's own string. Also the paging cursor: every line of one
+    /// millisecond comes back on the same page.
     public let timestamp: String
     /// Last path component of the session's project root ("" when unknown).
     public let projectName: String

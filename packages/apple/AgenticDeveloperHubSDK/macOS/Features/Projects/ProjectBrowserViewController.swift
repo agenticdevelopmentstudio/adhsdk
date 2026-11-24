@@ -33,6 +33,9 @@ public final class ProjectBrowserViewController: NSViewController {
     public var onChoose: ((GitRepo) -> Void)?
     /// Called as the highlighted row changes, `nil` when nothing is selected.
     public var onSelectionChange: ((GitRepo?) -> Void)?
+    /// Closes one project of the window. While the list is filtered to the
+    /// window's active projects, a project row's context menu offers it.
+    public var onCloseProject: ((UUID) -> Void)?
 
     private let coordinator: ProjectsCoordinator
     /// Whether the browser draws its own filter field above the list. The
@@ -48,16 +51,33 @@ public final class ProjectBrowserViewController: NSViewController {
     /// What the rows highlight, kept because a row is built long after the
     /// filter ran and has to be able to ask what it survived.
     private var query = ""
+    /// What the drawn tree was built from: ids, paths, names, remotes and the
+    /// query. A coordinator change that leaves all of it alone (an open stamp,
+    /// a rescan that found nothing new) must not rebuild every row on the main
+    /// thread, which is what made clicking a project spin.
+    private var builtSignature: [String]?
     /// The filter as typed, whichever field it was typed in.
     private var filterText = ""
     private var changeObserver: NSObjectProtocol?
+    /// When set, only these projects are listed: the shelf's active-projects
+    /// button filtering the one list rather than showing another.
+    private var onlyRepoIDs: Set<UUID>?
+
+    /// Which folders the user has closed; put back after every rebuild.
+    private let disclosure: FolderDisclosureMemory
+    /// True while the outline is being opened and closed to match
+    /// `disclosure`, whose expand and collapse notifications are not the
+    /// user's.
+    private var isRestoringDisclosure = false
 
     public init(
         coordinator: ProjectsCoordinator,
         mode: ProjectBrowserMode = .browser,
-        showsFilterField: Bool = true
+        showsFilterField: Bool = true,
+        disclosure: FolderDisclosureMemory = FolderDisclosureMemory()
     ) {
         self.coordinator = coordinator
+        self.disclosure = disclosure
         self.mode = mode
         self.showsFilterField = showsFilterField
         super.init(nibName: nil, bundle: nil)
@@ -110,6 +130,9 @@ public final class ProjectBrowserViewController: NSViewController {
         outline.target = self
         outline.action = #selector(rowClicked(_:))
         outline.doubleAction = #selector(rowDoubleClicked(_:))
+        let menu = NSMenu()
+        menu.delegate = self
+        outline.menu = menu
         outline.autoresizesOutlineColumn = false
         outline.accessibilityID("project-browser.table")
 
@@ -184,6 +207,12 @@ public final class ProjectBrowserViewController: NSViewController {
     }
 
     /// Filters the list by `text`, typed into a field the host drew.
+    public func setOnlyRepoIDs(_ ids: Set<UUID>?) {
+        guard ids != onlyRepoIDs else { return }
+        onlyRepoIDs = ids
+        if isViewLoaded { applyFilter() }
+    }
+
     public func setFilterQuery(_ text: String) {
         guard text != filterText else { return }
         filterText = text
@@ -252,7 +281,40 @@ public final class ProjectBrowserViewController: NSViewController {
     public func selectRepo(id: GitRepo.ID) {
         let projects = roots.flatMap { $0.repositoriesInDisplayOrder }
         guard let node = projects.first(where: { $0.repo?.id == id }) else { return }
+        // A project inside a collapsed folder has no row; open the folders
+        // above it so it can be selected and scrolled to.
+        let ancestors = Self.ancestors(of: node, in: roots)
+        disclosure.reveal(ancestors.map(\.path))
+        for ancestor in ancestors { outline.expandItem(ancestor) }
         select(node)
+    }
+
+    /// Opens every folder the user has not closed. The tree is what the user
+    /// came to read, so a folder starts open; one the user closed stays closed
+    /// through every rebuild until they open it or a project inside it is
+    /// selected. While a filter is typed every folder opens, without changing
+    /// what is remembered: the matches are what the filter is asking to see.
+    private func restoreDisclosure() {
+        isRestoringDisclosure = true
+        defer { isRestoringDisclosure = false }
+        outline.expandItem(nil, expandChildren: true)
+        guard query.isEmpty else { return }
+        func collapse(_ nodes: [ProjectTreeNode]) {
+            for node in nodes where node.isFolder {
+                collapse(node.children)
+                if disclosure.isCollapsed(node.path) { outline.collapseItem(node) }
+            }
+        }
+        collapse(roots)
+    }
+
+    private static func ancestors(of target: ProjectTreeNode, in nodes: [ProjectTreeNode]) -> [ProjectTreeNode] {
+        for node in nodes {
+            if node === target { return [] }
+            let below = ancestors(of: target, in: node.children)
+            if !below.isEmpty || node.children.contains(where: { $0 === target }) { return [node] + below }
+        }
+        return []
     }
 
     // MARK: - Return in the list
@@ -290,13 +352,15 @@ public final class ProjectBrowserViewController: NSViewController {
         query = filterText.trimmingCharacters(in: .whitespaces)
         let previous = selectedRepo?.id
         let all = coordinator.listedRepos
-        let matching = all.filter { ProjectFilter.matches($0, query: query) }
+        let matching = all.filter {
+            (onlyRepoIDs?.contains($0.id) ?? true) && ProjectFilter.matches($0, query: query)
+        }
+        let signature = [query] + matching.map { "\($0.id)|\($0.kind)|\($0.path)|\($0.name)|\($0.remote ?? "")" }
+        guard signature != builtSignature else { return }
+        builtSignature = signature
         roots = ProjectTree.build(from: matching)
         outline.reloadData()
-        // Opened all the way down. The tree is what the user came to read, and
-        // a chooser that hides every project behind a disclosure triangle
-        // answers the question with more questions.
-        outline.expandItem(nil, expandChildren: true)
+        restoreDisclosure()
 
         emptyLabel.isHidden = !matching.isEmpty
         if matching.isEmpty {
@@ -428,6 +492,22 @@ extension ProjectBrowserViewController: NSOutlineViewDataSource, NSOutlineViewDe
         return !node.children.isEmpty
     }
 
+    public func outlineViewItemDidExpand(_ notification: Notification) {
+        noteDisclosure(notification, collapsed: false)
+    }
+
+    public func outlineViewItemDidCollapse(_ notification: Notification) {
+        noteDisclosure(notification, collapsed: true)
+    }
+
+    /// A user's open or close, remembered; ours (restoring) and a filter's
+    /// open-everything are not.
+    private func noteDisclosure(_ notification: Notification, collapsed: Bool) {
+        guard !isRestoringDisclosure, query.isEmpty,
+              let node = notification.userInfo?["NSObject"] as? ProjectTreeNode, node.isFolder else { return }
+        disclosure.note(node.path, collapsed: collapsed)
+    }
+
     public func outlineView(_ outlineView: NSOutlineView, rowViewForItem item: Any) -> NSTableRowView? {
         ThemedTableRowView()
     }
@@ -463,21 +543,22 @@ private final class ProjectRowView: NSView {
     init(node: ProjectTreeNode, query: String) {
         super.init(frame: .zero)
 
-        let symbol = node.isFolder ? "folder.fill" : "shippingbox.fill"
+        let symbol = node.isFolder ? TreeRowStyle.folderSymbol : TreeRowStyle.codeProjectSymbol
         let icon = NSImageView(image: NSImage(
             systemSymbolName: symbol,
             accessibilityDescription: node.isFolder ? "Folder" : "Project"
         ) ?? NSImage())
-        icon.contentTintColor = resolvedThemeScope.palette.nsColor(
-            node.isFolder ? .secondaryText : .accent
-        )
+        let palette = resolvedThemeScope.palette
+        icon.contentTintColor = node.isFolder
+            ? TreeRowStyle.folderColor(palette)
+            : TreeRowStyle.codeProjectColor(palette)
         icon.setContentHuggingPriority(.required, for: .horizontal)
 
         let label = ThemedHighlightLabel(
             string: node.name,
             highlighting: ProjectFilter.ranges(of: query, in: node.name),
             role: .primaryText,
-            textRole: node.isFolder ? .caption : .body
+            textRole: .body
         )
         label.lineBreakMode = .byTruncatingMiddle
         label.cell?.usesSingleLineMode = true
@@ -499,4 +580,27 @@ private final class ProjectRowView: NSView {
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+}
+
+extension ProjectBrowserViewController: NSMenuDelegate {
+
+    /// "Close Project" for the clicked row, only in the active-projects view,
+    /// where every row is a project open in this window.
+    public func menuNeedsUpdate(_ menu: NSMenu) {
+        menu.removeAllItems()
+        let row = outline.clickedRow
+        guard onlyRepoIDs != nil, onCloseProject != nil, row >= 0,
+              let node = outline.item(atRow: row) as? ProjectTreeNode,
+              let repo = node.repo
+        else { return }
+        let item = NSMenuItem(title: "Close Project", action: #selector(closeProjectChosen(_:)), keyEquivalent: "")
+        item.target = self
+        item.representedObject = repo.id
+        menu.addItem(item)
+    }
+
+    @objc private func closeProjectChosen(_ sender: NSMenuItem) {
+        guard let id = sender.representedObject as? UUID else { return }
+        onCloseProject?(id)
+    }
 }

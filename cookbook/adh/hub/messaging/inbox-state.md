@@ -1,13 +1,12 @@
 ---
 id: 8da824cf-e518-4cee-b897-3a8e17f9c32a
 title: "Inbox State"
-domain: adhsdk://cookbook/adh/hub/messaging/inbox-state
 type: ingredient
-version: 1.2.1
+version: 2.0.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-16
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -142,6 +141,9 @@ guidance this recipe was authored under.
 - **dm-thread-null-chatid-clears-state**: when `chatId` is `null` or the empty string, the DM
   thread state MUST set `messages` to `[]` and `loading` to `false`, and MUST NOT issue any
   request or open any connection.
+- **dm-thread-reset-on-chatid-change**: on every `chatId` change, the DM thread state MUST set
+  `messages` to `[]` before loading the new thread, so no message from the previous chat is shown
+  under the new one.
 - **dm-thread-history-load-and-sort**: for a non-empty `chatId`, the DM thread state MUST request
   `GET {DM_BASE}/<enc(chatId)>/messages?pageSize=200` and MUST merge the returned `items`, sorted
   ascending by `seq`, into `messages`.
@@ -158,6 +160,9 @@ guidance this recipe was authored under.
 - **dm-thread-teardown-on-change-or-unmount**: on `chatId` change or unmount, the DM thread state
   MUST mark itself cancelled and MUST close the stream/poll handle, so neither the pending history
   fetch nor the connection can update state afterward.
+- **dm-thread-send-merge-guarded**: the send action MUST merge its POST response into `messages`
+  only when the `chatId` it was called for is still the current one; a send that settles after a
+  `chatId` change MUST NOT update `messages`.
 - **dm-thread-poll-fallback-refetch**: the poll fallback MUST re-request the same `GET
   {DM_BASE}/<enc(chatId)>/messages?pageSize=200` window and merge its `items` the same way as the
   initial load; a failed poll refetch MUST be swallowed, leaving `messages` unchanged.
@@ -168,6 +173,12 @@ guidance this recipe was authored under.
   random-UUID generator when one is available, and MUST otherwise generate one from the current
   timestamp and a random suffix, before `POST`-ing `{ body, clientMessageId }` to
   `{DM_BASE}/<enc(chatId)>/messages`.
+- **dm-composer-reset-on-chatid-change**: the DM composer (the draft, the sending flag and the
+  send error) MUST start empty for each `chatId`, so a draft typed in one conversation is never
+  shown in, or sent to, another.
+- **dm-composer-late-result-ignored**: a send that settles after `chatId` has changed MUST NOT
+  clear the new conversation's draft, set its send error or clear its sending flag; the send
+  itself still goes to the conversation it was started in.
 - **dm-thread-send-merges-and-broadcasts**: on a successful send, the DM thread state MUST merge
   the server-returned message into `messages` via the same merge step and MUST broadcast a wake
   signal exactly once.
@@ -245,39 +256,42 @@ Not applicable — this is the DM and notification data-and-transport layer, not
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| hub-domain-hooks-001 | shared-stream-refcounting | Two independent consumers each subscribe to the wake channel | Only one live connection (or poll timer) is created; unsubscribing one leaves the shared connection open — no dedicated test; derived directly from source |
-| hub-domain-hooks-002 | shared-stream-refcounting | The last subscriber unsubscribes | The shared connection/poll handle is closed and the shared reference is cleared, so the next subscription reopens it — no dedicated test; derived directly from source |
-| hub-domain-hooks-003 | local-change-broadcast | Two consumers each subscribe to the wake channel; a third piece of code broadcasts a wake signal | Both subscribed listeners are invoked with no arguments — no dedicated test; derived directly from source |
-| hub-domain-hooks-004 | unread-count-fetch-on-mount-and-wake | The unread-count state initializes against a stub returning `{ count: 4 }` | `count` resolves to `4` after the initial fetch — no dedicated test; derived directly from source |
-| hub-domain-hooks-005 | unread-count-preserved-on-failure | `count` is `4`; the next `GET /unread-count` rejects | `count` remains `4`; no reset to `0` — no dedicated test; derived directly from source |
-| hub-domain-hooks-006 | inbox-query-serialization | Building the inbox query with categories `["a", "b"]` and `page: 2` | Serializes to `page=2&category=a&category=b` — no dedicated test; derived directly from source |
-| hub-domain-hooks-007 | inbox-status-left-to-backend-default | Building the inbox query with every field omitted | Serializes to the empty string; no `status` key present — no dedicated test; derived directly from source |
-| hub-domain-hooks-008 | inbox-stale-response-ignored | The notification inbox state is mounted; the query parameters change before the first `GET` resolves | The first request's resolution (success or failure) is never applied to `items`/`total`/`error` — no dedicated test; derived directly from source |
-| hub-domain-hooks-009 | inbox-mutation-then-broadcast | The mark-read action resolves for notification `"n1"` | `POST /api/notifications/n1/read` is sent, then a wake signal fires exactly once — no dedicated test; derived directly from source |
-| hub-domain-hooks-010 | inbox-mutation-failure-leaves-list-untouched | The archive action's `POST` rejects for notification `"n1"` | No wake signal is broadcast; `items` is unchanged — no dedicated test; derived directly from source |
-| hub-domain-hooks-011 | dm-inbox-initial-window | The DM conversation list state mounts | `GET /api/chat/dms?pageSize=100` is the first request — no dedicated test; derived directly from source |
-| hub-domain-hooks-012 | dm-inbox-window-growth-and-ceiling | The load-more action is called four times starting from `limit = 100` | Requested `pageSize` grows `200, 300, 400, 500` and stays at `500` on a fifth call — no dedicated test; derived directly from source |
-| hub-domain-hooks-013 | dm-inbox-presence-merge | A chat row for `otherUserId: "u1"`; presence response has no `u1` entry | That row's `online` is `false` and `lastSeenAt` is `null` — no dedicated test; derived directly from source |
-| hub-domain-hooks-014 | dm-inbox-presence-query-encoding | `otherUserId`s `["a,b", "c"]` | The presence request's `userIds` query value equals the percent-encoding of `"a,b,c"`, with the internal comma escaped — no dedicated test; derived directly from source |
-| hub-domain-hooks-015 | dm-inbox-presence-failure-is-silent | The presence `GET` rejects while the chats `GET` succeeds | `chats` still resolves, every row defaulted to `online: false, lastSeenAt: null`; no `error` is set for this reason — no dedicated test; derived directly from source |
-| hub-domain-hooks-016 | dm-inbox-stale-response-discarded | Two loads are in flight; the older one resolves after the newer one | The older resolution is discarded; `chats` reflects only the newer response — no dedicated test; derived directly from source |
-| hub-domain-hooks-017 | dm-inbox-load-failure-keeps-last-good-list | `chats` already holds two rows; the next `GET` rejects | `chats` still holds the same two rows; `error` is set to a message — no dedicated test; derived directly from source |
-| hub-domain-hooks-018 | dm-inbox-has-more-computation | `chats.length = 500`, `total = 800`, `limit = 500` | `hasMore` is `false` (ceiling reached) despite `total` exceeding `chats.length` — no dedicated test; derived directly from source |
-| hub-domain-hooks-019 | dm-thread-null-chatid-clears-state | The DM thread state initializes with `chatId: null` | `messages` is `[]`, `loading` is `false`; no request is issued — no dedicated test; derived directly from source |
-| hub-domain-hooks-020 | dm-thread-history-load-and-sort | History response `items` in seq order `[3, 1, 2]` | `messages` resolves sorted ascending as seq `[1, 2, 3]` — no dedicated test; derived directly from source |
-| hub-domain-hooks-021 | dm-thread-message-merge-dedupe | A live-stream event delivers a message whose `id` matches one already in `messages` | `messages` length is unchanged; no duplicate row is added — no dedicated test; derived directly from source |
-| hub-domain-hooks-022 | dm-thread-sse-cursor-from-last-loaded-seq | History load's last item has `seq: 42` | The live connection is opened with `after=42` — no dedicated test; derived directly from source |
-| hub-domain-hooks-023 | dm-thread-malformed-frame-ignored | A live-stream event whose `data` is not valid JSON | `messages` is unchanged; no exception escapes the handler — no dedicated test; derived directly from source |
-| hub-domain-hooks-024 | dm-thread-teardown-on-change-or-unmount | `chatId` changes from `"c1"` to `"c2"` while `"c1"`'s history fetch is still pending | The `"c1"` fetch's resolution, once it arrives, is ignored (cancellation was recorded); `"c1"`'s connection is closed — no dedicated test; derived directly from source |
-| hub-domain-hooks-025 | dm-thread-send-noop-on-empty-or-missing-chat | The send action is called with `"   "` on an open thread | No `POST` is issued; the returned promise resolves with no side effect — no dedicated test; derived directly from source |
-| hub-domain-hooks-026 | dm-thread-send-client-message-id | The send action is called with `"hi"` in an environment with no random-UUID generator available | The POST body's `clientMessageId` matches the timestamp-plus-random-suffix fallback shape, not a UUID — no dedicated test; derived directly from source |
-| hub-domain-hooks-027 | dm-thread-mark-read-request-shape | The mark-read action is called on chat `"c1"` | `POST /api/chat/dms/c1/read` is sent with body `{}`; a wake signal fires once — no dedicated test; derived directly from source |
-| hub-domain-hooks-028 | dm-thread-ownership-comparison | The caller's id is `null`; `msg.senderUserId` is `""` | The ownership check returns `false` — no dedicated test; derived directly from source |
-| hub-domain-hooks-029 | start-dm-forbidden-mapping | `POST /api/chat/dms` responds `403` | The start-DM action resolves to `{ forbidden: true }`, not a rejection — no dedicated test; derived directly from source |
-| hub-domain-hooks-030 | start-dm-other-errors-propagate | `POST /api/chat/dms` responds `500` | The start-DM action's returned promise rejects with a typed HTTP error, status `500` — no dedicated test; derived directly from source |
-| hub-domain-hooks-031 | session-refresh-waterfall | Any plain HTTP call in this recipe first responds `401`; refresh succeeds | Exactly one retried request is sent with the new token; a `401` on that retry throws a typed HTTP error, status `401` — traced to the shared authenticated request client, exercised only indirectly through this state |
-| hub-domain-hooks-032 | sse-token-rides-the-query-string | The live-connection transport opens the DM thread's live connection with a current access token `"tok"` | The constructed live-connection URL ends in `access_token=tok` — no dedicated test; derived directly from the shared live-connection transport |
-| hub-domain-hooks-033 | thread-message-bleed-on-chatid-switch | The send action is called for `chatId = "c1"`; before the POST resolves, `chatId` changes to `"c2"` | See the `thread-message-bleed-on-chatid-switch` edge case below — the resolved message from `"c1"`'s send call merges into whatever `messages` array is current when it settles, with no chatId-generation guard preventing it from landing under `"c2"` |
+| hub-domain-hooks-001 | shared-stream-refcounting | Two independent consumers each subscribe to the wake channel | Only one live connection (or poll timer) is created; unsubscribing one leaves the shared connection open |
+| hub-domain-hooks-002 | shared-stream-refcounting | The last subscriber unsubscribes | The shared connection/poll handle is closed and the shared reference is cleared, so the next subscription reopens it |
+| hub-domain-hooks-003 | local-change-broadcast | Two consumers each subscribe to the wake channel; a third piece of code broadcasts a wake signal | Both subscribed listeners are invoked with no arguments |
+| hub-domain-hooks-004 | unread-count-fetch-on-mount-and-wake | The unread-count state initializes against a stub returning `{ unread_count: { count: 4 } }` | `count` resolves to `4` after the initial fetch, which is `GET /api/v1/notifications?include[]=unread_count&limit=1` |
+| hub-domain-hooks-005 | unread-count-preserved-on-failure | `count` is `4`; the next unread-count request rejects | `count` remains `4`; no reset to `0` |
+| hub-domain-hooks-006 | inbox-query-serialization | Building the inbox query with status `archived`, read `false`, limit `20`, startingAfter `n9` and categories `["a", "b"]` | Serializes to `/api/v1/notifications?status=archived&read=false&limit=20&starting_after=n9&category=a&category=b` |
+| hub-domain-hooks-007 | inbox-status-left-to-backend-default | Building the inbox query with every field omitted | Requests `/api/v1/notifications` with no query string; no `status` key present; `hasMore` mirrors the page's `hasMore` |
+| hub-domain-hooks-008 | inbox-stale-response-ignored | The notification inbox state is mounted; the query parameters change before the first `GET` resolves | The first request's resolution (success or failure) is never applied to `items`/`hasMore`/`error` |
+| hub-domain-hooks-009 | inbox-mutation-then-broadcast | The mark-read action resolves for notification `"n1"` | `POST /api/v1/notifications/n1/read` is sent, then a wake signal fires exactly once |
+| hub-domain-hooks-010 | inbox-mutation-failure-leaves-list-untouched | The archive action's `POST` rejects for notification `"n1"` | No wake signal is broadcast; `items` is unchanged; the action rejects with the failure |
+| hub-domain-hooks-011 | dm-inbox-initial-window | The DM conversation list state mounts | `GET /api/v1/chats?type=direct&limit=100` is the first request |
+| hub-domain-hooks-012 | dm-inbox-window-growth-and-ceiling | The load-more action is called while the server reports more rows | The window is a fixed 100 rows (the maximum the endpoint accepts): no wider request is sent and the request count does not grow |
+| hub-domain-hooks-013 | dm-inbox-presence-merge | Chat rows for `otherUserId: "u1"` and `"u2"`; the presence response has no `u1` entry | `u1`'s `online` is `false` and `lastSeenAt` is `null`; `u2` carries its presence values |
+| hub-domain-hooks-014 | dm-inbox-presence-query-encoding | `otherUserId`s `["a,b", "c"]` | The presence request is `/api/v1/presence?user_ids=<percent-encoding of "a,b,c">&limit=100`, with every comma escaped |
+| hub-domain-hooks-015 | dm-inbox-presence-failure-is-silent | The presence `GET` rejects while the chats `GET` succeeds | `chats` still resolves, every row defaulted to `online: false, lastSeenAt: null`; no `error` is set for this reason |
+| hub-domain-hooks-016 | dm-inbox-stale-response-discarded | Two loads are in flight; the older one resolves after the newer one | The older resolution is discarded; `chats` reflects only the newer response |
+| hub-domain-hooks-017 | dm-inbox-load-failure-keeps-last-good-list | `chats` already holds two rows; the next `GET` rejects | `chats` still holds the same two rows; `error` is set to a message |
+| hub-domain-hooks-018 | dm-inbox-has-more-computation | The server reports more rows than the 100-row window returned | `hasMore` is `false` (window ceiling reached) despite the server's own `hasMore` |
+| hub-domain-hooks-019 | dm-thread-null-chatid-clears-state | The DM thread state initializes with `chatId: null` | `messages` is `[]`, `loading` is `false`; no request is issued and no live connection is opened |
+| hub-domain-hooks-020 | dm-thread-history-load-and-sort | History response items in seq order `[3, 1, 2]` | `messages` resolves sorted ascending as seq `[1, 2, 3]`, from `GET /api/v1/chats/c1/messages?limit=100` |
+| hub-domain-hooks-021 | dm-thread-message-merge-dedupe | A live-stream event delivers a message whose `id` matches one already in `messages` | `messages` length is unchanged; no duplicate row is added; a message with a new id is appended |
+| hub-domain-hooks-022 | dm-thread-sse-cursor-from-last-loaded-seq | History load's last item has `seq: 42` | The live connection is opened at `/api/v1/chats/c1/stream?after=42` for the `message` event |
+| hub-domain-hooks-023 | dm-thread-malformed-frame-ignored | A live-stream event whose `data` is not valid JSON | `messages` is unchanged; no exception escapes the handler |
+| hub-domain-hooks-024 | dm-thread-teardown-on-change-or-unmount | `chatId` changes from `"c1"` to `"c2"` while `"c1"`'s history fetch is still pending | The `"c1"` fetch's resolution, once it arrives, is ignored; only `"c2"`'s connection is opened, and it is closed on unmount |
+| hub-domain-hooks-025 | dm-thread-send-noop-on-empty-or-missing-chat | The send action is called with `"   "` on an open thread | No `POST` is issued and no wake signal fires; the returned promise resolves with no side effect |
+| hub-domain-hooks-026 | dm-thread-send-client-message-id | The send action is called with `"hi"` in an environment with no random-UUID generator available | The POST body's `client_message_id` matches the timestamp-plus-random-suffix fallback shape, not a UUID |
+| hub-domain-hooks-027 | dm-thread-mark-read-request-shape | The mark-read action is called on chat `"c1"` | `POST /api/v1/chats/c1/read` is sent with body `{}`; a wake signal fires once |
+| hub-domain-hooks-028 | dm-thread-ownership-comparison | The caller's id is `null`; `msg.senderUserId` is `""` | The ownership check returns `false`; with a signed-in caller it is `true` only for that caller's own id |
+| hub-domain-hooks-029 | start-dm-forbidden-mapping | `POST /api/v1/chats` responds `403` | The start-DM action resolves to `{ forbidden: true }`, not a rejection; on success it resolves `{ chatId }` |
+| hub-domain-hooks-030 | start-dm-other-errors-propagate | `POST /api/v1/chats` responds `500` | The start-DM action's returned promise rejects with a typed HTTP error, status `500` |
+| hub-domain-hooks-031 | session-refresh-waterfall | Any plain HTTP call in this recipe first responds `401`; refresh succeeds | Exactly one retried request is sent with the new token; a `401` on that retry throws a typed HTTP error, status `401` — owned by the shared authenticated request client, not these hooks |
+| hub-domain-hooks-032 | sse-token-rides-the-query-string | The live-connection transport opens the DM thread's live connection with a current access token `"tok"` | The constructed live-connection URL ends in `access_token=tok` — owned by the shared live-connection transport, not these hooks |
+| hub-domain-hooks-033 | thread-message-bleed-on-chatid-switch | The send action is called for `chatId = "c1"`; before the POST resolves, `chatId` changes to `"c2"` | `messages` contains no message with `chatId` `\"c1\"` after the POST resolves; the send action resolves without error |
+| hub-domain-hooks-035 | dm-composer-reset-on-chatid-change | A draft `"hi Alice"` typed for `chatId` `"c1"`; `chatId` then changes to `"c2"` | The draft is `""` for `"c2"` |
+| hub-domain-hooks-036 | dm-composer-late-result-ignored | A send for `"c1"` is in flight; `chatId` changes to `"c2"` and `"hi Bob"` is typed; the `"c1"` send then resolves (and, in a second case, rejects with 403) | The draft stays `"hi Bob"`, with no send error and `sending` false |
+| hub-domain-hooks-034 | dm-thread-reset-on-chatid-change | `chatId` `"c1"` loads one message; `chatId` then changes to `"c2"`, whose history load returns no messages | `messages` is `[]` for `"c2"`; the `"c1"` message is not shown |
 
 ## Edge Cases
 
@@ -327,12 +341,12 @@ Not applicable — this is the DM and notification data-and-transport layer, not
   on a `401`, the single inherited refresh-and-retry); nothing in this recipe retries a network
   failure or a non-401 error status, and no exponential backoff exists anywhere in this recipe —
   the poll fallback is a fixed interval, not a backoff schedule.
-- **thread-message-bleed-on-chatid-switch**: if the send action (or its returned promise) is still
-  pending when `chatId` changes, the DM thread state's `messages` is a single array not
-  partitioned by chat id, and neither the send action nor the mark-read action carries a
-  generation guard analogous to the history load's own cancellation flag or the DM conversation
-  list's generation counter; the resolved message MAY merge into whatever thread is displayed when
-  it settles rather than the one it was sent for.
+- **thread-message-bleed-on-chatid-switch**: if the send action is still pending when `chatId`
+  changes, its resolved message is dropped rather than merged into the newly displayed thread
+  (`dm-thread-send-merge-guarded`), and the new thread starts from an empty `messages` list
+  (`dm-thread-reset-on-chatid-change`). The message is still stored server-side and appears when
+  the original chat is opened again. The mark-read action needs no guard: it updates no thread
+  state, only the server's read cursor for the chat it was called for.
 
 ## Configuration
 
@@ -411,7 +425,7 @@ with no diagnostic output anywhere in this recipe.
 ## Platform Notes
 
 - **React/Web** (source platform): `packages/web/packages/messaging/src/hooks/use-dms.ts` and
-  `use-notifications.ts` hold the hooks; both build on `authedJson`/`authedRequest`/`AuthHttpError`
+  `use-notifications.ts` hold the hooks, and `use-dm-composer.ts` the composer `DmThread` mounts; both build on `authedJson`/`authedRequest`/`AuthHttpError`
   from `@adh-sdk/auth/client`, `useAuth` from `@adh-sdk/auth`, and the shared
   `connectSse`/`SseHandle` from `@adh-sdk/data/stream` — the one live-connection transport
   every real-time consumer in the web app now shares, per that package's own top-of-file comment.
@@ -448,9 +462,9 @@ with no diagnostic output anywhere in this recipe.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/messaging/src/hooks/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/messaging/src/hooks/` | confirmed (1.2.2) |
 
 ## Design Decisions
 
@@ -486,43 +500,39 @@ request headers); a live-connection client on another platform that can set a he
 replicate this deviation.
 **Approved**: pending
 
-**Decision**: `send` and `markRead` carry no chatId-generation guard, while the thread's own history
-load and `useDmConversations`' window load both do.
-**Rationale**: recorded as observed source behavior, not smoothed over — see the
-`thread-message-bleed-on-chatid-switch` marker; a port MUST decide deliberately whether to add
-a matching guard to these two callbacks or to preserve the current behavior, since the current
-checkout does not settle which is intended.
-**Approved**: pending
-
-**Decision**: a send that settles after a `chatId` switch can merge its message into the newly displayed thread; the send and mark-read actions have no generation guard.
-
-**Rationale**: the thread's `messages` is one array not partitioned by chat id, unlike the history load's cancellation flag and the conversation list's generation counter; closing the gap takes a generation guard (or per-chat partitioning) on send and mark-read, and it is undecided whether product intent tolerates the bleed-through during a fast switch.
-
+**Decision**: a send that settles after a `chatId` switch is dropped from local state instead of
+merged into the newly displayed thread, and a `chatId` change clears `messages` first.
+**Rationale**: `messages` is one array not partitioned by chat id, so without the guard a message
+sent in one chat appeared under another during a fast switch, and without the reset the previous
+chat's messages stayed in the new thread. A ref holding the current `chatId` is the smallest guard;
+the dropped message is not lost, because the server stored it and the original chat's history
+load returns it. `markRead` stays unguarded because it changes no local thread state.
 **Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [server-side-authorization](agenticdevelopercookbook://compliance/security#server-side-authorization) | passed | Security |
-| [secure-transport](agenticdevelopercookbook://compliance/security#secure-transport) | partial | Security |
-| [reconnection-strategy](agenticdevelopercookbook://compliance/access-patterns#reconnection-strategy) | partial | Access Patterns |
-| [pagination-support](agenticdevelopercookbook://compliance/access-patterns#pagination-support) | partial | Access Patterns |
-| [offline-behavior](agenticdevelopercookbook://compliance/access-patterns#offline-behavior) | partial | Access Patterns |
-| [error-response-handling](agenticdevelopercookbook://compliance/access-patterns#error-response-handling) | passed | Access Patterns |
-| [retry-with-backoff](agenticdevelopercookbook://compliance/access-patterns#retry-with-backoff) | failed | Access Patterns |
-| [timeout-configuration](agenticdevelopercookbook://compliance/access-patterns#timeout-configuration) | failed | Access Patterns |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | Reliability |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.security.server-side-authorization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/90e085e3-5112-5c02-9c10-4a2e324eeca1) | passed | Security |
+| [adc.check.security.secure-transport](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0a75f61f-9508-506e-b92e-0f5b29a91c95) | partial | Security |
+| [adc.check.access-patterns.reconnection-strategy](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9200a653-2bfd-5ea2-adbe-758243dc9228) | partial | Access Patterns |
+| [adc.check.access-patterns.pagination-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/e29ce31a-67cb-5690-b2ca-b1065ccdaf1a) | partial | Access Patterns |
+| [adc.check.access-patterns.offline-behavior](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/df7f401a-39be-5c60-bab4-85dd95bd1ab1) | partial | Access Patterns |
+| [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | passed | Access Patterns |
+| [adc.check.access-patterns.retry-with-backoff](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bcb17bfe-d2d6-53f3-b2af-06b7eea3da61) | failed | Access Patterns |
+| [adc.check.access-patterns.timeout-configuration](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/dc15eb62-a72c-5b09-b9e7-c1bed983f499) | failed | Access Patterns |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
 
 `separation-of-concerns` passes: both files contain zero JSX or DOM code — they export hooks and
-plain functions consumed by a separate presentation layer. `unit-test-coverage` fails: this
-checkout has no test file next to either `use-dms.ts` or `use-notifications.ts`, and the one
-messaging-adjacent test found (`MessagingPane.test.tsx`, in a different package) exercises a
-different component and neither imports nor mocks either file. `explicit-error-handling` is
+plain functions consumed by a separate presentation layer. `unit-test-coverage` is `partial`:
+`hooks/__tests__/use-notifications.test.ts` and `hooks/__tests__/use-dms.test.ts` cover 32 of the 34
+conformance vectors with passing tests. Vectors `hub-domain-hooks-031` (401 refresh waterfall) and
+`-032` (`access_token` query parameter) belong to the shared `authedFetch` and `connectSse`
+transport and are skipped. `explicit-error-handling` is
 `partial`: every plain HTTP failure either throws (`AuthHttpError`/`Error`) or lands in an exposed
 `error` field, but several catches (`fetchPresenceMap`, the SSE malformed-frame handler, and both
 poll-fallback refetches) discard the error with no signal at all beyond a silent fallback.
@@ -554,6 +564,7 @@ data — none of the three crashes the hook or blanks the UI.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 2.0.0 | 2026-11-16 | Mike Fullerton | The DM composer starts empty for each conversation and ignores a send that settles after a switch |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Design Decisions keep the Decision / Rationale / Approved triple; each decision's platform line is folded into its rationale. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolve open-question markers against the code; restate unimplemented behavior as current behavior with pending Decisions. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to adh/hub/messaging/. |

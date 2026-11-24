@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, type KeyboardEvent } from "react"
 import { Loader2 } from "lucide-react"
 
 const mono = "var(--mono,ui-monospace,monospace)"
@@ -61,6 +61,12 @@ export function ConnectionOverlay({ active, onRetry, detail }: ConnectionOverlay
   // re-render, so the 15s auto-retry would never actually fire.
   const onRetryRef = useRef(onRetry)
   onRetryRef.current = onRetry
+  // Mirrors `active` as of the latest render, so a tick already queued when the feed
+  // recovers (active → false, before the effects below clean up) cannot fire onRetry.
+  const activeRef = useRef(active)
+  activeRef.current = active
+  const cardRef = useRef<HTMLDivElement>(null)
+  const retryButtonRef = useRef<HTMLButtonElement>(null)
 
   // Debounced show: surface only after the feed has stayed dark past a blip; hide
   // immediately when the connection recovers (active → false).
@@ -85,6 +91,7 @@ export function ConnectionOverlay({ active, onRetry, detail }: ConnectionOverlay
     remainingRef.current = RETRY_SECONDS
     setCountdown(RETRY_SECONDS)
     const id = setInterval(() => {
+      if (!activeRef.current) return
       if (sinceRef.current != null) setElapsedMs(Date.now() - sinceRef.current)
       const next = remainingRef.current - 1
       if (next <= 0) {
@@ -99,6 +106,18 @@ export function ConnectionOverlay({ active, onRetry, detail }: ConnectionOverlay
     return () => clearInterval(id)
   }, [shown])
 
+  // Focus: move into the card on show, and on hide return it to whatever had it
+  // before, unless the user has since put it somewhere else.
+  useEffect(() => {
+    if (!shown) return
+    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    retryButtonRef.current?.focus()
+    return () => {
+      const now = document.activeElement
+      if (previous?.isConnected && (now == null || now === document.body)) previous.focus()
+    }
+  }, [shown])
+
   if (!shown) return null
 
   const deploying = elapsedMs < DEPLOY_GRACE_MS
@@ -106,6 +125,29 @@ export function ConnectionOverlay({ active, onRetry, detail }: ConnectionOverlay
   const sub = deploying
     ? "The backend is restarting — reconnecting automatically. This usually takes a moment."
     : "Still can't reach the backend. Retrying automatically."
+
+  // Tab and Shift+Tab wrap inside the card, so keyboard focus cannot leave for the
+  // panels the overlay obscures.
+  const containTab = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== "Tab" || !cardRef.current) return
+    const focusables = Array.from(
+      cardRef.current.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      ),
+    ).filter((el) => !el.hasAttribute("disabled"))
+    const first = focusables[0]
+    const last = focusables[focusables.length - 1]
+    if (!first || !last) return
+    const current = document.activeElement
+    const inside = cardRef.current.contains(current)
+    if (e.shiftKey && (current === first || !inside)) {
+      e.preventDefault()
+      last.focus()
+    } else if (!e.shiftKey && (current === last || !inside)) {
+      e.preventDefault()
+      first.focus()
+    }
+  }
 
   return (
     <div
@@ -128,6 +170,8 @@ export function ConnectionOverlay({ active, onRetry, detail }: ConnectionOverlay
       }}
     >
       <div
+        ref={cardRef}
+        onKeyDown={containTab}
         style={{
           display: "flex",
           flexDirection: "column",
@@ -143,7 +187,7 @@ export function ConnectionOverlay({ active, onRetry, detail }: ConnectionOverlay
           color: TEXT,
         }}
       >
-        <Loader2 className="animate-spin" size={34} color={BLUE} aria-hidden />
+        <Loader2 className="animate-spin motion-reduce:animate-none" size={34} color={BLUE} aria-hidden />
         <div style={{ fontSize: 17, fontWeight: 700, letterSpacing: "0.02em" }}>{heading}</div>
         <div style={{ fontSize: 12.5, color: MUTED, lineHeight: 1.5 }}>{sub}</div>
         {/* aria-hidden: the parent is an aria-live region, so a per-second countdown
@@ -152,6 +196,7 @@ export function ConnectionOverlay({ active, onRetry, detail }: ConnectionOverlay
           Retrying in {countdown}s
         </div>
         <button
+          ref={retryButtonRef}
           type="button"
           onClick={() => {
             remainingRef.current = RETRY_SECONDS

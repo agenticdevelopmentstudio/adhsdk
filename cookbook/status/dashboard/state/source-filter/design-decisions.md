@@ -5,9 +5,9 @@
 
 **Approved**: pending
 
-**Decision**: The selection is in-memory only and per use, with no persistence.
+**Decision**: The selection is persisted per pane under a caller-supplied storage key.
 
-**Rationale**: The source uses bare in-memory state with no storage calls, so the choice resets on reload. This differs from the sibling Environment Filter, which persists its selection to storage (on the web platform, `localStorage`). A port that adds persistence changes observable behavior.
+**Rationale**: The source delegates to a shared persisted-state hook, the same one the sibling Environment Filter follows, so each pane's choice survives a reload. It was in-memory only in an earlier version of this spec, and that is no longer the case. The first render shows the default and storage is read afterwards, so a server render and the first paint agree.
 
 **Approved**: pending
 

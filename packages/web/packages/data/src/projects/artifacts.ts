@@ -11,15 +11,16 @@
 // how a picker discovers what a project can hold, so adding a kind is a backend change that a
 // deployed client picks up on its next request.
 
-import { authedJson, authedRequest } from "../http";
+import { authedRequest, withV1Query } from "../http";
 import { enc } from "../client-helpers";
+import { v1Json, v1List, v1Write } from "../v1-case";
 import type {
   ProjectArtifactRow,
   ProjectArtifactLinkBody,
   TargetDescriptorRow,
 } from "./wire";
 
-const BASE = "/api/project/projects";
+const BASE = "/api/v1/projects";
 
 /** Which side of the project's work a target sits on. */
 export type ArtifactDirection = "ingested" | "produced";
@@ -81,11 +82,10 @@ export const projectArtifactsApi = {
     projectId: string,
     opts?: { direction?: ArtifactDirection },
   ): Promise<ProjectArtifact[]> {
-    const query = opts?.direction ? `?direction=${enc(opts.direction)}` : "";
-    const { items } = await authedJson<{ items: ProjectArtifactRow[] }>(
-      `${BASE}/${enc(projectId)}/artifacts${query}`,
+    const rows = await v1List<ProjectArtifactRow>(
+      withV1Query(`${BASE}/${enc(projectId)}/artifacts`, { direction: opts?.direction }),
     );
-    return items.map(toProjectArtifact);
+    return rows.map(toProjectArtifact);
   },
 
   /**
@@ -99,14 +99,18 @@ export const projectArtifactsApi = {
     projectId: string,
     opts?: { kind?: string; query?: string; limit?: number },
   ): Promise<TargetDescriptor[]> {
-    const params = new URLSearchParams();
-    if (opts?.kind) params.set("kind", opts.kind);
-    if (opts?.query) params.set("q", opts.query);
-    if (opts?.limit !== undefined) params.set("limit", String(opts.limit));
-    const suffix = params.size ? `?${params}` : "";
-    const { items } = await authedJson<{ items: TargetDescriptorRow[] }>(
-      `${BASE}/${enc(projectId)}/attachable${suffix}`,
+    // `attachable` is an `include[]` of the project itself. `kind` and `q` are not declared on
+    // that attachment, so they ride as query parameters the gateway forwards; `limit` belongs to
+    // the project read (not the attachment), so it is applied here.
+    const project = await v1Json<{ attachable: { items: TargetDescriptorRow[] } | TargetDescriptorRow[] }>(
+      withV1Query(`${BASE}/${enc(projectId)}`, {
+        "include[]": "attachable",
+        kind: opts?.kind || undefined,
+        q: opts?.query || undefined,
+      }),
     );
+    const all = Array.isArray(project.attachable) ? project.attachable : project.attachable.items;
+    const items = opts?.limit === undefined ? all : all.slice(0, opts.limit);
     return items.map(toTargetDescriptor);
   },
 
@@ -118,10 +122,7 @@ export const projectArtifactsApi = {
   ): Promise<ProjectArtifact> {
     const body: ProjectArtifactLinkBody = input;
     return toProjectArtifact(
-      await authedJson<ProjectArtifactRow>(`${BASE}/${enc(projectId)}/artifacts`, {
-        method: "POST",
-        body: JSON.stringify(body),
-      }),
+      await v1Json<ProjectArtifactRow>(`${BASE}/${enc(projectId)}/artifacts`, v1Write("POST", body)),
     );
   },
 

@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "3bec9b27-a9e3-4716-b516-688cc7f5a1c5",
     "title": "Git Repository Scanner",
-    "domain": "adhsdk://cookbook/workspace/projects/git-repo-scanner",
     "type": "ingredient",
     "version": "1.2.0",
     "status": "review",
@@ -35,7 +34,7 @@
     "approved-date": ""
   },
   "names_hosts": "A test vector uses the literal path `.claude/worktrees/…` as scan input.",
-  "synced": "d9a95934a0b30be9",
+  "synced": "fb585898107bbf30",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -54,7 +53,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

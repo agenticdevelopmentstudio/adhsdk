@@ -4,56 +4,29 @@ import Testing
 
 @Suite("GitClient", .serialized)
 struct GitClientTests {
-    private static let budget: TimeInterval = 10
-
     /// A fresh repository with one commit on `main`, one worktree on `feature`, and a modified file.
     private struct Fixture {
-        let root: URL
-        let worktree: URL
+        let repository: GitTestRepository
+        var root: URL { repository.root }
+        var worktree: URL { repository.url("wt-feature") }
 
         static func make() async throws -> Fixture {
-            let root = FileManager.default.temporaryDirectory
-                .appendingPathComponent("git-client-test-\(UUID().uuidString)")
-            try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
-            // A throw here never reaches a caller's tearDown, so the half-built
-            // repository is removed before the error propagates.
+            let repository = try await GitTestRepository.make(prefix: "git-client-test")
             do {
-                try await run(["init", "-b", "main"], in: root)
-                try await run(["config", "user.email", "test@example.com"], in: root)
-                try await run(["config", "user.name", "Test"], in: root)
-                // The developer's own global config may turn signing on; a signing
-                // prompt would hang this commit rather than fail it. Mirrors
-                // `TerminalSessionGitBranchTests.makeRepository`.
-                try await run(["config", "commit.gpgsign", "false"], in: root)
-                try "one\n".write(to: root.appendingPathComponent("a.txt"), atomically: true, encoding: .utf8)
-                try await run(["add", "a.txt"], in: root)
-                try await run(["commit", "-m", "initial"], in: root)
-                let worktree = root.appendingPathComponent("wt-feature")
-                try await run(["worktree", "add", "-b", "feature", worktree.path], in: root)
-                try "two\n".write(to: root.appendingPathComponent("a.txt"), atomically: true, encoding: .utf8)
-                return Fixture(root: root, worktree: worktree)
+                try repository.write("one\n", to: "a.txt")
+                try await repository.run(["add", "a.txt"])
+                try await repository.run(["commit", "-m", "initial"])
+                try await repository.run(["worktree", "add", "-b", "feature", repository.url("wt-feature").path])
+                try repository.write("two\n", to: "a.txt")
+                return Fixture(repository: repository)
             } catch {
-                try? FileManager.default.removeItem(at: root)
+                repository.tearDown()
                 throw error
             }
         }
 
         func tearDown() {
-            try? FileManager.default.removeItem(at: root)
-        }
-
-        /// Drives the system binary directly, so the fixture never depends on the
-        /// type under test. Only ever pointed at a throwaway directory this suite made.
-        private static func run(_ arguments: [String], in directory: URL) async throws {
-            let configuration = SubprocessChannel.Configuration(
-                executableURL: URL(fileURLWithPath: "/usr/bin/git"),
-                arguments: arguments,
-                environment: ["GIT_TERMINAL_PROMPT": "0"],
-                environmentPolicy: .mergeOverParent,
-                currentDirectoryURL: directory
-            )
-            let result = try await SubprocessChannel.run(configuration, budget: GitClientTests.budget)
-            #expect(result.exitStatus == 0, "\(arguments.joined(separator: " ")): \(result.standardError)")
+            repository.tearDown()
         }
     }
 
@@ -182,6 +155,51 @@ struct GitClientTests {
             #expect(verb == "merge-base")
             #expect(status != 0)
         }
+    }
+
+    @Test("a failed call reaches the command log with its standard error; a success without it")
+    func commandLogKeepsStandardErrorOfAFailure() async throws {
+        let fixture = try await Fixture.make()
+        defer { fixture.tearDown() }
+        let client = GitClient(configuration: .default)
+        _ = try? await client.run("rev-parse", ["--verify", "refs/heads/no-such-branch"], in: fixture.root)
+        _ = try await client.run("rev-parse", ["HEAD"], in: fixture.root)
+        // The shared ring takes every suite's calls; this fixture's directory is its own.
+        let mine = GitCommandLog.entries().filter { entry in
+            entry.directory == fixture.root.path && entry.arguments.first == "rev-parse"
+        }
+        let failed = try #require(mine.first { $0.arguments.contains("refs/heads/no-such-branch") })
+        #expect(failed.exitStatus != 0)
+        #expect(failed.standardError?.isEmpty == false)
+        let succeeded = try #require(mine.first { $0.arguments == ["rev-parse", "HEAD"] })
+        #expect(succeeded.exitStatus == 0)
+        #expect(succeeded.standardError == nil)
+    }
+
+    @Test("a write's config overrides are logged ahead of the verb, as spawned, message redacted")
+    func commandLogKeepsSpawnOrder() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("git-client-spawn-order-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let argvLog = directory.appendingPathComponent("argv.log")
+        let script = directory.appendingPathComponent("argv-git")
+        try "#!/bin/sh\necho \"$*\" >> \"$ARGV_LOG\"\n".write(to: script, atomically: true, encoding: .utf8)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: script.path)
+        let client = GitClient(configuration: GitClientConfiguration(
+            executableURL: script, timeout: 10, extraEnvironment: ["ARGV_LOG": argvLog.path]))
+
+        // The stand-in prints nothing, so the rebase-helper probe after the commit may throw.
+        _ = try? await client.perform(.commit(message: "secret", amend: false), in: directory)
+
+        let spawned = try #require(try String(contentsOf: argvLog, encoding: .utf8)
+            .split(separator: "\n").map(String.init).first { $0.contains(" commit ") })
+        #expect(spawned.hasPrefix("-c core.editor=true commit "))
+        let entry = try #require(GitCommandLog.entries().first { entry in
+            entry.directory == directory.path && entry.arguments.contains("commit")
+        })
+        #expect(Array(entry.arguments.prefix(3)) == ["-c", "core.editor=true", "commit"])
+        #expect(entry.commandLine == "git " + spawned.replacingOccurrences(of: "secret", with: "<redacted:6>"))
     }
 
     @Test("currentBranch names the checked-out branch")
@@ -401,5 +419,148 @@ struct SubprocessChannelTerminationRaceTests {
         // a real `sleep 30` running for the rest of its 30s regardless of
         // whether the assertion just failed.
         await channel.terminate()
+    }
+}
+
+/// A cancelled caller must end the git process it started, not leave it running: the
+/// history search relies on this to stop a superseded `git log` (final review,
+/// Important 1). The "git" here is a script that records its pid and sleeps, so the
+/// test can see whether the process outlives the cancellation.
+@Suite("GitClient cancellation")
+struct GitClientCancellationTests {
+    @Test("cancelling a running command throws CancellationError and terminates the process")
+    func cancellingTerminatesTheProcess() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("git-client-cancel-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let script = directory.appendingPathComponent("slow-git")
+        let pidFile = directory.appendingPathComponent("pid")
+        try "#!/bin/sh\necho $$ > \"$SLOW_GIT_PID\"\nexec /bin/sleep 30\n"
+            .write(to: script, atomically: true, encoding: .utf8)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: script.path)
+        let client = GitClient(configuration: GitClientConfiguration(
+            executableURL: script, timeout: 60, extraEnvironment: ["SLOW_GIT_PID": pidFile.path]))
+
+        let call = Task { try await client.run("log", [], in: directory) }
+        var pid: pid_t?
+        let started = Date()
+        while pid == nil, Date().timeIntervalSince(started) < 5 {
+            let text = (try? String(contentsOf: pidFile, encoding: .utf8)) ?? ""
+            pid = pid_t(text.trimmingCharacters(in: .whitespacesAndNewlines))
+            if pid == nil { try await Task.sleep(for: .milliseconds(20)) }
+        }
+        let running = try #require(pid)
+
+        call.cancel()
+        await #expect(throws: CancellationError.self) { try await call.value }
+
+        let cancelled = Date()
+        while kill(running, 0) == 0, Date().timeIntervalSince(cancelled) < 5 {
+            try await Task.sleep(for: .milliseconds(50))
+        }
+        let alive = kill(running, 0) == 0
+        if alive { kill(running, SIGKILL) }
+        #expect(!alive, "the git process must not outlive its cancelled caller")
+    }
+}
+
+/// git runs with its messages in English whatever the user's locale, so a caller that
+/// reads one ("not fully merged") works everywhere; the character set is left alone.
+/// The "git" here is a script that prints the two variables it was given.
+@Suite("GitClient locale")
+struct GitClientLocaleTests {
+    @Test("the child gets LC_MESSAGES=C and the parent's LC_CTYPE")
+    func messagesAreInEnglish() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("git-client-locale-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let script = directory.appendingPathComponent("env-git")
+        try "#!/bin/sh\necho \"$LC_MESSAGES|$LC_CTYPE\"\n".write(to: script, atomically: true, encoding: .utf8)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: script.path)
+        let client = GitClient(configuration: GitClientConfiguration(executableURL: script, timeout: 10))
+
+        let output = try await client.run("status", [], in: directory)
+
+        let parentCType = ProcessInfo.processInfo.environment["LC_CTYPE"] ?? ""
+        #expect(output.trimmingCharacters(in: .newlines) == "C|\(parentCType)")
+        #expect(GitClient.baseEnvironment["LC_ALL"] == nil)
+        #expect(GitClient.baseEnvironment["LC_CTYPE"] == nil)
+    }
+
+    /// A background `git status` must not take `index.lock`, or the user's own git fails.
+    @Test("every child gets GIT_OPTIONAL_LOCKS=0")
+    func optionalLocksAreOff() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("git-client-locks-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let script = directory.appendingPathComponent("env-git")
+        try "#!/bin/sh\necho \"$GIT_OPTIONAL_LOCKS\"\n".write(to: script, atomically: true, encoding: .utf8)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: script.path)
+        let client = GitClient(configuration: GitClientConfiguration(executableURL: script, timeout: 10))
+
+        let output = try await client.run("status", [], in: directory)
+
+        #expect(output.trimmingCharacters(in: .newlines) == "0")
+    }
+}
+
+/// `pushDestination(of:)` is git's own `<branch>@{push}`: it follows `push.default`, refuses
+/// what git refuses, and never hands git a dash-led branch.
+@Suite("GitClient push destination", .serialized)
+struct GitClientPushDestinationTests {
+    private let client = GitClient(configuration: GitClientConfiguration(
+        extraEnvironment: ["GIT_CONFIG_GLOBAL": "/dev/null", "GIT_CONFIG_NOSYSTEM": "1"]
+    ))
+
+    @Test("a tracked branch resolves to its remote branch; push.default=upstream follows the upstream")
+    func resolves() async throws {
+        let remote = try await GitTestRepository.makeBare()
+        defer { remote.tearDown() }
+        let clone = try await GitTestRepository.clone(of: remote, prefix: "git-push-destination")
+        defer { clone.tearDown() }
+        try clone.write("a\n", to: "a.txt")
+        try await clone.run(["add", "a.txt"])
+        try await clone.run(["commit", "-q", "-m", "a"])
+        try await clone.run(["push", "--quiet", "-u", "origin", "main"])
+        try await clone.run(["push", "--quiet", "origin", "main:feature"])
+        try await clone.run(["branch", "--quiet", "--track", "feat", "origin/feature"])
+
+        #expect(try await client.pushDestination(of: "main", in: clone.root) == "origin/main")
+        let refused = try? await client.pushDestination(of: "feat", in: clone.root)
+        #expect(refused == nil)
+        try await clone.run(["config", "push.default", "upstream"])
+        #expect(try await client.pushDestination(of: "feat", in: clone.root) == "origin/feature")
+    }
+
+    @Test("a branch with no upstream has no destination")
+    func failsWithoutUpstream() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-push-destination")
+        defer { repository.tearDown() }
+        try repository.write("a\n", to: "a.txt")
+        try await repository.run(["add", "a.txt"])
+        try await repository.run(["commit", "-q", "-m", "a"])
+        do {
+            _ = try await client.pushDestination(of: "main", in: repository.root)
+            Issue.record("expected a failure")
+        } catch let GitClientError.commandFailed(verb, _, standardError) {
+            #expect(verb == "rev-parse")
+            #expect(standardError.contains("no upstream"))
+        }
+    }
+
+    @Test("a dash-led or empty branch is refused before git runs")
+    func dashLedRefused() async throws {
+        let directory = URL(fileURLWithPath: "/nonexistent-\(UUID().uuidString)")
+        for name in ["-q", "--all", ""] {
+            do {
+                _ = try await client.pushDestination(of: name, in: directory)
+                Issue.record("expected \(name) to be refused")
+            } catch let error as GitClientError {
+                #expect(error == .invalidArgument(verb: "rev-parse", argument: name))
+            }
+        }
     }
 }

@@ -1,0 +1,59 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "359e0f48-d617-4872-8da9-b01d774368a7",
+    "title": "Pane State Settings Storage Provider",
+    "type": "ingredient",
+    "version": "1.0.0",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-14",
+    "modified": "2026-11-14",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "A settings storage provider that keeps each setting as a JSON string in a pane's own state, so a pane's overrides travel and die with the pane.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "ui",
+      "pane",
+      "settings",
+      "storage"
+    ],
+    "depends-on": [],
+    "related": [
+      "6363b5ff-f511-4e21-9ba7-6850787dba62",
+      "846ec786-5b96-4ee0-b7db-d6ae4bd6e333",
+      "2b4d0f95-dbdf-48a9-8579-a3e5b7d488fe"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "c6a54da0886eafbe",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 /// `ThemeStorage` backed by `UserDefaults`, for a host that has no settings
 /// system of its own.
@@ -26,7 +27,10 @@ public final class UserDefaultsThemeStorage: ThemeStorage {
     }
 
     private let defaults: UserDefaults
-    private var observer: NSObjectProtocol?
+    /// Written once in `init`, read once in `deinit`, never touched between,
+    /// so the nonisolated `deinit` cannot race it. (`isolated deinit` would
+    /// say this in the type system, but needs macOS 15.4 / iOS 18.4.)
+    nonisolated(unsafe) private var observer: NSObjectProtocol?
 
     /// The values this object last wrote or last saw. The change hook fires
     /// only when what is stored differs from these, which is what makes it mean
@@ -76,10 +80,22 @@ public final class UserDefaultsThemeStorage: ThemeStorage {
             // useful to do with it either way, and throwing here would take
             // the whole app down over a preference. An empty catalog still
             // yields every built-in theme.
-            return (try? JSONDecoder().decode([ColorTheme].self, from: data)) ?? []
+            do {
+                return try JSONDecoder().decode([ColorTheme].self, from: data)
+            } catch {
+                Self.logger.error("custom themes blob could not be decoded; reading an empty catalog: \(error.localizedDescription, privacy: .public)")
+                return []
+            }
         }
         set {
-            guard let data = try? JSONEncoder().encode(newValue) else { return }
+            let data: Data
+            do {
+                data = try JSONEncoder().encode(newValue)
+            } catch {
+                // Nothing is written, so the stored catalog stays as it was.
+                Self.logger.error("custom themes could not be encoded; the stored catalog is unchanged: \(error.localizedDescription, privacy: .public)")
+                return
+            }
             // Recorded *before* the write, never after: `UserDefaults` delivers
             // its change notification synchronously when the post and the
             // observer's queue are both the main one, so a record written
@@ -106,4 +122,8 @@ public final class UserDefaultsThemeStorage: ThemeStorage {
         lastSeenActiveID = active
         onExternalChange?()
     }
+}
+
+extension UserDefaultsThemeStorage: Loggable {
+    public static nonisolated let logger = makeLogger()
 }

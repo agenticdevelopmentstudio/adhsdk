@@ -1,0 +1,2 @@
+
+A controls row (small push buttons: `Previous`, `Next`, the position label in the secondary caption style, `Ours`, `Theirs`, `Both`, `Base`, a flexible space, `Cancel`, `Save`) over a horizontal `ThemedSplitView`: on top a vertical `ThemedSplitView` of the ours and theirs panes at equal width, below the result pane. Each pane is a semibold secondary caption (the side's marker label, or `Result`) over a line viewer with one gutter column. Backgrounds are the line viewer's: `emphasis` for an unchosen conflict, `added` for chosen lines, `filler` for padding.

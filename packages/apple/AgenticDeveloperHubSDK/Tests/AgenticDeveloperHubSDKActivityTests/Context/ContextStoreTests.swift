@@ -12,7 +12,7 @@ final class ContextStoreTests: XCTestCase {
 
     override func setUpWithError() throws {
         dir = URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent("olylo-ctxstore-\(UUID().uuidString)")
+            .appendingPathComponent("temporal-ctxstore-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         db = try BoundedDatabase(path: dir.appendingPathComponent("test.sqlite").path)
         store = ContextStore(database: db)
@@ -148,12 +148,12 @@ final class ContextStoreTests: XCTestCase {
 
     func testWindowDetailRoundTripsEveryColumn() throws {
         try store.insert(event(.window(WindowDetail(
-            change: .destroyed, bundleID: "com.olylo.window", appName: "WindowApp", pid: 77,
+            change: .destroyed, bundleID: "com.fishlamp.temporal.window", appName: "WindowApp", pid: 77,
             windowID: 501, windowTitle: "Doc Window"))))
         try db.read { db in
             let row = try XCTUnwrap(Row.fetchOne(db, sql: "SELECT * FROM context_event_window"))
             XCTAssertEqual(row["change"] as String?, "destroyed")
-            XCTAssertEqual(row["bundle_id"] as String?, "com.olylo.window")
+            XCTAssertEqual(row["bundle_id"] as String?, "com.fishlamp.temporal.window")
             XCTAssertEqual(row["app_name"] as String?, "WindowApp")
             XCTAssertEqual(row["pid"] as Int?, 77)
             XCTAssertEqual(row["window_id"] as Int?, 501)

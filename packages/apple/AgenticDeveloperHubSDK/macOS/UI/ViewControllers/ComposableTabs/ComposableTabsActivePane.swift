@@ -259,7 +259,11 @@ public final class ComposableTabsActivePane {
         }
 
         // A click carries its own focus: the view under it takes first
-        // responder the ordinary AppKit way. The pointer carries nothing, so a
+        // responder the ordinary AppKit way — unless that view accepts none (a
+        // breadcrumb strip, a divider, padding), when the keys stay where they
+        // were; a pane with such parts moves them itself on
+        // `didChangeNotification`, as the file browser does for its filter.
+        // The pointer carries nothing, so a
         // pane it moves into would be outlined as active while the keys kept
         // going to the pane the user left.
         //
@@ -432,6 +436,16 @@ public final class ComposableTabsPaneBackgroundView: NSView, Themeable {
 
     public let nodeID: UUID
 
+    /// Whether the outline is drawn. Off, the track it would be drawn in is
+    /// painted as the pane's own fill, square, so the pane has no edge of its
+    /// own and no active-pane colour.
+    public var drawsOutline = true {
+        didSet {
+            guard drawsOutline != oldValue else { return }
+            applyTheme(scopedPalette)
+        }
+    }
+
     /// The pane itself: `windowBackground`, the plane a pane paints, inside
     /// the backdrop track.
     private let fill = ThemedBackgroundView(role: .windowBackground)
@@ -497,7 +511,7 @@ public final class ComposableTabsPaneBackgroundView: NSView, Themeable {
         // `.eventTracking` — a checkbox being clicked — would not repaint until
         // the mouse came up. `UserSetting` documents the same failure.
         UserSettings.shared.changes
-            .filter { $0 == UserSettings.highlightActivePane.name }
+            .filter { $0 == UserSettings.highlightActivePane.name || $0 == UserSettings.preferRoundedCorners.name }
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 guard let self else { return }
@@ -537,6 +551,15 @@ public final class ComposableTabsPaneBackgroundView: NSView, Themeable {
         // to the workspace's edge. Paint this track in the pane's own fill and
         // the tab is cut off from the workspace by a dark hairline.
         layer?.backgroundColor = NSColor(palette.projectPaneBackdrop).cgColor
+        guard drawsOutline else {
+            layer?.backgroundColor = palette.nsColor(.windowBackground).cgColor
+            layer?.borderWidth = 0
+            layer?.cornerRadius = 0
+            layer?.masksToBounds = false
+            fill.layer?.cornerRadius = 0
+            fill.layer?.masksToBounds = false
+            return
+        }
 
         // A theme may override both the switch and the color; neither is set
         // until the user edits the theme's Project topic, so by default the
@@ -556,6 +579,14 @@ public final class ComposableTabsPaneBackgroundView: NSView, Themeable {
         // like. The width is constant so that clicking between panes recolours
         // a line instead of moving one.
         layer?.borderWidth = 2
+        // Appearance > Prefer rounded corners. Clipping keeps the pane's own
+        // chrome and content inside the curve; the border draws above both.
+        let radius = CornerStyle.radius(CornerStyle.paneRadius)
+        layer?.cornerRadius = radius
+        layer?.masksToBounds = radius > 0
+        fill.wantsLayer = true
+        fill.layer?.cornerRadius = max(0, radius - Self.borderInset)
+        fill.layer?.masksToBounds = radius > 0
         // The accent for the active pane — the one line in the window drawn in
         // it, and the answer to "which pane am I in". Every other pane takes
         // the hairline tone the rest of the frame is drawn in

@@ -1,0 +1,5 @@
+
+| Version | Date | Author | Summary |
+|---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Corrected render-hex-display: shows raw value prop verbatim, not native-input-normalized lowercase. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case names and updated every citation, corrected the ARIA role and aria-hidden announcement claims in Accessibility, corrected the Compose/AppKit-UIKit/WinUI 3 platform notes to name real native APIs, specified the accepted hex format and the native fallback for empty/invalid values, normalized hex casing across requirements and test vectors, added a disabled-state onChange assertion and dropped an unstated layout claim in the test vectors, reworded the Disabled state row, marked Increase Contrast applicable, replaced the CSS-coupled Appearance section with platform-neutral tokens, reformatted Design Decisions into Decision/Rationale/Approved form, added a Compliance table, and added tags |

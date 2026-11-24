@@ -1,0 +1,5 @@
+
+- The title is rendered as an `h2` element, providing semantic structure for document outline and screen reader navigation. On native platforms, the equivalent element MUST carry the platform's heading trait/semantics (see Platform Notes) since there is no HTML tag to carry it implicitly.
+- **eyebrow-accessibility**: The eyebrow is rendered as a `span` without semantic role, as a sibling of the `h2` rather than nested inside it. `Head` offers no prop to set an `id` on the `span` or any attribute on the `h2`, so a caller cannot link the two with `aria-describedby` through this component. When the eyebrow content is important to a reader who lands directly on the section (for example, it is the label a drawer link used to get here), the caller SHOULD repeat that meaning in the `title` or in the first child content. A port MAY add an `id`/`aria-describedby` hook to its own API.
+- Child content inherits accessibility characteristics from its own implementation; the component does not alter or wrap accessibility properties of children.
+

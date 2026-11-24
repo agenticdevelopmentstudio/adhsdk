@@ -1,4 +1,5 @@
 import Foundation
+import AgenticDeveloperHubSDKCore
 
 /// How a Claude Code install learns about the endpoint: one `claude mcp add`
 /// the user runs once, with the URL and token written as shell defaults so

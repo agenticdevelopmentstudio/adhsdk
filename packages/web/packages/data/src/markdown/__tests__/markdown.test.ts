@@ -8,23 +8,24 @@ vi.mock("../../http", async (orig) => ({
 
 import { withTags, categoryNodes, tagNodes } from "../markdown";
 import type { MarkdownCategoryTreeBody, MarkdownTagSetBody } from "../wire";
+import { installFetch, paramsAt, pathAt, urlAt, fetchMock } from "../../__tests__/v1-fetch";
 
 // Regression: the ResearchPane crashed ("tags is not iterable" / reading `length`
 // of undefined) when a document arrived without a `tags` array — which happens
 // when the backend deploy is OLDER than this frontend (before the category/tags
 // migration). The API boundary must guarantee `tags` is always an array.
 describe("withTags", () => {
-  it("defaults a missing tags field to []", () => {
+  it("HDM-001 defaults a missing tags field to []", () => {
     const doc = { id: "d1", title: "Doc" } as unknown as { id: string; title: string; tags: string[] };
     expect(withTags(doc).tags).toEqual([]);
   });
 
-  it("defaults a null tags field to []", () => {
+  it("HDM-002 defaults a null tags field to []", () => {
     const doc = { id: "d1", tags: null } as unknown as { id: string; tags: string[] };
     expect(withTags(doc).tags).toEqual([]);
   });
 
-  it("passes a real array through unchanged (same reference, no needless copy)", () => {
+  it("HDM-003 passes a real array through unchanged (same reference, no needless copy)", () => {
     const doc = { id: "d1", tags: ["a", "b"] };
     expect(withTags(doc)).toBe(doc);
   });
@@ -43,12 +44,12 @@ describe("withTags", () => {
 describe("categoryNodes", () => {
   const old = (items: string[]) => ({ items }) as unknown as MarkdownCategoryTreeBody;
 
-  it("passes real nodes through unchanged (same reference, no needless copy)", () => {
+  it("HDM-004 passes real nodes through unchanged (same reference, no needless copy)", () => {
     const res = { items: ["Meetings"], nodes: [{ id: "c1", name: "Meetings", parentIds: [], sortOrder: 0 }] };
     expect(categoryNodes(res)).toBe(res.nodes);
   });
 
-  it("prefers nodes even when they are EMPTY — a workspace with no categories is not skew", () => {
+  it("HDM-005 prefers nodes even when they are EMPTY — a workspace with no categories is not skew", () => {
     // `items` and `nodes` describe one set: a current backend that sends `nodes: []` sent
     // `items: []` too. Falling back on emptiness rather than absence would be untestable
     // here and identical in effect — but it would rebuild names on a backend that has
@@ -56,7 +57,7 @@ describe("categoryNodes", () => {
     expect(categoryNodes({ items: [], nodes: [] })).toEqual([]);
   });
 
-  it("rebuilds an older backend's flat names as roots, in the order it sent them", () => {
+  it("HDM-006 rebuilds an older backend's flat names as roots, in the order it sent them", () => {
     expect(categoryNodes(old(["Admin", "Meetings", "Reading"]))).toEqual([
       { id: "Admin", name: "Admin", parentIds: [], sortOrder: 0 },
       { id: "Meetings", name: "Meetings", parentIds: [], sortOrder: 1 },
@@ -73,7 +74,7 @@ describe("categoryNodes", () => {
     expect(meetings?.name).toBe("Meetings");
   });
 
-  it("yields [] when NEITHER field is an array, rather than throwing", () => {
+  it("HDM-007 yields [] when NEITHER field is an array, rather than throwing", () => {
     expect(categoryNodes({} as unknown as MarkdownCategoryTreeBody)).toEqual([]);
   });
 });
@@ -94,7 +95,7 @@ describe("tagNodes", () => {
     expect(tagNodes({ items: [], nodes: [] })).toEqual([]);
   });
 
-  it("rebuilds an older backend's flat labels, in the order it sent them", () => {
+  it("HDM-008 rebuilds an older backend's flat labels, in the order it sent them", () => {
     expect(tagNodes(old(["alpha", "beta"]))).toEqual([
       { id: "alpha", label: "alpha" },
       { id: "beta", label: "beta" },
@@ -111,7 +112,7 @@ describe("tagNodes", () => {
 // route travels as a PATH SEGMENT, so it must be encoded, and the workspace must ride along
 // (an org member editing an org document asks about the ORG's slug space, not their own).
 describe("markdownApi.routeAvailable", () => {
-  it("asks the author-scoped endpoint with both segments encoded", async () => {
+  it("HDM-009 asks the author-scoped endpoint with both segments encoded", async () => {
     const { authedJson } = await import("../../http");
     const spy = vi.mocked(authedJson);
     spy.mockResolvedValueOnce({ available: true, reason: "ok" });
@@ -119,12 +120,12 @@ describe("markdownApi.routeAvailable", () => {
 
     await markdownApi.routeAvailable("doc 1", "a/b", { workspace: "acme" });
 
-    expect(spy).toHaveBeenCalledWith(
-      "/api/content/markdown/doc%201/route-available/a%2Fb?workspace=acme",
-    );
+    // /v1 spells it as a filter on the collection: route and excluding are query values, so
+    // both are still encoded, and the workspace still rides along.
+    expect(spy).toHaveBeenCalledWith("/api/v1/papers?route=a%2Fb&excluding=doc+1&workspace=acme");
   });
 
-  it("returns the backend's verdict unchanged — the reason drives the message", async () => {
+  it("HDM-010 returns the backend's verdict unchanged — the reason drives the message", async () => {
     const { authedJson } = await import("../../http");
     vi.mocked(authedJson).mockResolvedValueOnce({ available: false, reason: "reserved" });
     const { markdownApi } = await import("../markdown");
@@ -133,5 +134,59 @@ describe("markdownApi.routeAvailable", () => {
       available: false,
       reason: "reserved",
     });
+  });
+});
+
+// Conflict mapping: a 409 from the backend becomes a sentence the form shows inline, and the
+// original error is discarded; any other error passes through untouched.
+describe("markdownApi conflict mapping", () => {
+  const conflict = () => Object.assign(new Error("duplicate"), { status: 409 });
+
+  it("HDM-011 publish maps a 409 to the friendly route-in-use error, discarding the original", async () => {
+    const { authedJson } = await import("../../http");
+    vi.mocked(authedJson).mockRejectedValueOnce(conflict());
+    const { markdownApi } = await import("../markdown");
+    const err = await markdownApi.publish("d1", "my-paper").catch((e: Error) => e);
+    expect(err).toBeInstanceOf(Error);
+    expect((err as Error).message).toBe("The route “my-paper” is already used by one of your papers.");
+    expect((err as { status?: number }).status).toBeUndefined();
+  });
+
+  it("HDM-011 publish rethrows a non-conflict error unchanged", async () => {
+    const { authedJson } = await import("../../http");
+    const boom = Object.assign(new Error("down"), { status: 500 });
+    vi.mocked(authedJson).mockRejectedValueOnce(boom);
+    const { markdownApi } = await import("../markdown");
+    await expect(markdownApi.publish("d1", "r")).rejects.toBe(boom);
+  });
+
+  it("HDM-012 createCategory maps a 409 to the friendly already-exists error", async () => {
+    const { authedJson } = await import("../../http");
+    vi.mocked(authedJson).mockRejectedValueOnce(conflict());
+    const { markdownApi } = await import("../markdown");
+    await expect(markdownApi.createCategory({ name: "Meetings" })).rejects.toThrow(
+      "A category named “Meetings” already exists somewhere else.",
+    );
+  });
+});
+
+// The list query: the corpus flags are presence-only, so a `false` is the unfiltered list and
+// must not travel as `noted=false`.
+describe("markdownApi.list query", () => {
+  it("HDM-018 omits `noted` and `doc` entirely when they are false", async () => {
+    installFetch();
+    const { markdownApi } = await import("../markdown");
+    await markdownApi.list({}, { noted: false, doc: false });
+    expect(pathAt(0)).toBe("/api/v1/papers");
+    expect(paramsAt(0).has("noted")).toBe(false);
+    expect(paramsAt(0).has("doc")).toBe(false);
+    expect(urlAt(0)).not.toContain("noted");
+    expect(urlAt(0)).not.toContain("doc=");
+
+    // Control: true is sent.
+    fetchMock.mockClear();
+    await markdownApi.list({}, { noted: true, doc: true });
+    expect(paramsAt(0).get("noted")).toBe("true");
+    expect(paramsAt(0).get("doc")).toBe("true");
   });
 });

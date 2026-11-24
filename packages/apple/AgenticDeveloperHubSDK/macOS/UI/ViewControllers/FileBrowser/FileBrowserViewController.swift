@@ -3,11 +3,12 @@ import Combine
 
 import AgenticDeveloperHubSDKCore
 import AgenticDeveloperHubSDKCoreMacOS
+import AgenticDeveloperHubSDKCoreUI
 import AgenticDeveloperHubSDKLanguage
 
-/// A file browser — the tree, and the footer that adds and removes roots — so
-/// one can be dropped into any AppKit container: a document pane, a sidebar, a
-/// window.
+/// A file browser — a breadcrumb naming the selection, the tree, and a filter
+/// field under it — so one can be dropped into any AppKit container: a
+/// document pane, a sidebar, a window.
 ///
 /// Owns one `FileTreeManager` per root directory, and starts/stops watching with
 /// the view's appearance: a browser in a hidden tab has no business running an
@@ -15,8 +16,8 @@ import AgenticDeveloperHubSDKLanguage
 @MainActor
 public final class FileBrowserViewController: NSViewController {
 
-    /// The roots this browser shows. A host that wants the `+`/`−` footer to
-    /// outlive the pane owns this object and hands it in.
+    /// The roots this browser shows. A host that wants the list to outlive the
+    /// pane owns this object and hands it in.
     public let directories: FileBrowserDirectories
 
     /// The primary root's manager. Exposed so a host can force a resync or read
@@ -115,8 +116,54 @@ public final class FileBrowserViewController: NSViewController {
         documentStore: documentStore
     )
 
-    private let addButton = NSButton(title: "", target: nil, action: nil)
-    private let removeButton = NSButton(title: "", target: nil, action: nil)
+    /// The path of the selected node, under the pane's title bar, spelled
+    /// from `~` so it says where the file is on disk, not only in the project.
+    private lazy var breadcrumb = BreadcrumbView(rootURL: directories.primary, style: .homeRelative)
+
+    /// Asked to show a different directory, chosen from the breadcrumb's
+    /// "Browse" item. Set by a File Browser window, which reopens on it; nil
+    /// (a project's browser) offers no such item.
+    public var onBrowseDirectoryRequest: ((URL) -> Void)? {
+        didSet { breadcrumb.onSelectDirectory = onBrowseDirectoryRequest }
+    }
+
+    /// Keeps the breadcrumb inside the browser's own roots: crumbs above them
+    /// are disabled. A project's browser sets it; a File Browser window does not.
+    /// The verb on the breadcrumb's directory item; see `BreadcrumbView`.
+    public var breadcrumbDirectoryActionTitle: String {
+        get { breadcrumb.directoryActionTitle }
+        set { breadcrumb.directoryActionTitle = newValue }
+    }
+
+    public var confinesBreadcrumbToRoots = false {
+        didSet { updateBreadcrumbConfinement() }
+    }
+
+    private func updateBreadcrumbConfinement() {
+        breadcrumb.confiningRoots = confinesBreadcrumbToRoots
+            ? [directories.primary] + directories.additional
+            : []
+    }
+
+    /// Narrows the tree to the names that contain what is typed.
+    private let filterField = ThemedSearchField(placeholder: "Filter")
+
+    /// Tab and Shift-Tab between the filter and the list.
+    private lazy var keyViewLoop = KeyViewLoop([filterField, tree.listView])
+
+    /// Whether this pane was the active one at the last active-pane change, so
+    /// the filter takes the keyboard on becoming active, not on every change.
+    private var wasActivePane = false
+
+    /// `PanePreferredThicknessProviding`'s callback. Stored here because Swift
+    /// has no stored properties in extensions.
+    public var onPreferredThicknessChange: ((CGFloat) -> Void)?
+
+    /// Settings > File Browser > General's "Automatically adjust width to
+    /// content".
+    private let widthSettingObserver = UserSettingObserver(UserSettings.fileBrowserAdjustsWidthToContent)
+    private var themeObserver: ThemePaletteObserver?
+    private var isWidthUpdateScheduled = false
 
     private var isWatching = false
     private var hasLoaded = false
@@ -177,7 +224,10 @@ public final class FileBrowserViewController: NSViewController {
         rebuildManagers()
         directories.$additional
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in self?.rebuildManagers() }
+            .sink { [weak self] _ in
+                self?.rebuildManagers()
+                self?.updateBreadcrumbConfinement()
+            }
             .store(in: &cancellables)
 
         // `@Published` publishes from `willSet`, so a synchronous sink reads
@@ -231,101 +281,216 @@ public final class FileBrowserViewController: NSViewController {
         let treeView = tree.view
         treeView.translatesAutoresizingMaskIntoConstraints = false
 
-        let divider = NSBox()
-        divider.boxType = .separator
-        divider.translatesAutoresizingMaskIntoConstraints = false
+        breadcrumb.translatesAutoresizingMaskIntoConstraints = false
+        breadcrumb.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        breadcrumb.setAccessibilityIdentifier("file-browser.breadcrumb")
 
-        let footer = makeFooter()
+        let topDivider = Self.makeSeparator()
+        let bottomDivider = Self.makeSeparator()
+        let filterBar = makeFilterBar()
 
-        container.addSubview(treeView)
-        container.addSubview(divider)
-        container.addSubview(footer)
+        let strips: [NSView] = [breadcrumb, topDivider, treeView, bottomDivider, filterBar]
+        strips.forEach { container.addSubview($0) }
 
-        NSLayoutConstraint.activate([
-            treeView.topAnchor.constraint(equalTo: container.topAnchor),
-            treeView.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-            treeView.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-
-            divider.topAnchor.constraint(equalTo: treeView.bottomAnchor),
-            divider.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-            divider.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-
-            footer.topAnchor.constraint(equalTo: divider.bottomAnchor),
-            footer.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-            footer.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-            footer.bottomAnchor.constraint(equalTo: container.bottomAnchor)
-        ])
+        var constraints: [NSLayoutConstraint] = [
+            breadcrumb.topAnchor.constraint(equalTo: container.topAnchor),
+            breadcrumb.heightAnchor.constraint(equalToConstant: Self.breadcrumbHeight),
+            topDivider.topAnchor.constraint(equalTo: breadcrumb.bottomAnchor),
+            treeView.topAnchor.constraint(equalTo: topDivider.bottomAnchor),
+            bottomDivider.topAnchor.constraint(equalTo: treeView.bottomAnchor),
+            filterBar.topAnchor.constraint(equalTo: bottomDivider.bottomAnchor),
+            filterBar.bottomAnchor.constraint(equalTo: container.bottomAnchor)
+        ]
+        for strip in strips {
+            constraints.append(strip.leadingAnchor.constraint(equalTo: container.leadingAnchor))
+            constraints.append(strip.trailingAnchor.constraint(equalTo: container.trailingAnchor))
+        }
+        NSLayoutConstraint.activate(constraints)
 
         view = container
     }
 
-    /// The `+`/`−` strip under the tree.
-    private func makeFooter() -> NSView {
-        let footer = ThemedBackgroundView(role: .surface)
-        footer.translatesAutoresizingMaskIntoConstraints = false
+    private static let breadcrumbHeight: CGFloat = 24
 
-        for (button, symbol, action) in [
-            (addButton, "plus", #selector(addDirectory)),
-            (removeButton, "minus", #selector(removeSelectedDirectory))
-        ] {
-            button.bezelStyle = .accessoryBar
-            button.isBordered = false
-            button.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
-            button.target = self
-            button.action = action
-        }
-        addButton.toolTip = "Add a directory to this project"
-        addButton.accessibilityID("file-browser.add-directory")
-        removeButton.accessibilityID("file-browser.remove-directory")
+    private static func makeSeparator() -> NSBox {
+        let divider = NSBox()
+        divider.boxType = .separator
+        divider.translatesAutoresizingMaskIntoConstraints = false
+        return divider
+    }
 
-        let stack = NSStackView(views: [addButton, removeButton])
-        stack.orientation = .horizontal
-        stack.spacing = 2
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        footer.addSubview(stack)
+    /// The filter field under the tree, inset the way the Projects shelf
+    /// insets its own search field, so the two read as the same control.
+    private func makeFilterBar() -> NSView {
+        let bar = ThemedBackgroundView(role: .surface)
+        bar.translatesAutoresizingMaskIntoConstraints = false
+
+        filterField.delegate = self
+        filterField.target = self
+        filterField.action = #selector(filterChanged(_:))
+        // Filter as the reader types, every keystroke, rather than on Return.
+        filterField.sendsWholeSearchString = false
+        filterField.sendsSearchStringImmediately = true
+        filterField.controlSize = .small
+        filterField.setAccessibilityIdentifier("file-browser.filter")
+        filterField.translatesAutoresizingMaskIntoConstraints = false
+        bar.addSubview(filterField)
 
         NSLayoutConstraint.activate([
-            stack.leadingAnchor.constraint(equalTo: footer.leadingAnchor, constant: 8),
-            stack.trailingAnchor.constraint(lessThanOrEqualTo: footer.trailingAnchor, constant: -8),
-            stack.topAnchor.constraint(equalTo: footer.topAnchor, constant: 4),
-            stack.bottomAnchor.constraint(equalTo: footer.bottomAnchor, constant: -4)
+            filterField.leadingAnchor.constraint(equalTo: bar.leadingAnchor, constant: 8),
+            filterField.trailingAnchor.constraint(equalTo: bar.trailingAnchor, constant: -8),
+            filterField.topAnchor.constraint(equalTo: bar.topAnchor, constant: 6),
+            filterField.bottomAnchor.constraint(equalTo: bar.bottomAnchor, constant: -6)
         ])
-        return footer
+        return bar
     }
 
     public override func viewDidLoad() {
         super.viewDidLoad()
-        // `−` is only ever aimed at a root the user added, and which root that
-        // is changes with every click in the tree.
-        Publishers.Merge(
-            selection.$selectedRoot.map { _ in () },
-            directories.$additional.map { _ in () }
-        )
-        .receive(on: RunLoop.main)
-        .sink { [weak self] in self?.updateFooter() }
-        .store(in: &cancellables)
-        updateFooter()
+        // Read when the view is built, not when it first appears: a project
+        // window is built hidden and shown once it is ready, and a tree read
+        // only on appearing arrived after the window was on screen, so its
+        // rows — and a content-sized pane's width — landed a moment late and
+        // the window jumped. `loadInitial()` runs once; a tab switch does not
+        // re-read it.
+        loadRootsOnce()
+
+        // The breadcrumb names the selected node, or the browser's own
+        // directory when nothing is selected, so the path is always shown.
+        // Choosing in it is the same as a click in the tree (`dry`). The hop
+        // lets `@Published`'s `willSet` land before the strip reads the node back.
+        breadcrumb.fileURL = directories.primary
+        selection.$selectedNode
+            .receive(on: RunLoop.main)
+            .sink { [weak self] node in
+                guard let self else { return }
+                self.breadcrumb.fileURL = node?.url ?? self.directories.primary
+            }
+            .store(in: &cancellables)
+        breadcrumb.onSelect = { [weak self] url in self?.tree.onOpenRequest?(url, .current) }
+        // The crumb menus leave out what the tree leaves out, Hide Excluded
+        // Content included, anchored at the root the file sits under.
+        breadcrumb.filter = { [weak self] in
+            guard let self else { return .none }
+            let file = self.selection.selectedNode?.url.standardizedFileURL.path ?? ""
+            let root = ([self.directories.primary] + self.directories.additional)
+                .first { file.hasPrefix($0.standardizedFileURL.path + "/") } ?? self.directories.primary
+            return FileTreeFilter(rootURL: root, matcher: self.exclusions)
+        }
+
+        // Synchronous on purpose: the active pane posts from its mouse-down
+        // monitor *before* the click is delivered, and `NSApp.currentEvent` is
+        // only that mouse-down while the post is still on the stack.
+        NotificationCenter.default
+            .publisher(for: ComposableTabsActivePane.didChangeNotification)
+            .sink { [weak self] note in self?.activePaneDidChange(in: note.object as? NSWindow) }
+            .store(in: &cancellables)
+
+        tree.onRowsChanged = { [weak self] in self?.scheduleWidthUpdate() }
+        // The user may drag the divider wherever they like; choosing another
+        // row puts the content width back.
+        tree.onSelectionChanged = { [weak self] in self?.scheduleWidthUpdate() }
+        widthSettingObserver.onChange = { [weak self] _ in self?.scheduleWidthUpdate() }
+        // The rows' fonts come from the palette, so a text-size change is a
+        // width change.
+        themeObserver = ThemePaletteObserver(host: view) { [weak self] _ in self?.scheduleWidthUpdate() }
     }
 
-    private func updateFooter() {
-        let root = selection.selectedRoot
-        let removable = root.map { directories.isRemovable($0) } ?? false
-        removeButton.isEnabled = removable
-        // Saying *why* the button is off beats an unexplained grey minus.
-        removeButton.toolTip = removable && root != nil
-            ? "Remove “\(root!.lastPathComponent)” from this project"
-            : "Select an added directory to remove it"
+    public override func viewDidAppear() {
+        super.viewDidAppear()
+        keyViewLoop.refresh()
+        wasActivePane = ComposableTabsActivePane.shared.isInActivePane(view)
+        scheduleWidthUpdate()
+    }
+
+    // MARK: - Filter
+
+    @objc private func filterChanged(_ sender: NSSearchField) {
+        tree.setFilter(sender.stringValue)
+    }
+
+    /// Puts the keyboard in the filter field. Internal so a test can drive it.
+    func focusFilter() {
+        // Already being typed in: `makeFirstResponder` would end that edit and
+        // start a new one, throwing away the caret the reader just placed.
+        guard filterField.currentEditor() == nil else { return }
+        view.window?.makeFirstResponder(filterField)
+    }
+
+    /// The filter takes the keyboard whenever this pane becomes the active
+    /// one — by the keyboard, a menu, a tab switch, or a click on a part of the
+    /// pane that takes no focus of its own — except when the reader clicked
+    /// the tree or the filter, which take the keyboard themselves.
+    ///
+    /// The breadcrumb strip, the dividers and the padding around the filter
+    /// accept no first responder, so a click there activates the pane without
+    /// moving the keys: skipping the refocus for it left them in the pane that
+    /// was active before, while this one was drawn as the active pane.
+    private func activePaneDidChange(in window: NSWindow?) {
+        guard isViewLoaded, let window, window === view.window else { return }
+        let isActive = ComposableTabsActivePane.shared.isInActivePane(view)
+        defer { wasActivePane = isActive }
+        guard isActive, !wasActivePane else { return }
+        if let event = NSApp.currentEvent, Self.isMouseDown(event), event.window === window,
+           clickTakesFocus(atWindowPoint: event.locationInWindow) {
+            return
+        }
+        if let responder = window.firstResponder as? NSView, responder.isDescendant(of: view) { return }
+        // After the click or key that activated the pane has been handled, so
+        // whatever it does with the first responder does not undo this.
+        DispatchQueue.main.async { [weak self] in self?.focusFilter() }
+    }
+
+    /// Whether a click at `point`, in window coordinates, lands on a view that
+    /// takes the first responder itself: the tree, or the filter field.
+    /// Refocusing the filter a turn after a click *in the filter* ran while the
+    /// field editor was still tracking that mouse-down, tearing the edit down
+    /// under it; after a click in the tree it would pull the keys out of the
+    /// list the reader chose. Internal so a test can drive it.
+    func clickTakesFocus(atWindowPoint point: NSPoint) -> Bool {
+        [tree.view, filterField].contains { target in
+            target.bounds.contains(target.convert(point, from: nil))
+        }
+    }
+
+    private static func isMouseDown(_ event: NSEvent) -> Bool {
+        [.leftMouseDown, .rightMouseDown, .otherMouseDown].contains(event.type)
+    }
+
+    // MARK: - Width
+
+    /// Asks the host for the width the visible rows need, once per turn of the
+    /// run loop however many expansions, reloads and keystrokes asked for it.
+    private func scheduleWidthUpdate() {
+        guard !isWidthUpdateScheduled else { return }
+        isWidthUpdateScheduled = true
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.isWidthUpdateScheduled = false
+            guard self.widthSettingObserver.value, self.isViewLoaded, self.view.window != nil else { return }
+            // The tree measures its own view; the strips and bars beside it in
+            // this one are added on top.
+            let chrome = max(0, self.view.bounds.width - self.tree.view.frame.width)
+            self.onPreferredThicknessChange?(self.tree.preferredContentWidth() + chrome)
+        }
+    }
+
+    public func reportPreferredThickness() {
+        guard isViewLoaded, view.window != nil else { return }
+        let chrome = max(0, view.bounds.width - tree.view.frame.width)
+        onPreferredThicknessChange?(tree.preferredContentWidth() + chrome)
     }
 
     public override func viewWillAppear() {
         super.viewWillAppear()
-        // `loadInitial()` reads each root's top level; doing it once keeps a
-        // tab switch from re-reading it.
-        if !hasLoaded {
-            hasLoaded = true
-            managersByRoot.values.forEach { $0.loadInitial() }
-        }
+        loadRootsOnce()
         startWatching()
+    }
+
+    private func loadRootsOnce() {
+        guard !hasLoaded else { return }
+        hasLoaded = true
+        managersByRoot.values.forEach { $0.loadInitial() }
     }
 
     public override func viewDidDisappear() {
@@ -334,36 +499,6 @@ public final class FileBrowserViewController: NSViewController {
     }
 
     // MARK: - Directories
-
-    /// Asks for directories and adds them. Public so a menu item or a host's
-    /// own button can drive the same path the footer's `+` does (`dry`).
-    @objc public func addDirectory() {
-        let panel = NSOpenPanel()
-        panel.canChooseDirectories = true
-        panel.canChooseFiles = false
-        panel.allowsMultipleSelection = true
-        panel.prompt = "Add"
-        panel.message = "Choose directories to show in this project's file browser."
-        guard panel.runModal() == .OK else { return }
-        // A directory already in the list is not an error worth a dialog: the
-        // user asked for it to be there, and it is.
-        panel.urls.forEach { directories.add($0) }
-        // The footer aims at what this browser just added — in this browser
-        // only, since the list is the project's but the aim is the pane's.
-        if let added = panel.urls.last?.standardizedFileURL, directories.isRemovable(added) {
-            selection.selectedRoot = added
-        }
-    }
-
-    /// Removes the root the footer's `−` targets, if it is a removable one.
-    @objc public func removeSelectedDirectory() {
-        guard let root = selection.selectedRoot else { RefusalFeedback.announce(); return }
-        if directories.remove(root) {
-            selection.selectedRoot = nil
-        } else {
-            RefusalFeedback.announce()
-        }
-    }
 
     /// Rebuilds the manager list to match `directories.all`, reusing the
     /// managers whose roots are still listed and tearing down the rest.
@@ -386,8 +521,8 @@ public final class FileBrowserViewController: NSViewController {
                selected.path == root.path || selected.path.hasPrefix(root.path + "/") {
                 selection.selectedNode = nil
             }
-            // Nor may the footer keep aiming at a root that is gone — which it
-            // can be because *another* pane of the same project removed it.
+            // Nor may the selection keep aiming at a root that is gone — which
+            // it can be because *another* pane of the same project removed it.
             if selection.selectedRoot == root { selection.selectedRoot = nil }
         }
 
@@ -476,6 +611,25 @@ extension FileBrowserViewController: PaneMenuProviding {
 
     @objc private func toggleHidesExcludedContent() {
         exclusionState.hidesExcludedContent.toggle()
+    }
+}
+
+/// Reports the width the visible rows need, which the pane hosting this
+/// browser turns into a divider position while the setting is on. The
+/// callback itself is the stored `onPreferredThicknessChange` above.
+extension FileBrowserViewController: PanePreferredThicknessProviding {}
+
+extension FileBrowserViewController: NSSearchFieldDelegate {
+    public func controlTextDidChange(_ obj: Notification) {
+        tree.setFilter(filterField.stringValue)
+    }
+
+    /// Down arrow leaves the field for the list, the way it does from the
+    /// Projects shelf's search field.
+    public func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+        guard control === filterField, commandSelector == #selector(NSResponder.moveDown(_:)) else { return false }
+        tree.focusList()
+        return true
     }
 }
 

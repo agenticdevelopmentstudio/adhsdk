@@ -1,15 +1,15 @@
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [test-pyramid](agenticdevelopercookbook://compliance/best-practices#test-pyramid) | partial | Best Practices |
-| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | partial | Security |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
-| [error-recovery](agenticdevelopercookbook://compliance/reliability#error-recovery) | failed | Reliability |
-| [no-pii-in-logs](agenticdevelopercookbook://compliance/privacy-and-data#no-pii-in-logs) | passed | Privacy and Data |
-| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.best-practices.test-pyramid](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/203de556-83a8-5211-acaf-155c49da0eb3) | partial | Best Practices |
+| [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | partial | Security |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
+| [adc.check.reliability.error-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/694a971d-282d-501b-8861-c4ece3b01edd) | failed | Reliability |
+| [adc.check.privacy-and-data.no-pii-in-logs](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/23bca2e1-dc0f-5ff4-beaf-03891ad48e6b) | passed | Privacy and Data |
+| [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | failed | Internationalization |
 
 `separation-of-concerns` passes because `PluginTransport` is, by its own doc comment, "the one place in the system that performs networking or spawns a process" — every `AIPlugin` conformer only describes and decodes. `explicit-error-handling` passes because every failure path maps to a named `TransportError` case or is deliberately passed through unwrapped (`raw-error-passthrough`), with no silent catch-and-ignore anywhere in the source. `test-pyramid` is partial because `PluginTransportTests.swift` and `PluginTransportFramingTests.swift` exercise the command transport thoroughly with hermetic `/bin/sh` children, but the given sources contain no equivalent unit test for `runHTTP`. `input-sanitization` is partial because `runHTTP` and `runCommand` forward `headers`, `body`, `executableURL`, `arguments`, and `environment` to `URLRequest`/`Process` without any validation of their own — the open question of whether that should happen here rather than in the plugin or the host is the same one the sibling `AIRequestSpec` recipe records. `fault-tolerance` passes because every defined failure mode (non-2xx status, nonzero exit, invalid response, budget expiry) degrades to a typed, thrown error rather than a hang or a crash. `error-recovery` fails because, per the `single-attempt` Design Decision above, no failure is ever retried or recovered from within this component. `no-pii-in-logs` passes trivially, since the component performs no logging at all. `string-externalization` fails because the four literals under Localization above are hardcoded English with no string-catalog key.
 

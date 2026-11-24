@@ -130,6 +130,16 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
     /// describe an arrangement that is no longer on screen.
     private var hasAppliedPreferredThicknesses = false
 
+    /// The thickness the fractions were last applied against. A window lays its
+    /// content out at its default size before it is placed — the saved frame,
+    /// or a sibling's size cascaded, is set afterwards in `loadWindow()` — and
+    /// a split that latched there handed all of the growth to whichever pane
+    /// holds its width least, so a Git window placed at a sibling's 4,000pt
+    /// opened with its overview and history at their minimums. Until the
+    /// window is on screen nobody can have dragged a divider, so a new
+    /// thickness re-applies the fractions instead.
+    private var preferredThicknessesTotal: CGFloat?
+
     /// See `holdThicknessFractions()`: raised on the split it was called on,
     /// and the constraints each split in the tree holds its panes with.
     private var isHoldingShares = false
@@ -230,6 +240,8 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
                 pane.layoutOverride = layoutOverride
                 pane.stateOwnerNodeID = stateOwnerNodeID
                 pane.clampsToContainer = clampsToContainer
+                pane.showsTitleBar = showsPaneTitleBars
+                pane.showsOutline = showsPaneOutlines
             }
             if let split = child as? ComposableTabsViewController {
                 split.layoutParent = self
@@ -237,6 +249,8 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
                 split.layoutOverride = layoutOverride
                 split.stateOwnerNodeID = stateOwnerNodeID
                 split.clampsToContainer = clampsToContainer
+                split.showsPaneTitleBars = showsPaneTitleBars
+                split.showsPaneOutlines = showsPaneOutlines
             }
         }
     }
@@ -369,6 +383,26 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
         didSet { stampOwnershipOnChildren() }
     }
 
+    /// Whether the panes in this tree show their title bars. Off for a tree
+    /// whose container already names what it holds — the editors inside a
+    /// Documents tab, where the tab is the document and each editor carries
+    /// its own navigation row instead of a bar and a gear.
+    ///
+    /// Stamped down the subtree like `clampsToContainer`, onto panes and
+    /// nested splits alike, so a pane added later by a split or a rebuild
+    /// inherits it the moment it joins the tree.
+    public var showsPaneTitleBars: Bool = true {
+        didSet { stampOwnershipOnChildren() }
+    }
+
+    /// Whether the panes in this tree are outlined, the active one in the
+    /// accent. Off for a tree in a window that is one kind of pane and
+    /// nothing else (a Document window), where there is no other pane to
+    /// tell this one from. Stamped down the subtree like `showsPaneTitleBars`.
+    public var showsPaneOutlines: Bool = true {
+        didSet { stampOwnershipOnChildren() }
+    }
+
     /// The layout governing this tree — this subtree's own, the project's, or
     /// the placeholder-only fallback if the project has gone away.
     var layout: ComposableTabsLayout {
@@ -409,8 +443,78 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
     /// controller is not `Sendable` — its superclass is `open` in another
     /// module, so no implicit conformance reaches it — which makes capturing
     /// `self` in one an error under complete concurrency checking.
+    public override func splitViewWillResizeSubviews(_ notification: Notification) {
+        // No `super`: NSSplitViewController declares the delegate method but
+        // does not implement it, and calling through raises
+        // unrecognized-selector — which aborted every project window's load.
+        guard !isRedistributingDrag,
+              let index = notification.userInfo?["NSSplitViewDividerIndex"] as? Int else { return }
+        // A divider drag. The pane before the divider takes the change and
+        // nothing before it moves; a nested split after it is told to keep
+        // its panes' shares rather than let AppKit hand the whole change to
+        // whichever of them holds its width least.
+        draggedDividerFollower = proportionalFollower(after: index)
+        draggedDividerFollower?.beginProportionalResize()
+    }
+
+    /// The nested split, running the same way as this one, right after the
+    /// divider at `index` — the panes that share a drag of that divider.
+    private func proportionalFollower(after index: Int) -> ComposableTabsViewController? {
+        let items = splitViewItems
+        guard index + 1 < items.count,
+              let nested = items[index + 1].viewController as? ComposableTabsViewController,
+              nested.isViewLoaded, nested.splitView.isVertical == splitView.isVertical else { return nil }
+        return nested
+    }
+
+    private weak var draggedDividerFollower: ComposableTabsViewController?
+    /// Each pane's thickness when a proportional resize began.
+    private var proportionalStartThicknesses: [CGFloat]?
+    private var isRedistributingDrag = false
+
+    /// Every nested split directly under this one that runs the same way —
+    /// the rest of the run of panes a proportional resize spreads across.
+    private var sameAxisChildren: [ComposableTabsViewController] {
+        splitViewItems.indices.compactMap { proportionalFollower(after: $0 - 1) }
+    }
+
+    /// Remembers the panes' thicknesses, here and in every nested split along
+    /// the same axis, before the container resizes this split.
+    func beginProportionalResize() {
+        proportionalStartThicknesses = splitView.arrangedSubviews.map(thickness(of:))
+        sameAxisChildren.forEach { $0.beginProportionalResize() }
+    }
+
+    /// Puts the dividers back on the shares `beginProportionalResize()` saw.
+    func endProportionalResize() {
+        defer { proportionalStartThicknesses = nil }
+        if let old = proportionalStartThicknesses,
+           old.count == splitView.arrangedSubviews.count,
+           !splitView.arrangedSubviews.contains(where: { splitView.isSubviewCollapsed($0) }) {
+            let divider = splitView.dividerThickness
+            let length = splitView.isVertical ? splitView.bounds.width : splitView.bounds.height
+            let positions = ProportionalDividers.positions(
+                oldThicknesses: old,
+                available: length - divider * CGFloat(old.count - 1),
+                start: 0,
+                dividerThickness: divider)
+            isRedistributingDrag = true
+            for (index, position) in positions.enumerated() {
+                splitView.setPosition(position, ofDividerAt: index)
+            }
+            isRedistributingDrag = false
+        }
+        sameAxisChildren.forEach { $0.endProportionalResize() }
+    }
+
     public override func splitViewDidResizeSubviews(_ notification: Notification) {
         super.splitViewDidResizeSubviews(notification)
+        if !isRedistributingDrag,
+           notification.userInfo?["NSSplitViewDividerIndex"] is Int,
+           let follower = draggedDividerFollower {
+            draggedDividerFollower = nil
+            follower.endProportionalResize()
+        }
         guard hasAppliedPreferredThicknesses else { return }
         rootSplit()?.scheduleThicknessPersist()
     }
@@ -474,11 +578,15 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
     }
 
     private func applyPreferredThicknessesIfNeeded() {
-        guard !hasAppliedPreferredThicknesses else { return }
         let total = splitView.isVertical ? splitView.bounds.width : splitView.bounds.height
+        if hasAppliedPreferredThicknesses {
+            guard let window = view.window, !window.isVisible,
+                  let applied = preferredThicknessesTotal, abs(applied - total) > 0.5 else { return }
+        }
         // A zero-thickness pass carries no information; wait for a real one.
         guard total > 1, splitViewItems.count == layoutChildren.count else { return }
         hasAppliedPreferredThicknesses = true
+        preferredThicknessesTotal = total
 
         var offset: CGFloat = 0
         for index in 0..<max(splitViewItems.count - 1, 0) {
@@ -853,11 +961,28 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
         inner.layoutOverride = layoutOverride
         inner.stateOwnerNodeID = stateOwnerNodeID
         inner.clampsToContainer = clampsToContainer
+        inner.showsPaneTitleBars = showsPaneTitleBars
+        inner.showsPaneOutlines = showsPaneOutlines
 
         layoutChildren[index] = inner
         if isViewLoaded {
             insertSplitViewItem(makeItem(for: inner), at: index)
             hasAppliedPreferredThicknesses = false
+        }
+
+        // An insertion is where a relationship can break: a pane split off a
+        // primary lands between it and its sibling, and a new primary has no
+        // sibling yet. Normalizing here re-attaches the sibling against the
+        // primary, so the new pane ends up after the pair, never inside it.
+        // `rebuild(from:)` persists, so it replaces the two calls below.
+        if let root = rootSplit() {
+            let tree = root.snapshotNode()
+            let spec = root.layout.spec
+            let normalized = spec.paneRelationships.normalized(tree, spec: spec)
+            if !normalized.hasSameStructure(as: tree) {
+                root.rebuild(from: normalized)
+                return
+            }
         }
 
         // Propagate to root, which persists the full tree.
@@ -897,6 +1022,23 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
         // screen while the arrangement they describe is still on it.
         root?.captureThicknessFractions()
         let hadFocus = child.containsFirstResponder
+
+        // A primary takes its sibling with it, and the two can sit in
+        // different splits, so the pair goes as one tree rewrite from the root
+        // rather than as two removals — `canRemoveLeaf` above has already asked
+        // whether both may go. `rebuild(from:)` tells each dropped pane it is
+        // gone and persists.
+        let tabRoot = root ?? self
+        let tree = tabRoot.snapshotNode()
+        let relationships = tabRoot.layout.spec.paneRelationships
+        if relationships.sibling(of: child.nodeID, in: tree) != nil,
+           let remaining = relationships.removing(child.nodeID, from: tree) {
+            tabRoot.rebuild(from: remaining)
+            if hadFocus, let leaf = tabRoot.firstLeaf() {
+                tabRoot.view.window?.makeFirstResponder(leaf.view)
+            }
+            return
+        }
 
         layoutChildren.remove(at: index)
         if isViewLoaded, let item = splitViewItems.first(where: { $0.viewController === child }) {
@@ -964,13 +1106,23 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
     ) -> Set<Direction> {
         guard let root = rootSplit() else { return [] }
         let tree = root.snapshotNode()
-        return ComposableTabsMove.availableDirections(for: leaf.nodeID, in: tree)
+        let relationships = moveRelationships
+        return relationships.availableDirections(for: leaf.nodeID, in: tree)
             .filter { direction in
-                guard let moved = ComposableTabsMove.moving(leaf.nodeID, direction, in: tree) else {
+                guard let moved = relationships.moving(leaf.nodeID, direction, in: tree) else {
                     return false
                 }
                 return allowsBySpec(moved)
             }
+    }
+
+    /// The relationships a move has to keep, from the same spec `allowsBySpec`
+    /// asks. A move goes through `ComposableTabsPaneRelationships.moving`
+    /// rather than `ComposableTabsMove.moving`, so a primary carries its
+    /// sibling, a managed sibling stays put, and other panes move around the
+    /// pair; with no relationships it is exactly `ComposableTabsMove`.
+    private var moveRelationships: ComposableTabsPaneRelationships {
+        (rootSplit()?.project ?? project)?.layout.spec.paneRelationships ?? ComposableTabsPaneRelationships([])
     }
 
     /// Whether the layout would keep every pane it has if it were arranged like
@@ -995,7 +1147,7 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
     @discardableResult
     public func move(_ leaf: ComposableTabsPaneViewController, _ direction: Direction) -> Bool {
         guard let root = rootSplit(),
-              let moved = ComposableTabsMove.moving(
+              let moved = moveRelationships.moving(
                 leaf.nodeID, direction, in: root.snapshotNode()),
               allowsBySpec(moved) else { return false }
         root.rebuild(from: moved)
@@ -1146,6 +1298,24 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
     public func canRemoveLeaf(_ leaf: ComposableTabsPaneViewController) -> Bool {
         guard let root = rootSplit() else { return false }
         return layout.spec.canRemove(leaf.nodeID, from: root.snapshotNode())
+    }
+
+    /// Whether `leaf` is placed by a relationship — the pane whose close,
+    /// minimize, zoom and move are refused, because it goes where its primary
+    /// goes.
+    public func isManagedSibling(_ leaf: ComposableTabsPaneViewController) -> Bool {
+        layout.spec.paneRelationships.isManagedSibling(leaf.viewID)
+    }
+
+    /// Whether closing `leaf` would empty the tab: it is the last pane, or a
+    /// primary whose sibling is the only other one (closing a primary removes
+    /// both). Such a close goes to `onLastPaneCloseRequest`.
+    func closingEmptiesTab(_ leaf: ComposableTabsPaneViewController) -> Bool {
+        guard let root = rootSplit() else { return false }
+        let count = root.leafCount()
+        if count == 1 { return true }
+        return count == 2
+            && layout.spec.paneRelationships.sibling(of: leaf.nodeID, in: root.snapshotNode()) != nil
     }
 
     // MARK: - Tree walking
@@ -1303,7 +1473,25 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
             item.preferredThicknessFraction = fraction
         }
         item.holdingPriority = holdingPriority(of: viewController, registry: registry)
+        // Nothing inside a window may resize it: a pane collapsing or
+        // uncollapsing (a zoom, a restore) takes its room from its siblings
+        // rather than growing or shrinking the window, which is AppKit's
+        // default for an uncollapse with no room.
+        item.collapseBehavior = .preferResizingSiblingsWithFixedSplitView
         return item
+    }
+
+    /// Puts every divider in this subtree back on the shares captured before
+    /// a zoom, which un-collapsing alone does not: AppKit restores each item
+    /// to its own last width, so the panes come back at sizes nobody chose.
+    func reapplyThicknessFractions() {
+        guard isViewLoaded else { return }
+        hasAppliedPreferredThicknesses = false
+        splitView.layoutSubtreeIfNeeded()
+        applyPreferredThicknessesIfNeeded()
+        for child in layoutChildren {
+            (child as? ComposableTabsViewController)?.reapplyThicknessFractions()
+        }
     }
 
     /// Undoes a minimize's pinning, putting the item back on the sizing

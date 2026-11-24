@@ -1,0 +1,19 @@
+
+| ID | Requirements | Input | Expected |
+|----|-------------|-------|----------|
+| layered-settings-store-001 | get-fallback-reads-through, has-override | Test `testGetFallsBackWhenNoOverride`: fallback holds `browser.page_zoom` = 1.5, no override | `get(zoom)` is 1.5 and `hasOverride(zoom)` is false |
+| layered-settings-store-002 | get-override-wins, set-lands-in-overrides, has-override | Test `testOverrideWins`: fallback 1.5, then `layered.set(2.0, for: zoom)` | `layered.get(zoom)` is 2.0, `fallback.get(zoom)` is still 1.5, `hasOverride(zoom)` is true |
+| layered-settings-store-003 | remove-override, remove-from-overrides | Test `testRemoveOverrideRevealsFallback`: fallback 1.5, override 2.0, then `removeOverride(zoom)` | `get(zoom)` is 1.5 and `hasOverride(zoom)` is false |
+| layered-settings-store-004 | changes-fallback-unshadowed, changes-exact-probe | Test `testFallbackChangeIsPublishedWithoutOverride`: subscribe to `layered.changes`, then `fallback.set(1.5, for: zoom)` with no override | The subscriber receives exactly `["browser.page_zoom"]` |
+| layered-settings-store-005 | changes-fallback-hidden | Test `testFallbackChangeIsHiddenByAnOverride`: override 2.0 set, subscribe, then `fallback.set(1.5, for: zoom)` | The subscriber receives nothing and `layered.get(zoom)` is still 2.0 |
+| layered-settings-store-006 | remove-all-by-prefix, remove-all-spares-others | Test `testRemoveAllOverridesWithPrefix`: overrides for `browser.page_zoom`, `browser.home_page` and `editor.font_size`, then `removeAllOverrides(withPrefix: "browser.")` | `hasOverride` is false for zoom and home, true for `editor.font_size` |
+| layered-settings-store-007 | changes-remove-emits, remove-override | Test `testRemoveOverrideEmitsAChangeForThatKey`: override set, subscribe, then `removeOverride(zoom)` | The subscriber receives exactly `["browser.page_zoom"]` |
+| layered-settings-store-008 | set-secure-to-fallback, get-secure-from-fallback, has-override-secure-false | Test `testSecureKeyGoesStraightToTheFallback`: secure key `test.secret`, `layered.set("s3cret", for: secret)` | `fallback.get(secret)` is `"s3cret"`, the overrides provider does not contain the key, `hasOverride(secret)` is false, `layered.get(secret)` is `"s3cret"` |
+| layered-settings-store-009 | contains-is-override-only | Fallback holds a value for a non-secure key, no override | `layered.contains(key)` is false (no dedicated test) |
+| layered-settings-store-010 | contains-secure-from-fallback | A secure key set on the fallback | `layered.contains(secret)` is true (no dedicated test) |
+| layered-settings-store-011 | keys-from-overrides | Fallback holds `a.x`, overrides hold `a.y`; call `keys(withPrefix: "a.")` | `["a.y"]` (no dedicated test) |
+| layered-settings-store-012 | changes-secure-relayed-once | Subscribe to `layered.changes`, then `fallback.set("v", for: secret)` where the overrides do not hold the name | The subscriber receives the secret's name exactly once (no dedicated test) |
+| layered-settings-store-013 | remove-secure-from-fallback | A secure key set on the fallback; `layered.remove(secret)` | `fallback.contains(secret)` is false (no dedicated test) |
+| layered-settings-store-014 | changes-override | Subscribe, then `layered.set(2.0, for: zoom)` | The subscriber receives `"browser.page_zoom"` (no dedicated test) |
+| layered-settings-store-015 | changes-released-store | Subscribe to `layered.changes`, release the layered store, then `fallback.set(1.5, for: zoom)` while the overrides hold `browser.page_zoom` (no dedicated test) | The subscriber receives `"browser.page_zoom"`, because the filter no longer applies |
+| layered-settings-store-016 | changes-secure-relayed-once | The overrides provider holds a value under the name of a secure key; subscribe, then `fallback.set("v", for: secret)` (no dedicated test) | The subscriber receives nothing, because the override filter hides that name |

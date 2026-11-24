@@ -1,0 +1,71 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "cf3a3dc9-6fed-47ba-a699-71ff806dcedd",
+    "title": "Core Utilities",
+    "type": "ingredient",
+    "version": "1.1.1",
+    "status": "review",
+    "language": "en",
+    "created": "2026-09-24",
+    "modified": "2026-10-04",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Six foundation-tier utilities: secret storage in the system credential store, an encoding-skip wrapper, a structured-logging factory, floating-point clamping, semantic-version parsing, and text folding.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "credential-storage",
+      "secrets",
+      "semantic-versioning",
+      "logging",
+      "text-normalization",
+      "value-types"
+    ],
+    "depends-on": [],
+    "related": [
+      "d274abfa-3696-4fd0-b3e8-cff6fdffb825",
+      "fea35fb1-9eeb-4647-b185-902c1d1cb988"
+    ],
+    "references": [
+      "packages/apple/AgenticDeveloperHubSDK/Core/CodableIgnored.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/KeychainHelper.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Loggable.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/MathUtils.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/SemanticVersion.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/TextFolding.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/KeychainHelperTests.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Extensions/SemanticVersionTests.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Extensions/TextFoldingTests.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/CGFloatClampedTests.swift (adhsdk)"
+    ],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "794a027eda8f84ad",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

@@ -1,0 +1,16 @@
+
+| ID | Requirements | Input | Expected |
+|----|--------------|-------|----------|
+| ccp-001 | empty-display-encoding | `encodeRichDisplay({}, "m1:display")` | Returns `null`. |
+| ccp-002 | rich-display-attachment-shape | `encodeRichDisplay({ popover: { title: "Info" } }, "m1:display")` | Returns an `Attachment` with `id: "m1:display"`, `mediaType.identifier` equal to `RICH_DISPLAY_MEDIA_TYPE`, `source: { kind: "inline", data: <UTF-8 bytes of the JSON string `{"popover":{"title":"Info"}}`> }`, `presentation: "inline"`. |
+| ccp-003 | rich-display-lookup-by-media-type, non-rich-display-attachment-coexistence | `decodeRichDisplay` on an array of two attachments: one with `mediaType.identifier: "image/png"`, then one produced by `encodeRichDisplay({ content: [{ type: "link", url: "https://x" }] }, "a2")` | Returns `{ content: [{ type: "link", url: "https://x" }] }`. |
+| ccp-004 | rich-display-decode-fallthrough, rich-display-decode-non-throwing | `decodeRichDisplay` on one attachment whose `mediaType.identifier` equals `RICH_DISPLAY_MEDIA_TYPE`, `source.kind: "inline"`, and `source.data` is the UTF-8 bytes of the text `not json` | Returns `{}` and does not throw. |
+| ccp-005 | rich-display-decode-default | `decodeRichDisplay([])` | Returns `{}`. |
+| ccp-006 | projection-ordering, draft-projection-streaming-flag | `projectMessages` with `view.messages` holding one message `m1` (`senderID: "local"`, `localID: "m1"`) and `view.activeDrafts` holding one draft (`participantID: "bot"`) | Returns a 2-entry array: index 0 has `id: "m1"` and `isStreaming: undefined`; index 1 has `id: "draft:bot"` and `isStreaming: true`. |
+| ccp-007 | committed-message-timestamp | `projectMessages` with `m1` carrying no `timestamp` and resolving to `id: "abc"`; `stampFor` is a stub that always returns a fixed `Date` `D` and records the keys it was called with | The projected message's `timestamp` is `D`, and `stampFor` was called with `"abc"`. |
+| ccp-008 | committed-message-failure | `projectMessages` with `m1.deliveryStatus = { kind: "failed", reason: "network error" }` | The projected message's `failure` is `"network error"`. |
+| ccp-009 | draft-tool-call-precedence | `projectMessages` with a draft for `participantID: "bot"` whose `attachments` decode to `toolCalls: [{ name: "old", arguments: "{}", status: "completed" }]`, and `view.activeCommands` holding one entry for `participantID: "bot"` with `invocation: { commandName: "search", argumentsJSON: "{}", ... }` and `result: undefined` | The projected draft's `toolCalls` is `[{ name: "search", arguments: "{}", status: "started" }]`. |
+| ccp-010 | draft-tool-call-fallback | Same draft as ccp-009, but `view.activeCommands` has no entry for `"bot"` | The projected draft's `toolCalls` is the decoded `[{ name: "old", arguments: "{}", status: "completed" }]`. |
+| ccp-011 | active-command-to-tool-call-finished | `toToolCallInfo` on `{ participantID: "p", invocation: { commandName: "run", argumentsJSON: "{}", ... }, result: { invocationID: "i1", ok: false, errorMessage: "boom", completedAt: D } }` | Returns `{ name: "run", arguments: "{}", status: "failed", ok: false, result: "boom" }`. |
+| ccp-012 | draft-identity | `draftMessageID("bot-42")` | Returns `"draft:bot-42"`. |
+

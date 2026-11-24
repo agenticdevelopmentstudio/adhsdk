@@ -26,10 +26,10 @@ vi.mock('@adh-sdk/auth', async (importOriginal) => ({
 vi.mock('@adh-sdk/auth/client', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@adh-sdk/auth/client')>()),
   authedJson: vi.fn(),
-  authedRequest: vi.fn(),
+  listAllV1: vi.fn(),
 }))
 
-const { authedJson } = vi.mocked(await import('@adh-sdk/auth/client'))
+const { authedJson, listAllV1 } = vi.mocked(await import('@adh-sdk/auth/client'))
 const { CrudDataBrowser } = await import('../CrudDataBrowser')
 
 const col = (name: string, overrides: Partial<CrudColumn> = {}): CrudColumn => ({
@@ -45,11 +45,11 @@ const BUCKETS: CrudTableMeta = {
   key: 'bucket/buckets',
   schema: 'bucket',
   table: 'buckets',
-  basePath: '/bucket/buckets',
-  itemPath: '/bucket/buckets/{id}',
+  basePath: '/v1/bucket/buckets',
+  itemPath: '/v1/bucket/buckets/{id}',
   pkParams: ['id'],
   exposure: 'owner',
-  columns: [col('id', { serverManaged: true }), col('ecosystemId'), col('name')],
+  columns: [col('id', { serverManaged: true }), col('ecosystem_id'), col('name')],
 }
 
 /** The rail is not under test here; the shell only has to render the open table's editor. */
@@ -59,12 +59,9 @@ function RailProbe({ children }: CrudShellProps) {
 
 describe('CrudDataBrowser scoped to an ecosystem', () => {
   it('creates a new row in that ecosystem, not the caller’s', async () => {
-    authedJson.mockImplementation(
-      async (_url: string, init?: RequestInit) =>
-        (init?.method === 'POST'
-          ? { id: 'b2', ecosystemId: ECO, name: 'Fresh' }
-          : [{ id: 'b1', ecosystemId: ECO, name: 'Existing' }]) as never,
-    )
+    // Lists walk the collection through listAllV1; the create is the one authedJson call.
+    listAllV1.mockResolvedValue([{ id: 'b1', ecosystem_id: ECO, name: 'Existing' }] as never)
+    authedJson.mockResolvedValue({ id: 'b2', ecosystem_id: ECO, name: 'Fresh' } as never)
     const user = userEvent.setup()
     render(
       <CrudDataBrowser
@@ -81,7 +78,7 @@ describe('CrudDataBrowser scoped to an ecosystem', () => {
     await user.click(screen.getByRole('button', { name: 'Create' }))
     await user.type(await screen.findByLabelText('name'), 'Fresh')
     // The surface has already decided the ecosystem, so the new row's form does not offer it.
-    expect(screen.queryByLabelText('ecosystemId')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('ecosystem_id')).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Save' }))
 
     // Named on the URL (the scope the backend authorizes the write against) AND in the body (the
@@ -89,11 +86,11 @@ describe('CrudDataBrowser scoped to an ecosystem', () => {
     // The workspace rides too: it is the owner the backend stamps a create with.
     await waitFor(() =>
       expect(authedJson).toHaveBeenCalledWith(
-        `/api/bucket/buckets?ecosystemId=${ECO}&workspace=w`,
+        `/api/v1/bucket/buckets?ecosystem_id=${ECO}&workspace=w`,
         expect.objectContaining({ method: 'POST' }),
       ),
     )
     const post = authedJson.mock.calls.find(([, init]) => init?.method === 'POST')
-    expect(JSON.parse(String(post?.[1]?.body))).toEqual({ ecosystemId: ECO, name: 'Fresh' })
+    expect(JSON.parse(String(post?.[1]?.body))).toEqual({ ecosystem_id: ECO, name: 'Fresh' })
   })
 })

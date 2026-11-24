@@ -6,24 +6,51 @@ import Foundation
 public struct GitStatus: Sendable, Equatable {
     public let files: [String: GitFileStatus]
     public let directories: [String: GitFileStatus]
+    /// Each path's index column on its own: what a commit would record now.
+    public let stagedFiles: [String: GitFileStatus]
+    /// Each path's work-tree column on its own, plus untracked files and
+    /// conflicts: what is not staged yet.
+    public let unstagedFiles: [String: GitFileStatus]
+    /// The unmerged paths, each with how it is unmerged. Every one is also `.conflicted` in
+    /// `unstagedFiles` and `files`.
+    public var conflicts: [String: GitConflictKind]
 
-    public init(files: [String: GitFileStatus], directories: [String: GitFileStatus]) {
+    /// Every map is required, so a status can never claim changed files while its
+    /// staged and unstaged columns say nothing changed.
+    public init(files: [String: GitFileStatus], directories: [String: GitFileStatus],
+                stagedFiles: [String: GitFileStatus], unstagedFiles: [String: GitFileStatus],
+                conflicts: [String: GitConflictKind] = [:]) {
         self.files = files
         self.directories = directories
+        self.stagedFiles = stagedFiles
+        self.unstagedFiles = unstagedFiles
+        self.conflicts = conflicts
     }
 
-    public static let empty = GitStatus(files: [:], directories: [:])
+    /// One porcelain column read alone: `M` and `T` are modified, `A` added,
+    /// `D` deleted, `R` renamed, `C` copied, and anything else (a space above
+    /// all) leaves the path out of that column.
+    private static func columnStatus(_ column: Character) -> GitFileStatus? {
+        switch column {
+        case "M", "T": .modified
+        case "A": .added
+        case "D": .deleted
+        case "R": .renamed
+        case "C": .copied
+        default: nil
+        }
+    }
+
+    public static let empty = GitStatus(files: [:], directories: [:], stagedFiles: [:], unstagedFiles: [:])
 
     /// The seven `XY` pairs `git status` documents as *unmerged* — a file in
-    /// the middle of a conflict. A conflict is a property of the pair, not of
-    /// either column: testing for a `U` in one of them alone missed `AA`
-    /// (both added) and `DD` (both deleted), which then fell through to the
-    /// add/delete rungs of the ladder below and were badged as an ordinary
-    /// add or delete. The directory roll-up ranks by `GitFileStatus.priority`,
-    /// so every ancestor directory lost the conflict marker too.
-    private static let unmergedPairs: Set<String> = [
-        "DD", "AU", "UD", "UA", "DU", "AA", "UU"
-    ]
+    /// the middle of a conflict — are `GitConflictKind`'s raw values. A
+    /// conflict is a property of the pair, not of either column: testing for a
+    /// `U` in one of them alone missed `AA` (both added) and `DD` (both
+    /// deleted), which then fell through to the add/delete rungs of the ladder
+    /// below and were badged as an ordinary add or delete. The directory
+    /// roll-up ranks by `GitFileStatus.priority`, so every ancestor directory
+    /// lost the conflict marker too.
 
     /// Parses `git status --porcelain=v1 -z` output into file and directory
     /// status maps. `-z` NUL-delimits every record instead of newline-
@@ -38,6 +65,9 @@ public struct GitStatus: Sendable, Equatable {
     /// `"old -> new"`) impossible: there is no arrow to look for any more.
     public static func parse(porcelain output: String) -> GitStatus {
         var fileStatuses: [String: GitFileStatus] = [:]
+        var staged: [String: GitFileStatus] = [:]
+        var unstaged: [String: GitFileStatus] = [:]
+        var conflicts: [String: GitConflictKind] = [:]
 
         let fields = output.split(separator: "\u{0}", omittingEmptySubsequences: true)
         var index = fields.startIndex
@@ -101,6 +131,21 @@ public struct GitStatus: Sendable, Equatable {
             guard let filePath = String(bytes: bytes.dropFirst(3), encoding: .utf8),
                   !filePath.isEmpty else { continue }
 
+            // The two columns, each on its own, from the same record. A
+            // conflict and an untracked file belong to the unstaged side
+            // only; an ignored file to neither.
+            let pair = String([indexStatus, workTreeStatus])
+            let conflict = GitConflictKind(rawValue: pair)
+            if let conflict {
+                conflicts[filePath] = conflict
+                unstaged[filePath] = .conflicted
+            } else if pair == "??" {
+                unstaged[filePath] = .untracked
+            } else if pair != "!!" {
+                if let column = Self.columnStatus(indexStatus) { staged[filePath] = column }
+                if let column = Self.columnStatus(workTreeStatus) { unstaged[filePath] = column }
+            }
+
             if isRename || isCopy {
                 // A copy is its own status, not nothing. Both shapes key
                 // under the *new* path and both consume an origin field, so
@@ -112,7 +157,7 @@ public struct GitStatus: Sendable, Equatable {
             }
 
             let status: GitFileStatus?
-            if Self.unmergedPairs.contains(String([indexStatus, workTreeStatus])) {
+            if conflict != nil {
                 status = .conflicted
             } else if indexStatus == "?" || workTreeStatus == "?" {
                 status = .untracked
@@ -155,6 +200,7 @@ public struct GitStatus: Sendable, Equatable {
             }
         }
 
-        return GitStatus(files: fileStatuses, directories: dirStatuses)
+        return GitStatus(files: fileStatuses, directories: dirStatuses, stagedFiles: staged, unstagedFiles: unstaged,
+                         conflicts: conflicts)
     }
 }

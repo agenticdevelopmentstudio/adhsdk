@@ -1,0 +1,28 @@
+
+- **timestamp-format**: `quarantinedAt`, `lastRetriedAt`, `updatedAt` and `resolvedAt` are Strings that the daemon writes as ISO-8601 times (`ISO8601DateFormatter`).
+- **error-fields**: An `IngestionErrorDTO` MUST carry `filename`, `eventType`, `sessionId`, `quarantinedAt`, `reason` (String), `retryCount` (Int), `lastRetriedAt` (optional String) and `exhausted` (Bool).
+- **error-live-file**: An `IngestionErrorDTO` MUST describe a file still quarantined on disk; the daemon's `QuarantineService.list()` builds one per event file in the errors directory, not counting `.meta.json` sidecars.
+- **error-reason**: `reason` MUST be read from the file's `.meta.json` sidecar, or be the placeholder `unknown (quarantined before reason capture)` for a file quarantined before reason capture.
+- **error-retry-count**: `retryCount` MUST count failed self-healing retries so far, with 0 meaning not yet retried.
+- **error-last-retried**: `lastRetriedAt` MUST be an ISO-8601 time of the most recent retry, and MUST be nil when the file was never retried.
+- **error-exhausted**: `exhausted` MUST be true once `retryCount` reaches the configured maximum (the daemon's `maxRetries`, default 3, raised to at least 1), and these are the files the menubar alert badge counts.
+- **error-init-defaults**: `IngestionErrorDTO.init` MUST default `retryCount` to 0, `lastRetriedAt` to nil and `exhausted` to false.
+- **log-fields**: An `IngestionErrorLogDTO` MUST carry `filename`, `eventType`, `sessionId`, `reason`, `quarantinedAt`, `status`, `updatedAt` (String), `sqliteCode` (optional Int), `retryCount` (Int), `lastRetriedAt` (optional String) and `resolvedAt` (optional String).
+- **log-includes-history**: An `IngestionErrorLogDTO` MUST describe a log row whether or not the file is still on disk, including resolved history.
+- **log-status-values**: `status` MUST be one of `failing`, `exhausted`, `recovered`, `cleared` or `lost`: the daemon writes `failing` or `exhausted` when it records a failure, `recovered` when the event is finally ingested, `cleared` for every still-active row when the user clears the quarantine, and `lost` for an empty drop file.
+- **log-status-lost**: `lost` MUST mean a drop file arrived empty, so its event is gone; it is recorded once per `filename`, never retried and never counted as a live failure. Its row has an empty `eventType` and `sessionId`, `retryCount` 0, nil `lastRetriedAt` and `sqliteCode`, the fixed `reason` `empty drop file — the event was lost before it was written`, `quarantinedAt` set to the detection time, and `resolvedAt` set on arrival.
+- **log-sqlite-code**: `sqliteCode` MUST be the SQLite result code behind the failure when one exists, and nil otherwise.
+- **log-resolved-at**: `resolvedAt` MUST be nil for a `failing` or `exhausted` row, and set for a `recovered`, `cleared` or `lost` row; recording a new failure for a resolved filename resets it to nil.
+- **log-no-defaults**: `IngestionErrorLogDTO.init` MUST take every field with no default, nil included.
+- **log-no-exhausted-flag**: `IngestionErrorLogDTO` MUST NOT carry an `exhausted` Bool; exhaustion there is the `status` value `exhausted`.
+- **progress-fields**: A `RetryProgressDTO` MUST carry `running` (Bool), `total`, `processed`, `recovered` and `stillFailing` (Int).
+- **progress-total**: `total` MUST be the batch size: every quarantined event file for a Retry All, or the files taken by a periodic self-healing batch, which is bounded by its limit.
+- **progress-processed**: `processed` MUST count the files attempted so far, including a file that vanished (cleared or removed elsewhere) before its retry.
+- **progress-recovered**: `recovered` MUST count the files that ingested and were removed.
+- **progress-still-failing**: `stillFailing` MUST count the files whose retry failed, which stay quarantined.
+- **progress-polling**: A client MUST poll `RetryProgressDTO` until `running` is false after starting a batch.
+- **progress-async**: The Retry All batch MUST run off the XPC and HTTP reply thread, so a large backlog cannot time the caller out; starting it while a batch is running changes nothing and returns the live progress. The periodic self-healing batch runs on its scheduler's task and fills the same counters.
+- **conformance-protocols**: `IngestionErrorDTO`, `IngestionErrorLogDTO` and `RetryProgressDTO` MUST be `Codable` and `Sendable`; they are not declared `Equatable`.
+- **unknown-status**: A client MUST handle a `status` outside the five values, since the type is a String and decodes any value.
+- **no-validation**: The initializers MUST NOT validate: `status` is an unconstrained String here, and counts that do not add up are accepted.
+

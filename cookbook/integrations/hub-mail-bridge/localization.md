@@ -1,0 +1,2 @@
+Two strings reach the user and MUST be localizable: `HubMailService.signedOutMessage` (what every request answers while signed out) and the purge-failure status "The hub mail copy could not be cleared: ..." that the settings show. The other failure messages (`unknown account`, `unknown label`, `bad cursor`, the search refusal) are the RPC's developer-facing reasons, in English like the direct service's.
+

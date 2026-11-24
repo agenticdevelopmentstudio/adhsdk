@@ -1,6 +1,7 @@
 // The pure half of client auth editing, which the ecosystem's Settings pane and an application's
 // client auth section share. It covers the draft shapes, what counts as a change, what a save
-// sends, what a platform allows, and how a provider switch maps onto `allowedProviders`.
+// sends, what a platform allows, how a provider switch maps onto `allowedProviders`, and how the
+// login allow-list is cleaned and bounded.
 
 import type {
   ApplicationPlatform,
@@ -145,8 +146,67 @@ export function samePolicy(a: ClientAuthPolicy | null, b: ClientAuthPolicy | nul
     a.signupMode === b.signupMode &&
     a.loginEnabled === b.loginEnabled &&
     a.passwordEnabled === b.passwordEnabled &&
-    sameProviders(a.allowedProviders, b.allowedProviders)
+    sameProviders(a.allowedProviders, b.allowedProviders) &&
+    sameEmailList(a.loginAllowedEmails, b.loginAllowedEmails)
   );
+}
+
+/** The backend's bounds on the login allow-list (routes/ecosystemAuthSettings.ts), mirrored so
+ *  Save is refused before the round trip. */
+export const MAX_LOGIN_ALLOWED_EMAILS = 500;
+const MAX_EMAIL_LENGTH = 254;
+/** The allow-list's email grammar: exactly one `@`, a non-empty local part with no whitespace and
+ *  no quote, and a domain of at least two non-empty dot-separated labels. The backend's zod check
+ *  is authoritative; this only refuses sooner what it would refuse. */
+const EMAIL_SHAPE = /^[^\s@"]+@[^\s@.]+(?:\.[^\s@.]+)+$/;
+
+/**
+ * The login allow-list as a save sends it: each email trimmed and lowercased, blank rows dropped,
+ * duplicates dropped with the first kept — the form the backend stores. `null` (every customer)
+ * stays `null`, and an empty list stays `[]`, which means nobody — the editor's switch, not the
+ * row count, decides between the two.
+ */
+export function cleanEmailList(emails: string[] | null): string[] | null {
+  if (emails === null) return null;
+  return [...new Set(emails.map((e) => e.trim().toLowerCase()).filter(Boolean))];
+}
+
+/** Two allow-lists are the same when they would SAVE the same, compared as sets. */
+function sameEmailList(a: string[] | null, b: string[] | null): boolean {
+  const ca = cleanEmailList(a);
+  const cb = cleanEmailList(b);
+  if (ca === null || cb === null) return ca === cb;
+  return ca.length === cb.length && ca.every((e) => cb.includes(e));
+}
+
+/**
+ * Whether a save sent the login allow-list and the saved policy came back without it. A
+ * backend that predates the list drops the unknown field and answers 200. Re-seeding from that
+ * answer would turn the switch back off, while every customer can still sign in. An absent
+ * field reads as `null` (everyone), so sending `null` to such a backend is not a drop.
+ */
+export function allowListDropped(
+  sent: Partial<ClientAuthPolicy>,
+  saved: Partial<ClientAuthPolicy>,
+): boolean {
+  if (!("loginAllowedEmails" in sent)) return false;
+  return !sameEmailList(sent.loginAllowedEmails ?? null, saved.loginAllowedEmails ?? null);
+}
+
+/** The error a save shows when the backend dropped the allow-list. */
+export const ALLOW_LIST_NOT_SAVED =
+  "The sign-in list was not saved, so everyone can still sign in. This backend does not support the list yet.";
+
+/** Why the policy cannot be saved as it stands, or null when it can. The backend is
+ *  authoritative; this only says it sooner. */
+export function policyError(policy: ClientAuthPolicy | null): string | null {
+  const emails = cleanEmailList(policy?.loginAllowedEmails ?? null);
+  if (emails === null) return null;
+  if (emails.length > MAX_LOGIN_ALLOWED_EMAILS)
+    return `At most ${MAX_LOGIN_ALLOWED_EMAILS} people can be listed.`;
+  const bad = emails.find((e) => e.length > MAX_EMAIL_LENGTH || !EMAIL_SHAPE.test(e));
+  if (bad) return `"${bad}" is not an email address.`;
+  return null;
 }
 
 function sameProviders(a: string[] | null, b: string[] | null): boolean {
@@ -188,5 +248,7 @@ export function policyPatch(
   if (draft.passwordEnabled !== base.passwordEnabled) patch.passwordEnabled = draft.passwordEnabled;
   if (!sameProviders(draft.allowedProviders, base.allowedProviders))
     patch.allowedProviders = draft.allowedProviders;
+  if (!sameEmailList(draft.loginAllowedEmails, base.loginAllowedEmails))
+    patch.loginAllowedEmails = cleanEmailList(draft.loginAllowedEmails);
   return Object.keys(patch).length > 0 ? patch : undefined;
 }

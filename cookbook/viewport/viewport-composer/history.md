@@ -1,0 +1,7 @@
+
+| Version | Date | Author | Summary |
+|---------|------|--------|---------|
+| 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web source |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: replace nonexistent Platform Notes APIs with real mechanisms; rename requirements to subject-only kebab-case and merge the duplicate classname requirements/vectors; add a kb-inset-read-only requirement plus ViewportShell/useKeyboardInset dependencies; split the untestable keyboard vector into a unit test and a Playwright test; correct the base-stylesheet and safe-area-prerequisite edge cases; reformat Design Decisions into Decision/Rationale/Approved blocks; and replace "Not applicable" Compliance with a real table |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Dropped the dangling URI of the never-written use-keyboard-inset recipe from depends-on, related, and kb-inset-read-only; pointed to viewport-shell's keyboard-inset requirement instead. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Split the transition into an animate-bottom-padding requirement, removed repeated padding formulas, recorded the reduced-motion and unit-test failures as a pending Design Decision, clarified the no-children case, reworded vectors 005 and 006, added vectors for edge cases, dropped the duplicate related entry, and removed CoreInputView from the WinUI 3 note. |

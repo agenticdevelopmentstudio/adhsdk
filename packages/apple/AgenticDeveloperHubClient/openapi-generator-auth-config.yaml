@@ -1,11 +1,14 @@
 # swift-openapi-generator configuration for AgenticDeveloperHubAuth.
 # Emits a typed client + types for ONLY the endpoints sign-in and the session
 # need, so an app that wants the hub login links a few thousand lines instead
-# of the full ~517k-line client (openapi-generator-config.yaml).
+# of the full client (openapi-generator-config.yaml).
 #
 # Every path here is one ADHClient's hand-written auth/session code calls
 # (AuthSources/Auth); the schemas they reference come along on their own.
 # Adding a path is how a new sign-in call gets its typed operation.
+#
+# The paths are the /v1 API's (openapi.v1.json). /oauth/signin/exchange is
+# served unversioned and is not in the /v1 spec, so ADHClient calls it raw.
 #
 # Regenerate with: python3 scripts/generate.py
 generate:
@@ -15,14 +18,10 @@ accessModifier: public
 namingStrategy: idiomatic
 filter:
   paths:
-    - /auth/login
-    - /auth/login/mfa
-    - /auth/login/mfa/sms/send
-    - /auth/login/mfa/webauthn
-    - /auth/login/mfa/webauthn/options
-    - /auth/login/webauthn
-    - /auth/login/webauthn/options
-    - /auth/refresh
-    - /auth/me
-    - /auth/tokens
-    - /oauth/signin/exchange
+    - /v1/auth/sessions
+    - /v1/auth/sessions/refresh
+    - /v1/auth/sessions/revoke
+    - /v1/auth/sms_codes
+    - /v1/auth/passkey_challenges
+    - /v1/account
+    - /v1/api_keys

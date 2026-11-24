@@ -1,13 +1,12 @@
 ---
 id: f305da79-fa03-493e-9c08-7186530943c6
 title: "Chat Stream Types"
-domain: adhsdk://cookbook/ai/chat/chat-stream-types
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -23,8 +22,8 @@ tags:
   - value-type
 depends-on: []
 related:
-  - adhsdk://cookbook/ai/plugins/stream-event
-  - adhsdk://cookbook/ai/chat/chat-context
+  - 2067e249-4f97-4575-b8ed-8f55f6dc96df
+  - 613d7a36-d0cd-4415-97be-d983b3d6c644
 references: []
 approved-by: ""
 approved-date: ""
@@ -388,9 +387,9 @@ kind; each is a pure data declaration with no side effects of its own.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/AIPlugins/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/AIPlugins/` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -439,9 +438,9 @@ parameter-schema bytes.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
 
 `separation-of-concerns` passes because all three files perform no I/O,
 storage, or transport of their own — per `no-persistence-no-side-effects`
@@ -453,12 +452,13 @@ throwing, swallowing, or logging the failure silently — the same
 explicit-outcome shape `ChatToolSource.callTool`'s return tuple already
 uses.
 
-`unit-test-coverage` fails because no Swift test references `ChatStreamEvent`, `ToolDefinition` or `ToolResult` under the Apple test targets; the web-side `adhChatBackend.test.ts` and `visitorChatSse.test.ts` exercise a different TypeScript event type, not these shapes.
+`unit-test-coverage` is partial. `ChatStreamTypesConformanceTests.swift` (Core tests) and `ChatStreamTypesLocalSessionConformanceTests.swift` (macOS tests) cover chat-tool-types-001 to 008, 010 to 013, 015 and 017. Vectors 009 and 014 (field immutability) are skipped because they are compile-time properties of `let` fields that cannot be observed at runtime, and 016 (no I/O references) is skipped because it is a source-inspection property.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (ChatStreamTypesConformanceTests.swift, ChatStreamTypesLocalSessionConformanceTests.swift, 14 of 17 vectors); unit-test-coverage now partial. |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Added unit-test-coverage compliance row. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ai/chat/. |
 | 1.0.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

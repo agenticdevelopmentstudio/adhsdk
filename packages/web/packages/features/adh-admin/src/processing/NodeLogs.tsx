@@ -63,14 +63,14 @@ export function NodeLogs({ nodeId }: { nodeId: string }) {
           {entries.map((e) => (
             <li key={e.id} className="flex items-baseline gap-3 py-1">
               <span className="w-40 shrink-0 tabular-nums text-xs text-apt-text-dim">
-                {formatDateTime(e.occurredAt)}
+                {formatDateTime(e.occurred_at)}
               </span>
               <Badge variant={LEVEL_VARIANT[e.level]}>{e.level}</Badge>
               <span className="shrink-0 font-mono text-xs text-apt-text-muted">{e.event}</span>
               <span className="min-w-0 flex-1 break-words text-apt-text">{e.message}</span>
-              {e.jobId && (
+              {e.job_id && (
                 <span className="shrink-0 font-mono text-xs text-apt-text-dim" title="Job">
-                  {e.jobId}
+                  {e.job_id}
                 </span>
               )}
             </li>

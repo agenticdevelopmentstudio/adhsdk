@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "d274abfa-3696-4fd0-b3e8-cff6fdffb825",
     "title": "Secret Storing",
-    "domain": "adhsdk://cookbook/ai/plugins/secret-storing",
     "type": "ingredient",
     "version": "1.2.0",
     "status": "review",
@@ -26,8 +25,8 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/ai/chat/daemon-ai-chat",
-      "adhsdk://cookbook/ai/providers/provider-config-keys"
+      "4d7ed9a3-c6d8-491b-911a-cf257fde1c38",
+      "0f65ea61-3b0f-4a9b-842e-912555b7af62"
     ],
     "references": [
       "packages/apple/AgenticDeveloperHubSDK/AIPluginKit/SecretStoring.swift (adhsdk)",
@@ -41,7 +40,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "915ee67fe8bba775",
+  "synced": "44e83dca25144d24",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -60,7 +59,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

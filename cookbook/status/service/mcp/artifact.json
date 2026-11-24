@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "ce157d5a-c145-4348-b58f-6a76c9fda1d6",
     "title": "Status Server MCP",
-    "domain": "adhsdk://cookbook/status/service/mcp",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -24,13 +23,13 @@
       "server"
     ],
     "depends-on": [
-      "agenticdevelopercookbook://guidelines/implementing/security/mcp-server-security",
-      "agenticdevelopercookbook://guidelines/implementing/security/mcp-input-validation",
-      "agenticdevelopercookbook://guidelines/implementing/networking/mcp-server-design",
-      "agenticdevelopercookbook://guidelines/implementing/security/authorization"
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/ab8ed68c-949d-42c8-8c07-416674795a65",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/355028de-c329-48dd-b609-41aba903e01c",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/788f1c1d-69af-4570-a279-748d89fcc0e0",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/2609037a-fb89-4b49-88b0-7e4295e5d6f6"
     ],
     "related": [
-      "adhsdk://cookbook/status/service/auth"
+      "735b4e58-bce9-4754-ad3f-bf0344fd4b32"
     ],
     "references": [
       "packages/web/packages/status-server/src/mcp/route.ts (adhsdk)",
@@ -43,7 +42,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "e829a850b20d8d83",
+  "synced": "e3e12fcd083abb5a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -62,7 +61,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

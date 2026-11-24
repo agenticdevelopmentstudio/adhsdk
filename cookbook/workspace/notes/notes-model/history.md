@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.4 | 2026-11-13 | Mike Fullerton | The notes list shows modified dates through the shared relative-date formatter. |
 | 1.1.3 | 2026-10-04 | Mike Fullerton | Dropped the stray reference to the hub's notes client from the overview. |
 | 1.1.2 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own adhsdk://recipes/ domains; the adhsdk://recipes/ form named nothing. |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Removed the upward dependency on adh/hub/content/markdown-store (frontmatter depends-on and in-text links); the document store is described in plain terms. |

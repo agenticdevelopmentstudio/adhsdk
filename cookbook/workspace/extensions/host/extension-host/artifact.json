@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "b2cf12e3-71de-4d87-9216-d5e8d604169c",
     "title": "Extension Host",
-    "domain": "adhsdk://cookbook/workspace/extensions/host/extension-host",
     "type": "ingredient",
     "version": "1.2.0",
     "status": "review",
@@ -24,22 +23,22 @@
       "not-implemented-ledger"
     ],
     "depends-on": [
-      "adhsdk://cookbook/workspace/extensions/manifest/activation-event-matcher",
-      "adhsdk://cookbook/workspace/extensions/manifest/extension-resource-path",
-      "adhsdk://cookbook/workspace/extensions/manifest/extension-manifest",
-      "adhsdk://cookbook/workspace/extensions/registry/extension-registry"
+      "a29c23d4-a086-4413-9843-6b319e340646",
+      "f6acc431-0443-4b14-8ae4-e1f2dc227c0c",
+      "68d182dc-3fc0-489c-ab04-ff4da25fc4df",
+      "4b6f3e1a-9c2d-4e7a-8b3f-1d5a6c9e2f70"
     ],
     "related": [
-      "adhsdk://cookbook/workspace/extensions/manifest/activation-event-matcher",
-      "adhsdk://cookbook/workspace/extensions/manifest/extension-resource-path",
-      "adhsdk://cookbook/workspace/extensions/manifest/extension-manifest",
-      "adhsdk://cookbook/workspace/extensions/registry/extension-registry"
+      "a29c23d4-a086-4413-9843-6b319e340646",
+      "f6acc431-0443-4b14-8ae4-e1f2dc227c0c",
+      "68d182dc-3fc0-489c-ab04-ff4da25fc4df",
+      "4b6f3e1a-9c2d-4e7a-8b3f-1d5a6c9e2f70"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "9c89ee13de5b6488",
+  "synced": "bc3ee24cac038428",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -58,7 +57,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

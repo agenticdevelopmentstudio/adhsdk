@@ -8,7 +8,7 @@ options:
 
 settings:
   base:
-    SWIFT_VERSION: "6.0"
+    SWIFT_VERSION: "6.4"
     SWIFT_STRICT_CONCURRENCY: complete
     DEFINES_MODULE: YES
     SKIP_INSTALL: YES

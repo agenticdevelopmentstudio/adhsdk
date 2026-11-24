@@ -22,7 +22,7 @@ class TokenPrincipal:
         rdid (None | str): reverse-domain id, e.g. token.<owner-slug>.<name>; null if it has no canonical mapping
         bucket_rdid (None | str): the token’s own isolated bucket, e.g. storage.<owner-slug>.<name>; null if it has no
             canonical mapping
-        created_at (str):
+        created (int): Unix timestamp, in seconds.
         expires_at (None | str | Unset):
         last_used_at (None | str | Unset):
     """
@@ -33,7 +33,7 @@ class TokenPrincipal:
     prefix: str
     rdid: None | str
     bucket_rdid: None | str
-    created_at: str
+    created: int
     expires_at: None | str | Unset = UNSET
     last_used_at: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -53,7 +53,7 @@ class TokenPrincipal:
         bucket_rdid: None | str
         bucket_rdid = self.bucket_rdid
 
-        created_at = self.created_at
+        created = self.created
 
         expires_at: None | str | Unset
         if isinstance(self.expires_at, Unset):
@@ -76,14 +76,14 @@ class TokenPrincipal:
                 "description": description,
                 "prefix": prefix,
                 "rdid": rdid,
-                "bucketRdid": bucket_rdid,
-                "createdAt": created_at,
+                "bucket_rdid": bucket_rdid,
+                "created": created,
             }
         )
         if expires_at is not UNSET:
-            field_dict["expiresAt"] = expires_at
+            field_dict["expires_at"] = expires_at
         if last_used_at is not UNSET:
-            field_dict["lastUsedAt"] = last_used_at
+            field_dict["last_used_at"] = last_used_at
 
         return field_dict
 
@@ -110,9 +110,9 @@ class TokenPrincipal:
                 return data
             return cast(None | str, data)
 
-        bucket_rdid = _parse_bucket_rdid(d.pop("bucketRdid"))
+        bucket_rdid = _parse_bucket_rdid(d.pop("bucket_rdid"))
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
         def _parse_expires_at(data: object) -> None | str | Unset:
             if data is None:
@@ -121,7 +121,7 @@ class TokenPrincipal:
                 return data
             return cast(None | str | Unset, data)
 
-        expires_at = _parse_expires_at(d.pop("expiresAt", UNSET))
+        expires_at = _parse_expires_at(d.pop("expires_at", UNSET))
 
         def _parse_last_used_at(data: object) -> None | str | Unset:
             if data is None:
@@ -130,7 +130,7 @@ class TokenPrincipal:
                 return data
             return cast(None | str | Unset, data)
 
-        last_used_at = _parse_last_used_at(d.pop("lastUsedAt", UNSET))
+        last_used_at = _parse_last_used_at(d.pop("last_used_at", UNSET))
 
         token_principal = cls(
             id=id,
@@ -139,7 +139,7 @@ class TokenPrincipal:
             prefix=prefix,
             rdid=rdid,
             bucket_rdid=bucket_rdid,
-            created_at=created_at,
+            created=created,
             expires_at=expires_at,
             last_used_at=last_used_at,
         )

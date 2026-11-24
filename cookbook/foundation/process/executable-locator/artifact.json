@@ -1,0 +1,57 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "5d0f6a3e-2b8c-4e71-9a4d-7c3e1f9b2a60",
+    "title": "Executable Locator",
+    "type": "ingredient",
+    "version": "1.0.0",
+    "status": "draft",
+    "language": "en",
+    "created": "2026-11-16",
+    "modified": "2026-11-16",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Finds a command-line tool by name on PATH, then in the install directories a GUI app's PATH leaves out, each directory once.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "foundation",
+      "process",
+      "path",
+      "executables"
+    ],
+    "depends-on": [],
+    "related": [],
+    "references": [
+      "packages/apple/AgenticDeveloperHubSDK/Core/Process/ExecutableLocator.swift (adhsdk)"
+    ],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "e650fdeafa1ca4d8",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

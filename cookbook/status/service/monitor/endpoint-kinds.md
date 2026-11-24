@@ -1,13 +1,12 @@
 ---
 id: 990362d5-9c3a-4263-828f-a174b2dd2134
 title: "Monitor Endpoint Kinds"
-domain: adhsdk://cookbook/status/service/monitor/endpoint-kinds
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-09-27
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -148,9 +147,9 @@ This module makes no logging call of any kind.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/monitor/endpoint-kinds.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/monitor/endpoint-kinds.ts` | confirmed (1.1.1) |
 
 ## Design Decisions
 
@@ -168,16 +167,17 @@ This module makes no logging call of any kind.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | partial | Security |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | partial | Security |
 
-`unit-test-coverage` fails as written: no test file in the given source tree exercises `ENDPOINT_KINDS`, `EndpointKind`, or `isEndpointKind` directly — there is no dedicated test file for this module anywhere in `status-server` or `status-web`. The only test coverage touching this module's contents is indirect: `deploy-platform`'s `classify.test.ts` exercises `endpointNeedsWiring` (which reads the re-exported `NON_DEPLOY_KINDS`'s three members) against the same six kind strings this file's vocabulary defines, but that suite tests `classify.ts`'s own function, not anything exported from this file. `separation-of-concerns` passes: this file owns exactly one concern — the endpoint-kind vocabulary and a membership guard over it — and explicitly delegates the separate concern of which kinds are deploy-backed to the imported `NON_DEPLOY_KINDS`/`classify.ts`, per its own header comment that this list's knowledge stops short of the classifier's. `input-sanitization` is `partial`: `isEndpointKind` is exactly the validation primitive the module's header comment describes as backing "server-side validation (the endpoints routes)," but the given source tree has no call site anywhere that actually invokes `isEndpointKind` against an incoming `kind` value — whether any route currently performs that validation is unverified from this file alone, so the primitive exists and is correct on its own terms, but its wiring into an accept boundary cannot be confirmed as passing rather than merely available.
+`unit-test-coverage` passes: `status-server/test/endpoint-kinds.test.ts` carries one test per conformance vector (001-009), exercising `ENDPOINT_KINDS`, `EndpointKind`, `isEndpointKind` and the `NON_DEPLOY_KINDS` re-export directly. Before it, the only test coverage touching this module's contents is indirect: `deploy-platform`'s `classify.test.ts` exercises `endpointNeedsWiring` (which reads the re-exported `NON_DEPLOY_KINDS`'s three members) against the same six kind strings this file's vocabulary defines, but that suite tests `classify.ts`'s own function, not anything exported from this file. `separation-of-concerns` passes: this file owns exactly one concern — the endpoint-kind vocabulary and a membership guard over it — and explicitly delegates the separate concern of which kinds are deploy-backed to the imported `NON_DEPLOY_KINDS`/`classify.ts`, per its own header comment that this list's knowledge stops short of the classifier's. `input-sanitization` is `partial`: `isEndpointKind` is exactly the validation primitive the module's header comment describes as backing "server-side validation (the endpoints routes)," but the given source tree has no call site anywhere that actually invokes `isEndpointKind` against an incoming `kind` value — whether any route currently performs that validation is unverified from this file alone, so the primitive exists and is correct on its own terms, but its wiring into an accept boundary cannot be confirmed as passing rather than merely available.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-11-14 | Mike Fullerton | Conformance tests added (endpoint-kinds.test.ts, 9 of 9 vectors); unit-test-coverage now passed. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to status/service/monitor/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.0.0 | 2026-09-24 | Mike Fullerton | Initial creation |

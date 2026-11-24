@@ -9,22 +9,22 @@ final class BrowserPaneTests: XCTestCase {
 
     func testAnEntryWithASchemeLoadsAsWritten() {
         XCTAssertEqual(
-            BrowserPaneViewController.resolveAddress("http://example.com/path?q=1"),
+            WebBrowserPaneViewController.resolveAddress("http://example.com/path?q=1"),
             URL(string: "http://example.com/path?q=1")
         )
         XCTAssertEqual(
-            BrowserPaneViewController.resolveAddress("about:blank"),
-            BrowserPaneViewController.blankPage
+            WebBrowserPaneViewController.resolveAddress("about:blank"),
+            WebBrowserPaneViewController.blankPage
         )
     }
 
     func testABareHostGetsHTTPS() {
         XCTAssertEqual(
-            BrowserPaneViewController.resolveAddress("example.com"),
+            WebBrowserPaneViewController.resolveAddress("example.com"),
             URL(string: "https://example.com")
         )
         XCTAssertEqual(
-            BrowserPaneViewController.resolveAddress("  example.com/docs  "),
+            WebBrowserPaneViewController.resolveAddress("  example.com/docs  "),
             URL(string: "https://example.com/docs"),
             "surrounding whitespace is trimmed, not refused"
         )
@@ -34,38 +34,78 @@ final class BrowserPaneTests: XCTestCase {
     /// anyone meant; it is a host and a port.
     func testAHostWithAPortIsAHostNotAScheme() {
         XCTAssertEqual(
-            BrowserPaneViewController.resolveAddress("localhost:8080"),
+            WebBrowserPaneViewController.resolveAddress("localhost:8080"),
             URL(string: "https://localhost:8080")
         )
     }
 
     func testAnEntryWithInnerWhitespaceIsRefused() {
-        XCTAssertNil(BrowserPaneViewController.resolveAddress("how do I"),
+        XCTAssertNil(WebBrowserPaneViewController.resolveAddress("how do I"),
                      "a search is a choice the pane does not make")
-        XCTAssertNil(BrowserPaneViewController.resolveAddress(""))
-        XCTAssertNil(BrowserPaneViewController.resolveAddress("   "))
+        XCTAssertNil(WebBrowserPaneViewController.resolveAddress(""))
+        XCTAssertNil(WebBrowserPaneViewController.resolveAddress("   "))
+    }
+
+    // MARK: - Typed paths
+
+    private func makeTemporaryFile() throws -> URL {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("BrowserPaneTests-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let file = directory.appendingPathComponent("page one.html")
+        try Data("<p>hi</p>".utf8).write(to: file)
+        addTeardownBlock { try? FileManager.default.removeItem(at: directory) }
+        return file
+    }
+
+    /// A path to an existing file loads as a standardized file URL, as File ▸
+    /// Open Location reads the same text.
+    func testAPathToAFileLoadsAsAStandardizedFileURL() throws {
+        let file = try makeTemporaryFile()
+        let dotted = file.deletingLastPathComponent().path + "/./" + file.lastPathComponent
+        let resolved = WebBrowserPaneViewController.resolveAddress(dotted)
+        XCTAssertEqual(resolved, URL(fileURLWithPath: file.path).standardizedFileURL)
+        XCTAssertEqual(resolved?.path.contains("/./"), false)
+        XCTAssertEqual(WebBrowserPaneViewController.resolveAddress(file.absoluteString), resolved,
+                       "a file:// address reads the same way")
+    }
+
+    /// WebKit draws no listing for a directory, so a directory loads nothing,
+    /// typed as a path or as a `file://` address.
+    func testAPathToADirectoryResolvesToNothing() throws {
+        let directory = try makeTemporaryFile().deletingLastPathComponent()
+        XCTAssertNil(WebBrowserPaneViewController.resolveAddress(directory.path))
+        XCTAssertNil(WebBrowserPaneViewController.resolveAddress(directory.absoluteString))
+        XCTAssertNil(WebBrowserPaneViewController.resolveAddress("~"))
+        XCTAssertNil(WebBrowserPaneViewController.resolveAddress("/"))
+    }
+
+    /// A missing path is refused, not turned into `https:///…`.
+    func testAMissingPathResolvesToNothing() {
+        XCTAssertNil(WebBrowserPaneViewController.resolveAddress("/no/such/\(UUID().uuidString).html"))
+        XCTAssertNil(WebBrowserPaneViewController.resolveAddress("~/no-such-\(UUID().uuidString).html"))
     }
 
     // MARK: - Remembering where it was
 
     func testAFreshPaneOpensOnTheHomePage() {
         let home = URL(string: "https://example.com/home")!
-        let pane = BrowserPaneViewController(store: EphemeralPaneStateStore(), homeURL: home)
+        let pane = SafariBrowserPaneViewController(store: EphemeralPaneStateStore(), homeURL: home)
         XCTAssertEqual(pane.restorationURL, home)
     }
 
     func testAPaneRestoresTheAddressItsStoreRemembers() {
         let store = EphemeralPaneStateStore()
-        store.setPaneStateValue("https://example.com/remembered", forKey: BrowserPaneViewController.addressKey)
-        let pane = BrowserPaneViewController(store: store, homeURL: BrowserPaneViewController.blankPage)
+        store.setPaneStateValue("https://example.com/remembered", forKey: WebBrowserPaneViewController.addressKey)
+        let pane = SafariBrowserPaneViewController(store: store, homeURL: WebBrowserPaneViewController.blankPage)
         XCTAssertEqual(pane.restorationURL, URL(string: "https://example.com/remembered"))
     }
 
     func testAnUnparsableRememberedAddressFallsBackToHome() {
         let store = EphemeralPaneStateStore()
-        store.setPaneStateValue("not a url", forKey: BrowserPaneViewController.addressKey)
-        let pane = BrowserPaneViewController(store: store, settings: makeSettings())
-        XCTAssertEqual(pane.restorationURL, BrowserPaneViewController.blankPage)
+        store.setPaneStateValue("not a url", forKey: WebBrowserPaneViewController.addressKey)
+        let pane = SafariBrowserPaneViewController(store: store, settings: makeSettings())
+        XCTAssertEqual(pane.restorationURL, WebBrowserPaneViewController.blankPage)
     }
 
     /// The Home Page setting is the user's; the registration's `homeURL` is
@@ -75,12 +115,13 @@ final class BrowserPaneTests: XCTestCase {
         settings.set("example.com", for: UserSettings.browserHomePage)
         let hostHome = URL(string: "https://host.example/start")!
 
-        let fresh = BrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings, homeURL: hostHome)
+        let fresh = SafariBrowserPaneViewController(
+            store: EphemeralPaneStateStore(), settings: settings, homeURL: hostHome)
         XCTAssertEqual(fresh.restorationURL, URL(string: "https://example.com"))
 
         let store = EphemeralPaneStateStore()
-        store.setPaneStateValue("https://example.com/remembered", forKey: BrowserPaneViewController.addressKey)
-        let remembered = BrowserPaneViewController(store: store, settings: settings, homeURL: hostHome)
+        store.setPaneStateValue("https://example.com/remembered", forKey: WebBrowserPaneViewController.addressKey)
+        let remembered = SafariBrowserPaneViewController(store: store, settings: settings, homeURL: hostHome)
         XCTAssertEqual(remembered.restorationURL, URL(string: "https://example.com/remembered"))
     }
 
@@ -88,7 +129,7 @@ final class BrowserPaneTests: XCTestCase {
 
     func testThePaneFollowsLiveSettingsAsTheyChange() {
         let settings = makeSettings()
-        let pane = BrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings)
+        let pane = SafariBrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings)
         XCTAssertEqual(pane.webView.pageZoom, 1.0)
         // The pane sets nil; WebKit reads an unset agent back as "" on macOS 26.
         XCTAssertEqual(pane.webView.customUserAgent ?? "", "")
@@ -111,7 +152,7 @@ final class BrowserPaneTests: XCTestCase {
     func testZoomIsClampedToTheOfferedRange() {
         let settings = makeSettings()
         settings.set(10.0, for: UserSettings.browserPageZoom)
-        let pane = BrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings)
+        let pane = SafariBrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings)
         XCTAssertEqual(pane.webView.pageZoom, BrowserSettings.pageZoomRange.upperBound)
     }
 
@@ -128,12 +169,51 @@ final class BrowserPaneTests: XCTestCase {
         RunLoop.main.run(until: Date().addingTimeInterval(0.05))
     }
 
+    func testPaneOverrideAffectsOnlyThatPane() {
+        let fallback = makeSettings()
+        func layered() -> LayeredSettingsStore {
+            LayeredSettingsStore(
+                overrides: PaneStateSettingsStorageProvider(store: EphemeralPaneStateStore()),
+                fallback: fallback
+            )
+        }
+        let storeA = layered()
+        let paneA = SafariBrowserPaneViewController(store: EphemeralPaneStateStore(), settings: storeA)
+        let paneB = SafariBrowserPaneViewController(store: EphemeralPaneStateStore(), settings: layered())
+        storeA.set(2.0, for: UserSettings.browserPageZoom)
+        settle()
+        XCTAssertEqual(paneA.webView.pageZoom, 2.0)
+        XCTAssertEqual(paneB.webView.pageZoom, 1.0)
+    }
+
+    // MARK: - Agent access
+
+    func testAgentAccessAndPauseReadThePanesOwnSettings() {
+        let fallback = makeSettings()
+        let overrides = LayeredSettingsStore(
+            overrides: PaneStateSettingsStorageProvider(store: EphemeralPaneStateStore()),
+            fallback: fallback
+        )
+        let pane = SafariBrowserPaneViewController(store: EphemeralPaneStateStore(), settings: overrides)
+        XCTAssertEqual(pane.agentAccess, .full)
+        overrides.set(.readOnly, for: UserSettings.browserPrivacyAgentAccess)
+        XCTAssertEqual(pane.agentAccess, .readOnly)
+        XCTAssertEqual(fallback.get(UserSettings.browserPrivacyAgentAccess), .full)
+
+        overrides.set(.paused, for: UserSettings.browserPrivacyAgentWhilePaused)
+        XCTAssertFalse(pane.isPausedForAgent, "not paused, so the agent is not held off")
+        pane.setEventsPaused(true)
+        XCTAssertTrue(pane.isPausedForAgent)
+        overrides.set(.allowed, for: UserSettings.browserPrivacyAgentWhilePaused)
+        XCTAssertFalse(pane.isPausedForAgent, "paused, but the agent may still drive")
+    }
+
     // MARK: - Naming itself
 
-    func testAPaneOnNothingIsCalledBrowser() {
-        let pane = BrowserPaneViewController(store: EphemeralPaneStateStore())
-        XCTAssertEqual(pane.paneTitle, "Browser")
-        XCTAssertEqual(pane.paneMinimizedSymbolName, "globe")
+    func testAPaneOnNothingIsCalledSafari() {
+        let pane = SafariBrowserPaneViewController(store: EphemeralPaneStateStore())
+        XCTAssertEqual(pane.paneTitle, "Safari")
+        XCTAssertEqual(pane.paneMinimizedSymbolName, "safari")
     }
 
     // MARK: - Registration
@@ -144,6 +224,6 @@ final class BrowserPaneTests: XCTestCase {
         XCTAssertEqual(ComposableTabsViewID.browser.rawValue, "browser",
                        "the raw value is persisted in layout_nodes")
         XCTAssertTrue(registry.isRegistered(.browser))
-        XCTAssertEqual(registry.descriptor(for: .browser).displayName, "Browser")
+        XCTAssertEqual(registry.descriptor(for: .browser).displayName, "Safari Web Browser")
     }
 }

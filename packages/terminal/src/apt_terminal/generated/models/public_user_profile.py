@@ -22,7 +22,7 @@ class PublicUserProfile:
         slug (str):
         display_name (None | str):
         avatar_url (None | str):
-        created_at (str):
+        created (int): Unix timestamp, in seconds.
         social_links (list[PublicSocialLink]):
         emails (list[str]):
         phones (list[str]):
@@ -33,7 +33,7 @@ class PublicUserProfile:
     slug: str
     display_name: None | str
     avatar_url: None | str
-    created_at: str
+    created: int
     social_links: list[PublicSocialLink]
     emails: list[str]
     phones: list[str]
@@ -50,7 +50,7 @@ class PublicUserProfile:
         avatar_url: None | str
         avatar_url = self.avatar_url
 
-        created_at = self.created_at
+        created = self.created
 
         social_links = []
         for social_links_item_data in self.social_links:
@@ -76,10 +76,10 @@ class PublicUserProfile:
         field_dict.update(
             {
                 "slug": slug,
-                "displayName": display_name,
-                "avatarUrl": avatar_url,
-                "createdAt": created_at,
-                "socialLinks": social_links,
+                "display_name": display_name,
+                "avatar_url": avatar_url,
+                "created": created,
+                "social_links": social_links,
                 "emails": emails,
                 "phones": phones,
                 "addresses": addresses,
@@ -103,19 +103,19 @@ class PublicUserProfile:
                 return data
             return cast(None | str, data)
 
-        display_name = _parse_display_name(d.pop("displayName"))
+        display_name = _parse_display_name(d.pop("display_name"))
 
         def _parse_avatar_url(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        avatar_url = _parse_avatar_url(d.pop("avatarUrl"))
+        avatar_url = _parse_avatar_url(d.pop("avatar_url"))
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
         social_links = []
-        _social_links = d.pop("socialLinks")
+        _social_links = d.pop("social_links")
         for social_links_item_data in _social_links:
             social_links_item = PublicSocialLink.from_dict(social_links_item_data)
 
@@ -143,7 +143,7 @@ class PublicUserProfile:
             slug=slug,
             display_name=display_name,
             avatar_url=avatar_url,
-            created_at=created_at,
+            created=created,
             social_links=social_links,
             emails=emails,
             phones=phones,

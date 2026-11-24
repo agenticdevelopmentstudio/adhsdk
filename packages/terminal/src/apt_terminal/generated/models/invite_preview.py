@@ -49,9 +49,9 @@ class InvitePreview:
             }
         )
         if ecosystem_name is not UNSET:
-            field_dict["ecosystemName"] = ecosystem_name
+            field_dict["ecosystem_name"] = ecosystem_name
         if masked_destination is not UNSET:
-            field_dict["maskedDestination"] = masked_destination
+            field_dict["masked_destination"] = masked_destination
 
         return field_dict
 
@@ -67,7 +67,7 @@ class InvitePreview:
                 return data
             return cast(None | str | Unset, data)
 
-        ecosystem_name = _parse_ecosystem_name(d.pop("ecosystemName", UNSET))
+        ecosystem_name = _parse_ecosystem_name(d.pop("ecosystem_name", UNSET))
 
         def _parse_masked_destination(data: object) -> None | str | Unset:
             if data is None:
@@ -76,7 +76,7 @@ class InvitePreview:
                 return data
             return cast(None | str | Unset, data)
 
-        masked_destination = _parse_masked_destination(d.pop("maskedDestination", UNSET))
+        masked_destination = _parse_masked_destination(d.pop("masked_destination", UNSET))
 
         invite_preview = cls(
             state=state,

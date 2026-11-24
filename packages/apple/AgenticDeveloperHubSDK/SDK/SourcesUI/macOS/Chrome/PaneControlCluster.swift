@@ -1,7 +1,8 @@
 import AppKit
 import AgenticDeveloperHubSDK
 
-/// The close / minimize / zoom row at the leading edge of a pane's title bar.
+/// The close / minimize / zoom row at the leading edge of a pane's title bar,
+/// and a fourth, Move, for a host that can rearrange its panes.
 ///
 /// Deliberately in the same left-to-right order, and with the same meanings, as
 /// the three buttons at the leading edge of a window's title bar. A pane is a
@@ -12,7 +13,7 @@ import AgenticDeveloperHubSDK
 /// It reports and does not decide. Closing a pane, working out where it may
 /// shrink to, and knowing whether it is currently zoomed all belong to whatever
 /// is hosting it; this view is told, through `isZoomed`, `isMinimized`,
-/// `canMinimize` and `canClose`, and it renders that.
+/// `canMinimize`, `canClose` and `canZoom`, and it renders that.
 ///
 /// Four closures rather than a delegate: there are four events, the host is
 /// always exactly one object, and a protocol would make it declare conformance
@@ -23,6 +24,12 @@ public final class PaneControlCluster: NSStackView {
     public let closeButton = NSButton()
     public let minimizeButton = NSButton()
     public let zoomButton = NSButton()
+    /// Hidden until a host sets `onMove`: only a host that can rearrange its
+    /// panes has anything to put in the menu it raises.
+    public let moveButton = NSButton()
+    /// Hidden until a host sets `onFit`: only content that knows its own best
+    /// width can size its pane to it.
+    public let fitButton = NSButton()
 
     public var onClose: (() -> Void)?
     /// Handed the minimize button, because that button is the anchor the
@@ -31,6 +38,20 @@ public final class PaneControlCluster: NSStackView {
     public var onMinimize: ((NSButton) -> Void)?
     public var onRestore: (() -> Void)?
     public var onZoom: (() -> Void)?
+    /// Handed the move button, the anchor its directions menu drops from.
+    /// Setting it shows the button; `nil` hides it again.
+    public var onMove: ((NSButton) -> Void)? {
+        didSet { moveButton.isHidden = onMove == nil }
+    }
+
+    /// Sizes the pane to its content's best width. Setting it shows the
+    /// button; `nil` hides it again.
+    public var onFit: (() -> Void)? {
+        didSet { fitButton.isHidden = onFit == nil }
+    }
+
+    /// False when the pane has nowhere to go — the only pane in its tab.
+    public var canMove: Bool = true { didSet { applyState() } }
 
     /// Flips the zoom glyph and its tooltip. Set by the host; this view never
     /// infers it from a click, because a host is free to refuse.
@@ -51,6 +72,12 @@ public final class PaneControlCluster: NSStackView {
     /// (`principle-of-least-astonishment`).
     public var canClose: Bool = true { didSet { applyState() } }
 
+    /// False for a pane its host will not zoom — one a layout relationship
+    /// keeps beside another pane, which never takes over the tab. Dim for the
+    /// same reason as `canClose`. Ignored while zoomed, so unzooming stays
+    /// reachable whatever changed underneath.
+    public var canZoom: Bool = true { didSet { applyState() } }
+
     public init() {
         super.init(frame: .zero)
         translatesAutoresizingMaskIntoConstraints = false
@@ -62,13 +89,33 @@ public final class PaneControlCluster: NSStackView {
         configure(closeButton, action: #selector(closeTapped))
         configure(minimizeButton, action: #selector(minimizeTapped))
         configure(zoomButton, action: #selector(zoomTapped))
+        configure(moveButton, action: #selector(moveTapped))
+        configure(fitButton, action: #selector(fitTapped))
 
         closeButton.accessibilityID("pane.close")
         closeButton.setAccessibilityLabel("Close Pane")
         closeButton.toolTip = "Close Pane"
         closeButton.image = NSImage(systemSymbolName: "xmark", accessibilityDescription: "Close Pane")
 
-        for button in [closeButton, minimizeButton, zoomButton] {
+        moveButton.accessibilityID("pane.move")
+        moveButton.setAccessibilityLabel("Move Pane")
+        moveButton.toolTip = "Move Pane"
+        moveButton.image = NSImage(
+            systemSymbolName: "arrow.up.and.down.and.arrow.left.and.right",
+            accessibilityDescription: "Move Pane")
+        moveButton.isHidden = true
+
+        fitButton.accessibilityID("pane.fit")
+        fitButton.setAccessibilityLabel("Fit Width")
+        fitButton.toolTip = "Fit Width"
+        fitButton.image = NSImage(
+            systemSymbolName: "arrow.right.and.line.vertical.and.arrow.left",
+            accessibilityDescription: "Fit Width")
+        fitButton.isHidden = true
+
+        // A hidden arranged view is detached, so a pane with no Move keeps
+        // the three-button row it always had.
+        for button in [closeButton, minimizeButton, zoomButton, moveButton, fitButton] {
             addArrangedSubview(button)
         }
 
@@ -103,7 +150,7 @@ public final class PaneControlCluster: NSStackView {
         palette.nsColor(button.isEnabled ? .secondaryText : .tertiaryText)
     }
 
-    /// One place that turns the three flags into what the buttons look like.
+    /// One place that turns the flags into what the buttons look like.
     /// Spreading it across the three `didSet`s would make the middle button's
     /// appearance depend on the order the flags were assigned in.
     private func applyState() {
@@ -137,10 +184,19 @@ public final class PaneControlCluster: NSStackView {
         zoomButton.toolTip = zoomTitle
         zoomButton.image = NSImage(systemSymbolName: zoomSymbol, accessibilityDescription: zoomTitle)
         zoomButton.accessibilityID("pane.zoom")
+        zoomButton.isEnabled = canZoom || isZoomed
+        zoomButton.contentTintColor = Self.tint(
+            for: zoomButton, in: resolvedThemeScope.palette)
+
+        moveButton.isEnabled = canMove
+        moveButton.contentTintColor = Self.tint(
+            for: moveButton, in: resolvedThemeScope.palette)
     }
 
     @objc private func closeTapped() { onClose?() }
     @objc private func zoomTapped() { onZoom?() }
+    @objc private func moveTapped() { onMove?(moveButton) }
+    @objc private func fitTapped() { onFit?() }
 
     @objc private func minimizeTapped() {
         if isMinimized {

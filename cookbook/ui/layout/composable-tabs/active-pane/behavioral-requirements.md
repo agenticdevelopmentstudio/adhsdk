@@ -120,8 +120,10 @@
 - **focus-walk-reports-refused-when-restoration-fails**: When no candidate
   accepts input-focus status and the attempt to restore the original focus
   holder fails, taking input focus MUST report a refusal.
-- **every-pane-is-always-outlined**: Applying the theme MUST draw a 2-point
-  border on every pane backdrop, whether or not it is the active pane.
+- **every-pane-is-always-outlined**: While the backdrop's outline is on
+  (the default; see **the-backdrop-outline-is-optional**), applying the
+  theme MUST draw a 2-point border on every pane backdrop, whether or not
+  it is the active pane.
 - **the-backdrop-is-always-the-pane-backdrop-color**: Applying the theme MUST
   set the view's background to the theme's pane-backdrop color regardless of
   active state.
@@ -166,5 +168,9 @@
   own.
 - **the-backdrop-repaints-on-a-highlight-setting-change**: The backdrop MUST
   reapply its theme when the highlight setting changes.
+- **the-backdrop-outline-is-optional**: The backdrop MUST draw its outline
+  by default and MUST draw none, in either the active or the inactive
+  color, while its owner has switched the outline off; switching it MUST
+  repaint the backdrop.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
 

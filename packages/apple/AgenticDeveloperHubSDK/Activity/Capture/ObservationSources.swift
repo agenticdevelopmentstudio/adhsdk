@@ -1,6 +1,6 @@
 import Foundation
 
-// Public: `olylod` constructs the real macOS adapters directly and passes
+// Public: `temporald` constructs the real macOS adapters directly and passes
 // them into `UsageCollector`'s public initializer (which is typed in terms
 // of these protocols), and the iOS no-op adapters conform to them from the
 // same `#if os(iOS)` compilation path (c2, c9).

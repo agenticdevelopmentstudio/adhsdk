@@ -1,0 +1,2 @@
+The bridge logs nothing; failures are answered to the caller. `HubMailService` logs a failed connect and a failed purge at error level (subsystem `com.agenticdevelopmentstudio.hubmail`, category `service`), with the error message public and no mail content.
+

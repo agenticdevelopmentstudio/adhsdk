@@ -1,13 +1,12 @@
 ---
 id: 21cbbc1c-38a0-4e7a-8ca0-06e2f29429f5
 title: "Site Wordmark"
-domain: adhsdk://cookbook/adh/sites/site-wordmark
 type: ingredient
-version: 1.4.1
+version: 1.4.2
 status: review
 language: en
 created: 2026-06-26
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -225,9 +224,9 @@ Presentational and static; emits no log events.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/adh/src/marketing/SiteWordmark.tsx` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/adh/src/marketing/SiteWordmark.tsx` | confirmed (1.4.2) |
 
 ## Design Decisions
 
@@ -273,17 +272,18 @@ prop with `undefined` vs. `null` distinguished.
 
 | Check | Status | Category |
 |---|---|---|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
-| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | passed | Accessibility |
+| [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
 
-`separation-of-concerns` passes because `SiteWordmark.tsx` only composes registry lookup, the shared title split and theme tokens into markup, and ships on its own entry point so consumers do not pull in landing-page prose. `unit-test-coverage` fails because no test file exists for `SiteWordmark` anywhere under `packages/web` (the neighbouring `studioWordmark.test.tsx` covers `StudioWordmark`, a different component). These statuses otherwise rest on `SiteWordmark.tsx`: the brand and identity lines are plain text nodes with no ARIA suppression, read in document order (screen-reader-support); `text-apt-gold`/`text-apt-text`/`text-apt-text-dim` resolve to runtime theme roles whose rendered contrast is a property of the active theme, not measured or asserted by this component (contrast-ratio).
+`separation-of-concerns` passes because `SiteWordmark.tsx` only composes registry lookup, the shared title split and theme tokens into markup, and ships on its own entry point so consumers do not pull in landing-page prose. `unit-test-coverage` passes because `marketing/__tests__/SiteWordmark.test.tsx` covers all seven conformance vectors (T1-T7). These statuses otherwise rest on `SiteWordmark.tsx`: the brand and identity lines are plain text nodes with no ARIA suppression, read in document order (screen-reader-support); `text-apt-gold`/`text-apt-text`/`text-apt-text-dim` resolve to runtime theme roles whose rendered contrast is a property of the active theme, not measured or asserted by this component (contrast-ratio).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.4.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (SiteWordmark.test.tsx, 7 of 7 vectors); unit-test-coverage now passed. |
 | 1.4.1 | 2026-10-04 | Mike Fullerton | Matches its type's shape: required fields, title heading, and only the type's own sections. |
 | 1.4.0 | 2026-10-04 | Mike Fullerton | Filled Reference Implementations; completed missing sections; contrast gap restated as current behavior with a pending decision; added separation-of-concerns and unit-test-coverage compliance; WinUI 3 guidance. |
 | 1.3.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to adh/sites/. |

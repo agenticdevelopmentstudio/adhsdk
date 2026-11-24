@@ -1,4 +1,4 @@
-import { authedJson } from "../http";
+import { authedJson, withV1Query } from "../http";
 
 /** A principal who loses reach over the object when it moves.
  *
@@ -101,23 +101,60 @@ export interface TransferRequest {
  * moves exactly once — when `transfer` is called, in a single transaction that reverts entirely if
  * any part of it fails.
  */
+interface RevokedSubjectWire {
+  kind: RevokedSubject["kind"];
+  id: string;
+  name: string;
+  via: RevokedSubject["via"];
+}
+
+const toSubjects = (rows: RevokedSubjectWire[] | undefined): RevokedSubject[] =>
+  (rows ?? []).map((r) => ({ kind: r.kind, id: r.id, name: r.name, via: r.via }));
+
 export const ownershipApi = {
-  preview: (req: TransferRequest): Promise<TransferPreview> => {
-    const q = new URLSearchParams({
-      entityType: req.entityType,
-      entityId: req.entityId,
-      target: req.target,
-      // Omitted rather than sent empty when the caller has no kind: the server treats an ABSENT
-      // targetKind as "use the default precedence" but validates a PRESENT one against an enum,
-      // so `targetKind=` would turn a workable request into a 400.
-      ...(req.targetKind ? { targetKind: req.targetKind } : {}),
-    });
-    return authedJson<TransferPreview>(`/api/ownership/transfer/preview?${q.toString()}`);
+  async preview(req: TransferRequest): Promise<TransferPreview> {
+    const w = await authedJson<{
+      previous_id?: string | null;
+      tokens?: number;
+      revoking?: RevokedSubjectWire[];
+    }>(
+      withV1Query("/api/v1/ownership/transfers/preview", {
+        entity_type: req.entityType,
+        entity_id: req.entityId,
+        target: req.target,
+        // Omitted rather than sent empty when the caller has no kind: the server treats an ABSENT
+        // target_kind as "use the default precedence" but validates a PRESENT one against an enum,
+        // so `target_kind=` would turn a workable request into a 400.
+        target_kind: req.targetKind || undefined,
+      }),
+    );
+    return {
+      previousId: w.previous_id ?? null,
+      tokens: w.tokens ?? 0,
+      revoking: toSubjects(w.revoking),
+    };
   },
 
-  transfer: (req: TransferRequest): Promise<TransferResult> =>
-    authedJson<TransferResult>("/api/ownership/transfer", {
+  async transfer(req: TransferRequest): Promise<TransferResult> {
+    const w = await authedJson<{
+      id?: string | null;
+      previous_id?: string | null;
+      rewritten?: number;
+      revoked?: { tokens?: number; subjects?: RevokedSubjectWire[] };
+    }>("/api/v1/ownership/transfers", {
       method: "POST",
-      body: JSON.stringify(req),
-    }),
+      body: JSON.stringify({
+        entity_type: req.entityType,
+        entity_id: req.entityId,
+        target: req.target,
+        ...(req.targetKind ? { target_kind: req.targetKind } : {}),
+      }),
+    });
+    return {
+      id: w.id ?? null,
+      previousId: w.previous_id ?? null,
+      rewritten: w.rewritten ?? 0,
+      revoked: { tokens: w.revoked?.tokens ?? 0, subjects: toSubjects(w.revoked?.subjects) },
+    };
+  },
 };

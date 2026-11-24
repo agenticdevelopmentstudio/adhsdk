@@ -31,7 +31,8 @@
   value shown on the y axis and in the tooltip through the caller's format
   function, which defaults to rendering the number as-is.
 - **tooltip-null-placeholder**: The tooltip MUST render a value that is not a
-  number as an em dash, and MUST NOT pass it to the format function.
+  number as an em dash, and MUST NOT pass it to the format function. It MUST
+  still show, one row per series, at an x where every series is `null`.
 - **height-parameter**: The component MUST render the plot at the given height
   in pixels, defaulting to 240, and MUST size the plot's width to its container.
 - **no-point-dots**: Lines MUST be drawn without a dot on every point; only the

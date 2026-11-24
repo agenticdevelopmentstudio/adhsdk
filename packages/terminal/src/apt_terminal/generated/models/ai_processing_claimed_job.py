@@ -73,13 +73,13 @@ class AiProcessingClaimedJob:
         field_dict.update(
             {
                 "id": id,
-                "jobType": job_type,
-                "targetKind": target_kind,
-                "targetId": target_id,
+                "job_type": job_type,
+                "target_kind": target_kind,
+                "target_id": target_id,
                 "payload": payload,
-                "claimedAt": claimed_at,
-                "leaseExpiresAt": lease_expires_at,
-                "leaseToken": lease_token,
+                "claimed_at": claimed_at,
+                "lease_expires_at": lease_expires_at,
+                "lease_token": lease_token,
             }
         )
         if attempts is not UNSET:
@@ -99,19 +99,19 @@ class AiProcessingClaimedJob:
         d = dict(src_dict)
         id = UUID(d.pop("id"))
 
-        job_type = d.pop("jobType")
+        job_type = d.pop("job_type")
 
-        target_kind = d.pop("targetKind")
+        target_kind = d.pop("target_kind")
 
-        target_id = d.pop("targetId")
+        target_id = d.pop("target_id")
 
         payload = AiProcessingClaimedJobPayload.from_dict(d.pop("payload"))
 
-        claimed_at = d.pop("claimedAt")
+        claimed_at = d.pop("claimed_at")
 
-        lease_expires_at = d.pop("leaseExpiresAt")
+        lease_expires_at = d.pop("lease_expires_at")
 
-        lease_token = d.pop("leaseToken")
+        lease_token = d.pop("lease_token")
 
         attempts = d.pop("attempts", UNSET)
 

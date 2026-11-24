@@ -456,7 +456,7 @@ function PreferredMethodSection({ status }: { status: MfaStatus }): ReactElement
 
 /**
  * The Security settings panel. No page title and no API button of its own: the settings registry
- * draws the topic's `FeatureTitle` (title, `/account/mfa` API link, help) above every panel, and a
+ * draws the topic's `FeatureTitle` (title, `/v1/account/mfa` API link, help) above every panel, and a
  * second heading here is what used to make Security read as a different site from its siblings.
  * Form width — the passkeys table has four short columns and fits a form's column comfortably.
  */
@@ -497,7 +497,7 @@ export function SecurityWorkspace(): ReactElement {
       {/* OUTSIDE the `data &&` gate, deliberately: PasskeysSection reads neither `data` nor any
           other MFA-status field — it runs its own ["account","webauthn"] query and manages a
           sign-in method that works with no second factor configured at all. Gated on the MFA
-          status, a failing (or merely slow) /account/mfa took the entire passkey surface with
+          status, a failing (or merely slow) /v1/account/mfa took the entire passkey surface with
           it, so a user whose MFA status 500s could not add, name, or REMOVE a passkey — the
           one recovery path that does not need a password. It sits between the two gated
           groups so the section order is unchanged whenever the status does load. */}

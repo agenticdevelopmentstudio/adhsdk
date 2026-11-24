@@ -114,7 +114,7 @@ export function watchRun(opts: WatchRunOptions): SseHandle {
   if (opts.repo) params.set('repo', opts.repo);
   const query = params.size > 0 ? `?${params}` : '';
   return connectSse({
-    url: `${BASE}/stream/runs/${encodeURIComponent(opts.runId)}${query}`,
+    url: `${BASE}/runs/${encodeURIComponent(opts.runId)}/stream${query}`,
     event: ['line', 'state', 'end'],
     // The backend closes the stream right after `end`; without this the browser would
     // reconnect to a finished run forever, replaying `end` a few dozen times a second.
@@ -157,7 +157,7 @@ export function watchWorkspaceRuns(opts: WatchWorkspaceOptions): SseHandle {
     ? `?workspace=${encodeURIComponent(opts.workspace)}`
     : '';
   return connectSse({
-    url: `${BASE}/stream${ws}`,
+    url: `${BASE}/runs/stream${ws}`,
     event: 'run',
     onEvent: (data) => {
       const run = parse<RunTick>(data);

@@ -1,0 +1,59 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "7dfeb441-3681-45d3-a11b-049294168607",
+    "title": "Parsed Event Envelope",
+    "type": "ingredient",
+    "version": "1.0.2",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-14",
+    "modified": "2026-11-14",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Encodes a ParsedEvent as the drop-file envelope JSON the parser reads, with a typed error for payloads that cannot be serialized, and exposes the event's session id.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "foundation",
+      "sessions",
+      "claude-hooks",
+      "serialization"
+    ],
+    "depends-on": [
+      "81735174-d7d7-4103-87df-7be5944c78cc",
+      "67b656ef-78a2-41ae-a910-f87f527360b1"
+    ],
+    "related": [],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "names_hosts": "The component parses Claude Code hook events and settings; the host's name, events and paths are its subject.",
+  "synced": "fdfc51096bbc5b45",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

@@ -1,6 +1,6 @@
 
 The component is a card drawn as one tab in an edge bar of
-[the tabbed view](adhsdk://cookbook/ui/layout/tabbed-view): a stacked
+the tabbed view ([adhsdk.ingredient.ui.layout.tabbed-view](cookbook:d1257c76-fb28-47a5-bc2b-d4fb1ef87b53)): a stacked
 block, the same arrangement on all four edges, showing a session's
 agent/model name, status symbols, session name, working directory, branch,
 and an optional summary. It is hosted by a controller that drives its stack

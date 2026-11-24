@@ -215,18 +215,18 @@ struct MarkdownProjectionTests {
     /// Pins the behaviour deviation 3 (Task 12's original decision) exists
     /// to protect, now that fix #1 forces `deleted_at`/`is_deleted` into
     /// every upsert's `SET` clause: a local `stage(_:)` mutation whose
-    /// payload omits `customer_id` (as every taxonomy write does — the
+    /// payload omits `owner_id` (as every taxonomy write does — the
     /// column was already set moments earlier by the raw `INSERT` in the
     /// same transaction) must not null it out. The force-bind fix only
     /// widens the always-assigned set by `deleted_at`/`is_deleted`; it must
-    /// not have widened it to `customer_id` too.
-    @Test("a local stage mutation omitting customer_id does not null it out")
+    /// not have widened it to `owner_id` too.
+    @Test("a local stage mutation omitting owner_id does not null it out")
     func localStageDoesNotClobberCustomerID() throws {
         let store = try store()
         let category = try store.createCategory(name: "Recipes")
         try store.database.read { conn in
             let customerID = try String.fetchOne(
-                conn, sql: "SELECT customer_id FROM categories WHERE id = ?",
+                conn, sql: "SELECT owner_id FROM categories WHERE id = ?",
                 arguments: [category.id])
             #expect(customerID == "cust-1")
         }
@@ -889,8 +889,8 @@ struct MarkdownProjectionTests {
         }
     }
 
-    /// The consequence the omission actually had. `uq_markdown_author_route`
-    /// is `UNIQUE (customer_id, public_route) WHERE public_route IS NOT NULL`,
+    /// The consequence the omission actually had. `uq_markdown_author_pair_route`
+    /// is `UNIQUE (author_kind, author_id, public_route) WHERE public_route IS NOT NULL`,
     /// so a stale route on the first document makes the second document's
     /// pull fail — sync wedges on the same batch every time, and no amount of
     /// retrying clears it.
@@ -900,7 +900,7 @@ struct MarkdownProjectionTests {
         func pull(id: String, route: String?, version: String) async throws {
             var data: [String: JSONValue] = [
                 "title": .string(id), "content": .string("Body."),
-                "customer_id": .string("cust-1"),
+                "author_kind": .string("customer"), "author_id": .string("cust-1"),
                 "created_at": .string("2026-01-01T00:00:00Z"),
                 "updated_at": .string("2026-01-01T00:00:00Z")
             ]

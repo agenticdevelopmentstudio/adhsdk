@@ -20,11 +20,11 @@
   own `sortOrder`, then name — and MUST NOT re-sort. The root is the one exception
   (above) because it is the one level with no context to read an order from; deeper,
   the arriving order is the owner's, `buildCategoryTree` documents that it preserves
-  it, and the [Category Picker](adhsdk://recipes/category-picker-dialog)
+  it, and the Category Picker ([adhsdk.ingredient.ui.blocks.category-picker-dialog](cookbook:88d69611-4a12-4777-9509-8af6c0626dc7))
   browsing the same forest does not sort — so a rail
   that re-sorted would discard a deliberate ordering and disagree with the picker
   about the same subtree in the same session.
-- **show-only-the-category-name**: A category row MUST render its name and
+- **show-only-the-category-name**: A category row MUST render its name (beside a folder icon) and
   nothing else — no sublabel, and in particular a subcategory count MUST NOT be
   shown on any row at any depth.
 
@@ -153,4 +153,24 @@
   `chain.slice(0, d)` — this level's own ancestors, dropping its own selection —
   not the whole chain: it walks up one level at a time, the same as the level
   walk went down.
+
+### The Add dialog and write failures
+
+- **add-dialog-guards-duplicates**: The one-field Add dialog MUST disable Create, and MUST ignore Enter, while the trimmed name is empty, while the name equals (case-insensitively) a category already in the vocabulary, and while a write is in flight; when the name is taken it MUST say so beside the field.
+- **add-dialog-titles-its-parent**: The Add dialog MUST read "New category in “<parent>”" for a level with a parent and "New category" at the root level, and a new category MUST be filed under that parent (no parent at the root).
+- **dialog-resets-on-open**: The Add and picker dialogs MUST reset their text, selection and expansion each time they open, by reacting to the open transition and not by remounting, so the exit animation survives.
+- **failure-belongs-to-its-dialog**: A write failure MUST be stored with the dialog that caused it and shown only while that same dialog instance is open, so a cancelled failed delete cannot print its message under an unrelated later dialog.
+- **rename-failure-reaches-the-dialog**: The Rename write MUST let a rejection reach the rename dialog, which stays open showing its reason; the picker, delete and add writes MUST capture the failure into the message they render and stay open.
+- **refresh-after-every-write**: Every successful write MUST await `onChanged` before closing its dialog.
+
+### The picker and gear labels
+
+- **picker-offers-tree-and-filter**: The picker MUST browse the folded forest as a tree with expandable branches, and a filter field MUST replace the tree with a flat list of matching categories (case-insensitive name match), each shown with the trail of ancestor names above it.
+- **picker-dedupes-filter-hits**: A category filed under several parents MUST appear once in the filtered list, at its first placement, since the id is what is confirmed.
+- **picker-refuses-forbidden-rows**: A row whose id is in `disabledIds` MUST be shown dimmed with `aria-disabled` and MUST refuse a click, so it never becomes the selection.
+- **picker-root-row-only-unfiltered**: The no-parent row MUST be offered only when `allowRoot` is set and MUST count as an answer only while it is on screen: under a filter, Confirm MUST stay disabled until a real row is picked.
+- **picker-selects-one-drawing**: In the tree, selection MUST be tracked by path key so that a category drawn under two parents highlights, and is announced as selected, in one row only.
+- **picker-roving-keyboard**: The tree and the filtered list MUST each hold one tab stop that arrow keys move together with focus: Down and Up step through visible rows, Right expands or enters a branch, Left collapses or leaves for the parent, Home and End jump to the ends.
+- **picker-tree-semantics**: Tree rows MUST carry the `treeitem` role with level, position, set size, selected and expanded state; filtered rows MUST carry the `option` role in a `listbox`; the expand twisty is a pointer-only affordance and MUST stay out of the tab sequence and accessibility tree.
+- **gear-labels-name-the-target**: The gear's target verbs MUST be labelled with the selected category's name ("Rename “Q3”…", "Also file “Q3” in…") and read "Rename…" when no editable target exists; the gear trigger's accessible name MUST be "<Noun> actions", and Delete MUST be drawn in the red accent.
 

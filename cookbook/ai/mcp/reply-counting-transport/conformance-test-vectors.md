@@ -1,0 +1,14 @@
+
+| ID | Requirements | Input | Expected |
+|----|-------------|-------|----------|
+| reply-counting-transport-001 | count-request, pay-on-response, wait-until-paid, passthrough-receive | A stdio script of `initialize` (id 1), the initialized notification and `tools/list` (id 2) whose input ends at once, served through `serveUntilDrained` with a source that answers `tools/list` after 300 ms | Both replies, ids 1 and 2, are written before the server returns (`HostMCPServerDrainTests.testRequestsInFlightWhenInputClosesAreStillAnswered`) |
+| reply-counting-transport-002 | pay-on-cancel, count-id-kinds, wait-immediate-when-empty | A script of `tools/call` id 5, `tools/list` id `"6"`, then `notifications/cancelled` for 5, fully received; then a response for id `"6"` is sent | `owedCount` is 1 after receiving; after the send `waitUntilNothingOwed(.seconds(30))` returns true in under 5 seconds (`testACancelledRequestIsNoLongerOwedAReply`) |
+| reply-counting-transport-003 | wait-deadline, wait-result | The same server with a source that takes 60 seconds, drained with a 300 ms deadline | The server returns in under 10 seconds; only the reply that came, id 1, was written (`testDrainGivesUpAtItsDeadline`) |
+| reply-counting-transport-004 | count-ignore-other | A received batch `[{"jsonrpc":"2.0","id":1,"method":"ping"}]` | `owedCount` is 0 (`ReplyCountingTransportConformanceTests.testV4_aBatchIsNotCounted`) |
+| reply-counting-transport-005 | count-notification-not-counted | A received `{"jsonrpc":"2.0","method":"notifications/initialized"}` | `owedCount` is 0 (`ReplyCountingTransportConformanceTests.testV5_aNotificationIsNotCounted`) |
+| reply-counting-transport-006 | count-id-kinds, pay-on-response | A received request with id 1, then a sent response with id `"1"` | `owedCount` stays 1, because `n:1` and `s:1` differ (`ReplyCountingTransportConformanceTests.testV6_aStringIdAndANumberIdAreDifferentIds`) |
+| reply-counting-transport-007 | pay-after-send | A received request with id 3; `send` of the response for id 3 where the wrapped `send` throws | `send` rethrows and `owedCount` is 0 (`ReplyCountingTransportConformanceTests.testV7_aThrowingSendStillPaysTheDebt`) |
+| reply-counting-transport-008 | pay-unknown-harmless | `notifications/cancelled` for an id that was never received | `owedCount` is unchanged (`ReplyCountingTransportConformanceTests.testV8_cancellingAnUnknownIdChangesNothing`) |
+| reply-counting-transport-009 | disconnect-releases | A waiter suspended in `waitUntilNothingOwed(deadline: .seconds(30))` with an id owed, then `disconnect()` | The waiter returns false at once, well before 30 seconds (`ReplyCountingTransportConformanceTests.testV9_disconnectReleasesASuspendedWaiter`) |
+| reply-counting-transport-010 | wait-multiple | Two waiters suspended with one id owed, then the response is sent | Both return true (`ReplyCountingTransportConformanceTests.testV10_twoWaitersAreBothReleasedByOnePayment`) |
+

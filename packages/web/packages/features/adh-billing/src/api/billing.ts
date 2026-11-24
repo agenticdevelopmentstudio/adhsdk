@@ -1,7 +1,16 @@
-import { authedJson, authedRequest } from "@adh-sdk/auth/client";
+import {
+  authedJson,
+  authedRequest,
+  listAllV1,
+  listV1Page,
+  unixToIso,
+  withV1Query,
+} from "@adh-sdk/auth/client";
 
 /**
- * Every path here carries the `/api` prefix.
+ * Every path here carries the `/api` prefix and is a `/v1` route: snake_case on the wire,
+ * list envelopes drained with `listAllV1`, updates POSTed. The exported row types stay
+ * camelCase; each `from*` mapper below is the one place the wire is translated.
  *
  * `authedJson` takes a FULL path and bakes in no prefix of its own, and `/api` is
  * the Next rewrite that forwards to the backend — inside Hono the route is
@@ -12,7 +21,7 @@ import { authedJson, authedRequest } from "@adh-sdk/auth/client";
  * client in the repo: all of them, in both `@adh-sdk/data` and the
  * feature packages' own `src/api/` directories, spell the prefix out.
  */
-const BASE = "/api/billing";
+const BASE = "/api/v1/billing";
 
 /** What the billing UI needs before it can draw a control. See routes/billing.ts's `/context`. */
 export interface BillingContext {
@@ -150,39 +159,232 @@ export interface ClaimResult {
 
 const jsonHeaders = { "content-type": "application/json" };
 
-export const getBillingContext = () => authedJson<BillingContext>(`${BASE}/context`);
+// ── Wire shapes (the /v1 JSON, snake_case) ───────────────────────────────────
 
-export const listOffers = () => authedJson<OfferRow[]>(`${BASE}/offers`);
-export const createOffer = (body: OfferBody) =>
-  authedJson<OfferRow>(`${BASE}/offers`, {
-    method: "POST",
-    body: JSON.stringify(body),
-    headers: jsonHeaders,
-  });
-// PUT, not PATCH: generic CRUD's update verb is PUT (crud/factory.ts:975).
-export const updateOffer = (id: string, body: OfferBody) =>
-  authedJson<OfferRow>(`${BASE}/offers/${id}`, {
-    method: "PUT",
-    body: JSON.stringify(body),
-    headers: jsonHeaders,
-  });
+interface BillingContextWire {
+  ecosystem_id: string;
+  billing_enabled: boolean;
+  can_manage: boolean;
+  stripe_status: BillingContext["stripeStatus"];
+  webhook_path: string;
+}
+
+interface OfferWire {
+  id: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  purpose: OfferRow["purpose"];
+  stripe_price_id: string;
+  stripe_product_id: string | null;
+  collection_method: OfferRow["collectionMethod"];
+  days_until_due: number | null;
+  grants_ecosystem_id: string | null;
+  lapse_action: OfferRow["lapseAction"];
+  grace_days: number;
+  is_active: boolean;
+}
+
+interface AccountWire {
+  id: string;
+  offer_id: string;
+  stripe_customer_id: string | null;
+  stripe_checkout_session_id: string | null;
+  stripe_subscription_id: string | null;
+  payer_email: string | null;
+  status: string;
+  current_period_end: string | null;
+  lapsed_at: string | null;
+  claimed_customer_id: string | null;
+  claimed_at: string | null;
+  /** Unix seconds. */
+  created: number;
+}
+
+interface PriceWire {
+  id: string;
+  product_id: string;
+  product_name: string | null;
+  unit_amount: number | null;
+  currency: string;
+  interval: string | null;
+}
+
+interface EventWire {
+  id: string;
+  stripe_event_id: string;
+  type: string;
+  received_at: string;
+  processed_at: string | null;
+  error: string | null;
+}
+
+interface RedriveWire {
+  examined: number;
+  applied: number;
+  terminal: number;
+  still_pending: number;
+  unreadable: number;
+  failed: number;
+  next_offset: number | null;
+}
+
+function fromOffer(w: OfferWire): OfferRow {
+  return {
+    id: w.id,
+    slug: w.slug,
+    name: w.name,
+    description: w.description,
+    purpose: w.purpose,
+    stripePriceId: w.stripe_price_id,
+    stripeProductId: w.stripe_product_id,
+    collectionMethod: w.collection_method,
+    daysUntilDue: w.days_until_due,
+    grantsEcosystemId: w.grants_ecosystem_id,
+    lapseAction: w.lapse_action,
+    graceDays: w.grace_days,
+    isActive: w.is_active,
+  };
+}
+
+/** Key by key, never by spreading — see `OfferBody` on why a stray column must not ride along. */
+function toOfferWire(b: OfferBody): Omit<OfferWire, "id"> {
+  return {
+    slug: b.slug,
+    name: b.name,
+    description: b.description,
+    purpose: b.purpose,
+    stripe_price_id: b.stripePriceId,
+    stripe_product_id: b.stripeProductId,
+    collection_method: b.collectionMethod,
+    days_until_due: b.daysUntilDue,
+    grants_ecosystem_id: b.grantsEcosystemId,
+    lapse_action: b.lapseAction,
+    grace_days: b.graceDays,
+    is_active: b.isActive,
+  };
+}
+
+function fromAccount(w: AccountWire): AccountRow {
+  return {
+    id: w.id,
+    offerId: w.offer_id,
+    stripeCustomerId: w.stripe_customer_id,
+    stripeCheckoutSessionId: w.stripe_checkout_session_id,
+    stripeSubscriptionId: w.stripe_subscription_id,
+    payerEmail: w.payer_email,
+    status: w.status,
+    currentPeriodEnd: w.current_period_end,
+    lapsedAt: w.lapsed_at,
+    claimedCustomerId: w.claimed_customer_id,
+    claimedAt: w.claimed_at,
+    createdAt: unixToIso(w.created),
+  };
+}
+
+function fromPrice(w: PriceWire): PriceRow {
+  return {
+    id: w.id,
+    productId: w.product_id,
+    productName: w.product_name,
+    unitAmount: w.unit_amount,
+    currency: w.currency,
+    interval: w.interval,
+  };
+}
+
+function fromEvent(w: EventWire): EventRow {
+  return {
+    id: w.id,
+    stripeEventId: w.stripe_event_id,
+    type: w.type,
+    receivedAt: w.received_at,
+    processedAt: w.processed_at,
+    error: w.error,
+  };
+}
+
+export const getBillingContext = async (): Promise<BillingContext> => {
+  const w = await authedJson<BillingContextWire>(`${BASE}/context`);
+  return {
+    ecosystemId: w.ecosystem_id,
+    billingEnabled: w.billing_enabled,
+    canManage: w.can_manage,
+    stripeStatus: w.stripe_status,
+    webhookPath: w.webhook_path,
+  };
+};
+
+export const listOffers = async (): Promise<OfferRow[]> =>
+  (await listAllV1<OfferWire>(`${BASE}/offers`)).map(fromOffer);
+export const createOffer = async (body: OfferBody): Promise<OfferRow> =>
+  fromOffer(
+    await authedJson<OfferWire>(`${BASE}/offers`, {
+      method: "POST",
+      body: JSON.stringify(toOfferWire(body)),
+      headers: jsonHeaders,
+    }),
+  );
+// POST, not PUT: /v1 updates are POSTs to the item.
+export const updateOffer = async (id: string, body: OfferBody): Promise<OfferRow> =>
+  fromOffer(
+    await authedJson<OfferWire>(`${BASE}/offers/${id}`, {
+      method: "POST",
+      body: JSON.stringify(toOfferWire(body)),
+      headers: jsonHeaders,
+    }),
+  );
 // A DECLARED tombstone (policy.ts) — the row is soft-deleted, and its slug is freed by the
 // partial unique index. Not a hard delete, whatever the verb suggests.
 export const deleteOffer = (id: string) => authedRequest(`${BASE}/offers/${id}`, { method: "DELETE" });
 
-export const listAccounts = () => authedJson<AccountRow[]>(`${BASE}/accounts`);
-export const resendClaim = (accountId: string) =>
-  authedJson<ResendClaimResult>(`${BASE}/accounts/${accountId}/resend-claim`, { method: "POST" });
+export const listAccounts = async (): Promise<AccountRow[]> =>
+  (await listAllV1<AccountWire>(`${BASE}/accounts`)).map(fromAccount);
+export const resendClaim = async (accountId: string): Promise<ResendClaimResult> => {
+  const w = await authedJson<{ ok: true; account_id: string; expires_at: string }>(
+    `${BASE}/accounts/${accountId}/resend_claim`,
+    { method: "POST" },
+  );
+  return { ok: w.ok, accountId: w.account_id, expiresAt: w.expires_at };
+};
 
-export const listPrices = () => authedJson<PriceRow[]>(`${BASE}/prices`);
+export const listPrices = async (): Promise<PriceRow[]> =>
+  (await listAllV1<PriceWire>(`${BASE}/prices`)).map(fromPrice);
 
-export const listEvents = (limit = 200) => authedJson<EventRow[]>(`${BASE}/events?limit=${limit}`);
-export const redriveEvents = (opts?: { includeProcessed?: boolean; offset?: number }) => {
-  const q = new URLSearchParams();
-  if (opts?.includeProcessed) q.set("includeProcessed", "true");
-  if (opts?.offset) q.set("offset", String(opts.offset));
-  const qs = q.toString();
-  return authedJson<RedriveResult>(`${BASE}/events/redrive${qs ? `?${qs}` : ""}`, { method: "POST" });
+/** The newest `limit` ledger rows. The ledger is unbounded, so this walks pages only as far as
+ *  `limit` needs rather than draining it with `listAllV1`. */
+export const listEvents = async (limit = 200): Promise<EventRow[]> => {
+  const rows: EventWire[] = [];
+  let after: string | undefined;
+  for (;;) {
+    const page = await listV1Page<EventWire>(
+      withV1Query(`${BASE}/events`, { limit: Math.min(100, limit - rows.length), starting_after: after }),
+    );
+    rows.push(...page.data);
+    const last = page.data[page.data.length - 1];
+    if (!page.hasMore || rows.length >= limit || !last) break;
+    after = last.id;
+  }
+  return rows.slice(0, limit).map(fromEvent);
+};
+export const redriveEvents = async (opts?: {
+  includeProcessed?: boolean;
+  offset?: number;
+}): Promise<RedriveResult> => {
+  const url = withV1Query(`${BASE}/events/redrive`, {
+    include_processed: opts?.includeProcessed ? true : undefined,
+    offset: opts?.offset ? opts.offset : undefined,
+  });
+  const w = await authedJson<RedriveWire>(url, { method: "POST" });
+  return {
+    examined: w.examined,
+    applied: w.applied,
+    terminal: w.terminal,
+    stillPending: w.still_pending,
+    unreadable: w.unreadable,
+    failed: w.failed,
+    nextOffset: w.next_offset,
+  };
 };
 
 /**
@@ -198,9 +400,14 @@ export const redriveEvents = (opts?: { includeProcessed?: boolean; offset?: numb
  * distinguishing them tells a prober which tokens exist, and none of the four is
  * actionable by the claimant anyway — all four mean "ask the operator".
  */
-export const claimPurchase = (token: string) =>
-  authedJson<ClaimResult>(`${BASE}/claim`, {
-    method: "POST",
-    body: JSON.stringify({ token }),
-    headers: { "content-type": "application/json" },
-  });
+export const claimPurchase = async (token: string): Promise<ClaimResult> => {
+  const w = await authedJson<{ ok: true; ecosystem_id: string; offer_id: string }>(
+    `${BASE}/accounts/claim`,
+    {
+      method: "POST",
+      body: JSON.stringify({ token }),
+      headers: { "content-type": "application/json" },
+    },
+  );
+  return { ok: w.ok, ecosystemId: w.ecosystem_id, offerId: w.offer_id };
+};

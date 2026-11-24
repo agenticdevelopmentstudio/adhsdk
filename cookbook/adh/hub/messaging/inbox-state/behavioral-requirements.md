@@ -89,6 +89,9 @@
 - **dm-thread-null-chatid-clears-state**: when `chatId` is `null` or the empty string, the DM
   thread state MUST set `messages` to `[]` and `loading` to `false`, and MUST NOT issue any
   request or open any connection.
+- **dm-thread-reset-on-chatid-change**: on every `chatId` change, the DM thread state MUST set
+  `messages` to `[]` before loading the new thread, so no message from the previous chat is shown
+  under the new one.
 - **dm-thread-history-load-and-sort**: for a non-empty `chatId`, the DM thread state MUST request
   `GET {DM_BASE}/<enc(chatId)>/messages?pageSize=200` and MUST merge the returned `items`, sorted
   ascending by `seq`, into `messages`.
@@ -105,6 +108,9 @@
 - **dm-thread-teardown-on-change-or-unmount**: on `chatId` change or unmount, the DM thread state
   MUST mark itself cancelled and MUST close the stream/poll handle, so neither the pending history
   fetch nor the connection can update state afterward.
+- **dm-thread-send-merge-guarded**: the send action MUST merge its POST response into `messages`
+  only when the `chatId` it was called for is still the current one; a send that settles after a
+  `chatId` change MUST NOT update `messages`.
 - **dm-thread-poll-fallback-refetch**: the poll fallback MUST re-request the same `GET
   {DM_BASE}/<enc(chatId)>/messages?pageSize=200` window and merge its `items` the same way as the
   initial load; a failed poll refetch MUST be swallowed, leaving `messages` unchanged.
@@ -115,6 +121,12 @@
   random-UUID generator when one is available, and MUST otherwise generate one from the current
   timestamp and a random suffix, before `POST`-ing `{ body, clientMessageId }` to
   `{DM_BASE}/<enc(chatId)>/messages`.
+- **dm-composer-reset-on-chatid-change**: the DM composer (the draft, the sending flag and the
+  send error) MUST start empty for each `chatId`, so a draft typed in one conversation is never
+  shown in, or sent to, another.
+- **dm-composer-late-result-ignored**: a send that settles after `chatId` has changed MUST NOT
+  clear the new conversation's draft, set its send error or clear its sending flag; the send
+  itself still goes to the conversation it was started in.
 - **dm-thread-send-merges-and-broadcasts**: on a successful send, the DM thread state MUST merge
   the server-returned message into `messages` via the same merge step and MUST broadcast a wake
   signal exactly once.

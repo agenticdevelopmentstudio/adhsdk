@@ -1,0 +1,4 @@
+
+Project Tab Configuration is the value every project window shares: the pane arrangement of the front tab — the split tree's shape and its divider sizes — taken from the project window the user last worked in. The window manager reads it out of one window (or, when that window is closed, derives it from that project's stored tabs) and hands it to the next window that comes forward, so switching projects keeps the panels the same size instead of each project remembering its own.
+
+It deliberately carries nothing else. In particular it never carries the tab edges: a project's edges are its own explicit Tab Bars choice, or the app-wide tab positions when it has made none, and copying one project's edges into another would make a choice for a project whose user never made one. Reading the value out of a window and applying it to another window are the tabs window's and the window manager's concerns, documented in their own recipes.

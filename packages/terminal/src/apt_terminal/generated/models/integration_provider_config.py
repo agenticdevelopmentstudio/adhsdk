@@ -35,8 +35,8 @@ class IntegrationProviderConfig:
         config (IntegrationProviderConfigConfig): Non-secret config: clientId, scopes, URLs, endpoints, credentialStyle
         has_secret (bool): Whether a client secret is stored (the value is never returned)
         updated_by (None | str | Unset):
-        created_at (str | Unset):
-        updated_at (str | Unset):
+        created (int | Unset): Unix timestamp, in seconds.
+        updated (int | Unset): Unix timestamp, in seconds.
         deliverability_webhook (IntegrationProviderConfigDeliverabilityWebhookType0 | None | Unset): Postmark
             deliverability webhook registration details (postmark configs only)
     """
@@ -49,8 +49,8 @@ class IntegrationProviderConfig:
     config: IntegrationProviderConfigConfig
     has_secret: bool
     updated_by: None | str | Unset = UNSET
-    created_at: str | Unset = UNSET
-    updated_at: str | Unset = UNSET
+    created: int | Unset = UNSET
+    updated: int | Unset = UNSET
     deliverability_webhook: IntegrationProviderConfigDeliverabilityWebhookType0 | None | Unset = (
         UNSET
     )
@@ -82,9 +82,9 @@ class IntegrationProviderConfig:
         else:
             updated_by = self.updated_by
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         deliverability_webhook: dict[str, Any] | None | Unset
         if isinstance(self.deliverability_webhook, Unset):
@@ -101,22 +101,22 @@ class IntegrationProviderConfig:
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
-                "providerId": provider_id,
+                "ecosystem_id": ecosystem_id,
+                "provider_id": provider_id,
                 "name": name,
                 "rdid": rdid,
                 "config": config,
-                "hasSecret": has_secret,
+                "has_secret": has_secret,
             }
         )
         if updated_by is not UNSET:
-            field_dict["updatedBy"] = updated_by
-        if created_at is not UNSET:
-            field_dict["createdAt"] = created_at
-        if updated_at is not UNSET:
-            field_dict["updatedAt"] = updated_at
+            field_dict["updated_by"] = updated_by
+        if created is not UNSET:
+            field_dict["created"] = created
+        if updated is not UNSET:
+            field_dict["updated"] = updated
         if deliverability_webhook is not UNSET:
-            field_dict["deliverabilityWebhook"] = deliverability_webhook
+            field_dict["deliverability_webhook"] = deliverability_webhook
 
         return field_dict
 
@@ -132,9 +132,9 @@ class IntegrationProviderConfig:
         d = dict(src_dict)
         id = UUID(d.pop("id"))
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        provider_id = d.pop("providerId")
+        provider_id = d.pop("provider_id")
 
         name = d.pop("name")
 
@@ -147,7 +147,7 @@ class IntegrationProviderConfig:
 
         config = IntegrationProviderConfigConfig.from_dict(d.pop("config"))
 
-        has_secret = d.pop("hasSecret")
+        has_secret = d.pop("has_secret")
 
         def _parse_updated_by(data: object) -> None | str | Unset:
             if data is None:
@@ -156,11 +156,11 @@ class IntegrationProviderConfig:
                 return data
             return cast(None | str | Unset, data)
 
-        updated_by = _parse_updated_by(d.pop("updatedBy", UNSET))
+        updated_by = _parse_updated_by(d.pop("updated_by", UNSET))
 
-        created_at = d.pop("createdAt", UNSET)
+        created = d.pop("created", UNSET)
 
-        updated_at = d.pop("updatedAt", UNSET)
+        updated = d.pop("updated", UNSET)
 
         def _parse_deliverability_webhook(
             data: object,
@@ -182,7 +182,7 @@ class IntegrationProviderConfig:
             return cast(IntegrationProviderConfigDeliverabilityWebhookType0 | None | Unset, data)
 
         deliverability_webhook = _parse_deliverability_webhook(
-            d.pop("deliverabilityWebhook", UNSET)
+            d.pop("deliverability_webhook", UNSET)
         )
 
         integration_provider_config = cls(
@@ -194,8 +194,8 @@ class IntegrationProviderConfig:
             config=config,
             has_secret=has_secret,
             updated_by=updated_by,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
             deliverability_webhook=deliverability_webhook,
         )
 

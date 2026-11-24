@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest'
-import { tenantIdFromToken } from '../tenant'
+import { renderHook } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { decodeJwtClaims, tenantIdFromToken, useTenantId } from '../tenant'
 
 // Build a fake JWT whose middle segment is the base64url-encoded claims — the
 // real shape `tenantIdFromToken` (via `atob`) decodes. Browser-native `btoa`
@@ -42,5 +43,50 @@ describe('tenantIdFromToken', () => {
     expect(tenantIdFromToken(claims({ sub: 'user-1' }))).toBeNull()
     expect(tenantIdFromToken(null)).toBeNull()
     expect(tenantIdFromToken('garbage')).toBeNull()
+  })
+})
+
+// Conformance vectors for resource-data (cookbook/data/services/resource-data).
+describe('tenant conformance', () => {
+  afterEach(() => {
+    localStorage.clear()
+    vi.restoreAllMocks()
+  })
+
+  it('resource-data-032 decodeJwtClaims is null for a token without three parts', () => {
+    expect(decodeJwtClaims('not-a-jwt')).toBeNull()
+  })
+
+  it('resource-data-033 decodeJwtClaims returns the decoded claims of a well-formed token', () => {
+    expect(decodeJwtClaims(claims({ ecosystem_id: 'e1', sub: 'u' }))).toEqual({
+      ecosystem_id: 'e1',
+      sub: 'u',
+    })
+  })
+
+  it('resource-data-034 decodeJwtClaims is null when the middle part is not base64url JSON', () => {
+    expect(decodeJwtClaims('x.!!!not-base64!!!.y')).toBeNull()
+  })
+
+  it('resource-data-035 ecosystem_id wins over tenant_id', () => {
+    expect(tenantIdFromToken(claims({ ecosystem_id: 'e1', tenant_id: 't1' }))).toBe('e1')
+  })
+
+  it('resource-data-036 tenant_id wins over project_id', () => {
+    expect(tenantIdFromToken(claims({ tenant_id: 't1', project_id: 'p1' }))).toBe('t1')
+  })
+
+  it('resource-data-037 no token gives no tenant', () => {
+    expect(tenantIdFromToken(null)).toBeNull()
+  })
+
+  it('resource-data-038 useTenantId returns the same tenant on a re-render without re-decoding', () => {
+    localStorage.setItem('auth_tokens', JSON.stringify({ accessToken: claims({ ecosystem_id: 'e1' }) }))
+    const { result, rerender } = renderHook(() => useTenantId())
+    expect(result.current).toBe('e1')
+    const atobSpy = vi.spyOn(globalThis, 'atob')
+    rerender()
+    expect(result.current).toBe('e1')
+    expect(atobSpy).not.toHaveBeenCalled()
   })
 })

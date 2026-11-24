@@ -158,12 +158,16 @@ import * as Sentry from "@sentry/react";
 import { scrubUrl, startPostHog } from "@adh-sdk/analytics";
 
 // src/telemetry/noise-filter.ts
-var BOT_USER_AGENT = /HeadlessChrome|\bbot\b|bot\/|crawler|spider|Lighthouse|PhantomJS|Puppeteer|Playwright|Obscura/i;
+var BOT_USER_AGENT = /HeadlessChrome|\bbot\b|bot\/|crawler|spider|Lighthouse|PhantomJS|Puppeteer|Playwright|Obscura|Lightpanda/i;
+var SCRAPER_FRAME = [
+  /^<obscura:/,
+  // Obscura scraping browser's injected bootstrap
+  /^ext:/
+  // Deno's internal modules (ext:core/01_core.js), which Obscura runs on
+];
 var FOREIGN_FRAME = [
   /\/[0-9a-f]{16}\/script\.js(?:[?#]|$)/,
   // Vercel Web Analytics / Speed Insights v2 hashed paths
-  /^<obscura:/,
-  // Obscura scraping browser's injected bootstrap
   /^(?:chrome|moz|safari|safari-web)-extension:\/\//
   // browser extensions
 ];
@@ -171,15 +175,22 @@ var NETWORK_FAILURE = /^(?:Failed to fetch|Load failed|NetworkError when attempt
 function frameSource(frame) {
   return frame.abs_path || frame.filename || "";
 }
-function allFramesForeign(values) {
-  const sources = values.flatMap((v) => v.stacktrace?.frames ?? []).map(frameSource).filter(Boolean);
+function frameSources(values) {
+  return values.flatMap((v) => v.stacktrace?.frames ?? []).map(frameSource).filter(Boolean);
+}
+function anyFrameFromScraper(sources) {
+  return sources.some((s) => SCRAPER_FRAME.some((re) => re.test(s)));
+}
+function allFramesForeign(sources) {
   return sources.length > 0 && sources.every((s) => FOREIGN_FRAME.some((re) => re.test(s)));
 }
 function noiseReason(event, env = {}) {
   if (env.webdriver) return "automation";
   if (env.userAgent && BOT_USER_AGENT.test(env.userAgent)) return "bot";
   const values = event.exception?.values ?? [];
-  if (allFramesForeign(values)) return "foreign-code";
+  const sources = frameSources(values);
+  if (anyFrameFromScraper(sources)) return "bot";
+  if (allFramesForeign(sources)) return "foreign-code";
   if (values.some((v) => v.type === "ChunkLoadError")) return "stale-deploy";
   if (values.some((v) => v.type === "TypeError" && NETWORK_FAILURE.test(v.value ?? ""))) return "network";
   return null;

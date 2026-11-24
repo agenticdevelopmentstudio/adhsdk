@@ -8,17 +8,74 @@ public struct BrowserPaneHandle {
     public let project: String
     public let tab: String
     public let automation: BrowserAutomation
+    /// Which engine draws the pane. Every tool drives either the same way;
+    /// `browser_list` reports it so a model can tell the panes apart.
+    public let engine: BrowserEngineKind
+    /// The pane's Agent access setting, as it stood when the handle was made.
+    /// The tool set takes a fresh handle once a call is dequeued, so a change
+    /// made while the call waited is the one that counts.
+    public let access: BrowserAgentAccess
+    /// Whether the pane's events are paused **and** its settings pause the
+    /// agent too (`agent_while_paused == .paused`). A paused pane whose
+    /// settings let the agent keep driving reads `false` here.
+    public let isPausedForAgent: Bool
+    /// The pane's Agent Privacy, with the words as they stood when the handle
+    /// was made — fresh for each call once it is dequeued, like `access`.
+    public let agentPrivacy: BrowserAgentPrivacy
+    /// What `browser_history` conceals with: the pane's Agent Privacy over
+    /// every enabled word whatever its sites
+    /// (`WebBrowserPaneViewController.agentHistoryPrivacy()`), since history
+    /// lists other sites' pages. A handle made without one, while
+    /// `agentPrivacy` is on, gives `unavailable`, so history is refused
+    /// rather than concealed with only the page in front's words.
+    public let historyPrivacy: BrowserAgentPrivacy
+    /// The pane's effective Agent can see history setting — its own
+    /// override, else the global value — as it stood when the handle was
+    /// made, fresh for each call like `access`.
+    public let historyAccess: BrowserAgentHistoryAccess
+    /// The history store `browser_history` reads under All history; nil when
+    /// the host has none.
+    public let historyStore: BrowserHistoryStore?
+    /// The pane's effective Hide Images — its own override, else the global
+    /// value (`WebBrowserPaneViewController.agentHidesImages`) — as it stood
+    /// when the handle was made. The one value the tools and the pane's
+    /// Agent preview and Agent source build under.
+    public let hidesImages: Bool
 
-    public init(id: String, project: String, tab: String, automation: BrowserAutomation) {
+    public init(
+        id: String, project: String, tab: String, automation: BrowserAutomation,
+        engine: BrowserEngineKind = .safari,
+        access: BrowserAgentAccess = .full, isPausedForAgent: Bool = false,
+        agentPrivacy: BrowserAgentPrivacy = .off,
+        historyPrivacy: BrowserAgentPrivacy? = nil,
+        historyAccess: BrowserAgentHistoryAccess = .none,
+        historyStore: BrowserHistoryStore? = nil,
+        hidesImages: Bool
+    ) {
         self.id = id; self.project = project; self.tab = tab; self.automation = automation
+        self.engine = engine
+        self.access = access; self.isPausedForAgent = isPausedForAgent
+        self.agentPrivacy = agentPrivacy
+        self.historyPrivacy = historyPrivacy ?? (agentPrivacy.isOn ? .unavailable : .off)
+        self.historyAccess = historyAccess
+        self.historyStore = historyStore
+        self.hidesImages = hidesImages
     }
 
     public var title: String { automation.currentTitle }
     public var url: String { automation.currentURL }
+    /// The back/forward list of the tab the agent drives, read live from
+    /// the automation's page: current page, then back nearest first, then
+    /// forward nearest first.
+    public var backForward: [BrowserVisitLine] { automation.driver.backForwardVisits }
 }
 
 /// How the tool set finds Browser panes. The app supplies the real one over
 /// its windows; tests supply a fake.
+///
+/// Finding a pane, and opening one, change nothing on screen: the tool set
+/// first checks the pane's Agent access, and only a call that passes asks
+/// for `revealBrowserPane(id:)`. A refused call must leave no trace.
 @MainActor
 public protocol BrowserPaneDirectory: AnyObject {
     /// Every open Browser pane, front window first.
@@ -28,7 +85,26 @@ public protocol BrowserPaneDirectory: AnyObject {
     func browserPane(besidePane paneID: String) -> BrowserPaneHandle?
     /// The Browser pane most recently active, if still open.
     func lastUsedBrowserPane() -> BrowserPaneHandle?
-    /// Opens a Browser pane beside the caller's pane (or in the front
-    /// window when nil / unknown) and returns it.
-    func openBrowserPane(besidePane paneID: String?) throws -> BrowserPaneHandle
+    /// Opens a Browser pane on `engine` beside the caller's pane (or in the
+    /// front window when nil / unknown) and returns it.
+    func openBrowserPane(besidePane paneID: String?, engine: BrowserEngineKind) throws -> BrowserPaneHandle
+    /// Puts the pane's project on screen, for a call about to drive it: a
+    /// screenshot of an ordered-out window fails, and a pane driven there is
+    /// one nobody can see. Called only after the call's access check passed.
+    func revealBrowserPane(id: String)
+    /// Closes a Browser pane, the way its close button would. Used for a pane
+    /// `openBrowserPane` made whose settings refuse the agent, so a refused
+    /// open leaves nothing behind. Looks among every pane, hidden ones too.
+    func closeBrowserPane(id: String)
+}
+
+extension BrowserPaneDirectory {
+    /// The handles the agent may know about: every pane but those whose
+    /// Agent access is `hidden`. A directory applies it to everything it
+    /// lists or finds by id, so a hidden pane is not listed, not the default
+    /// target and not reachable by id. The rule lives here rather than in
+    /// each app's directory so every directory hides the same panes.
+    public static func visible(_ handles: [BrowserPaneHandle]) -> [BrowserPaneHandle] {
+        handles.filter { $0.access != .hidden }
+    }
 }

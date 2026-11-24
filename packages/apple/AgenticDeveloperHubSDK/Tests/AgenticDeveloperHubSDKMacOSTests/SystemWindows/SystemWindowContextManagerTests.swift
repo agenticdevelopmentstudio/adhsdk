@@ -14,11 +14,12 @@ struct SystemWindowContextManagerTests {
         private(set) var moved: [(id: UInt32, point: CGPoint)] = []
         private(set) var framed: [(id: UInt32, frame: CGRect)] = []
         private(set) var focused: [UInt32] = []
+        private(set) var listAllCount = 0
 
         init(windows: [SystemWindowInfo] = []) { self.windows = windows }
 
         func listWindows() -> [SystemWindowInfo] { windows }
-        func listAllWindows() -> [SystemWindowInfo] { windows }
+        func listAllWindows() -> [SystemWindowInfo] { listAllCount += 1; return windows }
         func move(windowID: UInt32, to point: CGPoint) throws { moved.append((windowID, point)) }
         func resize(windowID: UInt32, to size: CGSize) throws {}
         func focus(windowID: UInt32) throws { focused.append(windowID) }
@@ -41,7 +42,7 @@ struct SystemWindowContextManagerTests {
         )
     }
 
-    @Test("adding a window to an inactive context parks it off-screen")
+    @Test("contexts-001: adding a window to an inactive context parks it off-screen")
     func addToInactiveParks() throws {
         let control = MockWindowControl(windows: [
             window(id: 1, app: "Xcode"), window(id: 2, app: "Warp")
@@ -58,7 +59,7 @@ struct SystemWindowContextManagerTests {
         #expect(control.moved.contains { $0.id == 2 })
     }
 
-    @Test("adding a window with no active context does not park it")
+    @Test("contexts-002: adding a window with no active context does not park it")
     func addWithNoActiveContextDoesNotPark() throws {
         let control = MockWindowControl(windows: [window(id: 1, app: "Xcode")])
         let (manager, dir) = makeManager(control)
@@ -70,7 +71,7 @@ struct SystemWindowContextManagerTests {
         #expect(control.moved.isEmpty)
     }
 
-    @Test("deleting the active context restores every context's windows")
+    @Test("contexts-003: deleting the active context restores every context's windows")
     func deleteActiveRestoresAll() throws {
         let control = MockWindowControl(windows: [
             window(id: 1, app: "Xcode"), window(id: 2, app: "Warp")
@@ -92,7 +93,7 @@ struct SystemWindowContextManagerTests {
         #expect(control.framed.contains { $0.id == 2 })
     }
 
-    @Test("stale persisted window IDs are invalidated on load")
+    @Test("contexts-004: stale persisted window IDs are invalidated on load")
     func reconcileStaleIDsOnLoad() throws {
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: dir) }
@@ -112,7 +113,7 @@ struct SystemWindowContextManagerTests {
         #expect(manager.hasStaleWindows)
     }
 
-    @Test("a persisted window ID recycled to a different app is invalidated on load")
+    @Test("contexts-005: a persisted window ID recycled to a different app is invalidated on load")
     func reconcileRecycledIDOnLoad() throws {
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: dir) }

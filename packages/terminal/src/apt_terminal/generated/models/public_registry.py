@@ -83,11 +83,11 @@ class PublicRegistry:
                 "name": name,
                 "purpose": purpose,
                 "description": description,
-                "categoryRoot": category_root,
-                "entryTerm": entry_term,
+                "category_root": category_root,
+                "entry_term": entry_term,
                 "tags": tags,
-                "servicesEnabled": services_enabled,
-                "boundSiteId": bound_site_id,
+                "services_enabled": services_enabled,
+                "bound_site_id": bound_site_id,
                 "sections": sections,
                 "fields": fields,
             }
@@ -109,20 +109,20 @@ class PublicRegistry:
 
         description = d.pop("description")
 
-        category_root = d.pop("categoryRoot")
+        category_root = d.pop("category_root")
 
-        entry_term = d.pop("entryTerm")
+        entry_term = d.pop("entry_term")
 
         tags = cast(list[str], d.pop("tags"))
 
-        services_enabled = d.pop("servicesEnabled")
+        services_enabled = d.pop("services_enabled")
 
         def _parse_bound_site_id(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        bound_site_id = _parse_bound_site_id(d.pop("boundSiteId"))
+        bound_site_id = _parse_bound_site_id(d.pop("bound_site_id"))
 
         sections = []
         _sections = d.pop("sections")

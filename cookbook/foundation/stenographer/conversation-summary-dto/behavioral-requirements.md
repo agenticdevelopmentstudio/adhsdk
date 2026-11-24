@@ -1,0 +1,55 @@
+
+- **agent-constant**: `ConversationAgent.claude` MUST be the string `claude`.
+- **agent-always-claude**: `ConversationSummaryDTO.agent` and `ConversationInfoDTO.agent` MUST be `ConversationAgent.claude` for every session.
+- **status-cases**: `ConversationStatus` MUST have exactly the cases `busy`, `idle`, `waiting` and `ended`, with the raw values equal to the case names.
+- **status-busy**: `busy` MUST mean the agent is mid-turn, or a subagent is, so that a message sent now queues.
+- **status-idle**: `idle` MUST mean the session is alive with nothing in flight and the agent at its prompt.
+- **status-waiting**: `waiting` MUST mean the agent is blocked on the person, such as a permission prompt or a question.
+- **status-ended**: `ended` MUST mean the session's process is gone.
+- **status-from-session-ended**: `ConversationStatus.init(session:)` MUST yield `ended` when `session.status` is not the raw value of `SessionStatus.active`, whatever the last event.
+- **status-from-session-derive**: For an active session, `ConversationStatus.init(session:)` MUST derive the status with `SessionActivity.derive` from `lastEventType` and `subagentWorking`, mapping `working` to `busy`, `idle` to `idle` and `waiting` to `waiting`.
+- **summary-fields**: A `ConversationSummaryDTO` MUST carry `id`, `agent`, `terminal`, `cwd`, `sessionName`, `gitBranch`, `lastActivity` (all String) and `status` (`ConversationStatus`).
+- **summary-id**: `id` MUST be the session id, the id every `steno conversation` verb takes.
+- **summary-terminal**: `terminal` MUST be the terminal's name from `KnownTerminals` for the session's `termProgram` (for example `iTerm2`), else the raw `termProgram`.
+- **summary-cwd**: `cwd` MUST be the session's working directory written `~`-relative when it is under the home directory.
+- **summary-session-name**: `sessionName` MUST be the session's `transcriptTitle`, and MUST be an empty string, never nil, when the session is unnamed.
+- **summary-git-branch**: `gitBranch` MUST be the session's `gitBranch` unchanged, and MUST be an empty string, never nil, when the session is not in a repository.
+- **summary-last-activity**: `lastActivity` MUST be `UTCTimestamp.canonical` of the session's `lastActivityAt`, and MUST fall back to the raw `lastActivityAt` when that does not parse.
+- **summary-home-default**: `ConversationSummaryDTO.init(session:homeDirectory:)` MUST default `homeDirectory` to `NSHomeDirectory()`.
+- **home-relative-equal**: `homeRelative(_:homeDirectory:)` MUST return `~` when the path equals the home directory.
+- **home-relative-prefix**: `homeRelative` MUST return `~` followed by the rest of the path when the path starts with the home directory and a slash.
+- **home-relative-trailing-slash**: `homeRelative` MUST ignore one trailing slash on the home directory.
+- **home-relative-sibling**: `homeRelative` MUST NOT rewrite a path that merely shares the home directory's characters as a prefix, such as `/Users/meow` against `/Users/me`.
+- **home-relative-empty-home**: `homeRelative` MUST return the path unchanged when the home directory is empty.
+- **terminal-name**: `terminalName(_:)` MUST return the known terminal's `displayName` for a recognised `TERM_PROGRAM`, else the raw value.
+- **matches-empty**: `matches(app:session:)` MUST return true when `app` is empty.
+- **matches-prefix**: `matches(app:session:)` MUST return true when the lowercased `app` is a prefix of the lowercased agent name `claude`, of the session's `termProgram`, or of the known terminal's `displayName`.
+- **matches-ignores-empty-names**: `matches(app:session:)` MUST NOT match against an empty name.
+- **base-branches**: `baseBranches` MUST be the set of the empty string, `main`, `master` and `HEAD`, where `HEAD` is what a detached checkout reports.
+- **work-in-progress**: `isWorkInProgress(session:)` MUST be true when the session's `gitBranch` is not in `baseBranches`, or when its `cwd` is inside a worktree.
+- **in-worktree**: `isInWorktree(_:)` MUST be true when the path has a `.claude` segment immediately followed by a `worktrees` segment and then at least one more segment, at any depth.
+- **in-worktree-bare**: `isInWorktree(_:)` MUST be false for a path that ends at `.claude/worktrees` with no worktree name after it.
+- **info-fields**: A `ConversationInfoDTO` MUST carry `id`, `agent`, `terminal`, `termProgram`, `cwd`, `projectRoot`, `sessionName`, `gitBranch`, `model`, `startedAt`, `lastActivity`, `status`, `lastEvent`, `lastTool`, `summary`, `pid`, `canSend` and `sendRefusal`.
+- **info-from-summary**: `ConversationInfoDTO.init` MUST take `id`, `agent`, `terminal`, `cwd`, `sessionName`, `gitBranch`, `lastActivity` and `status` from the `ConversationSummaryDTO` built from the same session.
+- **info-raw-fields**: `ConversationInfoDTO.init` MUST copy `termProgram`, `model`, `lastTool`, `summary` and `pid` from the session, and `lastEvent` from the session's `lastEventType`.
+- **info-project-root**: `projectRoot` MUST be the session's `projectRoot` written `~`-relative, and MUST be an empty string when the session has no `projectRoot`.
+- **info-started-at**: `startedAt` MUST be `UTCTimestamp.canonical` of the session's `startedAt`, falling back to the raw value when it does not parse.
+- **info-can-send**: `canSend` MUST be true exactly when `ConversationSendability.refusal` returns nil.
+- **info-send-refusal**: `sendRefusal` MUST be the refusal sentence, and MUST be an empty string when `canSend` is true.
+- **info-live-sessions**: `ConversationInfoDTO.init` MUST take the active sessions as `liveSessions`, which the pane-sharing check reads.
+- **info-attachment-probe**: `ConversationInfoDTO.init` MUST take an `attachment` probe that defaults to `ConversationSendability.processAttachment`, so a test can inject the answer.
+- **refusal-ended**: `refusal` MUST return exactly `conversation <id> has ended.` for an `ended` conversation.
+- **refusal-waiting**: `refusal` MUST refuse a `waiting` conversation with exactly `conversation <id> is waiting on a prompt (a permission or a question); answer it in its terminal. A message typed now would land in the prompt, and its Return would pick the highlighted choice.`, because its pane holds a permission or question prompt and the Return that follows typed text would pick the highlighted choice.
+- **refusal-order**: `refusal` MUST test in this order: ended, waiting, unsupported terminal, detached process, pane sharer; the first match wins.
+- **refusal-terminal**: `refusal` MUST refuse a session whose terminal `TerminalTextInjector.isSupported` rejects, with exactly `typing into a conversation needs iTerm2 or Terminal.app; <id> runs in <termProgram>.`, where `<termProgram>` is `an unknown terminal` when it is empty.
+- **refusal-detached**: `refusal` MUST refuse a session whose process the probe reports as `detached`, with exactly `conversation <id> is a headless claude (claude -p, run by a script or shell), which reads its prompt once and never a terminal, so nothing typed into a pane can reach it.`
+- **refusal-pane-sharer**: `refusal` MUST refuse a session when another active session's pane resolves to the same `TerminalTextInjector.Target`, with exactly `conversation <sharer id> runs in the same terminal pane as <id> (a nested or headless claude shares its parent's), so a message can't be aimed at <id> alone.`
+- **refusal-sharer-excused**: A pane sharer whose probe reports `detached` MUST NOT block the session.
+- **refusal-sharer-unknown**: A pane sharer whose probe returns nil MUST still block the session, because an unreadable process might be on the pane.
+- **refusal-sharer-active-only**: A sharer whose `status` is not the raw value of `SessionStatus.active` MUST NOT block the session.
+- **refusal-busy-idle**: `refusal` MUST return nil for a `busy` or `idle` conversation that passes the later checks, so a busy conversation's message queues.
+- **refusal-no-pane**: `refusal` MUST NOT run the pane-sharer check for a session whose pane does not resolve.
+- **attachment-probe-type**: `AttachmentProbe` MUST be a `@Sendable` function from `SessionDTO` to an optional `ProcessLiveness.TerminalAttachment`, where nil means the process cannot be read.
+- **process-attachment**: `processAttachment` MUST ask `ProcessLiveness.terminalAttachment(ofPid:)` for the session's recorded `pid`, clamped into `pid_t`.
+- **conformance-protocols**: `ConversationSummaryDTO` and `ConversationInfoDTO` MUST be `Codable`, `Sendable` and `Equatable`; `ConversationStatus` MUST be `String`, `Codable`, `Sendable` and `CaseIterable`.
+

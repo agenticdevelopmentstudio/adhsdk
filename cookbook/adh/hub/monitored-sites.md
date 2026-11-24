@@ -1,17 +1,16 @@
 ---
 id: a3e87176-5845-43ff-9041-af53437d605d
 title: "Monitored Sites"
-domain: adhsdk://cookbook/adh/hub/monitored-sites
 type: ingredient
-version: 1.2.1
+version: 2.0.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "A data client for the Status Sites monitoring domain: generic-CRUD groups, sites, and endpoints over /api/monitoring/*, the 1:M group-to-site-to-endpoint model, owner/workspace scoping, and the field renames each mapper performs."
+summary: "A data client for the Status Sites monitoring domain: generic-CRUD groups, sites, and endpoints over /api/v1/monitoring/*, the 1:M group-to-site-to-endpoint model, owner/workspace scoping, and the field renames each mapper performs."
 platforms:
   - typescript
   - web
@@ -43,13 +42,13 @@ approved-date: ""
 ## Overview
 
 This is the client for the Status Sites monitoring domain: groups, sites, and endpoints, backed by
-generic CRUD over `/api/monitoring/site-groups`, `/api/monitoring/sites`, and
-`/api/monitoring/endpoints`. The model matches the database, not an earlier prototype: a site
+the /v1 monitoring surface: `/api/v1/monitoring/site_groups`, `/api/v1/monitoring/sites`, and
+`/api/v1/monitoring/endpoints`. The model matches the database, not an earlier prototype: a site
 belongs to exactly one group (`sites.site_group_id`, `NOT NULL`, FK `ON DELETE CASCADE`) and an
 endpoint belongs to exactly one site (same cascade) — a strict 1:M chain, not the prototype's
 many-to-many `groupIds[]`. The whole chain is owner-scoped server-side, with an optional
 `workspace` parameter on every operation that re-pins it to a workspace's owning principal. This
-logic holds the backend row and request-body shapes (a group row, a site row, an endpoint row, and
+logic holds the snake_case backend row and request-body shapes (a group row, a site row, an endpoint row, and
 their create/put bodies), three mappers from row to caller-facing view, the caller-facing create
 and update body shapes for each entity, the fixed set of valid endpoint kinds, and twelve
 operations — list/create/update/delete for each of the three entities — each a thin request
@@ -59,35 +58,36 @@ Appearance, States, and Accessibility not applicable and carries the runtime con
 Behavioral Requirements, per the non-UI component guidance this recipe was authored under.
 
 ## Behavioral Requirements
-
 **Mappers**
 
-- **site-group-view-shape**: the group mapper MUST map a group row verbatim to a group view carrying
-  `id`, `slug`, `name`, `retentionDays`, `createdAt`, and `updatedAt`, with no field renamed.
-- **site-view-renames-group-id**: the site mapper MUST copy a site row's `siteGroupId` field into the
-  site view's `groupId`; every other field (`id`, `slug`, `name`, `createdAt`, `updatedAt`) MUST be
-  copied unchanged.
-- **endpoint-view-shape**: the endpoint mapper MUST map an endpoint row verbatim to an endpoint view
-  carrying `id`, `siteId`, `url`, `kind`, `expectedStatus`, `checkIntervalSeconds`, `isActive`,
-  `createdAt`, and `updatedAt`, with no field renamed.
+- **site-group-view-shape**: the group mapper MUST map a snake_case group row to a group view carrying
+  `id`, `slug`, `name`, `retentionDays` (from `retention_days`), `createdAt` (from `created`), and
+  `updatedAt` (from `updated`), converting both unix-second timestamps to ISO strings.
+- **site-view-renames-group-id**: the site mapper MUST copy a site row's `site_group_id` field into the
+  site view's `groupId`; `id`, `slug` and `name` MUST be copied unchanged, and `created` and `updated`
+  MUST become ISO-string `createdAt` and `updatedAt`.
+- **endpoint-view-shape**: the endpoint mapper MUST map a snake_case endpoint row to an endpoint view
+  carrying `id`, `siteId` (`site_id`), `url`, `kind`, `expectedStatus` (`expected_status`),
+  `checkIntervalSeconds` (`check_interval_seconds`), `isActive` (`is_active`), `createdAt` and
+  `updatedAt` (from the unix-second `created` and `updated`).
 
 **Groups**
 
-- **group-list-request**: the list-groups operation MUST send `GET /api/monitoring/site-groups` with
-  the query string the shared workspace-query builder appends (empty when the `workspace` option is
-  absent).
+- **group-list-request**: the list-groups operation MUST read `GET /api/v1/monitoring/site_groups`,
+  with the `workspace` query only when that option is given, through the shared paging helper, which
+  adds `limit` and `starting_after` and keeps requesting pages while the response says `has_more`.
 - **group-list-sorted-by-name**: the list-groups operation MUST return the mapped group views sorted by
   `name` via a locale-aware comparison, without mutating the array the request returned.
-- **group-create-request**: the create-group operation MUST send `POST /api/monitoring/site-groups`
+- **group-create-request**: the create-group operation MUST send `POST /api/v1/monitoring/site_groups`
   (plus the workspace query) with a body built by the body-compaction helper from `{ name, slug,
-  retentionDays }`, dropping `retentionDays` from the JSON payload when the caller omits it, and MUST
-  return the mapped group view.
-- **group-update-request**: the update-group operation MUST send `PUT
-  /api/monitoring/site-groups/<encoded id>` (plus the workspace query) with a compacted patch of `{
-  name, slug, retentionDays }`, and MUST return the mapped group view.
+  retention_days }`, dropping `retention_days` from the JSON payload when the caller omits
+  `retentionDays`, and MUST return the mapped group view.
+- **group-update-request**: the update-group operation MUST send `POST
+  /api/v1/monitoring/site_groups/<encoded id>` (plus the workspace query) with a compacted patch of `{
+  name, slug, retention_days }`, and MUST return the mapped group view.
 - **group-delete-request**: the delete-group operation MUST send `DELETE
-  /api/monitoring/site-groups/<encoded id>` (plus the workspace query), discarding any response body,
-  and MUST resolve with no value.
+  /api/v1/monitoring/site_groups/<encoded id>` (plus the workspace query), discarding any response
+  body, and MUST resolve with no value.
 - **group-delete-cascades**: deleting a group MUST cascade at the database level (`FK ON DELETE
   CASCADE`) to remove every site in that group and every endpoint of those sites; this client issues
   one `DELETE` request and performs no separate cleanup call of its own.
@@ -97,49 +97,48 @@ Behavioral Requirements, per the non-UI component guidance this recipe was autho
 - **site-belongs-to-exactly-one-group**: a site view MUST carry exactly one `groupId` as a required
   field — the single group this site belongs to (1:M; required) — and this client models no
   many-to-many group membership.
-- **site-list-request**: the list-sites operation MUST send `GET /api/monitoring/sites` (plus the
-  workspace query).
+- **site-list-request**: the list-sites operation MUST read `GET /api/v1/monitoring/sites` (plus the
+  workspace query) through the shared paging helper, draining every page.
 - **site-list-sorted-by-name**: the list-sites operation MUST return the mapped site views sorted by
   `name`.
-- **site-list-single-request-only**: the list-sites operation MUST NOT issue a second request to the
-  site-groups endpoint or perform any client-side intersection against group membership. An earlier
-  implementation did both — a second round-trip, plus a silent-hiding bug, since generic-CRUD lists cap
-  at 500 rows and a workspace with more than 500 groups could drop sites whose group fell past that cap
-  even though the server still monitors them; the current single-request form replaced it.
-- **site-create-request**: the create-site operation MUST send `POST /api/monitoring/sites` (plus the
-  workspace query) with a body of exactly `{ name, slug, siteGroupId: <the given groupId> }`, renaming
-  `groupId` to `siteGroupId`, sent without passing through the body-compaction helper — all three
-  fields are required, so none can be absent.
-- **site-update-request**: the update-site operation MUST send `PUT /api/monitoring/sites/<encoded
-  id>` (plus the workspace query) with a compacted patch of `{ name, slug, siteGroupId: <the given
+- **site-list-single-request-only**: the list-sites operation MUST NOT request the site-groups
+  collection or perform any client-side intersection against group membership. An earlier
+  implementation did both — a second round-trip, plus a silent-hiding bug, since a capped groups list
+  dropped sites whose group fell past the cap even though the server still monitors them; the current
+  form reads only the sites collection.
+- **site-create-request**: the create-site operation MUST send `POST /api/v1/monitoring/sites` (plus
+  the workspace query) with a body of exactly `{ name, slug, site_group_id: <the given groupId> }`,
+  sent without passing through the body-compaction helper — all three fields are required, so none can
+  be absent.
+- **site-update-request**: the update-site operation MUST send `POST /api/v1/monitoring/sites/<encoded
+  id>` (plus the workspace query) with a compacted patch of `{ name, slug, site_group_id: <the given
   groupId> }` built from the optional update fields.
-- **site-delete-request**: the delete-site operation MUST send `DELETE /api/monitoring/sites/<encoded
-  id>` (plus the workspace query), discarding the body, and MUST resolve with no value.
+- **site-delete-request**: the delete-site operation MUST send `DELETE
+  /api/v1/monitoring/sites/<encoded id>` (plus the workspace query), discarding the body, and MUST
+  resolve with no value.
 - **site-delete-cascades**: deleting a site MUST cascade at the database level to remove every endpoint
   that belongs to it.
 
 **Endpoints**
 
-- **endpoint-list-request**: the list-endpoints operation MUST send `GET /api/monitoring/endpoints`
-  with a query string built from a `siteId` parameter, appending `workspace=<value>` only when the
-  `workspace` option is given — this is the one operation that builds its query string separately from
-  the shared workspace-query builder every other operation here uses.
-- **endpoint-list-double-filtered**: the list-endpoints operation MUST re-filter the mapped rows
-  client-side to `e.siteId === siteId`, in addition to the server-side `siteId` equality filter the
-  query string already applies. This client filter is retained as defense-in-depth and is redundant
-  once the server has already scoped the response.
+- **endpoint-list-request**: the list-endpoints operation MUST read `GET /api/v1/monitoring/endpoints`
+  (plus the workspace query) through the shared paging helper. The /v1 collection declares no
+  `site_id` filter, so no site parameter is sent.
+- **endpoint-list-double-filtered**: the list-endpoints operation MUST filter the mapped rows
+  client-side to `e.siteId === siteId`. This is the only site narrowing; the server scopes the
+  response by owner, not by site.
 - **endpoint-list-sorted-by-url**: the list-endpoints operation MUST return the filtered rows sorted by
   `url`.
 - **endpoint-create-request**: the create-endpoint operation MUST send `POST
-  /api/monitoring/endpoints` (plus the workspace query) with a compacted body of `{ siteId, url, kind,
-  expectedStatus, checkIntervalSeconds, isActive }`, where `siteId` comes from the operation's own
-  `siteId` parameter, not from the caller-supplied body.
-- **endpoint-update-request**: the update-endpoint operation MUST send `PUT
-  /api/monitoring/endpoints/<encoded id>` (plus the workspace query) with a compacted patch of `{ url,
-  kind, expectedStatus, checkIntervalSeconds, isActive }`; `siteId` MUST NOT appear in this patch, so
-  this operation cannot reparent an endpoint to a different site.
+  /api/v1/monitoring/endpoints` (plus the workspace query) with a compacted body of `{ site_id, url,
+  kind, expected_status, check_interval_seconds, is_active }`, where `site_id` comes from the
+  operation's own `siteId` parameter, not from the caller-supplied body.
+- **endpoint-update-request**: the update-endpoint operation MUST send `POST
+  /api/v1/monitoring/endpoints/<encoded id>` (plus the workspace query) with a compacted patch of `{
+  url, kind, expected_status, check_interval_seconds, is_active }`; `site_id` MUST NOT appear in this
+  patch, so this operation cannot reparent an endpoint to a different site.
 - **endpoint-delete-request**: the delete-endpoint operation MUST send `DELETE
-  /api/monitoring/endpoints/<encoded id>` (plus the workspace query), discarding the body, and MUST
+  /api/v1/monitoring/endpoints/<encoded id>` (plus the workspace query), discarding the body, and MUST
   resolve with no value.
 - **endpoint-kind-passthrough**: the create- and update-endpoint operations MUST send the
   caller's `kind` value to the backend as given; the body's `kind` field is typed as an
@@ -150,15 +149,15 @@ Behavioral Requirements, per the non-UI component guidance this recipe was autho
 **Cross-cutting**
 
 - **every-write-url-encodes-identifiers**: every group, site, and endpoint `id` interpolated into a URL
-  path segment MUST be percent-encoded; every `workspace` value MUST likewise be percent-encoded, by
-  the shared workspace-query builder in every operation except the list-endpoints operation, which
-  percent-encodes it through its own query-string construction instead.
+  path segment MUST be percent-encoded; every `workspace` value MUST likewise be encoded, by the shared
+  query builder every operation uses.
 - **optional-fields-omitted-not-nulled**: the body-compaction helper MUST drop only absent-valued keys
   from a write body before it is serialized, preserving any explicit `null` a caller supplies — `null`
   is preserved, as an explicit "clear this column" — though no create/update body field in this module
   accepts `null` itself, so this only matters if a caller bypasses the declared shapes.
-- **no-client-side-cache**: the twelve operations MUST NOT cache or memoize a response; every call
-  issues exactly one HTTP request (aside from the inherited `401` refresh-and-retry described below).
+- **no-client-side-cache**: the twelve operations MUST NOT cache or memoize a response; every write
+  issues exactly one HTTP request, and every list issues one request per page until the response
+  stops reporting `has_more` (aside from the inherited `401` refresh-and-retry described below).
 - **module-holds-no-mutable-state**: the only persistent values this logic holds are the three
   fixed path-string constants and the fixed set of valid endpoint kinds, all read-only; no shared
   mutable state exists for concurrent calls to race on.
@@ -209,26 +208,26 @@ component.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| hub-domain-monitored-sites-001 | site-view-renames-group-id | The site mapper applied to a site row `{ id:"s1", slug:"site", name:"Site", siteGroupId:"g1", createdAt:"c", updatedAt:"u" }` | Resolves to a site view with `groupId: "g1"` |
-| hub-domain-monitored-sites-002 | site-group-view-shape | The group mapper applied to a group row `{ id:"g1", slug:"grp", name:"Grp", retentionDays:30, createdAt:"c", updatedAt:"u" }` | Resolves to a group view with `retentionDays: 30` |
-| hub-domain-monitored-sites-003 | endpoint-view-shape | The endpoint mapper applied to an endpoint row `{ id:"e1", siteId:"s1", url:"https://x", kind:"http", expectedStatus:200, checkIntervalSeconds:60, isActive:true, createdAt:"c", updatedAt:"u" }` | Resolves to an endpoint view with `expectedStatus: 200` and `isActive: true` |
-| hub-domain-monitored-sites-004 | site-group-view-shape | Same input as 002 | `id`, `slug`, `name`, `createdAt`, `updatedAt` are all copied unchanged |
-| hub-domain-monitored-sites-005 | group-list-request | The list-groups operation called with `{ workspace: "acme" }` against a stub GET | Request URL is `/api/monitoring/site-groups?workspace=acme` |
+| hub-domain-monitored-sites-001 | site-view-renames-group-id | The site mapper applied to a site row `{ id:"s1", slug:"site", name:"Site", site_group_id:"g1", created:1700000000, updated:1700000060 }` | Resolves to a site view with `groupId: "g1"`; `createdAt`/`updatedAt` are the ISO strings of the unix-second timestamps |
+| hub-domain-monitored-sites-002 | site-group-view-shape | The group mapper applied to a group row `{ id:"g1", slug:"grp", name:"Grp", retention_days:30, created:1700000000, updated:1700000000 }` | Resolves to a group view with `retentionDays: 30` |
+| hub-domain-monitored-sites-003 | endpoint-view-shape | The endpoint mapper applied to an endpoint row `{ id:"e1", site_id:"s1", url:"https://x", kind:"http", expected_status:200, check_interval_seconds:60, is_active:true, created:1700000000, updated:1700000000 }` | Resolves to an endpoint view with `siteId: "s1"`, `expectedStatus: 200`, `checkIntervalSeconds: 60` and `isActive: true` |
+| hub-domain-monitored-sites-004 | site-group-view-shape | Same input as 002 | `id`, `slug`, `name` are copied unchanged; `createdAt`/`updatedAt` are the ISO strings of `created`/`updated` |
+| hub-domain-monitored-sites-005 | group-list-request | The list-groups operation called with `{ workspace: "acme" }` against a stub GET | The first request is `GET /api/v1/monitoring/site_groups` with query `workspace=acme` (plus the `limit=100` page size) |
 | hub-domain-monitored-sites-006 | group-list-sorted-by-name | Stub returns rows named `"Zebra"`, `"Apple"` | The list-groups operation resolves in the order `["Apple", "Zebra"]` |
-| hub-domain-monitored-sites-007 | group-create-request | The create-group operation called with `{ name: "Grp", slug: "grp" }` (no `retentionDays`) | `POST /api/monitoring/site-groups` body is `{"name":"Grp","slug":"grp"}` with no `retentionDays` key |
-| hub-domain-monitored-sites-008 | group-update-request | The update-group operation called with id `"g1"` and `{ retentionDays: 14 }` | `PUT /api/monitoring/site-groups/g1` body is `{"retentionDays":14}` only |
-| hub-domain-monitored-sites-009 | group-delete-request | The delete-group operation called with id `"g1"` | `DELETE /api/monitoring/site-groups/g1`; resolves to no value |
-| hub-domain-monitored-sites-010 | site-list-single-request-only | The list-sites operation called with `{ workspace: "acme" }` | Exactly one HTTP request is issued, to `GET /api/monitoring/sites?workspace=acme`; no request to `/api/monitoring/site-groups` occurs |
-| hub-domain-monitored-sites-011 | site-create-request | The create-site operation called with `{ name: "Site", slug: "site", groupId: "g1" }` | `POST /api/monitoring/sites` body is `{"name":"Site","slug":"site","siteGroupId":"g1"}` |
-| hub-domain-monitored-sites-012 | site-update-request | The update-site operation called with id `"s1"` and `{ groupId: "g2" }` | `PUT /api/monitoring/sites/s1` body is `{"siteGroupId":"g2"}` only |
-| hub-domain-monitored-sites-013 | site-delete-request | The delete-site operation called with id `"s1"` | `DELETE /api/monitoring/sites/s1`; resolves to no value |
-| hub-domain-monitored-sites-014 | site-belongs-to-exactly-one-group | Attempting to build a create-site request without `groupId` | MUST be rejected before any request is sent — `groupId` is a required field |
-| hub-domain-monitored-sites-015 | endpoint-list-request | The list-endpoints operation called with site id `"s1"` and `{ workspace: "acme" }` | Request URL is `/api/monitoring/endpoints?siteId=s1&workspace=acme` |
-| hub-domain-monitored-sites-016 | endpoint-list-double-filtered | Stub `GET /api/monitoring/endpoints?siteId=s1` returns one row with `siteId: "other"` (a stub bug or stale cache) | The list-endpoints operation resolves to an empty array — the client-side filter drops it even though the server already applied its own `siteId` equality filter |
+| hub-domain-monitored-sites-007 | group-create-request | The create-group operation called with `{ name: "Grp", slug: "grp" }` (no `retentionDays`) | `POST /api/v1/monitoring/site_groups` body is `{"name":"Grp","slug":"grp"}` with no `retention_days` key |
+| hub-domain-monitored-sites-008 | group-update-request | The update-group operation called with id `"g1"` and `{ retentionDays: 14 }` | `POST /api/v1/monitoring/site_groups/g1` body is `{"retention_days":14}` only |
+| hub-domain-monitored-sites-009 | group-delete-request | The delete-group operation called with id `"g1"` | `DELETE /api/v1/monitoring/site_groups/g1`; resolves to no value |
+| hub-domain-monitored-sites-010 | site-list-single-request-only | The list-sites operation called with `{ workspace: "acme" }` | One page request is issued (the stub reports no `has_more`), to `GET /api/v1/monitoring/sites` with `workspace=acme`; no request to `/api/v1/monitoring/site_groups` occurs |
+| hub-domain-monitored-sites-011 | site-create-request | The create-site operation called with `{ name: "Site", slug: "site", groupId: "g1" }` | `POST /api/v1/monitoring/sites` body is `{"name":"Site","slug":"site","site_group_id":"g1"}` |
+| hub-domain-monitored-sites-012 | site-update-request | The update-site operation called with id `"s1"` and `{ groupId: "g2" }` | `POST /api/v1/monitoring/sites/s1` body is `{"site_group_id":"g2"}` only |
+| hub-domain-monitored-sites-013 | site-delete-request | The delete-site operation called with id `"s1"` | `DELETE /api/v1/monitoring/sites/s1`; resolves to no value |
+| hub-domain-monitored-sites-014 | site-belongs-to-exactly-one-group | A create-site body that omits `groupId` | Does not type-check: `CreateSiteBody.groupId` is a required field. The constraint is compile-time only; there is no runtime guard |
+| hub-domain-monitored-sites-015 | endpoint-list-request | The list-endpoints operation called with site id `"s1"` and `{ workspace: "acme" }` | Request is `GET /api/v1/monitoring/endpoints` with `workspace=acme` (plus `limit=100`); no `siteId` query parameter is sent, because the collection has no `site_id` filter |
+| hub-domain-monitored-sites-016 | endpoint-list-double-filtered | Stub `GET /api/v1/monitoring/endpoints` returns one row with `site_id: "s1"` and one with `site_id: "other"` | The list-endpoints operation for `"s1"` resolves to only the `s1` row: the client-side filter is the only narrowing, since the server has no `site_id` filter |
 | hub-domain-monitored-sites-017 | endpoint-list-sorted-by-url | Stub returns endpoints with `url` `"https://z"`, `"https://a"` | The list-endpoints operation resolves in the order `["https://a", "https://z"]` |
-| hub-domain-monitored-sites-018 | endpoint-create-request | The create-endpoint operation called with site id `"s1"` and `{ url: "https://x", kind: "http" }` | `POST /api/monitoring/endpoints` body is `{"siteId":"s1","url":"https://x","kind":"http"}` (no `expectedStatus`/`checkIntervalSeconds`/`isActive` keys) |
-| hub-domain-monitored-sites-019 | endpoint-update-request | The update-endpoint operation called with id `"e1"` and `{ isActive: false }` | `PUT /api/monitoring/endpoints/e1` body is `{"isActive":false}` only, and never includes a `siteId` key regardless of what the caller passes |
-| hub-domain-monitored-sites-020 | endpoint-delete-request | The delete-endpoint operation called with id `"e1"` | `DELETE /api/monitoring/endpoints/e1`; resolves to no value |
+| hub-domain-monitored-sites-018 | endpoint-create-request | The create-endpoint operation called with site id `"s1"` and `{ url: "https://x", kind: "http" }` | `POST /api/v1/monitoring/endpoints` body is `{"site_id":"s1","url":"https://x","kind":"http"}` (no `expected_status`/`check_interval_seconds`/`is_active` keys) |
+| hub-domain-monitored-sites-019 | endpoint-update-request | The update-endpoint operation called with id `"e1"` and `{ isActive: false }` | `POST /api/v1/monitoring/endpoints/e1` body is `{"is_active":false}` only, and never includes a `site_id` key regardless of what the caller passes |
+| hub-domain-monitored-sites-020 | endpoint-delete-request | The delete-endpoint operation called with id `"e1"` | `DELETE /api/v1/monitoring/endpoints/e1`; resolves to no value |
 | hub-domain-monitored-sites-021 | endpoint-kind-passthrough | The create-endpoint operation called with site id `"s1"` and `{ url: "https://x", kind: "ssh" }` | The call resolves normally (the request is sent with `kind: "ssh"` verbatim); no client-side error is thrown despite `"ssh"` not being one of the valid kinds |
 | hub-domain-monitored-sites-022 | session-refresh-waterfall | Any operation's first response is `401`; the token-refresh step resolves a new token | The request is retried once with the new token; a `401` on that retry throws a typed HTTP error with `status: 401` |
 | hub-domain-monitored-sites-023 | errors-carry-status-and-code | Backend responds `409` to the create-group operation with body `{ error: { message: "slug already exists", code: "duplicate_slug" } }` | The thrown error has `status: 409` and `code: "duplicate_slug"`, with the conflict-friendly-error helper never invoked, so the message is exactly the backend's |
@@ -237,9 +236,8 @@ component.
 ## Edge Cases
 
 - **Null and empty input — `workspace`**: not checked client-side in any of the twelve operations. The
-  `workspace` option is optional and may be absent; an empty string is sent unchanged as `workspace=`
-  (or, for the list-endpoints operation, silently omitted, since it is only appended when the option is
-  truthy and an empty string is falsy). This is a MUST per the observed source; no validation exists.
+  `workspace` option is optional and may be absent; an empty string is silently omitted from the
+  query, since the shared scoping helper only passes a truthy `workspace` through. This is a MUST per the observed source; no validation exists.
 - **Null and empty input — required create fields**: the create-group, create-site, and create-endpoint
   operations perform no client-side check that `name`/`slug`/`url` are non-empty; an empty string is
   sent to the backend unchanged, since the body-compaction helper only drops absent values, never an
@@ -248,20 +246,20 @@ component.
   fields has a client-side minimum, maximum, or integer check; whatever number the caller supplies
   (including negative, zero, or non-integer) is sent to the backend unchanged. MUST behave this way per
   source — no declared closed set constrains these fields, unlike `kind`.
-- **Boundary values — list size past the generic-CRUD 500-row cap**: generic-CRUD lists cap at 500 rows.
-  The list-groups, list-sites, and list-endpoints operations accept no pagination, cursor, or limit
-  parameter, and none of the three inspects the returned row count or signals truncation to the caller;
-  a workspace with more than 500 groups, sites, or endpoints receives a silently incomplete list from
-  any of the three. This is a fact traced directly to the source, not a gap invented by this recipe —
-  see the `pagination-support` compliance finding below.
+- **Boundary values — large collections**: the list-groups, list-sites, and list-endpoints operations
+  accept no pagination, cursor, or limit parameter from the caller; the shared paging helper fetches
+  `limit=100` pages, advancing `starting_after` while the response reports `has_more`, so a workspace
+  with more than one page of groups, sites, or endpoints still receives the complete list, at the cost
+  of one request per page. A page that reports `has_more` but whose last row has no id throws rather
+  than looping.
 - **Concurrent access — module state**: this module holds no shared mutable state between calls (only
   the three read-only path constants and the fixed set of valid endpoint kinds), so there is nothing for
   two concurrent calls to race on within the module itself.
 - **Concurrent access — competing writes**: two concurrent update-site/update-group/update-endpoint calls
-  for the same `id` follow ordinary `PUT` semantics — last response received wins, with no client-side
+  for the same `id` follow ordinary last-write-wins `POST` update semantics — last response received wins, with no client-side
   sequencing, optimistic-lock check, or `updatedAt`-based conflict detection in this recipe.
 - **Concurrent access — reparent then list**: calling the update-site operation to move a site to a new
-  group and then immediately calling the list-sites/list-endpoints operations issues two independent
+  group and then immediately calling the list-sites/list-endpoints operations issues independent
   requests with no client-side cache to invalidate; the second request's freshness depends entirely on
   the backend having committed the first, which this module does not wait on beyond the first request's
   own response.
@@ -280,30 +278,30 @@ component.
   backend leaves the call pending until the underlying transport's own limit, if any.
 - **No cancellation**: no operation accepts a cancellation-signal parameter, so a caller cannot cancel
   an in-flight request through this module.
-- **No retry beyond the `401` waterfall**: every call issues exactly one request (plus, on a `401`, the
+- **No retry beyond the `401` waterfall**: every write issues exactly one request and every list one request per page (plus, on a `401`, the
   single inherited refresh-and-retry); nothing in this recipe retries a network failure or a non-`401`
   error status.
 - **Stale module doc comment**: this module's own top-of-file comment states "the client-side narrowing
-  in the list-sites/list-endpoints operations stays as defense-in-depth," but the list-sites operation's
+  in listSites()/listEndpoints() stays as defense-in-depth," but the list-sites operation's
   implementation performs no such filter — it maps and sorts the response with no owner/workspace
   narrowing of its own; only the list-endpoints operation retains a client-side filter (on `siteId`, per
-  `endpoint-list-double-filtered`). This is recorded as an observed discrepancy between the source's
+  `endpoint-list-double-filtered`), and there it is the only site narrowing, not defense-in-depth. This is recorded as an observed discrepancy between the source's
   comment and its code in Design Decisions, not smoothed over.
 
 ## Configuration
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `workspace` (every operation) | string (caller parameter, optional) | omitted → caller's own owner scope | Percent-encoded and appended as `?workspace=<slug>` (or `&workspace=<slug>` on the list-endpoints operation); pins the operation to a workspace's owning principal instead of the caller's own scope. |
-| body (create-group) | `{ name, slug, retentionDays? }` | none — required except `retentionDays` | Sent through the body-compaction helper as the `POST` body. |
-| body (update-group) | all fields optional | none — required argument, fields individually optional | Sent through the body-compaction helper as the `PUT` body. |
-| body (create-site) | `{ name, slug, groupId }`, all required | none — required | Sent verbatim (renamed to `siteGroupId`) as the `POST` body; not passed through the body-compaction helper. |
-| body (update-site) | all fields optional | none — required argument, fields individually optional | Sent through the body-compaction helper (renamed to `siteGroupId`) as the `PUT` body. |
-| `siteId` (list-endpoints, create-endpoint) | string (caller parameter, required) | none | Identifies the parent site; sent as a query parameter on the list-endpoints operation and as a body field on the create-endpoint operation. |
-| body (create-endpoint) | `{ url, kind, expectedStatus?, checkIntervalSeconds?, isActive? }` | none — `url`/`kind` required, rest optional | Sent through the body-compaction helper as the `POST` body, with `siteId` added from the operation's own parameter. |
-| body (update-endpoint) | all fields optional | none — required argument, fields individually optional | Sent through the body-compaction helper as the `PUT` body; carries no `siteId` field. |
+| `workspace` (every operation) | string (caller parameter, optional) | omitted → caller's own owner scope | Percent-encoded and appended as `?workspace=<slug>` by the shared query builder (omitted when empty); pins the operation to a workspace's owning principal instead of the caller's own scope. |
+| body (create-group) | `{ name, slug, retentionDays? }` | none — required except `retentionDays` | Sent through the body-compaction helper as the `POST` body, with `retention_days` on the wire. |
+| body (update-group) | all fields optional | none — required argument, fields individually optional | Sent through the body-compaction helper as the `POST` body to the item URL. |
+| body (create-site) | `{ name, slug, groupId }`, all required | none — required | Sent verbatim (renamed to `site_group_id`) as the `POST` body; not passed through the body-compaction helper. |
+| body (update-site) | all fields optional | none — required argument, fields individually optional | Sent through the body-compaction helper (renamed to `site_group_id`) as the `POST` body to the item URL. |
+| `siteId` (list-endpoints, create-endpoint) | string (caller parameter, required) | none | Identifies the parent site; not sent on the list-endpoints operation (the /v1 collection has no site filter, so it only drives the client-side filter) and sent as the `site_id` body field on the create-endpoint operation. |
+| body (create-endpoint) | `{ url, kind, expectedStatus?, checkIntervalSeconds?, isActive? }` | none — `url`/`kind` required, rest optional | Sent through the body-compaction helper as the `POST` body, with `site_id` added from the operation's own parameter. |
+| body (update-endpoint) | all fields optional | none — required argument, fields individually optional | Sent through the body-compaction helper as the `POST` body to the item URL; carries no `site_id` field. |
 | valid endpoint kinds | fixed set (`"http"`, `"tcp"`, `"icmp"`) | fixed | The declared set of valid `kind` values; not consulted by the create-endpoint/update-endpoint operations (`endpoint-kind-passthrough`). |
-| the three route paths | fixed path strings | fixed | `/api/monitoring/site-groups`, `/api/monitoring/sites`, `/api/monitoring/endpoints`; not injectable or configurable. |
+| the three route paths | fixed path strings | fixed | `/api/v1/monitoring/site_groups`, `/api/v1/monitoring/sites`, `/api/v1/monitoring/endpoints`; not injectable or configurable. |
 
 ## Deep Linking
 
@@ -355,8 +353,9 @@ Not applicable: this logic contains no logging call of any kind.
 - **React/Web** (source platform): `packages/web/packages/data/src/monitored-sites/monitored-sites.ts`
   and `wire.ts` hold the client, re-exported by `index.ts` as `@adh-sdk/data/monitored-sites`;
   every function is built on `authedJson`/`authedRequest` (from `../http`, re-exporting
-  `@adh-sdk/auth/client`) and `compact`/`enc`/`sortByText`/`workspaceQuery` (from
-  `../client-helpers`). The Dashboards feature (`packages/web/packages/features/dashboards/src/*`) is the
+  `@adh-sdk/auth/client`) and `compact`/`enc`/`sortByText` (from
+  `../client-helpers`), with `listAllV1`, `withV1Query` and `unixToIso` from the auth package's `v1.ts`
+  paging and query helpers. The Dashboards feature (`packages/web/packages/features/dashboards/src/*`) is the
   one current consumer.
 - **SwiftUI**: model `SiteGroupView`/`SiteView`/`EndpointView` (and the create/update body shapes) as
   `Codable, Hashable, Sendable` structs, mirroring the sibling Hub domain recipes' models pattern, and the
@@ -386,13 +385,13 @@ Not applicable: this logic contains no logging call of any kind.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/data/src/monitored-sites/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/data/src/monitored-sites/` | confirmed (2.0.0) |
 
 ## Design Decisions
 
-**Decision**: `createSite` builds its body as a plain object literal (`{ name, slug, siteGroupId:
+**Decision**: `createSite` builds its body as a plain object literal (`{ name, slug, site_group_id:
 body.groupId }`) rather than passing it through `compact()`, even though `createGroup` and
 `createEndpoint` both do.
 **Rationale**: `CreateSiteBody`'s three fields are all required (unlike `CreateGroupBody.retentionDays`
@@ -407,21 +406,19 @@ helper, not a behavior a port needs to reproduce beyond the observable request b
 performs no owner/workspace filter — only a `sortByText` by name.
 **Rationale**: `listSites`'s own inline comment explains the server now owner-scopes `sites` identically
 to `site_groups`, and the earlier client-side intersection (against the groups list) was removed
-specifically because it round-tripped an extra request and hid rows past the 500-row cap; the top-of-file
+specifically because it round-tripped an extra request and hid rows whose group fell past a capped groups list; the top-of-file
 comment appears to predate that refactor and was not updated to drop the `listSites()` half of its claim.
 This recipe records the code as it actually behaves — no client-side owner narrowing in `listSites` — per
 the source-fidelity guideline's requirement to describe the code as it is rather than as a stale comment
 describes it.
 **Approved**: pending
 
-**Decision**: `listEndpoints` builds its query string with `URLSearchParams`/`qs.set` instead of the
-shared `workspaceQuery` helper every other function in this file uses.
-**Rationale**: `listEndpoints` already needs `URLSearchParams` to carry the required `siteId` parameter,
-so appending `workspace` to that same object avoids constructing a second query-string fragment and
-concatenating it; the resulting request is equivalent to what `workspaceQuery` would have produced, but
-the code path is not shared.
-Platform scope: Web — `URLSearchParams` and the shared `workspaceQuery` helper are both artifacts of
-this platform's implementation; a port only needs to reproduce the resulting query string.
+**Decision**: `listEndpoints` sends no site filter and narrows by `siteId` on the client, over the whole
+endpoints collection.
+**Rationale**: the /v1 endpoints collection declares no `site_id` filter, so the only way to return one
+site's endpoints is to page the full owner-scoped collection through the shared paging helper and filter
+the mapped rows; every operation builds its URL through the same `scoped()`/`withV1Query` helper, so the
+workspace pin is uniform. A port reproduces the request and the client-side filter, not the helper names.
 **Approved**: pending
 
 **Decision**: endpoint `kind` is not validated client-side against the fixed set of valid endpoint kinds before create or update; an unknown kind is sent to the backend as given.
@@ -434,29 +431,26 @@ this platform's implementation; a port only needs to reproduce the resulting que
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [server-side-authorization](agenticdevelopercookbook://compliance/security#server-side-authorization) | passed | Security |
-| [error-response-handling](agenticdevelopercookbook://compliance/access-patterns#error-response-handling) | partial | Access Patterns |
-| [pagination-support](agenticdevelopercookbook://compliance/access-patterns#pagination-support) | failed | Access Patterns |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | failed | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.security.server-side-authorization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/90e085e3-5112-5c02-9c10-4a2e324eeca1) | passed | Security |
+| [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | partial | Access Patterns |
+| [adc.check.access-patterns.pagination-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/e29ce31a-67cb-5690-b2ca-b1065ccdaf1a) | partial | Access Patterns |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | failed | Reliability |
 
 `separation-of-concerns` passes: `monitored-sites.ts`/`wire.ts` contain zero UI or presentation code —
 both files are the public data-domain surface consumed by the separate Dashboards presentation layer.
-`unit-test-coverage` is `partial`: of the twelve exported functions plus three mappers,
-`monitored-sites.test.ts` covers only the three mappers (`toGroup`, `toSite`, `toEndpoint`); none of
-`listGroups`/`createGroup`/`updateGroup`/`deleteGroup`/`listSites`/`createSite`/`updateSite`/`deleteSite`/`listEndpoints`/`createEndpoint`/`updateEndpoint`/`deleteEndpoint`
-has a dedicated test in this checkout. `explicit-error-handling` passes: nothing in this file swallows an
+`unit-test-coverage` is `partial`: `monitored-sites.test.ts` covers vectors 001-013 and 015-024 (the three mappers and all twelve operations, with only `fetch` stubbed). Vector 014 (`site-belongs-to-exactly-one-group`) is skipped: it is a compile-time type constraint on `CreateSiteBody.groupId`, which vitest does not type-check and the source does not guard at runtime. `explicit-error-handling` passes: nothing in this file swallows an
 error — every failure either throws `AuthHttpError` (via the shared `authedFetch`) or propagates
 unmodified. `server-side-authorization` passes: the module contains no client-side permission check of any
 kind, per `owner-scoping-server-side`, deferring owner/workspace scoping entirely to the backend.
 `error-response-handling` is `partial`: every call exposes a status and optional code for the caller to
 branch on, but no function in this file offers per-code handling of its own (no `rethrowConflict`, no
 `isNotFound`/`isConflict` branch) — every failure surfaces as the generic `AuthHttpError` propagation.
-`pagination-support` fails: `listGroups`, `listSites`, and `listEndpoints` all return unpaginated
-collections with no limit/cursor parameter, against a backend the source's own comment documents as
-capping generic-CRUD lists at 500 rows, with no truncation signal to the caller. `graceful-degradation`
+`pagination-support` is `partial`: `listGroups`, `listSites`, and `listEndpoints` all go
+through `listAllV1`, which pages with `limit`/`starting_after` while `has_more`, so no row is silently
+dropped; the callers still get no incremental paging or cursor control. `graceful-degradation`
 fails: unlike a sibling client's documented fallback constant, this module offers no fallback of any kind
 when a call fails — every failure is an unhandled rejection with no degraded-but-functional path.
 
@@ -464,6 +458,7 @@ when a call fails — every failure is an unhandled rejection with no degraded-b
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 2.0.0 | 2026-11-14 | Mike Fullerton | Wire text brought up to the /v1 client: v1 URLs, POST updates, snake_case bodies, paged lists, no endpoint site filter |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Design Decisions keep the Decision / Rationale / Approved triple; each decision's platform line is folded into its rationale. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolve open-question markers against the code; restate unimplemented behavior as current behavior with pending Decisions. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to adh/hub/. |

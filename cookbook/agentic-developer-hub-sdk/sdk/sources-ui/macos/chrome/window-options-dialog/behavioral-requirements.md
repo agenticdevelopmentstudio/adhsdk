@@ -1,0 +1,38 @@
+
+- **present-modal**: The dialog MUST be presented as an app-modal window: interaction with the host window and every other app window MUST be blocked (mouse and keyboard) for as long as it is open, even though the host window remains visible and MAY still change on screen — but only as a side effect of the dialog's own controls driving host state, never from direct user interaction with the host.
+- **center-on-screen**: The dialog MUST be positioned at the center of the screen the host window is on when it opens, not anchored to the gear button or positioned relative to the host window's frame. The position is computed once, at open time; it is not recomputed while the dialog remains open (see Edge Cases).
+- **host-level-sync**: The dialog MUST adopt the host window's level (e.g., `.normal`, `.floating`) at open time and MUST continue tracking the host's level for as long as it stays open, moving with it whenever the host's level changes.
+- **build-controls-at-open-time**: Controls MUST be built from the host's closure when the dialog is opened, not at construction time, allowing the host to read live state.
+- **rebuild-on-title-change**: When the `title` property changes while the dialog is open, the dialog MUST call `rebuildControls()`, which re-invokes the host's `makeControls` closure and replaces the dialog's content, so every row — not only ones tied to the title — reflects current host state.
+- **rebuild-controls-public**: `rebuildControls()` MUST be public API, callable directly by the host independently of a title change, so a host can force the dialog's rows to refresh whenever its own state changes while the dialog is open.
+- **support-toggle**: The dialog MUST support a `toggle()` method that opens the dialog if closed and closes it if open.
+- **support-present-close**: The dialog MUST support `present()` to open and `close()` to close independently.
+- **track-shown-state**: The dialog MUST track whether it is currently shown via the read-only `isShown` property.
+- **gear-button-borderless**: The gear button MUST be borderless (`bezelStyle = .accessoryBarAction`, `isBordered = false`).
+- **gear-button-gearshape-symbol**: The gear button MUST display the system `gearshape` symbol as its image, `imageOnly` position.
+- **gear-button-secondary-text-tint**: The gear button's content tint MUST match the theme's secondary text color and MUST respond to theme changes.
+- **gear-button-tooltip**: The gear button MUST have a tooltip set (default "Window appearance", customizable).
+- **gear-button-accessible-label**: The gear button's accessible name MUST come from the `gearshape` image's `accessibilityDescription`, which MUST be set to the tooltip text at construction, so VoiceOver announces the button by its purpose rather than as an unlabeled image button.
+- **dialog-window-titlebar-closable**: The dialog window MUST have a title bar with the host-provided title and MUST have a close button. The close button MUST route through the component's `close()` method.
+- **dialog-window-undecorated-except-title**: The dialog window style MUST be `.titled` and `.closable` only, with no other decorations.
+- **gear-button-public**: The `gearButton` property MUST be public so the host can add it to the window's chrome via `makeTitlebarAccessory()` or custom layout.
+- **titlebar-accessory-helper**: The component MUST provide a `makeTitlebarAccessory()` method to position the gear button in a right-aligned title bar accessory, optionally with leading views.
+- **titlebar-accessory-right-align**: The title bar accessory MUST right-align the gear button using autoresizing masks and `NSTitlebarAccessoryViewController` with `.right` layout attribute.
+- **titlebar-accessory-leading-views**: The `makeTitlebarAccessory()` method MUST accept an optional array of leading views to place left of the gear button, with configurable spacing (6pt default) and centered vertical alignment.
+- **close-on-window-close-button**: When the dialog's close button is clicked, the dialog MUST close and the modal session MUST end. Clicking the button MUST NOT close the window itself — only dismiss the dialog.
+- **dialog-window-keyboard-dismissal**: Because the dialog window's style is `.closable`, the standard ⌘W keyboard shortcut MUST dismiss it through the same `windowShouldClose` delegate path as clicking the close button, ending the modal session the same way.
+- **configurable-width**: The dialog body width MUST be configurable at construction time, falling back to the component's built-in default when omitted, allowing hosts with wider controls to avoid cramping.
+- **slider-caption-updates-continuously**: The slider's caption MUST update continuously as the user moves the slider, reflecting the value via the host-supplied `caption` closure.
+- **slider-value-constrained-to-range**: The slider's value MUST be constrained to the provided range; initial values outside the range MUST be clamped to the valid bounds.
+- **slider-calls-onchange**: When the slider moves, the slider MUST call the `onChange` callback with the new value.
+- **slider-custom-range**: The slider MUST support a custom closed range (e.g., 0.0...100.0, 1.0...10.0).
+- **toggle-updates-state**: When the user clicks the checkbox, the toggle's `isOn` property MUST reflect the new state and the `onChange` callback MUST be called.
+- **toggle-is-on-settable**: The `isOn` property MUST be settable from outside, allowing the host to update the displayed state without triggering `onChange` (one-way assignment).
+- **toggle-accessibility-id**: The toggle MUST provide a `checkboxAccessibilityID()` method to set an accessibility identifier on the underlying checkbox, not the wrapper view.
+- **reset-button-standard-title**: The "Reset to Defaults" button MUST use the static `WindowOptionsResetButton.title` string for consistency across windows.
+- **reset-button-centered**: The reset button MUST be centered horizontally under the rows, not stretched to the full dialog width.
+- **reset-button-rounded**: The reset button MUST use `bezelStyle = .rounded`.
+- **reset-button-calls-onreset**: When the reset button is clicked, it MUST call the host-supplied `onReset` closure.
+- **single-dialog-instance**: Calling `present()` while the dialog is already open MUST be a no-op — no second dialog is created and the existing session is left undisturbed. `toggle()` does not share this behavior: while the dialog is open, `toggle()` MUST close it instead (see **support-toggle**).
+- **end-modal-session-on-close**: When `close()` is called while the dialog is open, the active modal session MUST end, but only when the dialog's own window is the one currently running the modal loop — an unrelated modal session MUST NOT be ended. Calling `close()` when the dialog is not open MUST be a no-op.
+

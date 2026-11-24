@@ -236,6 +236,17 @@ public final class WindowManager {
         }
     }
 
+    /// Forgets everything kept under `controller`'s window id: its spec, its
+    /// registry entry and its launch-restore mark. For a window whose id is
+    /// made fresh for each opening (`<kind>-<UUID>`), called as it closes —
+    /// nothing will ask for that id again, so whatever stays under it is kept
+    /// for the life of the process, one entry per opening.
+    public func forgetOneOffWindow(_ controller: SingleWindowController) {
+        controller.windowSpec = nil
+        registry.unregister(controller)
+        launchRestoredIDs.remove(controller.windowID)
+    }
+
     private func restoreSavedVisibleWindows() {
         for (id, make) in windowFactories
         where registry.controller(forID: id) == nil && frames.savedVisibility(for: id) == true {

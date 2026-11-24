@@ -25,7 +25,7 @@ import { connectSse, type SseHandle } from "../stream";
 
 /** Where the backend serves a board's wake stream. */
 const streamUrl = (projectId: string) =>
-  `/api/project/projects/${encodeURIComponent(projectId)}/stream`;
+  `/api/v1/projects/${encodeURIComponent(projectId)}/stream`;
 
 /** The event name the backend writes; see `routes/projects.ts`. */
 const EVENT = "project";

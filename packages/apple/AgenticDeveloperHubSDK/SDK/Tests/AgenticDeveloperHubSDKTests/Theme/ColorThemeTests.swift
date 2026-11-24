@@ -117,4 +117,126 @@ struct ColorThemeTests {
         #expect(nonFinite.blue == 1)      // +∞ → 1
         #expect(nonFinite.alpha == 0)     // -∞ → 0
     }
+
+    // MARK: Vectors color-theme-009 to color-theme-019
+
+    private static func themeJSON(
+        ansiCount: Int = 16, foreground: String = "#ffffffff", omit: String? = nil, extra: String = ""
+    ) -> String {
+        let ansi = Array(repeating: "\"#000000ff\"", count: ansiCount).joined(separator: ",")
+        var fields: [String: String] = [
+            "id": "\"x\"", "name": "\"Shared\"", "appearance": "\"dark\"",
+            "foreground": "\"\(foreground)\"", "background": "\"#000000ff\"",
+            "cursor": "\"#ffffffff\"", "selection": "\"#111111ff\"", "ansi": "[\(ansi)]"
+        ]
+        if let omit { fields.removeValue(forKey: omit) }
+        let body = fields.map { "\"\($0.key)\":\($0.value)" }.sorted().joined(separator: ",")
+        return "{" + body + extra + "}"
+    }
+
+    private static func decode(_ json: String) throws -> ColorTheme {
+        try JSONDecoder().decode(ColorTheme.self, from: Data(json.utf8))
+    }
+
+    @Test("color-theme-009: decoding fails when the ansi key is absent")
+    func v009_missingAnsiThrows() {
+        #expect(throws: DecodingError.self) {
+            try Self.decode(Self.themeJSON(omit: "ansi"))
+        }
+    }
+
+    @Test("color-theme-010: absent optional keys decode to their defaults")
+    func v010_absentOptionalDefaults() throws {
+        let decoded = try Self.decode(Self.themeJSON())
+        #expect(decoded.roleOverrides.isEmpty)
+        #expect(decoded.typography == .system)
+        #expect(decoded.terminal == nil)
+        #expect(decoded.project == nil)
+    }
+
+    @Test("color-theme-011: the initializer defaults")
+    func v011_initializerDefaults() {
+        func make() -> ColorTheme {
+            ColorTheme(
+                name: "Plain", appearance: .dark,
+                foreground: .white, background: .black, cursor: .white, selection: .black, ansi: []
+            )
+        }
+        let first = make()
+        let second = make()
+        #expect(UUID(uuidString: first.id) != nil)
+        #expect(UUID(uuidString: second.id) != nil)
+        #expect(first.id != second.id)
+        #expect(!first.isBuiltIn)
+        #expect(!first.isImported)
+        #expect(first.attribution == nil)
+        #expect(first.roleOverrides.isEmpty)
+    }
+
+    @Test("color-theme-012: ThemeAppearance cases and identifier")
+    func v012_appearanceCases() {
+        #expect(ThemeAppearance.allCases == [.dark, .light, .auto])
+        #expect(ThemeAppearance.auto.id == "auto")
+    }
+
+    @Test("color-theme-013: decoding does not validate the palette length")
+    func v013_shortPaletteDecodes() throws {
+        let decoded = try Self.decode(Self.themeJSON(ansiCount: 3))
+        #expect(!decoded.hasValidPalette)
+    }
+
+    @Test("color-theme-014: a malformed color string is a data-corrupted error")
+    func v014_malformedColorThrowsDataCorrupted() {
+        do {
+            _ = try Self.decode(Self.themeJSON(foreground: "not-a-color"))
+            Issue.record("Decoding should have thrown")
+        } catch let DecodingError.dataCorrupted(context) {
+            #expect(!context.debugDescription.isEmpty)
+        } catch {
+            Issue.record("Expected a data-corrupted error, got \(error)")
+        }
+    }
+
+    @Test("color-theme-015: built-in wins over imported")
+    func v015_builtInAndImported() {
+        var theme = BuiltInThemes.dracula
+        theme.isBuiltIn = true
+        theme.isImported = true
+        #expect(!theme.isEditable)
+        #expect(theme.isLocked)
+        #expect(!theme.isDeletable)
+    }
+
+    @Test("color-theme-016: seventeen ANSI colors decode and index")
+    func v016_seventeenAnsiColors() throws {
+        let decoded = try Self.decode(Self.themeJSON(ansiCount: 17))
+        #expect(!decoded.hasValidPalette)
+        #expect(decoded.ansiColor(at: 16) == decoded.ansi[16])
+    }
+
+    @Test("color-theme-017: an unknown key is ignored")
+    func v017_unknownKeyIgnored() throws {
+        let plain = try Self.decode(Self.themeJSON())
+        let withExtra = try Self.decode(Self.themeJSON(extra: ",\"extra\":1"))
+        #expect(withExtra == plain)
+    }
+
+    @Test("color-theme-018: an unknown appearance is rejected")
+    func v018_unknownAppearanceThrows() {
+        let json = Self.themeJSON().replacingOccurrences(of: "\"dark\"", with: "\"sepia\"")
+        #expect(throws: DecodingError.self) {
+            try Self.decode(json)
+        }
+    }
+
+    @Test("color-theme-019: encoding omits nil optionals")
+    func v019_encodeOmitsNil() throws {
+        let theme = try Self.decode(Self.themeJSON())
+        #expect(theme.attribution == nil)
+        let data = try JSONEncoder().encode(theme)
+        let object = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        #expect(object["attribution"] == nil)
+        #expect(object["terminal"] == nil)
+        #expect(object["project"] == nil)
+    }
 }

@@ -1,4 +1,4 @@
-// Project activity API client — the audit trail side of `/api/project/*`.
+// Project activity API client — the audit trail side of `/api/v1/*`.
 //
 // Both activity trails (project-scoped and work-item-scoped) are newest-first and
 // keyset-paginated on `{ limit?, before? }`: `before` is an OPAQUE composite cursor
@@ -13,12 +13,15 @@
 // trail as a `comment.added` / `.edited` / `.deleted` entry; the trail records the ACT, the
 // comment holds the WORDS.
 
-import { authedJson } from "../http";
+import { withV1Query } from "../http";
 import { enc } from "../client-helpers";
+import { v1Page } from "../v1-case";
 import type { ProjectActivityRow } from "./wire";
 
-const PROJECTS = "/api/project/projects";
-const ITEMS = "/api/project/work-items";
+const PROJECTS = "/api/v1/projects";
+const ITEMS = "/api/v1/work_items";
+/** The page the legacy trail returned when no `limit` was named. */
+const ACTIVITY_LIMIT_DEFAULT = 50;
 
 export interface ProjectActivity {
   id: string;
@@ -62,47 +65,46 @@ interface Keyset {
 }
 
 /** Build the `?limit=&before=&beforeId=` query for a keyset page (empty when neither set). */
-function keysetQuery({ limit, before }: Keyset): string {
-  const parts: string[] = [];
-  if (limit !== undefined) parts.push(`limit=${enc(String(limit))}`);
-  if (before !== undefined) {
-    // `before` is an opaque cursor token "<createdAt>|<id>" (see fetchActivityPage). Split it
-    // into the composite (before, beforeId) keyset the backend pages on, so millisecond-tied
-    // rows never straddle a page boundary and get silently dropped. A createdAt timestamp
-    // contains no "|", so the last separator cleanly divides the two halves; a legacy token
-    // with no id still sends `before` alone.
-    const sep = before.lastIndexOf("|");
-    const beforeTs = sep >= 0 ? before.slice(0, sep) : before;
-    const beforeId = sep >= 0 ? before.slice(sep + 1) : "";
-    parts.push(`before=${enc(beforeTs)}`);
-    if (beforeId) parts.push(`beforeId=${enc(beforeId)}`);
-  }
-  return parts.length ? `?${parts.join("&")}` : "";
+function keysetQuery({ limit, before }: Keyset): Record<string, string | number | undefined> {
+  const sep = before === undefined ? -1 : before.lastIndexOf("|");
+  return {
+    limit: limit ?? ACTIVITY_LIMIT_DEFAULT,
+    before: before === undefined ? undefined : sep >= 0 ? before.slice(0, sep) : before,
+    before_id: before !== undefined && sep >= 0 && before.slice(sep + 1) ? before.slice(sep + 1) : undefined,
+  };
 }
 
-/** Fetch + map a keyset page, deriving `nextBefore` from a full-page heuristic. */
-async function fetchActivityPage(url: string, limit: number | undefined): Promise<ActivityPage> {
-  const rows = (await authedJson<ProjectActivityRow[]>(url)).map(toProjectActivity);
+async function fetchActivityPage(
+  url: string,
+  { limit, before }: Keyset,
+): Promise<ActivityPage> {
+  const q = keysetQuery({ limit, before });
+  const page = await v1Page<ProjectActivityRow>(withV1Query(url, q));
+  let data = page.data;
+  // /v1 carries `created` in whole seconds, so the cursor below is the NEXT second up: the
+  // backend then returns every row of the cursor row's second, including ones already shown.
+  // They sit ahead of the cursor row in the trail's order, so everything up to and including
+  // that row is dropped.
+  const cursorId = typeof q.before_id === "string" ? q.before_id : undefined;
+  if (cursorId) {
+    const at = data.findIndex((r) => r.id === cursorId);
+    if (at >= 0) data = data.slice(at + 1);
+  }
+  const rows = data.map(toProjectActivity);
   const last = rows.at(-1);
-  // A full page (rows === limit) means there may be more — hand back the last row's
-  // composite "<createdAt>|<id>" cursor token as the next `before`; otherwise this is the tail.
   const nextBefore =
-    limit !== undefined && rows.length === limit && last ? `${last.createdAt}|${last.id}` : null;
+    limit !== undefined && page.data.length === limit && last
+      ? `${new Date(Date.parse(last.createdAt) + 1000).toISOString()}|${last.id}`
+      : null;
   return { rows, nextBefore };
 }
 
 export const projectActivityApi = {
   projectActivity(projectId: string, opts: Keyset = {}): Promise<ActivityPage> {
-    return fetchActivityPage(
-      `${PROJECTS}/${enc(projectId)}/activity${keysetQuery(opts)}`,
-      opts.limit,
-    );
+    return fetchActivityPage(`${PROJECTS}/${enc(projectId)}/activity`, opts);
   },
 
   workItemActivity(workItemId: string, opts: Keyset = {}): Promise<ActivityPage> {
-    return fetchActivityPage(
-      `${ITEMS}/${enc(workItemId)}/activity${keysetQuery(opts)}`,
-      opts.limit,
-    );
+    return fetchActivityPage(`${ITEMS}/${enc(workItemId)}/activity`, opts);
   },
 };

@@ -25,6 +25,13 @@ extension UserSettings {
         default: ""
     )
 
+    /// The model summaries ask for, overriding the selected configuration's own;
+    /// "" keeps the configuration's model. Pushed by `StenographerSummaryPrefsPush`.
+    public static let stenographerAISummariesModel = UserSetting<String>(
+        "stenographer_ai_summaries_model",
+        default: ""
+    )
+
     // MARK: - AI summaries tuning
     //
     // Settings → AI Summaries. The daemon is the one that actually prompts the

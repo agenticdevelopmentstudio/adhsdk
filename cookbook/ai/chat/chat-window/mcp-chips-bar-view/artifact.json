@@ -1,15 +1,14 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "bea6525c-171f-4547-bbb3-7c709543552e",
     "title": "MCP Chips Bar View",
-    "domain": "adhsdk://cookbook/ai/chat/chat-window/mcp-chips-bar-view",
     "type": "ingredient",
-    "version": "1.2.2",
+    "version": "1.2.3",
     "status": "review",
     "language": "en",
     "created": "2026-09-23",
-    "modified": "2026-10-04",
+    "modified": "2026-11-15",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -30,7 +29,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "5796e474c9320167",
+  "synced": "7e6cdbbae6657638",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -49,7 +48,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

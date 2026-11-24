@@ -8,7 +8,7 @@
   slug-too-long message ("Slug must be 64 characters or fewer."), every
   field label (`"Display Name"`, `"Slug"`, `"Identifier"`, `"Description"`,
   `"Geographic Region"`), and every "already in use"/"already exists"
-  validation message this recipe's requirements quote.
+  validation message this ingredient's requirements quote.
 - **Hardcoded strings (API-client implementation)**: every thrown-error
   friendly message (the "already exists"/"already in use" conflict
   messages), and the batch-apply's `Couldn't remove: <keys>` error. Catalog

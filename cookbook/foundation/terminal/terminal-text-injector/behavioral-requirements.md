@@ -1,0 +1,57 @@
+
+- **namespace**: The component MUST be a caseless public `enum` named `TerminalTextInjector` with no stored instance state.
+- **supported-terminals**: `isSupported(termProgram:)` MUST return true for exactly `iTerm.app` and `Apple_Terminal`, and false for every other value, including the empty string.
+- **supported-kept-in-step**: The set of terminals `isSupported` accepts MUST stay equal to the set `resolveTarget` can resolve: for each `termProgram` that `isSupported` accepts, `resolveTarget` returns non-nil given a non-empty session id (iTerm) or a live pid, and for every other value it returns nil.
+- **target-cases**: `Target` MUST have three cases: `iTermSession(uuid:)`, `iTermTTY(tty:)` and `terminalTTY(tty:)`; it is `Equatable` and `Sendable`.
+- **target-app**: `Target.app` MUST return `("iTerm2", "com.googlecode.iterm2")` for both iTerm cases and `("Terminal", "com.apple.Terminal")` for `terminalTTY`.
+- **resolve-iterm-session**: For `iTerm.app`, `resolveTarget` MUST take the text after the last `:` of `termSessionId` as the uuid, and return `iTermSession(uuid:)` when that text is non-empty.
+- **resolve-iterm-split**: The `termSessionId` split MUST omit empty pieces, so an id with no colon is used whole as the uuid and an id ending in `:` yields the piece before the colon.
+- **resolve-iterm-tty-fallback**: For `iTerm.app` with an empty uuid, `resolveTarget` MUST return `iTermTTY(tty:)` using `ttyForPid`, and return nil when `ttyForPid` returns nil.
+- **resolve-terminal-tty**: For `Apple_Terminal`, `resolveTarget` MUST ignore `termSessionId`, return `terminalTTY(tty:)` using `ttyForPid`, and return nil when `ttyForPid` returns nil.
+- **resolve-unsupported**: For any other `termProgram`, `resolveTarget` MUST return nil.
+- **tty-for-pid**: `ttyForPid` MUST return the controlling-terminal device path (`/dev/` plus the `devname` of the process's `e_tdev`) read with the `proc_pidinfo` libproc call (`PROC_PIDTBSDINFO`), with no subprocess.
+- **tty-for-pid-nil**: `ttyForPid` MUST return nil for a pid of 0 or below, for a failed or short `proc_pidinfo` read, for a process whose `e_tdev` is 0, and when `devname` yields no name.
+- **tty-main-thread-safe**: `ttyForPid` MUST NOT fork a subprocess, so it is safe to call on the main thread.
+- **normalize-tty**: `normalizeTTY` MUST return its argument unchanged when it starts with `/dev/`, and otherwise prefix `/dev/`.
+- **escape-order**: `escape` MUST double every backslash first and then turn every double quote into a backslash and a quote, so its own escapes are not escaped twice.
+- **escape-line-breaks**: `escape` MUST replace every character for which `Character.isNewline` is true (a `\r\n` pair is one character) with one space, never delete it, so that adjacent words are not glued.
+- **escape-tab**: `escape` MUST replace a tab with a space, because a tab typed at an agent's prompt is a completion key and not text.
+- **escape-controls**: `escape` MUST drop every other character whose Unicode scalars are all in the `.control` general category (NUL, ESC, ^C, ^D, DEL), because each would reach the pane as a keystroke.
+- **escape-text-kept**: `escape` MUST leave non-control text, including accented letters, symbols and CJK characters, unchanged.
+- **script-iterm**: For an iTerm target, `script(for:text:raising:)` MUST build a script that begins with `tell application id "com.googlecode.iterm2"`, searches every session of every tab of every window, and tests `id of s is "<escaped uuid>"` or `tty of s is "<escaped normalized tty>"`.
+- **script-iterm-bundle-id**: The iTerm script MUST address iTerm by bundle id, not by the name "iTerm" or "iTerm2".
+- **script-terminal**: For a `terminalTTY` target, `script(for:text:raising:)` MUST build a script that begins with `tell application "Terminal"`, searches every tab of every window, and tests `tty of t is "<escaped normalized tty>"`.
+- **script-sentinels**: Every built script MUST return the string `found` from inside the matching branch and fall through to return the string `not_found` when no pane matches.
+- **script-iterm-typing**: With a non-nil `text`, the iTerm script MUST write `tell s to write text "<escaped text>" newline no`, so the text is typed without a newline.
+- **script-terminal-typing**: With a non-nil `text`, the Terminal.app script MUST run `do script "<escaped text>" in t`, which runs the text in the existing tab and does not open a window.
+- **script-text-escaped**: The text and the uuid or TTY interpolated into a script MUST pass through `escape` first.
+- **script-text-nil**: With `text: nil` the script MUST contain no `write text` and no `do script`, and so MUST NOT type into or run anything in the pane.
+- **script-no-delay**: A typing script MUST NOT contain an AppleScript `delay`, because a `delay` inside the script froze the caller's UI.
+- **script-raising-off**: With `raising: false` the script MUST NOT select, activate or bring forward the pane or its application: for iTerm no `select s`, `select t` or `activate`; for Terminal no `set selected tab`, `set frontmost` or `activate`.
+- **script-raising-on-iterm**: With `raising: true` the iTerm script MUST run `select s`, `select t` and `activate` inside the matching branch only, before any write.
+- **script-raising-on-terminal**: With `raising: true` the Terminal.app script MUST run `set selected tab of w to t`, `set frontmost of w to true` and `activate` inside the matching branch only, before any run.
+- **return-script**: `returnScript(for:)` MUST build a script that finds the same pane and presses Return alone: `tell s to write text ""` for iTerm and `do script "" in t` for Terminal.app.
+- **return-never-raises**: `returnScript(for:)` MUST NOT raise the terminal.
+- **return-delay**: `returnDelay` MUST be 300 milliseconds, so the Return lands as its own keystroke after the paste rather than inside it.
+- **split-submit**: The typing script MUST NOT include the Return. The text is typed without a newline so that the Return arrives as its own keystroke (see Design Decisions).
+- **terminal-return-extra**: For Terminal.app, which has no `newline no`, Return MUST still follow as a separate `do script ""`; after a line that did submit, it meets an empty prompt, which ignores it.
+- **inject-order**: `inject(_:termProgram:termSessionId:pid:raising:)` MUST, in order, check `isSupported`, resolve the target, run the typing script, wait `returnDelay`, then run the Return script, and return the result of the Return script.
+- **inject-unsupported**: `inject` MUST return `.failure(.unsupportedTerminal(name))` when the terminal is unsupported, where name is `termProgram`, or `an unknown terminal` when `termProgram` is empty.
+- **inject-unresolvable**: `inject` MUST return `.failure(.paneUnresolvable)` when `resolveTarget` returns nil.
+- **inject-stops-on-first-failure**: `inject` MUST NOT wait or press Return when the typing script fails; it MUST return that failure.
+- **inject-fresh-lookup**: Each half of `inject` MUST find the pane afresh, so a pane closed between the two halves fails the Return half as `paneNotFound`.
+- **inject-raising-default**: `inject` MUST default `raising` to false. Sending a line to a session is not a request to watch it, and a terminal jumping in front of the sender's window takes away what they were reading.
+- **inject-wait-off-main**: The wait between the halves MUST be an `await` on `Task.sleep(for: returnDelay)`, so the main thread is free during it.
+- **main-actor**: `inject` and `run` MUST be `@MainActor`; `escape`, `script`, `returnScript`, `resolveTarget`, `normalizeTTY` and `ttyForPid` are nonisolated pure or syscall functions.
+- **run-compile**: `run(script:target:)` MUST return `.failure(.scriptFailed("could not compile the AppleScript"))` when `NSAppleScript(source:)` returns nil.
+- **run-execute**: `run` MUST execute the script with `executeAndReturnError` and, when an error dictionary comes back, return `.permissionDenied` if it is an Automation denial and `.scriptFailed(message)` otherwise.
+- **run-error-message**: The `scriptFailed` message MUST be the dictionary's `NSAppleScript.errorMessage` string, or the dictionary's description when that key is missing or not a string.
+- **run-not-found**: `run` MUST return `.failure(.paneNotFound)` when the script's output string, trimmed of whitespace and newlines, equals `not_found`.
+- **run-success**: `run` MUST return `.success(())` when the script ran without error and did not return `not_found`.
+- **permission-detection**: An error MUST be mapped to `permissionDenied` when its error number is -1743 or -1744, or its message contains `not authorized` or `privilege violation` compared case-insensitively.
+- **permission-payload**: `permissionDenied` MUST carry the message `Automation permission is required to control <app name>. Grant it in System Settings ▸ Privacy & Security ▸ Automation.` and the target's bundle id, which an app maps onto its permission UI.
+- **error-cases**: `InjectionError` MUST be `Error`, `LocalizedError` and `Equatable` with five cases: `unsupportedTerminal(String)`, `paneUnresolvable`, `paneNotFound`, `permissionDenied(String, targetBundleID: String)` and `scriptFailed(String)`.
+- **error-descriptions**: `errorDescription` MUST be, in order: `Injecting text isn't supported for <name> yet — only iTerm2 and Terminal.app.`; `Couldn't identify the session's terminal pane.`; `The session's terminal pane wasn't found — it may have been closed.`; the permission message unchanged; and `Terminal automation failed: <message>`.
+- **no-retry**: The component MUST NOT retry a failed script, apply a timeout or cancel a running script; each call runs each half once.
+- **foundation-only**: The component MUST depend only on Foundation and Darwin (`NSAppleScript` and libproc), so the app and the CLI share one copy of the escaping.
+

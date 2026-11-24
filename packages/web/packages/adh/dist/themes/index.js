@@ -349,30 +349,59 @@ function clearThemeOverride() {
 import { reportUnexpectedError } from "@adh-sdk/adh/telemetry/report-error";
 
 // src/themes/themes-client.ts
-var API = "/api";
-async function readJson(res) {
-  if (!res.ok) throw new Error(`themes API ${res.status}`);
-  return await res.json();
+import { AuthHttpError, authedJson, authedRequest, listAllV1, unixToIso } from "@adh-sdk/auth/client";
+var API = "/api/v1/themes";
+function fromWire(w) {
+  return {
+    key: w.key,
+    label: w.label,
+    basedOn: w.based_on,
+    data: w.data,
+    createdAt: unixToIso(w.created),
+    updatedAt: unixToIso(w.updated)
+  };
 }
-var jsonInit = (method, body) => ({
-  method,
+function toWire(theme) {
+  const body = {};
+  if (theme.key !== void 0) body.key = theme.key;
+  if (theme.label !== void 0) body.label = theme.label;
+  if (theme.basedOn !== void 0) body.based_on = theme.basedOn;
+  if (theme.data !== void 0) body.data = theme.data;
+  return body;
+}
+var postInit = (body) => ({
+  method: "POST",
   headers: { "content-type": "application/json" },
   body: JSON.stringify(body)
 });
 async function listThemes() {
-  const res = await fetch(`${API}/public/themes`, { cache: "no-store" });
-  if (res.status === 404) return [];
-  return readJson(res);
+  try {
+    const rows = await listAllV1(
+      API,
+      { cache: "no-store" },
+      { cursorOf: (row) => row.key }
+    );
+    return rows.map(fromWire);
+  } catch (err) {
+    if (err instanceof AuthHttpError && err.status === 404) return [];
+    throw err;
+  }
 }
 async function createTheme(theme) {
-  return readJson(await fetch(`${API}/themes`, jsonInit("POST", theme)));
+  return fromWire(await authedJson(API, postInit(toWire(theme))));
 }
 async function updateTheme(key, patch) {
-  return readJson(await fetch(`${API}/themes/${encodeURIComponent(key)}`, jsonInit("PUT", patch)));
+  return fromWire(
+    await authedJson(`${API}/${encodeURIComponent(key)}`, postInit(toWire(patch)))
+  );
 }
 async function deleteTheme(key) {
-  const res = await fetch(`${API}/themes/${encodeURIComponent(key)}`, { method: "DELETE" });
-  if (!res.ok && res.status !== 404) throw new Error(`themes API ${res.status}`);
+  try {
+    await authedRequest(`${API}/${encodeURIComponent(key)}`, { method: "DELETE" });
+  } catch (err) {
+    if (err instanceof AuthHttpError && err.status === 404) return;
+    throw err;
+  }
 }
 
 // src/themes/useThemeEditor.ts

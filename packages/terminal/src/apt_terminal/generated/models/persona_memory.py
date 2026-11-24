@@ -21,7 +21,9 @@ class PersonaMemory:
     Attributes:
         id (str):
         ecosystem_id (str): Ecosystem (tenant) id
-        customer_id (str): Owning user; empty for a global memory
+        owner_kind (str): Kind of principal that owns the memory (the user for a user-scoped memory, else the persona):
+            'customer', 'organization', 'application', 'persona' or 'ecosystem'.
+        owner_id (str): Id of the owning principal.
         persona_id (str):
         scope (PersonaMemoryScope):
         slug (str):
@@ -33,8 +35,8 @@ class PersonaMemory:
         confidence (int):
         tags (list[str]):
         recall_count (int):
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
         deleted_at (None | str | Unset):
         subject_table (None | str | Unset):
         subject_id (None | str | Unset):
@@ -46,7 +48,8 @@ class PersonaMemory:
 
     id: str
     ecosystem_id: str
-    customer_id: str
+    owner_kind: str
+    owner_id: str
     persona_id: str
     scope: PersonaMemoryScope
     slug: str
@@ -58,8 +61,8 @@ class PersonaMemory:
     confidence: int
     tags: list[str]
     recall_count: int
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     deleted_at: None | str | Unset = UNSET
     subject_table: None | str | Unset = UNSET
     subject_id: None | str | Unset = UNSET
@@ -74,7 +77,9 @@ class PersonaMemory:
 
         ecosystem_id = self.ecosystem_id
 
-        customer_id = self.customer_id
+        owner_kind = self.owner_kind
+
+        owner_id = self.owner_id
 
         persona_id = self.persona_id
 
@@ -98,9 +103,9 @@ class PersonaMemory:
 
         recall_count = self.recall_count
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         deleted_at: None | str | Unset
         if isinstance(self.deleted_at, Unset):
@@ -149,37 +154,38 @@ class PersonaMemory:
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
-                "customerId": customer_id,
-                "personaId": persona_id,
+                "ecosystem_id": ecosystem_id,
+                "owner_kind": owner_kind,
+                "owner_id": owner_id,
+                "persona_id": persona_id,
                 "scope": scope,
                 "slug": slug,
-                "memoryType": memory_type,
+                "memory_type": memory_type,
                 "description": description,
                 "body": body,
                 "status": status,
                 "source": source,
                 "confidence": confidence,
                 "tags": tags,
-                "recallCount": recall_count,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
+                "recall_count": recall_count,
+                "created": created,
+                "updated": updated,
             }
         )
         if deleted_at is not UNSET:
-            field_dict["deletedAt"] = deleted_at
+            field_dict["deleted_at"] = deleted_at
         if subject_table is not UNSET:
-            field_dict["subjectTable"] = subject_table
+            field_dict["subject_table"] = subject_table
         if subject_id is not UNSET:
-            field_dict["subjectId"] = subject_id
+            field_dict["subject_id"] = subject_id
         if supersedes_id is not UNSET:
-            field_dict["supersedesId"] = supersedes_id
+            field_dict["supersedes_id"] = supersedes_id
         if valid_from is not UNSET:
-            field_dict["validFrom"] = valid_from
+            field_dict["valid_from"] = valid_from
         if valid_to is not UNSET:
-            field_dict["validTo"] = valid_to
+            field_dict["valid_to"] = valid_to
         if last_recalled_at is not UNSET:
-            field_dict["lastRecalledAt"] = last_recalled_at
+            field_dict["last_recalled_at"] = last_recalled_at
 
         return field_dict
 
@@ -188,17 +194,19 @@ class PersonaMemory:
         d = dict(src_dict)
         id = d.pop("id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        customer_id = d.pop("customerId")
+        owner_kind = d.pop("owner_kind")
 
-        persona_id = d.pop("personaId")
+        owner_id = d.pop("owner_id")
+
+        persona_id = d.pop("persona_id")
 
         scope = PersonaMemoryScope(d.pop("scope"))
 
         slug = d.pop("slug")
 
-        memory_type = PersonaMemoryMemoryType(d.pop("memoryType"))
+        memory_type = PersonaMemoryMemoryType(d.pop("memory_type"))
 
         description = d.pop("description")
 
@@ -212,11 +220,11 @@ class PersonaMemory:
 
         tags = cast(list[str], d.pop("tags"))
 
-        recall_count = d.pop("recallCount")
+        recall_count = d.pop("recall_count")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         def _parse_deleted_at(data: object) -> None | str | Unset:
             if data is None:
@@ -225,7 +233,7 @@ class PersonaMemory:
                 return data
             return cast(None | str | Unset, data)
 
-        deleted_at = _parse_deleted_at(d.pop("deletedAt", UNSET))
+        deleted_at = _parse_deleted_at(d.pop("deleted_at", UNSET))
 
         def _parse_subject_table(data: object) -> None | str | Unset:
             if data is None:
@@ -234,7 +242,7 @@ class PersonaMemory:
                 return data
             return cast(None | str | Unset, data)
 
-        subject_table = _parse_subject_table(d.pop("subjectTable", UNSET))
+        subject_table = _parse_subject_table(d.pop("subject_table", UNSET))
 
         def _parse_subject_id(data: object) -> None | str | Unset:
             if data is None:
@@ -243,7 +251,7 @@ class PersonaMemory:
                 return data
             return cast(None | str | Unset, data)
 
-        subject_id = _parse_subject_id(d.pop("subjectId", UNSET))
+        subject_id = _parse_subject_id(d.pop("subject_id", UNSET))
 
         def _parse_supersedes_id(data: object) -> None | str | Unset:
             if data is None:
@@ -252,7 +260,7 @@ class PersonaMemory:
                 return data
             return cast(None | str | Unset, data)
 
-        supersedes_id = _parse_supersedes_id(d.pop("supersedesId", UNSET))
+        supersedes_id = _parse_supersedes_id(d.pop("supersedes_id", UNSET))
 
         def _parse_valid_from(data: object) -> None | str | Unset:
             if data is None:
@@ -261,7 +269,7 @@ class PersonaMemory:
                 return data
             return cast(None | str | Unset, data)
 
-        valid_from = _parse_valid_from(d.pop("validFrom", UNSET))
+        valid_from = _parse_valid_from(d.pop("valid_from", UNSET))
 
         def _parse_valid_to(data: object) -> None | str | Unset:
             if data is None:
@@ -270,7 +278,7 @@ class PersonaMemory:
                 return data
             return cast(None | str | Unset, data)
 
-        valid_to = _parse_valid_to(d.pop("validTo", UNSET))
+        valid_to = _parse_valid_to(d.pop("valid_to", UNSET))
 
         def _parse_last_recalled_at(data: object) -> None | str | Unset:
             if data is None:
@@ -279,12 +287,13 @@ class PersonaMemory:
                 return data
             return cast(None | str | Unset, data)
 
-        last_recalled_at = _parse_last_recalled_at(d.pop("lastRecalledAt", UNSET))
+        last_recalled_at = _parse_last_recalled_at(d.pop("last_recalled_at", UNSET))
 
         persona_memory = cls(
             id=id,
             ecosystem_id=ecosystem_id,
-            customer_id=customer_id,
+            owner_kind=owner_kind,
+            owner_id=owner_id,
             persona_id=persona_id,
             scope=scope,
             slug=slug,
@@ -296,8 +305,8 @@ class PersonaMemory:
             confidence=confidence,
             tags=tags,
             recall_count=recall_count,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
             deleted_at=deleted_at,
             subject_table=subject_table,
             subject_id=subject_id,

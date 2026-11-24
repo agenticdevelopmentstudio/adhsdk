@@ -1,13 +1,12 @@
 ---
 id: 87d66a8a-5742-4ae0-91c4-8bb1fd09f9e4
 title: "Refresh All"
-domain: adhsdk://cookbook/status/dashboard/state/refresh-all
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -18,8 +17,8 @@ platforms:
 tags: []
 depends-on: []
 related:
-  - adhsdk://cookbook/status/dashboard/state/config-status
-  - adhsdk://cookbook/status/dashboard/state/live-snapshot
+  - 4bd200d7-f9d2-4348-af53-95ea02272c79
+  - ca7205d2-31c0-424a-95a2-a356bed30187
 references: []
 approved-by: ""
 approved-date: ""
@@ -113,7 +112,7 @@ There is no dedicated test file for this concept. The vectors below are derived 
 | refresh-all-009 | interval-cleanup | Start using Refresh All with a 1,000 ms interval, stop using it, advance the timer by 5,000 ms | The refetch operation is triggered zero times after that |
 | refresh-all-010 | interval-restart-on-change | Start with a 1,000 ms interval; advance 500 ms; change the interval to 2,000 ms; advance 1,999 ms, then 1 ms more | No call before the change and none during the 1,999 ms; exactly one call at 2,000 ms after the change |
 | refresh-all-011 | refresh-all-stable, return-object-fresh | Use Refresh All twice with the same cache context | The `refreshAll` reference is the same each time; the wrapper objects are different references |
-| refresh-all-012 | refetch-call | Call `refreshAll` once | The refetch operation is triggered once with one argument, an object whose only key is the filter |
+| refresh-all-012 | refetch-call | Call `refreshAll` once | The refetch operation is triggered once with one argument, an object holding the filter (`type: "active"`) and the predicate |
 | refresh-all-013 | one-timer-per-mount | Use Refresh All twice, each with a 1,000 ms interval, sharing one cache context; advance 1,000 ms | The refetch operation is triggered twice |
 | refresh-all-014 | client-only | Load Refresh All in a server-only rendering context | It is unavailable there: the module is marked for client execution only |
 
@@ -180,9 +179,9 @@ Not applicable: the source contains no log calls. Refetch outcomes are recorded 
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-web/src/hooks/use-refresh-all.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-web/src/hooks/use-refresh-all.ts` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -210,17 +209,18 @@ Not applicable: the source contains no log calls. Refetch outcomes are recorded 
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | best-practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | best-practices |
-| [resource-efficiency](agenticdevelopercookbook://compliance/performance#resource-efficiency) | partial | performance |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | best-practices |
+| [adc.check.performance.resource-efficiency](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d5fe7b8e-1051-5581-b2c5-1adae8fdd5fc) | partial | performance |
 
-The hook handles only scheduling and query selection. What each dataset fetches and how it reports failure stays with the query that owns it, so separation of concerns passes. There is no test file for the hook, so the timer lifecycle and both exclusion rules are untested, and unit test coverage fails. Error handling passes because failures are not swallowed: react-query records each refetch failure on its own query, where observers read it, and the discarded aggregate promise always resolves. Resource efficiency is partial. The live exclusion and the disabled gate deliberately avoid duplicate provider polls, but the timer keeps running in hidden tabs, each mount runs its own timer, and cached queries with no observer are still refetched.
+The hook handles only scheduling and query selection. What each dataset fetches and how it reports failure stays with the query that owns it, so separation of concerns passes. The conformance vectors are covered in `use-refresh-all.dom.test.tsx`, including the timer lifecycle and both exclusion rules, so unit test coverage passes. Error handling passes because failures are not swallowed: react-query records each refetch failure on its own query, where observers read it, and the discarded aggregate promise always resolves. Resource efficiency is partial. The live exclusion and the disabled gate deliberately avoid duplicate provider polls, but the timer keeps running in hidden tabs, each mount runs its own timer, and cached queries with no observer are still refetched.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (use-refresh-all.dom.test.tsx, 14 of 14 vectors; vector 012 text corrected); unit-test-coverage now passed. |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | One client-only requirement, worded the same across the dashboard state specs, with a test vector; the web module's "use client" directive is noted in Platform Notes. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to status/dashboard/state/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

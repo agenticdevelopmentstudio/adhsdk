@@ -10,10 +10,12 @@
   passed to setting a value, which deletes the row rather than storing it
   (see **set-setting-nil-deletes**).
 - **Boundary values (MUST)**: Reading the schema version's boundaries are
-  exactly less-than-1, less-than-2, less-than-3, and less-than-4 — a
-  database already at version 4 runs none of the four migrations; a
+  exactly less-than-1 through less-than-7 — a
+  database already at version 7 runs none of the seven migrations; a
   database whose `schema_migrations` table exists but is empty reads as
-  version 0 and runs all four. Checking whether a column exists has a
+  version 0 and runs all seven. A project whose stored edges are `'top'`
+  alone follows the app-wide tab position after migration 7; a user who
+  chose top alone sees no change, as the app-wide position starts at top. Checking whether a column exists has a
   boundary of "greater than zero matching rows" against
   `pragma_table_info` — i.e. exactly zero or one matching row, since
   SQLite disallows two columns of the same name on one table.

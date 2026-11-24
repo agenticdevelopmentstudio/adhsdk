@@ -48,6 +48,9 @@ final class TabPaneView: NSView {
     ///
     /// On a vertical bar the steps accumulate — see `recession`.
     static let inactiveInset: CGFloat = 4
+    /// How far short of the workspace a card behind stops on a vertical bar,
+    /// so the card in front is plainly the longest one.
+    static let verticalInactiveShortfall: CGFloat = 12
 
     /// How many steps back a card is drawn at before they stop adding up.
     ///
@@ -77,6 +80,23 @@ final class TabPaneView: NSView {
     let summaryLabel = ThemedLabel(role: .secondaryText, textRole: .caption)
     let closeButton = NSButton()
     let statusStack = NSStackView()
+    let activityView = NSImageView()
+
+    /// A card that is only its top line and summary is as tall as those
+    /// lines, not `minHeight`. A card that is its top line alone (no details,
+    /// no summary) also drops to the compact padding, so it is one title row.
+    var showsDetails = true { didSet { applyCompactness() } }
+
+    /// Insets for a card that shows only its title line.
+    private static let compactPadding = NSEdgeInsets(top: 5, left: 14, bottom: 5, right: 14)
+
+    /// Shrinks the stack's padding and spacing when the card holds nothing
+    /// but its header, and restores them otherwise.
+    func applyCompactness() {
+        let compact = !showsDetails && summaryLabel.isHidden
+        content.edgeInsets = compact ? Self.compactPadding : Self.padding
+        content.spacing = compact ? 0 : 6
+    }
 
     var onClose: (() -> Void)?
     var contextMenuProvider: ((NSEvent) -> NSMenu?)?
@@ -119,6 +139,7 @@ final class TabPaneView: NSView {
         directoryLabel.accessibilityID("tab-pane.directory.\(tabID.uuidString)")
         branchLabel.accessibilityID("tab-pane.branch.\(tabID.uuidString)")
         summaryLabel.accessibilityID("tab-pane.summary.\(tabID.uuidString)")
+        activityView.accessibilityID("tab-pane.activity.\(tabID.uuidString)")
         closeButton.accessibilityID("tab-pane.close.\(tabID.uuidString)")
         setUp()
     }
@@ -145,6 +166,14 @@ final class TabPaneView: NSView {
         }
     }
 
+    func setActivitySymbol(_ symbol: TabPaneStatusSymbol?) {
+        activityView.isHidden = symbol == nil
+        guard let symbol else { return }
+        activityView.image = NSImage(
+            systemSymbolName: symbol.symbolName, accessibilityDescription: symbol.accessibilityLabel)
+        activityView.setAccessibilityLabel(symbol.accessibilityLabel)
+    }
+
     /// The size the card wants for its current content. The same measurement
     /// on every edge, because the arrangement is the same on every edge: a
     /// width held between `minWidth` and `maxWidth`, and a height that starts
@@ -167,7 +196,7 @@ final class TabPaneView: NSView {
         let slack = 2 * deepestRecession
         return NSSize(
             width: min(Self.maxWidth, max(Self.minWidth, fitting.width + slack)),
-            height: max(Self.minHeight, fitting.height + slack)
+            height: showsDetails ? max(Self.minHeight, fitting.height + slack) : fitting.height + slack
         )
     }
 
@@ -215,12 +244,21 @@ final class TabPaneView: NSView {
         }
         directoryLabel.lineBreakMode = .byTruncatingHead
         summaryLabel.lineBreakMode = .byTruncatingTail
+        summaryLabel.maximumNumberOfLines = 2
+        summaryLabel.cell?.wraps = true
+        summaryLabel.cell?.truncatesLastVisibleLine = true
+        summaryLabel.preferredMaxLayoutWidth = Self.maxWidth - Self.padding.left - Self.padding.right
+        activityView.symbolConfiguration = .init(pointSize: 11, weight: .regular)
+        activityView.isHidden = true
+        activityView.widthAnchor.constraint(equalToConstant: 14).isActive = true
+        activityView.heightAnchor.constraint(equalToConstant: 14).isActive = true
         summaryLabel.isHidden = true
 
         statusStack.orientation = .horizontal
         statusStack.spacing = 2
 
-        closeButton.image = NSImage(systemSymbolName: "xmark.circle.fill", accessibilityDescription: "Close")
+        closeButton.image = NSImage(systemSymbolName: "xmark.circle.fill", accessibilityDescription: "Close Tab")
+        closeButton.toolTip = "Close Tab"
         closeButton.isBordered = false
         closeButton.bezelStyle = .inline
         closeButton.imagePosition = .imageOnly
@@ -286,7 +324,7 @@ final class TabPaneView: NSView {
         let gap = NSView()
         gap.setContentHuggingPriority(NSLayoutConstraint.Priority(1), for: .horizontal)
         gap.setContentCompressionResistancePriority(NSLayoutConstraint.Priority(1), for: .horizontal)
-        let body = [agentLabel, statusStack, gap] as [NSView]
+        let body = [statusStack, agentLabel, gap, activityView] as [NSView]
         let header = NSStackView(views: edge == .left ? [closeButton] + body : body + [closeButton])
         header.orientation = .horizontal
         header.alignment = .centerY
@@ -324,7 +362,9 @@ final class TabPaneView: NSView {
 
     private func recession(atDepth depth: Int) -> CGFloat {
         guard depth > 0 else { return 0 }
-        let steps = edge.isVertical ? min(depth, Self.maxStackDepth) : 1
+        // One step on every edge: vertical cards are spaced like horizontal
+        // ones now, not fanned as an overlapping deck.
+        let steps = 1
         return CGFloat(steps) * Self.inactiveInset
     }
 
@@ -364,6 +404,7 @@ final class TabPaneView: NSView {
         branchLabel.role = isFrontCard ? .secondaryText : .tertiaryText
         summaryLabel.role = isFrontCard ? .secondaryText : .tertiaryText
         closeButton.contentTintColor = palette.nsColor(isFrontCard ? .secondaryText : .tertiaryText)
+        activityView.contentTintColor = palette.nsColor(isFrontCard ? .accent : .secondaryText)
     }
 
     /// Puts the card where this depth wants it: pulled in by `recession` on
@@ -387,8 +428,20 @@ final class TabPaneView: NSView {
     private func place(animated: Bool) {
         guard let cardSides else { return }
         let overhang = isFrontCard ? Self.workspaceOverlap : -recession
+        let apply = { [self] in
+            if edge.isVertical {
+                // The card in front is the longest: every card shares the outer
+                // edge, and the ones behind stop short of the workspace. The
+                // slot's spare height is split above and below the text.
+                let spare = max(0, (bounds.height - content.fittingSize.height) / 2)
+                cardSides.slide(isFront: isFrontCard, shift: Self.verticalInactiveShortfall,
+                                textAlong: spare, overhang: overhang)
+            } else {
+                cardSides.place(inset: recession, overhang: overhang)
+            }
+        }
         guard animated else {
-            cardSides.place(inset: recession, overhang: overhang)
+            apply()
             return
         }
         // Settle whatever layout is still outstanding first: the animation has
@@ -398,7 +451,7 @@ final class TabPaneView: NSView {
             context.duration = Self.depthAnimationDuration
             context.timingFunction = CAMediaTimingFunction(name: .easeOut)
             context.allowsImplicitAnimation = true
-            cardSides.place(inset: recession, overhang: overhang)
+            apply()
             layoutSubtreeIfNeeded()
         }
     }
@@ -425,6 +478,9 @@ private struct InsetBox {
     /// are one piece of knowledge, so they are stored as one.
     let workspace: (constraint: NSLayoutConstraint, outwardSign: CGFloat)
     private let sides: [(constraint: NSLayoutConstraint, inward: CGFloat)]
+    /// The side facing away from the workspace, and the two running along it.
+    private let far: (constraint: NSLayoutConstraint, inward: CGFloat)
+    private let along: [(constraint: NSLayoutConstraint, inward: CGFloat)]
 
     init(edge: Edge, slot: NSView, box: NSView) {
         let top = box.topAnchor.constraint(equalTo: slot.topAnchor)
@@ -433,10 +489,23 @@ private struct InsetBox {
         let bottom = box.bottomAnchor.constraint(equalTo: slot.bottomAnchor)
         sides = [(top, 1), (leading, 1), (trailing, -1), (bottom, -1)]
         switch edge {
-        case .top: workspace = (bottom, 1)
-        case .bottom: workspace = (top, -1)
-        case .left: workspace = (trailing, 1)
-        case .right: workspace = (leading, -1)
+        case .top: workspace = (bottom, 1); far = (top, 1); along = [(leading, 1), (trailing, -1)]
+        case .bottom: workspace = (top, -1); far = (bottom, -1); along = [(leading, 1), (trailing, -1)]
+        case .left: workspace = (trailing, 1); far = (leading, 1); along = [(top, 1), (bottom, -1)]
+        case .right: workspace = (leading, -1); far = (trailing, -1); along = [(top, 1), (bottom, -1)]
+        }
+    }
+
+    /// Keeps the box its full size and slides it across the bar: `shift` in
+    /// from the far side when `towardWorkspace`, else in from the workspace
+    /// side. The two sides along the bar are held `along` in.
+    func slide(towardWorkspace: Bool, shift: CGFloat, along alongInset: CGFloat) {
+        for side in sides { side.constraint.constant = 0 }
+        for side in along { side.constraint.constant = side.inward * alongInset }
+        if towardWorkspace {
+            far.constraint.constant = far.inward * shift
+        } else {
+            workspace.constraint.constant = -workspace.outwardSign * shift
         }
     }
 
@@ -482,6 +551,20 @@ private struct CardSides {
         text.inset(inset)
         paint.workspace.constraint.constant = overhang * paint.workspace.outwardSign
     }
+
+    /// A vertical bar's cards: the one in front is the longest, running the
+    /// full width of the bar from its outer edge to over the workspace's line;
+    /// the rest keep the same outer edge and stop `shift` short of the
+    /// workspace. The text is held `textAlong` in from the card's top and
+    /// bottom, the same on both, so it stays centred.
+    func slide(isFront: Bool, shift: CGFloat, textAlong: CGFloat, overhang: CGFloat) {
+        let pulledIn = isFront ? 0 : shift
+        paint.slide(towardWorkspace: false, shift: pulledIn, along: 0)
+        text.slide(towardWorkspace: false, shift: pulledIn, along: textAlong)
+        if isFront {
+            paint.workspace.constraint.constant = overhang * paint.workspace.outwardSign
+        }
+    }
 }
 
 // MARK: - The card's shape
@@ -502,10 +585,14 @@ private final class TabCardBackgroundView: NSView {
     var reachesOverWorkspace = false { didSet { needsDisplay = true } }
 
     private let edge: Edge
+    private var cornerObserver: UserSettingObserver<Bool>?
 
     init(edge: Edge) {
         self.edge = edge
         super.init(frame: .zero)
+        cornerObserver = UserSettingObserver(UserSettings.preferRoundedCorners) { [weak self] _ in
+            self?.needsDisplay = true
+        }
     }
 
     @available(*, unavailable)
@@ -529,8 +616,17 @@ private final class TabCardBackgroundView: NSView {
         guard rect.width > 0, rect.height > 0 else { return nil }
         let path = NSBezierPath()
         let corners = corners(of: rect)
+        // Appearance > Prefer rounded corners rounds the two outer corners;
+        // the open side stays square so the card still joins the workspace.
+        let radius = min(CornerStyle.radius(CornerStyle.tabRadius), rect.width / 2, rect.height / 2)
         path.move(to: corners[0])
-        for corner in corners.dropFirst() { path.line(to: corner) }
+        if radius > 0 {
+            path.appendArc(from: corners[1], to: corners[2], radius: radius)
+            path.appendArc(from: corners[2], to: corners[3], radius: radius)
+            path.line(to: corners[3])
+        } else {
+            for corner in corners.dropFirst() { path.line(to: corner) }
+        }
         return path
     }
 

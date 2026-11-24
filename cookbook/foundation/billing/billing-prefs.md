@@ -1,13 +1,12 @@
 ---
-id: 0175F0BB-F4BD-4F72-94C2-57B087AD9DF9
+id: 0175f0bb-f4bd-4f72-94c2-57b087ad9df9
 title: "Billing Preferences"
-domain: adhsdk://cookbook/foundation/billing/billing-prefs
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-10-04
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -21,9 +20,9 @@ tags:
   - settings
 depends-on: []
 related:
-  - adhsdk://cookbook/foundation/billing/billing-user-settings
-  - adhsdk://cookbook/foundation/billing/billing-persistence
-  - adhsdk://cookbook/foundation/billing/billing-dt-os
+  - c1caa827-f7f1-4e69-b4c6-adbfef22e636
+  - 5296d0b7-8416-4e76-8f45-47a726f230cf
+  - ed610aa4-2717-4242-a8b9-c4616377dbd9
 references: []
 approved-by: ""
 approved-date: ""
@@ -125,9 +124,9 @@ Not applicable: this code makes no log calls.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingPrefs.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingPrefs.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
 
@@ -139,13 +138,14 @@ Not applicable: this code makes no log calls.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-separation-of-concerns passes: the type owns only reading, clamping and applying the knobs; storage is the persistence protocol and text parsing is the shared raw-setting helper. unit-test-coverage fails: a search of the Tests directories finds no test that references the preferences type.
+separation-of-concerns passes: the type owns only reading, clamping and applying the knobs; storage is the persistence protocol and text parsing is the shared raw-setting helper. unit-test-coverage passes: `BillingPrefsConformanceTests` in `AgenticDeveloperHubSDKCoreTests` covers vectors 001 to 009 against an in-memory settings store.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Conformance tests added (BillingPrefsConformanceTests.swift, 9 of 9 vectors); unit-test-coverage now passed. |
 | 1.0.0 | 2026-10-04 | Mike Fullerton | Initial creation |

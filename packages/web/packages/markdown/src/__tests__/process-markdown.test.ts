@@ -7,7 +7,7 @@ import { processMarkdown } from '../lib/process-markdown'
 
 describe('processMarkdown', () => {
   // c5: frontmatter must be stripped from the rendered HTML body
-  it('strips YAML frontmatter and exposes it as metadata', async () => {
+  it('mdc-032: strips YAML frontmatter and exposes it as metadata', async () => {
     const raw = '---\ntitle: Hello\n---\n\n# Heading\n\nbody'
     const result = await processMarkdown(raw)
 
@@ -58,7 +58,7 @@ describe('processMarkdown', () => {
   })
 
   // c4: shiki syntax highlighting on fenced code blocks
-  it('highlights fenced code blocks with shiki', async () => {
+  it('mdc-040: highlights fenced code blocks with shiki', async () => {
     const raw = '```ts\nconst x = 1\n```'
     const result = await processMarkdown(raw)
 
@@ -67,10 +67,21 @@ describe('processMarkdown', () => {
     expect(result.html).toContain('x')
   })
 
+  it('keeps the highlighted pre focusable, so a keyboard user can scroll a wide block', async () => {
+    const result = await processMarkdown('```ts\nconst x = 1\n```')
+    expect(result.html).toMatch(/<pre[^>]*class="shiki[^"]*"/)
+    expect(result.html).toMatch(/<pre[^>]*tabindex="0"/)
+  })
+
+  it('keeps the class shiki puts on each line span', async () => {
+    const result = await processMarkdown('```ts\nconst x = 1\nconst y = 2\n```')
+    expect(result.html.match(/<span class="line"/g)?.length).toBe(2)
+  })
+
   // c6: XSS inert — raw HTML in markdown is dropped by remark-rehype
   // (allowDangerousHtml defaults to false) and any survivor would be stripped
   // by rehype-sanitize's allowlist.
-  it('is inert to XSS payloads', async () => {
+  it('mdc-033: is inert to XSS payloads', async () => {
     const raw = [
       '<script>alert(1)</script>',
       '<img src=x onerror="alert(1)">',

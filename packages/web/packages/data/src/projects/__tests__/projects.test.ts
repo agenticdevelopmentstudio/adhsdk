@@ -1,10 +1,10 @@
-// URL/method/body contract tests for the Projects clients. Only the
-// transport (`authedJson`/`authedRequest`) is mocked — the mappers, `compact`,
-// and query-building run for real, so these pin the wire contract that the later
-// Projects UI is built on. Emphasis (per the task brief) on: a PATCH with a
-// compacted body, a work-item update that CLEARS an assignee (explicit null must
-// survive), the activity keyset query + `nextBefore`, and the participant DELETE
-// carrying `?kind=`.
+// URL/method/body contract tests for the Projects clients, on the /v1 wire. Single reads and
+// writes mock the transport (`authedJson`/`authedRequest`); list reads stub `fetch` under the
+// real /v1 pager. The mappers, `compact`, the camel->snake body mapping and query-building run
+// for real, so these pin the wire contract that the Projects UI is built on. Emphasis on: an
+// update (a POST on /v1) with a compacted snake_case body, a work-item update that CLEARS an
+// assignee (explicit null must survive), the activity keyset query + `nextBefore`, and the
+// participant DELETE carrying `?kind=`.
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
 // Stub only the transport; client-helpers (compact/enc/sortByText) stay real.
@@ -21,6 +21,7 @@ import { projectArtifactsApi } from "../artifacts";
 import { projectCommentsApi, threadOf, type ProjectComment } from "../comments";
 import type { ProjectCommentRow } from "../wire";
 import { authedJson, authedRequest } from "../../http";
+import { fetchMock, installFetch, paramsAt, pathAt, respondOnce, respondWith, v1List } from "../../__tests__/v1-fetch";
 
 const mockedJson = vi.mocked(authedJson);
 const mockedRequest = vi.mocked(authedRequest);
@@ -28,48 +29,50 @@ const mockedRequest = vi.mocked(authedRequest);
 beforeEach(() => {
   mockedJson.mockReset();
   mockedRequest.mockReset();
+  installFetch();
 });
+
+/** The query of a call to the mocked `authedJson` (single reads carry their params in the URL). */
+const paramsOf = (call: number) => new URL(String(mockedJson.mock.calls[call]![0]), "http://x").searchParams;
 
 /* ── projectsApi ──────────────────────────────────────────────────────── */
 
 describe("projectsApi", () => {
   it("list GETs the base URL and sorts by name", async () => {
-    mockedJson.mockResolvedValueOnce([
-      { id: "2", name: "Beta", description: "", status: "active", color: "#000", ecosystemId: "o", createdAt: "c", updatedAt: "u" },
-      { id: "1", name: "Alpha", description: "", status: "active", color: "#000", ecosystemId: "o", createdAt: "c", updatedAt: "u" },
-    ]);
+    const wire = (id: string, name: string) => ({ object: "project", id, name, description: "", status: "active", color: "#000", ecosystem_id: "o", created: 1767225600, updated: 1767225600 });
+    respondWith(v1List([wire("2", "Beta"), wire("1", "Alpha")]));
     const out = await projectsApi.list();
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/projects");
+    expect(pathAt(0)).toBe("/api/v1/projects");
     expect(out.map((p) => p.name)).toEqual(["Alpha", "Beta"]);
   });
 
   it("get encodes the id and returns null on a thrown 404", async () => {
     mockedJson.mockRejectedValueOnce(new Error("not found"));
     expect(await projectsApi.get("a/b")).toBeNull();
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/projects/a%2Fb");
+    expect(mockedJson).toHaveBeenCalledWith("/api/v1/projects/a%2Fb", undefined);
   });
 
   it("create POSTs a compacted body (undefined optionals dropped)", async () => {
     mockedJson.mockResolvedValueOnce({ id: "1", name: "P", description: "", status: "active", color: "#000", ecosystemId: "o", createdAt: "c", updatedAt: "u" });
     await projectsApi.create({ name: "P", color: "#fff" });
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/projects", {
+    expect(mockedJson).toHaveBeenCalledWith("/api/v1/projects", {
       method: "POST",
       body: JSON.stringify({ name: "P", color: "#fff" }),
     });
   });
 
-  it("update PATCHes a compacted body, dropping undefined but KEEPING explicit null (un-archive)", async () => {
+  it("update POSTs a compacted snake_case body, dropping undefined but KEEPING explicit null (un-archive)", async () => {
     mockedJson.mockResolvedValueOnce({ id: "1", name: "P", description: "", status: "active", color: "#000", ecosystemId: "o", createdAt: "c", updatedAt: "u" });
     await projectsApi.update("1", { name: "Renamed", description: undefined, archivedAt: null });
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/projects/1", {
-      method: "PATCH",
-      body: JSON.stringify({ name: "Renamed", archivedAt: null }),
+    expect(mockedJson).toHaveBeenCalledWith("/api/v1/projects/1", {
+      method: "POST",
+      body: JSON.stringify({ name: "Renamed", archived_at: null }),
     });
   });
 
   it("delete DELETEs via authedRequest", async () => {
     await projectsApi.delete("1");
-    expect(mockedRequest).toHaveBeenCalledWith("/api/project/projects/1", { method: "DELETE" });
+    expect(mockedRequest).toHaveBeenCalledWith("/api/v1/projects/1", { method: "DELETE" });
   });
 });
 
@@ -79,24 +82,24 @@ describe("projectsApi.statuses", () => {
   it("create POSTs to the project's statuses collection", async () => {
     mockedJson.mockResolvedValueOnce({ id: "s1", projectId: "p1", key: "todo", label: "To do", category: "todo", position: 0, createdAt: "c" });
     await projectsApi.statuses.create("p1", { key: "todo", label: "To do", category: "todo" });
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/projects/p1/statuses", {
+    expect(mockedJson).toHaveBeenCalledWith("/api/v1/projects/p1/statuses", {
       method: "POST",
       body: JSON.stringify({ key: "todo", label: "To do", category: "todo" }),
     });
   });
 
-  it("update PATCHes the status by id with a compacted body", async () => {
+  it("update POSTs the status by id with a compacted body", async () => {
     mockedJson.mockResolvedValueOnce({ id: "s1", projectId: "p1", key: "todo", label: "Doing", category: "in_progress", position: 1, createdAt: "c" });
     await projectsApi.statuses.update("p1", "s1", { label: "Doing", category: "in_progress" });
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/projects/p1/statuses/s1", {
-      method: "PATCH",
+    expect(mockedJson).toHaveBeenCalledWith("/api/v1/projects/p1/statuses/s1", {
+      method: "POST",
       body: JSON.stringify({ label: "Doing", category: "in_progress" }),
     });
   });
 
   it("remove DELETEs the status by id", async () => {
     await projectsApi.statuses.remove("p1", "s1");
-    expect(mockedRequest).toHaveBeenCalledWith("/api/project/projects/p1/statuses/s1", { method: "DELETE" });
+    expect(mockedRequest).toHaveBeenCalledWith("/api/v1/projects/p1/statuses/s1", { method: "DELETE" });
   });
 });
 
@@ -106,16 +109,16 @@ describe("projectsApi.participants", () => {
   it("add POSTs the (kind, id) pair", async () => {
     mockedJson.mockResolvedValueOnce({ id: "pp1", projectId: "p1", participantKind: "customer", participantId: "cust1", role: "member", addedBy: null, addedAt: "a" });
     await projectsApi.participants.add("p1", { participantKind: "customer", participantId: "cust1" });
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/projects/p1/participants", {
+    expect(mockedJson).toHaveBeenCalledWith("/api/v1/projects/p1/participants", {
       method: "POST",
-      body: JSON.stringify({ participantKind: "customer", participantId: "cust1" }),
+      body: JSON.stringify({ participant_kind: "customer", participant_id: "cust1" }),
     });
   });
 
   it("remove addresses by actor id and REQUIRES the ?kind= query", async () => {
     await projectsApi.participants.remove("p1", "cust1", "customer");
     expect(mockedRequest).toHaveBeenCalledWith(
-      "/api/project/projects/p1/participants/cust1?kind=customer",
+      "/api/v1/projects/p1/participants/cust1?kind=customer",
       { method: "DELETE" },
     );
   });
@@ -139,6 +142,24 @@ const WORK_ITEM = {
   updatedAt: "u",
 };
 
+/** The same card as /v1 sends it (snake_case, unix-second timestamps) for list reads. */
+const WIRE_ITEM = {
+  object: "work_item",
+  id: "w1",
+  ecosystem_id: "o",
+  project_id: "p1",
+  title: "Task",
+  description: "",
+  status_id: "s1",
+  assignee_kind: "customer",
+  assignee_id: "cust1",
+  priority: 0,
+  labels: [],
+  rank: "V0",
+  created: 1767225600,
+  updated: 1767225600,
+};
+
 describe("compareRank", () => {
   it("sorts by BYTES, so a capital letter sorts before every lower-case one", () => {
     // The half a locale comparator gets wrong: `localeCompare` treats case as a tertiary weight
@@ -158,18 +179,23 @@ describe("compareRank", () => {
 
 describe("projectWorkItemsApi", () => {
   it("listForProject GETs the per-project collection", async () => {
-    mockedJson.mockResolvedValueOnce([WORK_ITEM]);
+    respondWith(v1List([WIRE_ITEM]));
     const out = await projectWorkItemsApi.listForProject("p1");
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/projects/p1/work-items");
+    expect(pathAt(0)).toBe("/api/v1/work_items");
+    expect(paramsAt(0).get("project")).toBe("p1");
+    // Accepted cards only unless asked: the escape is a separate, explicit parameter.
+    expect(paramsAt(0).has("include_untriaged")).toBe(false);
+    expect(paramsAt(0).has("includeUntriaged")).toBe(false);
     expect(out[0]?.assigneeId).toBe("cust1");
+    expect(out[0]?.createdAt).toBe("2026-01-01T00:00:00.000Z");
   });
 
-  it("create POSTs a compacted body under the project stem", async () => {
+  it("create POSTs a compacted body to the collection, naming the project in it", async () => {
     mockedJson.mockResolvedValueOnce(WORK_ITEM);
     await projectWorkItemsApi.create("p1", { title: "Task", statusId: "s1" });
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/projects/p1/work-items", {
+    expect(mockedJson).toHaveBeenCalledWith("/api/v1/work_items", {
       method: "POST",
-      body: JSON.stringify({ title: "Task", statusId: "s1" }),
+      body: JSON.stringify({ project: "p1", title: "Task", status_id: "s1" }),
     });
   });
 
@@ -182,17 +208,17 @@ describe("projectWorkItemsApi", () => {
       parentId: null,
       title: undefined, // an omitted field is still stripped
     });
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/work-items/w1", {
-      method: "PATCH",
-      body: JSON.stringify({ assigneeKind: null, assigneeId: null, dueDate: null, parentId: null }),
+    expect(mockedJson).toHaveBeenCalledWith("/api/v1/work_items/w1", {
+      method: "POST",
+      body: JSON.stringify({ assignee_kind: null, assignee_id: null, due_date: null, parent_id: null }),
     });
   });
 
   it("update setting values keeps only defined fields", async () => {
     mockedJson.mockResolvedValueOnce(WORK_ITEM);
     await projectWorkItemsApi.update("w1", { title: "New", priority: 3 });
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/work-items/w1", {
-      method: "PATCH",
+    expect(mockedJson).toHaveBeenCalledWith("/api/v1/work_items/w1", {
+      method: "POST",
       body: JSON.stringify({ title: "New", priority: 3 }),
     });
   });
@@ -200,9 +226,9 @@ describe("projectWorkItemsApi", () => {
   it("move POSTs the named neighbour to the item's move stem", async () => {
     mockedJson.mockResolvedValueOnce({ ...WORK_ITEM, rank: "V05" });
     const out = await projectWorkItemsApi.move("w1", { beforeId: "w2" });
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/work-items/w1/move", {
+    expect(mockedJson).toHaveBeenCalledWith("/api/v1/work_items/w1/move", {
       method: "POST",
-      body: JSON.stringify({ beforeId: "w2" }),
+      body: JSON.stringify({ before_id: "w2" }),
     });
     // The moved card comes back carrying its NEW key — that is what lets a caller re-sort the
     // list it already holds instead of refetching it.
@@ -214,114 +240,138 @@ describe("projectWorkItemsApi", () => {
     // null has to survive `compact`, exactly as the PATCH clears do.
     mockedJson.mockResolvedValueOnce(WORK_ITEM);
     await projectWorkItemsApi.move("w1", { afterId: null, beforeId: undefined });
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/work-items/w1/move", {
+    expect(mockedJson).toHaveBeenCalledWith("/api/v1/work_items/w1/move", {
       method: "POST",
-      body: JSON.stringify({ afterId: null }),
+      body: JSON.stringify({ after_id: null }),
     });
   });
 
   it("remove DELETEs the item by id", async () => {
     await projectWorkItemsApi.remove("w1");
-    expect(mockedRequest).toHaveBeenCalledWith("/api/project/work-items/w1", { method: "DELETE" });
+    expect(mockedRequest).toHaveBeenCalledWith("/api/v1/work_items/w1", { method: "DELETE" });
   });
 
-  it("children GETs the children collection", async () => {
-    mockedJson.mockResolvedValueOnce([WORK_ITEM]);
+  it("children lists the collection filtered to the parent", async () => {
+    respondWith(v1List([WIRE_ITEM]));
     await projectWorkItemsApi.children("w1");
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/work-items/w1/children");
+    expect(pathAt(0)).toBe("/api/v1/work_items");
+    expect(paramsAt(0).get("parent")).toBe("w1");
   });
 
-  it("getValues GETs the field form", async () => {
-    mockedJson.mockResolvedValueOnce([{ fieldId: "f1", key: "sev", label: "Severity", type: "number", value: 3 }]);
+  it("getValues reads the item with its fields included", async () => {
+    mockedJson.mockResolvedValueOnce({
+      id: "w1",
+      fields: { object: "list", data: [], items: [{ field_id: "f1", key: "sev", label: "Severity", type: "number", value: 3 }] },
+    });
     const out = await projectWorkItemsApi.getValues("w1");
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/work-items/w1/fields");
+    expect(mockedJson).toHaveBeenCalledWith("/api/v1/work_items/w1?include[]=fields", undefined);
     expect(out[0]?.value).toBe(3);
   });
 
-  it("setValues PUTs the batch", async () => {
-    mockedJson.mockResolvedValueOnce([]);
+  it("setValues POSTs the batch as the item's `fields` member", async () => {
+    mockedJson.mockResolvedValueOnce({ id: "w1", fields: { items: [] } });
     await projectWorkItemsApi.setValues("w1", { values: [{ fieldId: "f1", value: null }] });
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/work-items/w1/fields", {
-      method: "PUT",
-      body: JSON.stringify({ values: [{ fieldId: "f1", value: null }] }),
+    expect(mockedJson).toHaveBeenCalledWith("/api/v1/work_items/w1", {
+      method: "POST",
+      body: JSON.stringify({ fields: { values: [{ field_id: "f1", value: null }] } }),
     });
   });
 
   it("dependencies.add POSTs the dependsOnId edge", async () => {
     mockedJson.mockResolvedValueOnce({ id: "d1", ecosystemId: "o", workItemId: "w1", dependsOnId: "w2", createdAt: "c" });
     await projectWorkItemsApi.dependencies.add("w1", "w2");
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/work-items/w1/dependencies", {
+    expect(mockedJson).toHaveBeenCalledWith("/api/v1/work_items/w1/dependencies", {
       method: "POST",
-      body: JSON.stringify({ dependsOnId: "w2" }),
+      body: JSON.stringify({ depends_on_id: "w2" }),
     });
   });
 
   it("dependencies.remove DELETEs the edge", async () => {
     await projectWorkItemsApi.dependencies.remove("w1", "w2");
-    expect(mockedRequest).toHaveBeenCalledWith("/api/project/work-items/w1/dependencies/w2", { method: "DELETE" });
+    expect(mockedRequest).toHaveBeenCalledWith("/api/v1/work_items/w1/dependencies/w2", { method: "DELETE" });
   });
 });
 
 /* ── projectActivityApi ───────────────────────────────────────────────── */
 
-const activityRow = (id: string, createdAt: string) => ({
+// An activity row as /v1 sends it: snake_case, `created` in unix SECONDS.
+const T0 = 1767225600;
+const iso = (unix: number) => new Date(unix * 1000).toISOString();
+const activityRow = (id: string, created: number) => ({
+  object: "activity",
   id,
-  ecosystemId: "o",
-  projectId: "p1",
-  workItemId: null,
-  actorKind: null,
-  actorId: null,
-  actorLabel: null,
+  ecosystem_id: "o",
+  project_id: "p1",
+  work_item_id: null,
+  actor_kind: null,
+  actor_id: null,
+  actor_label: null,
   action: "project.updated",
   detail: null,
-  createdAt,
+  created,
 });
 
 describe("projectActivityApi", () => {
   it("projectActivity threads limit+before into the query and derives nextBefore from a full page", async () => {
-    mockedJson.mockResolvedValueOnce([activityRow("a1", "t1"), activityRow("a2", "t2")]);
+    respondWith(v1List([activityRow("a1", T0), activityRow("a2", T0 + 60)]));
     const page = await projectActivityApi.projectActivity("p1", {
       limit: 2,
       before: "2026-01-02T00:00:00.000Z",
     });
-    expect(mockedJson).toHaveBeenCalledWith(
-      "/api/project/projects/p1/activity?limit=2&before=2026-01-02T00%3A00%3A00.000Z",
-    );
-    // Full page (rows === limit) → nextBefore is the last row's COMPOSITE cursor token
-    // "<createdAt>|<id>" (the id tiebreaker that closes the millisecond-tie "load older" gap).
-    expect(page.nextBefore).toBe("t2|a2");
+    expect(pathAt(0)).toBe("/api/v1/projects/p1/activity");
+    expect(paramsAt(0).get("limit")).toBe("2");
+    expect(paramsAt(0).get("before")).toBe("2026-01-02T00:00:00.000Z");
+    // Full page (rows === limit) -> nextBefore is a COMPOSITE cursor token "<createdAt>|<id>" (the
+    // id tiebreaker that closes the tie gap). /v1 timestamps are whole seconds, so the time half
+    // is the NEXT second up: the legacy keyset compares `< before`, and the page is trimmed to
+    // the cursor row on the way back in.
+    expect(page.nextBefore).toBe(`${iso(T0 + 61)}|a2`);
     expect(page.rows).toHaveLength(2);
+    expect(page.rows[1]!.createdAt).toBe(iso(T0 + 60));
   });
 
-  it("projectActivity splits a composite before token into before + beforeId query params", async () => {
-    mockedJson.mockResolvedValueOnce([activityRow("a3", "t3")]);
+  it("projectActivity splits a composite before token into before + before_id query params", async () => {
+    respondWith(v1List([activityRow("a3", T0)]));
     await projectActivityApi.projectActivity("p1", { limit: 2, before: "t2|a2" });
-    // The opaque "<createdAt>|<id>" token → before=<createdAt>&beforeId=<id> for the keyset.
-    expect(mockedJson).toHaveBeenCalledWith(
-      "/api/project/projects/p1/activity?limit=2&before=t2&beforeId=a2",
-    );
+    // The opaque "<createdAt>|<id>" token -> before=<createdAt>&before_id=<id> for the keyset.
+    expect(paramsAt(0).get("limit")).toBe("2");
+    expect(paramsAt(0).get("before")).toBe("t2");
+    expect(paramsAt(0).get("before_id")).toBe("a2");
   });
 
-  it("projectActivity returns nextBefore=null on a short (last) page", async () => {
-    mockedJson.mockResolvedValueOnce([activityRow("a1", "t1")]);
-    const page = await projectActivityApi.projectActivity("p1", { limit: 2 });
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/projects/p1/activity?limit=2");
+  it("projectActivity drops the rows up to and including the cursor row, so a second-wide tie is not repeated", async () => {
+    // The cursor is rounded UP to the next second, so the page can start with rows already shown.
+    respondWith(v1List([activityRow("a1", T0 + 60), activityRow("a2", T0 + 60), activityRow("a3", T0)]));
+    const page = await projectActivityApi.projectActivity("p1", { limit: 5, before: `${iso(T0 + 61)}|a2` });
+    expect(page.rows.map((r) => r.id)).toEqual(["a3"]);
     expect(page.nextBefore).toBeNull();
   });
 
-  it("projectActivity with no options issues no query string and nextBefore=null", async () => {
-    mockedJson.mockResolvedValueOnce([activityRow("a1", "t1"), activityRow("a2", "t2")]);
+  it("projectActivity returns nextBefore=null on a short (last) page", async () => {
+    respondWith(v1List([activityRow("a1", T0)]));
+    const page = await projectActivityApi.projectActivity("p1", { limit: 2 });
+    expect(paramsAt(0).get("limit")).toBe("2");
+    expect(paramsAt(0).has("before")).toBe(false);
+    expect(page.nextBefore).toBeNull();
+  });
+
+  it("projectActivity with no options sends only the default page size and nextBefore=null", async () => {
+    respondWith(v1List([activityRow("a1", T0), activityRow("a2", T0 + 60)]));
     const page = await projectActivityApi.projectActivity("p1");
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/projects/p1/activity");
+    expect(pathAt(0)).toBe("/api/v1/projects/p1/activity");
+    expect(paramsAt(0).get("limit")).toBe("50");
+    expect(paramsAt(0).has("before")).toBe(false);
+    expect(paramsAt(0).has("before_id")).toBe(false);
     expect(page.nextBefore).toBeNull();
   });
 
   it("workItemActivity hits the work-item stem with the keyset query", async () => {
-    mockedJson.mockResolvedValueOnce([activityRow("a1", "t1")]);
+    respondWith(v1List([activityRow("a1", T0)]));
     await projectActivityApi.workItemActivity("w1", { limit: 1, before: "cur" });
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/work-items/w1/activity?limit=1&before=cur");
+    expect(pathAt(0)).toBe("/api/v1/work_items/w1/activity");
+    expect(paramsAt(0).get("limit")).toBe("1");
+    expect(paramsAt(0).get("before")).toBe("cur");
   });
-
 });
 
 /* ── projectCommentsApi ───────────────────────────────────────────────── */
@@ -349,19 +399,35 @@ describe("projectCommentsApi", () => {
     ...over,
   });
 
+  const wireComment = (id: string, over: Record<string, unknown> = {}) => ({
+    object: "comment",
+    id,
+    project_id: "p1",
+    work_item_id: "w1",
+    parent_id: null,
+    author_kind: "customer",
+    author_id: "cust-1",
+    author_label: "Ada",
+    body: `body ${id}`,
+    edited_at: null,
+    created: 1767225600,
+    updated: 1767225600,
+    ...over,
+  });
+
   it("list GETs the CARD's comments stem and keeps the server's order", async () => {
     // Oldest-first is the server's order and it is load-bearing — a conversation only reads
     // correctly forward — so the client must not sort it into something else.
-    mockedJson.mockResolvedValueOnce([commentRow("c1"), commentRow("c2")]);
+    respondWith(v1List([wireComment("c1"), wireComment("c2")]));
     const out = await projectCommentsApi.list("w1");
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/work-items/w1/comments");
+    expect(pathAt(0)).toBe("/api/v1/work_items/w1/comments");
     expect(out.map((c) => c.id)).toEqual(["c1", "c2"]);
   });
 
   it("add POSTs to the card, and omits parentId entirely when it is a top-level comment", async () => {
     mockedJson.mockResolvedValueOnce(commentRow("c1"));
     await projectCommentsApi.add("w1", "hello");
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/work-items/w1/comments", {
+    expect(mockedJson).toHaveBeenCalledWith("/api/v1/work_items/w1/comments", {
       method: "POST",
       body: JSON.stringify({ body: "hello" }),
     });
@@ -370,9 +436,9 @@ describe("projectCommentsApi", () => {
   it("add carries parentId when replying", async () => {
     mockedJson.mockResolvedValueOnce(commentRow("c2", { parentId: "c1" }));
     const out = await projectCommentsApi.add("w1", "me too", "c1");
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/work-items/w1/comments", {
+    expect(mockedJson).toHaveBeenCalledWith("/api/v1/work_items/w1/comments", {
       method: "POST",
-      body: JSON.stringify({ body: "me too", parentId: "c1" }),
+      body: JSON.stringify({ body: "me too", parent_id: "c1" }),
     });
     expect(out.parentId).toBe("c1");
   });
@@ -382,20 +448,20 @@ describe("projectCommentsApi", () => {
     // these to the work-item stem would edit nothing and report success.
     mockedJson.mockResolvedValueOnce(commentRow("c1", { body: "fixed", editedAt: "t9" }));
     const out = await projectCommentsApi.edit("c1", "fixed");
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/comments/c1", {
-      method: "PATCH",
+    expect(mockedJson).toHaveBeenCalledWith("/api/v1/comments/c1", {
+      method: "POST",
       body: JSON.stringify({ body: "fixed" }),
     });
     expect(out.editedAt).toBe("t9");
 
     await projectCommentsApi.remove("c1");
-    expect(mockedRequest).toHaveBeenCalledWith("/api/project/comments/c1", { method: "DELETE" });
+    expect(mockedRequest).toHaveBeenCalledWith("/api/v1/comments/c1", { method: "DELETE" });
   });
 
   it("maps an unknown authorKind to `customer` rather than inventing a principal", async () => {
     // A bundle older than the backend must not let an unrecognised kind pose as an agent —
     // "a plain author with a label" is the reading that claims the least.
-    mockedJson.mockResolvedValueOnce([commentRow("c1", { authorKind: "martian" })]);
+    respondWith(v1List([wireComment("c1", { author_kind: "martian" })]));
     const [c] = await projectCommentsApi.list("w1");
     expect(c?.authorKind).toBe("customer");
   });
@@ -452,36 +518,34 @@ describe("projectArtifactsApi", () => {
   });
 
   const artifactRow = (id: string) => ({
+    object: "project_artifact",
     id,
-    projectId: "p1",
+    project_id: "p1",
     direction: "ingested" as const,
-    targetKind: "content.markdown",
-    targetId: "d1",
+    target_kind: "content.markdown",
+    target_id: "d1",
     target: descriptor("d1"),
-    createdAt: "c",
+    created: 1767225600,
   });
 
-  it("list unwraps the items envelope and keeps the server's order", async () => {
-    mockedJson.mockResolvedValueOnce({ items: [artifactRow("a2"), artifactRow("a1")] });
+  it("list unwraps the /v1 list envelope and keeps the server's order", async () => {
+    respondWith(v1List([artifactRow("a2"), artifactRow("a1")]));
     const out = await projectArtifactsApi.list("p1");
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/projects/p1/artifacts");
+    expect(pathAt(0)).toBe("/api/v1/projects/p1/artifacts");
+    expect(paramsAt(0).has("direction")).toBe(false);
     // Not re-sorted: the endpoint returns newest-first and a client re-sort would silently
     // disagree with the pagination the endpoint is built for.
     expect(out.map((a) => a.id)).toEqual(["a2", "a1"]);
   });
 
   it("list narrows to one direction when asked", async () => {
-    mockedJson.mockResolvedValueOnce({ items: [] });
     await projectArtifactsApi.list("p1", { direction: "produced" });
-    expect(mockedJson).toHaveBeenCalledWith(
-      "/api/project/projects/p1/artifacts?direction=produced",
-    );
+    expect(pathAt(0)).toBe("/api/v1/projects/p1/artifacts");
+    expect(paramsAt(0).get("direction")).toBe("produced");
   });
 
   it("list keeps an unresolvable pointer as a row with a null target", async () => {
-    mockedJson.mockResolvedValueOnce({
-      items: [{ ...artifactRow("a1"), target: null }],
-    });
+    respondWith(v1List([{ ...artifactRow("a1"), target: null }]));
     const [row] = await projectArtifactsApi.list("p1");
     expect(row?.target).toBeNull();
     // The pointer itself survives, so a renderer can still say WHAT is missing.
@@ -489,27 +553,31 @@ describe("projectArtifactsApi", () => {
     expect(row?.targetId).toBe("d1");
   });
 
-  it("attachable builds the picker query and unwraps the envelope", async () => {
-    mockedJson.mockResolvedValueOnce({ items: [descriptor("d1")] });
+  it("attachable builds the picker query on the project's `attachable` include and unwraps the envelope", async () => {
+    mockedJson.mockResolvedValueOnce({
+      attachable: { items: [descriptor("d1"), descriptor("d2"), descriptor("d3")] },
+    });
     const out = await projectArtifactsApi.attachable("p1", {
       kind: "content.urls",
       query: "road map",
-      limit: 100,
+      limit: 2,
     });
-    expect(mockedJson).toHaveBeenCalledWith(
-      "/api/project/projects/p1/attachable?kind=content.urls&q=road+map&limit=100",
-    );
-    expect(out[0]?.id).toBe("d1");
+    expect(String(mockedJson.mock.calls[0]![0])).toMatch(/^\/api\/v1\/projects\/p1\?/);
+    expect(paramsOf(0).get("include[]")).toBe("attachable");
+    expect(paramsOf(0).get("kind")).toBe("content.urls");
+    expect(paramsOf(0).get("q")).toBe("road map");
+    // /v1 has no limit on an include, so the cap is applied here.
+    expect(out.map((d) => d.id)).toEqual(["d1", "d2"]);
   });
 
-  it("attachable sends no query string when nothing narrows it", async () => {
-    mockedJson.mockResolvedValueOnce({ items: [] });
+  it("attachable sends only the include when nothing narrows it", async () => {
+    mockedJson.mockResolvedValueOnce({ attachable: [] });
     await projectArtifactsApi.attachable("p1");
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/projects/p1/attachable");
+    expect([...paramsOf(0).keys()]).toEqual(["include[]"]);
   });
 
   it("attachable defaults `url`/`subtitle` to null rather than leaving them undefined", async () => {
-    mockedJson.mockResolvedValueOnce({ items: [{ kind: "k", id: "i", title: "T" }] });
+    mockedJson.mockResolvedValueOnce({ attachable: { items: [{ kind: "k", id: "i", title: "T" }] } });
     const [d] = await projectArtifactsApi.attachable("p1");
     expect(d?.subtitle).toBeNull();
     expect(d?.url).toBeNull();
@@ -522,12 +590,12 @@ describe("projectArtifactsApi", () => {
       targetKind: "content.markdown",
       targetId: "d1",
     });
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/projects/p1/artifacts", {
+    expect(mockedJson).toHaveBeenCalledWith("/api/v1/projects/p1/artifacts", {
       method: "POST",
       body: JSON.stringify({
         direction: "ingested",
-        targetKind: "content.markdown",
-        targetId: "d1",
+        target_kind: "content.markdown",
+        target_id: "d1",
       }),
     });
     expect(out.target?.title).toBe("Doc d1");
@@ -537,7 +605,7 @@ describe("projectArtifactsApi", () => {
     mockedRequest.mockResolvedValueOnce(undefined);
     await projectArtifactsApi.unlink("p/1", "a/1");
     expect(mockedRequest).toHaveBeenCalledWith(
-      "/api/project/projects/p%2F1/artifacts/a%2F1",
+      "/api/v1/projects/p%2F1/artifacts/a%2F1",
       { method: "DELETE" },
     );
   });
@@ -566,23 +634,25 @@ describe("work-item keys", () => {
   });
 
   it("defaults a work item's itemKey to \"\" when the backend omits it", async () => {
-    mockedJson.mockResolvedValueOnce([WORK_ITEM]);
+    respondWith(v1List([WIRE_ITEM]));
     const [w] = await projectWorkItemsApi.listForProject("p1");
     expect(w?.itemKey).toBe("");
   });
 
   it("carries the rendered itemKey through when the backend sends one", async () => {
-    mockedJson.mockResolvedValueOnce([{ ...WORK_ITEM, itemKey: "WEB-42" }]);
+    // `item_key` is not a declared /v1 property, so the gateway passes it through camelCase;
+    // both spellings must land on `itemKey`.
+    respondWith(v1List([{ ...WIRE_ITEM, item_key: "WEB-42" }]));
     const [w] = await projectWorkItemsApi.listForProject("p1");
     expect(w?.itemKey).toBe("WEB-42");
   });
 
-  it("update PATCHes a keyPrefix like any other field", async () => {
+  it("update POSTs a key_prefix like any other field", async () => {
     mockedJson.mockResolvedValueOnce({ id: "1", name: "P", description: "", status: "active", color: "#000", keyPrefix: "WEB", ecosystemId: "o", createdAt: "c", updatedAt: "u" });
     await projectsApi.update("1", { keyPrefix: "WEB" });
-    expect(mockedJson).toHaveBeenCalledWith("/api/project/projects/1", {
-      method: "PATCH",
-      body: JSON.stringify({ keyPrefix: "WEB" }),
+    expect(mockedJson).toHaveBeenCalledWith("/api/v1/projects/1", {
+      method: "POST",
+      body: JSON.stringify({ key_prefix: "WEB" }),
     });
   });
 });

@@ -1,7 +1,7 @@
 
 This logic provides one pure, synchronous function, the sublabel-building function, that returns the one-line caption shown under the status headline. When the board is clear it reads like "12/12 endpoints healthy · no failed builds". Otherwise it is a grouped breakdown of the problem rows, such as "2 down · 1 failed build", and the doc comment requires it to account "for EVERY problem so the parts sum to the indicator count".
 
-The doc comment says the function is "Shared by the mobile hero and the desktop top-bar pill". In the current tree its only caller is the overview tab view, which passes the result to the big indicator view as its sublabel. The inputs are typed by the indicator state (specified in [Overview Projections](adhsdk://cookbook/status/dashboard/logic/overview)) and a row (specified in [Row Model](adhsdk://cookbook/status/dashboard/logic/row-model)). The function reads only a row's `statusWord`.
+The doc comment says the function is "Shared by the mobile hero and the desktop top-bar pill". In the current tree its only caller is the overview tab view, which passes the result to the big indicator view as its sublabel. The inputs are typed by the indicator state (specified in Overview Projections ([adhsdk.ingredient.status.dashboard.logic.overview](cookbook:ba5855cd-bd4c-49be-b7d3-4c3f7f35434e))) and a row (specified in Row Model ([adhsdk.ingredient.status.dashboard.logic.row-model](cookbook:a0ae2ae1-7d51-4639-8f3b-062dcf750b66))). The function reads only a row's `statusWord`.
 
 This logic also holds a private table, the sublabel-phrase table, which maps a problem row's status word to a function that formats a count into a phrase.
 

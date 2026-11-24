@@ -13,6 +13,20 @@ public enum GitFileStatus: String, Codable, CaseIterable, Sendable {
 
     public var displayCharacter: String { rawValue }
 
+    /// The status as a person reads it, localized: an accessibility label, never the case name.
+    public var displayName: String {
+        switch self {
+        case .modified: String(localized: "Modified")
+        case .added: String(localized: "Added")
+        case .deleted: String(localized: "Deleted")
+        case .renamed: String(localized: "Renamed")
+        case .copied: String(localized: "Copied")
+        case .untracked: String(localized: "Untracked")
+        case .conflicted: String(localized: "Conflicted")
+        case .ignored: String(localized: "Ignored")
+        }
+    }
+
     /// Higher wins when statuses are merged for a directory.
     public var priority: Int {
         switch self {

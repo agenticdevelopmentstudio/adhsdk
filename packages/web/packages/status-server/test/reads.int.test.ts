@@ -249,7 +249,7 @@ describe('reads with seeded data', () => {
     expect(body.checks).toHaveLength(2);
   });
 
-  it('/uptime aggregates daily counts for the configured endpoint', async () => {
+  it('status-server-monitor-uptime-013: /uptime aggregates daily counts for the configured endpoint', async () => {
     // Through the real cycle path (insert, then roll up): /uptime reads the hourly
     // rollup, so raw checks alone are invisible to it, as with /response-history below.
     await db.insert(schema.healthChecks).values([

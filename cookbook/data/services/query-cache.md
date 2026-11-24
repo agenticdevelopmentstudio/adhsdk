@@ -1,32 +1,28 @@
 ---
 id: 0fcd16c1-a8da-4184-b63f-97b68ed6378d
 title: "Query Cache"
-domain: adhsdk://cookbook/data/services/query-cache
 type: ingredient
-version: 1.2.1
+version: 1.3.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-13
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "Shared query-cache runtime: a singleton cache client, provider, and consumer accessor every toolkit data hook fetches through, with whole-cache clearing when the signed-in principal changes."
+summary: "Shared query-cache runtime: a singleton cache client, provider, and consumer accessor every toolkit data hook fetches through, with whole-cache clearing when the signed-in principal changes, plus a sequential batch runner that refetches the cache after a run."
 platforms:
   - typescript
   - web
 tags:
   - cache
   - session
+  - batch
 depends-on:
-  - adhsdk://cookbook/data/services/auth/auth-client
+  - 3ea9329e-5acc-4c43-b5ce-bb8c50570104
 related:
-  - adhsdk://cookbook/data/services/resource-data
-references:
-  - packages/web/packages/data/src/query/index.tsx (adhsdk)
-  - packages/web/packages/data/src/query/__tests__/toolkit-query-provider.test.tsx (adhsdk)
-  - packages/web/packages/data/src/__tests__/query-client.test.tsx (adhsdk)
-  - packages/web/packages/auth/src/tokens.ts (adhsdk)
+  - ec6e6ca5-8780-4ce2-8b3a-087adc50ed35
+references: []
 approved-by: ""
 approved-date: ""
 ---
@@ -35,7 +31,7 @@ approved-date: ""
 
 ## Overview
 
-This recipe is the shared query-cache runtime that every toolkit
+This ingredient is the shared query-cache runtime that every toolkit
 data-fetching hook reads through, rather than any cache client a host
 application mounts for its own code. It owns exactly one client-side cache
 instance per tab, held at module scope specifically so it survives a
@@ -49,7 +45,7 @@ configured cache-provider component (built on the same underlying cache
 library) is mounted above it instead; and a session-watch guard that empties
 the whole cache the instant the signed-in principal changes, so a second
 user on a shared machine is never served the first user's cached rows. It
-has no visual surface of its own.
+has no visual surface of its own. It also carries a sequential batch runner that refetches the cache after a run (see Behavioral Requirements, Batch runner).
 
 ## Behavioral Requirements
 
@@ -109,12 +105,48 @@ has no visual surface of its own.
 - **session-refresh-does-not-clear**: A session-change notification whose
   subject-claim value is unchanged from the last-seen subject — the case a
   token refresh for the same signed-in principal produces, per session-change
-  subscription's own contract (see the authentication client recipe) — MUST
+  subscription's own contract (see [adhsdk.ingredient.data.services.auth.auth-client](cookbook:3ea9329e-5acc-4c43-b5ce-bb8c50570104)) — MUST
   NOT clear the cache.
 - **cross-tab-session-watch**: The session-watch guard MUST also register
   its comparison callback against a cross-tab storage-change notification,
   so the same subject comparison and conditional clear run when another
   browser tab of the same origin writes the session storage key.
+
+
+### Batch runner
+
+The batch runner runs one action over a selection of rows. It lives here, beside the
+cache it refetches, so any feature package's list can use it. Its web implementation,
+`useBatchRun`, is named in Platform Notes.
+
+The runner exposes a controller with four operations and one state value:
+
+- `run(items, perform)`: starts a run over a list of items (`{id, label}`) and settles when the
+  run ends, after any halt decisions. `perform` is the action for one item; it fails by throwing.
+- `continueRun()`: resumes a halted run with the next item.
+- `stop()`: ends a halted run without performing the remaining items.
+- `reset()`: releases a halted run as if it were stopped, then returns the state to idle.
+
+The state is `running`, `finished` (the run has ended, by completing every item or by a stop),
+`total` (items in the run), `done` (items that succeeded), `currentLabel` (the item being
+performed), `error` (set only while the run is halted on a failure: the message and the failed
+item's label) and `results`. Each result is `{id, label, status, message}`, where `status` is
+`ok` or `failed`, and `message` is the success message, the thrown error's message, or a
+default failure message.
+
+- **batch-sequential**: a run MUST perform its items one at a time, in order,
+  reporting each item's result as it settles.
+- **batch-halt-on-failure**: a failed item MUST halt the run until the caller
+  continues or stops it. Items that already succeeded MUST stay reported as done.
+  Continuing performs the next item; stopping ends the run.
+- **batch-empty-is-no-run**: a run over no items MUST change no state, so no
+  progress view opens for a run that never happened.
+- **batch-single-flight**: a run started while another is in flight on the same
+  controller MUST be ignored.
+- **batch-release-on-reset**: reset and unmount MUST release a halted run as if it
+  were stopped, so the run reaches its end and its refetch.
+- **batch-invalidate-at-end**: when given an invalidation key, the runner MUST
+  invalidate it once the run ends, however it ended.
 
 ## Appearance
 
@@ -142,16 +174,22 @@ component.
 | query-cache-005 | provider-nesting-is-idempotent | Render one instance of the cache provider component nested inside another, each with its own client-capturing probe | The inner probe's client is the identical instance as the outer probe's client |
 | query-cache-006 | provider-siblings-share-client | Render two separate, non-nested trees each rendering the cache provider component, each with its own probe | Both probes resolve to the identical client instance |
 | query-cache-007 | hook-ignores-ancestor-context | Mount a host's own cache-provider wrapper around a distinct cache client (staleness window 30,000 ms, retry count 3) wrapping the cache provider component and a probe | The probe's client is not the host's client, and its resolved staleness window is 300,000 ms, not 30,000 ms |
-| query-cache-008 | query-defaults-stale-and-retry | Inspect a freshly constructed client's resolved default query options | Staleness window is 300,000 ms and retry count is `1` (the staleness half is also exercised indirectly by vector 007) |
+| query-cache-008 | query-defaults-stale-and-retry | Inspect a freshly constructed client's resolved default query options | Staleness window is 300,000 ms and retry count is `1` |
 | query-cache-009 | resource-gc-time-constant | Read the exported resource-cache retention constant | `1,800,000` (30 minutes) |
-| query-cache-010 | resource-key-gc-time-pinned | Inspect the resolved defaults for a key beginning with each configured long-retention prefix (by default `['resource-list', ...]` and `['resource-item', ...]`) on a freshly constructed client | Both resolve their retention time to the resource-cache retention constant; a key under none of the configured prefixes resolves the client's unpinned default instead (exercised indirectly through the resource-item/resource-list recipes' own coverage — see the resource-data recipe) |
-| query-cache-011 | browser-client-lazy-construction | Call the singleton cache accessor a first time in the browser, then a second time | The cache-client factory and the session-watch guard each run exactly once, on the first call only (no dedicated test in this package exercises this directly) |
-| query-cache-012 | session-watch-initial-subject | With a valid access token for subject `'user-1'` already stored, trigger the first browser call to the singleton cache accessor | The internal last-seen subject is initialized to `'user-1'` (no test in this package exercises this today) |
-| query-cache-013 | session-change-clears-on-subject-change | With the singleton already constructed for subject `'user-1'`, change the stored token to subject `'user-2'` and invoke the session-change notification | The browser singleton's cache is cleared and the last-seen subject becomes `'user-2'` (no test in this package exercises this today — see Design Decisions) |
-| query-cache-014 | session-refresh-does-not-clear | With the singleton already constructed for subject `'user-1'`, refresh the token for the SAME subject `'user-1'` and invoke the session-change notification | The cache is NOT cleared (no test in this package exercises this today) |
-| query-cache-015 | cross-tab-session-watch | With the singleton constructed for subject `'user-1'`, dispatch a cross-tab storage-change notification (simulating another tab writing subject `'user-2'`'s token) without ever invoking the session-change notification directly | The same comparison runs and clears the cache exactly as vector 013 (no test in this package exercises this today) |
+| query-cache-010 | resource-key-gc-time-pinned | Inspect the resolved defaults for a key beginning with each configured long-retention prefix (by default `['resource-list', ...]` and `['resource-item', ...]`) on a freshly constructed client | Both resolve their retention time to the resource-cache retention constant; a key under none of the configured prefixes resolves the client's unpinned default instead |
+| query-cache-011 | browser-client-lazy-construction | Call the singleton cache accessor a first time in the browser, then a second time | The cache-client factory and the session-watch guard each run exactly once, on the first call only |
+| query-cache-012 | session-watch-initial-subject | With a valid access token for subject `'user-1'` already stored, trigger the first browser call to the singleton cache accessor | The internal last-seen subject is initialized to `'user-1'` |
+| query-cache-013 | session-change-clears-on-subject-change | With the singleton already constructed for subject `'user-1'`, change the stored token to subject `'user-2'` and invoke the session-change notification | The browser singleton's cache is cleared and the last-seen subject becomes `'user-2'` |
+| query-cache-014 | session-refresh-does-not-clear | With the singleton already constructed for subject `'user-1'`, refresh the token for the SAME subject `'user-1'` and invoke the session-change notification | The cache is NOT cleared |
+| query-cache-015 | cross-tab-session-watch | With the singleton constructed for subject `'user-1'`, dispatch a cross-tab storage-change notification (simulating another tab writing subject `'user-2'`'s token) without ever invoking the session-change notification directly | The same comparison runs and clears the cache exactly as vector 013 |
 | query-cache-016 | provider-uses-singleton | Render the cache provider component and inspect the client it passes to its underlying cache-provider wrapper | It is exactly the singleton cache accessor's current return value |
-
+| query-cache-017 | batch-sequential, batch-invalidate-at-end | Run three items that all succeed, with an invalidation key | Results ok, ok, ok in order; `done` 3; the key invalidated once |
+| query-cache-018 | batch-halt-on-failure | The second of three items fails, then the caller stops | Run ends with one ok and one failed; the third is never performed |
+| query-cache-019 | batch-empty-is-no-run | Run zero items | State stays idle |
+| query-cache-020 | batch-single-flight | Start a second run while the first is halted | The second run is ignored |
+| query-cache-021 | batch-halt-on-failure | The second of three items fails, then the caller continues | The third item is performed; results are ok, failed, ok; `done` is 2; the run ends |
+| query-cache-022 | batch-release-on-reset | The second of three items fails, the run is halted, then `reset()` is called (or the owner unmounts) | The halted run is released as if stopped: the third item is never performed, the run reaches its end, and the invalidation key is invalidated; after `reset()` the run's results and error are cleared and the state is not running |
+| query-cache-023 | batch-invalidate-at-end | The second of three items fails, then the caller stops, with an invalidation key | The key is invalidated once after the stop, even though the run did not complete |
 ## Edge Cases
 
 - **Null/empty input**: the session-watch guard's initial last-seen subject
@@ -184,12 +222,12 @@ component.
   database dependency of its own — its only external calls are reading the
   token's subject claim, session-change subscription, registering the
   cross-tab storage-change listener, and cache-client construction, none of
-  which this component's tests or the authentication client's own
+  which this component's tests or the authentication client's ([adhsdk.ingredient.data.services.auth.auth-client](cookbook:3ea9329e-5acc-4c43-b5ce-bb8c50570104)) own
   documented contract for reading the token's subject claim (guaranteed to
   return nothing rather than throw on a malformed token) show as failing.
   This component therefore defines no dependency-failure path of its own; a
-  downstream query's network failure is documented by the recipe for that
-  query (e.g. the resource-data recipe), not here.
+  downstream query's network failure is documented by the spec for that
+  query (e.g. [adhsdk.ingredient.data.services.resource-data](cookbook:ec6e6ca5-8780-4ce2-8b3a-087adc50ed35)), not here.
 - **Offline/disconnected state**: the cache-client factory sets one default
   retry policy (a single retry) applied to every query built on the
   singleton cache accessor, but this component implements no
@@ -210,8 +248,8 @@ component.
 | The mounted subtree | required prop of the cache provider component | none (required) | Subtree the provider mounts its underlying cache-provider wrapper around |
 
 None of these values is exposed through a caller-facing setter (no
-configuration function exists in this component, unlike the resource-data
-recipe's own configuration entry point); changing any of them requires
+configuration function exists in this component, unlike the [adhsdk.ingredient.data.services.resource-data](cookbook:ec6e6ca5-8780-4ce2-8b3a-087adc50ed35)
+ingredient's own configuration entry point); changing any of them requires
 editing the source module itself.
 
 ## Deep Linking
@@ -247,7 +285,7 @@ product-telemetry event, and calls no reporting sink of its own.
 
 - **Data collected**: This component collects no new personal data. It
   reads the already-stored access token's subject claim, via reading the
-  token's subject claim (documented by the authentication client recipe),
+  token's subject claim (documented by [adhsdk.ingredient.data.services.auth.auth-client](cookbook:3ea9329e-5acc-4c43-b5ce-bb8c50570104)),
   solely to compare it against the previously seen value; it never displays,
   re-derives, or persists that claim itself.
 - **Storage**: The last-seen subject lives in an in-memory, module-scope
@@ -268,14 +306,16 @@ Not applicable: this component contains no logging call of any kind.
 
 ## Platform Notes
 
-- **React/Web**: This is the reference implementation.
+- **React/Web**: This is the reference implementation. `useBatchRun` is in
+  `src/query/use-batch-run.ts` and exported from `@adh-sdk/data/query`; it reads
+  the context's client through `useQueryClient`, like the feature panes' own hooks.
   `@tanstack/react-query` v5's `QueryClient`/`QueryClientProvider`/
   `useQueryClient` back the cache and its React binding; a module-scope
   `let` binding backs the one-per-tab singleton; `window.addEventListener
   ('storage', ...)` backs the cross-tab session watch;
   `@adh-sdk/auth/client`'s `onSessionChange`/`readTokenSubject`
   supply the same-tab session signal and the principal comparison value.
-- **SwiftUI / AppKit / UIKit**: A `final class` or `actor`-isolated cache
+- **SwiftUI**: A `final class` or `actor`-isolated cache
   object (an `NSCache`- or `Dictionary`-backed store keyed the same way the
   react-query keys are) held as a singleton (a static property, or an
   `EnvironmentObject`/`ObservableObject` injected once at the app's root)
@@ -285,6 +325,9 @@ Not applicable: this component contains no logging call of any kind.
   same-origin-other-tab analog to port, since an Apple app is a single
   process — a second window of the same app sharing the cache singleton
   in-process already covers that case without any storage-event equivalent.
+
+- **AppKit / UIKit**: Same design as SwiftUI: a `final class` or `actor`-isolated cache singleton replaces the module-scope `QueryClient`, `NotificationCenter` or a Combine `PassthroughSubject` replaces `onSessionChange`, and a second window of the same app already shares the singleton in-process, so no storage-event equivalent is needed.
+
 - **Compose / Android**: A Kotlin `object` (Kotlin's own module-scope
   singleton) holding a `MutableStateFlow`- or coroutine-`Deferred`-backed
   cache map replaces the `QueryClient` singleton; a `SharedFlow`/`Channel`
@@ -302,7 +345,7 @@ Not applicable: this component contains no logging call of any kind.
   `WeakEventManager` exists to prevent) raised by the same code that writes
   or clears the stored tokens replaces `onSessionChange`; the handler MUST
   apply the identical "compare the subject, only clear on an actual change"
-  guard this recipe's comparison callback implements here, so a token
+  guard this ingredient's comparison callback implements here, so a token
   refresh for the same signed-in user does not needlessly discard the
   cache. There is no `window` `'storage'`-event equivalent for a
   single-process WinUI 3 app; if the app supports multiple top-level
@@ -313,9 +356,12 @@ Not applicable: this component contains no logging call of any kind.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/data/src/query/index.tsx` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/data/src/query/index.tsx` | confirmed (1.3.0) |
+| web | `packages/web/packages/data/src/query/use-batch-run.ts` | confirmed (1.3.0) |
+| web | `packages/web/packages/data/src/query/__tests__/toolkit-query-provider.test.tsx` | confirmed (1.3.0) |
+| web | `packages/web/packages/data/src/__tests__/query-client.test.tsx` | confirmed (1.3.0) |
 
 ## Design Decisions
 
@@ -404,30 +450,23 @@ expect server-fetched data to "already be there" on first paint.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [caching-strategy](agenticdevelopercookbook://compliance/performance#caching-strategy) | passed | Performance |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | passed | Reliability |
-| [data-minimization](agenticdevelopercookbook://compliance/privacy-and-data#data-minimization) | passed | Privacy and Data |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.performance.caching-strategy](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3b773606-ab90-5e7d-8e96-093777dcf070) | passed | Performance |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | Reliability |
+| [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | Privacy and Data |
 
 `separation-of-concerns` **passed**: this file is pure data-layer
 infrastructure — a cache client, a provider, and a subscription guard — with
 no presentation code and no domain-specific fetch logic of its own; every
-concrete query lives in a sibling file (see the resource-data component and the other data components that consume this client). `unit-test-coverage` is **partial**: the
-singleton, per-call-server, provider-nesting, and context-independence
-behaviors are all directly asserted by `query-client.test.tsx` and
-`toolkit-query-provider.test.tsx`, but `watchSession`'s entire
-session-change contract — the initial subject capture, the compare-then-clear
-guard, and the cross-tab `'storage'` listener — has no test exercising it
-anywhere in this package (see the open question recorded against
-`session-change-clears-on-subject-change` in the Conformance Test Vectors).
+concrete query lives in a sibling file (see [adhsdk.ingredient.data.services.resource-data](cookbook:ec6e6ca5-8780-4ce2-8b3a-087adc50ed35) and the other data components that consume this client). `unit-test-coverage` is **passed**: `query-client.test.tsx`, `toolkit-query-provider.test.tsx` and `use-batch-run.test.tsx` assert all 23 conformance vectors, including `watchSession`'s initial subject capture, compare-then-clear guard and cross-tab `'storage'` listener (vectors 012-015) and the batch runner (vectors 017-023).
 `caching-strategy` **passed**: this file is the single place that defines
 the shared invalidation policy (5-minute `staleTime`, single retry, a
 30-minute `gcTime` pinned by key prefix so a prefetch or a post-write
 `setQueryData` survives as long as an observed read) every toolkit query
 inherits, plus the whole-cache invalidation on principal change; the actual
-remote fetches these policies govern are documented by the recipes for the
+remote fetches these policies govern are documented by the specs for the
 queries that make them. `fault-tolerance` **passed**: the module tolerates
 every unpredictable-state shape its own tests exercise — server vs. browser
 execution, a provider nested inside another, sibling providers, no provider
@@ -437,15 +476,17 @@ without ever throwing or adopting the wrong client. `data-integrity`
 exactly a corrupt-data guard — it exists specifically to stop a second
 signed-in principal from reading data cached under the first, and it is a
 second, independent layer against that on top of the tenant-keyed cache
-segments the resource-data component describes. `data-minimization` **passed**: the
+segments the resource-data ingredient describes. `data-minimization` **passed**: the
 only identity value this file reads, `readTokenSubject()`'s `sub` claim, is
 held only in an in-memory comparison variable and is never persisted,
 transmitted, or exposed beyond that comparison.
 
+`data-integrity` and `data-minimization` are **passed** because both rest on `watchSession`, whose behavior (vectors 012-015) is now tested.
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.0 | 2026-11-13 | Mike Fullerton | useBatchRun moves to @adh-sdk/data/query, shared by the admin console and the hub |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Hub framing removed: vector ids take this spec's own name, and the ADH host's default names move to Platform Notes as the web implementation's shipped values. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Make the long-retention cache-key prefixes configuration instead of hard-coded ADH keys; drop ADH-specific references. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to data/services/. |

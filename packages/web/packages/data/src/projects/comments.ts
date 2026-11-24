@@ -1,5 +1,5 @@
 // Work-item comments API client — the CONVERSATION on a card, wired to
-// `/api/project/work-items/{id}/comments` (read + write) and `/api/project/comments/{id}`
+// `/api/v1/work_items/{id}/comments` (read + write) and `/api/v1/comments/{id}`
 // (edit + remove).
 //
 // Separate from `./activity` on purpose. The activity trail is an append-only record of what
@@ -12,12 +12,13 @@
 // Threading is ONE level deep by construction: replying to a reply re-parents onto the root, so
 // a caller can group by `parentId` without recursing (see `threadOf`).
 
-import { authedJson, authedRequest } from "../http";
+import { authedRequest } from "../http";
 import { enc, narrow } from "../client-helpers";
+import { v1Json, v1List, v1Write } from "../v1-case";
 import type { CommentCreateBody, CommentUpdateBody, ProjectCommentRow } from "./wire";
 
-const ITEMS = "/api/project/work-items";
-const COMMENTS = "/api/project/comments";
+const ITEMS = "/api/v1/work_items";
+const COMMENTS = "/api/v1/comments";
 
 /**
  * How a comment names itself to the polymorphic reaction store (`@adh-sdk/data/reactions`):
@@ -115,9 +116,7 @@ export const projectCommentsApi = {
   /** Every live comment on the card, OLDEST-first (the server's order — a conversation reads
    *  forward). Soft-deleted comments are already gone from this. */
   async list(workItemId: string): Promise<ProjectComment[]> {
-    const rows = await authedJson<ProjectCommentRow[]>(
-      `${ITEMS}/${enc(workItemId)}/comments`,
-    );
+    const rows = await v1List<ProjectCommentRow>(`${ITEMS}/${enc(workItemId)}/comments`);
     return rows.map(toProjectComment);
   },
 
@@ -126,10 +125,7 @@ export const projectCommentsApi = {
   async add(workItemId: string, body: string, parentId?: string): Promise<ProjectComment> {
     const payload: CommentCreateBody = parentId ? { body, parentId } : { body };
     return toProjectComment(
-      await authedJson<ProjectCommentRow>(`${ITEMS}/${enc(workItemId)}/comments`, {
-        method: "POST",
-        body: JSON.stringify(payload),
-      }),
+      await v1Json<ProjectCommentRow>(`${ITEMS}/${enc(workItemId)}/comments`, v1Write("POST", payload)),
     );
   },
 
@@ -138,10 +134,7 @@ export const projectCommentsApi = {
   async edit(commentId: string, body: string): Promise<ProjectComment> {
     const payload: CommentUpdateBody = { body };
     return toProjectComment(
-      await authedJson<ProjectCommentRow>(`${COMMENTS}/${enc(commentId)}`, {
-        method: "PATCH",
-        body: JSON.stringify(payload),
-      }),
+      await v1Json<ProjectCommentRow>(`${COMMENTS}/${enc(commentId)}`, v1Write("POST", payload)),
     );
   },
 

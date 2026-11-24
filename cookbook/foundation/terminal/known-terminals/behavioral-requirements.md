@@ -1,0 +1,21 @@
+
+- **entry-fields**: A `KnownTerminal` MUST carry `displayName` (String), `bundleID` (String) and `termProgramValues` (array of String), all immutable.
+- **entry-conformance**: `KnownTerminal` MUST be a `public struct` that is `Sendable` and `Equatable`.
+- **entry-memberwise-init**: `init(displayName:bundleID:termProgramValues:)` MUST be public and MUST require all three values.
+- **display-name-use**: `displayName` MUST be a human-readable product name.
+- **bundle-id-use**: `bundleID` MUST be a macOS bundle identifier.
+- **term-program-values-plural**: `termProgramValues` MUST allow more than one value for a terminal, because a terminal may expose distribution variants that share one bundle id.
+- **catalog-single-source**: `KnownTerminals.all` MUST be the single source of truth for terminal enumeration, matching and activation; callers MUST NOT keep a second list.
+- **catalog-iterm2**: `all` MUST contain iTerm2 with bundle id `com.googlecode.iterm2` and `TERM_PROGRAM` value `iTerm.app`.
+- **catalog-terminal-app**: `all` MUST contain Terminal.app with bundle id `com.apple.Terminal` and `TERM_PROGRAM` value `Apple_Terminal`.
+- **catalog-warp**: `all` MUST contain Warp with bundle id `dev.warp.Warp-Stable` and `TERM_PROGRAM` value `WarpTerminal`.
+- **catalog-vscode**: `all` MUST contain VS Code with bundle id `com.microsoft.VSCode` and `TERM_PROGRAM` value `vscode`.
+- **catalog-no-duplicates**: No `TERM_PROGRAM` value MAY appear in two entries of `all`, so the default catalog never depends on first-match order.
+- **catalog-order**: `all` MUST list the terminals in the order iTerm2, Terminal.app, Warp, VS Code; the order is the order of enumeration and of a first-match win.
+- **catalog-extensible**: A caller MAY pass its own list to `match(termProgram:in:)` instead of `all`, so more terminals can be supported without patching the toolkit.
+- **match-contract**: `match(termProgram:in:)` MUST return the first entry whose `termProgramValues` contains `termProgram`, and nil when no entry does, including for an empty `termProgram` with the default catalog (no default entry lists an empty value) and for an empty catalog.
+- **match-exact**: Matching MUST compare the whole value and be case sensitive; `iterm.app` does not match `iTerm.app`.
+- **match-default-catalog**: `match` MUST default its catalog to `all`.
+- **type-shape**: `KnownTerminals` MUST be a caseless `public enum` namespace that cannot be instantiated.
+- **no-activation-here**: This code MUST NOT look up running apps or activate one; the callers do, using `bundleID`.
+

@@ -11,7 +11,7 @@ final class FakeMessagingDataSource: MessagingDataSource, @unchecked Sendable {
     var result = MessagingSendResult(status: "sent", providerId: "pm-1", error: nil)
     var failure: Error?
     var statusFailure: Error?
-    var logRequests: [(page: Int, pageSize: Int)] = []
+    var logRequests: [(limit: Int, startingAfter: String?)] = []
 
     func status(ecosystemID: String) async throws -> MessagingStatus {
         if let statusFailure { throw statusFailure }
@@ -19,10 +19,10 @@ final class FakeMessagingDataSource: MessagingDataSource, @unchecked Sendable {
         return status
     }
     func templates() async throws -> [MessagingTemplate] { if let failure { throw failure }; return templates }
-    func log(ecosystemID: String, page: Int, pageSize: Int) async throws -> MessagingLogPage {
+    func log(ecosystemID: String, limit: Int, startingAfter: String?) async throws -> MessagingLogPage {
         if let failure { throw failure }
-        logRequests.append((page, pageSize))
-        return MessagingLogPage(items: entries, total: entries.count, page: page, pageSize: pageSize)
+        logRequests.append((limit, startingAfter))
+        return MessagingLogPage(items: entries, hasMore: false)
     }
     func send(ecosystemID: String, _ message: MessagingSend) async throws -> MessagingSendResult {
         if let failure { throw failure }
@@ -49,7 +49,7 @@ extension MessagingLogEntry {
         errorMessage: String? = nil
     ) -> MessagingLogEntry {
         MessagingLogEntry(
-            id: id, customerId: "c-jane", ecosystemId: "org.acme.shop", channel: channel,
+            id: id, ownerId: "c-jane", ecosystemId: "org.acme.shop", channel: channel,
             recipient: "jane@example.com", subject: "Your order", body: "Shipped today.", templateId: nil,
             status: status, providerId: "pm-1", errorMessage: errorMessage, sentBy: "owner@acme.test",
             origin: "ecosystem", createdAt: "2026-09-03T12:00:00.000Z"
@@ -249,8 +249,8 @@ final class MessagingTopicTests: XCTestCase {
         XCTAssertEqual(level.items[1].systemImage, "message")
         XCTAssertEqual(level.emptyMessage, "No messages sent yet.")
         XCTAssertNil(level.createAction)
-        XCTAssertEqual(data.logRequests.last?.page, 1)
-        XCTAssertEqual(data.logRequests.last?.pageSize, MessagingTopic.logPageSize)
+        XCTAssertEqual(data.logRequests.last?.limit, MessagingTopic.logPageSize)
+        XCTAssertNil(data.logRequests.last?.startingAfter ?? nil)
 
         let (detail, form) = try await rail.form(["log", "m-2"])
         XCTAssertEqual(detail.id, "messaging-log-entry:m-2")

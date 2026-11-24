@@ -24,7 +24,7 @@ class WorkItemRelation:
         related_key (str): the far item's rendered key (ADH-42); '' when the project has no prefix
         title (str): the far item title (joined)
         status (str): the far item statusId (joined)
-        created_at (str):
+        created (int): Unix timestamp, in seconds.
     """
 
     id: str
@@ -34,7 +34,7 @@ class WorkItemRelation:
     related_key: str
     title: str
     status: str
-    created_at: str
+    created: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -52,7 +52,7 @@ class WorkItemRelation:
 
         status = self.status
 
-        created_at = self.created_at
+        created = self.created
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -61,11 +61,11 @@ class WorkItemRelation:
                 "id": id,
                 "kind": kind,
                 "direction": direction,
-                "relatedId": related_id,
-                "relatedKey": related_key,
+                "related_id": related_id,
+                "related_key": related_key,
                 "title": title,
                 "status": status,
-                "createdAt": created_at,
+                "created": created,
             }
         )
 
@@ -80,15 +80,15 @@ class WorkItemRelation:
 
         direction = WorkItemRelationDirection(d.pop("direction"))
 
-        related_id = d.pop("relatedId")
+        related_id = d.pop("related_id")
 
-        related_key = d.pop("relatedKey")
+        related_key = d.pop("related_key")
 
         title = d.pop("title")
 
         status = d.pop("status")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
         work_item_relation = cls(
             id=id,
@@ -98,7 +98,7 @@ class WorkItemRelation:
             related_key=related_key,
             title=title,
             status=status,
-            created_at=created_at,
+            created=created,
         )
 
         work_item_relation.additional_properties = d

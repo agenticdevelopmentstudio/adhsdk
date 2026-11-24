@@ -3,7 +3,7 @@ import Combine
 import AIPluginKit
 import AgenticDeveloperHubSDKCore
 
-/// Backs the LLM Providers settings list: the ordered configurations, the row the
+/// Backs the AI Connections settings list: the ordered configurations, the row the
 /// editor is showing, and add/remove/rename against `UserSettings` + the
 /// per-configuration `AIProviderConfigStore`.
 @MainActor
@@ -19,11 +19,6 @@ final class LLMProvidersListViewModel: ObservableObject {
     /// this to present the modal provider picker over its window (SwiftUI can't
     /// present the AppKit sheet itself).
     var onRequestAddProvider: (() -> Void)?
-
-    /// Invoked when a configuration's "Chat" button is tapped. The hosting AppKit
-    /// controller sets this to open the LLM Chat window pointed at that
-    /// configuration (SwiftUI can't reach the window manager itself).
-    var onRequestChat: ((AIProviderConfiguration) -> Void)?
 
     init(pluginManager: AIPluginManager) {
         self.pluginManager = pluginManager

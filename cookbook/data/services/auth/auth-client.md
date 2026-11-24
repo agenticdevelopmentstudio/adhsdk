@@ -1,13 +1,12 @@
 ---
 id: 3ea9329e-5acc-4c43-b5ce-bb8c50570104
 title: "Authentication Client"
-domain: adhsdk://cookbook/data/services/auth/auth-client
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -541,7 +540,7 @@ component.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| auth-client-001 | default-runtime-config | The runtime configuration read with no prior reconfiguration | `{ storageKey: 'auth_tokens', refreshPath: '/api/auth/refresh' }` |
+| auth-client-001 | default-runtime-config | The runtime configuration read with no prior reconfiguration | `{ storageKey: 'auth_tokens', refreshPath: '/api/v1/auth/sessions/refresh' }` |
 | auth-client-002 | configure-auth-merges | Reconfiguring with `{ storageKey: 'x' }`, then reading the configuration | `refreshPath` unchanged; `storageKey === 'x'` |
 | auth-client-003 | auth-api-base-resolution | AS base resolution given `'https://x.example.com/'` explicitly | `'https://x.example.com'` (trailing slash stripped) |
 | auth-client-004 | as-endpoint-proxy-fallback | AS endpoint resolution for `/a` with no base and no environment variable set | `'/api/a'` |
@@ -549,7 +548,7 @@ component.
 | auth-client-006 | auth-user-shape | A user record omitting `slug` | Valid |
 | auth-client-007 | has-capability-null-safe | The capability check applied to an absent user and `'billing'` | `false` |
 | auth-client-008 | is-admin-derived | The admin check applied to a user with capabilities `['user', 'admin']` | `true` |
-| auth-client-009 | tokens-from-response-precedence | Token extraction from `{ accessToken: 'A', token: 'T' }` | `{ accessToken: 'A', refreshToken: '' }` |
+| auth-client-009 | tokens-from-response-precedence | Token extraction from `{ accessToken: 'A', token: 'T' }` | `{ accessToken: 'T', refreshToken: '' }` (`token`, the `/v1` spelling, wins) |
 | auth-client-010 | tokens-from-response-refresh-token-blanked | Token extraction from a body carrying `{ token: 'T', refreshToken: 'server-rt' }` | `refreshToken === ''` |
 | auth-client-011 | tokens-from-response-throws-when-absent | Token extraction from `{}` | Throws `/missing token/i` |
 | auth-client-012 | token-storage-key-configurable | Reconfiguring with `{ storageKey: 'other_key' }`, then writing the token bundle | The persistent store holds a value under `'other_key'`; the default key is absent |
@@ -594,18 +593,18 @@ component.
 | auth-client-051 | exchange-sso-code-no-http-retry | The underlying request resolves not OK, status `401` | The underlying request is issued once per exchange call — no internal retry |
 | auth-client-052 | exchange-sso-code-success-result | `200` response with `{ token: 'A', user: { id: 'u1' } }` | `{ tokens: { accessToken: 'A', refreshToken: '' }, user: { id: 'u1' } }` |
 | auth-client-053 | exchange-sso-code-failure-throws | `401` response with `{ error: { message: 'invalid or expired exchange code' } }` | Throws a typed HTTP error with that message |
-| auth-client-054 | link-provider-routes-to-as-host | The AS base environment variable set to `'https://api.example.com'`; the provider-link request invoked | Underlying request targets `'https://api.example.com/auth/link-provider'` |
-| auth-client-055 | link-provider-authed-post | Writing `{ accessToken: 'at' }`, then the provider-link request | Request header `authorization: 'Bearer at'`; body deep-equals the input |
+| auth-client-054 | link-provider-routes-to-as-host | The AS base environment variable set to `'https://api.example.com'`; the provider-link request invoked | Underlying request targets `'https://api.example.com/v1/account/login_methods'` |
+| auth-client-055 | link-provider-authed-post | Writing `{ accessToken: 'at' }`, then the provider-link request | `POST` with header `Authorization: 'Bearer at'`; body is the snake_case wire form `{ type: 'provider', client_slug, provider_slug, code, redirect_uri }` |
 | auth-client-056 | retry-marker-hook | The retry-marker hook registered; a post-refresh retry occurs | The registered callback is called once with the retried request's options |
 | auth-client-057 | webauthn-assertion-ceremony-shared | The options endpoint returns not OK | The shared ceremony throws using the extracted/fallback message |
-| auth-client-058 | assert-second-factor-body | The second-factor assertion called with `('tok', url)` | The options POST body is `{"token":"tok"}` |
-| auth-client-059 | assert-passwordless-passkey-body | The passwordless-passkey assertion called with `('id', url)` | The options POST body is `{"identifier":"id"}` |
-| auth-client-060 | request-login-sms | Requesting a login SMS code with `'tok'` | `POST` to `'/api/auth/login/mfa/sms/send'` with `{"token":"tok"}` |
-| auth-client-061 | complete-login-code | Completing login with `('tok', 'totp', '123456')` on a `200` | `POST` to `'/api/auth/login/mfa'`; returns the parsed body |
-| auth-client-062 | complete-login-passkey | Completing login with a passkey given `'tok'` | `POST` to `'/api/auth/login/mfa/webauthn'` with the ceremony's `{ token, response }` |
-| auth-client-063 | passwordless-passkey-login | Passwordless passkey login given `'id'` | `POST` to `'/api/auth/login/webauthn'` with the ceremony's `{ token, response }` |
+| auth-client-058 | assert-second-factor-body | The second-factor assertion called with `('tok', url)` | The options POST body is `{"method":"mfa_passkey","token":"tok"}` |
+| auth-client-059 | assert-passwordless-passkey-body | The passwordless-passkey assertion called with `('id', url)` | The options POST body is `{"method":"passkey","identifier":"id"}` |
+| auth-client-060 | request-login-sms | Requesting a login SMS code with `'tok'` | `POST` to `'/api/v1/auth/sms_codes'` with `{"token":"tok"}` |
+| auth-client-061 | complete-login-code | Completing login with `('tok', 'totp', '123456')` on a `200` | `POST` to `'/api/v1/auth/sessions'` with `{ token, method, code }`; returns the session mapped to `{ token, user }` |
+| auth-client-062 | complete-login-passkey | Completing login with a passkey given `'tok'` | Options `POST` to `'/api/v1/auth/passkey_challenges'`, then `POST` to `'/api/v1/auth/sessions'` with `{ method: 'mfa_passkey', token, response }` |
+| auth-client-063 | passwordless-passkey-login | Passwordless passkey login given `'id'` | Options `POST` to `'/api/v1/auth/passkey_challenges'`, then `POST` to `'/api/v1/auth/sessions'` with `{ method: 'passkey', token, response }` |
 | auth-client-064 | begin-login-navigation | Beginning login with `{ clientId: 'cookbook', authApiBase: 'https://api.hub.example.com' }` | The top-level view's target origin is `'https://api.hub.example.com'`, path `/oauth/signin/authorize`, `clientId=cookbook`, `return=<site>/auth/callback` |
-| auth-client-065 | authorize-url-shape | Building the authorize URL with `{ clientId: 'adh', returnUrl: 'r', prompt: 'none' }` | Query has `clientId=adh`, `return=r`, `prompt=none` |
+| auth-client-065 | authorize-url-shape | Building the site-switch (authorize) URL with `ssoSwitchUrl('r', { clientId: 'adh', authApiBase })` | Query has `clientId=adh`, `return=r`, `prompt=none` |
 | auth-client-066 | provider-signin-url-shape | Building the provider sign-in URL with `{ clientId: 'adh', providerId: 'github', returnUrl: 'r' }` | Path `/oauth/signin/start`; query has `clientId`, `providerId`, `return` |
 | auth-client-067 | sso-hint-cookie-check | The SSO-hint cookie present | The SSO-hint cookie check returns `true` |
 | auth-client-068 | sso-checked-guard-tolerates-storage-failure | The session-scoped store's write mocked to throw | Marking the once-per-tab restore guard does not throw |
@@ -639,15 +638,15 @@ component.
 | auth-client-096 | central-passwordless-passkey | Central passwordless passkey login with `(target, 'id')` | The ceremony runs against the AS's passkey options endpoint, then `POST` to `'/oauth/signin/login/webauthn'` |
 | auth-client-097 | begin-link-provider-csrf-nonce | Beginning a provider-link with `{ providerId: 'github', returnTo: '/home' }` | Navigates to the AS `/oauth/signin/start` with `link=1`; the stashed nonce equals the `linkNonce` query value |
 | auth-client-098 | begin-link-provider-csrf-nonce | The session-scoped store's write mocked to throw | Beginning a provider-link returns `false`; no navigation occurs |
-| auth-client-099 | mfa-status-fetch | Fetching MFA status on a `200` with an MFA-status body | `GET /api/account/mfa`; returns the parsed body |
-| auth-client-100 | totp-enroll | Enrolling TOTP on a `200` with `{ secret, otpauthUri }` | `POST /api/account/mfa/totp/enroll`; returns that body |
-| auth-client-101 | totp-confirm | Confirming a TOTP code with `'123456'` | `POST /api/account/mfa/totp/confirm` with `{"code":"123456"}` |
-| auth-client-102 | totp-remove | Removing TOTP | `DELETE /api/account/mfa/totp` |
-| auth-client-103 | webauthn-list | Listing WebAuthn credentials on a `200` with `{ items: [...] }` | `GET /api/account/mfa/webauthn`; returns that body |
-| auth-client-104 | webauthn-register-ceremony | Registering a WebAuthn credential with `('passkey', 'My key')` | An options POST, then the registration ceremony, then a verify POST with `{ token, response, name: 'My key' }` |
+| auth-client-099 | mfa-status-fetch | Fetching MFA status on a `200` with an MFA-status body | `GET /api/v1/account/mfa`; returns the body mapped to camelCase (`totpPending`, `recoveryRemaining`, `preferredMethod`) |
+| auth-client-100 | totp-enroll | Enrolling TOTP on a `200` with `{ secret, otpauthUri }` | `POST /api/v1/account/mfa/totp`; returns `{ secret, otpauthUri }` mapped from `otpauth_uri` |
+| auth-client-101 | totp-confirm | Confirming a TOTP code with `'123456'` | `POST /api/v1/account/mfa/totp/confirm` with `{"code":"123456"}` |
+| auth-client-102 | totp-remove | Removing TOTP | `DELETE /api/v1/account/mfa/totp` |
+| auth-client-103 | webauthn-list | Listing WebAuthn credentials on a `200` list envelope `{ object: 'list', data: [...] }` | `GET /api/v1/account/mfa/passkeys?...`; returns `{ items }` with `created` mapped to an ISO `createdAt` |
+| auth-client-104 | webauthn-register-ceremony | Registering a WebAuthn credential with `('passkey', 'My key')` | An options POST to `/api/v1/account/mfa/passkeys/registration_options` with `{ kind }`, then the registration ceremony, then a verify POST to `/api/v1/account/mfa/passkeys` with `{ token, response, name: 'My key' }` |
 | auth-client-105 | webauthn-remove | Removing a WebAuthn credential `'cred id/with slash'` | The delete path has the id percent-encoded |
-| auth-client-106 | recovery-codes-regenerate | Regenerating recovery codes on a `200` with `{ codes: [...] }` | `POST /api/account/mfa/recovery/regenerate`; returns that body |
-| auth-client-107 | preferred-method-set | Setting the preferred method to `'totp'` | `PUT /api/account/mfa/preference` with `{"method":"totp"}` |
+| auth-client-106 | recovery-codes-regenerate | Regenerating recovery codes on a `200` with `{ codes: [...] }` | `POST /api/v1/account/mfa/recovery_codes/regenerate`; returns that body |
+| auth-client-107 | preferred-method-set | Setting the preferred method to `'totp'` | `POST /api/v1/account/mfa` with `{"preference":{"method":"totp"}}`; returns `{ preferredMethod }` |
 | auth-client-108 | account-security-authed | No access token stored; any account-security operation invoked | Request carries no `Authorization` header, then a `401` triggers the same refresh-and-retry waterfall as any authenticated call |
 | auth-client-109 | report-unexpected-status-gate | Unexpected-error reporting given a `401` typed HTTP error and given a `403` host-defined error with a compatible shape | Neither the console nor the sink is called for either |
 | auth-client-110 | report-unexpected-status-gate | Unexpected-error reporting given a `503` typed HTTP error | Both the console and the sink are called |
@@ -895,19 +894,19 @@ keeps an expected 4xx (wrong password, stale code) off this log.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/auth/src/account-security.ts` |
-| web | `packages/web/packages/auth/src/asBase.ts` |
-| web | `packages/web/packages/auth/src/client.ts` |
-| web | `packages/web/packages/auth/src/config.ts` |
-| web | `packages/web/packages/auth/src/labels.ts` |
-| web | `packages/web/packages/auth/src/mfa.ts` |
-| web | `packages/web/packages/auth/src/refresh.ts` |
-| web | `packages/web/packages/auth/src/report.ts` |
-| web | `packages/web/packages/auth/src/sso.ts` |
-| web | `packages/web/packages/auth/src/tokens.ts` |
-| web | `packages/web/packages/auth/src/types.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/auth/src/account-security.ts` | confirmed (1.1.2) |
+| web | `packages/web/packages/auth/src/asBase.ts` | confirmed (1.1.2) |
+| web | `packages/web/packages/auth/src/client.ts` | confirmed (1.1.2) |
+| web | `packages/web/packages/auth/src/config.ts` | confirmed (1.1.2) |
+| web | `packages/web/packages/auth/src/labels.ts` | confirmed (1.1.2) |
+| web | `packages/web/packages/auth/src/mfa.ts` | confirmed (1.1.2) |
+| web | `packages/web/packages/auth/src/refresh.ts` | confirmed (1.1.2) |
+| web | `packages/web/packages/auth/src/report.ts` | confirmed (1.1.2) |
+| web | `packages/web/packages/auth/src/sso.ts` | confirmed (1.1.2) |
+| web | `packages/web/packages/auth/src/tokens.ts` | confirmed (1.1.2) |
+| web | `packages/web/packages/auth/src/types.ts` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -1035,15 +1034,15 @@ consistency.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [secure-storage](agenticdevelopercookbook://compliance/security#secure-storage) | partial | Security |
-| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | partial | Security |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
-| [data-minimization](agenticdevelopercookbook://compliance/privacy-and-data#data-minimization) | passed | Privacy and Data |
-| [no-pii-in-logs](agenticdevelopercookbook://compliance/privacy-and-data#no-pii-in-logs) | passed | Privacy and Data |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
+| [adc.check.security.secure-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bb5dfc9b-c5b0-54fa-882f-007ae7dad0e9) | partial | Security |
+| [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | partial | Security |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
+| [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | Privacy and Data |
+| [adc.check.privacy-and-data.no-pii-in-logs](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/23bca2e1-dc0f-5ff4-beaf-03891ad48e6b) | passed | Privacy and Data |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
 `secure-storage` is **partial**: the refresh token is deliberately never
 persisted client-side and the CSRF nonce/return-to path live in
@@ -1070,12 +1069,13 @@ scalar-only context, never a request body or token. `no-hardcoded-strings`
 parameter anywhere in this component (see Localization) — this is a plain,
 honestly-reported gap in the source, not a hidden one.
 
-`separation-of-concerns` passes because each of the eleven source files owns one concern with no overlap — `tokens.ts` token storage, `refresh.ts` the refresh single-flight, `sso.ts` SSO hint and return-to handling, `report.ts` the telemetry sink, `client.ts` the HTTP calls, `mfa.ts` and `account-security.ts` their endpoint families, `config.ts`, `labels.ts` and `types.ts` configuration, copy and shapes. `unit-test-coverage` is partial because `client.test.ts`, `refresh.test.ts`, `sso.test.ts`, `tokens.test.ts`, `report.test.ts`, `silent-restore.test.ts`, `link.test.ts` and `types.test.ts` in the auth package's `__tests__` directory cover the core flows, but `mfa.ts`, `account-security.ts` and `asBase.ts` have no dedicated test file.
+`separation-of-concerns` passes because each of the eleven source files owns one concern with no overlap — `tokens.ts` token storage, `refresh.ts` the refresh single-flight, `sso.ts` SSO hint and return-to handling, `report.ts` the telemetry sink, `client.ts` the HTTP calls, `mfa.ts` and `account-security.ts` their endpoint families, `config.ts`, `labels.ts` and `types.ts` configuration, copy and shapes. `unit-test-coverage` passes because `conformance-vectors.test.ts` exercises 119 of the 120 conformance vectors against every source file, including `mfa.ts`, `account-security.ts` and `asBase.ts`, beside the existing `client.test.ts`, `refresh.test.ts`, `sso.test.ts`, `tokens.test.ts`, `report.test.ts`, `silent-restore.test.ts`, `link.test.ts` and `types.test.ts` in the auth package's `__tests__` directory; auth-client-118 is skipped because it records a static property of the call sites, not a runtime behavior.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (conformance-vectors.test.ts, 119 of 120 vectors; auth-client-118 skipped as a static property); vector text corrected to the /v1 API; unit-test-coverage now passed. |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Cite separation-of-concerns and unit-test-coverage in Compliance. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to data/services/auth/. |
 | 1.0.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

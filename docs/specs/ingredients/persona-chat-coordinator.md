@@ -3,7 +3,7 @@ id: 412B845B-7496-4347-A710-1BD29325C1BE
 title: "Persona Chat Coordinator"
 domain: adhsdk://ingredients/chat/persona-chat-coordinator
 type: ingredient
-version: 1.3.0
+version: 1.4.0
 status: draft
 language: en
 created: 2026-08-20
@@ -43,6 +43,19 @@ adh orchestrates the turn. It resolves the persona from its slug, assembles the
 system prompt from the persona's saved config, reads and writes conversation
 history, calls the provider, and streams the reply back as Server-Sent Events.
 The coordinator holds no history, no credentials, and no prompt.
+
+The coordinator speaks the `/v1` API, all of it relative to `baseURL`:
+
+| Step | Request | Answer |
+|------|---------|--------|
+| Create the conversation | `POST {baseURL}/v1/chats` with `{ "type": "persona", "persona_slug": <slug>, "model": <model?> }` | `201`, a chat resource whose `id` names the conversation |
+| Send a turn | `POST {baseURL}/v1/chats/{id}/messages` with `{ "message": <text> }` | an SSE stream |
+
+`/v1` is snake_case on the wire: request bodies and JSON answers use `persona_slug`,
+and timestamps (`created`, `updated`) are unix seconds. The SSE stream is passed
+through untouched, so its event names and payloads are unchanged. Every platform
+port MUST send the same two requests; a conversation listing, where one is
+needed, is `GET {baseURL}/v1/chats?type=persona`.
 
 This is the A1 split: the server orchestrates, the client relays. The single
 clearest evidence is that `Backend.send` receives only the new message — there is
@@ -220,7 +233,7 @@ A vector that has never failed has proved nothing.
 |--------|------|---------|-------------|
 | `personaSlug` | string | — (required) | Persona to converse with. |
 | `model` | string? | `nil` | Overrides the persona's configured model when set. |
-| `baseURL` | string | `/api` | Root of the adh chat API. |
+| `baseURL` | string | `/api` | Root of the adh API; the coordinator appends `/v1/chats`. |
 | `authorize` | injected | — (required) | Attaches credentials to each request. |
 | `onStatus` | sink? | `nil` | Receives turn-phase transitions. |
 | `participantID` | string | `personaSlug` | Identifies the persona in emitted events. |
@@ -347,6 +360,7 @@ rule. The real fix is an invocation id on the wire, which is an adh change.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.4.0 | 2026-11-09 | Mike Fullerton | Moved the coordinator onto the `/v1` API: the conversation is created with `POST {baseURL}/v1/chats` (`type: "persona"`, `persona_slug`, `model`) and turns go to `POST {baseURL}/v1/chats/{id}/messages`. Wire fields are snake_case and timestamps are unix seconds; the SSE stream is unchanged. |
 | 1.3.0 | 2026-08-24 | Mike Fullerton | Added `ci-one-turn-at-a-time` and extended `ci-destroy-authoritative` over the conversation-creation window. Both were behaviors the implementation silently lacked: overlapping turns shared one cancellation handle and one invocation map, and a `destroy` during creation left the request in flight and let the turn post afterwards. Added vectors pcc-017 and pcc-018. |
 | 1.0.0 | 2026-08-20 | Mike Fullerton | Initial creation |
 | 1.2.0 | 2026-08-20 | Mike Fullerton | Rewrote the Kotlin and Windows platform notes to match the port plans in `docs/planning/ports/`. The Kotlin note called for a cold `Flow`, which cannot express a push source; the Windows note called for `CancellationToken`, which the contract has no parameter to carry. |

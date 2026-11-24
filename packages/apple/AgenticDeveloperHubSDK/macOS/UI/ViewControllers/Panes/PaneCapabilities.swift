@@ -27,6 +27,16 @@ public protocol PaneTitleProviding: AnyObject {
     var onPaneTitleChange: (() -> Void)? { get set }
 }
 
+/// Content that shows its own icon in the title bar, between the window
+/// controls and the title — a browser pane showing the browser it is.
+/// `nil` falls back to the pane's own icon. Read with the title, so content
+/// whose icon changes calls `onPaneTitleChange` (or the pane's
+/// `refreshTitle()`) and both are re-read together.
+@MainActor
+public protocol PaneIconProviding: AnyObject {
+    var paneIcon: NSImage? { get }
+}
+
 /// Content that puts its own controls in the title bar's middle.
 ///
 /// This is the "space between the title and the gear, abstracted to accept
@@ -87,4 +97,18 @@ public protocol PaneSelectionDescribing: AnyObject {
     /// Called by the content when `paneSelectionDescription` would now answer
     /// differently.
     var onPaneSelectionChange: (() -> Void)? { get set }
+}
+
+/// Content that knows how wide (or tall) it would like its pane to be — a file
+/// browser sizing itself to its widest row. The content reports the length its
+/// own content needs; the pane adds its border and spacing and passes the sum
+/// to its host, which decides what to do with it.
+@MainActor
+public protocol PanePreferredThicknessProviding: AnyObject {
+    /// Called by the content with the length its content needs across the
+    /// split's axis, excluding the pane's own insets.
+    var onPreferredThicknessChange: ((CGFloat) -> Void)? { get set }
+    /// Measures now and reports through `onPreferredThicknessChange`, whether
+    /// or not the content sizes itself automatically — the pane's Fit Width.
+    func reportPreferredThickness()
 }

@@ -216,7 +216,7 @@ func makeFixture(
         baseURL: URL(string: "https://adh.test/api")!,
         authorize: { request in
             requests.record(request)
-            if request.url?.path.hasSuffix("/conversations") == true {
+            if request.url?.path.hasSuffix("/v1/chats") == true {
                 return AuthorizedResponse(
                     statusCode: conversationStatus,
                     body: AsyncThrowingStream { continuation in

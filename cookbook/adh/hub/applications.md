@@ -1,7 +1,6 @@
 ---
 id: 519d4419-8f80-478d-aa08-912b66bbe5cf
 title: "Hub Domain Applications"
-domain: adhsdk://cookbook/adh/hub/applications
 type: ingredient
 version: 1.2.1
 status: review
@@ -23,7 +22,7 @@ tags:
   - api-tokens
 depends-on: []
 related:
-  - adhsdk://cookbook/adh/hub/security/authentication-client
+  - 65fbb2b1-ca41-499f-ac03-7ecc0e206dcc
 references:
   - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Applications/ApplicationsDataSource.swift (apple)
   - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Applications/ApplicationsModels.swift (apple)
@@ -49,7 +48,7 @@ to label and enumerate the buckets/tables a grant can target. Every thrown error
 normalized to the shared error type before it reaches a caller, and every token
 secret this component ever holds is a transient, reveal-once-then-drop entry in an
 in-memory dictionary — the same pattern the sibling Authentication feature
-(`adhsdk://cookbook/adh/hub/security/authentication-client`) uses for its own
+([adhsdk.ingredient.adh.hub.security.authentication-client](cookbook:65fbb2b1-ca41-499f-ac03-7ecc0e206dcc)) uses for its own
 API and storage tokens.
 
 ## Behavioral Requirements
@@ -594,9 +593,9 @@ Not applicable: this component contains no logging call of any kind.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Applications/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Applications/` | unverified |
 
 ## Design Decisions
 
@@ -659,13 +658,13 @@ Platform scope: AppKit/UIKit.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [secure-storage](agenticdevelopercookbook://compliance/security#secure-storage) | passed | Security |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
-| [error-recovery](agenticdevelopercookbook://compliance/reliability#error-recovery) | failed | Reliability |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | partial | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.security.secure-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bb5dfc9b-c5b0-54fa-882f-007ae7dad0e9) | passed | Security |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
+| [adc.check.reliability.error-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/694a971d-282d-501b-8861-c4ece3b01edd) | failed | Reliability |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | Reliability |
 
 `separation-of-concerns` passes: `ApplicationsDataSource` isolates every network call behind a
 protocol `ApplicationsTopic` depends on but never implements, and the wire/domain model split

@@ -20,7 +20,8 @@ public struct PartnerReview: Codable, Sendable, Equatable, Identifiable {
     public var finishedAt: Date?
     public var summary: String?
     public var skipReason: String?
-    /// SHAs of later commits whose review replaced this one.
+    /// SHAs of later commits on the same branch that touch the same files; the reviewer is
+    /// told about them. It does not mean this review was replaced.
     public var supersededBy: [String]
 
     public init(

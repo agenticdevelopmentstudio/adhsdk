@@ -1,11 +1,11 @@
 
-`hub-domain-ecosystems` is the Ecosystems ("Products") domain of the hub: the
+The Ecosystems ingredient is the Ecosystems ("Products") domain of the hub: the
 non-UI logic that lists, creates, renames, and deletes an *ecosystem* — a
 reverse-domain-identified (rdid) product row that can itself own child
 ecosystems, and that other domains (applications, buckets, customers) hang
 off of. Two independent, source-of-truth reference implementations model the
-identical contract from opposite ends of one system; this recipe covers both
-together, and Platform Notes and Reference Implementations describe how each
+identical contract from opposite ends of one system; this ingredient covers both
+together, and Platform Notes describes how each
 realizes it.
 
 Both implementations model the same backend fact: an ecosystem's public

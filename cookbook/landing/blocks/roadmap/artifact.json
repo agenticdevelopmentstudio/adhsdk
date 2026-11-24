@@ -1,0 +1,57 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "e7060a14-3f66-429a-9ea5-288f1fe5a76f",
+    "title": "Roadmap",
+    "type": "ingredient",
+    "version": "1.1.2",
+    "status": "review",
+    "language": "en",
+    "created": "2026-09-22",
+    "modified": "2026-11-14",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Container separating planned features visually from shipped ones, with optional label.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "landing",
+      "layout",
+      "roadmap"
+    ],
+    "depends-on": [],
+    "related": [
+      "31198bb7-2270-449e-94c1-026b68d2bc81",
+      "1d701cc5-5822-4465-8ad5-413e6b0c31fc"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "329188940408b616",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

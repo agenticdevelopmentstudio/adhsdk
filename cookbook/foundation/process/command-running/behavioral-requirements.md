@@ -1,0 +1,29 @@
+
+- **sendable-seam**: A `CommandRunning` implementation MUST be safe to share across concurrency domains (the protocol is `Sendable`), and both operations MUST be asynchronous.
+- **run-result-shape**: `run` MUST return a pair of the child's exit status and an output string.
+- **run-merged-output-order**: `run` MUST build its output as the child's stdout text followed by the child's stderr text, never interleaved.
+- **capture-result-shape**: `capture` MUST return the exit status, the stdout text and the stderr text as three separate values.
+- **capture-streams-apart**: `capture` MUST NOT place any stderr text in `stdout`, so a caller that parses stdout never sees stderr noise.
+- **capture-environment-replacement**: When `capture` is given a non-nil `environment`, `ProcessCommandRunner` MUST give the child exactly that dictionary as its whole environment, with no variable inherited from the calling process.
+- **capture-environment-inherited**: When `capture` is given a nil `environment`, the child MUST inherit the calling process's environment.
+- **capture-default-from-run**: The protocol's default `capture` MUST call `run` and return its status, its whole output as `stdout`, and `""` as `stderr`.
+- **capture-overload-default**: The one-argument `capture(_:)` MUST behave exactly as `capture(_:environment:)` called with a nil `environment`.
+- **run-inherits-environment**: `run` MUST run the child with the calling process's environment.
+- **empty-command**: An empty `argv` MUST NOT launch anything and MUST report status -1 with the text `empty command` (as the whole output for `run`, as `stderr` with an empty `stdout` for `capture`).
+- **argv-split**: The first element of `argv` MUST be the executable and the remaining elements MUST be its arguments, passed without a shell.
+- **path-lookup**: A first element with no `/` MUST be looked up directory by directory on the child's `PATH` (the replacement environment's `PATH` when one is given, otherwise the calling process's), and the first directory holding an executable file of that name MUST win.
+- **path-default**: When there is no `PATH` value to search, the lookup MUST search `/usr/bin:/bin:/usr/sbin:/sbin`.
+- **path-empty-entries**: Empty entries in the `PATH` value MUST be skipped.
+- **path-miss**: When no `PATH` directory holds an executable of that name, the name MUST be used unchanged, so the launch fails and reports the launch error.
+- **slash-verbatim**: A first element that contains a `/` MUST be used as the executable path without any lookup.
+- **launch-failure**: A command that cannot be launched MUST report status -1 and the launch error's localized description, and MUST NOT crash.
+- **exit-status-passthrough**: A command that ran MUST report its own exit status, whether zero or not.
+- **stream-draining**: Both output streams MUST be read while the child writes, so output larger than a 64 KB pipe buffer is returned in full and the call does not deadlock.
+- **utf8-decoding**: Each stream MUST be decoded as UTF-8, and a stream whose bytes are not valid UTF-8 MUST contribute an empty string rather than an error.
+- **backstop-default**: `ProcessCommandRunner` MUST give a command at most `backstop` seconds, defaulting to 600.
+- **backstop-timeout-report**: A command that outlives the backstop MUST be terminated (`SIGTERM`, then `SIGKILL` after a 2-second grace if it is still alive) and reported with status -1 and the text `timed out after <backstop>s` appended on a new line after the collected text (to the merged output for `run`, to `stderr` for `capture`).
+- **timeout-never-success**: A command that outlives the backstop MUST report status -1 even if it later exits with status 0 (a child that traps `SIGTERM` can).
+- **off-pool-execution**: `ProcessCommandRunner` MUST run the blocking process work off the cooperative thread pool, on a thread whose quality-of-service class is the default class regardless of the caller's class.
+- **stdin-not-supplied**: `ProcessCommandRunner` MUST NOT supply input to the child, so the child's stdin is the calling process's stdin.
+- **no-cancellation**: Cancelling the awaiting task MUST NOT stop a running child; only the backstop ends it early.
+

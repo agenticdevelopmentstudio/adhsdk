@@ -1,13 +1,12 @@
 ---
 id: 28581588-68f5-465d-8e8e-3aaaaef00560
 title: "Teams"
-domain: adhsdk://cookbook/adh/hub/teams
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -23,7 +22,7 @@ tags:
   - slug
 depends-on: []
 related:
-  - adhsdk://cookbook/adh/hub/ecosystems/ecosystems
+  - 201572ee-2e0f-4839-94f5-252f8044c4bf
 references:
   - packages/web/packages/data/src/teams/team-members.ts (adhsdk)
   - packages/web/packages/data/src/teams/teams.ts (adhsdk)
@@ -223,23 +222,22 @@ layer, which owns accessibility presentation.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| hub-domain-teams-001 | identifier-validation-shape | Validating the identifier `"com.acme.platform"`. | `null` — accepts reverse-domain identifiers, verified by an existing test in the source. |
-| hub-domain-teams-002 | identifier-validation-empty-refused | Validating the empty identifier `""`. | Matches `/required/i` — rejects an empty identifier, verified by an existing test in the source. |
-| hub-domain-teams-003 | identifier-validation-shape | Validating the identifier `"platform"`. | Matches `/reverse-domain/i` — rejects a single-label identifier, verified by an existing test in the source. |
-| hub-domain-teams-004 | team-vocabulary-mapping | Mapping the backend row `{id:"1", name:"Platform", slug:"com.acme.platform", createdAt:"c", updatedAt:"u"}` to its UI shape. | `displayName === "Platform"`, `identifier === "com.acme.platform"` — renames name→displayName and slug→identifier, verified by an existing test in the source. |
-| hub-domain-teams-005 | team-update-partial-via-compact | Updating team `"1"` with `{displayName: "Renamed", identifier: undefined}`. | The update body is `{"name":"Renamed"}` — the `slug` key is absent, not sent as `undefined`. |
-| hub-domain-teams-006 | team-create-conflict-rethrown-friendly | Creating a team `{displayName:"X", identifier:"com.acme.x"}` in ecosystem `"eco1"` when the backend throws an error matching "... already exists". | Rethrown as `A team with identifier "com.acme.x" already exists.` |
-| hub-domain-teams-007 | team-list-scoped-to-ecosystem, team-list-sorted-by-display-name | Listing teams for ecosystem `"eco1"` over backend rows named `["Beta","Alpha"]`. | `GET /api/team/teams?ecosystemId=eco1`; result names `["Alpha","Beta"]`. |
-| hub-domain-teams-008 | team-get-resolves-null-on-thrown-error | Fetching team `"missing"` when the request throws. | Resolves to `null`, does not rethrow. |
-| hub-domain-teams-009 | team-delete-issues-delete | Deleting team `"t/1"`. | `DELETE /api/team/teams/t%2F1` (percent-encoded). |
-| hub-domain-teams-010 | member-list-tolerates-missing-members-key | Listing members of team `"t1"` when the response body is `{}`. | Resolves to `[]`, no thrown error. |
-| hub-domain-teams-011 | member-list-query-scoped-by-team | Listing members of team `"t1"`. | `GET /api/team/members?teamId=t1`. |
-| hub-domain-teams-012 | member-counts-maps-team-to-count | Fetching member counts over `{counts:[{teamId:"t1",count:3}]}`. | A map with `get("t1") === 3`. |
-| hub-domain-teams-013 | member-add-by-email-resolves-existing-customer | Adding member `"a@b.com"` to team `"t1"` by email. | `POST /api/team/members` with body `{"teamId":"t1","email":"a@b.com"}`. |
-| hub-domain-teams-014 | member-add-persona-gated-by-may-act | Adding persona `"sales-bot"` to team `"t1"`. | `POST /api/team/members/personas` with body `{"teamId":"t1","personaKey":"sales-bot"}`. |
-| hub-domain-teams-015 | member-remove-addresses-member-row | Removing member `"m/1"`. | `DELETE /api/team/members/m%2F1` (percent-encoded). |
-| hub-domain-teams-016 | member-kind-discriminates-customer-vs-persona | A listing row with `memberKind: "elevated"` (an unrecognized value). | Per the field's own documented contract, a consumer MUST treat it as `"customer"`, never as `"persona"`. |
-
+| hub-domain-teams-001 | identifier-validation-shape | Validating the identifier `"com.acme.platform"`. | `null` — accepts dotted identifiers; `teams.test.ts`, `conformance-vectors.test.ts`. |
+| hub-domain-teams-002 | identifier-validation-empty-refused | Validating the empty identifier `""`. | Matches `/required/i` — rejects an empty identifier; `teams.test.ts`, `conformance-vectors.test.ts`. |
+| hub-domain-teams-003 | identifier-validation-shape | Validating the identifier `"platform"`. | `null` — a single-label slug is the common shape and is accepted (the old reverse-domain rule was removed); `teams.test.ts` › "accepts a plain slug", `conformance-vectors.test.ts`. |
+| hub-domain-teams-004 | team-vocabulary-mapping | Mapping the backend row `{id:"1", name:"Platform", slug:"com.acme.platform", created:1700000000, updated:1700000100}` to its UI shape. | `displayName === "Platform"`, `identifier === "com.acme.platform"` — renames name→displayName and slug→identifier; `teams.test.ts`, `conformance-vectors.test.ts`. |
+| hub-domain-teams-005 | team-update-partial-via-compact | Updating team `"1"` with `{displayName: "Renamed", identifier: undefined}`. | `POST /api/v1/teams/1` with body `{"name":"Renamed"}` — the `slug` key is absent, not sent as `undefined`; `conformance-vectors.test.ts`. |
+| hub-domain-teams-006 | team-create-conflict-rethrown-friendly | Creating a team `{displayName:"X", identifier:"com.acme.x"}` in ecosystem `"eco1"` when the backend throws an error matching "... already exists". | Rethrown as `A team with identifier "com.acme.x" already exists.`; `conformance-vectors.test.ts`. |
+| hub-domain-teams-007 | team-list-scoped-to-ecosystem, team-list-sorted-by-display-name | Listing teams for ecosystem `"eco1"` over backend rows named `["Beta","Alpha"]`. | `GET /api/v1/teams?ecosystem_id=eco1`; result names `["Alpha","Beta"]`; `conformance-vectors.test.ts`. |
+| hub-domain-teams-008 | team-get-resolves-null-on-thrown-error | Fetching team `"missing"` when the request throws. | Resolves to `null`, does not rethrow; `conformance-vectors.test.ts`. |
+| hub-domain-teams-009 | team-delete-issues-delete | Deleting team `"t/1"`. | `DELETE /api/v1/teams/t%2F1` (percent-encoded); `conformance-vectors.test.ts`. |
+| hub-domain-teams-010 | member-list-tolerates-missing-members-key | Listing members of team `"t1"` when the response body is `{}`. | Resolves to `[]`, no thrown error; `conformance-vectors.test.ts`. |
+| hub-domain-teams-011 | member-list-query-scoped-by-team | Listing members of team `"t1"`. | `GET /api/v1/team_members?team_id=t1`; `conformance-vectors.test.ts`. |
+| hub-domain-teams-012 | member-counts-maps-team-to-count | Fetching member counts over `{total_count:{counts:[{team_id:"t1",count:3}]}}`. | A map with `get("t1") === 3`; `conformance-vectors.test.ts`. |
+| hub-domain-teams-013 | member-add-by-email-resolves-existing-customer | Adding member `"a@b.com"` to team `"t1"` by email. | `POST /api/v1/team_members` with body `{"team_id":"t1","email":"a@b.com"}`; `conformance-vectors.test.ts`. |
+| hub-domain-teams-014 | member-add-persona-gated-by-may-act | Adding persona `"sales-bot"` to team `"t1"`. | `POST /api/v1/team_members` with body `{"type":"persona","team_id":"t1","persona_key":"sales-bot"}`; `conformance-vectors.test.ts`. |
+| hub-domain-teams-015 | member-remove-addresses-member-row | Removing member `"m/1"`. | `DELETE /api/v1/team_members/m%2F1` (percent-encoded); `conformance-vectors.test.ts`. |
+| hub-domain-teams-016 | member-kind-discriminates-customer-vs-persona | A listing row with `memberKind: "elevated"` (an unrecognized value). | Per the field's own documented contract, a consumer MUST treat it as `"customer"`, never as `"persona"`; `conformance-vectors.test.ts`. |
 ## Edge Cases
 
 - **Null/empty input**: An empty `identifier` MUST be refused with
@@ -395,9 +393,9 @@ host application, not of this domain component.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/data/src/teams/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/data/src/teams/` | confirmed (1.2.1) |
 
 ## Design Decisions
 
@@ -457,26 +455,24 @@ has (file header: "The caller resolves the id with
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | best-practices |
-| [api-design-conventions](agenticdevelopercookbook://compliance/access-patterns#api-design-conventions) | partial | access-patterns |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | failed | reliability |
-| [error-recovery](agenticdevelopercookbook://compliance/reliability#error-recovery) | partial | reliability |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | internationalization |
-| [secure-transport](agenticdevelopercookbook://compliance/security#secure-transport) | passed | security |
-| [secure-log-output](agenticdevelopercookbook://compliance/security#secure-log-output) | passed | security |
-| [server-side-authorization](agenticdevelopercookbook://compliance/security#server-side-authorization) | passed | security |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
+| [adc.check.access-patterns.api-design-conventions](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b6745c95-4ef2-5ab4-8791-00ffc1d7b82d) | partial | access-patterns |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | failed | reliability |
+| [adc.check.reliability.error-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/694a971d-282d-501b-8861-c4ece3b01edd) | partial | reliability |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | internationalization |
+| [adc.check.security.secure-transport](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0a75f61f-9508-506e-b92e-0f5b29a91c95) | passed | security |
+| [adc.check.security.secure-log-output](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b258657f-bb73-5491-9c70-0d14afdfa6ce) | passed | security |
+| [adc.check.security.server-side-authorization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/90e085e3-5112-5c02-9c10-4a2e324eeca1) | passed | security |
 
 Every logic component in this cookbook is held to at least
 `separation-of-concerns` and `unit-test-coverage`. **`separation-of-concerns`**
 passes: `teams.ts` owns the `Team` route stem, `team-members.ts` owns the
 membership route stem, and `wire.ts` is a type-only file the other two read
 — no file reaches into another's internals. **`unit-test-coverage`** is
-`partial`: `teams.test.ts` exercises `toTeam` and `validateTeamIdentifier`
-directly (the vectors above traced to its three assertions), but no test
-file exists for `team-members.ts` at all — every `teamMembersApi` behavior
-in this recipe is traced to the source code and its doc comments, not to a
-test assertion. **`api-design-conventions`** is `partial`: the domain does
+`passed`: `teams.test.ts` exercises `toTeam` and `validateTeamIdentifier`,
+and `conformance-vectors.test.ts` covers every one of the 16 conformance
+vectors across `teamsApi` and `teamMembersApi` with a passing test. **`api-design-conventions`** is `partial`: the domain does
 not follow one uniform client shape end to end — `teamsApi` maps through a
 `wire.ts` row and a `toX` mapper and translates a 409 to a friendly message
 on write, while `teamMembersApi` declares its type directly with no mapper
@@ -508,6 +504,7 @@ of both `teams.ts` and `team-members.ts`).
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.1 | 2026-11-14 | Mike Fullerton | Conformance tests added (conformance-vectors.test.ts, 16 of 16 vectors); unit-test-coverage now passed. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolve open-question markers against the code; restate unimplemented behavior as current behavior with pending Decisions. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to adh/hub/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

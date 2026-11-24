@@ -5,7 +5,7 @@ import type { UserCardDto } from '@adh-sdk/ui/blocks/user-card';
  *
  * `UserCardDto` is already the whole public card (`slug`, `displayName`, `avatarUrl`,
  * `createdAt`, the persona roster, and the four privacy-gated collections), and an organization
- * is a card with most of those collections empty: `/public/orgs/:slug` returns identity plus a
+ * is a card with most of those collections empty: `/v1/organizations?slug=` returns identity plus a
  * persona roster, and carries no avatar and no privacy grants at all. So the org case is a
  * SUBSET of this shape, not a different one, and a union type here would force every consumer to
  * branch for a difference that only shows up as an empty array.

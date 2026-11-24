@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "fcff7387-19aa-49ab-b75d-f0c7bfcdf27c",
     "title": "Project Reconciler",
-    "domain": "adhsdk://cookbook/workspace/projects/project-reconciler",
     "type": "ingredient",
     "version": "1.2.0",
     "status": "review",
@@ -34,7 +33,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "5b7bd7db8f305709",
+  "synced": "9d5b9f6a0959e389",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -53,7 +52,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

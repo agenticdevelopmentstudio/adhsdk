@@ -57,11 +57,11 @@ class EcosystemSigninAppCreate:
             }
         )
         if allowed_return_origins is not UNSET:
-            field_dict["allowedReturnOrigins"] = allowed_return_origins
+            field_dict["allowed_return_origins"] = allowed_return_origins
         if enable_github is not UNSET:
-            field_dict["enableGithub"] = enable_github
+            field_dict["enable_github"] = enable_github
         if redirect_uris is not UNSET:
-            field_dict["redirectUris"] = redirect_uris
+            field_dict["redirect_uris"] = redirect_uris
 
         return field_dict
 
@@ -72,11 +72,11 @@ class EcosystemSigninAppCreate:
 
         name = d.pop("name")
 
-        allowed_return_origins = cast(list[str], d.pop("allowedReturnOrigins", UNSET))
+        allowed_return_origins = cast(list[str], d.pop("allowed_return_origins", UNSET))
 
-        enable_github = d.pop("enableGithub", UNSET)
+        enable_github = d.pop("enable_github", UNSET)
 
-        redirect_uris = cast(list[str], d.pop("redirectUris", UNSET))
+        redirect_uris = cast(list[str], d.pop("redirect_uris", UNSET))
 
         ecosystem_signin_app_create = cls(
             slug=slug,

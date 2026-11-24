@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "9b1b54d5-e514-479f-b9f9-0a03cf4ebbc9",
     "title": "File Editor View",
-    "domain": "adhsdk://cookbook/workspace/files/file-editor-view",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -25,14 +24,14 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/workspace/documents/document-editor-view",
-      "agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages"
+      "4205c688-865a-4d74-890d-f803ee66fdcb",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "e62f6e9eeb2cf4db",
+  "synced": "fe32b8a6ab9fd3a7",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -51,7 +50,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

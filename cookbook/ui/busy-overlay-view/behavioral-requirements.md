@@ -1,0 +1,25 @@
+
+- **cover-host**: `show(in:message:)` MUST add the overlay as the topmost subview of the host, above every existing sibling, with its top, leading, trailing and bottom edges pinned to the host's edges.
+- **fade-in**: When first laid over a host, the overlay MUST start at opacity 0 and animate to opacity 1 over `fadeDuration` (0.2 seconds).
+- **spinner-runs**: `show` MUST start the spinner animating.
+- **message-line**: When `message` is a non-empty string, the overlay MUST show it on a single line below the spinner.
+- **message-hidden-when-empty**: When `message` is `nil` or the empty string, the overlay MUST hide the message line and MUST clear any earlier text.
+- **message-update-in-place**: Calling `show` again with the overlay already over the same host MUST update the message without re-adding the overlay to the host.
+- **move-between-hosts**: Calling `show` with a different host MUST remove the overlay from its previous host before adding it to the new one.
+- **hide-fades-out**: `hide()` MUST animate opacity to 0 over `fadeDuration` (0.2 seconds).
+- **hide-removes**: When the fade-out completes, the overlay MUST stop the spinner and remove itself from its host.
+- **hide-idempotent**: `hide()` MUST do nothing when the overlay has no host or is already fading out.
+- **show-cancels-hide**: A `show` call during a fade-out MUST cancel the removal and animate the overlay back to opacity 1, leaving it over the host.
+- **is-showing**: `isShowing` MUST be true exactly while the overlay has a host and is not fading out.
+- **swallow-pointer**: While not hidden and with opacity above 0, the overlay MUST answer the hit test for every point inside its frame, so that no pointer event reaches a view beneath it.
+- **ignore-hidden-hits**: When hidden or at opacity 0, the overlay MUST NOT answer any hit test.
+- **swallow-click-events**: The overlay MUST consume left, right and other mouse-down events and scroll-wheel events without acting on them.
+- **first-click-accepted**: The overlay MUST accept the first mouse event even when its window is inactive, so that event is swallowed too.
+- **no-dismiss-on-input**: The overlay MUST NOT remove itself in response to any pointer event.
+- **accessibility-role**: The overlay MUST expose the progress-indicator accessibility role.
+- **accessibility-label**: `show` MUST set the overlay's accessibility label to the `message` it was given (cleared when `nil`).
+- **material-configurable**: The blurred ground MUST use the material passed to the initializer, defaulting to the HUD window material.
+- **ground-blends-within-window**: The blurred ground MUST blend with content within the window and MUST always be in the active state.
+- **message-truncation**: A message too long for the available width MUST truncate at the tail.
+- **content-inset**: The spinner and message stack MUST stay at least 16 points from the leading and trailing edges of the overlay.
+

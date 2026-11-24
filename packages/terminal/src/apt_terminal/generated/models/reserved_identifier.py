@@ -59,12 +59,12 @@ class ReservedIdentifier:
         field_dict.update(
             {
                 "rdid": rdid,
-                "entityType": entity_type,
-                "entityId": entity_id,
+                "entity_type": entity_type,
+                "entity_id": entity_id,
                 "reason": reason,
-                "heldSince": held_since,
+                "held_since": held_since,
                 "releasable": releasable,
-                "needsName": needs_name,
+                "needs_name": needs_name,
             }
         )
 
@@ -75,9 +75,9 @@ class ReservedIdentifier:
         d = dict(src_dict)
         rdid = d.pop("rdid")
 
-        entity_type = d.pop("entityType")
+        entity_type = d.pop("entity_type")
 
-        entity_id = d.pop("entityId")
+        entity_id = d.pop("entity_id")
 
         reason = ReservedIdentifierReason(d.pop("reason"))
 
@@ -86,11 +86,11 @@ class ReservedIdentifier:
                 return data
             return cast(None | str, data)
 
-        held_since = _parse_held_since(d.pop("heldSince"))
+        held_since = _parse_held_since(d.pop("held_since"))
 
         releasable = d.pop("releasable")
 
-        needs_name = d.pop("needsName")
+        needs_name = d.pop("needs_name")
 
         reserved_identifier = cls(
             rdid=rdid,

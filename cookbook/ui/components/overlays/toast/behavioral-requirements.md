@@ -1,0 +1,20 @@
+- **render-title**: Toast MUST render a title element when provided.
+- **render-description**: Toast MUST render a description element when provided.
+- **render-close-button**: Toast MUST render a clickable close button.
+- **dismiss-on-close**: Toast MUST dismiss and remove itself from the viewport when the close button is clicked.
+- **enqueue-toasts**: The `useToast()` hook MUST accept objects with `title` and `description` properties and enqueue them for display.
+- **position-viewport-bottom-right**: The toast viewport MUST be positioned at the bottom inline-end corner of the viewport (1rem from the inline-end edge, which is the right edge in left-to-right locales, and 1rem from the bottom edge); the source uses `fixed end-4 bottom-4`, so it mirrors in right-to-left locales.
+- **manage-z-index**: The toast viewport MUST render at z-index 50 (above typical page content).
+- **animate-entrance**: Toasts MUST fade in smoothly (opacity transition from 0 to 1) on entrance.
+- **animate-exit**: Toasts MUST fade out smoothly (opacity transition to 0) when dismissed.
+- **stack-toasts**: Multiple toasts MUST render in a vertical stack with 0.5rem gap between each.
+- **constrain-width**: Each toast MUST have a fixed width of 320px, capped to (viewport width − 2rem) when the viewport is narrower than 320px plus margins.
+- **localize-close-label**: The close button's dismiss label MUST be localized for the active locale; `Toaster` takes a `closeLabel` prop (default `"Close"`) that callers pass their localized string through.
+- **enlarge-close-hit-area**: The close button SHOULD provide a hit area of at least 44×44pt, independent of the visible icon size; the source renders it as an `inline-flex size-11` (44×44) button at `top-0 end-0` with the 16px icon centred, and the toast root's `pe-11` keeps text clear of it.
+- **respect-reduced-motion**: Toasts SHOULD disable or shorten the opacity fade when the system reduced-motion preference is enabled; the toast root and the close button carry `motion-reduce:transition-none`.
+- **independent-provider-queues**: Each `ToastProvider` instance MUST manage its own toast queue independently.
+- **auto-dismiss-timeout**: A toast MUST close itself after a timeout, 5000ms by default, and the countdown MUST pause while the toast is hovered or holds focus.
+- **dismiss-on-escape**: Pressing Escape while focus is inside a toast MUST dismiss it.
+- **dismiss-on-swipe**: A toast MUST be dismissible by swiping it down or to the right past a 40px threshold.
+- **set-explicit-limit**: Implementations SHOULD pass an explicit `limit` to `ToastProvider` to bound the number of simultaneously visible toasts.
+- **use-design-tokens**: Implementations MUST use the design tokens `apt-text-muted`, `apt-text` and `apt-gold/40` for the close button's rest, hover and focus-ring colors, and MUST NOT hardcode a color value.

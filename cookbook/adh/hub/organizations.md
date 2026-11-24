@@ -1,13 +1,12 @@
 ---
 id: 98d7c94e-4db9-42c9-b36e-1a2a59409fda
 title: "Organizations"
-domain: adhsdk://cookbook/adh/hub/organizations
 type: ingredient
-version: 1.2.1
+version: 1.2.2
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -23,7 +22,7 @@ tags:
   - api
 depends-on: []
 related:
-  - adhsdk://cookbook/data/services/auth/auth-client
+  - 3ea9329e-5acc-4c43-b5ce-bb8c50570104
 references:
   - packages/web/packages/data/src/organizations/organizations.ts (adhsdk)
   - packages/web/packages/data/src/organizations/members.ts (adhsdk)
@@ -229,26 +228,26 @@ layer a caller builds around it.
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
 | hub-domain-organizations-001 | organization-shape, organization-rdid-presence | Decode two organization-record payloads: one from a read/rename response (no `rdid`) and one from a create response (`rdid` present) | The read/rename-shaped value has `rdid` absent; the create-shaped value has `rdid` equal to the sent string — derived directly from the wire documentation on the record's `rdid` field; no dedicated test in this checkout |
-| hub-domain-organizations-002 | organization-list-row-omits-owner | A list-row payload for an organization | Carries only `id`, `slug`, `name`, `description?` — no `ownerKind`/`ownerId` pair; the shape is fixed by the wire documentation, not enforced by a runtime check — no dedicated test |
+| hub-domain-organizations-002 | organization-list-row-omits-owner | A list-row payload for an organization | Carries only `id`, `slug`, `name`, `description?`; the list mapper copies those fields only, so any `owner_kind`/`owner_id` on the wire row is dropped — covered by a dedicated test |
 | hub-domain-organizations-003 | organization-create-input-shape | A create-organization input carrying only `slug` and `name` | Is a complete, valid input; the shape defines no other field — no dedicated test |
 | hub-domain-organizations-004 | organization-rename-input-shape | A rename-organization input with only `slug` set | Is a valid input — `name`/`description` are independently optional — no dedicated test |
-| hub-domain-organizations-005 | organization-provisioned-shape, organization-create-request-shape, organization-create-workspace-required | The create operation, called with `{slug:"acme",name:"Acme"}` from the `"personal"` workspace, against a stub 201 response `{organization, namespace, teamId, ecosystem}` | Resolves to that object verbatim; request is `POST /api/organization/organizations?workspace=personal` with body `{"slug":"acme","name":"Acme"}` — no dedicated test; derived directly from source |
-| hub-domain-organizations-006 | organization-restored-shape, organization-restore-request-shape | The restore operation, called with `"org-1"`, against a stub 200 response `{"organization":{"id":"org-1","slug":"acme","name":"Acme"}}` | Resolves to `{"id":"org-1","slug":"acme","name":"Acme"}`, the unwrapped `organization`, not the envelope — no dedicated test; derived directly from source |
+| hub-domain-organizations-005 | organization-provisioned-shape, organization-create-request-shape, organization-create-workspace-required | The create operation, called with `{slug:"acme",name:"Acme"}` from the `"personal"` workspace, against a stub 201 response `{organization, namespace, team_id, ecosystem}` (snake_case wire) | Resolves to the camelCase-mapped object (`namespace.owner_kind` becomes `ownerKind`, `team_id` becomes `teamId`); request is `POST /api/v1/organizations?workspace=personal` with body `{"slug":"acme","name":"Acme"}` — no dedicated test; derived directly from source |
+| hub-domain-organizations-006 | organization-restored-shape, organization-restore-request-shape | The restore operation, called with `"org-1"`, against a stub 200 response `{"id":"org-1","slug":"acme","name":"Acme"}` (the organization itself, no envelope) | Sends `POST /api/v1/organizations/org-1/restore` and resolves to `{"id":"org-1","slug":"acme","name":"Acme"}` — no dedicated test; derived directly from source |
 | hub-domain-organizations-008 | workspace-member-shape, workspace-member-nullable-fields | Decode a workspace member record for a member outside the caller's ecosystem: `{"userId":"u1","email":null,"displayName":null,"isAdmin":false,"addedAt":"2026-01-01"}` | Resolves with `email === null` and `displayName === null`, not `undefined` or omitted — derived directly from the wire documentation; no dedicated test |
-| hub-domain-organizations-009 | workspace-member-is-admin-definition | A customer who is a plain member of one of the org's teams and an admin of another of the org's teams | The roster row for that customer has `isAdmin === true` — derived directly from the wire documentation ("Admin of any of the org's teams"); no dedicated test |
-| hub-domain-organizations-010 | workspace-member-added-at-definition | A customer who joined Team A on `2026-01-01` and Team B (same org) on `2026-03-01` | The roster row for that customer has `addedAt === "2026-01-01"` — derived directly from the wire documentation ("Earliest membership across the org's teams"); no dedicated test |
-| hub-domain-organizations-011 | organization-list-workspace-required, organization-list-request-shape | The list operation, called with `"acme"` | Request URL is `/api/organization/organizations?workspace=acme`; resolves to the parsed body verbatim as an array of list-row shapes — no dedicated test; derived directly from source |
-| hub-domain-organizations-012 | every-call-url-encodes-identifiers | The list operation, and separately the roster list operation, each called with `"a b/c"` | Both request URLs contain the slug percent-encoded, not the raw string — no dedicated test; derived directly from source |
+| hub-domain-organizations-009 | workspace-member-is-admin-definition | A roster wire row whose `is_admin` is `true` (the backend sets it for a customer who is admin of any of the org's teams) | The client maps it to `isAdmin === true`; the any-team rule itself is server-side — covered by a mapping test |
+| hub-domain-organizations-010 | workspace-member-added-at-definition | A roster wire row whose `added_at` is `2026-01-01` (the backend chooses the earliest membership across the org's teams) | The client maps it to `addedAt === "2026-01-01"` unchanged; the earliest-membership rule itself is server-side — covered by a mapping test |
+| hub-domain-organizations-011 | organization-list-workspace-required, organization-list-request-shape | The list operation, called with `"acme"` | Request is `GET /api/v1/organizations` with `workspace=acme` in the query (plus `limit=100` paging); resolves to the `/v1` list envelope's rows mapped to an array of list-row shapes — no dedicated test; derived directly from source |
+| hub-domain-organizations-012 | every-call-url-encodes-identifiers | The list operation, and separately the roster list operation, each called with `"a b/c"` | Neither request URL contains the raw string: the list operation form-encodes it in the `workspace` query value, the roster operation percent-encodes it in the path (`a%20b%2Fc`) — no dedicated test; derived directly from source |
 | hub-domain-organizations-013 | organization-list-semantics-by-workspace-kind | The list operation called with a personal-workspace slug, and separately with an organization-workspace slug | The row set differs per the documented rule (personal → owned-plus-member organizations; organization workspace → only that organization's owned rows) — this is server-side behavior the client cannot assert on its own; recorded as fact per the source documentation, not exercised by a test in this checkout |
-| hub-domain-organizations-014 | organization-resolve-request-shape, organization-resolve-key-polymorphic | The resolve operation called with `"org.acme"`, separately with `"11111111-1111-1111-1111-111111111111"`, and separately with `"acme"` | All three send `GET /api/organization/organizations/<key>` with the key passed through unmodified — no dedicated test; derived directly from source |
+| hub-domain-organizations-014 | organization-resolve-request-shape, organization-resolve-key-polymorphic | The resolve operation called with `"org.acme"`, separately with `"11111111-1111-1111-1111-111111111111"`, and separately with `"acme"` | All three send `GET /api/v1/organizations/<key>` with the key passed through unmodified — no dedicated test; derived directly from source |
 | hub-domain-organizations-015 | organization-resolve-no-404-mapping | The resolve operation called with `"missing"` against a backend 404 | Rejects with a plain HTTP error, status 404; the resolve operation contains no catch clause of its own — no dedicated test; derived directly from the absence of a catch block in source |
 | hub-domain-organizations-016 | organization-create-conflict-mapping | The create request's backend response is a 409 whose message matches the pattern "already exists" | The create operation rejects with the error "An organization with that slug already exists.", not the raw backend message — derived directly from the shared conflict-mapping helper's pattern match; no dedicated test |
-| hub-domain-organizations-017 | organization-rename-request-shape | The rename operation, called with `"org-1"` and `{slug:"acme2", description: undefined}` | `PATCH /api/organization/organizations/org-1` with body `{"slug":"acme2"}` — `description` is omitted, not sent as an explicit `undefined`, because unset fields are stripped before serialization — no dedicated test; derived directly from source |
+| hub-domain-organizations-017 | organization-rename-request-shape | The rename operation, called with `"org-1"` and `{slug:"acme2", description: undefined}` | `POST /api/v1/organizations/org-1` with body `{"slug":"acme2"}` — `description` is omitted, not sent as an explicit `undefined`, because unset fields are stripped before serialization — no dedicated test; derived directly from source |
 | hub-domain-organizations-018 | organization-rename-conflict-mapping | The rename request's backend response is a 409 whose message matches the pattern "already exists" | The rename operation rejects with the error "That organization slug is already taken." — no dedicated test; derived directly from source |
-| hub-domain-organizations-019 | organization-archive-request-shape | The archive operation, called with `"org-1"`, against a 204 response | Sends `DELETE /api/organization/organizations/org-1`; resolves to nothing with no parse attempted — no dedicated test; derived directly from source |
+| hub-domain-organizations-019 | organization-archive-request-shape | The archive operation, called with `"org-1"`, against a 204 response | Sends `DELETE /api/v1/organizations/org-1`; resolves to nothing with no parse attempted — no dedicated test; derived directly from source |
 | hub-domain-organizations-020 | organization-restore-conflict-status-based | The restore operation, called with `"org-1"`, against a 409 response whose body message reads "that organization handle has been taken" (does not match the "already exists" pattern) | The restore operation rejects with the error "That organization's handle has been taken, so it can't be restored.", produced via status-based conflict detection, not message-pattern matching — derived directly from the source's own inline comment explaining this asymmetry; no dedicated test |
 | hub-domain-organizations-021 | organizations-query-key-is-prefix-only, organizations-query-key-distinct-from-workspaces-key | Read the exported organizations cache-key prefix | Names the "organizations" namespace as a one-element prefix; documented as deliberately distinct from a workspace-membership cache key — no dedicated test; derived directly from source |
-| hub-domain-organizations-022 | roster-request-shape | The roster list operation, called with `"acme"`, against a stub response `{"members":[{"userId":"u1","email":"a@b.com","displayName":"A","isAdmin":true,"addedAt":"2026-01-01"}]}` | `GET /api/workspaces/acme/members`; resolves to the parsed body verbatim (the `{members}` envelope, not unwrapped to a bare array) — no dedicated test; derived directly from source |
+| hub-domain-organizations-022 | roster-request-shape | The roster list operation, called with `"acme"`, against a stub `/v1` list response whose one row is `{"user_id":"u1","email":"a@b.com","display_name":"A","is_admin":true,"added_at":"2026-01-01"}` | `GET /api/v1/workspaces/acme/members` (plus `limit=100` paging) against a `/v1` list envelope of snake_case rows; resolves to `{members: [...]}` with each row mapped to camelCase — no dedicated test; derived directly from source |
 | hub-domain-organizations-023 | roster-distinct-customers | A backend roster response for an organization whose one customer belongs to two of the organization's teams | The resolved `members` array contains exactly one row for that customer — a backend guarantee stated in the documented rule; recorded as fact, not exercised by a client-side test in this checkout |
 | hub-domain-organizations-024 | roster-not-found-semantics | The roster list operation called with a slug naming no organization workspace, and separately with a slug naming a real organization workspace the caller is not a member of | Both reject with a plain HTTP error, status 404, indistinguishable from each other by this client — derived directly from the documented rule; no dedicated test |
 | hub-domain-organizations-025 | session-refresh-waterfall | Any organizations or roster call's first response is 401; the refresh operation resolves a new token | The request is retried once with the new token; a 401 on that retry throws a plain HTTP error, status 401 — traced to the shared authenticated request client; exercised only indirectly through these operations |
@@ -408,9 +407,9 @@ logging of that failure is the responsibility of the caller or host application.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/data/src/organizations/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/data/src/organizations/` | confirmed (1.2.2) |
 
 ## Design Decisions
 
@@ -481,29 +480,27 @@ prefix/distinctness invariants.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
-| [server-side-authorization](agenticdevelopercookbook://compliance/security#server-side-authorization) | passed | Security |
-| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | partial | Security |
-| [error-response-handling](agenticdevelopercookbook://compliance/access-patterns#error-response-handling) | passed | Access Patterns |
-| [retry-with-backoff](agenticdevelopercookbook://compliance/access-patterns#retry-with-backoff) | failed | Access Patterns |
-| [offline-behavior](agenticdevelopercookbook://compliance/access-patterns#offline-behavior) | failed | Access Patterns |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | partial | Reliability |
-| [data-minimization](agenticdevelopercookbook://compliance/privacy-and-data#data-minimization) | passed | Privacy and Data |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.security.server-side-authorization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/90e085e3-5112-5c02-9c10-4a2e324eeca1) | passed | Security |
+| [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | partial | Security |
+| [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | passed | Access Patterns |
+| [adc.check.access-patterns.retry-with-backoff](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bcb17bfe-d2d6-53f3-b2af-06b7eea3da61) | failed | Access Patterns |
+| [adc.check.access-patterns.offline-behavior](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/df7f401a-39be-5c60-bab4-85dd95bd1ab1) | failed | Access Patterns |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | partial | Reliability |
+| [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | Privacy and Data |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 
 `separation-of-concerns` **passed**: `organizations.ts`/`members.ts` contain zero UI or
 presentation code, `wire.ts` is a type-only file, and `index.ts`'s own comment describes the module
 as the public surface of a data domain, consumed by a separate presentation layer.
 `explicit-error-handling` **passed**: nothing in either file swallows an error — every failure
 either throws `AuthHttpError` (via the shared `authedFetch`) or one of the two hand-authored
-friendly `Error`s this recipe documents. `unit-test-coverage` **failed**: no `__tests__` directory
-or `*.test.ts` file exists next to `organizations.ts`/`members.ts` in this checkout, and the
-consumer feature tests found elsewhere in the repository (`NewOrganizationModal.test.tsx`,
-`orgRenameSavePath.test.tsx`) mock `@adh-sdk/data/organizations` wholesale rather than
-exercising this module's own request-building or error-mapping logic — none of the requirements
-above is exercised by a dedicated test in this checkout. `server-side-authorization` **passed**:
+friendly `Error`s this recipe documents. `unit-test-coverage` **partial**: `organizations/__tests__/organizations.test.ts`
+exercises every conformance vector except `hub-domain-organizations-013` and
+`hub-domain-organizations-023`, which describe server-side behavior (the row set per workspace kind,
+and one roster row per customer) that the client cannot assert on its own and are skipped. `server-side-authorization` **passed**:
 neither module performs a client-side permission check of any kind, per
 `authorization-enforced-server-side`, deferring the workspace-kind and field-level authorization
 splits, the archive role set, and the roster membership gate entirely to the backend.
@@ -532,6 +529,7 @@ file (see Localization) — a plain, honestly-reported gap, not a hidden one.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (organizations.test.ts, 27 of 29 vectors; 013 and 023 skipped as server-side); unit-test-coverage now partial. Vector text corrected to the real /api/v1 routes and mappings. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Design Decisions keep the Decision / Rationale / Approved triple; each decision's platform line is folded into its rationale. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Restate negative requirements as MUST NOT prohibitions. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to adh/hub/. |

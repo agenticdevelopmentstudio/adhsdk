@@ -1,0 +1,7 @@
+
+- **SwiftUI**: Not used; the types have no view layer.
+- **Compose**: Kotlin `data class` with `val` string properties, which gives structural equality and immutability; the session id is a computed property that calls the port's `ActivitySpanSession` equivalent rather than writing the `app:` literal inline.
+- **React/Web**: Readonly TypeScript interfaces or frozen object literals with string fields; session ids come from the port's `ActivitySpanSession` equivalent function, not an inline `app:` literal. Object equality is by reference, so provide an explicit field-wise `equals` helper to cover **value-semantics**.
+- **AppKit / UIKit**: `BillingAppSpanRow` and `BillingIdleInterval` in `Core/Billing/BillingAppSpans.swift`, public structs conforming to `Sendable` and `Equatable`, with explicit public memberwise initializers (a public struct gets no public memberwise initializer for free) and a `swiftlint` identifier_name suppression on `tz`, written twice: once on the property and once on the initializer parameter line that holds `tz`; `ActivitySpanSession` lives in `Core/WorkTracking/WorkTrackingModels.swift`.
+- **WinUI 3**: C# `record` or `readonly record struct` types with `init`-only string properties, which give value equality and immutability; a `SessionId` property calls the port's `ActivitySpanSession` equivalent instead of inlining `"app:" + Id`. Use `string.Empty` for the sentinels and parse timestamps with `DateTimeOffset.TryParse` in the consuming code, not in the type. Records are safe to share across `Task` boundaries.
+

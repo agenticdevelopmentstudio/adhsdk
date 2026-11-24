@@ -43,9 +43,9 @@
   `slugFor` derives the slug from the CURRENT name, a rename changes the slug the
   instant it lands — see
   #integration-requirements/follow-a-rename-to-the-new-slug. The hook re-selects
-  the chain under its new slug as soon as the write succeeds, in the same call
-  that also triggers `onChanged`'s refetch, so the already-open level never
-  resolves against a slug the rename just invalidated.
+  the chain under its new slug inside the write callback, as soon as the rename
+  lands and before `onChanged` is awaited, so the route is never left on the
+  slug the rename just invalidated.
 - **Deleting the currently-open category.** `chainAfterDelete` finds the deleted
   category ON the chain and truncates there, and the dialog's `onConfirm` navigates
   only once the write has landed. Dropping the LAST segment instead would be the
@@ -68,4 +68,6 @@
   move changed, so reading it there is exact) and hands it to `onSelectChain` only
   after the write lands
   (#integration-requirements/follow-a-move-to-its-new-place).
-
+- **Moving to the place the walk came through.** A confirmed Move whose chosen
+  parent equals the level's own parent (or `null` at the root level) writes nothing
+  and does not navigate; the hook still awaits `onChanged` and closes the dialog.

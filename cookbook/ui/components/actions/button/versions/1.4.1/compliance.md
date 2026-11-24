@@ -1,0 +1,15 @@
+
+| Check | Status | Category |
+|---|---|---|
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
+| [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
+| [adc.check.accessibility.touch-target-size](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5b4e41dc-8362-5dad-aa80-f1b5500ed1f2) | failed | Accessibility |
+| [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | passed | Accessibility |
+| [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | passed | Internationalization |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | passed | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+
+Statuses rest on the source as documented above: `keyboard-activates` and the native Base UI `<button>` (T7) ground `keyboard-navigable`; the Accessibility section's accessible-name gap (label comes from consumer `children`/`aria-label`, absent for an unlabeled icon-only button) grounds `screen-reader-support` as partial; the shadcn theme tokens used throughout Appearance (no raw hex) ground `contrast-ratio` as partial, since the tokens' actual contrast values are defined outside this component; the Accessibility section's explicit statement that the fixed size-variant heights fall below the 44×44pt/48×48dp guidance by default grounds `touch-target-size` as failed; `disabled`/`aria-invalid`/`aria-haspopup` mapping to native attributes grounds `semantic-markup` as passed; and the Localization section's "no built-in strings to localize" grounds both internationalization checks as passed. Security, Privacy and Data, and User Safety are omitted: the component collects no data, makes no network calls, produces no logs, and renders no links (see Privacy and Logging above). `separation-of-concerns` passes: server-safe styling (`buttonVariants`) is split from the client-only pointer/press behavior, which itself lives in the sibling `PressableButton` rather than `button.tsx` (see the Provenance note above). `unit-test-coverage` is partial — `button.test.tsx` covers pointerdown/pointerup, leave-while-held/re-enter, and handler forwarding, but not `pointercancel`, the window-wide release, `no-pointer-capture`, `haspopup-suppresses-dip`, or keyboard activation.
+

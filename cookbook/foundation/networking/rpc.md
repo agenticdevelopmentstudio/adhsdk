@@ -1,13 +1,12 @@
 ---
 id: 2dd6133a-1d6c-4ee5-9e37-308a11966433
 title: "RPC"
-domain: adhsdk://cookbook/foundation/networking/rpc
 type: ingredient
-version: 1.2.0
+version: 1.3.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -23,7 +22,7 @@ tags:
   - networking
 depends-on: []
 related:
-  - adhsdk://cookbook/ai/plugins/plugin-transport
+  - 7d5c5a1f-30df-460e-b6c4-7cfe9ab42784
 references: []
 approved-by: ""
 approved-date: ""
@@ -279,10 +278,18 @@ process-plus-three-pipes implementations in the codebase.
   scheme to unframed before constructing its channel, regardless of the
   framing value supplied in the configuration passed in.
 - **run-captures-full-output**: The one-shot run operation MUST launch the
-  channel, close its standard input immediately, and concatenate every
+  channel, close its standard input immediately (or, given standard input,
+  once that input is written), and concatenate every
   chunk yielded by the message stream in arrival order to form the run
   result's standard output, reproducing the child's raw standard output
   byte-for-byte.
+- **run-standard-input**: The one-shot run operation MAY be given bytes for
+  the child's standard input. It MUST write them from a separate task while
+  it drains standard output, so a child that fills its output pipe before
+  reading all of its input cannot stall either side, and close the input
+  once written. A write that fails because the child exited or closed its
+  input early MUST be ignored: the exit status is the answer. The writer
+  MUST be cancelled on every path that leaves the operation.
 - **run-tolerates-exited-case**: The one-shot run operation MUST catch an
   exited failure thrown while draining the message stream and treat it as
   a normal end of that iteration rather than propagating it, tolerating a
@@ -373,7 +380,8 @@ Not applicable — this is a subprocess/RPC networking engine with no user inter
 | networking-rpc-018 | termination-suppresses-flush-on-forced-teardown | Terminating called mid-message against a child under the newline-delimited scheme and, separately, the content-length-prefixed scheme, that has written a partial frame. | The message stream finishes cleanly with no partial frame delivered and no framing failure thrown. |
 | networking-rpc-019 | environment-replace-policy, environment-merge-policy | A channel launched with the replace policy and a non-empty environment, versus one launched with the merge-over-parent policy and the same environment, against a parent process with a distinguishing environment variable already set. | Under the replace policy, the child's environment contains only the configured variables; under the merge-over-parent policy, the child's environment contains both the parent's distinguishing variable and the configured override. |
 | networking-rpc-020 | budget-nan-starts-no-timer, budget-caller-cancellation-propagates | The wall-clock budget race given a not-a-number budget wrapping a long-running operation, and separately the awaiting context cancelled mid-operation. | The not-a-number case lets the operation run to completion with no immediate budget-exceeded failure; the cancellation case throws a cancellation signal promptly, well before the operation or the budget would otherwise resolve. |
-
+| networking-rpc-021 | run-standard-input, run-captures-full-output | The one-shot run operation running `cat` given 272 KB of standard input, more than either pipe holds. | Standard output equals the input byte-for-byte, exit status 0, no stall. |
+| networking-rpc-022 | run-standard-input, run-does-not-interpret-exit-status | The one-shot run operation running a command that exits 2 without reading, given 1 MB of standard input. | Returns a run result with exit status 2; the failed write is not thrown. |
 ## Edge Cases
 
 - **Null/empty input**: An empty chunk fed to an unframed decoder's consume operation MUST yield an empty array. A zero-length message passed to the content-length-prefixed encoding operation MUST still produce a valid `Content-Length: 0\r\n\r\n` header with an empty body; a decoder reading that header back MUST immediately yield one empty frame, since a declared body length of `0` already satisfies "the whole body has arrived." An empty configured environment MUST be treated as "inherit the parent unchanged" under the replace policy and as "a no-op merge" under the merge-over-parent policy, never as "clear the child's environment." No configured working directory MUST let the child inherit the parent's working directory.
@@ -458,9 +466,10 @@ Not applicable: this component contains no logging call of any kind — every di
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/RPC/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/RPC/` | confirmed (1.3.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Core/RPC/SubprocessChannel+Run.swift` | confirmed (1.3.0) |
 
 ## Design Decisions
 
@@ -488,15 +497,15 @@ Not applicable: this component contains no logging call of any kind — every di
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [test-pyramid](agenticdevelopercookbook://compliance/best-practices#test-pyramid) | passed | Best Practices |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
-| [timeout-handling](agenticdevelopercookbook://compliance/reliability#timeout-handling) | passed | Reliability |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | Reliability |
-| [error-recovery](agenticdevelopercookbook://compliance/reliability#error-recovery) | failed | Reliability |
-| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.test-pyramid](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/203de556-83a8-5211-acaf-155c49da0eb3) | passed | Best Practices |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
+| [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | passed | Reliability |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
+| [adc.check.reliability.error-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/694a971d-282d-501b-8861-c4ece3b01edd) | failed | Reliability |
+| [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | failed | Internationalization |
 
 `separation-of-concerns` passes because the four sources each own one job — framing rules, incremental decoding, process/descriptor lifecycle, and wall-clock racing — with no file reaching into another's internal state. `explicit-error-handling` passes because every defined failure path maps to a named, typed error case (`MessageFramingError`, `ChannelError`, `WallClockBudgetExceeded`) rather than a silent catch, with the one open question (a silent descriptor close) tracked as the pending design decision above and the descriptor-close-failure-silent requirement. `unit-test-coverage` and `test-pyramid` both pass because `MessageFramingTests.swift`, `SubprocessChannelTests.swift`, `SubprocessChannelRunTests.swift`, and `WallClockBudgetTests.swift` exercise every framing case, every cap-recovery path, and every termination ordering with hermetic, fast unit tests against real (but tiny, deterministic) child processes — no integration or end-to-end layer is needed for this component's contract. `fault-tolerance` passes because every defined failure mode degrades to a typed thrown error or a bounded wait rather than a hang, deadlock, or crash — the continuous stderr drain in particular exists specifically to avoid the 64 KB pipe-buffer deadlock its own doc comment names. `timeout-handling` passes because `withWallClockBudget(_:_:)` gives every wrapped operation a genuine wall-clock bound, including the explicit non-bound cases (`NaN`, the one-year ceiling) that are decisions rather than fallout of the arithmetic. `idempotent-operations` passes because `terminate()` is documented and tested as safe to call any number of times, concurrently or sequentially, with every caller observing the one completed teardown. `error-recovery` fails because none of these four sources retries, backs off, or otherwise recovers from a failure at its own layer — a `frameSizeExceeded`, a `launchFailed`, or a `WallClockBudgetExceeded` is reported once and left for the caller to act on. `string-externalization` fails because every string listed under Localization above is a hardcoded English literal with no catalog key.
 
@@ -504,6 +513,7 @@ Not applicable: this component contains no logging call of any kind — every di
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.0 | 2026-11-15 | Mike Fullerton | The one-shot run operation takes optional standard input, written from its own task while output drains, closed once written, a failed write ignored. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolved NEEDS REVIEW marker as current behavior plus a pending design decision; updated stale references to the renamed requirement |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to foundation/networking/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

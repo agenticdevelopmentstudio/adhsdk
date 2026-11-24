@@ -177,4 +177,78 @@ struct JSONCPreprocessorTests {
             try JSONCPreprocessor.jsonObject(from: Data("// nothing here\n".utf8))
         }
     }
+
+    // MARK: - Conformance vectors
+
+    @Test("foundation-json-011: a line comment stops at its newline, which survives")
+    func foundationJSON011_lineCommentKeepsNewline() {
+        #expect(JSONCPreprocessor.strip("// a\nb") == "\nb")
+    }
+
+    @Test("foundation-json-016: a top-level scalar is rejected by jsonObject")
+    func foundationJSON016_topLevelScalarRejected() {
+        #expect(throws: (any Error).self) {
+            try JSONCPreprocessor.jsonObject(from: Data("42".utf8))
+        }
+    }
+
+    @Test("foundation-json-017: jsonData passes a top-level scalar through")
+    func foundationJSON017_scalarPassesThrough() throws {
+        let data = Data("42".utf8)
+        #expect(try JSONCPreprocessor.jsonData(from: data) == data)
+    }
+
+    @Test("foundation-json-018: jsonData returns strict JSON byte-for-byte")
+    func foundationJSON018_strictBytesUnchanged() throws {
+        let data = Data(#"{"a":1e3}"#.utf8)
+        #expect(try JSONCPreprocessor.jsonData(from: data) == data)
+    }
+
+    @Test("foundation-json-019: jsonData re-serializes a document that is not strict")
+    func foundationJSON019_reencodesNonStrict() throws {
+        let data = Data(#"{"a": 1 /* note */}"#.utf8)
+        let result = try JSONCPreprocessor.jsonData(from: data)
+        #expect(result != data)
+        let root = try #require(try JSONSerialization.jsonObject(with: result) as? [String: Any])
+        #expect(root["a"] as? Int == 1)
+        #expect(root.count == 1)
+    }
+
+    @Test("foundation-json-020: jsonData propagates the parse failure")
+    func foundationJSON020_propagatesErrors() {
+        #expect(throws: (any Error).self) {
+            try JSONCPreprocessor.jsonData(from: Data(#"{"a": 1"#.utf8))
+        }
+    }
+
+    @Test("foundation-json-021: fifty concurrent calls each get their own result")
+    func foundationJSON021_concurrentCalls() async throws {
+        let results = try await withThrowingTaskGroup(of: (Int, String, Int?).self) { group in
+            for index in 0..<50 {
+                group.addTask {
+                    let stripped = JSONCPreprocessor.strip("{ // \(index)\n \"n\": \(index), }")
+                    let parsed = try JSONCPreprocessor.jsonObject(
+                        from: Data("{ /* c */ \"n\": \(index), }".utf8)) as? [String: Any]
+                    return (index, stripped, parsed?["n"] as? Int)
+                }
+            }
+            var collected: [(Int, String, Int?)] = []
+            for try await result in group { collected.append(result) }
+            return collected
+        }
+        #expect(results.count == 50)
+        for (index, stripped, parsed) in results {
+            #expect(parsed == index)
+            #expect(stripped.contains("\"n\": \(index)"))
+            #expect(stripped.contains("// ") == false)
+        }
+    }
+
+    @Test("foundation-json-022: the operations perform no file, network or notification I/O",
+          .disabled("the absence of side effects cannot be observed from a unit test"))
+    func foundationJSON022_noSideEffects() {}
+
+    @Test("foundation-json-023: neither operation accepts an encoding list",
+          .disabled("a compile-time property: a call site passing one does not build, so no test can run it"))
+    func foundationJSON023_candidateListIsFixed() {}
 }

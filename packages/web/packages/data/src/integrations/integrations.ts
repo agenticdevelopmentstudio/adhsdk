@@ -1,6 +1,6 @@
 // Integrations API client — wired to the real backend integrations subsystem
-// (/api/integrations). Covers two surfaces:
-//   • the provider CATALOG (GET /integrations/providers) — every provider the
+// (/api/v1/integrations). Covers two surfaces:
+//   • the provider CATALOG (GET /v1/integrations/providers) — every provider the
 //     platform can integrate, with its auth method + capabilities; and
 //   • an ecosystem's own, owner-scoped provider CONFIGS — its OAuth client
 //     credentials + optional endpoint overrides, secrets masked to `hasSecret`.
@@ -11,17 +11,37 @@
 //
 // It also covers an ecosystem's CONNECTIONS (linked accounts): list / connect
 // (all five auth methods) / disconnect / sync-now / per-connection sync settings,
-// plus the OAuth start endpoints (auth-url, register-instance, link-token). Every
+// plus the OAuth start endpoints (connect_sessions flows oauth / install / link_token, and
+// register_instance). Every
 // call names the target ecosystem (list/auth-url/link-token/register-instance take
 // `ecosystemId`; connect names it in `ecosystemId`); the backend authorizes the caller
 // against that ecosystem (403 otherwise). Connection-scoped ops (disconnect / sync /
 // settings) derive the ecosystem from the connection, so they take only its id.
 
-import { authedJson, authedRequest, decodeBase64UrlJson, isNotFound } from "../http";
+import {
+  authedJson,
+  authedRequest,
+  decodeBase64UrlJson,
+  isNotFound,
+  listAllV1,
+  unixToIso,
+  withV1Query,
+} from "../http";
 import { enc } from "../client-helpers";
 import type {
+  AdoptedInstallationRow,
+  AdoptedInstallationWire,
   AdoptInstallationsBodyType,
   AdoptInstallationsResultRow,
+  AdoptInstallationsResultWire,
+  ConnectionWire,
+  DeliverabilityWebhookWire,
+  IntegrationTestResultWire,
+  ProviderCatalogEntryWire,
+  ProviderConfigWire,
+  RegisterInstanceResultWire,
+  SyncSettingsResultWire,
+  TransferProviderConfigResultWire,
   AuthUrlResultRow,
   ConnectRequestBody,
   CreateProviderConfigBody,
@@ -102,9 +122,9 @@ export type SyncSettingsBody = SyncSettingsBodyType;
 /** `{ ok, syncSettings }` returned by the settings PATCH. */
 export type SyncSettingsResult = SyncSettingsResultRow;
 
-const BASE = "/api/integrations";
+const BASE = "/api/v1/integrations";
 
-/** The synced tables `GET /integrations/{connectionId}/data/{resource}` serves. */
+/** The synced tables `GET /v1/integrations/{resource}?connection=` serves. */
 export type ConnectionDataResource =
   | "media-items"
   | "social-notifications"
@@ -153,7 +173,7 @@ export interface IntegrationOAuthStateClaims {
  *
  * It decodes the payload half and ignores the signature ON PURPOSE, because nothing here is
  * a security decision: every value it recovers goes straight back to
- * `POST /integrations/connect`, which re-verifies the signature, that the state was minted
+ * `POST /v1/integrations/connect_sessions`, which re-verifies the signature, that the state was minted
  * for THIS caller, and that it names this ecosystem, before it writes anything. A forged
  * state gets the same 400 it would have got without this function.
  *
@@ -170,7 +190,7 @@ export function decodeOAuthStateClaims(state: string): IntegrationOAuthStateClai
   // backend serializes these claims with `JSON.stringify` and base64s the UTF-8 bytes, and
   // `atob` hands those bytes back one per code unit — so a non-ASCII serviceType or
   // ecosystem id decoded naively becomes mojibake in the very fields that are echoed to
-  // `POST /integrations/connect`, where they match nothing. That decode is identical to the
+  // `POST /v1/integrations/connect_sessions`, where they match nothing. That decode is identical to the
   // one a JWT payload needs, and it was written three times before it was written once.
   const parsed = decodeBase64UrlJson(state.slice(0, dot));
   if (!parsed || typeof parsed !== "object") return null;
@@ -240,30 +260,162 @@ export function isOAuthStateFresh(
   );
 }
 
-const configPath = (ecosystemId: string, providerId?: string) =>
-  providerId
-    ? `${BASE}/ecosystems/${enc(ecosystemId)}/provider-configs/${enc(providerId)}`
-    : `${BASE}/ecosystems/${enc(ecosystemId)}/provider-configs`;
+const configPath = (providerOrConfigId?: string) =>
+  providerOrConfigId
+    ? `${BASE}/provider_configs/${enc(providerOrConfigId)}`
+    : `${BASE}/provider_configs`;
 
-/** The id/rdid-addressed path for one provider config within an ecosystem. */
-const configByIdPath = (ecosystemId: string, configId: string) =>
-  `${BASE}/ecosystems/${enc(ecosystemId)}/provider-configs/${enc(configId)}`;
+/** `ecosystem` names the owning ecosystem on every provider-config call (query on a read or a
+ *  delete, body field on a write). */
+const inEco = (url: string, ecosystemId: string) => withV1Query(url, { ecosystem: ecosystemId });
+
+// ── wire <-> domain mappers (explicit, field by field) ────────────────────────
+
+const toCatalogEntry = (w: ProviderCatalogEntryWire): ProviderCatalogEntry => ({
+  providerId: w.provider_id,
+  displayName: w.display_name,
+  subtitle: w.subtitle,
+  description: w.description,
+  links: w.links,
+  authMethod: w.auth_method,
+  serviceTypes: w.service_types,
+  capabilities: w.capabilities,
+  defaultPollIntervalMs: w.default_poll_interval_ms,
+  ...(w.config_fields !== undefined ? { configFields: w.config_fields } : {}),
+  testable: w.testable,
+});
+
+const toWebhook = (w: DeliverabilityWebhookWire): DeliverabilityWebhook => ({
+  url: w.url,
+  secretHeader: w.secret_header,
+  secret: w.secret,
+  instruction: w.instruction,
+});
+
+const toConfig = (w: ProviderConfigWire): MaskedProviderConfig => ({
+  id: w.id,
+  ecosystemId: w.ecosystem_id,
+  providerId: w.provider_id,
+  name: w.name,
+  rdid: w.rdid,
+  config: w.config,
+  hasSecret: w.has_secret,
+  ...(w.deliverability_webhook !== undefined
+    ? { deliverabilityWebhook: w.deliverability_webhook ? toWebhook(w.deliverability_webhook) : null }
+    : {}),
+  ...(w.updated_by !== undefined ? { updatedBy: w.updated_by } : {}),
+  ...(w.created !== undefined ? { createdAt: unixToIso(w.created) } : {}),
+  ...(w.updated !== undefined ? { updatedAt: unixToIso(w.updated) } : {}),
+});
+
+const toConnection = (w: ConnectionWire): SafeConnection => ({
+  id: w.id,
+  provider: w.provider,
+  serviceType: w.service_type,
+  status: w.status,
+  displayName: w.display_name,
+  username: w.username,
+  externalAccountId: w.external_account_id,
+  ...(w.last_sync_at !== undefined ? { lastSyncAt: w.last_sync_at } : {}),
+  ...(w.last_error !== undefined ? { lastError: w.last_error } : {}),
+  createdAt: unixToIso(w.created),
+  ...(w.sync_settings !== undefined ? { syncSettings: w.sync_settings } : {}),
+});
+
+const toInstallation = (w: AdoptedInstallationWire): AdoptedInstallationRow => ({
+  installationId: w.installation_id,
+  accountLogin: w.account_login,
+  targetType: w.target_type,
+  ...(w.connection_id !== undefined ? { connectionId: w.connection_id } : {}),
+  ...(w.skipped !== undefined ? { skipped: w.skipped } : {}),
+  ...(w.warning !== undefined ? { warning: w.warning } : {}),
+});
+
+const toAdopted = (w: AdoptInstallationsResultWire): AdoptInstallationsResult => ({
+  connected: w.connected.map(toInstallation),
+  skipped: w.skipped.map(toInstallation),
+});
+
+const toTestResult = (w: IntegrationTestResultWire): IntegrationTestResult => ({
+  ok: w.ok,
+  summary: w.summary,
+  notes: w.notes,
+  ...(w.adopted !== undefined ? { adopted: toAdopted(w.adopted) } : {}),
+});
+
+const configInputToWire = (b: ProviderConfigInput) => ({
+  ...(b.clientId !== undefined ? { client_id: b.clientId } : {}),
+  ...(b.scopes !== undefined ? { scopes: b.scopes } : {}),
+  ...(b.authUrl !== undefined ? { auth_url: b.authUrl } : {}),
+  ...(b.tokenUrl !== undefined ? { token_url: b.tokenUrl } : {}),
+  ...(b.userinfoUrl !== undefined ? { userinfo_url: b.userinfoUrl } : {}),
+  ...(b.validateUrl !== undefined ? { validate_url: b.validateUrl } : {}),
+  ...(b.credentialStyle !== undefined ? { credential_style: b.credentialStyle } : {}),
+  ...(b.endpoints !== undefined ? { endpoints: b.endpoints } : {}),
+  ...(b.clientSecret !== undefined ? { client_secret: b.clientSecret } : {}),
+  ...(b.fields !== undefined ? { fields: b.fields } : {}),
+  ...(b.enabled !== undefined ? { enabled: b.enabled } : {}),
+});
+
+const connectToWire = (b: ConnectRequest) => {
+  const base = {
+    flow: "connect" as const,
+    type: b.type,
+    provider_id: b.providerId,
+    service_type: b.serviceType,
+    ecosystem_id: b.ecosystemId,
+  };
+  switch (b.type) {
+    case "oauth":
+      return { ...base, code: b.code, redirect_uri: b.redirectUri, state: b.state };
+    case "api_key":
+      return { ...base, fields: b.fields };
+    case "app_password":
+      return {
+        ...base,
+        ...(b.identifier !== undefined ? { identifier: b.identifier } : {}),
+        ...(b.password !== undefined ? { password: b.password } : {}),
+        ...(b.instanceUrl !== undefined ? { instance_url: b.instanceUrl } : {}),
+        ...(b.providerConfigId !== undefined ? { provider_config_id: b.providerConfigId } : {}),
+      };
+    case "plaid_link":
+      return { ...base, public_token: b.publicToken };
+    case "oauth_instance":
+      return { ...base, code: b.code, state: b.state };
+    case "github_app":
+      return { ...base, installation_id: b.installationId, state: b.state };
+  }
+};
+
+const syncSettingsToWire = (b: SyncSettingsBody) => ({
+  ...(b.gmailLabelIds !== undefined ? { gmail_label_ids: b.gmailLabelIds } : {}),
+  ...(b.gmailWindowDays !== undefined ? { gmail_window_days: b.gmailWindowDays } : {}),
+  ...(b.redditSubreddits !== undefined ? { reddit_subreddits: b.redditSubreddits } : {}),
+  ...(b.redditKeywords !== undefined ? { reddit_keywords: b.redditKeywords } : {}),
+  ...(b.audienceIds !== undefined ? { audience_ids: b.audienceIds } : {}),
+});
+
+const post = <T>(url: string, body?: unknown) =>
+  authedJson<T>(url, { method: "POST", ...(body !== undefined ? { body: JSON.stringify(body) } : {}) });
+
+const connectSession = <T>(body: Record<string, unknown>) =>
+  post<T>(`${BASE}/connect_sessions`, body);
 
 export const integrationsApi = {
   /** The provider catalog — every provider the platform can integrate. */
   async listProviders(): Promise<ProviderCatalogEntry[]> {
-    const { providers } = await authedJson<{ providers: ProviderCatalogEntry[] }>(
+    const rows = await listAllV1<ProviderCatalogEntryWire>(
       `${BASE}/providers`,
+      {},
+      { cursorOf: (r) => (r as ProviderCatalogEntryWire).provider_id },
     );
-    return providers;
+    return rows.map(toCatalogEntry);
   },
 
   /** The ecosystem's configured providers (secrets masked to `hasSecret`). */
   async listProviderConfigs(ecosystemId: string): Promise<MaskedProviderConfig[]> {
-    const { configs } = await authedJson<{ configs: MaskedProviderConfig[] }>(
-      configPath(ecosystemId),
-    );
-    return configs;
+    const rows = await listAllV1<ProviderConfigWire>(inEco(configPath(), ecosystemId));
+    return rows.map(toConfig);
   },
 
   /** One masked config, or null when none is stored yet (backend 404). */
@@ -272,7 +424,9 @@ export const integrationsApi = {
     providerId: string,
   ): Promise<MaskedProviderConfig | null> {
     try {
-      return await authedJson<MaskedProviderConfig>(configPath(ecosystemId, providerId));
+      return toConfig(
+        await authedJson<ProviderConfigWire>(inEco(configPath(providerId), ecosystemId)),
+      );
     } catch (err) {
       if (isNotFound(err)) return null;
       throw err;
@@ -286,28 +440,34 @@ export const integrationsApi = {
     providerId: string,
     body: ProviderConfigInput,
   ): Promise<MaskedProviderConfig> {
-    return authedJson<MaskedProviderConfig>(configPath(ecosystemId, providerId), {
-      method: "PUT",
-      body: JSON.stringify(body),
-    });
+    return toConfig(
+      await post<ProviderConfigWire>(configPath(providerId), {
+        ...configInputToWire(body),
+        ecosystem: ecosystemId,
+      }),
+    );
   },
 
   async deleteProviderConfig(ecosystemId: string, providerId: string): Promise<void> {
-    await authedRequest(configPath(ecosystemId, providerId), { method: "DELETE" });
+    await authedRequest(inEco(configPath(providerId), ecosystemId), { method: "DELETE" });
   },
 
   // ── id/rdid-addressed provider-config CRUD ───────────────────────────────────
 
   /** Create a new provider config under the ecosystem. POSTs to the collection path
-   *  with a `providerId` + `name` and the config input fields; returns the masked row. */
+   *  with a `provider_id` + `name` and the config input fields; returns the masked row. */
   async createProviderConfig(
     ecosystemId: string,
     body: CreateProviderConfigBody,
   ): Promise<MaskedProviderConfig> {
-    return authedJson<MaskedProviderConfig>(configPath(ecosystemId), {
-      method: "POST",
-      body: JSON.stringify(body),
-    });
+    return toConfig(
+      await post<ProviderConfigWire>(configPath(), {
+        provider_id: body.providerId,
+        name: body.name,
+        ...configInputToWire(body),
+        ecosystem: ecosystemId,
+      }),
+    );
   },
 
   /** One masked config addressed by its id/rdid, or null when it doesn't exist
@@ -317,7 +477,9 @@ export const integrationsApi = {
     configId: string,
   ): Promise<MaskedProviderConfig | null> {
     try {
-      return await authedJson<MaskedProviderConfig>(configByIdPath(ecosystemId, configId));
+      return toConfig(
+        await authedJson<ProviderConfigWire>(inEco(configPath(configId), ecosystemId)),
+      );
     } catch (err) {
       if (isNotFound(err)) return null;
       throw err;
@@ -331,15 +493,18 @@ export const integrationsApi = {
     configId: string,
     body: ProviderConfigInput & { name?: string },
   ): Promise<MaskedProviderConfig> {
-    return authedJson<MaskedProviderConfig>(configByIdPath(ecosystemId, configId), {
-      method: "PUT",
-      body: JSON.stringify(body),
-    });
+    return toConfig(
+      await post<ProviderConfigWire>(configPath(configId), {
+        ...(body.name !== undefined ? { name: body.name } : {}),
+        ...configInputToWire(body),
+        ecosystem: ecosystemId,
+      }),
+    );
   },
 
   /** Delete a provider config addressed by its id/rdid. */
   async deleteProviderConfigById(ecosystemId: string, configId: string): Promise<void> {
-    await authedRequest(configByIdPath(ecosystemId, configId), { method: "DELETE" });
+    await authedRequest(inEco(configPath(configId), ecosystemId), { method: "DELETE" });
   },
 
   /**
@@ -357,9 +522,10 @@ export const integrationsApi = {
     ecosystemId: string,
     configId: string,
   ): Promise<IntegrationTestResult> {
-    return authedJson<IntegrationTestResult>(
-      `${configByIdPath(ecosystemId, configId)}/test`,
-      { method: "POST" },
+    return toTestResult(
+      await post<IntegrationTestResultWire>(`${configPath(configId)}/test`, {
+        ecosystem: ecosystemId,
+      }),
     );
   },
 
@@ -376,9 +542,19 @@ export const integrationsApi = {
     providerId: string,
     body: TestCredentialsBody,
   ): Promise<IntegrationTestResult> {
-    return authedJson<IntegrationTestResult>(
-      `${BASE}/providers/${enc(providerId)}/test-credentials`,
-      { method: "POST", body: JSON.stringify(body) },
+    return toTestResult(
+      await post<IntegrationTestResultWire>(
+        `${BASE}/providers/${enc(providerId)}/test_credentials`,
+        {
+          ecosystem_id: body.ecosystemId,
+          ...(body.clientId !== undefined ? { client_id: body.clientId } : {}),
+          ...(body.clientSecret !== undefined ? { client_secret: body.clientSecret } : {}),
+          ...(body.fields !== undefined ? { fields: body.fields } : {}),
+          ...(body.providerConfigId !== undefined
+            ? { provider_config_id: body.providerConfigId }
+            : {}),
+        },
+      ),
     );
   },
 
@@ -395,10 +571,15 @@ export const integrationsApi = {
     configId: string,
     body: TransferProviderConfigBody,
   ): Promise<TransferProviderConfigResult> {
-    return authedJson<TransferProviderConfigResult>(
-      `${configByIdPath(ecosystemId, configId)}/transfer`,
-      { method: "POST", body: JSON.stringify(body) },
-    );
+    const w = await post<TransferProviderConfigResultWire>(`${configPath(configId)}/transfer`, {
+      target_ecosystem_id: body.targetEcosystemId,
+      ecosystem: ecosystemId,
+    });
+    return {
+      config: toConfig(w.config),
+      connections: w.connections,
+      repositoryCaches: w.repository_caches,
+    };
   },
 
   /**
@@ -417,9 +598,10 @@ export const integrationsApi = {
     ecosystemId: string,
     configId: string,
   ): Promise<MaskedProviderConfig> {
-    return authedJson<MaskedProviderConfig>(
-      `${configByIdPath(ecosystemId, configId)}/rotate-webhook-secret`,
-      { method: "POST" },
+    return toConfig(
+      await post<ProviderConfigWire>(`${configPath(configId)}/rotate_webhook_secret`, {
+        ecosystem: ecosystemId,
+      }),
     );
   },
 
@@ -428,13 +610,13 @@ export const integrationsApi = {
   /** The connections OWNED by ecosystem `ecosystemId` (secrets redacted), across all
    *  providers. The backend authorizes the caller against the ecosystem (403 otherwise). */
   async listConnections(ecosystemId: string): Promise<SafeConnection[]> {
-    const { connections } = await authedJson<{ connections: SafeConnection[] }>(
-      `${BASE}?ecosystemId=${enc(ecosystemId)}`,
+    const rows = await listAllV1<ConnectionWire>(
+      withV1Query(`${BASE}/connections`, { ecosystem_id: ecosystemId }),
     );
-    return connections;
+    return rows.map(toConnection);
   },
 
-  /** One page of a connection's synced rows (`GET /integrations/{id}/data/{resource}`),
+  /** One page of a connection's synced rows (`GET /v1/integrations/{resource}?connection=`),
    *  ordered by syncVersion. Pass the previous page's `nextCursor` as `cursor`; the backend
    *  defaults the limit to 50 and caps it at 200. Only the connection's own customer may read. */
   async getConnectionData(
@@ -442,34 +624,32 @@ export const integrationsApi = {
     resource: ConnectionDataResource,
     opts: { cursor?: string | null; limit?: number } = {},
   ): Promise<ConnectionDataPage> {
-    const q = new URLSearchParams();
-    if (opts.cursor) q.set("cursor", opts.cursor);
-    if (opts.limit) q.set("limit", String(opts.limit));
-    const qs = q.size > 0 ? `?${q.toString()}` : "";
-    return authedJson<ConnectionDataPage>(
-      `${BASE}/${enc(connectionId)}/data/${enc(resource)}${qs}`,
+    const w = await authedJson<{ rows: Array<Record<string, unknown>>; next_cursor?: string | null }>(
+      withV1Query(`${BASE}/${enc(resource)}`, {
+        connection: connectionId,
+        cursor: opts.cursor || undefined,
+        limit: opts.limit || undefined,
+      }),
     );
+    return { rows: w.rows, nextCursor: w.next_cursor ?? null };
   },
 
   /** Finish a connect for any auth method and persist the connection. The `body`
    *  names the owning ecosystem in `ecosystemId`; the backend authorizes the caller
    *  against it (403 otherwise) before persisting the connection under it. */
   async connect(body: ConnectRequest): Promise<SafeConnection> {
-    return authedJson<SafeConnection>(`${BASE}/connect`, {
-      method: "POST",
-      body: JSON.stringify(body),
-    });
+    return toConnection(await connectSession<ConnectionWire>(connectToWire(body)));
   },
 
   /** Disconnect (soft-delete) a connection the caller owns. */
   async disconnect(connectionId: string): Promise<void> {
-    await authedRequest(`${BASE}/${enc(connectionId)}`, { method: "DELETE" });
+    await authedRequest(`${BASE}/connections/${enc(connectionId)}`, { method: "DELETE" });
   },
 
   /** Trigger an immediate sync. Throws AuthHttpError(503) when no worker is
    *  registered for the provider yet (caller shows an inline "not available" note). */
   async sync(connectionId: string): Promise<void> {
-    await authedRequest(`${BASE}/${enc(connectionId)}/sync`, { method: "POST" });
+    await authedRequest(`${BASE}/connections/${enc(connectionId)}/sync`, { method: "POST" });
   },
 
   /** Update a connection's caller-tunable sync settings (gmail today). */
@@ -477,10 +657,11 @@ export const integrationsApi = {
     connectionId: string,
     body: SyncSettingsBody,
   ): Promise<SyncSettingsResult> {
-    return authedJson<SyncSettingsResult>(`${BASE}/${enc(connectionId)}/settings`, {
-      method: "PATCH",
-      body: JSON.stringify(body),
-    });
+    const w = await post<SyncSettingsResultWire>(
+      `${BASE}/connections/${enc(connectionId)}`,
+      syncSettingsToWire(body),
+    );
+    return { ok: w.ok, syncSettings: w.sync_settings };
   },
 
   // ── OAuth / install / instance / link-token start endpoints ─────────────────
@@ -491,15 +672,15 @@ export const integrationsApi = {
     providerId: string,
     params: { ecosystemId: string; redirectUri: string; serviceType?: string; scopes?: string },
   ): Promise<AuthUrlResult> {
-    const qs = new URLSearchParams({
-      ecosystemId: params.ecosystemId,
-      redirectUri: params.redirectUri,
+    const w = await connectSession<{ url: string; state: string }>({
+      flow: "oauth",
+      provider: providerId,
+      ecosystem_id: params.ecosystemId,
+      redirect_uri: params.redirectUri,
+      ...(params.serviceType ? { service_type: params.serviceType } : {}),
+      ...(params.scopes ? { scopes: params.scopes } : {}),
     });
-    if (params.serviceType) qs.set("serviceType", params.serviceType);
-    if (params.scopes) qs.set("scopes", params.scopes);
-    return authedJson<AuthUrlResult>(
-      `${BASE}/providers/${enc(providerId)}/auth-url?${qs.toString()}`,
-    );
+    return { url: w.url, state: w.state };
   },
 
   /**
@@ -515,11 +696,13 @@ export const integrationsApi = {
     providerId: string,
     params: { ecosystemId: string; serviceType?: string },
   ): Promise<AuthUrlResult> {
-    const qs = new URLSearchParams({ ecosystemId: params.ecosystemId });
-    if (params.serviceType) qs.set("serviceType", params.serviceType);
-    return authedJson<AuthUrlResult>(
-      `${BASE}/providers/${enc(providerId)}/install-url?${qs.toString()}`,
-    );
+    const w = await connectSession<{ url: string; state: string }>({
+      flow: "install",
+      provider: providerId,
+      ecosystem_id: params.ecosystemId,
+      ...(params.serviceType ? { service_type: params.serviceType } : {}),
+    });
+    return { url: w.url, state: w.state };
   },
 
   /**
@@ -536,9 +719,15 @@ export const integrationsApi = {
     providerId: string,
     body: AdoptInstallationsBody,
   ): Promise<AdoptInstallationsResult> {
-    return authedJson<AdoptInstallationsResult>(
-      `${BASE}/providers/${enc(providerId)}/adopt-installations`,
-      { method: "POST", body: JSON.stringify(body) },
+    return toAdopted(
+      await post<AdoptInstallationsResultWire>(
+        `${BASE}/providers/${enc(providerId)}/adopt_installations`,
+        {
+          ecosystem_id: body.ecosystemId,
+          provider_config_id: body.providerConfigId,
+          ...(body.serviceType !== undefined ? { service_type: body.serviceType } : {}),
+        },
+      ),
     );
   },
 
@@ -547,20 +736,32 @@ export const integrationsApi = {
     providerId: string,
     body: RegisterInstanceBody,
   ): Promise<RegisterInstanceResult> {
-    return authedJson<RegisterInstanceResult>(
-      `${BASE}/providers/${enc(providerId)}/register-instance`,
-      { method: "POST", body: JSON.stringify(body) },
+    const w = await post<RegisterInstanceResultWire>(
+      `${BASE}/providers/${enc(providerId)}/register_instance`,
+      {
+        ecosystem_id: body.ecosystemId,
+        instance_url: body.instanceUrl,
+        redirect_uri: body.redirectUri,
+        ...(body.serviceType !== undefined ? { service_type: body.serviceType } : {}),
+        ...(body.providerConfigId !== undefined
+          ? { provider_config_id: body.providerConfigId }
+          : {}),
+      },
     );
+    return { state: w.state, authorizeUrl: w.authorize_url, clientId: w.client_id };
   },
 
   /** Mint a Plaid Link token for the provider. */
   async createLinkToken(
     providerId: string,
-    body?: LinkTokenBody,
+    body: LinkTokenBody,
   ): Promise<{ linkToken: string }> {
-    return authedJson<{ linkToken: string }>(
-      `${BASE}/providers/${enc(providerId)}/link-token`,
-      { method: "POST", body: JSON.stringify(body ?? {}) },
-    );
+    const w = await connectSession<{ link_token: string }>({
+      flow: "link_token",
+      provider: providerId,
+      ecosystem_id: body.ecosystemId,
+      ...(body.serviceType !== undefined ? { service_type: body.serviceType } : {}),
+    });
+    return { linkToken: w.link_token };
   },
 };

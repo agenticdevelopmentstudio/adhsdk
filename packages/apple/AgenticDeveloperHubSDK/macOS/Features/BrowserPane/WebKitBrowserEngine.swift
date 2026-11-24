@@ -1,0 +1,1113 @@
+//
+//  WebKitBrowserEngine.swift
+//  AgenticDeveloperHubSDK
+//
+
+import AppKit
+import Combine
+import os
+import WebKit
+import AgenticDeveloperHubSDKCore
+import AgenticDeveloperHubSDKCoreUI
+import AgenticDeveloperHubSDKCoreMacOS
+
+/// Drives a `WKWebView` for automation, and nothing more: it sets no
+/// delegates, so whoever owns the web view keeps owning its navigation.
+/// `BrowserAutomation(webView:console:)` wraps a bare web view in one.
+@MainActor
+public class WebKitPageDriver: NSObject, BrowserPageDriver {
+
+    public let webView: WKWebView
+
+    public init(webView: WKWebView) {
+        self.webView = webView
+        super.init()
+    }
+
+    public var url: URL? { webView.url }
+    public var title: String? { webView.title }
+    public var isLoading: Bool { webView.isLoading }
+    public var view: NSView { webView }
+
+    public var loadingChanges: AnyPublisher<Bool, Never> {
+        webView.publisher(for: \.isLoading, options: [.new]).eraseToAnyPublisher()
+    }
+
+    /// WebKit keeps no visit time on a list item, so `when` is nil. The
+    /// current item's title is the web view's, which follows a title the
+    /// page sets after loading; `backList` runs farthest first, so it is
+    /// reversed.
+    public var backForwardVisits: [BrowserVisitLine] {
+        let list = webView.backForwardList
+        func line(_ item: WKBackForwardListItem, title: String? = nil) -> BrowserVisitLine {
+            BrowserVisitLine(title: title ?? item.title ?? "", url: item.url.absoluteString, when: nil)
+        }
+        var lines: [BrowserVisitLine] = []
+        if let current = list.currentItem { lines.append(line(current, title: webView.title)) }
+        lines += list.backList.reversed().map { line($0) }
+        lines += list.forwardList.map { line($0) }
+        return lines
+    }
+
+    public var viewportSize: CGSize {
+        let zoom = webView.pageZoom
+        return CGSize(width: webView.bounds.width / zoom, height: webView.bounds.height / zoom)
+    }
+
+    public func load(_ url: URL) { webView.loadAllowingFiles(URLRequest(url: url)) }
+    public func goBack() { webView.goBack() }
+    public func goForward() { webView.goForward() }
+
+    public func installAutomationRuntime() async throws {
+        try await BrowserSnapshotRuntime.install(in: webView)
+    }
+
+    public func callAsyncFunction(
+        body: String, arguments: [String: Any], world: BrowserScriptWorld
+    ) async throws -> Any? {
+        let contentWorld: WKContentWorld = switch world {
+        case .automation: BrowserSnapshotRuntime.world
+        case .page: .page
+        }
+        return try await webView.callAsyncJavaScript(body, arguments: arguments, in: nil, contentWorld: contentWorld)
+    }
+
+    /// WebKit's snapshot rect is in view points, so the CSS rect is scaled by
+    /// the page zoom on its way in.
+    public func snapshot(cssRect: CGRect?) async throws -> CGImage {
+        let configuration = WKSnapshotConfiguration()
+        if let cssRect {
+            let zoom = webView.pageZoom
+            configuration.rect = CGRect(x: cssRect.minX * zoom, y: cssRect.minY * zoom,
+                                        width: cssRect.width * zoom, height: cssRect.height * zoom)
+        }
+        let image: NSImage = try await withCheckedThrowingContinuation { continuation in
+            webView.takeSnapshot(with: configuration) { image, error in
+                if let image {
+                    continuation.resume(returning: image)
+                } else {
+                    continuation.resume(throwing: BrowserAutomationError.script(
+                        error?.localizedDescription ?? "snapshot failed"))
+                }
+            }
+        }
+        guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+            throw BrowserAutomationError.script("could not read the screenshot")
+        }
+        return cgImage
+    }
+
+    /// Mouse down/up through the web view's own responder methods, so WebKit
+    /// handles it as a real click. The point is viewport CSS pixels: the web
+    /// view's bounds are the viewport, so a page coordinate would be off by
+    /// the scroll offset on any page that has scrolled.
+    public func nativeClick(atViewportX viewportX: Double, viewportY: Double) async throws {
+        guard let window = webView.window else { throw BrowserAutomationError.noWindow }
+        let zoom = webView.pageZoom
+        var point = NSPoint(x: viewportX * zoom, y: viewportY * zoom)
+        if !webView.isFlipped { point.y = webView.bounds.height - point.y }
+        let inWindow = webView.convert(point, to: nil)
+        let click = { [webView] in
+            for (type, number) in [(NSEvent.EventType.leftMouseDown, 1), (.leftMouseUp, 2)] {
+                guard let event = NSEvent.mouseEvent(
+                    with: type, location: inWindow, modifierFlags: [],
+                    timestamp: ProcessInfo.processInfo.systemUptime,
+                    windowNumber: window.windowNumber, context: nil, eventNumber: number, clickCount: 1, pressure: 1
+                ) else { continue }
+                if type == .leftMouseDown { webView.mouseDown(with: event) } else { webView.mouseUp(with: event) }
+            }
+        }
+        // A gated web view lets the click through as the agent's, so the
+        // pane's input settings judge it as synthesized, not as the user's.
+        if let gated = webView as? BrowserWebView {
+            gated.deliveringAutomationInput(click)
+        } else {
+            click()
+        }
+    }
+}
+
+/// The Safari pane's engine: a `WKWebView` it configures from the browser
+/// settings and is the navigation, UI and download delegate of.
+///
+/// What it honours comes from the Browser settings (`BrowserSettings.swift`):
+/// read once where WebKit fixes a value at construction, and followed live
+/// everywhere WebKit lets a value change under a page. The Session Privacy
+/// settings arrive through the pane: the input gate, the activation shield
+/// and the cookie policy are the pane's decisions, enforced here. Third-Party
+/// Content is followed here, because holding a load until the rules are on
+/// is a fact about WebKit's rule compiler.
+@MainActor
+public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
+
+    public weak var delegate: BrowserEngineDelegate?
+    public let consoleLog: BrowserConsoleLog
+
+    private let settings: SettingsStore
+    /// Whether this web view captures the page console, read once where its
+    /// configuration was built, so the handler and the hook come together or
+    /// not at all.
+    private let capturesConsole: Bool
+    private let siteData: BrowserSiteData
+    /// Hides focus and visibility changes from the page.
+    let activationShield: BrowserActivationShield
+    private let logger = Logger(subsystem: "AgenticDeveloperHubSDK", category: "BrowserPane")
+    private var observations: [NSKeyValueObservation] = []
+    private var cancellables: Set<AnyCancellable> = []
+    private var downloads: [WKDownload] = []
+    /// The theme's window background, for the area around a blank page and
+    /// the backdrop under every page.
+    private var themedUnderPageColor: NSColor?
+
+    /// The Third-Party Content value last asked of this web view, so an
+    /// unrelated browser key change does not compile the rules again.
+    private var requestedThirdPartyContent: BrowserThirdPartyContent?
+    /// The value whose rules the web view actually has. What tests wait on;
+    /// the compile behind it is asynchronous.
+    private(set) var appliedThirdPartyContent: BrowserThirdPartyContent?
+    /// The list behind `appliedThirdPartyContent`, kept so a popup can start
+    /// under it without waiting on a lookup.
+    private var appliedRuleList: WKContentRuleList?
+    /// Counts content-rule requests, so a compile that finishes after a newer
+    /// request — or after teardown — is dropped.
+    private var contentRulesGeneration = 0
+    /// Whether the current request's rule list is still being compiled or
+    /// looked up. A load asked for meanwhile is held (`heldLoad`).
+    private var isApplyingContentRules = false
+    /// The load waiting for the rules to land, so a page never starts before
+    /// the blocker it was meant to load under.
+    private var heldLoad: URLRequest?
+    /// Whether a load is waiting for the rules. For tests.
+    var isHoldingLoad: Bool { heldLoad != nil }
+    /// Where rule lists come from. The store by default; a test injects a
+    /// slow or failing one to drive the generation and failure paths.
+    var contentRuleListProvider: @MainActor (BrowserThirdPartyContent) async throws -> WKContentRuleList? = {
+        try await BrowserContentRules.ruleList(for: $0)
+    }
+    /// Called as each navigation starts. A test seam: it is how a test sees
+    /// what rules were on the web view when its first page began loading.
+    var onNavigationStart: (() -> Void)?
+    /// How many finished compiles were dropped because a newer request had
+    /// come since. For tests.
+    private(set) var droppedContentRules = 0
+
+    public convenience init(configuration: BrowserEngineConfiguration) {
+        self.init(configuration: configuration, contentRuleListProvider: nil)
+    }
+
+    /// - Parameter contentRuleListProvider: Where rule lists come from, when
+    ///   not the store. Given here rather than set afterwards because the
+    ///   first compile starts during `init`.
+    convenience init(
+        configuration: BrowserEngineConfiguration,
+        contentRuleListProvider: (@MainActor (BrowserThirdPartyContent) async throws -> WKContentRuleList?)?
+    ) {
+        let webConfiguration = Self.makeConfiguration(
+            settings: configuration.settings, consoleLog: configuration.consoleLog,
+            jar: configuration.jar, capturesConsole: configuration.capturesConsole
+        )
+        self.init(
+            webConfiguration: webConfiguration, settings: configuration.settings,
+            consoleLog: configuration.consoleLog, capturesConsole: configuration.capturesConsole,
+            contentRuleListProvider: contentRuleListProvider, inheritedRules: nil
+        )
+    }
+
+    /// The rules a popup starts with, handed over by its opener so the first
+    /// request — which WebKit loads itself, the moment the web view is
+    /// returned — already runs under them.
+    struct InheritedRules {
+        let policy: BrowserThirdPartyContent
+        let list: WKContentRuleList?
+    }
+
+    /// The one initialiser every engine goes through: a fresh pane's, from a
+    /// configuration made for it, and a popup's, from the configuration
+    /// WebKit hands the opener (which ties the two pages together).
+    private init(
+        webConfiguration: WKWebViewConfiguration,
+        settings: SettingsStore,
+        consoleLog: BrowserConsoleLog,
+        capturesConsole: Bool,
+        contentRuleListProvider: (@MainActor (BrowserThirdPartyContent) async throws -> WKContentRuleList?)?,
+        inheritedRules: InheritedRules?
+    ) {
+        if let contentRuleListProvider { self.contentRuleListProvider = contentRuleListProvider }
+        self.settings = settings
+        self.consoleLog = consoleLog
+        self.capturesConsole = capturesConsole
+        self.siteData = BrowserSiteData(dataStore: webConfiguration.websiteDataStore)
+        // Every page sits behind an input gate, open until the pane sets one.
+        let webView = BrowserWebView(
+            frame: NSRect(x: 0, y: 0, width: 640, height: 480), configuration: webConfiguration)
+        self.activationShield = BrowserActivationShield(webView: webView)
+        super.init(webView: webView)
+        if let inheritedRules {
+            if let list = inheritedRules.list {
+                webConfiguration.userContentController.add(list)
+            }
+            requestedThirdPartyContent = inheritedRules.policy
+            appliedThirdPartyContent = inheritedRules.policy
+            appliedRuleList = inheritedRules.list
+        }
+        webView.navigationDelegate = self
+        webView.uiDelegate = self
+        webView.allowsBackForwardNavigationGestures = true
+        webView.keepPaintingUnderQuietPresentation()
+        webView.observeTheme { [weak self] _, palette in
+            self?.themedUnderPageColor = palette.windowBackgroundColor
+            self?.updatePageBackground()
+        }
+        updatePageBackground()
+        installUserScripts()
+        applyLiveSettings()
+        observeSettings()
+        observeHiddenItems()
+        observeWebView()
+    }
+
+    /// A popup's engine, on the configuration WebKit gave `opener`'s web view
+    /// for it. WebKit requires exactly that configuration — it is what makes
+    /// the new page the opener's `window.opener` partner and puts it in the
+    /// same session — but it arrives sharing the opener's user content
+    /// controller, and an engine owns its controller outright
+    /// (`installUserScripts()` clears it), so the popup gets a fresh one.
+    convenience init(popupOf opener: WebKitBrowserEngine, configuration webConfiguration: WKWebViewConfiguration) {
+        let controller = WKUserContentController()
+        // The popup is a tab of its own, with a console of its own.
+        let consoleLog = BrowserConsoleLog()
+        if opener.capturesConsole {
+            controller.add(consoleLog, name: BrowserConsoleLog.handlerName)
+        }
+        webConfiguration.userContentController = controller
+        let inherited = opener.appliedThirdPartyContent.map {
+            InheritedRules(policy: $0, list: opener.appliedRuleList)
+        }
+        self.init(
+            webConfiguration: webConfiguration, settings: opener.settings,
+            consoleLog: consoleLog, capturesConsole: opener.capturesConsole,
+            contentRuleListProvider: opener.contentRuleListProvider, inheritedRules: inherited
+        )
+    }
+
+    /// An engine on the shared store — or a private one, when the settings
+    /// say private browsing — with its own console log, honouring the
+    /// cookie setting itself. For a host with no pane around the engine, and
+    /// for tests.
+    public convenience init(settings: SettingsStore) {
+        let jar = WebBrowserPaneViewController.resolveJar(
+            settings: settings, context: .detached, label: WebBrowserPaneViewController.untitledLabel)
+        self.init(configuration: BrowserEngineConfiguration(
+            settings: settings,
+            consoleLog: BrowserConsoleLog(),
+            jar: jar,
+            capturesConsole: settings.get(UserSettings.browserPrivacyConsoleCapture)
+        ))
+        applyCookiePolicy(acceptsCookies: WebBrowserPaneViewController.acceptsCookies(
+            settings: settings, ownsDataStore: jar.isOwnedByPane))
+    }
+
+    private var gatedWebView: BrowserWebView? { webView as? BrowserWebView }
+
+    public var canGoBack: Bool { webView.canGoBack }
+    public var canGoForward: Bool { webView.canGoForward }
+
+    /// Loads now, or — while the current rule list is still on its way —
+    /// once it is on, so a blocked resource is never fetched by a page that
+    /// started first. A newer load replaces a held one.
+    public override func load(_ url: URL) {
+        let request = URLRequest(url: url)
+        if isApplyingContentRules {
+            heldLoad = request
+        } else {
+            webView.loadAllowingFiles(request)
+        }
+    }
+
+    // History moves are not held for rules, but they do cancel a held load,
+    // so a load asked for earlier cannot land over them afterwards.
+    public override func goBack() {
+        heldLoad = nil
+        webView.goBack()
+    }
+
+    public override func goForward() {
+        heldLoad = nil
+        webView.goForward()
+    }
+
+    public func reload() {
+        heldLoad = nil
+        webView.reload()
+    }
+
+    public func stopLoading() { webView.stopLoading() }
+
+    public var heldLoadURL: URL? { heldLoad?.url }
+
+    // MARK: - Session privacy
+
+    public var inputGate: BrowserInputGate {
+        get { gatedWebView?.gate ?? .open }
+        set { gatedWebView?.gate = newValue }
+    }
+
+    public var onInputDecision: ((BrowserInputChannel, String, Bool, Bool, String) -> Void)? {
+        get { gatedWebView?.onInputDecision }
+        set { gatedWebView?.onInputDecision = newValue }
+    }
+
+    public var isActivationShieldActive: Bool { activationShield.isActive }
+
+    /// When the shield's state moves, the user scripts are put back so the
+    /// next page load follows it; the shield itself acts on the page showing.
+    public func setActivationShieldActive(_ active: Bool) {
+        let wasActive = activationShield.isActive
+        activationShield.apply(active: active)
+        if activationShield.isActive != wasActive { installUserScripts() }
+    }
+
+    /// Whether the page's images are drawn as a crossed-out eye.
+    private var hidesImages = false
+    /// The Hide Images script's token: one per engine, so a message only
+    /// this engine's script sent changes a frame's images.
+    private let hiddenImagesToken = UUID().uuidString
+
+    private var hiddenImagesSource: String {
+        BrowserHiddenImages.script(hides: hidesImages, token: hiddenImagesToken)
+    }
+
+    /// The script goes back in with the new setting written in, for every
+    /// document from now on, and runs in the main frame of the page showing,
+    /// which passes it to every frame already loaded (`BrowserHiddenImages`).
+    public func setHidesImages(_ hides: Bool) {
+        guard hides != hidesImages else { return }
+        hidesImages = hides
+        installUserScripts()
+        guard webView.url != nil else { return }
+        webView.evaluateJavaScript(
+            hiddenImagesSource, in: nil, in: .world(name: BrowserHiddenImages.worldName)) { _ in }
+    }
+
+    /// The words the committed document was drawn through.
+    public private(set) var pageWordFilter: TextSubstitutionFilter?
+
+    /// The filter's script goes in with the other user scripts, at document
+    /// start in every frame, so a frame from another site is drawn through it
+    /// too; the reload brings the page showing to the new answer. Only a
+    /// change of script reloads: no filter and a filter with no pairs both
+    /// draw the page as it is, as the Chromium engine also decides.
+    ///
+    /// A navigation never needs this reload: its destination's words are put
+    /// in at its policy decision, before its document starts
+    /// (`preparePageWords(for:)`), so the pane's call at commit finds them in
+    /// place. And it never reloads under a provisional navigation, which a
+    /// reload would cancel: the script is installed and that navigation's own
+    /// document picks it up, and the pane checks again when it commits.
+    public func setPageWordFilter(_ filter: TextSubstitutionFilter?) {
+        let script = filter.flatMap(BrowserPageWordFilter.script(for:))
+        pageWordFilter = filter
+        preparedPageWordFilter = filter
+        guard script != pageWordScript else { return }
+        pageWordScript = script
+        installUserScripts()
+        guard provisionalNavigation == nil, let url = webView.url else { return }
+        pageWordReloadURL = url
+        webView.reload()
+    }
+
+    /// Puts the words for `url`, where the main frame is about to go, in as
+    /// the next document's script, without a reload: the document has not
+    /// started yet. The delegate answers which words apply there.
+    private func preparePageWords(for url: URL?) {
+        guard let delegate else { return }
+        let filter = delegate.browserEngine(self, pageWordFilterFor: url)
+        pageWordPreparations += 1
+        preparedPageWordFilter = filter
+        let script = filter.flatMap(BrowserPageWordFilter.script(for:))
+        guard script != pageWordScript else { return }
+        pageWordScript = script
+        installUserScripts()
+    }
+
+    /// Puts the committed document's words back as the script, without a
+    /// reload, after a navigation prepared for another address did not commit.
+    private func restoreCommittedPageWords() {
+        preparedPageWordFilter = pageWordFilter
+        let script = pageWordFilter.flatMap(BrowserPageWordFilter.script(for:))
+        guard script != pageWordScript else { return }
+        pageWordScript = script
+        installUserScripts()
+    }
+
+    /// The script `setPageWordFilter` or `preparePageWords(for:)` last
+    /// installed, which the next document starts with.
+    private var pageWordScript: String?
+
+    /// The filter `pageWordScript` was built from; becomes `pageWordFilter`
+    /// when the navigation it was prepared for commits.
+    private var preparedPageWordFilter: TextSubstitutionFilter?
+
+    /// The main frame's navigation from its provisional start to its commit
+    /// or failure, and how many preparations had been made when it started.
+    private var provisionalNavigation: (navigation: WKNavigation, preparations: Int)?
+
+    /// Counts `preparePageWords(for:)`, so a navigation that fails can tell
+    /// whether a newer one has prepared its own words since.
+    private var pageWordPreparations = 0
+
+    /// The page the reload a filter change asked for is reloading, while that
+    /// reload is being decided. A page reached by a POST would be posted again
+    /// by that reload — an order submitted twice — so its resubmission is
+    /// cancelled and the page left as it is drawn; the next page it loads
+    /// follows the new filter. Only a reload of this address takes it, so a
+    /// navigation the user starts meanwhile is never mistaken for it.
+    private var pageWordReloadURL: URL?
+
+    /// The cookie policy belongs to the data store, which may be shared; the
+    /// pane decides what goes on it and says so only when the answer moves.
+    public func applyCookiePolicy(acceptsCookies: Bool) {
+        let siteData = siteData
+        Task { await siteData.setAcceptsCookies(acceptsCookies) }
+    }
+
+    /// Puts every user script the engine wants on the web view's controller:
+    /// the console hook when this web view captures the console, the
+    /// activation shield's script while the shield is up, the page word
+    /// filter while Agent Privacy draws the page through the privacy words,
+    /// Hide Images' script, always, with its setting written in, and the
+    /// hidden-items style while the user list hides anything here.
+    ///
+    /// The only place user scripts are added or removed.
+    /// `WKUserContentController` cannot remove one script, only all of them,
+    /// so turning the shield off means putting back everything else, and that
+    /// is safe only while one function knows what "everything" is (`dry`).
+    /// The automation runtime is not a user script (it is evaluated into its
+    /// own content world on demand), so clearing the list does not touch it.
+    private func installUserScripts() {
+        let controller = webView.configuration.userContentController
+        controller.removeAllUserScripts()
+        if capturesConsole { controller.addUserScript(consoleLog.userScript) }
+        if let shieldScript = activationShield.userScript {
+            controller.addUserScript(shieldScript)
+        }
+        // Installed with Hide Images off too: each frame's copy is what a
+        // later change reaches it through.
+        controller.addUserScript(WKUserScript(
+            source: hiddenImagesSource, injectionTime: .atDocumentStart, forMainFrameOnly: false,
+            in: .world(name: BrowserHiddenImages.worldName)))
+        if let source = pageWordScript {
+            controller.addUserScript(WKUserScript(
+                source: source, injectionTime: .atDocumentStart, forMainFrameOnly: false,
+                in: .world(name: BrowserPageWordFilter.worldName)))
+        }
+        // Hide distracting items: the user list's rules for the address the
+        // next document is for, in every frame, in the page's world.
+        if !hiddenItemSelectors.isEmpty {
+            controller.addUserScript(WKUserScript(
+                source: BrowserHiddenItemsStyle.installScript(selectors: hiddenItemSelectors),
+                injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .page))
+        }
+    }
+
+    // MARK: - Hidden items
+
+    /// The user list's enabled selectors the user script carries: those for
+    /// the address the next document is for.
+    private var hiddenItemSelectors: [String] = []
+    /// Counts hidden-item reads, so the last one asked for is the one that
+    /// stands when a store change and a navigation race.
+    private var hiddenItemsGeneration = 0
+    private var isTornDown = false
+
+    /// Re-renders the page showing whenever the hidden-items store changes,
+    /// and once now for whatever the web view starts on.
+    private func observeHiddenItems() {
+        NotificationCenter.default.publisher(for: BrowserHiddenItemsStore.didChangeNotification)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.refreshHiddenItems(live: true) }
+            .store(in: &cancellables)
+        refreshHiddenItems(live: true)
+    }
+
+    /// Reads the selectors for the current address and applies them; `live`
+    /// also restyles the page showing, without a reload.
+    private func refreshHiddenItems(live: Bool) {
+        let url = webView.url
+        Task { [weak self] in
+            guard let self, case .selectors(let selectors) = await self.readHiddenItemSelectors(for: url) else {
+                return
+            }
+            self.applyHiddenItems(selectors, live: live)
+        }
+    }
+
+    /// Puts the rules for `url`, where the main frame is about to go, in the
+    /// next document's script, so a matching item is never drawn on it. A
+    /// read that a store-change refresh supersedes reads again: that refresh
+    /// read the page being left, and returning empty-handed would start the
+    /// new document on the old site's rules.
+    private func prepareHiddenItems(for url: URL?) async {
+        let selectors = await Self.preparedHiddenItemSelectors(
+            isTornDown: { [weak self] in self?.isTornDown ?? true },
+            read: { [weak self] checksGeneration in
+                guard let self else { return .superseded }
+                return await self.readHiddenItemSelectors(for: url, checkingGeneration: checksGeneration)
+            })
+        if let selectors { applyHiddenItems(selectors, live: false) }
+    }
+
+    static let hiddenItemsPrepareAttempts = 3
+
+    /// The selectors a navigation's document starts with, or nil to keep the
+    /// current ones (torn down, or a read that failed outright). Up to
+    /// ``hiddenItemsPrepareAttempts`` reads that a newer one may supersede;
+    /// when every one is, a last read that nothing supersedes decides, and
+    /// if even that fails the document starts with none rather than the
+    /// previous site's (fail closed: another site's rules never stand).
+    static func preparedHiddenItemSelectors(
+        attempts: Int = hiddenItemsPrepareAttempts,
+        isTornDown: () -> Bool,
+        read: (_ checksGeneration: Bool) async -> HiddenItemsRead
+    ) async -> [String]? {
+        for _ in 0..<attempts {
+            switch await read(true) {
+            case .selectors(let selectors):
+                return selectors
+            case .superseded:
+                // Teardown supersedes every read for good.
+                if isTornDown() { return nil }
+                continue
+            case .failed:
+                return nil
+            }
+        }
+        if isTornDown() { return nil }
+        if case .selectors(let selectors) = await read(false) { return selectors }
+        return []
+    }
+
+    enum HiddenItemsRead: Equatable {
+        case selectors([String])
+        /// A newer read started while this one ran.
+        case superseded
+        case failed
+    }
+
+    /// The user list's enabled selectors for `url`, read off the main thread.
+    /// No store means nothing hidden; a failed read keeps the rules the page
+    /// last had. The store is awaited, never blocked on: an engine made at
+    /// launch reads before the store's background open is done.
+    /// `checkingGeneration` false neither claims a generation nor can be
+    /// superseded: the last word of a navigation every read of which was.
+    private func readHiddenItemSelectors(for url: URL?, checkingGeneration: Bool = true) async -> HiddenItemsRead {
+        if checkingGeneration { hiddenItemsGeneration += 1 }
+        let generation = hiddenItemsGeneration
+        guard let store = await BrowserHiddenItemsStore.sharedStore() else { return .selectors([]) }
+        do {
+            let selectors = try await store.perform { try $0.enabledSelectors(list: .user, for: url) }
+            let current = !checkingGeneration || generation == hiddenItemsGeneration
+            return current ? .selectors(selectors) : .superseded
+        } catch {
+            let host = url?.host ?? "no address"
+            logger.error(
+                "hidden items could not be read for \(host): \(error.localizedDescription, privacy: .public)")
+            return .failed
+        }
+    }
+
+    private func applyHiddenItems(_ selectors: [String], live: Bool) {
+        if selectors != hiddenItemSelectors {
+            hiddenItemSelectors = selectors
+            installUserScripts()
+        }
+        guard live, webView.url != nil else { return }
+        webView.evaluateJavaScript(
+            BrowserHiddenItemsStyle.applyScript(selectors: selectors), in: nil, in: .page) { _ in }
+    }
+
+    /// The picker dialog's "Show page with selected element removed": hides
+    /// `selectors` on the page showing in a rule set of its own
+    /// (`__adk_hidden_items_preview`), saving nothing and leaving the saved
+    /// list's rules alone; nil removes it.
+    public func setPreviewHiddenSelectors(_ selectors: [String]?) {
+        guard webView.url != nil else { return }
+        webView.evaluateJavaScript(
+            BrowserHiddenItemsStyle.previewScript(selectors: selectors ?? []), in: nil, in: .page) { _ in }
+    }
+
+    // MARK: - Settings
+
+    /// The configuration WebKit fixes when the web view is made. The settings
+    /// read here take effect for the *next* Safari pane, and the panel says
+    /// so beside each of them. User scripts are not added here:
+    /// `installUserScripts()` owns them, so there is one owner to keep right.
+    ///
+    /// - Parameter capturesConsole: Whether to register the console message
+    ///   handler. Off, a page has no `webkit.messageHandlers` entry to find
+    ///   the hook by.
+    static func makeConfiguration(
+        settings: SettingsStore,
+        consoleLog: BrowserConsoleLog,
+        jar: BrowserResolvedJar,
+        capturesConsole: Bool
+    ) -> WKWebViewConfiguration {
+        let configuration = WKWebViewConfiguration()
+        if capturesConsole {
+            configuration.userContentController.add(consoleLog, name: BrowserConsoleLog.handlerName)
+        }
+        configuration.websiteDataStore = jar.webKitDataStore
+        // The profile's web extensions run in every page on it. A web view
+        // cannot change controllers once made, so this is the one place.
+        // A private page gets the global profile's, which runs in it only
+        // the extensions allowed in private browsing.
+        if #available(macOS 15.4, *), let host = SafariExtensionHost.runningHost(for: jar) {
+            configuration.webExtensionController = host.controller
+        }
+        configuration.upgradeKnownHostsToHTTPS = settings.get(UserSettings.browserUpgradesToHTTPS)
+        configuration.allowsAirPlayForMediaPlayback = settings.get(UserSettings.browserAllowsAirPlay)
+        configuration.mediaTypesRequiringUserActionForPlayback = switch settings.get(UserSettings.browserAutoplay) {
+        case .allowed: []
+        case .mutedOnly: .audio
+        case .never: .all
+        }
+        return configuration
+    }
+
+    /// The configuration a pane in `context` would be built with now.
+    static func makeConfiguration(
+        settings: SettingsStore,
+        consoleLog: BrowserConsoleLog,
+        context: BrowserPaneContext = .detached
+    ) -> WKWebViewConfiguration {
+        makeConfiguration(
+            settings: settings,
+            consoleLog: consoleLog,
+            jar: WebBrowserPaneViewController.resolveJar(
+                settings: settings, context: context, label: WebBrowserPaneViewController.untitledLabel),
+            capturesConsole: settings.get(UserSettings.browserPrivacyConsoleCapture)
+        )
+    }
+
+    /// Every setting WebKit lets change under a page, applied from the store.
+    /// Called once at construction and again whenever a browser key changes.
+    private func applyLiveSettings() {
+        let zoom = settings.get(UserSettings.browserPageZoom)
+        let zoomRange = BrowserSettings.pageZoomRange
+        webView.pageZoom = min(max(zoom, zoomRange.lowerBound), zoomRange.upperBound)
+        let agent = settings.get(UserSettings.browserCustomUserAgent)
+        webView.customUserAgent = agent.isEmpty ? nil : agent
+        webView.isInspectable = settings.get(UserSettings.browserWebInspectorEnabled)
+        applyContentRules()
+
+        let preferences = webView.configuration.preferences
+        let fontSize = settings.get(UserSettings.browserMinimumFontSize)
+        let fontRange = BrowserSettings.minimumFontSizeRange
+        preferences.minimumFontSize = CGFloat(min(max(fontSize, fontRange.lowerBound), fontRange.upperBound))
+        preferences.javaScriptCanOpenWindowsAutomatically = !settings.get(UserSettings.browserBlocksPopups)
+        preferences.isFraudulentWebsiteWarningEnabled = settings.get(UserSettings.browserFraudWarning)
+    }
+
+    /// Puts the Third-Party Content setting's rule list on the web view,
+    /// live: the old list comes off and the new one goes on when its compile
+    /// finishes (spec section 9). Only when the value differs from the one
+    /// last asked, so a zoom drag does not recompile.
+    ///
+    /// The compile is asynchronous, so a request carries a generation; one
+    /// that finishes after a newer request is dropped rather than applied
+    /// over it. `.allow` takes the rules off at once. Until a blocking
+    /// compile lands the web view keeps whatever list it had, and a load
+    /// asked for meanwhile is held (`load(_:)`).
+    ///
+    /// A failed compile fails **open**: the web view keeps the lists it had,
+    /// the held load goes ahead, the failure is logged, and the request is
+    /// forgotten so the next settings change tries again. Blocking every load
+    /// because the rule store errored would break browsing outright.
+    private func applyContentRules() {
+        let policy = settings.get(UserSettings.browserPrivacyThirdPartyContent)
+        guard policy != requestedThirdPartyContent else { return }
+        requestedThirdPartyContent = policy
+        contentRulesGeneration += 1
+        let generation = contentRulesGeneration
+        guard policy != .allow else {
+            webView.configuration.userContentController.removeAllContentRuleLists()
+            appliedThirdPartyContent = .allow
+            appliedRuleList = nil
+            finishContentRules()
+            return
+        }
+        isApplyingContentRules = true
+        let provide = contentRuleListProvider
+        Task { [weak self, logger] in
+            do {
+                let list = try await provide(policy)
+                guard let self else { return }
+                guard self.contentRulesGeneration == generation else {
+                    self.droppedContentRules += 1
+                    return
+                }
+                let controller = self.webView.configuration.userContentController
+                controller.removeAllContentRuleLists()
+                if let list { controller.add(list) }
+                self.appliedThirdPartyContent = policy
+                self.appliedRuleList = list
+                self.finishContentRules()
+            } catch {
+                guard let self else { return }
+                // A stale failure says nothing about the current request: it
+                // must neither forget that request nor release its held load.
+                guard self.contentRulesGeneration == generation else {
+                    self.droppedContentRules += 1
+                    return
+                }
+                self.requestedThirdPartyContent = nil
+                logger.error(
+                    "browser content rules failed to compile: \(error.localizedDescription, privacy: .public)")
+                self.finishContentRules()
+            }
+        }
+    }
+
+    /// The current request is done, one way or the other: a held load may go.
+    private func finishContentRules() {
+        isApplyingContentRules = false
+        guard let request = heldLoad else { return }
+        heldLoad = nil
+        webView.loadAllowingFiles(request)
+    }
+
+    private func observeSettings() {
+        settings.changes
+            .filter { $0.hasPrefix("browser.") }
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.applyLiveSettings() }
+            .store(in: &cancellables)
+    }
+
+    // MARK: - Observation
+
+    /// Title, address and the back/forward affordances all follow the web view
+    /// rather than being set by whichever code path happened to navigate —
+    /// a link click, a redirect and a typed address all land here the same way.
+    private func observeWebView() {
+        observations = [
+            webView.observe(\.title, options: [.new]) { [weak self] _, _ in
+                MainActor.assumeIsolated {
+                    guard let self else { return }
+                    self.delegate?.browserEngineTitleDidChange(self)
+                }
+            },
+            webView.observe(\.url, options: [.new]) { [weak self] _, _ in
+                MainActor.assumeIsolated {
+                    guard let self else { return }
+                    self.updatePageBackground()
+                    self.delegate?.browserEngineAddressDidChange(self)
+                }
+            },
+            webView.observe(\.canGoBack, options: [.new]) { [weak self] _, _ in
+                MainActor.assumeIsolated {
+                    guard let self else { return }
+                    self.delegate?.browserEngineHistoryDidChange(self)
+                }
+            },
+            webView.observe(\.canGoForward, options: [.new]) { [weak self] _, _ in
+                MainActor.assumeIsolated {
+                    guard let self else { return }
+                    self.delegate?.browserEngineHistoryDidChange(self)
+                }
+            }
+        ]
+    }
+
+    /// Nothing loaded — no address yet, or the blank page — is see-through, so
+    /// the pane's themed backdrop shows instead of WebKit's white; a real page
+    /// gets its opaque backdrop back the moment the address moves to it, since
+    /// a site with no background of its own is written for white. See
+    /// `WKWebView.setDrawsPageBackground(_:)`.
+    ///
+    /// The area past the page's edges follows the same split. Around a blank
+    /// page it is the theme's. Around a real page it is left to WebKit, which
+    /// takes the page's own background.
+    ///
+    /// The backdrop under every page is the theme's window background. WebKit
+    /// paints out of process, a frame or more behind the web view's frame, so
+    /// a resize that widens the pane uncovers a strip at the trailing edge
+    /// that shows only that backdrop until the page catches up. Left at
+    /// WebKit's default, `controlBackgroundColor`, it was a grey bar chasing
+    /// the edge; in the page's own colour it still flashed wherever the page
+    /// painted something else over its declared background. In the theme's
+    /// colour it reads as the window showing through, the same surface as
+    /// the pane around it. The backdrop shows only where the page has not
+    /// painted: a page with no background of its own still draws white.
+    private func updatePageBackground() {
+        let url = webView.url
+        let isPage = url != nil && url != WebBrowserPaneViewController.blankPage
+        webView.setDrawsPageBackground(isPage)
+        webView.underPageBackgroundColor = isPage ? nil : themedUnderPageColor
+        webView.setPageBackdropColor(themedUnderPageColor)
+    }
+
+    // MARK: - Teardown
+
+    /// Stops the page, cancels its downloads and drops the delegates: a
+    /// navigation or a transfer that completes into a discarded pane would
+    /// otherwise call back into it. A compile still in flight is dropped by
+    /// its generation.
+    public func teardown() {
+        observations.removeAll()
+        cancellables.removeAll()
+        downloads.forEach { $0.cancel() }
+        downloads.removeAll()
+        contentRulesGeneration += 1
+        hiddenItemsGeneration += 1
+        isTornDown = true
+        heldLoad = nil
+        webView.stopLoading()
+        webView.navigationDelegate = nil
+        webView.uiDelegate = nil
+        gatedWebView?.onInputDecision = nil
+        delegate = nil
+        onNavigationStart = nil
+        // The handler holds the log strongly and the pane holds the log, so
+        // without this the two outlive the pane together.
+        if capturesConsole {
+            webView.configuration.userContentController.removeScriptMessageHandler(
+                forName: BrowserConsoleLog.handlerName
+            )
+        }
+    }
+}
+
+// MARK: - Navigation
+
+extension WebKitBrowserEngine: WKNavigationDelegate {
+
+    /// Per navigation, and read off the settings each time, so switching
+    /// JavaScript or Lockdown Mode takes effect on the next page rather than
+    /// the next pane. WebKit picks **one** `decidePolicyFor` overload, so the
+    /// download decision lives here too.
+    public func webView(
+        _ webView: WKWebView,
+        decidePolicyFor navigationAction: WKNavigationAction,
+        preferences: WKWebpagePreferences
+    ) async -> (WKNavigationActionPolicy, WKWebpagePreferences) {
+        preferences.allowsContentJavaScript = settings.get(UserSettings.browserJavaScriptEnabled)
+        preferences.isLockdownModeEnabled = settings.get(UserSettings.browserLockdownMode)
+        if navigationAction.targetFrame?.isMainFrame == true {
+            let type = navigationAction.navigationType
+            if let reloading = pageWordReloadURL, navigationAction.request.url == reloading,
+               type == .reload || type == .formResubmitted {
+                pageWordReloadURL = nil
+                if type == .formResubmitted {
+                    logger.info("page word filter reload would resubmit a form; the page is left as drawn")
+                    return (.cancel, preferences)
+                }
+            }
+            if !navigationAction.shouldPerformDownload {
+                preparePageWords(for: navigationAction.request.url)
+                await prepareHiddenItems(for: navigationAction.request.url)
+            }
+        }
+        return (navigationAction.shouldPerformDownload ? .download : .allow, preferences)
+    }
+
+    /// A response the web view cannot show — a zip, a disk image — is a
+    /// download, which is what every browser does with one.
+    public func webView(
+        _ webView: WKWebView,
+        decidePolicyFor navigationResponse: WKNavigationResponse
+    ) async -> WKNavigationResponsePolicy {
+        navigationResponse.canShowMIMEType ? .allow : .download
+    }
+
+    public func webView(_ webView: WKWebView, navigationAction: WKNavigationAction, didBecome download: WKDownload) {
+        adopt(download)
+    }
+
+    public func webView(
+        _ webView: WKWebView, navigationResponse: WKNavigationResponse, didBecome download: WKDownload
+    ) {
+        adopt(download)
+    }
+
+    public func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+        provisionalNavigation = (navigation, pageWordPreparations)
+        delegate?.browserEngineDidStartNavigation(self)
+        onNavigationStart?()
+    }
+
+    /// The new document started with the words prepared for it; the pane's
+    /// commit handler checks them against the committed address.
+    public func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
+        provisionalNavigation = nil
+        pageWordFilter = preparedPageWordFilter
+        refreshHiddenItems(live: true)
+        delegate?.browserEngineDidCommitNavigation(self)
+    }
+
+    public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        delegate?.browserEngineDidFinishNavigation(self)
+    }
+
+    public func webView(
+        _ webView: WKWebView,
+        didFailProvisionalNavigation navigation: WKNavigation!,
+        withError error: Error
+    ) {
+        // The document showing stays, so the words it was drawn through are
+        // put back for the frames it loads next, unless a newer navigation
+        // (the one that cancelled this) has prepared its own since.
+        if let provisional = provisionalNavigation, provisional.navigation === navigation {
+            provisionalNavigation = nil
+            if provisional.preparations == pageWordPreparations {
+                restoreCommittedPageWords()
+                // The hidden items, too, go back to the committed address's.
+                refreshHiddenItems(live: false)
+            }
+        }
+        // A cancelled load is the next navigation starting, not a failure.
+        guard (error as NSError).code != NSURLErrorCancelled else { return }
+        delegate?.browserEngine(self, didFailNavigationWith: error)
+        logger.error("browser pane failed to load: \(error.localizedDescription, privacy: .public)")
+    }
+
+    public func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+        guard (error as NSError).code != NSURLErrorCancelled else { return }
+        delegate?.browserEngine(self, didFailNavigationWith: error)
+    }
+}
+
+// MARK: - Downloads
+
+extension WebKitBrowserEngine: WKDownloadDelegate {
+
+    private func adopt(_ download: WKDownload) {
+        download.delegate = self
+        downloads.append(download)
+        delegate?.browserEngine(self, download: "start", host: download.originalRequest?.url?.host ?? "")
+    }
+
+    public func download(
+        _ download: WKDownload,
+        decideDestinationUsing response: URLResponse,
+        suggestedFilename: String
+    ) async -> URL? {
+        await delegate?.browserEngine(self, destinationForDownloadNamed: suggestedFilename)
+    }
+
+    public func downloadDidFinish(_ download: WKDownload) {
+        downloads.removeAll { $0 === download }
+        // The host says which site it came from; the path and query can carry
+        // a token or a name, and stay out of the public log.
+        let host = download.originalRequest?.url?.host ?? ""
+        delegate?.browserEngine(self, download: "finish", host: host)
+        logger.info("browser download finished from \(host, privacy: .public)")
+    }
+
+    public func download(_ download: WKDownload, didFailWithError error: Error, resumeData: Data?) {
+        downloads.removeAll { $0 === download }
+        guard (error as NSError).code != NSURLErrorCancelled else { return }
+        delegate?.browserEngine(self, download: "fail", host: download.originalRequest?.url?.host ?? "")
+        logger.error("browser download failed: \(error.localizedDescription, privacy: .public)")
+    }
+}
+
+// MARK: - UI delegate
+
+extension WebKitBrowserEngine: WKUIDelegate {
+
+    public func webView(
+        _ webView: WKWebView,
+        runJavaScriptAlertPanelWithMessage message: String,
+        initiatedByFrame frame: WKFrameInfo
+    ) async {
+        delegate?.browserEngine(self, didRaise: BrowserDialog(kind: .alert, message: message))
+    }
+
+    public func webView(
+        _ webView: WKWebView,
+        runJavaScriptConfirmPanelWithMessage message: String,
+        initiatedByFrame frame: WKFrameInfo
+    ) async -> Bool {
+        delegate?.browserEngine(self, didRaise: BrowserDialog(kind: .confirm, message: message))
+        return false
+    }
+
+    public func webView(
+        _ webView: WKWebView,
+        runJavaScriptTextInputPanelWithPrompt prompt: String,
+        defaultText: String?,
+        initiatedByFrame frame: WKFrameInfo
+    ) async -> String? {
+        delegate?.browserEngine(self, didRaise: BrowserDialog(kind: .prompt, message: prompt))
+        return nil
+    }
+
+    /// A `target="_blank"` link or a `window.open()` asks for a new window.
+    /// The pane has tabs, not windows, so the new page becomes a tab: an
+    /// engine built on the configuration WebKit passes, which keeps the two
+    /// pages linked — `window.opener` works and the popup shares the opener's
+    /// session — and that is what a sign-in or 2FA window needs to post its
+    /// answer back. WebKit loads the request into the returned web view
+    /// itself. With no host to take the tab, the popup is refused.
+    ///
+    /// Blocked popups never get here: `javaScriptCanOpenWindowsAutomatically`
+    /// (the Block Pop-ups setting) has WebKit refuse a script's window that
+    /// no click asked for.
+    public func webView(
+        _ webView: WKWebView,
+        createWebViewWith configuration: WKWebViewConfiguration,
+        for navigationAction: WKNavigationAction,
+        windowFeatures: WKWindowFeatures
+    ) -> WKWebView? {
+        let popup = WebKitBrowserEngine(popupOf: self, configuration: configuration)
+        guard delegate?.browserEngine(self, didOpenPopup: popup) == true else {
+            popup.teardown()
+            return nil
+        }
+        return popup.webView
+    }
+
+    /// The page called `window.close()` on itself — a sign-in popup done
+    /// with its work. The host closes its tab.
+    public func webViewDidClose(_ webView: WKWebView) {
+        webView.stopLoading()
+        delegate?.browserEngineDidRequestClose(self)
+    }
+
+    /// Camera and microphone: the pane decides, from the Media setting; with
+    /// no answer (nowhere to ask) WebKit asks in its own way.
+    public func webView(
+        _ webView: WKWebView,
+        decideMediaCapturePermissionsFor origin: WKSecurityOrigin,
+        initiatedBy frame: WKFrameInfo,
+        type: WKMediaCaptureType
+    ) async -> WKPermissionDecision {
+        let device = switch type {
+        case .camera: BrowserMediaDevice.describe(camera: true, microphone: false)
+        case .microphone: BrowserMediaDevice.describe(camera: false, microphone: true)
+        case .cameraAndMicrophone: BrowserMediaDevice.describe(camera: true, microphone: true)
+        @unknown default: BrowserMediaDevice.describe(camera: false, microphone: false)
+        }
+        switch await delegate?.browserEngine(self, allowsMediaCaptureFor: origin.host, device: device) {
+        case true?: return .grant
+        case false?: return .deny
+        case nil: return .prompt
+        }
+    }
+}
+
+extension WKWebView {
+    /// Loads `request`, and a file URL through `loadFileURL`, which grants
+    /// the page read access to the file's directory, so a typed path's page
+    /// can load the images and stylesheets beside it. `load(_:)` alone
+    /// refuses a file URL in a WKWebView.
+    func loadAllowingFiles(_ request: URLRequest) {
+        if let url = request.url, url.isFileURL {
+            let directory = url.hasDirectoryPath ? url : url.deletingLastPathComponent()
+            loadFileURL(url, allowingReadAccessTo: directory)
+        } else {
+            load(request)
+        }
+    }
+}

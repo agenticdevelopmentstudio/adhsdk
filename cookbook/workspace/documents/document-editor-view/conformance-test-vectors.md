@@ -30,8 +30,8 @@
 | devc-037 | rows-refresh-on-options-change | Build the option rows, then let the popover close so the kept row references become unset; then set the "show overview" override to true | No crash occurs; the refresh operation's writes to the released rows are no-ops |
 | devc-026 | pane-override-isolated | Two component instances, each with its own independent display-option overrides; toggle "Show line numbers" on the first via its row | The first's resolved "show line numbers" value flips and its overridden state becomes true; the second's resolved value and overridden state are unchanged |
 | devc-027 | reset-does-not-affect-other-panes-or-global | Override "Show line numbers" on both of two instances, then click the first's reset button | The first's overridden state becomes false; the second's stays true; the app-wide "show line numbers" setting is unchanged |
-| devc-028 | breadcrumb-above-content | Load the component's view | The root stack's child views are, in order, the breadcrumb then the hosted content; its orientation is vertical; its spacing is 0 |
-| devc-029 | breadcrumb-fixed-height | Load the component's view | The breadcrumb's height constraint constant is `24` |
+| devc-028 | breadcrumb-above-content | Load the component's view | The root stack's child views are, in order, the navigation bar (holding the breadcrumb) then the hosted content; its orientation is vertical; its spacing is 0 |
+| devc-029 | breadcrumb-fixed-height | Load the component's view | The breadcrumb's height equals the navigation row's, which is `28` |
 | devc-030 | content-spans-container-width | Load the component's view | Both the breadcrumb's and the hosted content's leading/trailing edges pin to the stack's leading/trailing edges |
 | devc-031 | root-view-initial-frame | Load the component's view | The returned root view's initial position and size is `(0, 0, 520, 424)`; the stack's top/bottom/leading/trailing edges pin to the root view's edges |
 | devc-032 | content-uses-themed-root | Inspect the hosted content's root-view wrapping | The shared theming root is applied — verified by code inspection; this wrapping cannot be introspected by an automated test |
@@ -40,4 +40,4 @@
 | devc-035 | editor-open-request-routes-out | Install a callback on the open-request callback; invoke the hosted content's open-file callback with a URL | The open-request callback is called with that URL |
 | devc-038 | construction-title-change | Install a callback on the title-change callback; construct the component whose pane-state store has the file-URL key set to an existing file's path | The callback is called during construction |
 | devc-039 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
-
+| devc-040 | markdown-tabs-follow-tab-position | Open a Markdown file in the single-pane layout with the tab position setting at top; change the setting to leading | The Markdown and Preview tabs move from the top edge to the leading edge, the selected tab unchanged |

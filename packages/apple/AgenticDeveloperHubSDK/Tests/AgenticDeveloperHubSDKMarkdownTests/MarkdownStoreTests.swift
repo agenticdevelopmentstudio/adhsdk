@@ -61,9 +61,9 @@ struct MarkdownStoreTests {
         let created = try store.createDocument(content: "a paper", markers: [.paper])
         try store.database.read { conn in
             let customer = try String.fetchOne(
-                conn, sql: "SELECT customer_id FROM papers WHERE markdown_id = ?",
+                conn, sql: "SELECT owner_id FROM papers WHERE markdown_id = ?",
                 arguments: [created.id])
-            #expect(customer == "cust-1")   // adh's inherit_customer trigger, done explicitly
+            #expect(customer == "cust-1")   // adh's inherit_owner trigger, done explicitly
         }
     }
 

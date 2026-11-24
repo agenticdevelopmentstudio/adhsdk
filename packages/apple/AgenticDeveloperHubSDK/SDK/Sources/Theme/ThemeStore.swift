@@ -71,7 +71,9 @@ public final class ThemeStore {
     /// lookup `reload()` can never satisfy again, and it snaps back to
     /// "active" without the user choosing it if a later import ever reuses it.
     public func delete(id: String) {
-        storage.customThemes = customThemes.filter { $0.id != id }
+        let remaining = customThemes.filter { $0.id != id }
+        guard remaining.count != customThemes.count else { return }
+        storage.customThemes = remaining
         if storage.activeThemeID == id {
             storage.activeThemeID = nil
         }

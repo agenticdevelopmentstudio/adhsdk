@@ -18,7 +18,7 @@ class ApiTokenCreated:
         id (str):
         name (str):
         prefix (str): Non-secret leading chars, for display
-        created_at (str):
+        created (int): Unix timestamp, in seconds.
         expires_at (None | str):
         last_used_at (None | str):
         token (str): The raw token value — shown exactly once
@@ -29,7 +29,7 @@ class ApiTokenCreated:
     id: str
     name: str
     prefix: str
-    created_at: str
+    created: int
     expires_at: None | str
     last_used_at: None | str
     token: str
@@ -43,7 +43,7 @@ class ApiTokenCreated:
 
         prefix = self.prefix
 
-        created_at = self.created_at
+        created = self.created
 
         expires_at: None | str
         expires_at = self.expires_at
@@ -69,9 +69,9 @@ class ApiTokenCreated:
                 "id": id,
                 "name": name,
                 "prefix": prefix,
-                "createdAt": created_at,
-                "expiresAt": expires_at,
-                "lastUsedAt": last_used_at,
+                "created": created,
+                "expires_at": expires_at,
+                "last_used_at": last_used_at,
                 "token": token,
             }
         )
@@ -89,21 +89,21 @@ class ApiTokenCreated:
 
         prefix = d.pop("prefix")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
         def _parse_expires_at(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        expires_at = _parse_expires_at(d.pop("expiresAt"))
+        expires_at = _parse_expires_at(d.pop("expires_at"))
 
         def _parse_last_used_at(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        last_used_at = _parse_last_used_at(d.pop("lastUsedAt"))
+        last_used_at = _parse_last_used_at(d.pop("last_used_at"))
 
         token = d.pop("token")
 
@@ -128,7 +128,7 @@ class ApiTokenCreated:
             id=id,
             name=name,
             prefix=prefix,
-            created_at=created_at,
+            created=created,
             expires_at=expires_at,
             last_used_at=last_used_at,
             token=token,

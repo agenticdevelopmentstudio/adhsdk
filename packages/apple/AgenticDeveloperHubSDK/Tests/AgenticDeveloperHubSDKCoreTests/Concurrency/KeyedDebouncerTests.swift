@@ -43,7 +43,7 @@ struct KeyedDebouncerTests {
 
     // MARK: - Debouncing
 
-    @Test("ten schedules inside the window run the work once")
+    @Test("foundation-concurrency-008: ten schedules inside the window run the work once")
     func tenSchedulesRunOnce() async throws {
         let recorder = Recorder()
         let debouncer = KeyedDebouncer<String>(debounce: Self.debounce)
@@ -58,7 +58,7 @@ struct KeyedDebouncerTests {
         #expect(debouncer.isPending(key: "a") == false)
     }
 
-    @Test("different keys debounce independently")
+    @Test("foundation-concurrency-009: different keys debounce independently")
     func keysAreIndependent() async throws {
         let recorder = Recorder()
         let debouncer = KeyedDebouncer<String>(debounce: Self.debounce)
@@ -71,7 +71,7 @@ struct KeyedDebouncerTests {
         #expect(debouncer.pendingKeys.isEmpty)
     }
 
-    @Test("cancel before the window elapses runs nothing and drops the entry")
+    @Test("foundation-concurrency-010: cancel before the window elapses runs nothing and drops the entry")
     func cancelDropsTheEntry() async throws {
         let recorder = Recorder()
         let debouncer = KeyedDebouncer<String>(debounce: Self.debounce)
@@ -90,7 +90,7 @@ struct KeyedDebouncerTests {
     // section fails against a debouncer that retires the entry before running
     // the work.
 
-    @Test("work that throws stays pending, and the failure is reported")
+    @Test("foundation-concurrency-011: work that throws stays pending, and the failure is reported")
     func failureStaysPending() async throws {
         let recorder = Recorder()
         var failures: [String] = []
@@ -116,7 +116,7 @@ struct KeyedDebouncerTests {
         debouncer.cancel(key: "a")
     }
 
-    @Test("a failed entry is still there for a later flush, and that flush writes it")
+    @Test("foundation-concurrency-012: a failed entry is still there for a later flush, and that flush writes it")
     func failedEntrySurvivesToALaterFlush() async throws {
         let recorder = Recorder()
         let debouncer = KeyedDebouncer<String>(debounce: Self.debounce)
@@ -134,7 +134,7 @@ struct KeyedDebouncerTests {
         #expect(debouncer.isPending(key: "a") == false)
     }
 
-    @Test("flushAll answers with the keys that still failed")
+    @Test("foundation-concurrency-013: flushAll answers with the keys that still failed")
     func flushAllReportsSurvivingFailures() async throws {
         let recorder = Recorder()
         let debouncer = KeyedDebouncer<String>(debounce: .seconds(60))
@@ -149,7 +149,7 @@ struct KeyedDebouncerTests {
         #expect(recorder.successes(for: "good") == 1)
     }
 
-    @Test("retry backoff is capped, so a permanently failing entry keeps retrying")
+    @Test("foundation-concurrency-014: retry backoff is capped, so a permanently failing entry keeps retrying")
     func retryBackoffIsCapped() async throws {
         let recorder = Recorder()
         let debouncer = KeyedDebouncer<String>(
@@ -168,7 +168,7 @@ struct KeyedDebouncerTests {
 
     // MARK: - One run per key
 
-    @Test("flush during a run in flight awaits it rather than starting a second")
+    @Test("foundation-concurrency-015: flush during a run in flight awaits it rather than starting a second")
     func flushAwaitsTheRunInFlight() async throws {
         let debouncer = KeyedDebouncer<String>(debounce: .milliseconds(10))
         let gate = Gate()
@@ -187,7 +187,7 @@ struct KeyedDebouncerTests {
         #expect(debouncer.isPending(key: "a") == false)
     }
 
-    @Test("scheduling newer work during a run re-arms instead of retiring the entry")
+    @Test("foundation-concurrency-016: scheduling newer work during a run re-arms instead of retiring the entry")
     func newerWorkDuringARunIsNotLost() async throws {
         let debouncer = KeyedDebouncer<String>(debounce: .milliseconds(10))
         let gate = Gate()
@@ -209,7 +209,7 @@ struct KeyedDebouncerTests {
         #expect(debouncer.isPending(key: "a") == false)
     }
 
-    @Test("cancel during a run in flight does not resurrect the entry")
+    @Test("foundation-concurrency-017: cancel during a run in flight does not resurrect the entry")
     func cancelDuringARunWins() async throws {
         let debouncer = KeyedDebouncer<String>(debounce: .milliseconds(10))
         let gate = Gate()
@@ -241,5 +241,39 @@ struct KeyedDebouncerTests {
         func open() {
             isOpen = true
         }
+    }
+
+    @Test("foundation-concurrency-018: a retry ceiling below the debounce is raised to the debounce")
+    func retryCeilingIsRaisedToTheDebounce() async throws {
+        let recorder = Recorder()
+        let debouncer = KeyedDebouncer<String>(
+            debounce: .milliseconds(150),
+            maximumRetryInterval: .milliseconds(10)
+        )
+
+        recorder.keysThatThrow.insert("a")
+        debouncer.schedule(key: "a") { try recorder.run("a") }
+        try await Task.sleep(for: .milliseconds(400))
+
+        // A 10ms ceiling would retry about every 10ms (dozens of attempts);
+        // raised to the 150ms debounce, only two or three fit in the window.
+        #expect(recorder.calls.isEmpty == false)
+        #expect(recorder.calls.count <= 4, "the ceiling must be the debounce, not the smaller value passed in")
+        debouncer.cancel(key: "a")
+    }
+
+    @Test("foundation-concurrency-025: cancelAll drops every key without running any")
+    func cancelAllDropsEveryKey() async throws {
+        let recorder = Recorder()
+        let debouncer = KeyedDebouncer<String>(debounce: Self.debounce)
+
+        for key in ["a", "b", "c"] {
+            debouncer.schedule(key: key) { try recorder.run(key) }
+        }
+        debouncer.cancelAll()
+        try await Task.sleep(for: Self.settle)
+
+        #expect(debouncer.pendingKeys.isEmpty)
+        #expect(recorder.calls.isEmpty)
     }
 }

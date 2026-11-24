@@ -9,17 +9,36 @@ public final class FileSystemWatcher: @unchecked Sendable {
     public typealias ChangeHandler = @Sendable (_ changedPaths: [String]) -> Void
 
     private var streamRef: FSEventStreamRef?
-    private let rootPath: String
+    private let rootPaths: [String]
     private let excludedPrefixes: [String]
     private let handler: ChangeHandler
     private let queue = DispatchQueue(
         label: "com.mikefullerton.agenticdeveloperhubsdk.filebrowser.fswatcher", qos: .utility
     )
 
-    public init(rootPath: String, excludedPrefixes: [String], handler: @escaping ChangeHandler) {
-        self.rootPath = rootPath
+    public convenience init(rootPath: String, excludedPrefixes: [String], handler: @escaping ChangeHandler) {
+        self.init(rootPaths: [rootPath], excludedPrefixes: excludedPrefixes, handler: handler)
+    }
+
+    /// Watches every one of `rootPaths` in one stream — a linked worktree's
+    /// git directory and the common directory live outside its working tree.
+    /// A root that repeats another, or lies inside one, is dropped, so an
+    /// event is never delivered twice.
+    public init(rootPaths: [String], excludedPrefixes: [String], handler: @escaping ChangeHandler) {
+        self.rootPaths = Self.distinctRoots(rootPaths)
         self.excludedPrefixes = excludedPrefixes
         self.handler = handler
+    }
+
+    /// `paths` without repeats and without any path inside another, in their
+    /// original order.
+    static func distinctRoots(_ paths: [String]) -> [String] {
+        var kept: [String] = []
+        for path in paths where !kept.contains(path) {
+            let covered = paths.contains { other in other != path && path.hasPrefix(other + "/") }
+            if !covered { kept.append(path) }
+        }
+        return kept
     }
 
     /// Whether `path` is an excluded directory or something inside one.
@@ -33,7 +52,7 @@ public final class FileSystemWatcher: @unchecked Sendable {
     }
 
     public func start() {
-        guard streamRef == nil else { return }
+        guard streamRef == nil, !rootPaths.isEmpty else { return }
 
         var context = FSEventStreamContext()
         context.info = Unmanaged.passUnretained(self).toOpaque()
@@ -54,7 +73,7 @@ public final class FileSystemWatcher: @unchecked Sendable {
             }
         }
 
-        let pathsToWatch = [rootPath] as CFArray
+        let pathsToWatch = rootPaths as CFArray
         streamRef = FSEventStreamCreate(
             nil, callback, &context,
             pathsToWatch, FSEventStreamEventId(kFSEventStreamEventIdSinceNow),
@@ -63,13 +82,13 @@ public final class FileSystemWatcher: @unchecked Sendable {
         )
 
         guard let stream = streamRef else {
-            logger.error("Failed to create FSEvent stream for \(self.rootPath)")
+            logger.error("Failed to create FSEvent stream for \(self.rootPaths.joined(separator: ", "))")
             return
         }
 
         FSEventStreamSetDispatchQueue(stream, queue)
         FSEventStreamStart(stream)
-        logger.info("Started file system watcher for \(self.rootPath, privacy: .public)")
+        logger.info("Started file system watcher for \(self.rootPaths.joined(separator: ", "), privacy: .public)")
     }
 
     public func stop() {

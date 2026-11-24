@@ -1,7 +1,7 @@
 
 - **Role/trait**: Not implemented in source. No accessibility role, label,
   or title-element link — unlike the Key Command Row View
-  (`adhsdk://cookbook/ui/settings/rows/key-command-row-view`),
+  ([adhsdk.ingredient.ui.settings.rows.key-command-row-view](cookbook:1d2f69b6-1156-4dfa-a390-a240925ba1bd)),
   whose sibling toggle control links to its label — appears anywhere in
   this component's own source; the view relies entirely on the platform's
   default accessibility exposure. The view is an interactive,

@@ -1,5 +1,5 @@
 
-No test file exists for the source directly; these vectors are derived from the source. They assume a shared cache with retries disabled and a stubbed transport.
+`use-history.dom.test.tsx` tests these vectors, which are derived from the source. They assume a shared cache with retries disabled and a stubbed transport.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

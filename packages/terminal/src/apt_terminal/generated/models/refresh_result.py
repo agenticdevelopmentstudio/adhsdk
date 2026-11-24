@@ -31,7 +31,7 @@ class RefreshResult:
         field_dict.update(
             {
                 "token": token,
-                "refreshToken": refresh_token,
+                "refresh_token": refresh_token,
             }
         )
 
@@ -42,7 +42,7 @@ class RefreshResult:
         d = dict(src_dict)
         token = d.pop("token")
 
-        refresh_token = d.pop("refreshToken")
+        refresh_token = d.pop("refresh_token")
 
         refresh_result = cls(
             token=token,

@@ -11,7 +11,7 @@ describe('proseClassName', () => {
     expect(proseClassName({ measure: 'fill' })).toBe('adh-mv-prose adh-mv-prose--fill')
   })
 
-  it('combines wrap, measure and extra classes in a stable order', () => {
+  it('mdc-062: combines wrap, measure and extra classes in a stable order', () => {
     expect(proseClassName({ wrap: true, measure: 'fill', className: 'x y' })).toBe(
       'adh-mv-prose adh-mv-prose--wrap adh-mv-prose--fill x y',
     )

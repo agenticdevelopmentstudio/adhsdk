@@ -1,0 +1,18 @@
+
+| ID | Requirements | Input | Expected |
+|----|-------------|-------|----------|
+| registry-001 | provide-context, register-elements | Render `ConnectorRegistryProvider`; call `register("btn1", el)` with an `HTMLElement` | Element is stored in the registry under id `"btn1"` |
+| registry-002 | unregister-function | Call `register("btn1", el)`; invoke the returned function | Element is removed from the registry; `snapshot().get("btn1")` returns `undefined` |
+| registry-003 | idempotent-reregister | Call `register("btn1", el)`; call `register("btn1", el)` again with the same reference | Second call returns a function that performs no action when invoked; registry state and snapshot are unchanged; no notification occurs |
+| registry-004 | replace-on-conflict | Call `register("btn1", elA)`; call `register("btn1", elB)` with a different element reference | `register` proceeds as an ordinary change (not a no-op); subscribers are notified; `snapshot().get("btn1")` returns `elB` |
+| registry-005 | update-registry-on-change, implement-subscription | Subscribe a listener; call `register("btn1", el)`; invoke the returned unregister function | Listener is called exactly twice: once synchronously after `register`, once synchronously after unregister; an idempotent re-register or an already-stale unregister call adds zero further calls |
+| registry-006 | provide-snapshot, expose-has-method, expose-get-method | Call `snapshot()` immediately after registering an element with id `"btn1"` | `snapshot.has("btn1")` returns `true`; `snapshot.get("btn1")` returns the element |
+| registry-007 | stable-snapshot-identity | Call `snapshot()` twice with no `register`/`unregister` call in between | Both calls return the identical (`===`) `RegistrySnapshot` object |
+| registry-008 | expose-ids-method | Register elements with ids `"btn1"` and `"btn2"`; call `snapshot().ids()` | Returns an array containing both `"btn1"` and `"btn2"` |
+| registry-009 | throw-without-provider | Call `useConnectorRegistry()` in a component not wrapped by `ConnectorRegistryProvider` | Hook throws an error with a message containing `"ConnectorRegistryProvider"` |
+| registry-010 | provide-optional-hook | Call `useConnectorRegistryOptional()` outside a provider; call it again inside one | First call returns `null`; second call returns the registry handle |
+| registry-011 | provide-snapshot-hook, throw-without-provider | Call `useRegistrySnapshot()` outside a provider; then, inside a provider, render it, register an element, and unregister it | Outside a provider it throws the same error as `useConnectorRegistry()`; inside a provider it returns the current snapshot and the component re-renders once for the register and once for the unregister |
+| registry-012 | provide-snapshot, expose-has-method, expose-get-method, expose-ids-method | Call `snapshot()` on a freshly mounted `ConnectorRegistryProvider` with no elements registered | `snapshot().ids()` returns `[]`; `snapshot().has(id)` returns `false` for any id; `snapshot().get(id)` returns `undefined` for any id |
+| registry-013 | unregister-function, replace-on-conflict | Call `register("btn1", elA)` and keep its returned function `unregA`; call `register("btn1", elB)`; invoke `unregA` | `elB` remains registered; `snapshot().get("btn1")` still returns `elB`; `unregA` performs no action |
+| registry-014 | implement-subscription, update-registry-on-change | Subscribe listener A, which unsubscribes listener B when called, then subscribe listener B; trigger a change via `register()` | Listener B is not called during this notification pass; a later change calls only listener A |
+

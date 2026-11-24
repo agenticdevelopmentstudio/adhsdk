@@ -5,6 +5,7 @@ import { Button } from '@adh-sdk/ui/components/button'
 import { Spinner } from '@adh-sdk/ui/components/spinner'
 import { ErrorText } from '@adh-sdk/ui/components/error-text'
 import { rowKey } from './useCrudResource'
+import { columnDisplayValue } from './display'
 import type { CrudColumn, CrudRow, CrudTableMeta } from './types'
 import { cn } from '@adh-sdk/ui/lib/utils'
 import { fieldCaptionClass } from '@adh-sdk/ui/lib/typography'
@@ -23,7 +24,7 @@ export function displayColumns(meta: CrudTableMeta): CrudColumn[] {
 }
 
 export function cellText(row: CrudRow, column: CrudColumn): string {
-  const value = row[column.name]
+  const value = columnDisplayValue(column, row[column.name])
   if (value == null) return '—'
   const text = typeof value === 'string' ? value : JSON.stringify(value)
   return text.length > MAX_CELL_CHARS ? `${text.slice(0, MAX_CELL_CHARS)}…` : text

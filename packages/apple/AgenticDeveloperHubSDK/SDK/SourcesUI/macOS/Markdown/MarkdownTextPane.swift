@@ -82,7 +82,15 @@ public final class MarkdownTextPane: NSView {
     /// back via this setter must not re-enter its own callback, or it loops.
     public var text: String {
         get { textView.string }
-        set { textView.string = newValue }
+        set {
+            textView.string = newValue
+            // A replaced document is a different document: its predecessor's
+            // undo steps would apply to the wrong text (or out of range).
+            textView.undoManager?.removeAllActions(withTarget: textView)
+            if let storage = textView.textStorage {
+                textView.undoManager?.removeAllActions(withTarget: storage)
+            }
+        }
     }
 
     public var attributedText: NSAttributedString {

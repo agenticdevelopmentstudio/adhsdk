@@ -1,0 +1,62 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "9eb46f78-0ceb-455f-9584-b6b43ddf0871",
+    "title": "Claude Hook Configuration",
+    "type": "ingredient",
+    "version": "1.0.2",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-14",
+    "modified": "2026-11-14",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Value type holding everything that makes one daemon's Claude Code hook registration its own: marker, helper, drop directory, lock, status-line entry and legacy forms.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "foundation",
+      "sessions",
+      "claude-hooks",
+      "configuration"
+    ],
+    "depends-on": [
+      "1c2b7ff7-4d12-4580-94b0-17258d3384e1"
+    ],
+    "related": [
+      "fc622208-1504-421f-8892-c5869820550c",
+      "f3326f3a-cccd-4ac5-8dc1-84d660ed4581",
+      "517adfce-44e7-404e-8a7b-b1e304da32e7"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "names_hosts": "The component parses Claude Code hook events and settings; the host's name, events and paths are its subject.",
+  "synced": "378a550a621d45ef",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

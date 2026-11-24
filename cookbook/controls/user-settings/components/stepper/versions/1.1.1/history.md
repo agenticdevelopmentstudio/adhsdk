@@ -1,0 +1,6 @@
+
+| Version | Date | Author | Summary |
+|---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case everywhere they're cited; removed unverified Analytics/Logging content (marked Not applicable) and documented that instrumentation is the consumer's responsibility; replaced AWS-specific class names and hex colors with `{{app_prefix}}`/theme-token guidance; reformatted Design Decisions to the Decision/Rationale/Approved form; rebuilt Compliance as a table of cookbook compliance-catalog checks with accurate passed/partial/failed statuses; corrected the button role and Differentiate Without Color claims; cited the reference implementation by path in place of an unidentified source reference; clarified the out-of-range test vectors as typed input rather than an onChange input; and documented native ArrowUp/Down stepping, fractional-step floating-point drift, empty-input-as-zero, per-keystroke clamping, and invalid-configuration (`min > max`, `step <= 0`, NaN) behavior as built. |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from React/Web source |

@@ -54,10 +54,10 @@ class BillingRedriveResult:
                 "examined": examined,
                 "applied": applied,
                 "terminal": terminal,
-                "stillPending": still_pending,
+                "still_pending": still_pending,
                 "unreadable": unreadable,
                 "failed": failed,
-                "nextOffset": next_offset,
+                "next_offset": next_offset,
             }
         )
 
@@ -72,7 +72,7 @@ class BillingRedriveResult:
 
         terminal = d.pop("terminal")
 
-        still_pending = d.pop("stillPending")
+        still_pending = d.pop("still_pending")
 
         unreadable = d.pop("unreadable")
 
@@ -83,7 +83,7 @@ class BillingRedriveResult:
                 return data
             return cast(int | None, data)
 
-        next_offset = _parse_next_offset(d.pop("nextOffset"))
+        next_offset = _parse_next_offset(d.pop("next_offset"))
 
         billing_redrive_result = cls(
             examined=examined,

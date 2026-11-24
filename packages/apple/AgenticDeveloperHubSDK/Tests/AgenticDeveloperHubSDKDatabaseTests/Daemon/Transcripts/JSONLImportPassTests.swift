@@ -111,8 +111,8 @@ final class JSONLImportPassTests: XCTestCase {
 
         let outcome = try pass(filesPerBatch: 10, window: 86_400).run()
         XCTAssertEqual(outcome.summary.filesScanned, 1, "only the file inside the window is eligible")
-        XCTAssertNotNil(try database.transcriptTurn(messageId: "m-new"), "the in-window file is imported")
-        XCTAssertNil(try database.transcriptTurn(messageId: "m-old"), "the out-of-window file is not")
+        XCTAssertNotNil(try database.legacyTranscriptTurn(messageId: "m-new"), "the in-window file is imported")
+        XCTAssertNil(try database.legacyTranscriptTurn(messageId: "m-old"), "the out-of-window file is not")
 
         let cutoff = try XCTUnwrap(try storedCutoff())
         XCTAssertEqual(cutoff.timeIntervalSince1970, newMtime.timeIntervalSince1970, accuracy: 2,
@@ -127,7 +127,7 @@ final class JSONLImportPassTests: XCTestCase {
 
         let outcome = try pass(filesPerBatch: 10, window: nil).run()
         XCTAssertEqual(outcome.summary.filesScanned, 1)
-        XCTAssertNotNil(try database.transcriptTurn(messageId: "m-ancient"), "a 40-day-old file is imported")
+        XCTAssertNotNil(try database.legacyTranscriptTurn(messageId: "m-ancient"), "a 40-day-old file is imported")
         let cutoff = try XCTUnwrap(try storedCutoff())
         XCTAssertEqual(cutoff.timeIntervalSince1970, mtime.timeIntervalSince1970, accuracy: 2)
     }
@@ -146,8 +146,8 @@ final class JSONLImportPassTests: XCTestCase {
 
         let outcome = try pass(filesPerBatch: 10, window: 90 * 86_400).run()
         XCTAssertEqual(outcome.summary.filesScanned, 1, "only the file after the stored cutoff is eligible")
-        XCTAssertNotNil(try database.transcriptTurn(messageId: "m-recent"))
-        XCTAssertNil(try database.transcriptTurn(messageId: "m-between"),
+        XCTAssertNotNil(try database.legacyTranscriptTurn(messageId: "m-recent"))
+        XCTAssertNil(try database.legacyTranscriptTurn(messageId: "m-between"),
                      "the window must not reach behind a stored cutoff")
 
         let cutoff = try XCTUnwrap(try storedCutoff())

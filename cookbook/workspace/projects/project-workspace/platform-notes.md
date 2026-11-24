@@ -25,7 +25,7 @@
   scope this object to on the web; a browser-hosted project workspace would
   keep `repo`/tabs/pane-state/settings as component state populated from and
   persisted through a server-side API standing in for `ProjectDatabase` (see
-  `adhsdk://cookbook/workspace/projects/project-database`), and would
+  [adhsdk.ingredient.workspace.projects.project-database](cookbook:c212ea39-10e7-4146-89dd-36edb3b3455a)), and would
   reproduce the two weak, directory-keyed caches with a JavaScript `WeakMap`
   (optionally paired with `FinalizationRegistry` to detect eviction) keyed by
   a normalized directory identifier, since JavaScript has no
@@ -36,13 +36,13 @@
   and directory-cache logic unchanged; it would still need its own
   `FileBrowserDirectories`/`GitStatusProvider`-equivalent collaborators, and,
   per the multi-checkout note in
-  `adhsdk://cookbook/workspace/projects/project-controller`, iOS
+  [adhsdk.ingredient.workspace.projects.project-controller](cookbook:5bfadad5-c93b-432a-807e-04be57ff16b4), iOS
   sandboxing makes exposing more than one linked worktree under one project
   an unusual arrangement to design a browser for.
 - **WinUI 3**: Port `ProjectWorkspace` as a plain C# class with no interface
   requiring thread-affinity of its own, touched only from the UI thread
   (`DispatcherQueue`) by convention — the same discipline
-  `adhsdk://cookbook/workspace/projects/branch-controller`'s WinUI
+  [adhsdk.ingredient.workspace.projects.branch-controller](cookbook:92f11498-2cb2-4b04-92b9-560d9f2de6ee)'s WinUI
   port assumes for `@MainActor`. Reproduce the two `WeakCache`s with a
   `Dictionary<string, WeakReference<T>>` (or `ConditionalWeakTable`) keyed by
   a normalized, reparse-point-resolved path (`Path.GetFullPath`/
@@ -55,8 +55,8 @@
   `JSONEncoder`/`JSONDecoder`. Route every persisted accessor
   (`storedTabs`/`saveTabs`, `paneState`/`setPaneState`, `setting`/
   `setSetting`, `loadProjectDirectories`/`saveProjectDirectories`) through
-  the same SQLite-backed port `adhsdk://cookbook/workspace/projects/project-database`
-  and `adhsdk://cookbook/workspace/projects/project-database-layout`
+  the same SQLite-backed port [adhsdk.ingredient.workspace.projects.project-database](cookbook:c212ea39-10e7-4146-89dd-36edb3b3455a)
+  and [adhsdk.ingredient.workspace.projects.project-database-layout](cookbook:ded9b397-958d-437d-8235-48ef85ae7386)
   describe, keeping this file's swallow-and-log convention on every path
   except the one flagged as a pending decision above.
 - **confines-to-ui-thread** (scope): The workspace has no thread-safety guarantee of its own; every stored property and method is confined to the UI thread by that declaration alone.

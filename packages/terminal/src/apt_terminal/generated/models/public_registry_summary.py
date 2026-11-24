@@ -45,7 +45,7 @@ class PublicRegistrySummary:
                 "slug": slug,
                 "name": name,
                 "purpose": purpose,
-                "categoryRoot": category_root,
+                "category_root": category_root,
                 "tags": tags,
             }
         )
@@ -61,7 +61,7 @@ class PublicRegistrySummary:
 
         purpose = d.pop("purpose")
 
-        category_root = d.pop("categoryRoot")
+        category_root = d.pop("category_root")
 
         tags = cast(list[str], d.pop("tags"))
 

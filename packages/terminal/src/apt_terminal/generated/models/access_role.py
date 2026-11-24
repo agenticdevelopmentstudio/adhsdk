@@ -63,8 +63,8 @@ class AccessRole:
                 "slug": slug,
                 "name": name,
                 "description": description,
-                "isSystem": is_system,
-                "defaultFor": default_for,
+                "is_system": is_system,
+                "default_for": default_for,
                 "grants": grants,
             }
         )
@@ -84,9 +84,9 @@ class AccessRole:
 
         description = d.pop("description")
 
-        is_system = d.pop("isSystem")
+        is_system = d.pop("is_system")
 
-        default_for = AccessRoleDefaultFor(d.pop("defaultFor"))
+        default_for = AccessRoleDefaultFor(d.pop("default_for"))
 
         grants = []
         _grants = d.pop("grants")

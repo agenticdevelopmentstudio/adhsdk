@@ -1,13 +1,12 @@
 ---
 id: 5bfadad5-c93b-432a-807e-04be57ff16b4
 title: "Project Management"
-domain: adhsdk://cookbook/workspace/projects/project-controller
 type: ingredient
-version: 1.1.1
+version: 1.2.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -24,10 +23,10 @@ tags:
   - command-palette
 depends-on: []
 related:
-  - adhsdk://cookbook/workspace/projects/branch-controller
-  - adhsdk://cookbook/ui/layout/composable-tabs/tabs-window
-  - adhsdk://cookbook/ui/layout/tabbed-view/tab-pane
-  - adhsdk://cookbook/workspace/files/git-status-provider
+  - 92f11498-2cb2-4b04-92b9-560d9f2de6ee
+  - 55a394e6-9934-404b-941d-25bebbf71378
+  - a30725ca-fa2f-4a04-8cb0-8beddf264a0a
+  - 9a4aa2a8-c01b-4cec-b789-6c89c100d8d3
 references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectController.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWorkspace.swift (adhsdk)
@@ -139,9 +138,11 @@ registry in step with which checkouts currently exist.
   or the plan is not unchanged, reconciling MUST signal that tabs are
   about to change, then persist the new tabs, then signal that tabs
   changed, in that order.
-- **default-enabled-edge**: Reconciling MUST use the previously stored
-  enabled edges, or the single top edge when nothing was stored, as the
-  enabled-edges list for any newly built tab record.
+- **default-enabled-edge**: Reconciling MUST build any new tab record on
+  the project's stored Tab Bars choice, or on the app-wide tab positions
+  when the project has no stored choice, and MUST persist the stored
+  choice unchanged — absent stays absent, so a reconcile never writes
+  edges of its own.
 - **new-checkout-tabs-copy-arrangement-or-blueprint**: For every checkout
   being added, reconciling MUST build its tab records from a blueprint that
   reuses the existing tab arrangement (with fresh identifiers) when one can
@@ -263,9 +264,10 @@ itself.
   repository with no linked worktrees) or many; the loops over checkouts
   being added and over held branch controllers run zero, one, or many
   times with no special case for either end (MUST). The enabled edges
-  default to the single top edge (**default-enabled-edge**) when nothing
-  was stored, so a project's very first reconcile always creates exactly
-  one tab per checkout rather than one per available edge.
+  default to the app-wide tab positions (**default-enabled-edge**) when
+  no choice was stored, so a project's very first reconcile creates one
+  tab per checkout per app-wide edge — exactly one per checkout under the
+  default top-only setting — rather than one per available edge.
 - **Concurrent access**: Opening and refreshing checkouts MUST be safe to
   call concurrently because the serialized reconcile operation chains each
   call onto whatever reconcile is already running, so two overlapping
@@ -425,7 +427,7 @@ project controller's own name.
   interface requiring thread-affinity of its own — mirror `@MainActor`
   confinement by only ever touching this object from the UI thread
   (`DispatcherQueue`), the same discipline `BranchController`'s WinUI port
-  already assumes (see `adhsdk://cookbook/workspace/projects/branch-controller`).
+  already assumes (see [adhsdk.ingredient.workspace.projects.branch-controller](cookbook:92f11498-2cb2-4b04-92b9-560d9f2de6ee)).
   Reproduce **reconcile-calls-chain-in-order** with a stored `Task`
   (previous reconcile) that the next call `await`s before starting its own
   work — the same continuation-chaining pattern, not a `SemaphoreSlim`, so
@@ -436,7 +438,7 @@ project controller's own name.
   rather than .NET's multicast-delegate convention). Read worktrees with
   `System.Diagnostics.Process` running `git worktree list --porcelain`
   through the same single-door `GitClient` WinUI port
-  `adhsdk://cookbook/workspace/projects/branch-controller` describes,
+  [adhsdk.ingredient.workspace.projects.branch-controller](cookbook:92f11498-2cb2-4b04-92b9-560d9f2de6ee) describes,
   and reproduce the main-first-then-git-order partition
   (**checkouts-ordered-main-first-then-git-order**) with `Where`/`Concat`
   rather than `OrderBy`, since LINQ's `OrderBy` is stable but a hand-rolled
@@ -444,9 +446,9 @@ project controller's own name.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectController.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectController.swift` | confirmed (1.1.1) |
 
 ## Design Decisions
 
@@ -519,12 +521,12 @@ subscription — on every branch change (`ProjectController.swift`).
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
-| [error-recovery](agenticdevelopercookbook://compliance/reliability#error-recovery) | partial | Reliability |
-| [main-thread-freedom](agenticdevelopercookbook://compliance/performance#main-thread-freedom) | passed | Performance |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
+| [adc.check.reliability.error-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/694a971d-282d-501b-8861-c4ece3b01edd) | partial | Reliability |
+| [adc.check.performance.main-thread-freedom](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/86dd71d6-1ab1-5d59-8c85-b9d469fbae0d) | passed | Performance |
 
 Notes: separation-of-concerns passes because `ProjectController` owns exactly
 the checkout list, the branch-controller lifecycle, and the tab-reconciliation
@@ -569,3 +571,4 @@ actor while the subprocess runs.
 | 1.0.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to workspace/projects/. |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
+| 1.2.0 | 2026-11-15 | Mike Fullerton | Tab edges are an explicit per-project Tab Bars choice: no stored edges means follow the app-wide tab positions live, an empty enabled_edges value means no choice, and the shared tab configuration carries only the pane arrangement. |

@@ -279,12 +279,6 @@ private extension NotesListViewController {
 
 public final class NoteListCellView: NSTableCellView {
 
-    private static let relativeFormatter: RelativeDateTimeFormatter = {
-        let formatter = RelativeDateTimeFormatter()
-        formatter.unitsStyle = .abbreviated
-        return formatter
-    }()
-
     private let pinIndicator = NSImageView()
     private let titleLabel = ThemedLabel(role: .primaryText, textRole: .body)
     private let dateLabel = ThemedLabel(role: .secondaryText, textRole: .caption)
@@ -342,7 +336,7 @@ public final class NoteListCellView: NSTableCellView {
 
     public func configure(with note: Note) {
         titleLabel.stringValue = note.title
-        dateLabel.stringValue = Self.relativeFormatter.localizedString(for: note.modifiedDate, relativeTo: Date())
+        dateLabel.stringValue = RelativeDateFormatting.string(for: note.modifiedDate, absoluteAfter: nil)
         previewLabel.stringValue = note.excerpt.isEmpty ? "(empty)" : note.excerpt
         pinIndicator.isHidden = !note.isPinned
     }

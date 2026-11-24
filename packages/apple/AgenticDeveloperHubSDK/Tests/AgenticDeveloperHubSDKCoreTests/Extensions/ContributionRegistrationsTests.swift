@@ -27,7 +27,7 @@ struct ContributionRegistrationsTests {
             detail: "recorded by a test")
     }
 
-    @Test("Payloads and notes come back in the order they were applied")
+    @Test("contribution-point-001: Payloads and notes come back in the order they were applied")
     func applicationOrderIsReported() {
         var registrations = ContributionRegistrations<Int, ContributedViewNote>()
         registrations.record(1, notes: [note("a", "a.one")], for: "a")
@@ -39,7 +39,7 @@ struct ContributionRegistrationsTests {
         #expect(registrations.notes.map(\.viewID) == ["a.one", "b.one"])
     }
 
-    @Test("An unrecorded identifier has no payload, and removing it changes nothing")
+    @Test("contribution-point-002: An unrecorded identifier has no payload, and removing it changes nothing")
     func anUnknownIdentifierIsInert() {
         var registrations = ContributionRegistrations<Int, ContributedViewNote>()
         registrations.record(1, notes: [note("a", "a.one")], for: "a")
@@ -50,7 +50,7 @@ struct ContributionRegistrationsTests {
         #expect(registrations.notes.count == 1)
     }
 
-    @Test("Recording the same extension twice leaves one payload and one set of notes")
+    @Test("contribution-point-003: Recording the same extension twice leaves one payload and one set of notes")
     func recordingTwiceReplaces() {
         var registrations = ContributionRegistrations<Int, ContributedViewNote>()
         registrations.record(1, notes: [note("a", "a.one")], for: "a")
@@ -64,7 +64,7 @@ struct ContributionRegistrationsTests {
         #expect(registrations.notes.map(\.viewID) == ["b.one", "a.two"])
     }
 
-    @Test("Removing one extension leaves the others and their notes alone")
+    @Test("contribution-point-004: Removing one extension leaves the others and their notes alone")
     func removalIsPerExtension() {
         var registrations = ContributionRegistrations<Int, ContributedViewNote>()
         registrations.record(1, notes: [note("a", "a.one"), note("a", "a.two")], for: "a")
@@ -77,7 +77,7 @@ struct ContributionRegistrationsTests {
         #expect(registrations.notes.map(\.viewID) == ["b.one"])
     }
 
-    @Test("The filtered identifiers keep application order")
+    @Test("contribution-point-005: The filtered identifiers keep application order")
     func filteringKeepsOrder() {
         var registrations = ContributionRegistrations<Int, ContributedViewNote>()
         for (index, identifier) in ["a", "b", "c", "d"].enumerated() {
@@ -86,4 +86,9 @@ struct ContributionRegistrationsTests {
 
         #expect(registrations.identifiers(where: { $0.isMultiple(of: 2) }) == ["a", "c"])
     }
+
+    @Test(
+        "contribution-point-006: use off the UI thread is rejected",
+        .disabled("Thread confinement is the compiler's, via @MainActor on ContributionPoint; no runtime test exists"))
+    func offUIThreadUseIsRejected() {}
 }

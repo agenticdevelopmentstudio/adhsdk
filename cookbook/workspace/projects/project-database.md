@@ -1,13 +1,12 @@
 ---
 id: c212ea39-10e7-4146-89dd-36edb3b3455a
 title: "Project Database"
-domain: adhsdk://cookbook/workspace/projects/project-database
 type: ingredient
-version: 1.2.1
+version: 1.4.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-16
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -24,7 +23,7 @@ tags:
   - migrations
 depends-on: []
 related:
-  - adhsdk://cookbook/workspace/projects/git-repo
+  - 1463e7a2-e290-4b8c-8643-df9462a758e6
 references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectDatabase.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepo.swift (adhsdk)
@@ -127,7 +126,7 @@ bookkeeping under its own table name so the two chains cannot collide.
 ### Migrations
 
 - **schema-version-constant**: The current schema version constant MUST be
-  `4`, matching the highest version number any migration in this component
+  `7`, matching the highest version number any migration in this component
   inserts into `schema_migrations`.
 - **migrations-run-in-one-transaction**: Running migrations MUST wrap the
   `schema_migrations` table creation and every pending migration in a
@@ -140,7 +139,7 @@ bookkeeping under its own table name so the two chains cannot collide.
   propagate the original failure to the caller; the file MUST be left
   exactly as it was before running migrations began.
 - **migrations-are-sequential-and-append-only**: Running migrations MUST
-  run migration 1, migration 2, migration 3, and migration 4, in that
+  run migrations 1 through 7, in that
   fixed order, and MUST run each one if and only if the current schema
   version is less than that migration's target version; a migration MUST
   NOT be skipped because a later migration already ran, and MUST NOT run
@@ -182,6 +181,23 @@ bookkeeping under its own table name so the two chains cannot collide.
 - **migration004-working-directory**: Migration 4 MUST add a nullable
   `project_tabs.working_directory TEXT` column when it does not already
   exist, and MUST insert version row `4`.
+- **migration005-browser-jars**: Migration 5 MUST create, guarded by `IF NOT
+  EXISTS`, table `browser_jars` (`kind` checked to `'worktree'` or
+  `'pane'`) with a unique index on `(kind, repo_id, worktree_path)` for
+  worktree jars and one on `pane_node_id` where it is not null, MUST keep
+  the browser panes already in the file on the shared store, and MUST
+  insert version row `5`.
+- **migration006-repo-kind**: Migration 6 MUST, when `git_repo` has no
+  `kind` column, rebuild `git_repo` with `kind TEXT NOT NULL DEFAULT
+  'project'` and `UNIQUE(path, kind)` in place of a unique `path`, copying
+  every row across as a project and recreating `idx_git_repo_name`, and
+  MUST insert version row `6`.
+- **migration007-edges-follow-global**: Migration 7 MUST set
+  `project_state.enabled_edges` to the empty string (no stored edge choice)
+  on every row whose value is exactly `'top'`, since older code wrote
+  `'top'` on every save unless the user chose otherwise, so a stored
+  `'top'` is the old default rather than a choice; it MUST leave every
+  other value alone and MUST insert version row `7`.
 - **migration-idempotency**: Re-running construction — and therefore
   running migrations — against a database file that already has every
   migration applied MUST be a no-op that leaves every row unchanged, and
@@ -207,6 +223,9 @@ bookkeeping under its own table name so the two chains cannot collide.
   design rationale, "one [the scanner] did not [find] is deleted, not
   filtered out here" — listing performs no filtering by recency, missing
   state, or any other criterion.
+- **repos-of-a-kind**: Listing the repositories of one kind MUST return
+  every row whose `kind` equals that kind, in no promised order, and no row
+  of any other kind.
 - **repo-lookup-by-id-and-path**: Looking up a repository by id MUST
   filter by `id = ?` bound to the id's string form, and looking up by path
   MUST filter by `path = ?` bound to the given string; both MUST return
@@ -313,7 +332,8 @@ visual component.
 | git-client-projects-project-database-011 | delete-cascades | Insert a repository, set one setting on it, then delete it. | Looking it up by id returns nothing; reading its settings returns an empty map. |
 | git-client-projects-project-database-012 | default-path-format, default-path-defaults | Compute the default path for home directory "/tmp/home" and token "COFFEEgrinder", and again for token "CoffeeGrinder". | Both calls return the identical string "/tmp/home/.coffeegrinder/Projects.db". |
 | git-client-projects-project-database-013 | init-creates-parent-directory | Construct this component with a path whose parent directory does not yet exist. | Construction succeeds, and the parent directory exists on disk afterward. |
-
+| git-client-projects-project-database-014 | repos-of-a-kind | Insert two File Browser rows, one Document row and one project row, then list the repositories of the File Browser kind. | Exactly the two File Browser rows are returned |
+| git-client-projects-project-database-015 | migration007-edges-follow-global | Hand-write a version-6 file with one `project_state` row whose `enabled_edges` is `top` and one whose value is `top,left`, then open it. | The first row's `enabled_edges` is the empty string, the second is still `top,left`, and the schema version reads 7 |
 ## Edge Cases
 
 - **Null and empty input (MUST)**: An empty path argument to construction
@@ -327,10 +347,12 @@ visual component.
   passed to setting a value, which deletes the row rather than storing it
   (see **set-setting-nil-deletes**).
 - **Boundary values (MUST)**: Reading the schema version's boundaries are
-  exactly less-than-1, less-than-2, less-than-3, and less-than-4 — a
-  database already at version 4 runs none of the four migrations; a
+  exactly less-than-1 through less-than-7 — a
+  database already at version 7 runs none of the seven migrations; a
   database whose `schema_migrations` table exists but is empty reads as
-  version 0 and runs all four. Checking whether a column exists has a
+  version 0 and runs all seven. A project whose stored edges are `'top'`
+  alone follows the app-wide tab position after migration 7; a user who
+  chose top alone sees no change, as the app-wide position starts at top. Checking whether a column exists has a
   boundary of "greater than zero matching rows" against
   `pragma_table_info` — i.e. exactly zero or one matching row, since
   SQLite disallows two columns of the same name on one table.
@@ -381,7 +403,7 @@ visual component.
 | `value` (set-setting parameter) | string, optional | none — required | Absent deletes the setting row; any string, including the empty string, upserts it. |
 
 The busy timeout (5,000 milliseconds) and the current schema version
-constant (`4`) are fixed constants in this file, not exposed as
+constant (`7`) are fixed constants in this file, not exposed as
 configuration a caller can override.
 
 ## Deep Linking
@@ -473,7 +495,7 @@ caller through a thrown error, not written to a log by this file.
   sibling extension in the same module, to call.
 - **Compose**: Port the SQLite access with `androidx.sqlite` or a light
   wrapper over `android.database.sqlite.SQLiteOpenHelper`/`SQLiteDatabase`,
-  keeping the same one-connection-per-store shape; run the four migrations
+  keeping the same one-connection-per-store shape; run the seven migrations
   inside `SQLiteDatabase.beginTransactionNonExclusive()`/`endTransaction()`,
   re-issue the `foreign_keys=ON` pragma per connection the same way opening
   the connection does here, and represent `GitRepo` as the Kotlin `data
@@ -501,7 +523,7 @@ caller through a thrown error, not written to a log by this file.
   5-second wait (`Microsoft.Data.Sqlite` has no dedicated
   `SQLITE_OPEN_FULLMUTEX` flag, but serializes access per connection by
   default, preserving the same one-connection, thread-safe-by-default
-  shape). Run the four migrations inside a transaction opened with `BEGIN
+  shape). Run the seven migrations inside a transaction opened with `BEGIN
   IMMEDIATE;`/`COMMIT;`/`ROLLBACK;` issued as raw command text the way this
   file's own execute operation does, guarding each `ALTER TABLE` with a
   `PRAGMA table_info('table')` read the way this file's column-existence
@@ -514,9 +536,9 @@ caller through a thrown error, not written to a log by this file.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectDatabase.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectDatabase.swift` | confirmed (1.3.0) |
 
 ## Design Decisions
 
@@ -528,7 +550,7 @@ caller through a thrown error, not written to a log by this file.
 **Rationale**: Per the doc comment, naming the file after the token too was tried and reverted: the directory name is lowercased for matching but the file name was not, so a display-name capitalization change alone resolved to the same directory but a different, empty file that `openDatabase` would then create and migrate from scratch beside the real one. Naming the file after its contents rather than the app removes that second, independently-foldable spelling of the app's name.
 **Approved**: pending
 
-**Decision**: `runMigrations()` wraps the `schema_migrations` table creation and all four migrations in one `BEGIN IMMEDIATE TRANSACTION` … `COMMIT`, and every individual migration statement is additionally guarded by `IF NOT EXISTS` or a `columnExists` check.
+**Decision**: `runMigrations()` wraps the `schema_migrations` table creation and all seven migrations in one `BEGIN IMMEDIATE TRANSACTION` … `COMMIT`, and every individual migration statement is additionally guarded by `IF NOT EXISTS` or a `columnExists` check.
 **Rationale**: Per the doc comment, before this transaction existed, a crash, kill, or power loss between a schema statement and the `INSERT` recording it left the schema changed with `schema_migrations` still behind it; the next launch re-ran the already-applied schema statement, `ALTER TABLE … ADD COLUMN` failed with a duplicate-column error, and `init(path:)` threw on that launch and every one after it, with every project, tab, and pane state in the file permanently unreachable. The transaction makes a half-applied state unreachable going forward; the per-statement guards make re-running the chain over a database an older, un-transacted build already left half-applied safe rather than fatal (`idempotency`).
 **Approved**: pending
 
@@ -556,11 +578,11 @@ caller through a thrown error, not written to a log by this file.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | Reliability |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | partial | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | Reliability |
 
 Notes: separation-of-concerns passes because `ProjectDatabase.swift` holds only schema, migration, and CRUD statements against its own tables — it performs no directory scanning, no reconciliation, and no window or layout business logic beyond storing and returning the rows another component reads and writes. unit-test-coverage is partial: `ProjectDatabaseTests.swift` exercises every public repository and settings method plus five distinct migration scenarios (a fresh database, a v1-to-v4 upgrade, a version row deleted mid-chain, the whole chain rewound, and directory-on-demand creation), but `checkpoint()` has no assertion verifying the WAL file was actually truncated, and the row-dropping path this recipe flags under `malformed-row-handling` has no test anywhere in the given sources. explicit-error-handling is partial for the same reason: every SQL-level failure this file's own statements can produce throws a specific `ProjectDatabaseError` case, but the malformed-row guard in `queryRepos` is the one path in this file that discards a failure signal instead of raising it — see the pending decision on `malformed-row-handling`. data-integrity is partial: the `UNIQUE` constraint on `git_repo.path`, the `ON DELETE CASCADE` foreign keys, and the transaction-wrapped, idempotency-guarded migration chain are all real, exercised integrity mechanisms, but this file never calls `PRAGMA integrity_check` and has no detection at all for a row that fails to parse on the way out of the database — again, the pending decision on `malformed-row-handling`.
 
@@ -574,3 +596,5 @@ Notes: separation-of-concerns passes because `ProjectDatabase.swift` holds only 
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to workspace/projects/. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolved the malformed-row NEEDS REVIEW marker against source: the row guard silently drops rows with a bad id or null path; restated as current behavior with a pending decision. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Swift-only constructs in normative sections restated as platform-neutral behavior; the Apple mechanism is in Platform Notes. |
+| 1.3.0 | 2026-11-15 | Mike Fullerton | Adds repos-of-a-kind and vector 014 |
+| 1.4.0 | 2026-11-16 | Mike Fullerton | Schema version 7: migrations 5 to 7 listed; migration 7 clears a stored top edge choice. |

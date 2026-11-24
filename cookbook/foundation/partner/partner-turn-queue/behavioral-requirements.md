@@ -1,0 +1,18 @@
+
+- **value-type**: The queue MUST be a value type that is `Sendable` and starts empty from `init()`.
+- **count**: `count` MUST report the number of entries currently queued.
+- **fifo-order**: `enqueue` MUST append an inbound event at the back, and `next()` MUST remove and return the front entry, so events leave oldest first.
+- **next-on-empty**: `next()` MUST return `nil` and leave the queue empty when nothing is queued.
+- **coalesce-replaces-in-place**: `enqueue` MUST, when the inbound event has a non-nil `coalescingKey` equal to the key of an entry already queued, replace that entry with the new event at the same position, so a coalesced event does not move to the back, and leave `count` unchanged.
+- **coalesce-first-match**: When more than one queued entry carries the inbound event's key, `enqueue` MUST replace only the first one (nearest the front).
+- **no-key-appends**: `enqueue` MUST append an event whose `coalescingKey` is nil, even when an equal event is already queued.
+- **key-compared-whole**: Keys MUST be compared as whole strings, and a nil key MUST never match; how a key is built is defined by `PartnerInbound`, not by the queue.
+- **enqueue-first**: `enqueueFirst` MUST insert the event at the front of the queue, ahead of every queued entry, and increase `count` by one.
+- **enqueue-first-no-coalesce**: `enqueueFirst` MUST NOT coalesce, even when its event carries a key equal to a queued entry's key; both entries remain.
+- **enqueue-first-order**: When `enqueueFirst` is called repeatedly, the most recent call MUST be returned first by `next()`.
+- **coalesce-targets-front-inserted**: An `enqueue` that follows an `enqueueFirst` MUST be able to coalesce into the front-inserted entry, because coalescing scans every queued entry.
+- **no-capacity-limit**: The queue MUST NOT drop entries to enforce a size limit; only coalescing and `next()` reduce `count`.
+- **no-persistence**: The queue MUST NOT persist its entries; they exist only as long as the value does.
+- **no-side-effects**: The queue MUST NOT perform file, network, process or notification side effects.
+- **infallible**: Every queue operation MUST NOT throw or return an error.
+- **ownership-and-concurrency**: The queue is a struct with a mutating API and no internal locking, so a caller MUST serialise access to one instance.

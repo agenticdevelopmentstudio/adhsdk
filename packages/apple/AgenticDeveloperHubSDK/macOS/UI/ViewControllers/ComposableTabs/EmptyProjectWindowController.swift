@@ -19,6 +19,9 @@ public protocol ProjectShelfWindow: AnyObject {
     /// window ordered out.
     func landShelfSlide()
     func toggleShelfPanel(_ panel: ProjectShelfPanel)
+    /// Dims the project area and spins while another project loads to take
+    /// this window's place.
+    func setProjectAreaBusy(_ busy: Bool)
 }
 
 extension ComposableTabsWindowController: ProjectShelfWindow {
@@ -67,6 +70,7 @@ public final class EmptyProjectWindowController: SingleWindowController {
             persistsFrame: true
         )
         self.windowTitle = "Projects"
+        self.windowTitleSymbolName = "folder"
         self.windowStyleMask = [.titled, .closable, .resizable, .miniaturizable, .fullSizeContentView]
         self.minSize = NSSize(width: 400, height: 300)
         windowContent.onShelfVisibilityChange = { [weak self] in
@@ -101,6 +105,7 @@ public final class EmptyProjectWindowController: SingleWindowController {
     /// `ComposableTabsWindowController.configureWindow(_:)`.
     public override func configureWindow(_ window: NSWindow) {
         super.configureWindow(window)
+        toolbarDelegate.titleSymbolName = windowTitleSymbolName
         window.toolbar = toolbarDelegate.makeToolbar(identifier: "project.empty.toolbar")
         window.toolbarStyle = .unified
         window.titlebarAppearsTransparent = true
@@ -161,6 +166,10 @@ extension EmptyProjectWindowController: ProjectShelfWindow {
 
     public func toggleShelfPanel(_ panel: ProjectShelfPanel) {
         windowContent.toggleShelfPanel(panel)
+    }
+
+    public func setProjectAreaBusy(_ busy: Bool) {
+        windowContent.setContentBusy(busy)
     }
 }
 

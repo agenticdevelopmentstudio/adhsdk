@@ -1,15 +1,14 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "39a7192e-7e1e-4e93-b615-312a5ddf69b0",
     "title": "Hub Domain Access Client",
-    "domain": "adhsdk://cookbook/adh/hub/access",
     "type": "ingredient",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-10-04",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -39,7 +38,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "249f62de3e99dcc7",
+  "synced": "117f688e9b1b084b",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -58,7 +57,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

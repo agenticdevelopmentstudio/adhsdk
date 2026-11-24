@@ -25,8 +25,8 @@ class BucketAccessGroup:
         name (str):
         description (str):
         kind (str): 'everyone' (seeded) or 'custom'
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
         metadata (BucketAccessGroupMetadataType0 | None | Unset):
     """
 
@@ -36,8 +36,8 @@ class BucketAccessGroup:
     name: str
     description: str
     kind: str
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     metadata: BucketAccessGroupMetadataType0 | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -58,9 +58,9 @@ class BucketAccessGroup:
 
         kind = self.kind
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         metadata: dict[str, Any] | None | Unset
         if isinstance(self.metadata, Unset):
@@ -75,13 +75,13 @@ class BucketAccessGroup:
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
-                "bucketId": bucket_id,
+                "ecosystem_id": ecosystem_id,
+                "bucket_id": bucket_id,
                 "name": name,
                 "description": description,
                 "kind": kind,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
+                "created": created,
+                "updated": updated,
             }
         )
         if metadata is not UNSET:
@@ -98,9 +98,9 @@ class BucketAccessGroup:
         d = dict(src_dict)
         id = d.pop("id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        bucket_id = d.pop("bucketId")
+        bucket_id = d.pop("bucket_id")
 
         name = d.pop("name")
 
@@ -108,9 +108,9 @@ class BucketAccessGroup:
 
         kind = d.pop("kind")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         def _parse_metadata(data: object) -> BucketAccessGroupMetadataType0 | None | Unset:
             if data is None:
@@ -136,8 +136,8 @@ class BucketAccessGroup:
             name=name,
             description=description,
             kind=kind,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
             metadata=metadata,
         )
 

@@ -1,0 +1,65 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "deac5bd8-5e5f-43cf-bdfa-3a83b2298639",
+    "title": "Git Merge View",
+    "type": "ingredient",
+    "version": "1.0.1",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-15",
+    "modified": "2026-11-15",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "The git window's 3-way merge view: a conflicted file's ours and theirs side by side, aligned with filler rows and scroll-locked, over the result; Previous and Next step through the conflicts, Ours, Theirs, Both and Base choose each, and Save sends the resolved text to the delegate.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "git",
+      "ui",
+      "merge",
+      "conflicts"
+    ],
+    "depends-on": [
+      "b28294a3-4eba-4c42-a7e9-d50821ed8f75",
+      "5f9e0c63-382d-4803-bd50-a8fb90ea9e4d",
+      "6708bfd4-5b29-4bf9-b180-05904873906e"
+    ],
+    "related": [
+      "bdd3a72d-8810-439b-bad7-ec16233cb2a3",
+      "6a830cf8-0b95-4ffd-b175-f5cf481490c4"
+    ],
+    "references": [
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitMergeViewController.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitMergeLineModels.swift (adhsdk)"
+    ],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "f0ff3a6e020144f5",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

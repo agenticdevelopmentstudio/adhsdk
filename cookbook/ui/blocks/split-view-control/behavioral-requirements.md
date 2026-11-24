@@ -1,0 +1,22 @@
+
+- **layout-toggle-visible-on-wide-viewport**: On viewports ≥ 64rem, the control MUST render a layout toggle group with two options: tabbed (single pane) and split (side by side).
+- **layout-toggle-hidden-on-narrow-viewport**: On viewports < 64rem, the control MUST NOT render the layout toggle group.
+- **separator-between-toggles-in-tabbed-mode**: When the layout toggle is rendered AND the effective layout is tabbed, the control MUST render a vertical separator (1px, border-token color) between the layout toggle and the pane toggle; it MUST NOT render the separator when the effective layout is split.
+- **pane-toggle-visible-only-in-tabbed-layout**: The pane toggle group (edit/preview) MUST render when the effective layout is tabbed and MUST NOT render when the effective layout is split (both panes are already visible).
+- **layout-preference-persists-across-viewport-changes**: The user's layout preference MUST be retained when the viewport narrows below 64rem and restored when widening above 64rem.
+- **effective-layout-demoted-on-narrow-viewport**: On narrow viewports, the effective layout MUST be "tabbed" regardless of the stored layout preference.
+- **edit-label-customizable**: The edit toggle label MUST be customizable via the `editLabel` prop, defaulting to "Edit".
+- **preview-label-customizable**: The preview toggle label MUST be customizable via the `previewLabel` prop, defaulting to "Preview".
+- **flex-row-layout**: The control MUST render as a row with children center-aligned and 0.75rem spacing between them.
+- **empty-toggle-selection-ignored**: When a user clicks a toggle group item that is already selected, the toggle group hands back an empty array; the control MUST ignore this event and retain the current selection.
+- **layout-toggle-group-aria-label**: The layout toggle group MUST have an `aria-label` that reads `"${subject} layout"` where `subject` is the component-provided context string.
+- **pane-toggle-group-aria-label**: The pane toggle group MUST have an `aria-label` that reads `"${subject} pane"`.
+- **pane-toggle-aria-controls-container**: Each pane toggle item MUST have an `aria-controls` attribute pointing to the ID (`panesId`) of the pane container element (placed on the container, not on individual hidden panes).
+- **layout-toggle-item-accessible-names**: The layout toggle items MUST have matching `title` and `aria-label` values: "Single tabbed view" for the tabbed item, "Side by side view" for the split item.
+- **tabbed-icon-is-square**: The tabbed layout toggle MUST display a single-pane icon (React/Web: Lucide `Square`).
+- **split-icon-is-columns2**: The split layout toggle MUST display a two-column icon (React/Web: Lucide `Columns2`).
+- **edit-icon-is-pencil**: The edit pane toggle MUST display a pencil icon (React/Web: Lucide `Pencil`) before its label.
+- **preview-icon-is-eye**: The preview pane toggle MUST display an eye icon (React/Web: Lucide `Eye`) before its label.
+- **classname-merged**: The control MUST accept an optional `className` prop and merge it with the base row layout, with the passed classes applied after the base ones (React/Web: via the `cn()` utility).
+- **initial-layout-and-pane**: Before the user acts, `useSplitView()` MUST start with layout `tabbed` and pane `edit`; the host MAY override these through the `defaultLayout` and `defaultPane` options. A narrow viewport always shows `tabbed` regardless of `defaultLayout`.
+- **toggle-groups-expose-pressed-state**: Each toggle group MUST render as `role="group"` and each item as a button whose pressed state is exposed with `aria-pressed`; exactly one item per group is pressed at a time.

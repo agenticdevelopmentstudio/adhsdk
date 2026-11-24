@@ -88,6 +88,8 @@ export const PRODUCT_TOPICS = [
   // key → JSON config values this product's apps / backend read at runtime.
   { id: "feature-flags", label: "Feature flags", dividerAfter: false, features: ["feature-flags"] },
   { id: "server-bags", label: "Server bags", dividerAfter: false, features: ["server-bags"] },
+  // Offline sync: which catalog tables this product's apps keep on the device.
+  { id: "sync", label: "Offline sync", dividerAfter: false, features: ["sync"] },
   { id: "billing", label: "Billing", dividerAfter: false, features: ["billing"] },
   // ── The rows that came DOWN from the hub's workspace rail (2026-08-24) ──────────────────────
   // Each one is a surface OF a product — a product has customers, devices, domains, a store;

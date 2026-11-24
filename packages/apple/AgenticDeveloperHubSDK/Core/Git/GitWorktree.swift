@@ -8,23 +8,29 @@ public struct GitWorktree: Sendable, Equatable, Hashable {
     public let isMain: Bool
     public let isBare: Bool
     public let isDetached: Bool
+    /// `git worktree lock` was run on it (with or without a reason): `worktree remove` refuses
+    /// it unless forced twice, and `worktree prune` leaves it alone.
+    public let isLocked: Bool
 
-    public init(directory: URL, head: String?, branch: String?, isMain: Bool, isBare: Bool, isDetached: Bool) {
+    public init(directory: URL, head: String?, branch: String?, isMain: Bool, isBare: Bool, isDetached: Bool,
+                isLocked: Bool = false) {
         self.directory = directory
         self.head = head
         self.branch = branch
         self.isMain = isMain
         self.isBare = isBare
         self.isDetached = isDetached
+        self.isLocked = isLocked
     }
 
-    /// Parses `worktree list --porcelain` output into worktrees.
+    /// Parses `worktree list --porcelain` output into worktrees, NUL-terminated (`-z`) when
+    /// the output holds a NUL and newline-terminated otherwise.
     ///
     /// Records are separated by blank lines, but the parser does not rely on the
     /// blank line itself: it flushes the in-progress record whenever a new
     /// `worktree ` line starts, so a missing trailing blank line (or none between
     /// two records) still produces correct results. `bare` and `detached` are
-    /// value-less attribute lines; `branch` arrives as a full ref
+    /// value-less attribute lines, and `locked` is one with an optional reason; `branch` arrives as a full ref
     /// (`refs/heads/<name>`) and is shortened to `<name>`. Per porcelain's
     /// contract, the main worktree is always the first entry, so `isMain` is
     /// simply "was this the first record flushed".
@@ -35,6 +41,7 @@ public struct GitWorktree: Sendable, Equatable, Hashable {
         var branch: String?
         var isBare = false
         var isDetached = false
+        var isLocked = false
 
         func flush() {
             guard let path else { return }
@@ -48,11 +55,13 @@ public struct GitWorktree: Sendable, Equatable, Hashable {
                 branch: branch,
                 isMain: results.isEmpty,
                 isBare: isBare,
-                isDetached: isDetached
+                isDetached: isDetached,
+                isLocked: isLocked
             ))
         }
 
-        for rawLine in output.split(separator: "\n", omittingEmptySubsequences: false) {
+        let terminator: Character = output.contains("\0") ? "\0" : "\n"
+        for rawLine in output.split(separator: terminator, omittingEmptySubsequences: false) {
             let line = String(rawLine)
             if line.hasPrefix("worktree ") {
                 flush()
@@ -61,6 +70,7 @@ public struct GitWorktree: Sendable, Equatable, Hashable {
                 branch = nil
                 isBare = false
                 isDetached = false
+                isLocked = false
             } else if line.hasPrefix("HEAD ") {
                 head = String(line.dropFirst("HEAD ".count))
             } else if line.hasPrefix("branch ") {
@@ -70,6 +80,8 @@ public struct GitWorktree: Sendable, Equatable, Hashable {
                 isDetached = true
             } else if line == "bare" {
                 isBare = true
+            } else if line == "locked" || line.hasPrefix("locked ") {
+                isLocked = true
             }
         }
         flush()

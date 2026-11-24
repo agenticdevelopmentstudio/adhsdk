@@ -1,5 +1,5 @@
 
-Subsystem: the app's bundle identifier (falls back to the literal string `nil` if absent) | Category: the conforming provider's role name (e.g. the secure persistent provider, the embedded-database provider)
+Subsystem: the app's bundle identifier (current behavior, a known defect: falls back to the literal string `nil` if absent; a port SHOULD use a meaningful fallback) | Category: the conforming provider's role name (e.g. the secure persistent provider, the embedded-database provider)
 
 | Event | Level | Message |
 |-------|-------|---------|

@@ -1,6 +1,6 @@
 'use client'
 
-import type { AuthTokens, AuthUser } from './types'
+import { userFromV1, type AuthTokens, type AuthUser, type V1User } from './types'
 import { authConfig } from './config'
 
 /** Where the cached user identity lives — a sibling of the tokens key, so it's
@@ -24,9 +24,11 @@ function readJson<T>(key: string): T | null {
 }
 
 export interface BackendTokenFields {
+  /** The access token: `token` on every /v1 session response. */
   token?: string
+  /** Legacy spelling, still answered by the unversioned `/oauth/signin/exchange`. */
   accessToken?: string
-  // The backend also returns refreshToken in the JSON body, but we intentionally
+  // The backend also returns `refresh_token` in the JSON body, but we intentionally
   // don't read or persist it: refresh/revoke are cookie-first against the
   // HttpOnly refresh cookie, so keeping the refresh token out of localStorage
   // avoids exposing it to JS. tokensFromResponse stores refreshToken: '' to
@@ -34,9 +36,18 @@ export interface BackendTokenFields {
 }
 
 export function tokensFromResponse(data: BackendTokenFields): AuthTokens {
-  const accessToken = data.accessToken ?? data.token
+  const accessToken = data.token ?? data.accessToken
   if (!accessToken) throw new Error('Token response missing token/accessToken')
   return { accessToken, refreshToken: '' }
+}
+
+/** A /v1 session answer (`POST /v1/auth/sessions`, `/v1/auth/registrations`) once its
+ *  user is mapped onto {@link AuthUser}. */
+export type BackendAuthResponse = BackendTokenFields & { user: AuthUser }
+
+/** Read a /v1 session response body: the access token passes through, `user` is mapped. */
+export function sessionFromV1(data: BackendTokenFields & { user: V1User }): BackendAuthResponse {
+  return { token: data.token, accessToken: data.accessToken, user: userFromV1(data.user) }
 }
 
 const sessionListeners = new Set<() => void>()
@@ -140,13 +151,13 @@ export function readTokenSubject(): string | null {
 }
 
 /** The last user the backend confirmed for this session, cached so a returning
- *  visitor's signed-in UI can render from it immediately while /api/auth/me
+ *  visitor's signed-in UI can render from it immediately while /api/v1/account
  *  revalidates in the background. Only meaningful alongside readTokens(). */
 export function readUser(): AuthUser | null {
   const user = readJson<AuthUser>(userKey())
   // Fail-fast on a malformed / old-schema blob (truncated write, hand-edit): a
   // wrong shape would feed bad identity straight into the optimistic render, so
-  // treat it as absent and let the authoritative /api/auth/me bootstrap fill it.
+  // treat it as absent and let the authoritative /api/v1/account bootstrap fill it.
   if (!user || typeof user.id !== 'string' || !Array.isArray(user.capabilities)) return null
   return user
 }

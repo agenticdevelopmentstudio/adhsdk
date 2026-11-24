@@ -48,8 +48,10 @@ public enum SessionEnricher {
     public enum TitleSource: Sendable, Equatable {
         /// Stream the transcript file. `path` nil means "go find it".
         case transcriptFile(path: String?)
-        /// Read `transcript_lines`, falling back to the file only for a session
-        /// the importer has not stored at all (so nothing is silently missed).
+        /// Read the session's stored `custom-title` from events.db (Claude
+        /// messages, through `latestCustomTitle`), falling back to the file only
+        /// for a session events.db holds no messages for (so nothing is silently
+        /// missed).
         case importedLines
     }
 

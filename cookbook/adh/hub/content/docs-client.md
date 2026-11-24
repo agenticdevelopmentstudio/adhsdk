@@ -1,13 +1,12 @@
 ---
 id: 48ddd102-b78c-4198-b71d-25801082a5b2
 title: "Docs Client"
-domain: adhsdk://cookbook/adh/hub/content/docs-client
 type: ingredient
-version: 1.0.3
+version: 1.0.4
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -179,22 +178,20 @@ Not applicable — this is a data client (a stateless collection of async
 functions over HTTP), not a visual component.
 
 ## Conformance Test Vectors
-
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| HDD-001 | list-scoped-to-doc-marker | `docsApi.list({}, { workspace: "acme" })` | Underlying call is `markdownApi.list({}, { workspace: "acme", doc: true })`, producing the query string `/api/content/markdown?pageSize=200&doc=true&workspace=acme` |
+| HDD-001 | list-scoped-to-doc-marker | `docsApi.list({}, { workspace: "acme" })` | Underlying call is `markdownApi.list({}, { workspace: "acme", doc: true })`, producing a GET to `/api/v1/papers` whose query carries `doc=true`, `workspace=acme` and the pager's `limit=100`, and no `noted` |
 | HDD-002 | doc-marker-on-create | `docsApi.create({ content: "# Hello" })` | The POST body sent by `markdownApi.create` is `JSON.stringify({ content: "# Hello", doc: true })` |
 | HDD-003 | create-body-retains-note-field, create-may-double-file | `docsApi.create({ content: "x", note: true } as CreateDocBody)` | The POST body is `{ content: "x", note: true, doc: true }` — both markers set on one create call |
-| HDD-004 | id-ops-not-scoped-to-marker | `docsApi.get("note-only-id")`, where the document at that id was created with `note: true` and no `doc` marker | Resolves with that document's full row (no marker check is performed; the call carries no `doc` field at all) |
+| HDD-004 | id-ops-not-scoped-to-marker | `docsApi.get("note-only-id")`, where the document at that id was created with `note: true` and no `doc` marker | Resolves with that document's full row (no marker check is performed; the request to `/api/v1/papers/note-only-id` carries no `doc` or `noted` query field) |
 | HDD-005 | tags-array-guaranteed | Backend responds to `docsApi.create`'s POST with `{ id: "d1", title: "T", content: "x", category: null, visibility: "private" }` (no `tags` key) | Resolved `Doc.tags` equals `[]`, per `markdown.test.ts`'s `withTags` case "defaults a missing tags field to []" |
-| HDD-006 | category-tree-degrades-flat | Backend answers `GET /api/content/markdown/categories` with `{ items: ["Admin", "Meetings"] }` (no `nodes` key) | `docsApi.categories()` resolves to `[{ id: "Admin", name: "Admin", parentIds: [], sortOrder: 0 }, { id: "Meetings", name: "Meetings", parentIds: [], sortOrder: 1 }]`, per `markdown.test.ts`'s "rebuilds an older backend's flat names as roots, in the order it sent them" |
-| HDD-007 | tag-set-degrades-flat | Backend answers `GET /api/content/markdown/tags` with `{ items: ["draft", "final"] }` (no `nodes` key) | `docsApi.tagSet()` resolves to `[{ id: "draft", label: "draft" }, { id: "final", label: "final" }]`, per `markdown.test.ts`'s tag-node fallback case |
-| HDD-008 | create-category-conflict-message | Backend responds 409 to `POST /api/content/markdown/categories` for `{ name: "Meetings" }` | `docsApi.createCategory({ name: "Meetings" })` rejects with `Error` whose message is exactly `A category named "Meetings" already exists somewhere else.` |
-| HDD-009 | remove-is-void | Backend responds 204 to `DELETE /api/content/markdown/{id}` | `docsApi.remove(id)` resolves to `undefined`; no `authedJson` call (and therefore no response-body parse) occurs for this operation |
-| HDD-010 | taxonomy-ops-not-workspace-scoped | `taxonomyApi.renameCategory("c1", "Renamed")` | The request URL is `/api/content/categories/c1` with no `?workspace=` query segment, regardless of any workspace context the caller may be in |
-| HDD-011 | list-page-size-fixed | A workspace has 250 documents matching the doc marker and the given filters | `docsApi.list()` resolves with exactly 200 `DocSummary` rows; the 201st through 250th are omitted with no cursor or "more available" signal in the result |
-| HDD-012 | errors-propagate-unmodified | Backend responds 404 to `GET /api/content/markdown/{id}` | `docsApi.get(id)` rejects with the same error `authedJson` threw (a status-404 `Error`); `docsApi` performs no remapping |
-
+| HDD-006 | category-tree-degrades-flat | Backend answers `GET /api/v1/paper_categories` with `{ items: ["Admin", "Meetings"] }` (no `nodes` key) | `docsApi.categories()` resolves to `[{ id: "Admin", name: "Admin", parentIds: [], sortOrder: 0 }, { id: "Meetings", name: "Meetings", parentIds: [], sortOrder: 1 }]`, per `markdown.test.ts`'s "rebuilds an older backend's flat names as roots, in the order it sent them" |
+| HDD-007 | tag-set-degrades-flat | Backend answers `GET /api/v1/paper_tags` with `{ items: ["draft", "final"] }` (no `nodes` key) | `docsApi.tagSet()` resolves to `[{ id: "draft", label: "draft" }, { id: "final", label: "final" }]`, per `markdown.test.ts`'s tag-node fallback case |
+| HDD-008 | create-category-conflict-message | Backend responds 409 to `POST /api/v1/paper_categories` for `{ name: "Meetings" }` | `docsApi.createCategory({ name: "Meetings" })` rejects with `Error` whose message is exactly `A category named “Meetings” already exists somewhere else.` (curly quotes) |
+| HDD-009 | remove-is-void | Backend responds 204 to `DELETE /api/v1/papers/{id}` | `docsApi.remove(id)` resolves to `undefined`; `authedRequest` is used, so no response-body parse occurs for this operation |
+| HDD-010 | taxonomy-ops-not-workspace-scoped | `taxonomyApi.renameCategory("c1", "Renamed")` | The request URL is `/api/v1/content/categories/c1` with no query string (so no `?workspace=` segment), regardless of any workspace context the caller may be in |
+| HDD-011 | list-page-size-fixed | A workspace has 250 documents matching the doc marker and the given filters | `docsApi.list()` walks the /v1 collection in pages of `limit=100` (`starting_after` advancing to the last row's id while `has_more`) and resolves with all 250 `DocSummary` rows, in three requests |
+| HDD-012 | errors-propagate-unmodified | Backend responds 404 to `GET /api/v1/papers/{id}` | `docsApi.get(id)` rejects with the same error `authedJson` threw (a status-404 `Error`); `docsApi` performs no remapping |
 ## Edge Cases
 
 - **Empty filters object.** `docsApi.list({})` MUST return every doc-marked
@@ -389,9 +386,9 @@ logged.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/data/src/docs/docs.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/data/src/docs/docs.ts` | confirmed (1.0.4) |
 
 ## Design Decisions
 
@@ -446,22 +443,20 @@ logged.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
-| [error-response-handling](agenticdevelopercookbook://compliance/access-patterns#error-response-handling) | partial | Access Patterns |
-| [pagination-support](agenticdevelopercookbook://compliance/access-patterns#pagination-support) | failed | Access Patterns |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | partial | Reliability |
-| [data-minimization](agenticdevelopercookbook://compliance/privacy-and-data#data-minimization) | passed | Privacy and Data |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | partial | Access Patterns |
+| [adc.check.access-patterns.pagination-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/e29ce31a-67cb-5690-b2ca-b1065ccdaf1a) | failed | Access Patterns |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | partial | Reliability |
+| [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | Privacy and Data |
 
 `separation-of-concerns` passes: `docs.ts` owns no HTTP call, wire-shape
 knowledge, or taxonomy logic of its own — every operation is either a
 direct forward to `markdownApi`/`taxonomyApi` or a one-line marker merge
 (`doc-marker-on-create`, `list-scoped-to-doc-marker`). `unit-test-coverage`
-fails: `docs.ts` has no test file of its own, and neither of its two
-marker-merge lines is exercised by any test in the given sources; the
-existing coverage in `markdown.test.ts` tests `withTags`/`categoryNodes`/
-`tagNodes`, which this component depends on but does not itself invoke
-under test. `error-response-handling` is partial: only `createCategory`'s
+passes: `docs/__tests__/docs.test.ts` holds one passing test for each of
+the twelve conformance vectors (HDD-001 to HDD-012), running the real /v1
+pager over a stubbed `fetch`. `error-response-handling` is partial: only `createCategory`'s
 409 is mapped to a friendly message (`create-category-conflict-message`);
 every other documented backend status this client's calls can receive —
 403, 404, 500 — propagates unmodified with no per-status handling
@@ -480,6 +475,7 @@ marker; no additional data is collected or appended.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.4 | 2026-11-14 | Mike Fullerton | Conformance tests added (docs.test.ts, 12 of 12 vectors); vector text corrected to the /v1 wire (paths, curly quotes, full paging); unit-test-coverage now passed. |
 | 1.0.3 | 2026-10-04 | Mike Fullerton | Inverted prohibitions (none/neither/no X MUST) restated as MUST NOT. |
 | 1.0.2 | 2026-09-27 | Mike Fullerton | Moved into the concept grouping. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

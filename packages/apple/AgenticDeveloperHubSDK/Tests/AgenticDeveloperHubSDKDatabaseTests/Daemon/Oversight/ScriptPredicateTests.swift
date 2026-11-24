@@ -90,10 +90,11 @@ final class ScriptPredicateTests: XCTestCase {
     // MARK: - last_event_type (DB-backed)
 
     func testLastEventTypeCondition() throws {
-        try database.ingestEvent(
-            eventType: "Stop", timestamp: iso8601(),
-            hookData: ["session_id": "s", "cwd": "/tmp/s"]
-        )
+        let pipeline = URL(fileURLWithPath: tmpPath).deletingLastPathComponent()
+            .appendingPathComponent("pipeline")
+        let harness = try ClaudePipelineTestHarness(directory: pipeline, database: database)
+        try harness.ingest(ClaudePipelineTestHarness.event(
+            "Stop", sessionId: "s", timestamp: iso8601(), cwd: "/tmp/s"))
         XCTAssertTrue(evaluate(.condition(field: .lastEventType, operation: .equals, value: "Stop"), on: snapshot()))
         XCTAssertFalse(evaluate(
             .condition(field: .lastEventType, operation: .equals, value: "PreToolUse"), on: snapshot()

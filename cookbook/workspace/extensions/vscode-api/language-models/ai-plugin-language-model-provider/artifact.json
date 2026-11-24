@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "a602608c-c061-44b6-a7ab-829e798d6b0c",
     "title": "AI Plugin Language Model Provider",
-    "domain": "adhsdk://cookbook/workspace/extensions/vscode-api/language-models/ai-plugin-language-model-provider",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -26,14 +25,14 @@
       "streaming"
     ],
     "depends-on": [
-      "adhsdk://cookbook/ai/providers/provider-configuration",
-      "adhsdk://cookbook/ai/plugins/plugin-manager",
-      "adhsdk://cookbook/ai/plugins/plugin-descriptor",
-      "adhsdk://cookbook/ai/chat/chat-context",
-      "adhsdk://cookbook/ai/models/model-catalog",
-      "adhsdk://cookbook/ai/plugins/plugin-transport",
-      "adhsdk://cookbook/ai/plugins/stream-event",
-      "adhsdk://cookbook/ai/plugins/ai-plugin"
+      "a8054368-9885-4b83-90cf-5029728ab397",
+      "0a729d47-fc2d-427c-b474-26072dc8b336",
+      "39de0dff-2b26-4d3d-97a3-ebdbdb38846a",
+      "613d7a36-d0cd-4415-97be-d983b3d6c644",
+      "c8438764-89c9-4286-9b58-10c9cd175a97",
+      "7d5c5a1f-30df-460e-b6c4-7cfe9ab42784",
+      "2067e249-4f97-4575-b8ed-8f55f6dc96df",
+      "47eb19ef-2c42-4a52-a60b-54b6f01c8791"
     ],
     "related": [],
     "references": [
@@ -55,7 +54,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "6c19177107bf0998",
+  "synced": "f598002a1a23796d",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -74,7 +73,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

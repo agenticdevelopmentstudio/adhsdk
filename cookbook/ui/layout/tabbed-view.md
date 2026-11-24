@@ -1,13 +1,12 @@
 ---
 id: d1257c76-fb28-47a5-bc2b-d4fb1ef87b53
 title: "Multi-Edge Tabbed View"
-domain: adhsdk://cookbook/ui/layout/tabbed-view
 type: ingredient
-version: 1.2.1
+version: 1.4.0
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -35,8 +34,26 @@ The multi-edge tabbed view hosts up to four edge-docked tab bars — top, right,
 
 ## Behavioral Requirements
 
-- **top-edge-enabled-by-default**: The view MUST initialize with the top
-  edge enabled and the right, bottom, and left edges disabled.
+- **global-default-edges**: The view MUST initialize its enabled edges from
+  the app-wide tab positions setting (`tabs.positions`), whose default is the
+  top edge alone, and while it follows that setting MUST re-apply it whenever
+  the setting changes, preserving every edge's tabs.
+- **edges-never-empty**: The tab positions setting MUST always name at least
+  one edge: an empty stored value MUST read as the top edge alone, and a
+  change that would leave no edge enabled MUST be refused, leaving the
+  setting unchanged.
+- **explicit-edges-stop-following-global**: Enabling or disabling an edge
+  explicitly, or supplying an override set of edges, MUST stop the view
+  following the app-wide setting; clearing the override MUST make it follow
+  the app-wide setting again and apply its current value.
+- **single-edge-hosts-use-primary-edge**: A host that keeps its tabs on one
+  edge MUST place them on the view's primary edge, the first enabled edge in
+  the order top, left, right, bottom, and MUST move every tab, keeping order
+  and selection, to the new primary edge when the enabled edges change it.
+- **top-accessory-independent-of-edges**: A top accessory view MUST be pinned
+  directly above the shared content area whichever edges are enabled, so a
+  host's toolbar (such as a browser's address bar) stays at the top when its
+  tabs move to another edge.
 - **edge-toggle-updates-bar-visibility**: Once loaded, the view MUST update
   that edge's bar visibility to match its enabled state and rebuild the edge
   layout whenever an edge's enabled state is changed, and MUST do nothing (no
@@ -177,6 +194,12 @@ The multi-edge tabbed view hosts up to four edge-docked tab bars — top, right,
 - **explicit-group-override**: A caller MAY supply an explicit group id when
   creating a tab, differing from its own id, to tie multiple tab instances
   (typically one per edge) together as siblings of one logical tab.
+- **center-outline-is-optional**: The outline around the center content
+  MUST be drawn by default and MUST be removable by the owner, with the
+  content then filling the space the outline's inset took.
+- **tab-strips-are-optional**: The owner MAY hide the tab strips; hiding
+  and showing them MUST relay out the content without adding, removing or
+  reselecting any tab.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
 
 ## Appearance
@@ -268,7 +291,7 @@ The multi-edge tabbed view hosts up to four edge-docked tab bars — top, right,
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| multi-tabbed-001 | top-edge-enabled-by-default | Construct a new view | The top edge is enabled; the right, bottom, and left edges are disabled |
+| multi-tabbed-001 | global-default-edges | Construct a new view with `tabs.positions` at its default | The top edge is enabled; the right, bottom, and left edges are disabled |
 | multi-tabbed-002 | edge-toggle-updates-bar-visibility | View loaded; enable the bottom edge | The bottom edge's tab bar becomes visible (no longer hidden) in the view hierarchy; the edge layout is rebuilt |
 | multi-tabbed-003 | hidden-edge-retains-tabs | Add a tab on the bottom edge; disable the bottom edge; re-enable it | The bottom edge's tabs are unchanged throughout, and its button reappears once re-enabled |
 | multi-tabbed-004 | edge-state-change-triggers-fallback-activation | Active tab lives on the top edge; disable the top edge | Fallback activation runs; the active tab changes (to another tab or none) |
@@ -313,7 +336,13 @@ The multi-edge tabbed view hosts up to four edge-docked tab bars — top, right,
 | multi-tabbed-043 | Error states (Edge Cases) | Set a delegate, then let it deallocate (no strong reference remains); remove the last tab on an edge | The tab is removed from that edge's tabs (the mutation completes); no crash occurs even though the delegate reference is now empty |
 | multi-tabbed-044 | first-tab-on-enabled-edge-auto-activates | Edge has no tabs and is enabled; insert a tab at index 0 directly (not the append operation) | The inserted tab becomes active |
 | multi-tabbed-045 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
-
+| multi-tabbed-046 | global-default-edges | Set `tabs.positions` to the left edge; load a view | Left edge enabled; top, right and bottom disabled |
+| multi-tabbed-047 | edges-never-empty | Store an empty `tabs.positions`; read it | Reads as the top edge alone |
+| multi-tabbed-048 | edges-never-empty | `tabs.positions` is the left edge alone; disable the left edge in the setting | Refused; the setting is still the left edge alone |
+| multi-tabbed-049 | explicit-edges-stop-following-global | Load a view following the setting (left); enable the bottom edge explicitly; change the setting to right | View keeps left and bottom; after clearing the override it shows right alone |
+| multi-tabbed-050 | single-edge-hosts-use-primary-edge | Enabled edges right and bottom | Primary edge is right |
+| multi-tabbed-051 | single-edge-hosts-use-primary-edge | A single-edge host holds three tabs on top with the second selected; the enabled edges change to left | All three tabs are on the left in the same order, the second still selected |
+| multi-tabbed-052 | top-accessory-independent-of-edges | Set a top accessory; enable only the left edge | The accessory's bottom meets the content area's top; the accessory is not inside the left bar |
 ## Edge Cases
 
 - Null/empty input (MUST): Querying an edge's tabs MUST return an empty list
@@ -348,7 +377,10 @@ The multi-edge tabbed view hosts up to four edge-docked tab bars — top, right,
   another tab's content; callers MUST supply distinct content per tab, and
   the platform's own content-containment mechanism is the only thing that
   reacts to a violation.
-
+- Unchecking the last enabled edge, from settings or the View menu, is
+  refused and the control shows the edge as still enabled.
+- A view whose host stored its own edges (a project's tab bar choice) uses
+  those and ignores the app-wide setting until the stored choice is removed.
 ## Configuration
 
 | Option | Type | Default | Description |
@@ -359,7 +391,10 @@ The multi-edge tabbed view hosts up to four edge-docked tab bars — top, right,
 | `centerBackgroundColor` | Color (optional) | None | Overrides the shared content area's fill; unset falls back to the `windowBackground` role. |
 | `centerOutlineColor` | Color (optional) | None | Overrides the shared content area's `1pt` border color; unset falls back to the palette's `outline` role. |
 | Tab start inset | Number (points) per edge | `8` | Where a bar's first tab begins, measured along the bar from its start. |
-| Edge enabled state | Boolean per edge | `true` for the top edge; `false` for the right/bottom/left edges | Whether an edge's tab bar and tabs are shown at all. |
+| Edge enabled state | Boolean per edge | From `tabs.positions` while following the app-wide setting | Whether an edge's tab bar and tabs are shown at all. |
+| `tabs.positions` | Set of edges (never empty) | The top edge alone | App-wide tab positions, set from System > General > Window Behavior > Tab position and View > Tab Position; a view or pane override takes precedence (a browser pane's is `browser.tabs.positions`). |
+| Follows global tab positions | Boolean | `true` | Whether the view applies `tabs.positions`; becomes `false` on an explicit edge change or override. |
+| Top accessory | View (optional) | None | Pinned above the shared content area regardless of enabled edges. |
 
 ## Deep Linking
 
@@ -535,9 +570,12 @@ Not applicable: this concept contains no logging call of any kind.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/MultiTabbedViewController.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/MultiTabbedViewController.swift` | confirmed (1.3.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/TabPositionSetting.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/TabPositionMenuContributions.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/TabPositionsSettingView.swift` | unverified |
 
 ## Design Decisions
 
@@ -603,11 +641,11 @@ here, per source fidelity, rather than smoothed over. (AppKit/UIKit.)
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | failed | Accessibility |
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | Accessibility |
-| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | failed | Accessibility |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
+| [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | failed | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 Keyboard-navigable is failed because `TabButton`/`TabItemHostView` have no
 key-view-loop or `keyDown` wiring (see Accessibility).
@@ -634,3 +672,5 @@ compliance-catalog checks, so they are not listed here.
 | 1.1.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/layout/. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added separation-of-concerns and unit-test-coverage compliance rows. Added the confines-to-ui-thread requirement and vector. |
+| 1.3.0 | 2026-11-14 | Mike Fullerton | Center outline and tab strips can be hidden |
+| 1.4.0 | 2026-11-15 | Mike Fullerton | Global tab positions: edges follow tabs.positions (default top, never empty) until set explicitly; single-edge hosts use the primary edge; top accessory independent of edges. View > Tab Position menu, System > General Tab position row, browser pane override `browser.tabs.positions`. |

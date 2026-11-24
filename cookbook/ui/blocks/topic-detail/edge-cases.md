@@ -1,0 +1,22 @@
+
+- **Empty list**: MUST show `emptyLabel` in a paragraph. With a self-filtering rail and an empty result the paragraph MUST read "Nothing matches" with the query; a controlled host keeps its own label, because its empty list may still be loading.
+- **No match for selectedId**: when `selectedId` is null or unknown, no row is active (unless `railSlotActive`).
+- **Falsy icon**: a `false` icon (from a conditional) MUST fall back to the ring, because the fallback uses `||`.
+- **Preview inputs**: blank or whitespace-only preview renders nothing; a fractional, negative or too-large `previewLines` resolves to a valid 0-4 clamp.
+- **Covered versus uncovered re-click**: covered is a no-op; uncovered re-fires `onSelect` and the owner decides whether to toggle.
+- **Link row selected**: a link row's click is reported to `onSelect` by the list; `TopicDetail` runs the link instead. A host that owns its own `TopicRail` MUST do the same via `topicLinkOf`.
+- **Delete failure**: the error is swallowed by the dialog logic and left to the host's `onDelete`; this component shows nothing about it.
+- **Concurrent delete and cancel**: Cancel MUST do nothing while a delete is running.
+- **Collapse while filter open**: the toolbar leaves with the field open, so the panel and suggestions MUST NOT show.
+- **Query changes under a controlled host**: the highlight follows a topic id, so a late-arriving list keeps the highlight on the same topic, or the first suggestion if that id is gone.
+- **Case-folding length change**: positions are mapped per character, so the underline lands on the right letters.
+- **Fit with no layout**: a zero measurement (jsdom, a hidden ancestor) reports nothing and leaves the caller's width.
+- **Fit range at a non-16px root**: the range is scaled by `rootFontPx()` / 16; with no document it is 16.
+- **Fit while narrowed**: the measure is skipped while a query narrows the rows, so the width does not shrink to the matches.
+- **Offline or disconnected**: not applicable: the component performs no network access; `onDelete` and `onPrefetch` are caller functions.
+- **Concurrent access**: not applicable: state is local React state with one prefetch timer and one flash timer per list.
+- **Unmount**: prefetch and flash timers MUST be cleared on unmount.
+- **SSR**: `rootFontPx()` returns 16 without a `document`.
+- **Mobile**: only the toggle and drag handle hide, and `--rail-w` is ignored, so a collapsed rail still spans the full column.
+- **Label suffix without inline sublabel**: the row shows the label and suffix only; its `sublabel` is not rendered. A host that needs both MUST set `inlineSublabel`.
+

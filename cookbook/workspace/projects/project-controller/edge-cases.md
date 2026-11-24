@@ -9,9 +9,10 @@
   repository with no linked worktrees) or many; the loops over checkouts
   being added and over held branch controllers run zero, one, or many
   times with no special case for either end (MUST). The enabled edges
-  default to the single top edge (**default-enabled-edge**) when nothing
-  was stored, so a project's very first reconcile always creates exactly
-  one tab per checkout rather than one per available edge.
+  default to the app-wide tab positions (**default-enabled-edge**) when
+  no choice was stored, so a project's very first reconcile creates one
+  tab per checkout per app-wide edge — exactly one per checkout under the
+  default top-only setting — rather than one per available edge.
 - **Concurrent access**: Opening and refreshing checkouts MUST be safe to
   call concurrently because the serialized reconcile operation chains each
   call onto whatever reconcile is already running, so two overlapping

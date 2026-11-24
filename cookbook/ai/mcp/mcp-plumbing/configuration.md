@@ -10,8 +10,5 @@
 | `mcp.serverConfigurations` (settings key) | `[MCPServerConfiguration]` | `[]` | Non-secret server descriptions, routed to the regular settings provider. |
 | `mcp.serverSecrets` (settings key) | `MCPServerSecrets` (`[String: [String: String]]`) | `[:]` | Secret environment values keyed by server id, routed to the secure (Keychain) settings provider. |
 | `logger` (parameter to constructing the subprocess transport) | `Logger?` | `nil` (a no-op logger) | Diagnostic logger for the transport's own debug messages; production code does not supply one. |
-| `appName`, `appVersion` (parameters to constructing the host MCP server) | `String` | none — required | Reported by the `host_app_info` tool. |
-| `pluginNames` (parameter to constructing the host MCP server) | `[String]` | `[]` | Reported by the `host_app_info` tool, joined by `", "` or rendered as `(none)` when empty. |
-| `openChatWindow` (parameter to constructing the host MCP server) | a shareable callback taking no arguments and returning nothing | a no-op callback | Invoked when the `host_open_chat_window` tool is called. |
 | `abandonedConnectBudgetSeconds` (a fixed constant owned by the client) | `TimeInterval` | `1.0` | Fixed wall-clock bound teardown gives an in-flight connect before abandoning it; not exposed to callers. |
 

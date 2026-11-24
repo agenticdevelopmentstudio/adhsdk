@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.4 | 2026-11-14 | Mike Fullerton | Conformance tests added (use-live-snapshot.test.ts, use-live-snapshot.dom.test.tsx, 21 of 21 vectors); vector 015 and requirement result-blind corrected to match the source (blind is the snapshot's own flag); unit-test-coverage now passed. |
 | 1.2.3 | 2026-10-04 | Mike Fullerton | Inverted prohibitions (none/neither/no X MUST) restated as MUST NOT. |
 | 1.2.2 | 2026-10-04 | Mike Fullerton | One client-only requirement, worded the same across the dashboard state specs, with a test vector; the web module's "use client" directive is noted in Platform Notes. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Restored inverted prohibitions: a 'Neither … MUST' rule now reads 'MUST NOT'. |

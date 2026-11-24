@@ -28,14 +28,14 @@ class DmReadRequest:
         field_dict.update(self.additional_properties)
         field_dict.update({})
         if message_id is not UNSET:
-            field_dict["messageId"] = message_id
+            field_dict["message_id"] = message_id
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        message_id = d.pop("messageId", UNSET)
+        message_id = d.pop("message_id", UNSET)
 
         dm_read_request = cls(
             message_id=message_id,

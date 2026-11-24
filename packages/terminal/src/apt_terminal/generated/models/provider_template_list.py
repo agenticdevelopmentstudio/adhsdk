@@ -48,7 +48,7 @@ class ProviderTemplateList:
                 "items": items,
                 "total": total,
                 "page": page,
-                "pageSize": page_size,
+                "page_size": page_size,
             }
         )
 
@@ -70,7 +70,7 @@ class ProviderTemplateList:
 
         page = d.pop("page")
 
-        page_size = d.pop("pageSize")
+        page_size = d.pop("page_size")
 
         provider_template_list = cls(
             items=items,

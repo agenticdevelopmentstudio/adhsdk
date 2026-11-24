@@ -56,14 +56,14 @@ class PersonaSheetBadgesItem:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "badgeId": badge_id,
+                "badge_id": badge_id,
                 "name": name,
                 "description": description,
                 "icon": icon,
                 "tier": tier,
-                "badgeLine": badge_line,
-                "awardedAt": awarded_at,
-                "rarityPct": rarity_pct,
+                "badge_line": badge_line,
+                "awarded_at": awarded_at,
+                "rarity_pct": rarity_pct,
             }
         )
 
@@ -72,7 +72,7 @@ class PersonaSheetBadgesItem:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        badge_id = d.pop("badgeId")
+        badge_id = d.pop("badge_id")
 
         name = d.pop("name")
 
@@ -87,16 +87,16 @@ class PersonaSheetBadgesItem:
                 return data
             return cast(None | str, data)
 
-        badge_line = _parse_badge_line(d.pop("badgeLine"))
+        badge_line = _parse_badge_line(d.pop("badge_line"))
 
-        awarded_at = d.pop("awardedAt")
+        awarded_at = d.pop("awarded_at")
 
         def _parse_rarity_pct(data: object) -> float | None:
             if data is None:
                 return data
             return cast(float | None, data)
 
-        rarity_pct = _parse_rarity_pct(d.pop("rarityPct"))
+        rarity_pct = _parse_rarity_pct(d.pop("rarity_pct"))
 
         persona_sheet_badges_item = cls(
             badge_id=badge_id,

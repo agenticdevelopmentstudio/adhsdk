@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
-"""Every repo-relative `docs/…md` or `recipes/…md` citation in this repo must resolve,
+"""Every repo-relative `docs/…md`, `cookbook/…md` or `recipes/…md` citation in this repo must resolve,
 and so must every `agenticdeveloperhub://recipes/<slug>` citation — the recipe corpus's
 own cross-reference scheme, used in `domain:` (self-resolving), `ingredients:`/`related:`
 frontmatter lists, and an ingredient table's Domain column.
 
 AND every repo-relative citation of a SOURCE path made from inside `docs/` or `recipes/`.
+
+The root `recipes/` corpus moved into `cookbook/` with the cookr format 2 upgrade, so a
+`recipes/…md` path or a `agenticdeveloperhub://recipes/<slug>` URI left anywhere now
+reports as dangling: cite the spec's `cookbook/<group>/<name>/` folder or its rdid instead.
+Source-path citations inside `cookbook/` itself are not checked (they never were).
 
 That last clause is the widening, and it is worth saying why. The `.md`-only regex was
 honest about its scope and completely green while 42 recipe citations pointed at
@@ -41,7 +46,7 @@ from pathlib import Path
 
 # A repo-relative doc path. The lookbehind rejects `./docs/x.md` and `../docs/x.md`
 # (relative to the citing file, so not ours to resolve) and `https://…/docs/x.md`.
-CITATION = re.compile(r"(?<![./\w-])((?:docs|recipes)/[\w./-]+\.md)\b")
+CITATION = re.compile(r"(?<![./\w-])((?:docs|recipes|cookbook)/[\w./-]+\.md)\b")
 
 # The recipe corpus's own cross-reference scheme: `adhsdk://recipes/<slug>`, or the
 # older `agenticdeveloperhub://recipes/<slug>` a few recipes still carry, used in a recipe's `domain:` (self-resolving — the file always exists, it's citing

@@ -518,7 +518,7 @@ export function SchemasPane({
                   // ecosystem and acts there on every verb. As a plain filter it read a non-admin's
                   // product bucket as empty and refused every create (Mike, 2026-09-25).
                   scopeEcosystemId={bucket.ecosystemId}
-                  createDefaults={{ ecosystemId: bucket.ecosystemId }}
+                  createDefaults={{ ecosystem_id: bucket.ecosystemId }}
                   onGuardChange={registerGuard}
                 />
               ) : (
@@ -578,7 +578,7 @@ export function SchemasPane({
                 // disabled second button naming the same action.
                 showDelete={false}
                 api={{
-                  path: "/bucket/buckets/{id}",
+                  path: "/v1/buckets/{id}",
                   pathValues: { id: form.selectedId },
                   title: "Bucket API",
                 }}

@@ -9,8 +9,8 @@
 - **Storage**: Everything persisted here (tabs, pane state, project
   settings, extra directories) is written to the one database this
   project was constructed with, scoped by the repository's id; see
-  `adhsdk://cookbook/workspace/projects/project-database` and
-  `adhsdk://cookbook/workspace/projects/project-database-layout`
+  [adhsdk.ingredient.workspace.projects.project-database](cookbook:c212ea39-10e7-4146-89dd-36edb3b3455a) and
+  [adhsdk.ingredient.workspace.projects.project-database-layout](cookbook:ded9b397-958d-437d-8235-48ef85ae7386)
   for that store's own durability guarantees. The cache directory names,
   but does not itself populate, a filesystem location beside the
   database.

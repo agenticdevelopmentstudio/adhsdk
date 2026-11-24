@@ -77,6 +77,16 @@ public final class DocumentTabsViewController: MultiTabbedViewController {
     /// its highlight to follow.
     public var onFocusedDocumentChange: ((URL?) -> Void)?
 
+    /// Every editor here opens Markdown in one pane on the preview
+    /// (`DocumentEditorViewController.opensMarkdownOnSinglePreview`).
+    public var opensMarkdownOnSinglePreview = false {
+        didSet {
+            for root in splitsByTabID.values {
+                editors(in: root).forEach { $0.opensMarkdownOnSinglePreview = opensMarkdownOnSinglePreview }
+            }
+        }
+    }
+
     /// Fires with a file any editor in this container asked to open — a
     /// go-to-definition target, or a file chosen from a breadcrumb popover.
     /// Routed out to the session rather than opened directly: choosing in the
@@ -97,7 +107,8 @@ public final class DocumentTabsViewController: MultiTabbedViewController {
         self.paneNodeID = paneNodeID
         super.init()
         delegate = self
-        setEdgeEnabled(.top, true)
+        // One edge of tabs, on whichever the app-wide tab positions put first.
+        keepsTabsOnPrimaryEdge = true
     }
 
     @available(*, unavailable)
@@ -136,7 +147,7 @@ public final class DocumentTabsViewController: MultiTabbedViewController {
     /// for another pane of the window entirely — is deliberately not recorded:
     /// the answer has to outlive the click that asks for it.
     private func firstResponderDidMove() {
-        guard let tabID = selectedTabID(on: .top), let root = splitsByTabID[tabID] else { return }
+        guard let tabID = selectedTabID(on: primaryEdge), let root = splitsByTabID[tabID] else { return }
         guard let pane = panes(in: root).first(where: { $0.containsFirstResponder }) else { return }
         rememberFocus(pane, inTab: tabID)
         reportFocusedDocument()
@@ -155,7 +166,7 @@ public final class DocumentTabsViewController: MultiTabbedViewController {
     /// No-op for an editor that is not in the tab on screen: only a visible pane
     /// can have been the one the user acted in.
     private func rememberFocus(of editor: DocumentEditorViewController) {
-        guard let tabID = selectedTabID(on: .top), let root = splitsByTabID[tabID],
+        guard let tabID = selectedTabID(on: primaryEdge), let root = splitsByTabID[tabID],
               let pane = panes(in: root).first(where: { $0.contentViewController === editor })
         else { return }
         rememberFocus(pane, inTab: tabID)
@@ -188,6 +199,10 @@ public final class DocumentTabsViewController: MultiTabbedViewController {
         // The Document pane's width belongs to the window's tree, not to how
         // many editors this tab happens to hold — see `clampsToContainer`.
         root.clampsToContainer = true
+        // The tab names the document, and each editor carries its own
+        // back/forward and breadcrumb row, so the editors have no pane title
+        // bar (and so no gear) of their own.
+        root.showsPaneTitleBars = false
         // These editors are not layout nodes: they exist only inside this
         // pane's own stored layout, so what they remember has to be filed
         // against the node the window *does* know, or the next `saveTabs`
@@ -216,7 +231,7 @@ public final class DocumentTabsViewController: MultiTabbedViewController {
     private func addTab(root: ComposableTabsViewController, title: String) -> UUID {
         let tab = Tab(title: title, viewController: root)
         splitsByTabID[tab.id] = root
-        addTab(tab, on: .top)
+        addTab(tab, on: primaryEdge)
         wireTitles(in: root, tabID: tab.id)
         return tab.id
     }
@@ -236,6 +251,7 @@ public final class DocumentTabsViewController: MultiTabbedViewController {
     private func wireTitles(in root: ComposableTabsViewController, tabID: UUID) {
         for editor in editors(in: root) where !wiredEditors.contains(editor) {
             wiredEditors.add(editor)
+            editor.opensMarkdownOnSinglePreview = opensMarkdownOnSinglePreview
             let previousTitleHandler = editor.onTitleChange
             editor.onTitleChange = { [weak self] in
                 previousTitleHandler?()
@@ -278,13 +294,57 @@ public final class DocumentTabsViewController: MultiTabbedViewController {
     public func openInNewTab(_ url: URL) {
         let root = makeTabRoot()
         let newTabID = addTab(root: root, title: url.lastPathComponent)
-        selectTab(id: newTabID, on: .top)
+        selectTab(id: newTabID, on: primaryEdge)
         focusedEditor(in: root)?.fileURL = url
         persistTabs()
     }
 
+    /// Shows `url` without disturbing what is already open: the tab already
+    /// showing it is selected; failing that it fills the selected tab's
+    /// focused editor when that editor is empty; failing that it opens in a
+    /// new tab. What a Document window does with a file it is handed.
+    ///
+    /// Files compare by `canonicalFileURL`, so a symlink and the file it
+    /// names are one tab and one buffer.
+    public func show(_ url: URL) {
+        if selectTab(showing: url) { return }
+        if let editor = focusedEditor, editor.fileURL == nil {
+            editor.fileURL = url
+            return
+        }
+        openInNewTab(url)
+    }
+
+    /// Selects the tab whose editor shows `url`, and focuses that editor.
+    ///
+    /// - Returns: false, changing nothing, when no tab shows it.
+    @discardableResult
+    public func selectTab(showing url: URL) -> Bool {
+        guard let (tabID, editor) = tab(showing: url) else { return false }
+        selectTab(id: tabID, on: primaryEdge)
+        rememberFocus(of: editor)
+        retitle(tabID)
+        reportFocusedDocument()
+        persistTabs()
+        return true
+    }
+
+    /// Whether a tab's editor shows `url`.
+    public func holds(_ url: URL) -> Bool { tab(showing: url) != nil }
+
+    private func tab(showing url: URL) -> (UUID, DocumentEditorViewController)? {
+        let target = url.canonicalFileURL
+        for tab in tabs(on: primaryEdge) {
+            guard let root = splitsByTabID[tab.id],
+                  let editor = editors(in: root).first(where: { $0.fileURL?.canonicalFileURL == target })
+            else { continue }
+            return (tab.id, editor)
+        }
+        return nil
+    }
+
     public func openToTheSide(_ url: URL) {
-        guard let tabID = selectedTabID(on: .top),
+        guard let tabID = selectedTabID(on: primaryEdge),
               let root = splitsByTabID[tabID],
               let focused = focusedPane(in: root) else { return }
 
@@ -316,12 +376,12 @@ public final class DocumentTabsViewController: MultiTabbedViewController {
     // MARK: - Inspection
 
     public var focusedEditor: DocumentEditorViewController? {
-        guard let tabID = selectedTabID(on: .top), let root = splitsByTabID[tabID] else { return nil }
+        guard let tabID = selectedTabID(on: primaryEdge), let root = splitsByTabID[tabID] else { return nil }
         return focusedEditor(in: root)
     }
 
     public func editors(inTabAt index: Int) -> [DocumentEditorViewController] {
-        let all = tabs(on: .top)
+        let all = tabs(on: primaryEdge)
         guard index >= 0, index < all.count, let root = splitsByTabID[all[index].id] else { return [] }
         return editors(in: root)
     }
@@ -332,13 +392,13 @@ public final class DocumentTabsViewController: MultiTabbedViewController {
     /// things with close boxes on them, which is what a test of the close box
     /// has to hold.
     public func panes(inTabAt index: Int) -> [ComposableTabsPaneViewController] {
-        let all = tabs(on: .top)
+        let all = tabs(on: primaryEdge)
         guard index >= 0, index < all.count, let root = splitsByTabID[all[index].id] else { return [] }
         return panes(in: root)
     }
 
     public func paneFractions(inTabAt index: Int) -> [CGFloat] {
-        let all = tabs(on: .top)
+        let all = tabs(on: primaryEdge)
         guard index >= 0, index < all.count, let root = splitsByTabID[all[index].id] else { return [] }
         return absoluteFractions(of: root.snapshotNode())
     }
@@ -410,11 +470,11 @@ public final class DocumentTabsViewController: MultiTabbedViewController {
     /// stores nothing itself, and the project's own tab tables belong to the
     /// window, not to a pane inside it.
     public func persistTabs() {
-        let snapshots = tabs(on: .top).compactMap { splitsByTabID[$0.id]?.snapshotNode() }
+        let snapshots = tabs(on: primaryEdge).compactMap { splitsByTabID[$0.id]?.snapshotNode() }
         let records = snapshots.map { StoredTab(root: LayoutNodeCodable($0)) }
         let stored = StoredTabs(
             tabs: records,
-            selectedIndex: tabs(on: .top).firstIndex { $0.id == selectedTabID(on: .top) } ?? 0
+            selectedIndex: tabs(on: primaryEdge).firstIndex { $0.id == selectedTabID(on: primaryEdge) } ?? 0
         )
         guard let data = try? JSONEncoder().encode(stored),
               let json = String(data: data, encoding: .utf8) else { return }
@@ -463,9 +523,9 @@ public final class DocumentTabsViewController: MultiTabbedViewController {
             let tabID = addTab(root: makeTabRoot(from: record.root.node), title: "Untitled")
             retitle(tabID)
         }
-        let all = tabs(on: .top)
+        let all = tabs(on: primaryEdge)
         if stored.selectedIndex >= 0, stored.selectedIndex < all.count {
-            selectTab(id: all[stored.selectedIndex].id, on: .top)
+            selectTab(id: all[stored.selectedIndex].id, on: primaryEdge)
         }
     }
 }
@@ -488,7 +548,7 @@ extension DocumentTabsViewController: MultiTabbedViewControllerDelegate {
     /// The floor itself, reached from the tab's close box and from the last
     /// editor pane's — see `onLastPaneCloseRequest` in `makeTabRoot`.
     func closeTab(_ tabID: UUID) {
-        guard tabs(on: .top).count > 1 else {
+        guard tabs(on: primaryEdge).count > 1 else {
             // Every editor in the tab, not only the focused one: what the user
             // clicked closes the *tab*, and `retitle` renames it "Untitled" the
             // moment the focused editor empties — a tab named after nothing while

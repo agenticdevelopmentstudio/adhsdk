@@ -45,6 +45,18 @@ public protocol PaneHost: AnyObject {
     /// answer depends on the moment should keep answering `true` and refuse in
     /// `paneDidRequestClose(_:)` — this is for a rule, not for a mood.
     func canClose(_ pane: PaneViewController) -> Bool
+
+    /// Whether zooming this pane is a thing the host would agree to. The same
+    /// kind of question as `canClose(_:)`: a rule, answered with a dim button
+    /// rather than a live one that does nothing — a pane kept beside another
+    /// by a layout relationship never takes over the tab.
+    func canZoom(_ pane: PaneViewController) -> Bool
+
+    /// The pane's content asked for this width: set the divider of the nearest
+    /// side-by-side split so the pane (or the subtree holding it) is that wide,
+    /// within the minimums of it and its neighbour. A request, like the others —
+    /// a host with no divider to move ignores it.
+    func paneDidRequestThickness(_ pane: PaneViewController, thickness: CGFloat)
 }
 
 public extension PaneHost {
@@ -52,4 +64,10 @@ public extension PaneHost {
     /// Defaulted, because most hosts have no rule to state: a container that
     /// will hand back any pane it is asked for never has to write this.
     func canClose(_ pane: PaneViewController) -> Bool { true }
+
+    /// Defaulted for the same reason as `canClose(_:)`.
+    func canZoom(_ pane: PaneViewController) -> Bool { true }
+
+    /// Defaulted to nothing: a host with no dividers has no width to give.
+    func paneDidRequestThickness(_ pane: PaneViewController, thickness: CGFloat) {}
 }

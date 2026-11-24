@@ -2,28 +2,46 @@
 
 import { useCallback, useMemo } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
+import { listV1Page, withV1Query } from "./http";
 
-/** One server page of an append-only log. */
+/**
+ * One `/v1` page as a window page: `limit` rows after the cursor. The one place a windowed list
+ * turns its `(after, pageSize)` into a request, so no caller assembles `starting_after` itself.
+ */
+export async function fetchV1WindowPage<T>(
+  url: string,
+  after: string | undefined,
+  pageSize: number,
+): Promise<WindowPage<T>> {
+  const { data, hasMore } = await listV1Page<T>(
+    withV1Query(url, { limit: pageSize, starting_after: after }),
+  );
+  return { items: data, hasMore };
+}
+
+/** One server page of an append-only log. `/v1` collections carry `has_more`, never a total. */
 export interface WindowPage<T> {
   items: T[];
-  total: number;
+  hasMore: boolean;
 }
 
 export interface UseWindowedListOptions<T> {
   /** React Query key for the whole window. Must not contain anything the operator types. */
   key: readonly unknown[];
-  /** Fetch one server page, 1-based. */
-  fetchPage: (page: number, pageSize: number) => Promise<WindowPage<T>>;
+  /**
+   * Fetch one server page. `after` is the id of the last row already held (the `/v1`
+   * `starting_after` cursor), `undefined` for the first page.
+   */
+  fetchPage: (after: string | undefined, pageSize: number) => Promise<WindowPage<T>>;
   /** How many rows one fetch brings back. */
   pageSize: number;
   /**
    * A row's stable identity, used to keep the window free of duplicates.
    *
    * Required, not optional, because the duplicate is not a rare case. Growing this window is
-   * OFFSET paging over a log that is still being written to: one event inserted between the first
-   * fetch and the second pushes every row down a place, so the row that was last on page one is
-   * first on page two and the operator sees it twice. React would then see two rows with the same
-   * key, and the list's selection would count one row as two.
+   * a log that is still being written to: a row can reappear on a later page, so the operator would
+   * see it twice. React would then see two rows with the same key, and the list's selection would
+   * count one row as two. It is also the cursor the next page is asked to start after.
    */
   getRowId: (item: T) => string;
 }
@@ -36,8 +54,6 @@ export interface WindowedList<T> {
   /** The server has rows beyond the window. */
   hasMore: boolean;
   loadMore: () => void;
-  /** What the server says the whole log holds — which may be a saturating estimate. */
-  total: number;
   error: unknown;
 }
 
@@ -57,9 +73,7 @@ export interface WindowedList<T> {
  * exchanging one set for another — so a filter is never narrowing a slice it cannot see past.
  *
  * The window is the newest N, because these logs are read newest-first and an operator looking for
- * something older narrows rather than walks. `total` is what the server reports and is often a
- * capped estimate (the audit route saturates its count deliberately, to keep a full scan off an
- * unbounded table), so it is a caption, never arithmetic anything depends on.
+ * something older narrows rather than walks.
  */
 export function useWindowedList<T>({
   key,
@@ -70,10 +84,14 @@ export function useWindowedList<T>({
   const query = useInfiniteQuery({
     queryKey: [...key, pageSize],
     queryFn: ({ pageParam }) => fetchPage(pageParam, pageSize),
-    initialPageParam: 1,
-    // The NEXT page is asked for only when the last one came back full. A short page is the end of
-    // the log, and offering "load more" there gives the operator a button that fetches nothing.
-    getNextPageParam: (last, all) => (last.items.length < pageSize ? undefined : all.length + 1),
+    initialPageParam: undefined as string | undefined,
+    // The NEXT page is asked for only while the server says `has_more`, starting after the last
+    // row held. Offering "load more" at the end of the log gives the operator a button that
+    // fetches nothing.
+    getNextPageParam: (last) => {
+      const tail = last.items.at(-1);
+      return last.hasMore && tail !== undefined ? getRowId(tail) : undefined;
+    },
   });
 
   // FIRST SIGHTING WINS. A row that reappears on a later page because the log grew underneath the
@@ -104,10 +122,6 @@ export function useWindowedList<T>({
     isFetchingMore: query.isFetchingNextPage,
     hasMore: query.hasNextPage,
     loadMore,
-    // The LATEST page's count, not the first's. Both are the server's answer to the same
-    // question, but the first was answered when the window opened and a log that has grown
-    // since would keep reporting the number it had then.
-    total: query.data?.pages.at(-1)?.total ?? 0,
     error: query.error,
   };
 }

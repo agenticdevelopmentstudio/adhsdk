@@ -2,7 +2,7 @@
 This recipe covers this toolkit's own half of the theme engine, layered on
 top of a shared model — a theme, its color roles, and the semantic palette
 that derives colors from it — specified separately by
-[Theme Engine (shared model)](adhsdk://recipes/theme-engine).
+Theme Engine (shared model) ([adhsdk.ingredient.ui.theme.theme-engine](cookbook:0e35ddf2-3e87-4a5a-9fd9-24bafc7325b6)).
 This layer adds four things on top of that model, each in its own concern:
 
 - a syntax-role vocabulary (the ten syntax attributes a source editor

@@ -37,7 +37,7 @@ public enum PartnerStoreError: LocalizedError {
 /// store from its sink without deadlocking.
 public final class PartnerStore: @unchecked Sendable {
 
-    public static let currentSchemaVersion = 2
+    public static let currentSchemaVersion = 3
 
     /// What kind of rows a committed write touched.
     public enum Change: Sendable, Equatable { case attention, transcript, jobs, sessions, reviews, settings }
@@ -106,6 +106,9 @@ public final class PartnerStore: @unchecked Sendable {
             }
             if stored < 2 {
                 try migration002_reviews()
+            }
+            if stored < 3 {
+                try migration003_reviewPathIndex()
             }
             // A migration added without bumping `currentSchemaVersion` (or the reverse) fails here, not later.
             let migrated = try schemaVersion()
@@ -209,6 +212,13 @@ public final class PartnerStore: @unchecked Sendable {
             "INSERT INTO schema_migrations (version) VALUES (2)"
         ]
         for sql in statements { try execute(sql) }
+    }
+
+    /// The Git window asks for reviews by path and sha on every history batch; the only
+    /// other index on `review` leads with `repo_id`, so without this each ask is a full scan.
+    private func migration003_reviewPathIndex() throws {
+        try execute("CREATE INDEX IF NOT EXISTS idx_review_path_sha ON review(repo_path, sha)")
+        try execute("INSERT INTO schema_migrations (version) VALUES (3)")
     }
 
     // MARK: - Settings

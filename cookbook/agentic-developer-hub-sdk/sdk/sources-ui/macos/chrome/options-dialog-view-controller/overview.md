@@ -1,0 +1,3 @@
+
+`OptionsDialogViewController` is a macOS NSViewController that presents a modal or sheet dialog containing an optional heading, a stack of customizable rows (any NSView subclasses), and a Done button. There is no commit or cancel step in the dialog itself: each row applies its own change as it is made, and Done is the way out, not an acceptance. This component is designed to be container-agnostic; the same view controller body is used whether the dialog is presented as a sheet, a modal window, or through other presentation mechanisms. The caller controls presentation and dismissal through callbacks.
+

@@ -31,4 +31,12 @@
 | topic-list-027 | overlay-autohide-scroller | Inspect the scroll view after it loads | The vertical scroller floats over content and auto-hides when not scrolling |
 | topic-list-028 | automatic-outline-style | Inspect the list's rendering style after it loads | The list renders with the theme-following material, not the forced dark material |
 | topic-list-029 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
-
+| topic-list-030 | item-badge, item-emphasis | Items `main` (badge `↑2 ↓1`, emphasized) and `dev` (no badge) | `main`'s badge label reads `↑2 ↓1`, is visible and is identified `topic-list.item.main.badge`; `main`'s label is bold; `dev`'s badge label is hidden and its label is not bold |
+| topic-list-031 | preferred-width-badge-emphasis | One item `main`, then the same item with badge `↑12 ↓34` | The second preferred width is larger than the first |
+| topic-list-032 | row-context-menu | Sections `Branches` (`main`) and `Tags` (`v1`); an item provider returning a menu per item, a header provider returning one only for `Tags`; ask each row and rows -1 and 4 | `Branches` header: no menu; `main`: `main`'s menu; `Tags` header: the `Tags` menu; `v1`: `v1`'s menu; outside the rows: no menu |
+| topic-list-033 | row-context-menu | The same sections with no providers set | No row has a menu |
+| topic-list-034 | item-double-click | Double-click each of the four rows and row 9 | The callback receives `main`, then `v1`, and nothing else |
+| topic-list-035 | row-context-menu, item-double-click | Inspect the list after it loads; open its menu with no row clicked | The list carries a menu and a double-click action; the opened menu is empty, so none is shown |
+| topic-list-036 | item-drag-payload | Sections `Branches` (`main`, `dev`); a payload provider returning the item's id for `dev` only; ask each row for its drag writer | `dev` writes `dev` as the item type; the header and `main` write nothing; with no provider nothing writes |
+| topic-list-037 | item-drop-validation, item-drop-delivery | The same list, a validator accepting only `dev` onto `main`; drop `dev` and then `x` onto `main`, `dev` onto the header and row 9 | Only `dev` onto `main` is valid, and the callback receives (`dev`, `main`) once |
+| topic-list-038 | item-drop-validation | Inspect the outline after it loads | It is registered for the item pasteboard type |

@@ -1,0 +1,7 @@
+
+| Version | Date | Author | Summary |
+|---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Moved clamp-child-to-parent ahead of the purity requirements, added independent-capabilities and vectors crud-014 to crud-016, tied the asymmetric-parent edge case to a matching vector, softened loose normative text, reworded the noAccess rationale, relabeled the React/Web note, and stated what CRUD_LETTER is for. |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and added exported-key-type/not-mutate-inputs/fresh-instance-per-call requirements with vectors, made crud-001 a compile-time assertion and added clamping-identity/readOnly-as-input vectors, reformatted Design Decisions into Decision/Rationale/Approved blocks and removed the unsourced memory-footprint and "all web applications" claims, replaced the Compliance row with a sourced Internationalization check, retitled to "CRUD Permissions", clarified the Configuration defaults and Localization framing, gave concrete per-platform types in Platform Notes, and fixed the frontmatter `modified` quoting. |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from web source `packages/web/packages/ui/src/components/crud.tsx`. |

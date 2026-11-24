@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
-    "id": "E06B149B-D083-4812-8511-AAB2998C6969",
+    "id": "e06b149b-d083-4812-8511-aab2998c6969",
     "title": "Activity Runs",
-    "domain": "adhsdk://cookbook/foundation/time/activity-runs",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -26,13 +25,13 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/foundation/time/utc-timestamp"
+      "59f7893e-58fe-4f11-abd9-f80c1e05c002"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "1f558e294968e8e8",
+  "synced": "2bb3ff43ea886835",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -51,7 +50,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

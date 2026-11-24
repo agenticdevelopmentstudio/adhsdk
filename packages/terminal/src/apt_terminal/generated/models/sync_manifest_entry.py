@@ -31,7 +31,7 @@ class SyncManifestEntry:
         field_dict.update(
             {
                 "resource": resource,
-                "schemaVersion": schema_version,
+                "schema_version": schema_version,
             }
         )
 
@@ -42,7 +42,7 @@ class SyncManifestEntry:
         d = dict(src_dict)
         resource = d.pop("resource")
 
-        schema_version = d.pop("schemaVersion")
+        schema_version = d.pop("schema_version")
 
         sync_manifest_entry = cls(
             resource=resource,

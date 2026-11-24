@@ -234,7 +234,8 @@ function collectEnvVars(names, read) {
   return out;
 }
 function parseEnvEntries(body) {
-  const entries = body?.entries;
+  const b = body;
+  const entries = b?.object === "list" ? b.data : b?.entries;
   return Array.isArray(entries) && entries.every(isEnvVarEntry) ? entries : null;
 }
 function isEnvVarEntry(row) {
@@ -307,7 +308,7 @@ function EnvironmentPanel() {
   const [backend, setBackend] = useState3(null);
   useEffect3(() => {
     fetchEntries("/api/public/debug-env").then(setSite).catch(() => setSite("unavailable"));
-    fetchEntries("/api/system/debug-env").then(setBackend).catch(() => setBackend("unavailable"));
+    fetchEntries("/api/v1/system/debug_env").then(setBackend).catch(() => setBackend("unavailable"));
   }, []);
   const client = collectEnvVars(Object.keys(CLIENT_ENV), (name) => CLIENT_ENV[name]);
   const siteEntries = Array.isArray(site) && site.length > 0 ? site : client;

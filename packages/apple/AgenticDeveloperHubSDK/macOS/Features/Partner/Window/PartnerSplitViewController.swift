@@ -81,16 +81,18 @@ public final class PartnerSplitViewController: ThemedSplitViewController {
 
         observeTabs()
         syncTabs()
-        tabbed.selectTab(id: partnerTabID, on: .left)
+        tabbed.selectTab(id: partnerTabID, on: tabbed.primaryEdge)
     }
 
     // MARK: - Tabs
 
-    /// Left edge only, and the Projects window's spacing and backdrop: the same shared setters it calls.
+    /// One edge of tabs — the primary edge of the app-wide tab positions, which this window follows like
+    /// every other tab host — and the Projects window's spacing and backdrop: the same shared setters it
+    /// calls. Every tab call goes through `primaryEdge`, so a change to the setting moves the cards with
+    /// it (`primaryEdgeDidChange`).
     private func configureTabs() {
         tabbed.delegate = self
-        tabbed.setEdgeEnabled(.top, false)
-        tabbed.setEdgeEnabled(.left, true)
+        tabbed.keepsTabsOnPrimaryEdge = true
         spacingObservers = PaneSpacing.edgeSettings.values.map { setting in
             UserSettingObserver(setting) { [weak self] _ in self?.applySpacing() }
         }
@@ -141,20 +143,27 @@ public final class PartnerSplitViewController: ThemedSplitViewController {
 
     private func addTab(id: UUID, source: TabPaneDataSource, content: NSViewController, closable: Bool,
                         at index: Int? = nil) {
-        let card = TabPaneViewController(edge: .left, tabID: id)
+        let card = makeCard(id: id, source: source, closable: closable)
+        let tab = MultiTabbedViewController.Tab(id: id, item: .viewController(card), viewController: content)
+        let edge = tabbed.primaryEdge
+        if let index { tabbed.insertTab(tab, at: index, on: edge) } else { tabbed.addTab(tab, on: edge) }
+    }
+
+    /// A session card drawn for the edge the tabs are on, kept with its source in `cards`.
+    private func makeCard(id: UUID, source: TabPaneDataSource, closable: Bool) -> TabPaneViewController {
+        let card = TabPaneViewController(edge: tabbed.primaryEdge, tabID: id)
         card.dataSource = source
         card.showsCloseButton = closable
         card.reload()
         cards[id] = (card, source)
-        let tab = MultiTabbedViewController.Tab(id: id, item: .viewController(card), viewController: content)
-        if let index { tabbed.insertTab(tab, at: index, on: .left) } else { tabbed.addTab(tab, on: .left) }
+        return card
     }
 
     /// Selects the tab for the session with `sessionID`; nil, or a session no longer open, selects the partner.
     public func select(sessionID: UUID?) {
         loadViewIfNeeded()
         let id = sessionID.flatMap { cards[$0] != nil ? $0 : nil } ?? partnerTabID
-        tabbed.selectTab(id: id, on: .left)
+        tabbed.selectTab(id: id, on: tabbed.primaryEdge)
     }
 
     /// Puts `text` in the partner's composer with the cursor at its end, showing the partner first.
@@ -176,7 +185,7 @@ public final class PartnerSplitViewController: ThemedSplitViewController {
         let liveIDs = Set(live.map(\.id))
         for id in cards.keys where !fixedTabIDs.contains(id) && !liveIDs.contains(id) {
             // Select the partner first, so the neighbouring session is never mounted for a moment.
-            if tabbed.activeTabID == id { tabbed.selectTab(id: partnerTabID, on: .left) }
+            if tabbed.activeTabID == id { tabbed.selectTab(id: partnerTabID, on: tabbed.primaryEdge) }
             tabbed.removeTab(id: id)
             cards[id] = nil
         }
@@ -192,7 +201,7 @@ public final class PartnerSplitViewController: ThemedSplitViewController {
                 title: "Terminal", content: session.viewController, sessionID: session.id)
             pane.host = self
             addTab(id: session.id, source: source, content: pane, closable: true,
-                   at: min(offset + fixedTabIDs.count, tabbed.tabs(on: .left).count))
+                   at: min(offset + fixedTabIDs.count, tabbed.tabs(on: tabbed.primaryEdge).count))
         }
         reloadCards()
     }
@@ -334,6 +343,15 @@ extension PartnerSplitViewController: MultiTabbedViewControllerDelegate {
                                           didRequestCloseTab id: UUID, on edge: Edge) {
         guard !fixedTabIDs.contains(id) else { return }
         self.controller.sessions.close(id: id)
+    }
+
+    /// The tabs have already moved; each card is drawn for one edge, so each is redrawn for the new one.
+    public func multiTabbedViewController(_ controller: MultiTabbedViewController,
+                                          primaryEdgeDidChange edge: Edge, from oldEdge: Edge) {
+        for (id, entry) in cards {
+            let card = makeCard(id: id, source: entry.source, closable: !fixedTabIDs.contains(id))
+            tabbed.setTabItem(id: id, item: .viewController(card))
+        }
     }
 }
 

@@ -1,20 +1,20 @@
 
 | Check | Status | Category |
 |---|---|---|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [error-recovery](agenticdevelopercookbook://compliance/reliability#error-recovery) | passed | Reliability |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
-| [state-recovery](agenticdevelopercookbook://compliance/reliability#state-recovery) | passed | Reliability |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | Reliability |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | passed | Reliability |
-| [health-observability](agenticdevelopercookbook://compliance/reliability#health-observability) | passed | Reliability |
-| [offline-behavior](agenticdevelopercookbook://compliance/access-patterns#offline-behavior) | passed | Access Patterns |
-| [retry-with-backoff](agenticdevelopercookbook://compliance/access-patterns#retry-with-backoff) | partial | Access Patterns |
-| [timeout-configuration](agenticdevelopercookbook://compliance/access-patterns#timeout-configuration) | failed | Access Patterns |
-| [error-response-handling](agenticdevelopercookbook://compliance/access-patterns#error-response-handling) | passed | Access Patterns |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.reliability.error-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/694a971d-282d-501b-8861-c4ece3b01edd) | passed | Reliability |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
+| [adc.check.reliability.state-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/6e64e2f2-28ad-55d5-a8ed-cee075366674) | passed | Reliability |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | Reliability |
+| [adc.check.reliability.health-observability](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d4ece88d-eeff-5e3f-8823-d8c2929a35e0) | passed | Reliability |
+| [adc.check.access-patterns.offline-behavior](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/df7f401a-39be-5c60-bab4-85dd95bd1ab1) | passed | Access Patterns |
+| [adc.check.access-patterns.retry-with-backoff](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bcb17bfe-d2d6-53f3-b2af-06b7eea3da61) | partial | Access Patterns |
+| [adc.check.access-patterns.timeout-configuration](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/dc15eb62-a72c-5b09-b9e7-c1bed983f499) | failed | Access Patterns |
+| [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | passed | Access Patterns |
 
 Notes: separation-of-concerns passes because the pull, reconcile, and push phases, the SyncStore/SyncTransport/SyncTriggerSource protocols, and the client-side ADHSyncCatalog each live behind their own type, with the server kept as the sole authority the client never re-derives. unit-test-coverage passes because the two XCTest bundles (`SyncEngineTests.swift`, `InMemorySyncStoreTests.swift`, `GRDBSyncStoreTests.swift`, `SyncEngineGRDBIntegrationTests.swift`, `SyncWireTests.swift`, `ADHSyncCatalogTests.swift`, `SyncEventTests.swift`, `TriggerSourceTests.swift`, `SyncMirrorProjectionTests.swift`) exercise every Behavioral Requirement, one row per requirement in Conformance Test Vectors. explicit-error-handling passes because every push outcome (applied, conflict, rejected) and transport failure (401, 410, transient 5xx) is routed to a named terminal state (quarantine, resync, backoff) rather than swallowed. error-recovery and graceful-degradation pass because the AuthRequired and Backing-off states resume automatically from transient failures and dependency loss without user intervention or a crash. fault-tolerance passes because an unparseable conflict `sync_version` is routed to the same terminal quarantine path as an explicit rejection instead of throwing mid-batch. state-recovery passes because recovery-never-deletes-database and resync-preserves-outbox guarantee the mirror and outbox restore correctly after interruption. idempotent-operations passes because retried pushes are tracked by opId and a rejected or conflicting op is never re-pushed under the same id. data-integrity passes because a pull batch's cursor is persisted only together with an atomically applied batch, so a mid-batch failure cannot leave a corrupt or partially-applied mirror. health-observability passes because the SyncEvent stream (`started`/`pulledBatch`/`pushed`/`failed`/`idle`/etc.) gives a host everything it needs to build monitoring or status UI over the engine's health. offline-behavior passes because AuthRequired, Backing-off, and quarantine are all explicitly defined responses to a network-unavailable or backend-rejecting state. retry-with-backoff is partial: the engine defines exponential backoff via `baseBackoff`/`maxBackoff`, but neither the recipe nor the source adds jitter to the retry delay, which the catalog check requires alongside the exponential curve. timeout-configuration fails because neither the Configuration table nor the source (`SyncEngine.swift`, `SyncProtocols.swift`) sets or exposes a request timeout for the pull/push transport calls. error-response-handling passes because every documented push status (applied, conflict, rejected, with its listed rejection reasons) and pull-side HTTP condition (401, 410) has a defined client-side resolution.
 

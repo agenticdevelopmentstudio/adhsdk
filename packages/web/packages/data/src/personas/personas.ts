@@ -1,17 +1,26 @@
-// Persona/services/me API client — the hand-written /auth/me, /auth/slug-available,
-// /public/* profile, and /persona/provider-templates routes, plus generic CRUD over
-// `persona.services` and `persona.personas`.
+// Persona/services/me API client — the /v1 account, handle, user, provider-template,
+// ai-service and persona resources.
 //
-// Routes: /api/auth/me (get/patch), /api/auth/slug-available/{slug},
-//         /api/public/users/{slug}, /api/public/personas/{slug},
-//         /api/public/users/{ownerSlug}/personas/{personaSlug},
-//         /api/persona/provider-templates,
-//         /api/persona/services (list/create), /api/persona/services/{id}
-//         (patch/delete/connect/models/models/refresh),
-//         /api/persona/personas (list/create), /api/persona/personas/{id}
-//         (update/delete).
-import { authedJson, authedRequest } from "../http";
-import { workspaceQuery } from "../client-helpers";
+// Routes: /api/v1/account (get/post), /api/v1/handles/{handle},
+//         /api/v1/users?handle=, /api/v1/personas?slug= and ?owner=&slug= (public lookups),
+//         /api/v1/provider_templates,
+//         /api/v1/ai_services (list/create), /api/v1/ai_services/{id}
+//         (post/delete/connect/refresh_models), /api/v1/models?service=,
+//         /api/v1/personas (list/create), /api/v1/personas/{id} (post/delete).
+//
+// Every method returns the camelCase DOMAIN shapes declared below; `./mappers` is the one place
+// that reads the snake_case wire.
+import { authedJson, authedRequest, listAllV1, withV1Query } from "../http";
+import { enc } from "../client-helpers";
+import {
+  connectionSpecBodyToWire,
+  meFromWire,
+  personaFromWire,
+  providerTemplateFromWire,
+  publicPersonaFromWire,
+  publicUserFromWire,
+  connectionSpecFromWire,
+} from "./mappers";
 import type {
   MeRow,
   MePatchBody,
@@ -22,30 +31,96 @@ import type {
   PublicPersonaRow,
   ConnectionSpec,
   CannedChatConfig,
+  V1Account,
+  V1AccountPatchBody,
+  V1AiService,
+  V1AiServiceCreateBody,
+  V1AiServicePatchBody,
+  V1Handle,
+  V1Persona,
+  V1PersonaBody,
+  V1ProviderTemplate,
+  V1PublicPersona,
+  V1PublicUser,
 } from "./wire";
 import type { ChatStatusConfig } from "./chat-status";
 
-// The backend returns the /me payload UNWRAPPED (no `{ data }` envelope): GET and
-// PATCH both respond with the user object directly.
+const V1 = "/api/v1";
+
+// `/v1/account` answers the account object bare (with `object: 'account'`), for GET and for the
+// POST update's echo alike.
 function meRequest(): Promise<MeResponse> {
-  return authedJson<MeResponse>("/api/auth/me");
+  return authedJson<V1Account>(`${V1}/account`).then(meFromWire);
 }
 
 function patchMe(body: MePatchBody): Promise<MeResponse> {
-  return authedJson<MeResponse>("/api/auth/me", {
-    method: "PATCH",
-    body: JSON.stringify(body),
-  });
+  const wire: V1AccountPatchBody = {
+    name: body.name,
+    slug: body.slug,
+    avatar_url: body.avatarUrl,
+    public_profile_enabled: body.publicProfileEnabled,
+  };
+  return authedJson<V1Account>(`${V1}/account`, {
+    method: "POST",
+    body: JSON.stringify(wire),
+  }).then(meFromWire);
 }
 
 export type SlugAvailability =
   | { available: true }
   | { available: false; reason: "format" | "reserved" | "taken" };
 
-function slugAvailable(slug: string): Promise<SlugAvailability> {
-  return authedJson<SlugAvailability>(
-    `/api/auth/slug-available/${encodeURIComponent(slug)}`,
-  );
+async function slugAvailable(slug: string): Promise<SlugAvailability> {
+  const r = await authedJson<V1Handle>(`${V1}/handles/${enc(slug)}`);
+  return r.available ? { available: true } : { available: false, reason: r.reason ?? "taken" };
+}
+
+/** The service row as the registry UI consumes it: `models` is a jsonb column whose entries
+ *  are plain model objects (their keys pass through the gateway untouched) — a bare string
+ *  entry is the model id alone. */
+function serviceFromWire(r: V1AiService): UserService {
+  const out: UserService = {
+    id: r.id,
+    providerKind: r.provider_kind,
+    name: r.name,
+    baseUrl: r.base_url,
+    hasApiKey: r.has_api_key,
+    connectStatus: r.connect_status,
+    models: (r.models ?? []).map((m): ModelInfo => (typeof m === "string" ? { id: m } : (m as ModelInfo))),
+  };
+  if (r.template_id !== undefined) out.templateId = r.template_id;
+  if (r.connection_spec !== undefined) {
+    out.connectionSpec = r.connection_spec ? connectionSpecFromWire(r.connection_spec) : null;
+  }
+  if (r.connect_error !== undefined) out.connectError = r.connect_error;
+  if (r.last_connected_at !== undefined) out.lastConnectedAt = r.last_connected_at;
+  if (r.documentation_url !== undefined) out.documentationUrl = r.documentation_url;
+  if (r.status_url !== undefined) out.statusUrl = r.status_url;
+  if (r.models_fetched_at !== undefined) out.modelsFetchedAt = r.models_fetched_at;
+  return out;
+}
+
+function personaBodyToWire(body: PersonaBody): V1PersonaBody {
+  return {
+    slug: body.slug,
+    name: body.name,
+    description: body.description,
+    model_prompt: body.modelPrompt,
+    voice: body.voice,
+    character: body.character,
+    examples: body.examples,
+    avatar_attachment_id: body.avatarAttachmentId,
+    service_id: body.serviceId,
+    model: body.model,
+    visibility: body.visibility,
+    canned_chat: body.cannedChat,
+    chat_status: body.chatStatus,
+  };
+}
+
+/** `?workspace=<slug>` scoping, merged onto a /v1 url. */
+function scoped(url: string, opts?: { workspace?: string }): string {
+  return withV1Query(url, { workspace: opts?.workspace });
 }
 
 export const api = {
@@ -53,43 +128,68 @@ export const api = {
   patchMe,
   slugAvailable,
   publicUser: (slug: string) =>
-    authedJson<PublicUser>(`/api/public/users/${encodeURIComponent(slug)}`),
+    authedJson<V1PublicUser>(withV1Query(`${V1}/users`, { handle: slug })).then(publicUserFromWire),
   publicPersonaByOwner: (ownerSlug: string, personaSlug: string) =>
-    authedJson<PublicPersona>(
-      `/api/public/users/${encodeURIComponent(ownerSlug)}/personas/${encodeURIComponent(personaSlug)}`,
-    ),
+    authedJson<V1PublicPersona>(
+      withV1Query(`${V1}/personas`, { owner: ownerSlug, slug: personaSlug }),
+    ).then(publicPersonaFromWire),
   // Sign-out is the shared AuthProvider's `logout()` (revoke + clear the local
   // Bearer tokens), not an api.ts call — see src/App.tsx.
-  // Provider templates are the GLOBAL provider catalog, served by the hand-written
-  // /persona/provider-templates route: paginated ({ items, total, page, pageSize }), with
-  // connectionSpec.extraHeaders REDACTED and operator-only `syncKeys` stripped. Fetch one
-  // max-size page (MAX_PAGE_SIZE is 100; the catalog is well under that) and return the items.
+  // Provider templates are the GLOBAL provider catalog: `connection_spec.extra_headers` REDACTED
+  // and operator-only `syncKeys` stripped. Every page is read (the catalog is well under one).
   templates: () =>
-    authedJson<{ items: Template[] }>(
-      "/api/persona/provider-templates?pageSize=100",
-    ).then((r) => r.items),
+    listAllV1<V1ProviderTemplate>(`${V1}/provider_templates`).then((rows) =>
+      rows.map(providerTemplateFromWire),
+    ),
   services: {
-    list: () => authedJson<UserService[]>("/api/persona/services"),
-    create: (body: CreateServiceBody) =>
-      authedJson<UserService>("/api/persona/services", {
+    list: () =>
+      listAllV1<V1AiService>(`${V1}/ai_services`).then((rows) => rows.map(serviceFromWire)),
+    create: (body: CreateServiceBody) => {
+      const wire: V1AiServiceCreateBody = {
+        template_id: body.templateId,
+        name: body.name,
+        provider_kind: body.providerKind,
+        base_url: body.baseUrl,
+        api_key: body.apiKey,
+        connection_spec: connectionSpecBodyToWire(body.connectionSpec),
+      };
+      return authedJson<V1AiService>(`${V1}/ai_services`, {
         method: "POST",
-        body: JSON.stringify(body),
-      }),
-    patch: (id: string, body: PatchServiceBody) =>
-      authedJson<UserService>(`/api/persona/services/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify(body),
-      }),
+        body: JSON.stringify(wire),
+      }).then(serviceFromWire);
+    },
+    patch: (id: string, body: PatchServiceBody) => {
+      const wire: V1AiServicePatchBody = {
+        name: body.name,
+        base_url: body.baseUrl,
+        api_key: body.apiKey,
+        connection_spec: connectionSpecBodyToWire(body.connectionSpec),
+      };
+      return authedJson<V1AiService>(`${V1}/ai_services/${enc(id)}`, {
+        method: "POST",
+        body: JSON.stringify(wire),
+      }).then(serviceFromWire);
+    },
     delete: (id: string) =>
-      authedRequest(`/api/persona/services/${id}`, { method: "DELETE" }),
+      authedRequest(`${V1}/ai_services/${enc(id)}`, { method: "DELETE" }),
     connect: (id: string) =>
-      authedJson<UserService>(`/api/persona/services/${id}/connect`, { method: "POST" }),
+      authedJson<V1AiService>(`${V1}/ai_services/${enc(id)}/connect`, { method: "POST" }).then(
+        serviceFromWire,
+      ),
+    // The connection's live model list. The gateway forwards the provider's model objects with
+    // their own keys intact (only `object: 'model'` is added), so each is read back as ModelInfo.
     models: (id: string) =>
-      authedJson<ModelInfo[]>(`/api/persona/services/${id}/models`),
+      listAllV1<ModelInfo & { object?: string }>(withV1Query(`${V1}/models`, { service: id })).then(
+        (rows) =>
+          rows.map((row) => {
+            const { object: _object, ...model } = row;
+            return model;
+          }),
+      ),
     refreshModels: (id: string) =>
-      authedJson<UserService>(`/api/persona/services/${id}/models/refresh`, {
+      authedJson<V1AiService>(`${V1}/ai_services/${enc(id)}/refresh_models`, {
         method: "POST",
-      }),
+      }).then(serviceFromWire),
   },
   personas: {
     // `workspace` scopes EVERY op to the WORKSPACE'S owning principal (backend
@@ -100,16 +200,18 @@ export const api = {
     // edit rows other members created for the org. Omit for the caller's own
     // creator-scoped rows (the pre-workspace behavior).
     list: (opts?: { workspace?: string }) =>
-      authedJson<Persona[]>(`/api/persona/personas${workspaceQuery(opts)}`),
+      listAllV1<V1Persona>(scoped(`${V1}/personas`, opts)).then((rows) =>
+        rows.map(personaFromWire),
+      ),
     create: (body: PersonaBody, opts?: { workspace?: string }) =>
-      authedJson<Persona>(`/api/persona/personas${workspaceQuery(opts)}`, {
+      authedJson<V1Persona>(scoped(`${V1}/personas`, opts), {
         method: "POST",
-        body: JSON.stringify(body),
-      }),
+        body: JSON.stringify(personaBodyToWire(body)),
+      }).then(personaFromWire),
     // Persona rdids are DERIVED — `persona.<owner-address>.<slug>`, where the owner segment is
     // itself an rdid (`org.<slug>` or `user.<eco-path>.<slug>`) and NOT a bare workspace slug; the
     // slug is the only user-editable segment (the leaf). The address is derived from the stored
-    // slug, and this body always carries `slug`, so the PUT IS the rename: CRUD sees the address
+    // slug, and this body always carries `slug`, so the update IS the rename: CRUD sees the address
     // move and cascades the new address onto the handle and every descendant. Mirrors
     // ecosystemsApi.update(), including what was removed from it — the follow-up
     // `identifiersApi.rename` was a SECOND rename of a handle the cascade had already moved, from
@@ -121,33 +223,32 @@ export const api = {
       // The echoed row carries the address the server DERIVED, which is the authority — callers
       // (PersonasSection) still detect the rename via the id change, now from the server's answer
       // rather than a client-side guess at what it would be.
-      authedJson<Persona>(`/api/persona/personas/${id}${workspaceQuery(opts)}`, {
-        method: "PUT",
-        body: JSON.stringify(body),
-      }),
+      authedJson<V1Persona>(scoped(`${V1}/personas/${enc(id)}`, opts), {
+        method: "POST",
+        body: JSON.stringify(personaBodyToWire(body)),
+      }).then(personaFromWire),
     delete: (id: string, opts?: { workspace?: string }) =>
-      authedRequest(`/api/persona/personas/${id}${workspaceQuery(opts)}`, { method: "DELETE" }),
-    // Owner-scoped slug lookup. Generic CRUD's list is already confined to the
-    // caller's own rows (ecosystem_id + user_id) and supports an equality filter via
-    // `?slug=`, so the first match IS the caller's persona with that slug. There is
-    // no dedicated by-slug route; a miss is a 404 to mirror the old endpoint.
+      authedRequest(scoped(`${V1}/personas/${enc(id)}`, opts), { method: "DELETE" }),
+    // Owner-scoped slug lookup. `GET /v1/personas?slug=` is the PUBLIC lookup (it answers one
+    // public-card object, not the owner's row), so the owner's persona is found in the caller's
+    // own list instead. A miss is a 404, mirroring the old endpoint.
     bySlugAsOwner: async (slug: string) => {
-      const rows = await authedJson<Persona[]>(
-        `/api/persona/personas?slug=${encodeURIComponent(slug)}`,
-      );
-      const row = rows[0];
+      const rows = await listAllV1<V1Persona>(`${V1}/personas`);
+      const row = rows.find((r) => r.slug === slug);
       if (!row) throw new Error("404 Not Found");
-      return row;
+      return personaFromWire(row);
     },
   },
   publicPersona: (slug: string) =>
-    authedJson<PublicPersona>(`/api/public/personas/${encodeURIComponent(slug)}`),
+    authedJson<V1PublicPersona>(withV1Query(`${V1}/personas`, { slug })).then(
+      publicPersonaFromWire,
+    ),
 };
 
-// The authenticated developer, exactly as the backend /auth/me payload returns it
-// (`userPayload`): the customer.customers identity + effective capabilities. There is
-// no separate `githubLogin` anymore — GitHub is just one auth method behind the
-// shared OAuth flow, not a field on the profile.
+// The authenticated developer, as the domain sees it (mapped from `GET /v1/account`): the
+// customer.customers identity + effective capabilities. There is no separate `githubLogin`
+// anymore — GitHub is just one auth method behind the shared OAuth flow, not a field on the
+// profile.
 export type MeResponse = MeRow;
 export type PublicUser = PublicUserRow;
 export type Template = ServiceTemplateRow;
@@ -223,7 +324,7 @@ export type PatchServiceBody = {
   apiKey?: string;
   connectionSpec?: ConnectionSpec | null;
 };
-// The persona row exactly as GET /persona/personas returns it (spec-typed) + the
+// The persona row as the domain sees it (mapped from `/v1/personas`) + the
 // display-only `serviceName` join (no DB column). A backend column change now fails
 // registry's tsc instead of at runtime.
 export type Persona = PersonaRow & {

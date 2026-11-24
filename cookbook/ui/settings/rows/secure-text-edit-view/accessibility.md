@@ -6,7 +6,7 @@
 - **Label requirements**: Neither the text edit row's construction (which
   this component inherits unmodified) nor this component's own source
   links the field's accessible name to the label — unlike the sibling
-  checkbox row (adhsdk://cookbook/ui/settings/rows/checkbox-view),
+  checkbox row ([adhsdk.ingredient.ui.settings.rows.checkbox-view](cookbook:e9c10ff7-4e13-4007-a963-d2a9e4006745)),
   which links its switch to its label for exactly this reason (the
   platform gives a bare switch no name). Without that link, a screen
   reader announces the field as an unnamed secure text field rather than
@@ -23,7 +23,7 @@
   and the field's typed-text color both resolve to the theme's
   `primaryText` role, and placeholder text resolves to `placeholderText`,
   which is guaranteed only a 1.6:1 contrast floor against the background
-  (see `adhsdk://cookbook/ui/settings/rows/text-edit-view#design-decisions`
+  (see design-decisions ([adhsdk.ingredient.ui.settings.rows.text-edit-view](cookbook:c1787e74-2485-4d7b-a219-feb4c07cf97c))
   and **contrast-ratio** in Compliance below). Whether an active theme's
   actual resolved colors clear WCAG 2.1 SC 1.4.3's 4.5:1 threshold for
   body text is a property of the chosen theme, not of this component.

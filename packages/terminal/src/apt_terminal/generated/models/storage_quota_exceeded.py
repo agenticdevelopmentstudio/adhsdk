@@ -7,7 +7,7 @@ from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
 if TYPE_CHECKING:
-    from ..models.error import Error
+    from ..models.stripe_error import StripeError
 
 
 T = TypeVar("T", bound="StorageQuotaExceeded")
@@ -17,13 +17,13 @@ T = TypeVar("T", bound="StorageQuotaExceeded")
 class StorageQuotaExceeded:
     """
     Attributes:
-        error (Error):
+        error (StripeError):
         used (int): Bytes currently used by ready attachments.
         quota (int): The caller’s total quota in bytes.
         requested (int): Declared size of the rejected upload.
     """
 
-    error: Error
+    error: StripeError
     used: int
     quota: int
     requested: int
@@ -53,10 +53,10 @@ class StorageQuotaExceeded:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.error import Error
+        from ..models.stripe_error import StripeError
 
         d = dict(src_dict)
-        error = Error.from_dict(d.pop("error"))
+        error = StripeError.from_dict(d.pop("error"))
 
         used = d.pop("used")
 

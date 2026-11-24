@@ -1,0 +1,11 @@
+
+- **html-prop**: Component MUST accept a required `html` string containing pre-rendered document markup.
+- **unescaped-html-rendering**: Component MUST render the provided HTML string unescaped, so headings, links, and formatting in the markup appear as authored rather than as literal text.
+- **prose-typography**: Component MUST apply prose typography to the rendered content — consistent styling for headings, paragraphs, lists, tables, and code blocks.
+- **semantic-element-selection**: Component MUST accept an `as` prop that selects the rendered element's tag: `article`, `div`, or `section`.
+- **default-article-element**: Component MUST render as an `article` element when `as` is not provided.
+- **attribute-passthrough**: Component MUST forward standard HTML attributes it receives (other than `children`, which is not part of the public API, and the HTML-rendering mechanism) to the rendered element.
+- **class-name-override**: Component MUST accept a `className` prop and merge it with its own typography classes rather than replacing them.
+- **code-pseudo-content-removal**: Component MUST render code blocks without generated quote glyphs before or after their content.
+- **heading-scroll-offset**: Component MUST give headings a top scroll margin of 5rem (80px) so that jumping to an anchor does not hide the heading under fixed UI above the content.
+- **children-prop-excluded**: The `children` prop MUST NOT be part of the component's public API; HTML content MUST be supplied exclusively through the `html` input. The component does not strip a `children` value a caller forces through; doing so is a caller error that fails fast (the render throws) rather than being silently dropped.

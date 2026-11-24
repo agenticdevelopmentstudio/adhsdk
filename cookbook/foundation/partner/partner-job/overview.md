@@ -1,0 +1,3 @@
+
+`PartnerJob` and `PartnerJobStep` are the model types for the partner's standing work. A job is "a standing piece of work the partner does, on a timer or on request": it has an identity, a display name, an enabled flag, an optional timer interval in seconds, a block of guidelines text the partner follows, an ordered list of steps, and a flag saying whether the app shipped it. A step is "one step of a job: what to type, where, and when it is the right moment": a name, an environment (the terminal shell or the Claude Code prompt), the command text to type, and a condition describing when typing it is right. Both types are plain `Codable`, `Sendable` and `Equatable` data with no behavior; storage, scheduling and prompt assembly live elsewhere and read these fields.
+

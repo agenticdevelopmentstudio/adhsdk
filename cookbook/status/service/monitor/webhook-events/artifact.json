@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "937650ae-ac85-43f4-8aa4-708207e0d745",
     "title": "Status Server Monitor Webhook Events",
-    "domain": "adhsdk://cookbook/status/service/monitor/webhook-events",
     "type": "ingredient",
     "version": "1.0.3",
     "status": "review",
@@ -26,15 +25,15 @@
       "server"
     ],
     "depends-on": [
-      "agenticdevelopercookbook://guidelines/implementing/security/input-validation"
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/4ca8a3d5-cdcc-4f74-a2ec-3a198608b419"
     ],
     "related": [
-      "adhsdk://cookbook/status/service/monitor/deploy-status",
-      "adhsdk://cookbook/status/service/monitor/format",
-      "adhsdk://cookbook/status/service/monitor/provider-deploy",
-      "adhsdk://cookbook/status/service/monitor/live-buffer",
-      "adhsdk://cookbook/status/service/monitor/fetch-vercel",
-      "adhsdk://cookbook/status/service/monitor/fetch-railway"
+      "96009fcc-e32e-4a40-9b3c-8b4f83f1cfec",
+      "ae9a73de-80c8-4deb-82ab-89c7c5854c54",
+      "7ba98112-0f6d-4236-ab6b-aa18b72d76bd",
+      "fdfdaf38-95de-4475-98f4-e09fb998bb57",
+      "c7b38706-a6bc-4ad6-852c-425a4ed11a27",
+      "6a84b15a-5e4e-4b1c-9d73-0ae8a8b602af"
     ],
     "references": [
       "packages/web/packages/status-server/src/monitor/webhook-events.ts (adhsdk)",
@@ -49,7 +48,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "45d2bf3fbc66adf6",
+  "synced": "49f4d15e3046efe4",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -68,7 +67,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

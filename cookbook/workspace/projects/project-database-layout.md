@@ -1,13 +1,12 @@
 ---
 id: ded9b397-958d-437d-8235-48ef85ae7386
 title: "Project Layout Persistence"
-domain: adhsdk://cookbook/workspace/projects/project-database-layout
 type: ingredient
-version: 1.2.1
+version: 2.0.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-16
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -23,8 +22,8 @@ tags:
   - database
 depends-on: []
 related:
-  - adhsdk://cookbook/ui/layout/composable-tabs/tabs-window
-  - adhsdk://cookbook/workspace/projects/git-repo
+  - 55a394e6-9934-404b-941d-25bebbf71378
+  - 1463e7a2-e290-4b8c-8643-df9462a758e6
 references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectDatabase+Layout.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectDatabase.swift (adhsdk)
@@ -56,7 +55,7 @@ Every row this extension touches is scoped to one `repo_id`, matching a
 here reads or writes a row for any repository id other than the one a
 caller passes in. The project database carries no concurrency-safety
 guarantee of its own (see the sibling
-`adhsdk://cookbook/workspace/projects/project-database` recipe),
+[adhsdk.ingredient.workspace.projects.project-database](cookbook:c212ea39-10e7-4146-89dd-36edb3b3455a) recipe),
 so this extension's operations carry no concurrency guarantee of their own
 either — they run wherever the caller runs, synchronously, against one
 shared SQLite connection.
@@ -66,8 +65,9 @@ shared SQLite connection.
 ### Reading tabs
 
 - **load-tabs-empty-default**: Loading tabs MUST return `(tabs: [],
-  activeTabID: nil, enabledEdges: [top])` for a repository id with no
-  `project_tabs` or `project_state` rows.
+  activeTabID: nil, enabledEdges: nil)` for a repository id with no
+  `project_tabs` or `project_state` rows — no stored Tab Bars choice,
+  never the top edge alone.
 - **load-tabs-order**: MUST return tabs ordered ascending by the
   `project_tabs.position` column, via `ORDER BY position` in the query.
 - **load-tabs-malformed-row-dropped**: MUST silently exclude a
@@ -96,8 +96,8 @@ shared SQLite connection.
   exactly two ordered children by position.
 - **load-tabs-active-tab-default**: MUST read `active_tab_id` and
   `enabled_edges` from the single `project_state` row for the repository
-  id, or fall back to (no active tab, the top edge alone) when no such row
-  exists.
+  id, or fall back to (no active tab, no stored edge choice) when no such
+  row exists.
 - **load-tabs-active-tab-consistency**: Loading tabs reads
   `project_tabs`/`layout_nodes` and `project_state` as two separate,
   non-transactional statements, and never re-validates the returned
@@ -107,10 +107,12 @@ shared SQLite connection.
   instance can run between the two reads; a commit through a different
   connection to the same file between them can make the returned
   active-tab id name no tab in the result.
-- **load-tabs-enabled-edges-fallback**: MUST discard a stored
+- **load-tabs-enabled-edges-fallback**: MUST read a stored
   `enabled_edges` value that is empty, or that parses to zero valid edge
-  entries, and keep the default (the top edge alone) rather than return an
-  empty list.
+  entries, as no stored edge choice (absent) rather than as an empty list.
+  The column is `NOT NULL`, so the empty string is how "no choice" is
+  stored; an absent choice tells the caller to follow the app-wide tab
+  positions.
 
 ### Writing tabs
 
@@ -122,8 +124,16 @@ shared SQLite connection.
   IMMEDIATE TRANSACTION` / `COMMIT`, and MUST roll back and rethrow the
   original error unchanged if any step fails, leaving the previously
   persisted arrangement intact.
-- **save-tabs-default-enabled-edges**: The enabled edges MUST default to
-  the top edge alone when the caller omits them.
+- **save-tabs-default-enabled-edges**: The enabled edges are the
+  user's explicit Tab Bars choice and MUST default to absent when the
+  caller omits them. An absent value MUST write no edges of its own: the
+  write MUST read the stored `enabled_edges` value before deleting the
+  `project_state` row and write it back unchanged, or write the empty
+  string (no choice) when no row existed, so seeding or saving a layout
+  never turns the app-wide default into a per-project choice.
+- **save-tabs-empty-edges-clear**: An empty enabled-edges list MUST write the
+  empty string, clearing any stored choice, so the project follows the
+  app-wide tab positions again.
 - **save-tabs-tab-position**: MUST persist each tab's
   `project_tabs.position` as its index in the given tab list, in that
   order.
@@ -136,9 +146,9 @@ shared SQLite connection.
   than persist a reference to a tab that was not saved.
 - **save-tabs-state-row-always-written**: MUST always insert exactly one
   `project_state` row for the repository id, even when the validated
-  active tab is absent, so the enabled edges still persist.
-- **save-tabs-enabled-edges-canonical-order**: MUST persist the enabled
-  edges as a comma-joined string in a fixed canonical order (top, right,
+  active tab is absent, so a stored edge choice still persists.
+- **save-tabs-enabled-edges-canonical-order**: When the caller supplies
+  enabled edges, MUST persist them as a comma-joined string in a fixed canonical order (top, right,
   bottom, left), filtered to only the edges present in the caller's
   argument — not in the argument's own order.
 - **save-tabs-pane-state-orphan-sweep**: MUST delete every `pane_state`
@@ -252,7 +262,9 @@ Not applicable: this component has no UI surface to make accessible.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| git-client-projects-project-database-layout-001 | load-tabs-empty-default | Loading tabs on a repository id with no rows | no tabs, no active tab, the top edge alone |
+| git-client-projects-project-database-layout-001 | load-tabs-empty-default | Loading tabs on a repository id with no rows | no tabs, no active tab, no stored edge choice |
+| git-client-projects-project-database-layout-006 | save-tabs-default-enabled-edges, load-tabs-enabled-edges-fallback | Writing one tab without enabled edges, then loading tabs | the tab and active tab come back; no stored edge choice |
+| git-client-projects-project-database-layout-007 | save-tabs-default-enabled-edges | Writing tabs with the left edge alone, then writing them again without enabled edges | loading tabs returns the left edge alone |
 | git-client-projects-project-database-layout-002 | save-tabs-whole-replace, load-tabs-order, load-tabs-tree-reconstruction | Writing two tabs, then loading tabs on the same repository id | tabs returned in the same order, each root tree structurally equal to what was saved |
 | git-client-projects-project-database-layout-003 | save-tabs-active-tab-validated | Writing tabs with the active-tab id set to an identifier not present in the tab list | loading tabs returns no active tab |
 | git-client-projects-project-database-layout-004 | load-tabs-group-id-fallback | Two tabs sharing one group id, saved and reloaded | both come back tagged with the same group id |
@@ -263,6 +275,7 @@ Not applicable: this component has no UI surface to make accessible.
 | git-client-projects-project-database-layout-009 | project-directories-whole-replace, project-directories-empty-means-none | Saving project directories ["/a", "/b"] then loading them | ["/a", "/b"] in the same order; a second save with an empty list then reload → an empty list |
 | git-client-projects-project-database-layout-010 | load-tabs-working-directory-is-directory-url | A working directory containing a space and a non-ASCII character, saved and reloaded | the exact same path string, constructed as a directory location |
 | git-client-projects-project-database-layout-011 | save-tabs-atomic-rollback | A fresh database opened at the current schema version and a hand-built schema-version-3 fixture opened the same way | both migrate/open successfully and the working directory round-trips on the migrated database |
+| git-client-projects-project-database-layout-012 | save-tabs-empty-edges-clear | Save tabs with enabled edges `[top, left]`, then save again with an empty list, then load. | The loaded enabled edges are absent (no stored choice) |
 
 ## Edge Cases
 
@@ -327,7 +340,7 @@ Not applicable: this component has no UI surface to make accessible.
 | `repoID` | caller, every public method | none (required) | Scopes every read/write to one repository id; no method here accepts an unscoped or wildcard query. |
 | `tabs` | caller, writing tabs | none (required) | The whole tab-and-tree arrangement to persist; replaces whatever was previously stored for the repository id. |
 | `activeTabID` | caller, writing tabs | none (required, may be absent) | Persisted only if it names one of the given tabs; otherwise dropped to `NULL` (**save-tabs-active-tab-validated**). |
-| `enabledEdges` | caller, writing tabs | the top edge alone | Which tab-bar edges are shown; persisted in canonical order regardless of the argument's own order. |
+| `enabledEdges` | caller, writing tabs | absent (no choice) | The user's explicit Tab Bars choice; persisted in canonical order regardless of the argument's own order. Absent keeps whatever choice is already stored (none, stored as the empty string, for a project that never made one). |
 | `nodeID`, `key` | caller, pane-state operations | none (required) | Identifies one pane-scoped state slot. |
 | `value` | caller, setting pane state | none (required, may be absent) | An absent value deletes the row; any other value upserts it verbatim, with no format validation. |
 | `liveIDs` | caller, pruning nested pane state | none (required) | The set of node ids the caller currently considers alive; anything embedded in a stored key but absent from this set is pruned. |
@@ -441,9 +454,9 @@ in **load-tabs-corrupt-row-signal**.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectDatabase+Layout.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectDatabase+Layout.swift` | confirmed (1.2.1) |
 
 ## Design Decisions
 
@@ -475,10 +488,10 @@ in **load-tabs-corrupt-row-signal**.
 
 | Check | Status | Notes |
 |---|---|---|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | This extension owns only the layout/tabs/pane-state/directories schema and queries; connection setup, migrations, and the shared `execute`/`executeBound`/`forEachRow`/`bindText`/`columnText` primitives all stay in the base `ProjectDatabase.swift`, and this file adds no UI, networking, or presentation code of its own. |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | `ProjectDatabaseLayoutTests.swift` and `ProjectDatabaseWorkingDirectoryTests.swift` cover every happy-path round-trip in this extension (tabs, ordering, active-tab validity, groups, cross-project isolation, pane size/state, pruning, project directories, migration) with 24 test methods between them, but a grep for `invalidSchema`, `buildTree`, `prepareFailed`, `executionFailed`, and `openFailed` across all three test files in this target returns zero matches — none of `buildTree`'s three throw paths (**build-tree-missing-node-error**, **build-tree-split-child-count**, **build-tree-unknown-kind-error**) is exercised by a test. |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | `buildTree` throws a typed `ProjectDatabaseError.invalidSchema` for every malformed-tree case it can detect (missing node, wrong split-child count, unknown kind), and `saveTabs`/`saveProjectDirectories` roll back and rethrow unchanged on any failure — but `loadTabs`/`fetchNodeRows` handle a malformed row's UUID by silently dropping it rather than by raising or logging anything, which is the gap named in **load-tabs-corrupt-row-signal**. |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | partial | Every multi-row write in this file (`saveTabs`, `saveProjectDirectories`) is wrapped in an explicit transaction with rollback on failure, and `saveTabs` validates `activeTabID` against `tabs` before persisting — but `loadTabs` performs its two reads outside any shared transaction and applies no equivalent validation to what it returns, which is the gap named in **load-tabs-active-tab-consistency**. |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | This extension owns only the layout/tabs/pane-state/directories schema and queries; connection setup, migrations, and the shared `execute`/`executeBound`/`forEachRow`/`bindText`/`columnText` primitives all stay in the base `ProjectDatabase.swift`, and this file adds no UI, networking, or presentation code of its own. |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | `ProjectDatabaseLayoutTests.swift` and `ProjectDatabaseWorkingDirectoryTests.swift` cover every happy-path round-trip in this extension (tabs, ordering, active-tab validity, groups, cross-project isolation, pane size/state, pruning, project directories, migration) with 24 test methods between them, but a grep for `invalidSchema`, `buildTree`, `prepareFailed`, `executionFailed`, and `openFailed` across all three test files in this target returns zero matches — none of `buildTree`'s three throw paths (**build-tree-missing-node-error**, **build-tree-split-child-count**, **build-tree-unknown-kind-error**) is exercised by a test. |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | `buildTree` throws a typed `ProjectDatabaseError.invalidSchema` for every malformed-tree case it can detect (missing node, wrong split-child count, unknown kind), and `saveTabs`/`saveProjectDirectories` roll back and rethrow unchanged on any failure — but `loadTabs`/`fetchNodeRows` handle a malformed row's UUID by silently dropping it rather than by raising or logging anything, which is the gap named in **load-tabs-corrupt-row-signal**. |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | Every multi-row write in this file (`saveTabs`, `saveProjectDirectories`) is wrapped in an explicit transaction with rollback on failure, and `saveTabs` validates `activeTabID` against `tabs` before persisting — but `loadTabs` performs its two reads outside any shared transaction and applies no equivalent validation to what it returns, which is the gap named in **load-tabs-active-tab-consistency**. |
 
 Notes: both `partial` findings above trace to the same underlying property of this extension — every integrity check it makes (the malformed-row guards, the `activeTabID` validation) sits on the write side; the read side (`loadTabs`, `fetchNodeRows`) trusts what is in the tables and either drops what it cannot parse or returns it unvalidated. Given that this extension is the only writer of these five tables, that asymmetry may be an acceptable design rather than a defect, but nothing in the given source states that invariant explicitly, which is why both gaps are marked rather than resolved.
 
@@ -492,3 +505,4 @@ Notes: both `partial` findings above trace to the same underlying property of th
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to workspace/projects/. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolved the corrupt-row NEEDS REVIEW marker against source (silent drop, no logging) as a pending decision; converted test vectors to a table and Design Decisions to Decision/Rationale/Approved triples. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Requirements use the named-bullet form, `- **id**: ...`, instead of an em dash after the id. |
+| 2.0.0 | 2026-11-16 | Mike Fullerton | An empty enabled-edges list clears a stored choice. |

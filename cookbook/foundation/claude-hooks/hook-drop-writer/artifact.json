@@ -1,0 +1,60 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "f3326f3a-cccd-4ac5-8dc1-84d660ed4581",
+    "title": "Hook Drop Writer",
+    "type": "ingredient",
+    "version": "1.0.2",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-14",
+    "modified": "2026-11-14",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Chooses a configuration's drop directory, with a per-configuration override variable, and writes each hook envelope there as one atomically renamed JSON file.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "claude-hooks",
+      "drop-file",
+      "atomic-write",
+      "file-system"
+    ],
+    "depends-on": [],
+    "related": [
+      "826153e3-cae8-4917-a1d3-c298a54ab558",
+      "704d4ae9-e344-44d4-b19c-eadfec082077",
+      "9eb46f78-0ceb-455f-9584-b6b43ddf0871"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "names_hosts": "The component integrates with Claude Code's hooks and status line; the host's name, events and paths are its subject.",
+  "synced": "b846d3e771d4086f",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

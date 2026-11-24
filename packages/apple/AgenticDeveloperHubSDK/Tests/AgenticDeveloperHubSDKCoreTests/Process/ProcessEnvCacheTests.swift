@@ -46,6 +46,17 @@ final class ProcessEnvCacheTests: XCTestCase {
         XCTAssertEqual(ProcessEnv.cachedTokenCountForTesting, belowCeiling)
     }
 
+    func testV14_boundaryWalkIsNilAndUncached() {
+        XCTAssertNil(ProcessEnv.oauthTokenWalkingUp(from: 2_000_000, below: 2_000_000))
+        XCTAssertEqual(ProcessEnv.cachedTokenCountForTesting, 0)
+    }
+
+    func testV15_cacheIsEmptyAfterReset() {
+        lookup(3)
+        ProcessEnv.resetCacheForTesting()
+        XCTAssertEqual(ProcessEnv.cachedTokenCountForTesting, 0)
+    }
+
     func testRepeatedLookupsOfOnePidCacheOneEntry() {
         lookup(1)
         for _ in 0..<50 { _ = ProcessEnv.oauthTokenWalkingUp(from: 2_000_000) }

@@ -64,14 +64,14 @@ describe("ConfigSetDialog", () => {
     type("Timeout (seconds)", "30");
     save();
     await waitFor(() => expect(onClose).toHaveBeenCalled());
-    expect(authedJson).toHaveBeenCalledWith("/api/processing/admin/config-sets", {
+    expect(authedJson).toHaveBeenCalledWith("/api/v1/processing/config_sets", {
       method: "POST",
       body: JSON.stringify({
         name: "Local llama",
         description: null,
-        serviceId: null,
+        service_id: null,
         model: "llama3.2",
-        params: { temperature: 0.5, maxOutputTokens: 800, timeoutMs: 30000 },
+        params: { temperature: 0.5, max_output_tokens: 800, timeout_ms: 30000 },
       }),
     });
   });
@@ -90,8 +90,8 @@ describe("ConfigSetDialog", () => {
     await waitFor(() => expect(onClose).toHaveBeenCalled());
     expect(JSON.parse(authedJson.mock.calls[0]![1].body).params).toEqual({
       temperature: 0.2,
-      maxOutputTokens: 512,
-      timeoutMs: 300000,
+      max_output_tokens: 512,
+      timeout_ms: 300000,
     });
   });
 
@@ -119,7 +119,7 @@ describe("ConfigSetDialog", () => {
       provider: "local",
       model: "llama3.2",
       params: {},
-      isDefault: false,
+      is_default: false,
     } as unknown as ConfigSet);
     expect(params()).toEqual(["", "", ""]);
   });
@@ -146,13 +146,13 @@ describe("ConfigSetDialog", () => {
       id: "cs-9",
       name: "Shared",
       description: null,
-      service: { id: "svc-other", name: "Team Claude", providerKind: "anthropic" },
+      service: { id: "svc-other", name: "Team Claude", provider_kind: "anthropic" },
       provider: "anthropic",
       model: "claude-z",
       params: {},
-      isDefault: false,
-      createdAt: "2026-10-01T00:00:00Z",
-      updatedAt: "2026-10-01T00:00:00Z",
+      is_default: false,
+      created: 1790812800,
+      updated: 1790812800,
     };
     mount(set);
     const service = screen.getByLabelText("Service") as HTMLSelectElement;
@@ -187,7 +187,7 @@ describe("ConfigSetDialog", () => {
     save();
     await waitFor(() => expect(authedJson).toHaveBeenCalled());
     expect(JSON.parse(authedJson.mock.calls[0]![1].body)).toMatchObject({
-      serviceId: "svc-openai",
+      service_id: "svc-openai",
       model: "gpt-b",
     });
   });
@@ -219,7 +219,7 @@ describe("ConfigSetDialog", () => {
     type("Output mode", "json");
     save();
     await waitFor(() => expect(authedJson).toHaveBeenCalledTimes(1));
-    expect(JSON.parse(authedJson.mock.calls[0]![1].body).params.outputMode).toBe("json");
+    expect(JSON.parse(authedJson.mock.calls[0]![1].body).params.output_mode).toBe("json");
   });
 
   it("clears the output mode when the service changes", () => {
@@ -239,10 +239,10 @@ describe("ConfigSetDialog", () => {
       service: { id: "svc-openai", name: "My OpenAI" },
       provider: "openai",
       model: "gpt-a",
-      params: { outputMode: "json" },
-      isDefault: false,
-      createdAt: "2026-10-01T00:00:00Z",
-      updatedAt: "2026-10-01T00:00:00Z",
+      params: { output_mode: "json" },
+      is_default: false,
+      created: 1790812800,
+      updated: 1790812800,
     } as ConfigSet);
     expect((screen.getByLabelText("Output mode") as HTMLSelectElement).value).toBe("json");
   });
@@ -256,7 +256,7 @@ describe("ConfigSetDialog", () => {
     expect(await screen.findByText("A config set named 'x' already exists")).toBeTruthy();
   });
 
-  it("edits with PUT, showing the timeout in seconds", async () => {
+  it("edits with POST, showing the timeout in seconds", async () => {
     const set: ConfigSet = {
       id: "cs-1",
       name: "Existing",
@@ -264,17 +264,17 @@ describe("ConfigSetDialog", () => {
       service: null,
       provider: "local",
       model: "llama3.2",
-      params: { timeoutMs: 45000 },
-      isDefault: false,
-      createdAt: "2026-10-01T00:00:00Z",
-      updatedAt: "2026-10-01T00:00:00Z",
+      params: { timeout_ms: 45000 },
+      is_default: false,
+      created: 1790812800,
+      updated: 1790812800,
     };
     const { onClose } = mount(set);
     expect((screen.getByLabelText("Timeout (seconds)") as HTMLInputElement).value).toBe("45");
     type("Model", "llama3.3");
     save();
     await waitFor(() => expect(onClose).toHaveBeenCalled());
-    expect(authedJson.mock.calls[0]![0]).toBe("/api/processing/admin/config-sets/cs-1");
-    expect(authedJson.mock.calls[0]![1].method).toBe("PUT");
+    expect(authedJson.mock.calls[0]![0]).toBe("/api/v1/processing/config_sets/cs-1");
+    expect(authedJson.mock.calls[0]![1].method).toBe("POST");
   });
 });

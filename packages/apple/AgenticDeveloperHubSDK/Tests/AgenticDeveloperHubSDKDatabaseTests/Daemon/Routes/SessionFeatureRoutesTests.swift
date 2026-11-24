@@ -39,9 +39,29 @@ final class SessionFeatureRoutesTests: XCTestCase {
         try? FileManager.default.removeItem(at: tmpDir)
     }
 
+    /// A provider quarantine that records what the routes asked of it.
+    private final class FakePipelineQuarantine: PipelineQuarantineControl, @unchecked Sendable {
+        private let lock = NSLock()
+        private var calls: [String] = []
+        let parked: Int
+        init(parked: Int) { self.parked = parked }
+        var log: [String] { lock.withLock { calls } }
+        func quarantinedCount() -> Int { parked }
+        func quarantinedErrors() -> [IngestionErrorDTO] {
+            (0..<parked).map { index in
+                IngestionErrorDTO(filename: "parked-\(index)", eventType: "Stop", sessionId: "s",
+                                  quarantinedAt: "2026-11-10T00:00:00Z", reason: "unparseable",
+                                  retryCount: ProviderSpool.maxAttempts, exhausted: true)
+            }
+        }
+        func requeueAllQuarantined() -> Int { lock.withLock { calls.append("requeue") }; return parked }
+        func clearArchivedQuarantine() -> Int { lock.withLock { calls.append("clear") }; return 0 }
+    }
+
     private func makeServices(
         spool: IngestSpool? = nil,
-        buildHookEvent: @escaping @Sendable (String, Data) -> ParsedEvent? = { _, _ in nil }
+        buildHookEvent: @escaping @Sendable (String, Data) -> ParsedEvent? = { _, _ in nil },
+        pipelineQuarantine: (any PipelineQuarantineControl)? = nil
     ) throws -> SessionFeatureServices {
         let dispatcher = tmpDir.appendingPathComponent("dispatch.sh")
         // swiftlint:disable:next line_length
@@ -81,7 +101,8 @@ final class SessionFeatureRoutesTests: XCTestCase {
             retryIngest: { _ in },
             buildHookEvent: buildHookEvent,
             captureHook: { captured.add($0) },
-            runImport: { _ in throw ImportUnavailable() }
+            runImport: { _ in throw ImportUnavailable() },
+            pipelineQuarantine: pipelineQuarantine
         )
     }
 
@@ -163,6 +184,31 @@ final class SessionFeatureRoutesTests: XCTestCase {
         XCTAssertEqual(try json(response)["error"] as? String, "Invalid event id: abc")
     }
 
+    func testAnUnparseableEventsSinceIs400() async throws {
+        let services = try makeServices()
+        let bad = try await send("GET", "/events", query: ["since": ["not a time"]], services: services)
+        XCTAssertEqual(bad.status, 400)
+        XCTAssertNotNil(try json(bad)["error"] as? String)
+
+        let good = try await send("GET", "/events", query: ["since": ["2026-06-01T12:00:00Z"]], services: services)
+        XCTAssertEqual(good.status, 200)
+        let absent = try await send("GET", "/events", services: services)
+        XCTAssertEqual(absent.status, 200)
+    }
+
+    func testAnUnparseableConversationsBeforeIs400() async throws {
+        let services = try makeServices()
+        let bad = try await send("GET", "/conversations", query: ["before": ["yesterday"]], services: services)
+        XCTAssertEqual(bad.status, 400)
+        XCTAssertNotNil(try json(bad)["error"] as? String)
+
+        let good = try await send("GET", "/conversations", query: ["before": ["2026-06-01T12:00:00Z"]],
+                                  services: services)
+        XCTAssertEqual(good.status, 200)
+        let absent = try await send("GET", "/conversations", services: services)
+        XCTAssertEqual(absent.status, 200)
+    }
+
     func testAnUnknownEventIs404() async throws {
         let response = try await send("GET", "/events/999999", services: try makeServices())
         XCTAssertEqual(response.status, 404)
@@ -204,6 +250,39 @@ final class SessionFeatureRoutesTests: XCTestCase {
     func testStartingARetryReplies202() async throws {
         let response = try await send("POST", "/ingestion/errors/retry", services: try makeServices())
         XCTAssertEqual(response.status, 202)
+    }
+
+    /// Review F1(a): provider-spool quarantined records count in `count` and in
+    /// `exhausted`, so the app's badge (which polls `exhausted`) shows them.
+    func testProviderQuarantineCountsAsExhausted() async throws {
+        let fake = FakePipelineQuarantine(parked: 3)
+        let response = try await send(
+            "GET", "/ingestion/errors/count", services: try makeServices(pipelineQuarantine: fake))
+        let body = try json(response)
+        XCTAssertEqual(body["count"] as? Int, 3)
+        XCTAssertEqual(body["exhausted"] as? Int, 3)
+    }
+
+    /// Every record the count includes is in the list, with its reason.
+    func testProviderQuarantineIsListed() async throws {
+        let fake = FakePipelineQuarantine(parked: 2)
+        let response = try await send(
+            "GET", "/ingestion/errors", services: try makeServices(pipelineQuarantine: fake))
+        let rows = try XCTUnwrap(JSONSerialization.jsonObject(with: response.body) as? [[String: Any]])
+        XCTAssertEqual(rows.compactMap { $0["filename"] as? String }, ["parked-0", "parked-1"])
+        XCTAssertEqual(rows.compactMap { $0["reason"] as? String }, ["unparseable", "unparseable"])
+    }
+
+    /// Review F1(c)(d): retry requeues the provider quarantine; clear asks it to
+    /// drop only what the archive already holds.
+    func testRetryAndClearReachTheProviderQuarantine() async throws {
+        let fake = FakePipelineQuarantine(parked: 1)
+        let services = try makeServices(pipelineQuarantine: fake)
+        let retry = try await send("POST", "/ingestion/errors/retry", services: services)
+        XCTAssertEqual(retry.status, 202)
+        let clear = try await send("POST", "/ingestion/errors/clear", services: services)
+        XCTAssertEqual(clear.status, 204)
+        XCTAssertEqual(fake.log, ["requeue", "clear"])
     }
 
     func testAnEmptyHookBodyIsAcceptedAndIgnored() async throws {

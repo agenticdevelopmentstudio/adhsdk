@@ -1,0 +1,62 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "bd101720-9fd3-4978-a0aa-7671e301e64b",
+    "title": "Avatar Engine",
+    "type": "ingredient",
+    "version": "1.0.1",
+    "status": "review",
+    "language": "en",
+    "created": "2026-09-23",
+    "modified": "2026-09-25",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Engine / createEngine: the frame-clocked mood, timeline, gaze and speech state machine shared by the Apple and web avatar animation packages.",
+    "platforms": [
+      "ios",
+      "macos",
+      "swift",
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "avatar",
+      "engine",
+      "animation",
+      "state-machine"
+    ],
+    "depends-on": [
+      "d3e1f776-8ad1-431f-9485-386ac285a039",
+      "471eb7b8-6821-4fd3-ab89-022c56757421",
+      "74ba9dde-4963-42cb-aa03-bf1ee4dcc794"
+    ],
+    "related": [],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "916119ad20e3e5cf",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

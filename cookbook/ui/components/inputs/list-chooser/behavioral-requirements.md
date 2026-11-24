@@ -1,0 +1,24 @@
+
+- **trigger-opens-surface**: Activating the trigger (click, Enter, or Space) MUST open the popover.
+- **opens-with-field-focused**: On open, the filter/add field MUST receive focus so the user can type immediately.
+- **case-insensitive-comparison**: Every case-insensitive comparison (the substring filter and the exact-match check) MUST compare the trimmed typed text and the item label after the default Unicode lowercase mapping, without any locale-specific rules (so `I` and `i` match in every locale, Turkish included). Ports MUST map to a culture-invariant comparison.
+- **type-narrows-list**: Typing in the field MUST narrow the list to items whose label contains the typed text as a case-insensitive substring (see **case-insensitive-comparison**).
+- **arrow-roves-highlight**: ArrowDown / ArrowUp MUST move a roving highlight through the filtered list (and the create row when present). From no highlight, ArrowDown enters at the first row and ArrowUp enters at the last row; once a row is highlighted, ArrowUp at the first row and ArrowDown at the last row hold in place — no wrap between rows.
+- **highlight-syncs-into-field**: While a list item is highlighted, the field MUST display that item's label (the highlight is previewed in the field); typing again replaces the preview with the typed text and clears the highlight.
+- **enter-accepts-highlighted-item**: When a list item is highlighted, Enter MUST accept it via `onChange` with `isNew:false`, then close.
+- **enter-accepts-typed-entry**: When nothing is highlighted, the trimmed text is non-empty and has no exact case-insensitive label match, and `allowCreate` is set, Enter MUST accept the trimmed text via `onChange` with `isNew:true`, then close.
+- **typed-text-resolves-to-exact-item**: When nothing is highlighted and the trimmed text equals an item label (case-insensitive), accept MUST resolve to that item with `isNew:false`, never a new entry.
+- **create-unavailable-when-disabled**: When `allowCreate` is false, text matching no item MUST NOT be acceptable — no create row, OK disabled, Enter a no-op.
+- **create-row-visibility**: The create row MUST show whenever `allowCreate` is true, the trimmed text is non-empty, and no item label equals the trimmed text (case-insensitive), whether or not the filter still matches other items. Otherwise it MUST NOT show.
+- **trigger-shows-committed-value**: The trigger MUST show the label of the item whose value equals `value`; else, when `allowCreate` is true and `value` is not `null`, `value` verbatim (including an empty or whitespace-only string); else `triggerPlaceholder`.
+- **disabled-prevents-open**: When `disabled` is true, the trigger MUST NOT open the popover and `aria-expanded` MUST stay `false`.
+- **escape-cancels**: Esc MUST close the surface without firing `onChange`.
+- **ok-mirrors-enter**: The OK button MUST be equivalent to Enter and MUST be disabled whenever nothing is acceptable.
+- **cancel-mirrors-escape**: The Cancel button MUST be equivalent to Esc.
+- **pointer-click-commits**: A pointer click on a list row (or the create row) MUST accept it immediately and close.
+- **focus-returns-on-close**: On any close, focus MUST return to the trigger.
+- **empty-message-when-no-match**: When no item matches and creation is unavailable, the list MUST show the empty message.
+- **keep-open-accept-resets**: When `keepOpenOnCommit` is true, a plain accept (Enter, OK, or row click) MUST call `onChange`, keep the popover open, reset the query and highlight to their opened state, and keep focus in the field.
+- **shift-enter-dismiss-in-keep-open-mode**: When `keepOpenOnCommit` is true, Shift+Enter MUST close the popover without committing; plain Enter still accepts and keeps the popup open. When `keepOpenOnCommit` is false, Shift+Enter MUST behave exactly like plain Enter.
+- **focused-state-styling**: The trigger MUST show a visible focus indicator meeting WCAG 2.4.7 (Focus Visible) — a 2px focus ring plus a border color change, both distinct from the unfocused state — in addition to the platform-native focus ring where the host platform provides one.
+

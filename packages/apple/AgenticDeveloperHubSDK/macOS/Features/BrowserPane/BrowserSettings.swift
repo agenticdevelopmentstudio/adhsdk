@@ -39,6 +39,55 @@ public enum BrowserHistoryRetention: String, Codable, Sendable, CaseIterable {
     }
 }
 
+/// What the `browser_history` agent tool may return for a pane: every
+/// recorded visit, the driven tab's back/forward list alone, or nothing.
+/// Global, overridable per pane, and `none` by default so the person opts in
+/// (the Agent History Tool recipe: `access-three-choices`,
+/// `access-default-none`).
+public enum BrowserAgentHistoryAccess: String, Codable, CaseIterable, Sendable {
+    case all
+    case currentTab
+    case none
+
+    public var displayName: String {
+        switch self {
+        case .all: "All history"
+        case .currentTab: "Current tab only"
+        case .none: "None"
+        }
+    }
+}
+
+/// How often Chrome asks the Chrome Web Store whether an installed extension
+/// has a newer version.
+public enum BrowserExtensionUpdateInterval: String, Codable, Sendable, CaseIterable {
+    case hourly
+    case everyFiveHours
+    case daily
+    case weekly
+
+    public var label: String {
+        switch self {
+        case .hourly: "Every hour"
+        case .everyFiveHours: "Every 5 hours"
+        case .daily: "Every day"
+        case .weekly: "Every week"
+        }
+    }
+
+    /// The period in seconds, the unit Chrome's `extensions-update-frequency`
+    /// switch takes. Five hours is Chrome's own default.
+    public var seconds: Int {
+        let hour = 60 * 60
+        switch self {
+        case .hourly: return hour
+        case .everyFiveHours: return 5 * hour
+        case .daily: return 24 * hour
+        case .weekly: return 7 * 24 * hour
+        }
+    }
+}
+
 /// What a page may do with the camera and microphone.
 public enum BrowserMediaCapturePolicy: String, Codable, Sendable, CaseIterable {
     case ask
@@ -69,6 +118,104 @@ public enum BrowserAutoplayPolicy: String, Codable, Sendable, CaseIterable {
     }
 }
 
+/// Whether the page receives keyboard input.
+public enum BrowserInputPolicy: String, Codable, Sendable, CaseIterable {
+    case allow
+    case block
+
+    public var label: String {
+        switch self {
+        case .allow: "Allowed"
+        case .block: "Blocked"
+        }
+    }
+}
+
+/// When the pane reports the pointer to the page.
+///
+/// The Privacy topic offers two of the three, as its "Disable pointer
+/// tracking" checkbox: unchecked is `always`, checked writes `never`.
+/// `whenFocused` is no longer offered there (the three-way pop-up became that
+/// checkbox), but a value stored by an earlier build or written by the test
+/// harness (`APP_TEST_BROWSER_SETTINGS`) is still honoured by the gate, shown
+/// checked, and shown on the privacy toolbar as Tracking: Focused Only.
+public enum BrowserPointerTracking: String, Codable, Sendable, CaseIterable {
+    case always
+    case whenFocused
+    case never
+
+    public var label: String {
+        switch self {
+        case .always: "Always"
+        case .whenFocused: "Only while the page has focus"
+        case .never: "Never"
+        }
+    }
+}
+
+/// How much of the browser the agent may see and drive.
+public enum BrowserAgentAccess: String, Codable, Sendable, CaseIterable {
+    case hidden
+    case readOnly
+    case full
+
+    public var label: String {
+        switch self {
+        case .hidden: "Hidden from the agent"
+        case .readOnly: "Read only"
+        case .full: "Full control"
+        }
+    }
+}
+
+/// Whether the agent keeps driving the browser while the user has paused it.
+public enum BrowserAgentWhilePaused: String, Codable, Sendable, CaseIterable {
+    case allowed
+    case paused
+
+    public var label: String {
+        switch self {
+        case .allowed: "Agent may still drive"
+        case .paused: "Agent pauses too"
+        }
+    }
+}
+
+/// Which cookie and site-data store a browser pane shares.
+public enum BrowserStorageJar: String, Codable, Sendable, CaseIterable {
+    case global
+    case worktree
+    case pane
+
+    /// The setting's key, spelled once for `UserSettings.browserPrivacyStorageJar`
+    /// and for the project database's upgrade step, which runs off the main
+    /// actor and cannot read the setting object itself.
+    public static let settingName = "browser.privacy.storage_jar"
+
+    public var label: String {
+        switch self {
+        case .global: "Shared by all browser panes"
+        case .worktree: "Shared within this worktree"
+        case .pane: "This pane only"
+        }
+    }
+}
+
+/// Which third-party content a page may load.
+public enum BrowserThirdPartyContent: String, Codable, Sendable, CaseIterable {
+    case allow
+    case blockScripts
+    case blockAll
+
+    public var label: String {
+        switch self {
+        case .allow: "Allowed"
+        case .blockScripts: "Block third-party scripts"
+        case .blockAll: "Block all third-party content"
+        }
+    }
+}
+
 // MARK: - Keys
 
 /// The browser pane's settings. Every key starts with `browser.`, which is
@@ -84,15 +231,35 @@ extension UserSettings {
     public static let browserBlocksPopups = UserSetting<Bool>("browser.blocks_popups", default: true)
     public static let browserCustomUserAgent = UserSetting<String>("browser.custom_user_agent", default: "")
 
+    // Tabs
+    /// A browser pane's own tab positions. Meaningful only as a pane's
+    /// override: a pane whose layer holds none follows the app-wide
+    /// `tabs.positions`, which is what the row shows for it
+    /// (`BrowserSettings.tabPositions(in:)`). The default here matches that
+    /// setting's and is never what a pane uses.
+    public static let browserTabsPositions = UserSetting<TabPositions>(
+        "browser.tabs.positions", default: TabPositions([.top])
+    )
+
     // History
     public static let browserRecordsHistory = UserSetting<Bool>("browser.records_history", default: true)
     public static let browserHistoryRetention = UserSetting<BrowserHistoryRetention>(
         "browser.history_retention", default: .forever
     )
+    /// What an agent driving a pane may read of its history. Per pane over
+    /// global, never global-only (`access-pane-overridable`).
+    public static let browserAgentHistoryAccess = UserSetting<BrowserAgentHistoryAccess>(
+        "browser.agent.history_access", default: .none
+    )
 
     // Cookies and site data
     public static let browserAcceptsCookies = UserSetting<Bool>("browser.accepts_cookies", default: true)
     public static let browserPrivateBrowsing = UserSetting<Bool>("browser.private_browsing", default: false)
+
+    // Windows
+    /// File ▸ New (⌘N) over a web browser window opens a new tab in it
+    /// rather than a new window. App-wide: a window's New, not a pane's.
+    public static let browserNewOpensTabs = UserSetting<Bool>("browser.new_opens_tabs", default: false)
 
     // Privacy and security
     public static let browserFraudWarning = UserSetting<Bool>("browser.fraud_warning", default: true)
@@ -110,8 +277,70 @@ extension UserSettings {
     public static let browserDownloadDirectory = UserSetting<String>("browser.download_directory", default: "")
     public static let browserAsksDownloadLocation = UserSetting<Bool>("browser.asks_download_location", default: false)
 
+    // Session privacy
+    public static let browserPrivacyKeyboard = UserSetting<BrowserInputPolicy>(
+        "browser.privacy.keyboard", default: .allow
+    )
+    public static let browserPrivacyMouse = UserSetting<BrowserInputPolicy>("browser.privacy.mouse", default: .allow)
+    public static let browserPrivacyPointerTracking = UserSetting<BrowserPointerTracking>(
+        "browser.privacy.pointer_tracking", default: .always
+    )
+    public static let browserPrivacyDragAndDrop = UserSetting<Bool>("browser.privacy.drag_and_drop", default: true)
+    public static let browserPrivacyHideActivation = UserSetting<Bool>(
+        "browser.privacy.hide_activation", default: false
+    )
+    public static let browserPrivacyAgentAccess = UserSetting<BrowserAgentAccess>(
+        "browser.privacy.agent_access", default: .full
+    )
+    public static let browserPrivacyAgentWhilePaused = UserSetting<BrowserAgentWhilePaused>(
+        "browser.privacy.agent_while_paused", default: .allowed
+    )
+    public static let browserPrivacyStorageJar = UserSetting<BrowserStorageJar>(
+        BrowserStorageJar.settingName, default: .pane
+    )
+    public static let browserPrivacyThirdPartyContent = UserSetting<BrowserThirdPartyContent>(
+        "browser.privacy.third_party_content", default: .allow
+    )
+    public static let browserPrivacyConsoleCapture = UserSetting<Bool>("browser.privacy.console_capture", default: true)
+
+    // Agent Privacy: set globally, overridable per pane like any other.
+    // Kept by a global reset: see `BrowserSettings.keptByResetNames`.
+    public static let browserAgentPrivacy = UserSetting<Bool>("browser.agent_privacy.enabled", default: false)
+    /// Whether the privacy toolbar shows under the address bar, with the
+    /// privacy button at its leading edge.
+    public static let browserPrivacyShowToolbar = UserSetting<Bool>("browser.privacy.show_toolbar", default: false)
+    /// Whether the page's images are drawn as a crossed-out eye instead
+    /// (Agent Privacy's Hide Images). Kept by a global reset, like Agent
+    /// Privacy: see `BrowserSettings.keptByResetNames`. A style sheet does it, so it covers
+    /// what `BrowserHiddenImages` lists and no more, and a model's screenshot
+    /// shows whatever it misses.
+    public static let browserPrivacyHideImages = UserSetting<Bool>("browser.privacy.hide_images", default: false)
+    /// Whether the hidden-items picker's one-time notice ("Items that load
+    /// again (such as ads) can reappear.") has been shown. Global only.
+    public static let browserHiddenItemsNoticeShown = UserSetting<Bool>(
+        "browser.hidden_items.notice_shown", default: false
+    )
+
     // Developer
     public static let browserWebInspectorEnabled = UserSetting<Bool>("browser.web_inspector_enabled", default: false)
+
+    // Chrome only. The Safari-only keys above keep the names they shipped
+    // with; these are new, so they say which browser they belong to.
+    public static let browserChromeDevToolsEnabled = UserSetting<Bool>(
+        "browser.chrome.devtools_enabled", default: false
+    )
+    /// 0 is off. Chromium reads it once, when it starts.
+    public static let browserChromeRemoteDebuggingPort = UserSetting<Int>(
+        "browser.chrome.remote_debugging_port", default: 0
+    )
+    /// Chromium reads it once, when it starts.
+    public static let browserChromeHardwareAcceleration = UserSetting<Bool>(
+        "browser.chrome.hardware_acceleration", default: true
+    )
+    /// Chromium reads it once, when it starts.
+    public static let browserChromeExtensionUpdateInterval = UserSetting<BrowserExtensionUpdateInterval>(
+        "browser.chrome.extension_update_interval", default: .everyFiveHours
+    )
 
     // Automation
     public static let browserAutomationEnabled = UserSetting<Bool>("browser.automation.enabled", default: true)
@@ -133,6 +362,7 @@ public enum BrowserSettings {
     /// settings" means the browsing preferences; it must not turn model
     /// access back on for a user who turned it off, nor turn `browser_evaluate`
     /// off for one who turned it on. Those two are reset from their own panel.
+    /// The keys that are here for the same reason are in `keptByResetNames`.
     static let allKeys: [any BrowserSettingKey] = [
         UserSettings.browserHomePage, UserSettings.browserPageZoom, UserSettings.browserMinimumFontSize,
         UserSettings.browserJavaScriptEnabled, UserSettings.browserBlocksPopups,
@@ -142,16 +372,111 @@ public enum BrowserSettings {
         UserSettings.browserUpgradesToHTTPS, UserSettings.browserLockdownMode,
         UserSettings.browserAutoplay, UserSettings.browserAllowsAirPlay, UserSettings.browserMediaCapture,
         UserSettings.browserDownloadDirectory, UserSettings.browserAsksDownloadLocation,
-        UserSettings.browserWebInspectorEnabled
+        UserSettings.browserWebInspectorEnabled, UserSettings.browserChromeDevToolsEnabled,
+        UserSettings.browserChromeRemoteDebuggingPort, UserSettings.browserChromeHardwareAcceleration,
+        UserSettings.browserChromeExtensionUpdateInterval,
+        UserSettings.browserPrivacyKeyboard, UserSettings.browserPrivacyMouse,
+        UserSettings.browserPrivacyPointerTracking, UserSettings.browserPrivacyDragAndDrop,
+        UserSettings.browserPrivacyHideActivation, UserSettings.browserPrivacyAgentAccess,
+        UserSettings.browserPrivacyAgentWhilePaused, UserSettings.browserPrivacyStorageJar,
+        UserSettings.browserPrivacyThirdPartyContent, UserSettings.browserPrivacyConsoleCapture,
+        UserSettings.browserAgentPrivacy, UserSettings.browserPrivacyShowToolbar,
+        UserSettings.browserPrivacyHideImages, UserSettings.browserTabsPositions,
+        UserSettings.browserAgentHistoryAccess
     ]
+
+    /// The remote-debugging ports the Chrome topic accepts; 0 is off.
+    public static let chromeRemoteDebuggingPortRange: ClosedRange<Int> = 0...65535
 
     /// The names of every browser key, for a test to hold the list to.
     public static var allKeyNames: [String] { allKeys.map(\.name) }
 
-    /// Puts every browser setting back to its default by removing the stored
-    /// value, so what the default *is* stays declared in one place.
+    /// Read only when the web view is built, so changing one rebuilds it.
+    public static let constructionTimeKeyNames: Set<String> = [
+        UserSettings.browserPrivacyStorageJar.name,
+        UserSettings.browserUpgradesToHTTPS.name,
+        UserSettings.browserAllowsAirPlay.name,
+        UserSettings.browserAutoplay.name,
+        UserSettings.browserPrivacyConsoleCapture.name,
+        UserSettings.browserPrivateBrowsing.name
+    ]
+
+    /// Overridable for a Safari pane, but fixed once for every Chrome pane
+    /// when Chromium starts, so a Chrome pane reads them from the global
+    /// settings only (`ChromiumLauncher.processSettings`).
+    public static let chromeProcessKeyNames: Set<String> = [
+        UserSettings.browserAutoplay.name
+    ]
+
+    /// Cannot be overridden per pane, so it is only ever read from the global
+    /// settings. Chrome's remote debugging port, hardware acceleration and
+    /// extension update interval are fixed when Chromium starts, for every
+    /// Chrome pane at once.
+    public static let globalOnlyKeyNames: Set<String> = [
+        UserSettings.browserPrivateBrowsing.name,
+        UserSettings.browserChromeRemoteDebuggingPort.name,
+        UserSettings.browserChromeHardwareAcceleration.name,
+        UserSettings.browserChromeExtensionUpdateInterval.name,
+        UserSettings.browserHiddenItemsNoticeShown.name
+    ]
+
+    /// Whether Agent Privacy is on for a pane reading `settings` — its own
+    /// layer, whose override wins over the global value it otherwise
+    /// follows, or the shared store for a pane with no layer. `nil` is off.
+    public static func isAgentPrivacyOn(in settings: SettingsStore?) -> Bool {
+        settings?.get(UserSettings.browserAgentPrivacy) ?? false
+    }
+
+    /// The tab positions a pane reading `settings` overrides the app-wide
+    /// ones with: its layer's own value, or `nil` to follow `tabs.positions`.
+    /// A store with no layer (a pane built without one) never overrides.
+    public static func tabPositionsOverride(in settings: SettingsStore?) -> TabPositions? {
+        guard let layered = settings as? LayeredSettingsStore,
+              layered.hasOverride(UserSettings.browserTabsPositions) else { return nil }
+        return layered.get(UserSettings.browserTabsPositions)
+    }
+
+    /// The tab positions a pane reading `settings` shows: its override, or
+    /// the app-wide value it follows without one.
+    public static func tabPositions(in settings: SettingsStore?) -> TabPositions {
+        if let override = tabPositionsOverride(in: settings) { return override }
+        let global = (settings as? LayeredSettingsStore)?.fallback ?? settings ?? UserSettings.shared
+        return global.get(UserSettings.tabsPositions)
+    }
+
+    /// What `store` holds for every construction-time key, each described as
+    /// text so keys of different types compare in one dictionary. A pane
+    /// keeps the snapshot it was built with; a later snapshot that differs is
+    /// a web view that no longer matches its settings.
+    static func constructionSnapshot(in store: SettingsStore) -> [String: String] {
+        var snapshot: [String: String] = [:]
+        for key in allKeys where constructionTimeKeyNames.contains(key.name) {
+            snapshot[key.name] = key.describe(in: store)
+        }
+        return snapshot
+    }
+
+    /// Browser keys a reset leaves as they are, for the automation switches'
+    /// reason: agent access and agent-while-paused would hand a pane the
+    /// user hid or made read only back to the model, Agent Privacy would
+    /// hand the privacy words back to models, Hide Images (the other half of
+    /// the Agent Privacy group) would draw the images again on screen and in
+    /// a model's screenshot, and the storage jar would move panes off their
+    /// worktree jar, which the reconciler then deletes — site data the reset
+    /// promises not to touch.
+    public static let keptByResetNames: Set<String> = [
+        UserSettings.browserPrivacyAgentAccess.name,
+        UserSettings.browserPrivacyAgentWhilePaused.name,
+        UserSettings.browserPrivacyStorageJar.name,
+        UserSettings.browserAgentPrivacy.name,
+        UserSettings.browserPrivacyHideImages.name
+    ]
+
+    /// Puts every browser setting but `keptByResetNames` back to its default
+    /// by removing the stored value, so what the default *is* stays declared
+    /// in one place.
     public static func reset(in store: SettingsStore) {
-        for key in allKeys { key.remove(from: store) }
+        for key in allKeys where !keptByResetNames.contains(key.name) { key.remove(from: store) }
     }
 
     /// The home page the setting names, or `nil` when it is blank or not an
@@ -160,7 +485,7 @@ public enum BrowserSettings {
     public static func homePage(in store: SettingsStore) -> URL? {
         let entry = store.get(UserSettings.browserHomePage)
         guard !entry.isEmpty else { return nil }
-        return BrowserPaneViewController.resolveAddress(entry)
+        return WebBrowserPaneViewController.resolveAddress(entry)
     }
 
     /// Where downloads land when the setting is blank.
@@ -189,8 +514,30 @@ public enum BrowserSettings {
 protocol BrowserSettingKey {
     var name: String { get }
     func remove(from store: SettingsStore)
+    /// The value `store` resolves for this key, as text.
+    func describe(in store: SettingsStore) -> String
+    #if DEBUG
+    /// Throws unless `json` (a JSON scalar: a Bool, number or string, the
+    /// raw value of an enum) decodes as this key's value. Debug only: its one
+    /// caller is `BrowserTestLaunch`, which a shipping binary leaves out.
+    func check(json: Any) throws
+    /// Writes `json` as this key's value; throws when it does not decode.
+    /// Debug only, for the same reason as `check(json:)`.
+    func set(json: Any, in store: SettingsStore) throws
+    #endif
 }
 
 extension UserSetting: BrowserSettingKey {
     func remove(from store: SettingsStore) { store.remove(self) }
+    func describe(in store: SettingsStore) -> String { String(describing: store.get(self)) }
+    #if DEBUG
+    func check(json: Any) throws { _ = try decode(json) }
+    func set(json: Any, in store: SettingsStore) throws { store.set(try decode(json), for: self) }
+    /// Decodes a lone JSON scalar by wrapping it in an array, since
+    /// `JSONDecoder` takes only a top-level array or object.
+    private func decode(_ json: Any) throws -> Value {
+        let data = try JSONSerialization.data(withJSONObject: [json])
+        return try JSONDecoder().decode([Value].self, from: data)[0]
+    }
+    #endif
 }

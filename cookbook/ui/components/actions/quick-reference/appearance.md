@@ -1,0 +1,13 @@
+
+- **Trigger button**: Subdued outline variant, small size, with a book icon positioned at inline-start and an optional text label.
+- **Title**: Field-caption typography, with vertical spacing between the title and the entries.
+- **Entry label (dt)**: Small font size, muted foreground color.
+- **Code block (dd)**:
+  - Font: monospace
+  - Size: extra-small
+  - Whitespace: preserved, wrapping within the cell
+  - Line height: snug
+  - Foreground: default text color
+  - Width constraint: may shrink below its natural width so it cannot overflow the grid
+- **Grid layout**: Two-column definition list with a moderate horizontal gap and a smaller vertical gap.
+- **Popover container**: Default width of 20rem, with vertical spacing between the title and the list.

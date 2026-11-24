@@ -16,7 +16,7 @@
  *
  * The server refuses a NARROWER set, and this list is the wider one. `RESERVED_PRINCIPAL_SLUGS`
  * in `backend/src/adh/src/lib/rdid.ts` is the rdid type prefixes plus `RESERVED_ROUTE_SLUGS`,
- * and `/auth/slug-available/:slug` reports a hit there as `reason: 'format'` — so a word that
+ * and `/v1/handles/{handle}` reports a hit there as `reason: 'format'` — so a word that
  * shadows a route is refused whichever way the slug is minted, while the words held back on
  * taste alone (`admin`, `login`, the hub's feature vocabulary) are refused only by the two
  * forms. `<adh-tools>/sites/scripts/verify_reserved_route_slugs.py` is what keeps the narrow set from

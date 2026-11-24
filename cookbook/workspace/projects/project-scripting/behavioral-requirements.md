@@ -85,7 +85,7 @@ interface and are used throughout as such.
   longer exists.
 - **window-object-specifier-key**: the scriptable window's object
   specifier MUST be built under the `projectWindows` collection key,
-  addressed by its `uniqueID` (see `adhsdk://cookbook/system/scripting`
+  addressed by its `uniqueID` (see [adhsdk.ingredient.system.scripting](cookbook:d5812249-f235-43df-9cd7-504220da1a7d)
   for that mechanism's own contract).
 - **tab-value-rebuilt-per-read**: the scriptable tab MUST be constructed
   fresh on every enumeration or lookup call, with all six fields (`id`,
@@ -105,7 +105,7 @@ interface and are used throughout as such.
   builds, so a directory that resolves to no project controller, no branch
   controller for that directory, or a branch controller whose checkout is
   on a detached HEAD (no current branch, see
-  `adhsdk://cookbook/workspace/projects/branch-controller`) all
+  [adhsdk.ingredient.workspace.projects.branch-controller](cookbook:92f11498-2cb2-4b04-92b9-560d9f2de6ee)) all
   collapse to the same observable value: an empty string, never a null
   stringified and never a thrown error.
 - **tab-object-specifier-key**: the scriptable tab's object specifier MUST

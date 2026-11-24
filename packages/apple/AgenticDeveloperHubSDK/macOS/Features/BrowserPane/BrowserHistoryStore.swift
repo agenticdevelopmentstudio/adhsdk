@@ -41,6 +41,15 @@ public final class BrowserHistoryStore: @unchecked Sendable {
 
     public static let fileName = "BrowserHistory.db"
 
+    /// Posted, with the store as its object, after every write that
+    /// succeeded, on the thread that made it. A list showing the history
+    /// rereads on it, so a visit recorded while it is open appears.
+    public static let didChangeNotification = Notification.Name("BrowserHistoryStore.didChange")
+
+    private func changed() {
+        NotificationCenter.default.post(name: Self.didChangeNotification, object: self)
+    }
+
     /// `~/.<app token>/BrowserHistory.db`, with the home directory explicit so
     /// a test run can point it anywhere.
     public static func defaultPath(
@@ -88,25 +97,29 @@ public final class BrowserHistoryStore: @unchecked Sendable {
     /// load can be filed against the right row.
     @discardableResult
     public func record(_ url: URL, title: String, at date: Date = Date()) throws -> Int64 {
-        try database.write { connection in
+        let id = try database.write { connection in
             try connection.execute(
                 sql: "INSERT INTO visit (url, title, visited_at) VALUES (?, ?, ?)",
                 arguments: [url.absoluteString, title, date.timeIntervalSince1970]
             )
             return connection.lastInsertedRowID
         }
+        changed()
+        return id
     }
 
     public func updateTitle(ofVisit id: Int64, to title: String) throws {
         try database.write { connection in
             try connection.execute(sql: "UPDATE visit SET title = ? WHERE id = ?", arguments: [title, id])
         }
+        changed()
     }
 
     public func remove(visit id: Int64) throws {
         try database.write { connection in
             try connection.execute(sql: "DELETE FROM visit WHERE id = ?", arguments: [id])
         }
+        changed()
     }
 
     /// Forgets every visit before `cutoff`.
@@ -115,37 +128,62 @@ public final class BrowserHistoryStore: @unchecked Sendable {
             try connection.execute(
                 sql: "DELETE FROM visit WHERE visited_at < ?", arguments: [cutoff.timeIntervalSince1970])
         }
+        changed()
     }
 
     public func removeAll() throws {
         try database.write { connection in
             try connection.execute(sql: "DELETE FROM visit")
         }
+        changed()
     }
 
     // MARK: - Reading
 
-    /// The latest visits, newest first.
-    public func recent(limit: Int = 200) throws -> [BrowserVisit] {
-        try database.read { connection in
+    /// The latest visits, newest first. `excludingLocalFiles` leaves out
+    /// `file:` visits before the limit is applied, so a list for the agent
+    /// still holds `limit` visits it may see (`BrowserAutomation.isDrivable`).
+    /// `before`, when given, starts the page after that visit in the same
+    /// order (keyset paging), so a caller can walk the whole history a page
+    /// at a time without a visit recorded meanwhile shifting the pages.
+    public func recent(
+        limit: Int = 200, before: BrowserVisit? = nil, excludingLocalFiles: Bool = false
+    ) throws -> [BrowserVisit] {
+        var conditions: [String] = []
+        var arguments: StatementArguments = []
+        if let before {
+            conditions.append("(visited_at < ? OR (visited_at = ? AND id < ?))")
+            let time = before.visitedAt.timeIntervalSince1970
+            arguments += [time, time, before.id]
+        }
+        if excludingLocalFiles { conditions.append(Self.notLocalFile) }
+        let filter = conditions.isEmpty ? "" : "WHERE " + conditions.joined(separator: " AND ")
+        arguments += [limit]
+        return try database.read { connection in
             try Row.fetchAll(connection, sql: """
-                SELECT id, url, title, visited_at FROM visit
+                SELECT id, url, title, visited_at FROM visit \(filter)
                 ORDER BY visited_at DESC, id DESC LIMIT ?
-            """, arguments: [limit]).compactMap(Self.visit(from:))
+            """, arguments: arguments).compactMap(Self.visit(from:))
         }
     }
 
-    /// Visits whose address or title contains `text`, newest first.
-    public func search(_ text: String, limit: Int = 200) throws -> [BrowserVisit] {
+    /// Visits whose address or title contains `text`, newest first;
+    /// `excludingLocalFiles` as for `recent`.
+    public func search(_ text: String, limit: Int = 200, excludingLocalFiles: Bool = false) throws -> [BrowserVisit] {
         let pattern = "%" + Self.escapedForLike(text) + "%"
+        let filter = excludingLocalFiles ? "AND \(Self.notLocalFile)" : ""
         return try database.read { connection in
             try Row.fetchAll(connection, sql: """
                 SELECT id, url, title, visited_at FROM visit
-                WHERE url LIKE ? ESCAPE '\\' OR title LIKE ? ESCAPE '\\'
+                WHERE (url LIKE ? ESCAPE '\\' OR title LIKE ? ESCAPE '\\') \(filter)
                 ORDER BY visited_at DESC, id DESC LIMIT ?
             """, arguments: [pattern, pattern, limit]).compactMap(Self.visit(from:))
         }
     }
+
+    /// SQL that keeps a row whose address is not a local file. LIKE ignores
+    /// ASCII case, so `FILE:` is caught as `BrowserAutomation.isDrivable` does.
+    private static let notLocalFile = "url NOT LIKE 'file:%'"
 
     public func count() throws -> Int {
         try database.read { connection in

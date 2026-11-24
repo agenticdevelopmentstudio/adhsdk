@@ -1,0 +1,9 @@
+
+Persisted State is a state value that survives a reload. It takes a storage `key`, an `initial` value, a `decode` function and an optional `encode` function, and returns a pair: the current value and a setter shaped like the platform's ordinary state setter (it accepts either a value or an updater function). The value is stored as JSON in the browser's local storage under `key`.
+
+The state starts at `initial` on the first render and reads storage afterwards, in an effect, so the first paint matches what a server render would produce. In this spec "first render" means the first presentation of the value, and "effect" means work that runs after that first presentation; a port maps both onto its own view lifecycle. It reads storage once per key. `decode` turns the parsed JSON back into the value type and returns `undefined` for anything it does not recognise, such as a value written by an older build or edited by hand, which keeps the default instead of producing a shape the view never expected. `encode` turns the value into JSON-safe data before it is written; it defaults to the identity.
+
+The module also exports `decodeBoolean`, a decoder that accepts only a boolean.
+
+Its callers are the dashboard's gear settings. The source-filter state ([adhsdk.ingredient.status.dashboard.state.source-filter](cookbook:3f2ae6c1-bc07-40ab-b15c-bb4b8c77986b)) stores each pane's selected sources as an array under a per-pane key, and the overview tab stores its canceled-deploys flag, its in-progress-or-failed flag and its stats time span. The doc comment names two siblings with the same shape: the environment filter ([adhsdk.ingredient.status.dashboard.state.env-filter](cookbook:dcfe8ed6-2129-44ea-a084-eb30b640c0e3)) and the activity age-out ([adhsdk.ingredient.status.dashboard.state.activity-ttl](cookbook:f97631a6-531f-45c9-98a9-c5a292a2e6ea)).
+

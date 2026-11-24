@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "5069f11f-e0c6-40c3-92ca-6152b8df3bc2",
     "title": "Model Fit Policy",
-    "domain": "adhsdk://cookbook/ai/models/local/model-fit-policy",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -36,7 +35,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "e1314b9474c77132",
+  "synced": "4ab75b4d9035f457",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -55,7 +54,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

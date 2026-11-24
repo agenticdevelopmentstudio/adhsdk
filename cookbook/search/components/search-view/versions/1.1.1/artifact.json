@@ -1,0 +1,62 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "fed0a111-253c-427b-89c0-14f729657a7d",
+    "title": "SearchView",
+    "type": "ingredient",
+    "version": "1.1.1",
+    "status": "review",
+    "language": "en",
+    "created": "2026-09-22",
+    "modified": "2026-09-25",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "A document search interface combining query input, facet filters, result listing with keyboard navigation, and a collapsible preview dock.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "search",
+      "document-search",
+      "result-listing",
+      "keyboard-navigation"
+    ],
+    "depends-on": [
+      "2cfe57f0-cdd4-4723-a6e0-2ce4f136ce7f",
+      "f3c25236-d72f-4a7b-839a-b7f335b3acd0",
+      "f09feb7c-6778-445a-8a68-863c5d60b5cc",
+      "e86eb195-1ec2-4b12-8a24-79f8c03f65ce",
+      "c57b1aed-ef38-4803-b38a-2d7e0aeced5f",
+      "240f8d48-45af-49ea-aebf-95d756d74707"
+    ],
+    "related": [],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "d4df8fd17996835b",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

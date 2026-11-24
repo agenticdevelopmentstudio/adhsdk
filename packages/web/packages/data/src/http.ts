@@ -12,7 +12,15 @@ export {
   readAccessToken,
   readTokenSubject,
   decodeBase64UrlJson,
+  listAllV1,
+  listV1Page,
+  withV1Query,
+  unixToIso,
+  isoToUnix,
+  V1_PAGE_MAX,
   type BackendTokenFields,
+  type V1List,
+  type V1Deleted,
 } from "@adh-sdk/auth/client";
 
 /** The HTTP status a thrown error carries, when it is a status-carrying HTTP

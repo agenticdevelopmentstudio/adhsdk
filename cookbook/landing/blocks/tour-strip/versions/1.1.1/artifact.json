@@ -1,0 +1,59 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "1d701cc5-5822-4465-8ad5-413e6b0c31fc",
+    "title": "Tour Strip",
+    "type": "ingredient",
+    "version": "1.1.1",
+    "status": "review",
+    "language": "en",
+    "created": "2026-09-22",
+    "modified": "2026-09-25",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Full-viewport screen opening a guided tour stop with navigation and optional pillar content.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "tour",
+      "navigation",
+      "landing"
+    ],
+    "depends-on": [
+      "07c437af-a291-4356-bd83-c896bd4facde",
+      "51d3b1ba-ced7-4c08-8a63-c83094d91299"
+    ],
+    "related": [
+      "01947259-4883-44e1-a047-6b4e463cb422"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "6236909f9509bff1",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

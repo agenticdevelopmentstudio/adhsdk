@@ -1,0 +1,10 @@
+
+| Check | Status | Category |
+|-------|--------|----------|
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | partial | Reliability |
+
+`separation-of-concerns` is passed: `toChatMessages.ts` and `richContent.ts` are framework-free, I/O-free pure functions over the chat contract's types, and `projection-one-directional` explicitly forbids calling any mutating `ChatViewModel` method — the read side and the write side never mix in this module. `unit-test-coverage` is failed: no test file in the `chat` package references `projectMessages`, `encodeRichDisplay`, `decodeRichDisplay`, `draftMessageID`, or `toToolCallInfo` — `RichContent.test.tsx` exercises the differently-named `components/RichContent.tsx` React component, not this projection module, and `useChatSession.test.ts` (the only caller) never touches these functions either. `explicit-error-handling` is passed: `decodeRichDisplay` explicitly catches a `JSON.parse` failure on a matching attachment and falls through to the next candidate rather than letting a malformed payload throw, per `rich-display-decode-fallthrough` and `rich-display-decode-non-throwing`. `fault-tolerance` is partial: decoding a malformed attachment is handled cleanly, but the open question on **duplicate-resolved-ids** means `projectMessages` performs no uniqueness check when a committed message's resolved id (`m.id ?? m.localID`) collides with another message's, leaving downstream id-keyed consumers with undefined behavior on that unpredictable-state case.
+

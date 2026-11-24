@@ -1,0 +1,8 @@
+
+- **Invalid mode (untyped callers only)**: `mode` is typed as `ChatMode` (`'inline' | 'three-pane' | 'mobile'`), so a typed caller cannot pass any other value — this case is unreachable under the declared type (**route-by-mode**). An untyped JS caller, or a `mode as any` cast, that passes an unrecognized value falls through the `switch` with no matching case; PersonaChat returns `undefined` and renders nothing, with no warning or error.
+- **Missing required props (untyped callers only)**: `backend` and `persona` are typed as required (non-optional) on `PersonaChatProps`, so a typed caller cannot omit them. An untyped JS caller that omits them causes PersonaChat to forward `undefined` to the child component, which is responsible for handling or signaling the error; PersonaChat MUST NOT validate these props itself (**accept-backend**, **accept-persona**).
+- **Null/undefined participants**: If `user` is explicitly null or undefined, the component forwards it as-is to the child component, which determines whether this is acceptable (**accept-user**).
+- **Sizing prop on non-inline modes**: When `mode` is `'three-pane'` or `'mobile'` and `sizing` is provided, PersonaChat MUST NOT forward the `sizing` prop; the child component does not accept it (**accept-sizing-inline**).
+- **`open`/`onClose` on non-mobile modes**: When `mode` is not `'mobile'` and `open` or `onClose` are provided, PersonaChat MUST NOT forward them; `InlineChat` and `ThreePaneChat` do not accept these props. The values are silently dropped (**handle-mobile-open**, **handle-mobile-close**).
+- **`className` on mobile mode**: `MobileChat` does not accept a `className` prop. When `mode` is `'mobile'`, PersonaChat MUST NOT forward `className` (**accept-class-name**).
+

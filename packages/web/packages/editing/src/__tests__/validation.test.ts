@@ -28,7 +28,7 @@ describe("isEmptyValue", () => {
 })
 
 describe("fieldError", () => {
-  it("reports a required field left blank before it reports anything else", () => {
+  it("content-editing-019 reports a required field left blank before it reports anything else", () => {
     const field = text({
       label: "Slug",
       required: true,
@@ -38,14 +38,14 @@ describe("fieldError", () => {
     expect(fieldError(field, "  ", undefined)).toBe(REQUIRED_MESSAGE)
   })
 
-  it("does not run a format rule against an empty optional value", () => {
+  it("content-editing-016 does not run a format rule against an empty optional value", () => {
     // "" is how an optional field says "unset". Running the rule on it would
     // reject the empty state and leave the pane permanently unsaveable.
     const field = rdid({ label: "Identifier", validate: () => "nope", repair: (v) => v })
     expect(fieldError(field, "", undefined)).toBeNull()
   })
 
-  it("runs the field's own rule on a non-empty value, with the container's context", () => {
+  it("content-editing-071 runs the field's own rule on a non-empty value, with the container's context", () => {
     const field = text<{ prefix: string }>({
       label: "Name",
       validate: (value, context) => (value.startsWith(context.prefix) ? null : "wrong prefix"),
@@ -69,7 +69,7 @@ describe("a select holding a value its own options do not offer", () => {
     ],
   })
 
-  it("reports the stored value instead of passing it as valid", () => {
+  it("content-editing-017 reports the stored value instead of passing it as valid", () => {
     // A choice that was retired while rows still held it. This is the one field
     // kind whose control cannot show a value it was not given a place for, so
     // silence here would be worse than a normal validation failure: the pane
@@ -84,7 +84,7 @@ describe("a select holding a value its own options do not offer", () => {
     expect(fieldError(visibility, "team", undefined)).toBeNull()
   })
 
-  it("matches on the option's own value, not on the DOM's string of it", () => {
+  it("content-editing-018 matches on the option's own value, not on the DOM's string of it", () => {
     // A numeric select round-trips as a number (controls.tsx maps the string
     // back). A "2" arriving from anywhere else is a string in a numeric column,
     // which is exactly the kind of stored value worth naming.

@@ -45,12 +45,12 @@ class GamificationLevel:
         field_dict.update(
             {
                 "name": name,
-                "minPoints": min_points,
-                "sortOrder": sort_order,
+                "min_points": min_points,
+                "sort_order": sort_order,
             }
         )
         if subject_type is not UNSET:
-            field_dict["subjectType"] = subject_type
+            field_dict["subject_type"] = subject_type
 
         return field_dict
 
@@ -59,9 +59,9 @@ class GamificationLevel:
         d = dict(src_dict)
         name = d.pop("name")
 
-        min_points = d.pop("minPoints")
+        min_points = d.pop("min_points")
 
-        sort_order = d.pop("sortOrder")
+        sort_order = d.pop("sort_order")
 
         def _parse_subject_type(data: object) -> None | str | Unset:
             if data is None:
@@ -70,7 +70,7 @@ class GamificationLevel:
                 return data
             return cast(None | str | Unset, data)
 
-        subject_type = _parse_subject_type(d.pop("subjectType", UNSET))
+        subject_type = _parse_subject_type(d.pop("subject_type", UNSET))
 
         gamification_level = cls(
             name=name,

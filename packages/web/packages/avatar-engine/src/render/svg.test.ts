@@ -12,21 +12,21 @@ import { createSvgRenderer, renderToString } from "./svg";
 const config = loadConfig({ character, rig, poses, timelines, behavior, sayings });
 
 describe("renderToString", () => {
-  it("emits a 400x400 viewBox and one path per display item", () => {
+  it("avatar-engine-render-005: emits a 400x400 viewBox and one path per display item", () => {
     const list = createEngine({ config, seed: 1 }).tick(0);
     const svg = renderToString(config, list);
     expect(svg).toContain('viewBox="0 0 400 400"');
     expect(svg.match(/<path /g) ?? []).toHaveLength(list.length);
   });
 
-  it("writes matrix() in the a,b,c,d,e,f order", () => {
+  it("avatar-engine-render-006: writes matrix() in the a,b,c,d,e,f order", () => {
     const list = createEngine({ config, seed: 1 }).tick(0).map((i) => ({
       ...i, m: [1, 2, 3, 4, 5, 6] as const,
     }));
     expect(renderToString(config, list)).toContain("matrix(1,2,3,4,5,6)");
   });
 
-  it("strokes unfilled shapes and fills filled ones", () => {
+  it("avatar-engine-render-007: strokes unfilled shapes and fills filled ones", () => {
     const list = createEngine({ config, seed: 1 }).tick(0);
     const svg = renderToString(config, list);
     const strokeCount = (svg.match(/stroke="#/g) ?? []).length;
@@ -35,14 +35,14 @@ describe("renderToString", () => {
     expect(fillCount).toBe(list.filter((i) => i.paint.fill).length);
   });
 
-  it("carries the config's stroke style, not a stylesheet", () => {
+  it("avatar-engine-render-008: carries the config's stroke style, not a stylesheet", () => {
     const svg = renderToString(config, createEngine({ config, seed: 1 }).tick(0));
     expect(svg).toContain('stroke-linecap="round"');
     expect(svg).toContain('stroke-linejoin="round"');
     expect(svg).not.toContain("<style");
   });
 
-  it("escapes nothing it does not need to and stays stable across renders", () => {
+  it("avatar-engine-render-009: escapes nothing it does not need to and stays stable across renders", () => {
     const list = createEngine({ config, seed: 1 }).tick(0);
     expect(renderToString(config, list)).toBe(renderToString(config, list));
   });
@@ -98,7 +98,7 @@ const snapshot = (root: FakeEl): string =>
   JSON.stringify(root.children.map((c) => [c.attrs.d, c.attrs.transform, c.attrs.opacity]));
 
 describe("createSvgRenderer", () => {
-  it("creates one <path> per item on the first frame, and none on any frame after", () => {
+  it("avatar-engine-render-010: creates one <path> per item on the first frame, and none on any frame after", () => {
     const engine = createEngine({ config, seed: 1 });
     const { doc, created } = fakeDoc();
     const r = createSvgRenderer(config, doc);
@@ -136,7 +136,7 @@ describe("createSvgRenderer", () => {
     expect(root.attrs.viewBox).toBe("0 0 400 400");
   });
 
-  it("forgets everything on destroy", () => {
+  it("avatar-engine-render-011: forgets everything on destroy", () => {
     const engine = createEngine({ config, seed: 1 });
     const { doc, created } = fakeDoc();
     const r = createSvgRenderer(config, doc);
@@ -155,7 +155,7 @@ describe("createSvgRenderer", () => {
     expect(created).toHaveLength(2 * n + 1);
   });
 
-  it("paints exactly what renderToString writes, attribute for attribute", () => {
+  it("avatar-engine-render-012: paints exactly what renderToString writes, attribute for attribute", () => {
     // The two render paths now share one attribute source, and this is what
     // holds them there. It is the one property the file cares about that neither
     // describe block above can see: each tests its own path against its own
@@ -182,4 +182,27 @@ describe("createSvgRenderer", () => {
     expect(list.some((i) => i.paint.fill)).toBe(true);
     expect(list.some((i) => !i.paint.fill)).toBe(true);
   });
+});
+
+describe("avatar-engine-render conformance vectors without a web counterpart", () => {
+  it("avatar-engine-render-014: carries the item alpha as opacity, never in the ink", () => {
+    const list = createEngine({ config, seed: 1 }).tick(0).map((i) => ({
+      ...i, paint: { ...i.paint, alpha: 0.5, ink: "#abcdef" },
+    }));
+    const svg = renderToString(config, list);
+    const paths = [...svg.matchAll(/<path ([^>]*)\/>/g)].map((m) => m[1]!);
+    expect(paths).toHaveLength(list.length);
+    for (const p of paths) {
+      expect(p).toContain('opacity="0.5"');
+      expect(p).toMatch(/(fill|stroke)="#abcdef"/);
+      expect(p).not.toMatch(/#[0-9a-f]{8}"/);
+    }
+  });
+
+  // Swift-only bridges (PlatformShims.swift); the web has no CGAffineTransform, CGColor or CGPath.
+  it.skip("avatar-engine-render-001: CGAffineTransform bridge matches Mat.apply (Swift-only)", () => {});
+  it.skip("avatar-engine-render-002: live environment reads reduce motion (Swift-only, needs AppKit)", () => {});
+  it.skip("avatar-engine-render-003: CGPath.avatarItem builds the display item path (Swift-only)", () => {});
+  it.skip("avatar-engine-render-004: StrokeStyle maps onto CoreGraphics caps and joins (Swift-only)", () => {});
+  it.skip("avatar-engine-render-013: CGColor.avatarInk parses hex (Swift-only)", () => {});
 });

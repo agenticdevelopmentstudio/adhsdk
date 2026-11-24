@@ -17,7 +17,7 @@ import {
  * Postmark/Twilio config, with the full message log.
  *
  * Everything a reader sees is `MessagingSurface`, which the per-product Messaging pane
- * renders too — this file is the admin-scoped HALF: the `/messaging/{status,log,send}`
+ * renders too — this file is the admin-scoped HALF: the `/v1/messaging/{status,messages}`
  * endpoints (gated by isAdmin()) instead of the per-ecosystem ones, and the words that
  * name that scope. The two used to be forked copies of one screen, and had drifted
  * (adh/docs/ui/fleet-ui-audit.md, Tier 6).

@@ -2,7 +2,7 @@
 **Decision**: `viewModel.onChange` is overwritten unconditionally in `init`,
 replacing any handler already registered on that `FontViewModel` instance.
 **Rationale**: Mirrors the same closure-property-assignment pattern
-documented at `adhsdk://cookbook/ui/settings/rows/color-picker-view#requirements/owns-on-change`;
+documented at owns-on-change ([adhsdk.ingredient.ui.settings.rows.color-picker-view](cookbook:c0e95399-ddab-4445-a22a-566d07339f9b));
 the view provides no way to compose with an existing observer.
 **Approved**: pending
 

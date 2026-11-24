@@ -1,0 +1,25 @@
+
+- **follow-mode-for-own-window**: The controller MUST update its overlay when the arrange mode changes for the window that holds its pane, and MUST ignore a change for any other window.
+- **install-overlay-when-arranging**: While arrange mode is on in the pane's window, the controller MUST have exactly one overlay installed over the pane.
+- **remove-overlay-when-not-arranging**: When arrange mode is off in the pane's window, the controller MUST remove its overlay.
+- **reinstall-on-reentry**: `update()` MUST install the overlay again when the pane is re-hosted while the mode is on, so the pane comes back with the scrim it left with.
+- **overlay-inside-border**: The overlay MUST sit above the pane's content and inset from each edge of the pane view by `ComposableTabsPaneBackgroundView.borderInset`, so it stays inside the active-pane border.
+- **overlay-reflects-pane**: The overlay MUST be given the pane's name, whether it offers add and remove, and closures for whether the pane can add, can remove and which directions it can move, and for adding, removing and moving.
+- **overlay-done-leaves-mode**: The overlay's done action MUST turn arrange mode off in the pane's window.
+- **refresh-availability-on-layout-change**: The controller MUST refresh the overlay's availability whenever any tab's layout changes, because a pane moving changes what every other pane may do.
+- **remove-on-window-close**: The controller MUST remove its overlay and key monitor when its pane's window closes, even if the window never left arrange mode.
+- **exit-keys**: While arrange mode is on in the pane's window, Return (key code 36), Enter (key code 76) and Escape (key code 53) MUST turn the mode off and be consumed.
+- **exit-is-idempotent**: Turning the mode off MUST be a no-op when it is already off, since every pane in the window has its own key monitor and each one runs.
+- **arrow-moves-selected-pane**: While arrange mode is on, an arrow key MUST call the move action with the matching direction only in the pane that is the window's active pane, and be consumed.
+- **unselected-pane-ignores-arrows**: A pane that is not the window's active pane MUST NOT move on an arrow key and MUST NOT consume it.
+- **keys-ignored-outside-pane-window**: A key event whose window is not the pane's window MUST be left unconsumed, so a sheet's Escape cancels the sheet and not the mode behind it.
+- **keys-ignored-when-not-arranging**: A key event while arrange mode is off in the pane's window MUST be left unconsumed.
+- **monitor-sees-keys-before-content**: The key handling MUST see key events before the pane's content does, so a content view that holds first responder cannot swallow an arrow.
+- **single-monitor**: The controller MUST hold at most one key monitor, and remove it when the overlay is removed.
+- **toggle-button-toggles-mode**: Pressing the title bar toggle button MUST toggle arrange mode in the attached window.
+- **toggle-button-follows-mode**: The toggle button MUST show the accent color as its content tint and the on state while arrange mode is on in its window, and no tint and the off state otherwise, whether the mode was changed by the button or by another control such as the Window menu.
+- **toggle-button-identity**: The toggle button MUST use the symbol `rectangle.3.group`, the accessibility description "Arrange Panes", the tooltip "Arrange panes" and the accessibility identifier it is given.
+- **titlebar-button-size**: A button from `makeButton` MUST use a 14-point regular-weight symbol, image-only, textured rounded bezel, in a 36 by 24 point frame with the given tooltip, target and action.
+- **install-accessory-right-aligned**: `install(_:in:)` MUST add the buttons in a horizontal stack with 4 points between them, as a right-aligned title bar accessory of width 40 points per button and height 24 points, and return the accessory.
+- **integrated-titlebar**: `applyIntegratedTitlebar(to:)` MUST set a unified toolbar style, a transparent title bar, no title bar separator, the project pane backdrop as window background and disallowed native tabbing.
+

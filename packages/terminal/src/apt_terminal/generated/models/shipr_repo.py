@@ -91,19 +91,19 @@ class ShiprRepo:
         if id is not UNSET:
             field_dict["id"] = id
         if dev_repo_id is not UNSET:
-            field_dict["devRepoId"] = dev_repo_id
+            field_dict["dev_repo_id"] = dev_repo_id
         if group_id is not UNSET:
-            field_dict["groupId"] = group_id
+            field_dict["group_id"] = group_id
         if slug is not UNSET:
             field_dict["slug"] = slug
         if shard is not UNSET:
             field_dict["shard"] = shard
         if ship_branch is not UNSET:
-            field_dict["shipBranch"] = ship_branch
+            field_dict["ship_branch"] = ship_branch
         if env_branches is not UNSET:
-            field_dict["envBranches"] = env_branches
+            field_dict["env_branches"] = env_branches
         if registered_at is not UNSET:
-            field_dict["registeredAt"] = registered_at
+            field_dict["registered_at"] = registered_at
         if provisioned is not UNSET:
             field_dict["provisioned"] = provisioned
         if position is not UNSET:
@@ -121,7 +121,7 @@ class ShiprRepo:
         d = dict(src_dict)
         id = d.pop("id", UNSET)
 
-        dev_repo_id = d.pop("devRepoId", UNSET)
+        dev_repo_id = d.pop("dev_repo_id", UNSET)
 
         def _parse_group_id(data: object) -> None | str | Unset:
             if data is None:
@@ -130,15 +130,15 @@ class ShiprRepo:
                 return data
             return cast(None | str | Unset, data)
 
-        group_id = _parse_group_id(d.pop("groupId", UNSET))
+        group_id = _parse_group_id(d.pop("group_id", UNSET))
 
         slug = d.pop("slug", UNSET)
 
         shard = d.pop("shard", UNSET)
 
-        ship_branch = d.pop("shipBranch", UNSET)
+        ship_branch = d.pop("ship_branch", UNSET)
 
-        _env_branches = d.pop("envBranches", UNSET)
+        _env_branches = d.pop("env_branches", UNSET)
         env_branches: ShiprRepoEnvBranches | Unset
         if isinstance(_env_branches, Unset):
             env_branches = UNSET
@@ -152,7 +152,7 @@ class ShiprRepo:
                 return data
             return cast(None | str | Unset, data)
 
-        registered_at = _parse_registered_at(d.pop("registeredAt", UNSET))
+        registered_at = _parse_registered_at(d.pop("registered_at", UNSET))
 
         def _parse_provisioned(data: object) -> None | ShiprRepoProvisionedType0 | Unset:
             if data is None:

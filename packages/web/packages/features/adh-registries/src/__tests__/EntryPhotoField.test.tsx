@@ -45,7 +45,7 @@ describe('EntryPhotoField', () => {
     await waitFor(() =>
       expect(screen.getByRole('img').getAttribute('src')).toBe('https://cdn.example/p.png'),
     );
-    expect(authedJson).toHaveBeenCalledWith('/api/storage/downloads/att_1');
+    expect(authedJson).toHaveBeenCalledWith('/api/v1/files/att_1/contents');
   });
 
   it('refuses a file that is not an image, and calls nothing', async () => {
@@ -66,7 +66,7 @@ describe('EntryPhotoField', () => {
 
   it('initialises against the ENTRY, puts the bytes, completes, and reports the id', async () => {
     authedJson
-      .mockResolvedValueOnce({ attachment: { id: 'att_new' }, uploadUrl: 'https://r2/put' })
+      .mockResolvedValueOnce({ attachment: { id: 'att_new' }, upload_url: 'https://r2/put' })
       .mockResolvedValueOnce({});
     const onChange = vi.fn();
     const file = png();
@@ -74,16 +74,16 @@ describe('EntryPhotoField', () => {
     await userEvent.upload(screen.getByLabelText('Choose a photo'), file);
 
     await waitFor(() => expect(onChange).toHaveBeenCalledWith('att_new'));
-    // The two values that make this the ENTRY's photo rather than a loose file. `ownerType`
+    // The two values that make this the ENTRY's photo rather than a loose file. `owner_type`
     // is a free string server-side (storage.ts:17), so this needs no backend allowlist.
     expect(JSON.parse(String(authedJson.mock.calls[0]![1].body))).toMatchObject({
-      ownerType: 'registry.entry',
-      ownerId: 'e1',
-      contentType: 'image/png',
+      owner_type: 'registry.entry',
+      owner_id: 'e1',
+      content_type: 'image/png',
       // Minor `ph-sizebytes`: the server stores this verbatim (`routes/storage.ts` —
       // `body.sizeBytes ?? 0`), so sending `0` silently under-reports every attachment's size
       // and no other assertion in this file would notice.
-      sizeBytes: file.size,
+      size_bytes: file.size,
     });
     // R4-I5: the METHOD on both halves, not only the URL. The presigned R2 URL is signed for
     // `PUT`, and `POST …/complete` is what moves the attachment row out of `pending` — the
@@ -92,7 +92,7 @@ describe('EntryPhotoField', () => {
     expect(vi.mocked(fetch).mock.calls[0]![0]).toBe('https://r2/put');
     expect(vi.mocked(fetch).mock.calls[0]![1]).toMatchObject({ method: 'PUT' });
     expect(authedJson.mock.calls[1]).toEqual([
-      '/api/storage/uploads/att_new/complete',
+      '/api/v1/files/att_new/complete',
       { method: 'POST' },
     ]);
   });
@@ -112,7 +112,7 @@ describe('EntryPhotoField', () => {
   });
 
   it('skips the PUT when the init came back deduplicated', async () => {
-    // No uploadUrl means the bytes are already stored — PUTting to nowhere would throw.
+    // No upload_url means the bytes are already stored — PUTting to nowhere would throw.
     authedJson.mockResolvedValueOnce({ attachment: { id: 'att_same' }, deduplicated: true });
     const onChange = vi.fn();
     render(<EntryPhotoField entryId="e1" value={null} onChange={onChange} />);
@@ -124,7 +124,7 @@ describe('EntryPhotoField', () => {
   });
 
   it('surfaces a failed PUT instead of reporting an id that has no bytes', async () => {
-    authedJson.mockResolvedValueOnce({ attachment: { id: 'att_x' }, uploadUrl: 'https://r2/put' });
+    authedJson.mockResolvedValueOnce({ attachment: { id: 'att_x' }, upload_url: 'https://r2/put' });
     vi.mocked(fetch).mockResolvedValue({ ok: false, status: 503 } as unknown as Response);
     const onChange = vi.fn();
     render(<EntryPhotoField entryId="e1" value={null} onChange={onChange} />);

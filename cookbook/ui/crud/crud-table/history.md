@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.3.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (CrudTable.test.tsx, 26 of 26 vectors); unit-test-coverage now passed. |
 | 1.3.1 | 2026-10-04 | Mike Fullerton | Matches its type's shape: required fields, title heading, and only the type's own sections. |
 | 1.3.0 | 2026-10-04 | Mike Fullerton | Added the read-only mode and required canWrite requirements, vectors T23-T26 and configuration rows to match the code; resolved the minimum-contrast-ratio NEEDS REVIEW marker as current behavior with a pending decision; added the Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics and Privacy sections; filled Reference Implementations; added separation-of-concerns and unit-test-coverage compliance rows. |
 | 1.2.3 | 2026-09-27 | Mike Fullerton | Moved into the concept grouping. |

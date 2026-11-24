@@ -209,10 +209,18 @@
   scheme to unframed before constructing its channel, regardless of the
   framing value supplied in the configuration passed in.
 - **run-captures-full-output**: The one-shot run operation MUST launch the
-  channel, close its standard input immediately, and concatenate every
+  channel, close its standard input immediately (or, given standard input,
+  once that input is written), and concatenate every
   chunk yielded by the message stream in arrival order to form the run
   result's standard output, reproducing the child's raw standard output
   byte-for-byte.
+- **run-standard-input**: The one-shot run operation MAY be given bytes for
+  the child's standard input. It MUST write them from a separate task while
+  it drains standard output, so a child that fills its output pipe before
+  reading all of its input cannot stall either side, and close the input
+  once written. A write that fails because the child exited or closed its
+  input early MUST be ignored: the exit status is the answer. The writer
+  MUST be cancelled on every path that leaves the operation.
 - **run-tolerates-exited-case**: The one-shot run operation MUST catch an
   exited failure thrown while draining the message stream and treat it as
   a normal end of that iteration rather than propagating it, tolerating a

@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.4.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (deleteEntitySection.test.tsx, 19 of 19 vectors; this recipe's vectors live in integration-test-vectors.md as T1-T19); unit-test-coverage now passed. |
 | 1.4.2 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own adhsdk://recipes/ domains; the adhsdk://recipes/ form named nothing. |
 | 1.4.1 | 2026-10-04 | Mike Fullerton | Add separation-of-concerns and unit-test-coverage compliance. |
 | 1.4.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to adh/hub/admin/. |

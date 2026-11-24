@@ -189,6 +189,7 @@ public final class ConversationsWindowController: SingleWindowController {
         }
 
         self.windowTitle = "Stenographer — Conversations"
+        self.windowTitleSymbolName = "bubble.left.and.text.bubble.right"
         self.windowStyleMask = [.titled, .closable, .resizable, .miniaturizable]
         self.windowSpec = WindowSpec(
             defaultSize: NSSize(width: 560, height: 720),

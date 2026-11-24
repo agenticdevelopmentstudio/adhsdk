@@ -1,13 +1,12 @@
 ---
 id: 143b0352-49d4-46a9-a922-bb45c4cc0e7e
 title: "Conversations Key Commands"
-domain: adhsdk://cookbook/ai/chat/conversations/conversations-key-commands
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-10-04
-modified: 2026-10-04
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -21,8 +20,8 @@ tags:
   - conversations
 depends-on: []
 related:
-  - adhsdk://cookbook/ui/controls/key-command-capture-field
-  - adhsdk://cookbook/ui/settings/rows/key-command-row-view
+  - 969b7f76-3fff-4a13-9b85-a61df25c70ee
+  - 1d2f69b6-1156-4dfa-a390-a240925ba1bd
 references: []
 approved-by: ""
 approved-date: ""
@@ -202,9 +201,9 @@ Not applicable: the source contains no logging call.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/ConversationsWindow/ConversationsKeyCommands.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/ConversationsWindow/ConversationsKeyCommands.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
 
@@ -224,25 +223,25 @@ wrong way round: the panel is where you go to find out what the app can do."
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 `separation-of-concerns` passes because the component only declares commands;
 the registry performs them and the window decides ownership.
 `no-hardcoded-strings` fails because the titles are English literals with no
-localization. `unit-test-coverage` is `partial`: in
-`KeyCommands/KeyCommandsPanelHierarchyTests.swift`,
-`testTheConversationsWindowListsItsSingleModeCommandsUnderTheMode` installs
-the section with a resolver returning `nil` and checks the panel outline
-(section title, the toggle command, the "Single Conversation Mode" heading and
-the two selection commands in order), which covers section-identity,
-toggle-shelf-command and single-mode-feature and uses the identifier
-constants. No test checks default shortcuts, what each command passes to the
-controller, run-time resolution, or the declined-key behavior.
-
+localization. `unit-test-coverage` is `partial`:
+`KeyCommands/KeyCommandsPanelHierarchyTests.swift` covers the panel outline,
+and `ConversationsWindow/ConversationsKeyCommandsConformanceTests.swift`
+covers every vector by id. Skipped: conversations-key-commands-009
+(confines-to-ui-thread), because the component is `@MainActor` and a use from
+another thread is rejected at build time. The run-for-real halves of
+conversations-key-commands-005 (the selection moves by -1 and +1) and
+conversations-key-commands-008 (a controller that accepts reports taken) need
+a key window and skip themselves where the test runner cannot make one.
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-15 | Mike Fullerton | Conformance tests added (ConversationsKeyCommandsConformanceTests.swift, 8 of 9 vectors); unit-test-coverage now partial. |
 | 1.0.0 | 2026-10-04 | Mike Fullerton | Initial spec for the Conversations window key commands, split out of the mock chat session spec where it was misattributed. |

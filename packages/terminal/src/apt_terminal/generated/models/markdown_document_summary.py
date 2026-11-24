@@ -39,8 +39,8 @@ class MarkdownDocumentSummary:
         content_hash (str):
         size_bytes (int):
         current_version (int):
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
         frontmatter (MarkdownDocumentSummaryFrontmatterType0 | None | Unset):
         category (None | str | Unset):
         public_route (None | str | Unset):
@@ -57,8 +57,8 @@ class MarkdownDocumentSummary:
     content_hash: str
     size_bytes: int
     current_version: int
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     frontmatter: MarkdownDocumentSummaryFrontmatterType0 | None | Unset = UNSET
     category: None | str | Unset = UNSET
     public_route: None | str | Unset = UNSET
@@ -90,9 +90,9 @@ class MarkdownDocumentSummary:
 
         current_version = self.current_version
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         frontmatter: dict[str, Any] | None | Unset
         if isinstance(self.frontmatter, Unset):
@@ -131,11 +131,11 @@ class MarkdownDocumentSummary:
                 "visibility": visibility,
                 "stage": stage,
                 "kind": kind,
-                "contentHash": content_hash,
-                "sizeBytes": size_bytes,
-                "currentVersion": current_version,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
+                "content_hash": content_hash,
+                "size_bytes": size_bytes,
+                "current_version": current_version,
+                "created": created,
+                "updated": updated,
             }
         )
         if frontmatter is not UNSET:
@@ -143,9 +143,9 @@ class MarkdownDocumentSummary:
         if category is not UNSET:
             field_dict["category"] = category
         if public_route is not UNSET:
-            field_dict["publicRoute"] = public_route
+            field_dict["public_route"] = public_route
         if latest_version_id is not UNSET:
-            field_dict["latestVersionId"] = latest_version_id
+            field_dict["latest_version_id"] = latest_version_id
 
         return field_dict
 
@@ -170,15 +170,15 @@ class MarkdownDocumentSummary:
 
         kind = MarkdownDocumentSummaryKind(d.pop("kind"))
 
-        content_hash = d.pop("contentHash")
+        content_hash = d.pop("content_hash")
 
-        size_bytes = d.pop("sizeBytes")
+        size_bytes = d.pop("size_bytes")
 
-        current_version = d.pop("currentVersion")
+        current_version = d.pop("current_version")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         def _parse_frontmatter(
             data: object,
@@ -215,7 +215,7 @@ class MarkdownDocumentSummary:
                 return data
             return cast(None | str | Unset, data)
 
-        public_route = _parse_public_route(d.pop("publicRoute", UNSET))
+        public_route = _parse_public_route(d.pop("public_route", UNSET))
 
         def _parse_latest_version_id(data: object) -> None | str | Unset:
             if data is None:
@@ -224,7 +224,7 @@ class MarkdownDocumentSummary:
                 return data
             return cast(None | str | Unset, data)
 
-        latest_version_id = _parse_latest_version_id(d.pop("latestVersionId", UNSET))
+        latest_version_id = _parse_latest_version_id(d.pop("latest_version_id", UNSET))
 
         markdown_document_summary = cls(
             id=id,
@@ -237,8 +237,8 @@ class MarkdownDocumentSummary:
             content_hash=content_hash,
             size_bytes=size_bytes,
             current_version=current_version,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
             frontmatter=frontmatter,
             category=category,
             public_route=public_route,

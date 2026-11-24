@@ -1,0 +1,3 @@
+
+Mobile Chat has two user-facing strings, both currently hardcoded rather than externalized: the input placeholder ("Type a message...", both web and iOS) and the close affordance's default label ("← back", web only). The `closeLabel` prop already lets a web host override that string per locale; the placeholder is not exposed as a prop on either platform today, so it SHOULD be added as an overridable/localizable parameter — mirroring `closeLabel` — rather than staying hardcoded in source. Thinking-indicator text is already externalized: it comes from the host-authored `ChatStatusWordPair` configured on `thinkingIndicator`, not from this component's own strings.
+

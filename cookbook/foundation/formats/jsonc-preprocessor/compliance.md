@@ -1,23 +1,18 @@
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
-| [unicode-support](agenticdevelopercookbook://compliance/internationalization#unicode-support) | passed | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
+| [adc.check.internationalization.unicode-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d255b8aa-7379-52ef-b4e8-b08386ba6aac) | passed | Internationalization |
 
 Notes: `separation-of-concerns` passes because the JSONC preprocessor
 addresses exactly one concern — turning JSONC bytes/text into strict JSON —
 with no theme, snippet, extension-manifest, or presentation logic of its
 own; it was extracted from a color-theme importer specifically to keep that
 concern from being duplicated across readers. `unit-test-coverage` is
-partial: the strip operation and the parse-to-object operation are
-exercised directly and thoroughly (comments, string-awareness, trailing
-commas, all encoding paths, byte-order-mark handling, pass-through, and
-both failure cases), but the normalize-to-strict-JSON operation has no
-dedicated test anywhere in the repository, even though production code
-calls it. `explicit-error-handling` passes because every failure path
+partial: 21 of 23 vectors have a test, all in `JSONCPreprocessorTests.swift`. The strip, parse-to-object and normalize-to-strict-JSON operations are covered (comments, string-awareness, trailing commas, encodings, byte-order-mark handling, pass-through, re-encoding, both failure cases and concurrent calls). Skipped: foundation-json-022 (the absence of side effects cannot be observed from a unit test) and foundation-json-023 (a compile-time property: a call site passing an encoding list does not build). `explicit-error-handling` passes because every failure path
 rethrows the underlying JSON-parsing error unchanged, with no
 swallow-and-continue anywhere the final result is concerned — internal
 attempts exist only to test a candidate before committing to it, and each

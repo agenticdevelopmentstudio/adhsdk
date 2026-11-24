@@ -1,13 +1,12 @@
 ---
 id: 43d93a67-c469-40d1-8465-076cd782e1b2
 title: "Portfolio Indicator"
-domain: adhsdk://cookbook/status/dashboard/state/portfolio-indicator
 type: ingredient
-version: 1.1.0
+version: 2.0.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-09-27
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -17,9 +16,9 @@ platforms:
   - web
 tags: []
 depends-on:
-  - adhsdk://cookbook/status/dashboard/state/board
+  - 7610ef55-32c9-43b6-8a70-aaa247cc4899
 related:
-  - adhsdk://cookbook/status/dashboard/state/board
+  - 7610ef55-32c9-43b6-8a70-aaa247cc4899
 references: []
 approved-by: ""
 approved-date: ""
@@ -29,7 +28,7 @@ approved-date: ""
 
 ## Overview
 
-Portfolio Indicator is the single derivation of the whole-portfolio status sign, shared by the status header's pill and the landing sign in the board shell; in the current tree its callers are the board shell and the wallboard status view. It reads two independent feeds: the board state (for what's wrong) and Live Snapshot (for whether the data backing that claim is fresh). It returns a result holding a glyph key (`pillKey`) and a problem count (`count`).
+Portfolio Indicator is the single derivation of the whole-portfolio status sign, shared by the status header's pill and the landing sign in the board shell; in the current tree its callers are the board shell and the wallboard status view. It reads two independent feeds: the board state (for what's wrong) and Live Snapshot (for whether the data backing that claim is fresh, by the server's freshness verdict). It returns a result holding a glyph key (`pillKey`) and a problem count (`count`).
 
 Portfolio Indicator exists so that the rule for "when is status unknown" lives in one place and the signs that show portfolio status can never disagree. It does not format text: callers format their own headline text from `pillKey`/`count`.
 
@@ -52,14 +51,10 @@ Use it anywhere a view needs to show one portfolio-wide status verdict. Do not r
 
 ### Snapshot staleness
 
-- **snapshot-stale-rule**: The live snapshot MUST be judged stale exactly when `snapshot` is non-null and the shared snapshot-freshness check (given the snapshot's `lastCycleAt`, `generatedAt` and `probeIntervalMs`) returns anything other than `"fresh"` (that is, `"stale"` or `"very-stale"`).
+- **snapshot-stale-rule**: The live snapshot MUST be judged stale exactly when `snapshot` is non-null and its server-supplied `freshness.state` is anything other than `"fresh"` (that is, `"stale"`, `"very-stale"`, or no verdict at all).
 - **snapshot-null-not-stale**: A null `snapshot` (no live read yet) MUST NOT count as stale.
-- **shared-staleness-rule**: The snapshot staleness verdict MUST come from one shared snapshot-freshness check, the same rule the board-wide stale-snapshot banner uses, so the sign and the banner agree.
-- **freshness-no-probe**: Under the shared check, a missing or empty `lastCycleAt` or `generatedAt` MUST yield `"fresh"` — no probe yet means nothing to judge, so no alarm.
-- **freshness-window**: Under the shared check, the stale window MUST be `max(probeIntervalMs × 5, 300,000 ms)`, with a null or missing `probeIntervalMs` treated as 0 (so the window is the 300,000 ms floor).
-- **freshness-lag**: Under the shared check, the lag MUST be measured as the parsed timestamp of `generatedAt` minus the parsed timestamp of `lastCycleAt`, both server clocks, and MUST NOT involve the client's current time.
-- **freshness-threshold**: Under the shared check, a lag not strictly greater than the window MUST be `"fresh"`; a lag greater than the window MUST be `"stale"`, escalating to `"very-stale"` when greater than three times the window. Both non-fresh verdicts count as stale for Portfolio Indicator.
-- **freshness-unparseable**: Under the shared check, an unparseable date (an invalid lag) MUST yield `"fresh"`, because a comparison against an invalid value defaults to not-stale.
+- **shared-staleness-rule**: The snapshot staleness verdict MUST be the server's `snapshot.freshness` verdict, the same field the board-wide stale-snapshot banner reads, so the sign and the banner agree; Portfolio Indicator MUST NOT judge staleness from timestamps or cadence on the client.
+- **freshness-no-verdict**: A snapshot with no `freshness` field (from a backend older than the verdict) MUST read as stale, because no verdict is not "fresh"; it MUST NOT throw.
 
 ### Derivation
 
@@ -102,13 +97,13 @@ Not applicable — this is a state-derivation concept, not a visual component.
 | portfolio-004 | unknown-when-blind | `blind: true`, `offline: false`, board `{ indicator: "degraded", problems: [p1, p2] }` | `pillKey` is `"unknown"`, `count` is `2` |
 | portfolio-005 | mapped-verdict | fresh snapshot, board `{ indicator: "degraded", problems: [p1, p2] }` | `pillKey` is `"warn"`, `count` is `2` |
 | portfolio-006 | mapped-verdict | fresh snapshot, board `{ indicator: "outage", problems: [p1] }` | `pillKey` is `"down"`, `count` is `1` |
-| portfolio-007 | unknown-when-snapshot-stale, snapshot-stale-rule, freshness-window, freshness-threshold | snapshot `{ lastCycleAt: T, generatedAt: T + 301,000 ms, probeIntervalMs: 60,000 }`, board `{ indicator: "operational", problems: [] }` | Stale window is 300,000 ms, lag 301,000 ms, verdict `"stale"`: `pillKey` is `"unknown"`, `count` is `0` |
-| portfolio-008 | freshness-threshold | snapshot `{ lastCycleAt: T, generatedAt: T + 300,000 ms, probeIntervalMs: 60,000 }`, board `{ indicator: "operational" }` | Lag equals window, verdict `"fresh"`: `pillKey` is `"ok"` |
-| portfolio-009 | freshness-window | snapshot `{ lastCycleAt: T, generatedAt: T + 400,000 ms, probeIntervalMs: 120,000 }`, board `{ indicator: "operational" }` | Window is 600,000 ms, verdict `"fresh"`: `pillKey` is `"ok"` |
-| portfolio-010 | freshness-threshold, unknown-when-snapshot-stale | snapshot `{ lastCycleAt: T, generatedAt: T + 901,000 ms, probeIntervalMs: 60,000 }`, board `{ indicator: "operational" }` | Verdict `"very-stale"`: `pillKey` is `"unknown"` |
-| portfolio-011 | freshness-no-probe, snapshot-stale-rule | snapshot `{ lastCycleAt: null, generatedAt: T }`, board `{ indicator: "operational" }` | Verdict `"fresh"`: `pillKey` is `"ok"` |
-| portfolio-012 | freshness-unparseable | snapshot `{ lastCycleAt: "not-a-date", generatedAt: T }`, board `{ indicator: "operational" }` | Invalid lag, verdict `"fresh"`: `pillKey` is `"ok"` |
-| portfolio-013 | board-null-trusted, independent-feeds | The board state fed a board `{ indicator: "operational", problems: [] }` whose `generatedAt` is `BOARD_STALE_MS + 5,000` ms old; Live Snapshot inert (`snapshot: null`, `offline: false`, `blind: false`) | `pillKey` is `"unknown"`, and the global panel sharing the same cache context shows "status unknown" |
+| portfolio-007 | unknown-when-snapshot-stale, snapshot-stale-rule | snapshot carrying the server's freshness verdict `{ state: "stale", asOf: T }`, board `{ indicator: "operational", problems: [] }` | `pillKey` is `"unknown"`, `count` is `0` |
+| portfolio-008 | unknown-when-snapshot-stale, snapshot-stale-rule | snapshot carrying freshness verdict `{ state: "very-stale", asOf: T }`, board `{ indicator: "operational", problems: [] }` | `pillKey` is `"unknown"` |
+| portfolio-009 | snapshot-stale-rule | snapshot carrying freshness verdict `{ state: "fresh", asOf: T }`, board `{ indicator: "operational" }` | `pillKey` is `"ok"` |
+| portfolio-010 | snapshot-null-not-stale | snapshot carrying freshness verdict `{ state: "fresh", asOf: null }` (no probe yet), board `{ indicator: "operational" }` | `pillKey` is `"ok"` |
+| portfolio-011 | snapshot-stale-rule, freshness-no-verdict | snapshot from a backend older than the freshness verdict (no `freshness` field), board `{ indicator: "operational" }` | No verdict is not fresh: `pillKey` is `"unknown"`, no error |
+| portfolio-012 | snapshot-stale-rule, independent-feeds | snapshot carrying freshness verdict `{ state: "stale", asOf: T }`, `offline: false`, `blind: false`, board `{ indicator: "outage", problems: [p1] }` | The stale snapshot alone forces `pillKey` to `"unknown"` (not `"down"`); `count` is `1` |
+| portfolio-013 | board-null-trusted, independent-feeds | The board state fed a board `{ indicator: "operational", problems: [] }` whose `freshness.staleAt` deadline passed 5,000 ms ago; Live Snapshot inert (`snapshot: null`, `offline: false`, `blind: false`) | `pillKey` is `"unknown"`, and the global panel sharing the same cache context shows "status unknown" |
 | portfolio-014 | no-memoisation | Evaluate with board `{ indicator: "operational" }` (`pillKey` is `"ok"`), then re-evaluate with `board: null` | Second evaluation returns `pillKey` `"unknown"`, not `"ok"` |
 | portfolio-015 | hook-signature, no-text-output | Any input | The returned object's own keys are exactly `pillKey` and `count` |
 
@@ -119,10 +114,8 @@ Not applicable — this is a state-derivation concept, not a visual component.
 - **Zero-endpoint monitor**: A snapshot with an empty `services` list sets `blind`, so `pillKey` MUST be `"unknown"` even if the board reports `"operational"`.
 - **Zero problems**: A non-null board with an empty `problems` array MUST yield `count` `0`; the colour still comes from `board.indicator`, not from the count.
 - **Unknown with a count**: When the live feed is offline, blind or stale but the board is current, Portfolio Indicator MUST return `"unknown"` together with the board's non-zero problem count; callers that print a number next to an unknown glyph see the board's count.
-- **Stale window boundary**: A lag exactly equal to the stale window MUST be fresh; one millisecond more MUST be stale (portfolio-007, portfolio-008).
-- **Missing probe interval**: A snapshot from an older backend with no `probeIntervalMs` MUST be judged against the 300,000 ms floor.
-- **Malformed timestamps**: An unparseable `lastCycleAt` or `generatedAt` MUST be treated as fresh, so it never forces `"unknown"` on its own; this is the deliberate behavior of the shared snapshot-freshness check.
-- **Client clock skew or sleeping tab**: The snapshot verdict MUST be unaffected, since it compares two server timestamps only. The board staleness verdict applied inside the board state is that state's own contract, not this one's.
+- **Snapshot without a freshness verdict**: A snapshot from an older backend with no `freshness` field MUST read as stale, so `pillKey` is `"unknown"`, and MUST NOT throw (portfolio-011).
+- **Client clock skew or sleeping tab**: The snapshot verdict MUST be unaffected, since it is the server's verdict and the client computes nothing from time. The board staleness verdict applied inside the board state is that state's own contract, not this one's.
 - **Unmapped indicator**: A `board.indicator` value outside `"operational"`, `"degraded"` or `"outage"` is excluded by the board's declared shape; Portfolio Indicator does no runtime check and would return an undefined `pillKey`. The board shape is owned by the server.
 - **Network failure or unreachable server**: Portfolio Indicator MUST NOT handle transport errors itself; a failed board read surfaces as a null board from the board state and a dead live feed surfaces as `offline` true from Live Snapshot, and both MUST yield `"unknown"`.
 - **Timeouts, cancellation and retries**: Portfolio Indicator has none; any timeout, retry or cancellation belongs to the board state and Live Snapshot.
@@ -133,8 +126,7 @@ Not applicable — this is a state-derivation concept, not a visual component.
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | (none) | — | — | Portfolio Indicator takes no parameters. |
-| `SNAPSHOT_STALE_FLOOR_MS` | number constant | `300000` | Floor of the snapshot stale window; also the window when the backend omits `probeIntervalMs`. |
-| `snapshot.probeIntervalMs` | number, null, or absent (server-supplied) | treated as `0` | Probe cadence; the stale window is 5 times this, floored at `SNAPSHOT_STALE_FLOOR_MS`. |
+| `snapshot.freshness.state` | string (server-supplied) | absent reads as stale | The server's freshness verdict; only `"fresh"` leaves the snapshot trusted. |
 | Board state | injected dependency | — | Supplies the board (or null); carries its own polling, retry and board staleness configuration. |
 | Live Snapshot | injected dependency | — | Supplies `snapshot`, `offline` and `blind`; carries its own transport configuration. |
 | Shared cache context and status API context | required context | — | Required by the two inputs; Portfolio Indicator must be used where they are available. |
@@ -169,17 +161,17 @@ Not applicable: the source contains no logging calls.
 
 ## Platform Notes
 
-- **SwiftUI**: Expose the result as a computed property on an `@Observable` `@MainActor` store that already holds `board: Board?` and the live snapshot state (`snapshot`, `offline`, `blind`), returning a `struct PortfolioIndicator: Sendable, Equatable { let pillKey: PillKey; let count: Int }` where `PillKey` is an `enum` with cases `ok`, `warn`, `down`, `unknown`. Parse the ISO timestamps with `ISO8601DateFormatter` (with fractional seconds) or `Date.ISO8601FormatStyle`; a failed parse must fall through to fresh to mirror the invalid-lag rule. Views observing the store re-read the computed property automatically; there is no hook, so never cache the last value.
-- **Compose**: Derive with `combine(boardFlow, liveFlow) { board, live -> ... }` in a `ViewModel`, exposed as `StateFlow<PortfolioIndicator>` via `stateIn`, with `PortfolioIndicator` a `data class` and the key an `enum class`. Parse timestamps with `java.time.Instant.parse` inside `runCatching`, treating failure as fresh. Because `combine` re-emits whenever either input emits, the "never the last verdict" rule holds as long as a null board is emitted, not filtered.
-- **React/Web**: Source platform. `hooks/use-portfolio-indicator.ts` composes `useBoard` (`hooks/use-board.ts`) and `useLiveSnapshot` (`hooks/use-live-snapshot.ts`), applies `snapshotFreshness` from `lib/snapshot-staleness.ts`, and maps through `INDICATOR_STATE` (the `IndicatorState` union) in `lib/overview.ts`. It relies on `useBoard` having already folded board staleness into `board: null`. The board shape is declared in `lib/board-types.ts`. Dates are compared with `Date.parse`, and an unparseable one yields `NaN`, whose comparison `!(ageMs > staleMs)` defaults to fresh. Tests mock both input hooks at the module boundary with `vi.mock` (`use-portfolio-indicator.dom.test.tsx`) and exercise the real `useBoard` in `use-board.dom.test.tsx`, where it is checked against `GlobalPanel` on the same `QueryClient`.
+- **SwiftUI**: Expose the result as a computed property on an `@Observable` `@MainActor` store that already holds `board: Board?` and the live snapshot state (`snapshot`, `offline`, `blind`), returning a `struct PortfolioIndicator: Sendable, Equatable { let pillKey: PillKey; let count: Int }` where `PillKey` is an `enum` with cases `ok`, `warn`, `down`, `unknown`. Views observing the store re-read the computed property automatically; there is no hook, so never cache the last value.
+- **Compose**: Derive with `combine(boardFlow, liveFlow) { board, live -> ... }` in a `ViewModel`, exposed as `StateFlow<PortfolioIndicator>` via `stateIn`, with `PortfolioIndicator` a `data class` and the key an `enum class`. Because `combine` re-emits whenever either input emits, the "never the last verdict" rule holds as long as a null board is emitted, not filtered.
+- **React/Web**: Source platform. `hooks/use-portfolio-indicator.ts` composes `useBoard` (`hooks/use-board.ts`) and `useLiveSnapshot` (`hooks/use-live-snapshot.ts`), reads the server's `snapshot.freshness.state` verdict, and maps through `INDICATOR_STATE` (the `IndicatorState` union) in `lib/overview.ts`. It relies on `useBoard` having already folded board staleness into `board: null`. The board shape is declared in `lib/board-types.ts`. Tests mock both input hooks at the module boundary with `vi.mock` (`use-portfolio-indicator.dom.test.tsx`) and exercise the real `useBoard` in `use-board.dom.test.tsx`, where it is checked against `GlobalPanel` on the same `QueryClient`.
 - **AppKit / UIKit**: Same computed property on a `@MainActor` store as SwiftUI; with no render pass, recompute when the board or live state changes and publish through `@Published` or `withObservationTracking` so the header item and landing view update together.
-- **WinUI 3**: Implement a `PortfolioIndicatorViewModel` deriving from CommunityToolkit.Mvvm `ObservableObject` (or implementing `INotifyPropertyChanged` directly) that takes the `BoardStore` and `LiveSnapshotStore` singletons by constructor injection (`Microsoft.Extensions.DependencyInjection`). Subscribe to both stores' `PropertyChanged` and recompute `PillKey` (a C# `enum PillKey { Ok, Warn, Down, Unknown }`) and `Count` (`int`) on every change, raising `PropertyChanged` for both; a `record struct PortfolioIndicator(PillKey PillKey, int Count)` works as an immutable result. Parse timestamps with `DateTimeOffset.TryParse(..., CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var t)`, and treat a failed parse as fresh to match the invalid-lag rule; compute the lag as `(generatedAt - lastCycleAt).TotalMilliseconds` and the window as `Math.Max((probeIntervalMs ?? 0) * 5, 300_000)`. There is no render-driven recomputation as in React, so the recompute must be wired explicitly; run it on the UI thread (marshal store changes with `DispatcherQueue.TryEnqueue`). Bind the header and landing views with `x:Bind ViewModel.PillKey` through an `IValueConverter` or `VisualStateManager` states per key, and format headline text in the view layer, never in the view model. Register the view model as a singleton so both signs read one instance.
+- **WinUI 3**: Implement a `PortfolioIndicatorViewModel` deriving from CommunityToolkit.Mvvm `ObservableObject` (or implementing `INotifyPropertyChanged` directly) that takes the `BoardStore` and `LiveSnapshotStore` singletons by constructor injection (`Microsoft.Extensions.DependencyInjection`). Subscribe to both stores' `PropertyChanged` and recompute `PillKey` (a C# `enum PillKey { Ok, Warn, Down, Unknown }`) and `Count` (`int`) on every change, raising `PropertyChanged` for both; a `record struct PortfolioIndicator(PillKey PillKey, int Count)` works as an immutable result. Treat the snapshot as stale unless the server's freshness state is `"fresh"`. There is no render-driven recomputation as in React, so the recompute must be wired explicitly; run it on the UI thread (marshal store changes with `DispatcherQueue.TryEnqueue`). Bind the header and landing views with `x:Bind ViewModel.PillKey` through an `IValueConverter` or `VisualStateManager` states per key, and format headline text in the view layer, never in the view model. Register the view model as a singleton so both signs read one instance.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-web/src/hooks/use-portfolio-indicator.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-web/src/hooks/use-portfolio-indicator.ts` | confirmed (1.1.1) |
 
 ## Design Decisions
 
@@ -196,29 +188,32 @@ Not applicable: the source contains no logging calls.
 **Approved**: pending
 
 **Decision**: A null snapshot counts as fresh, not unknown.
-**Rationale**: A null `lastCycleAt` (no probe yet) is fresh, so a healthy monitor is unaffected; the board, not the snapshot, is the thing that must have come back before a colour is claimed.
+**Rationale**: No live read yet is not evidence of trouble, so a healthy monitor is unaffected; the board, not the snapshot, is the thing that must have come back before a colour is claimed.
 **Approved**: pending
 
 **Decision**: `count` is taken from the board even when `pillKey` is `"unknown"`.
 **Rationale**: The board's problem count is independent of the unknown test; callers decide whether to show a count beside an unknown glyph.
 **Approved**: pending
 
-**Decision**: Staleness compares two server timestamps rather than the client clock.
-**Rationale**: Measuring `generatedAt - lastCycleAt` is immune to client clock skew and to client timers being throttled while a tab sleeps. This rationale applies as written to a client that has such a timer-throttling concern (the web platform); a port on a platform without it keeps the two-server-timestamp comparison regardless, since it is also immune to simple client clock skew.
+**Decision**: Snapshot staleness is the server's verdict, not a client-side judgment.
+**Rationale**: The server judges freshness from its own clocks and publishes it as `snapshot.freshness`, so the client is immune to clock skew and throttled timers, and the sign, the banner and every other consumer read one verdict. An earlier version compared two server timestamps on the client with a probe-cadence window; that rule moved to the server and the hook now only reads its answer.
 **Approved**: pending
 
+**Decision**: A snapshot with no freshness verdict reads as stale.
+**Rationale**: No verdict is not "fresh": a backend older than the verdict cannot back a confident status claim, so the sign says unknown rather than a false green.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | best-practices |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | reliability |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | passed | reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | reliability |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | reliability |
 
-**Separation of Concerns**: Fetching and board staleness sit in `useBoard`, the live transport in `useLiveSnapshot`, the snapshot staleness rule in `lib/snapshot-staleness.ts`, and the server-to-glyph mapping in `lib/overview.ts`; the hook only composes them, and text formatting stays with callers.
+**Separation of Concerns**: Fetching and board staleness sit in `useBoard`, the live transport in `useLiveSnapshot`, the snapshot staleness verdict supplied by the server in `snapshot.freshness`, and the server-to-glyph mapping in `lib/overview.ts`; the hook only composes them, and text formatting stays with callers.
 
-**Unit Test Coverage**: `use-portfolio-indicator.dom.test.tsx` covers a present board backing its verdict and a null board rendering unknown; `use-board.dom.test.tsx` covers the hook agreeing with `GlobalPanel` on a stale board. The offline, blind and stale-snapshot branches, the `"warn"` and `"down"` mappings and the `count` value are not asserted by the hook's own tests, though `snapshotFreshness` has its own test file.
+**Unit Test Coverage**: `use-portfolio-indicator.dom.test.tsx` covers vectors portfolio-001 to portfolio-012, portfolio-014 and portfolio-015 (every mapping, the offline, blind and stale-snapshot branches, and the count); `use-board.dom.test.tsx` covers portfolio-013, the hook agreeing with `GlobalPanel` on a stale board.
 
 **Graceful Degradation**: Any missing, failed, blind or stale input degrades the sign to `"unknown"` instead of a false green.
 
@@ -228,6 +223,7 @@ Not applicable: the source contains no logging calls.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 2.0.0 | 2026-11-14 | Mike Fullerton | Match recipe to source: staleness is the server freshness verdict, not a client timestamp check |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to status/dashboard/state/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.0.0 | 2026-09-24 | Mike Fullerton | Initial creation |

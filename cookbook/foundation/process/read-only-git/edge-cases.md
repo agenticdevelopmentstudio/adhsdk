@@ -1,0 +1,11 @@
+
+- **Null and empty input**: An empty argument list runs bare `git`, which exits non-zero and so yields `""`. A command with empty output returns `""`, which cannot be told apart from a failure; callers MUST treat `""` as "unknown or nothing".
+- **Boundary values**: The limit is 5 seconds from the start; a git that finishes at 4.9 seconds MUST return its output. Output of any size MUST be returned, since it is drained as it arrives.
+- **Concurrent access**: The type has no shared state, so calls may run in parallel, each with its own process. Several simultaneous calls on one repository MUST NOT contend for the index lock, because none takes it. A blocked call occupies its calling thread for up to 5 seconds, so callers on the main thread MUST NOT call it.
+- **Error states**: A missing `git`, a non-zero exit, a hang, a spawn error and output that is not UTF-8 each MUST give `""` with no error and no log. A caller cannot tell which one happened.
+- **Whitespace**: `git(_:)` removes leading and trailing whitespace and newlines, so output whose edges matter (the two-column status prefix of porcelain output, whose first column can be a space) MUST use `rawGit(_:)`; otherwise a 24-byte status becomes a 22-byte one that git never emitted and hashes differently for a cosmetic reason.
+- **Empty PATH segments**: `repairedPath(_:)` drops empty entries (`::`, a leading `:` or a trailing `:`) and keeps every non-empty entry in order, so `/a::/b:` becomes `/a:/b:` plus the missing repaired directories (vector 014). A caller `PATH` therefore never keeps an empty entry, which a shell would read as the current directory.
+- **Minimal environment**: A GUI-launched status line with a minimal `PATH` MUST still find `git`, through the added `/usr/bin` and the other repaired directories.
+- **Not read-only arguments**: A caller that passes a writing command (commit, add) runs it; the lock-avoidance variable does not make it safe. This is a caller precondition: the type's doc comment says these calls only ever read git state, and the type does not check the arguments.
+- **Offline or disconnected state**: Not applicable — the commands read the local repository; a command that contacts a remote is outside the read-only intent.
+

@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "ab6d7655-9476-4318-8c36-f431686e2d23",
     "title": "File Browser",
-    "domain": "adhsdk://cookbook/workspace/files/file-browser-view",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -23,16 +22,16 @@
       "tree-view"
     ],
     "depends-on": [
-      "adhsdk://cookbook/workspace/files/file-tree-view"
+      "b307116d-3ab8-422a-b031-885710e11e70"
     ],
     "related": [
-      "agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages"
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "3f77754f6e15f607",
+  "synced": "6d5a41b3044dfdc0",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -51,7 +50,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

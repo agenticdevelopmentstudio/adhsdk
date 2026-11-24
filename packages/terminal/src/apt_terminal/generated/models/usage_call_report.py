@@ -54,7 +54,7 @@ class UsageCallReport:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "callId": call_id,
+                "call_id": call_id,
                 "events": events,
                 "lines": lines,
                 "children": children,
@@ -70,7 +70,7 @@ class UsageCallReport:
         from ..models.usage_cost_line import UsageCostLine
 
         d = dict(src_dict)
-        call_id = UUID(d.pop("callId"))
+        call_id = UUID(d.pop("call_id"))
 
         events = []
         _events = d.pop("events")

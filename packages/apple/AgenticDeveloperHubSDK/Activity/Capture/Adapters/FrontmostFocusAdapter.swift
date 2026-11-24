@@ -19,7 +19,7 @@ private func _AXUIElementGetWindow(_ element: AXUIElement, _ windowID: UnsafeMut
 /// thread, so the `@objc` selector is declared `nonisolated` and its body
 /// runs inside `MainActor.assumeIsolated` — see `WindowLifecycleAdapter` for
 /// the shared rationale.
-// Public, and its `FocusSource` witnesses are public too: `olylod`
+// Public, and its `FocusSource` witnesses are public too: `temporald`
 // constructs this directly and hands it to `UsageCollector`'s public
 // initializer as a `FocusSource` — a public type's public conformance to a
 // public protocol requires its witnesses be public as well.

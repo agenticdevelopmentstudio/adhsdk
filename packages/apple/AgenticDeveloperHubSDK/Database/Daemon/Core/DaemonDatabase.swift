@@ -36,7 +36,7 @@ public final class DaemonDatabase: @unchecked Sendable {
     /// Ceiling for a one-time maintenance READ — the read-lane twin of
     /// `migrationWriteDeadline`, and the widest of the four. A maintenance scan
     /// is the one read legitimately allowed to take minutes
-    /// (`repriceSessionMetricsIfNeeded` groups the whole of `transcript_turns`),
+    /// (`repriceSessionMetricsIfNeeded` groups every Claude turn in events.db),
     /// and the serving ceiling above ejects it every time on a large DB.
     ///
     /// Wider than the migration ceiling on purpose: this one runs off both the
@@ -111,6 +111,32 @@ public final class DaemonDatabase: @unchecked Sendable {
         defer { readyLock.unlock() }
         return _isReady
     }
+
+    // MARK: - Event reads
+
+    private let eventReadsLock = NSLock()
+    private var attachedEventReads: EventStore?
+    private var attachedRawArchive: RawArchive?
+
+    /// Hands this database the provider pipeline's event store and raw archive,
+    /// which readers of the moved tables go through. Set once, when the runtime
+    /// opens; a second call keeps the first pair.
+    public func attachEventReads(_ store: EventStore, archive: RawArchive) {
+        eventReadsLock.withLock {
+            guard attachedEventReads == nil else {
+                assertionFailure("attachEventReads called twice")
+                return
+            }
+            attachedEventReads = store
+            attachedRawArchive = archive
+        }
+    }
+
+    /// The event store (`events.db`), or nil until ``attachEventReads(_:archive:)``.
+    public var eventReads: EventStore? { eventReadsLock.withLock { attachedEventReads } }
+
+    /// The raw archive, or nil until ``attachEventReads(_:archive:)``.
+    public var rawArchive: RawArchive? { eventReadsLock.withLock { attachedRawArchive } }
 
     // MARK: - Attachments
 
@@ -356,11 +382,15 @@ public final class DaemonDatabase: @unchecked Sendable {
             return DaemonDatabaseError.stepFailed(
                 message: grdb.message ?? "\(grdb.resultCode)", code: grdb.resultCode.rawValue
             )
-        case BoundedDatabaseError.deadlineExceeded:
+        case let bounded as BoundedDatabaseError:
             // A timing failure, not a data problem — surface as SQLITE_BUSY so the
             // ingest path treats it as transient and leaves the event for retry.
+            // The message keeps the lane and the elapsed time: without them a
+            // deadline in a log names neither the kind of operation nor how far
+            // past its limit it ran.
             return DaemonDatabaseError.stepFailed(
-                message: "operation exceeded its deadline", code: ResultCode.SQLITE_BUSY.rawValue
+                message: "operation exceeded its deadline (\(bounded.localizedDescription))",
+                code: ResultCode.SQLITE_BUSY.rawValue
             )
         default:
             return error
@@ -416,10 +446,11 @@ public final class DaemonDatabase: @unchecked Sendable {
 
     /// Check whether a table has a given column via `PRAGMA table_info`.
     /// Used by insights queries to short-circuit when a dynamic column
-    /// (from ``DynamicSchema``) isn't present yet.
-    public func tableHasColumn(_ table: String, _ column: String) -> Bool {
+    /// (from ``DynamicSchema``) isn't present yet. A failed read throws rather
+    /// than answering false, so a guard on it never acts on a guess.
+    public func tableHasColumn(_ table: String, _ column: String) throws -> Bool {
         var found = false
-        try? query("PRAGMA table_info(\(table))") { row in
+        try query("PRAGMA table_info(\(table))") { row in
             let name = string(row, 1)
             if name == column { found = true }
         }
@@ -428,10 +459,11 @@ public final class DaemonDatabase: @unchecked Sendable {
 
     /// Whether a base table exists. Per-type event tables are created lazily by
     /// ``DynamicSchema`` on first ingest, so an event type never seen on this DB
-    /// has no table yet — callers that reference one must guard with this.
-    public func tableExists(_ table: String) -> Bool {
+    /// has no table yet — callers that reference one must guard with this. A
+    /// failed read throws rather than answering false.
+    public func tableExists(_ table: String) throws -> Bool {
         var found = false
-        try? query(
+        try query(
             "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?",
             params: [table]
         ) { _ in found = true }

@@ -1,0 +1,63 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "81b8d777-f5c2-4a9a-8d5f-bbddf6e4e094",
+    "title": "Markdown Spell Check",
+    "type": "ingredient",
+    "version": "1.2.1",
+    "status": "review",
+    "language": "en",
+    "created": "2026-06-26",
+    "modified": "2026-09-25",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "An off-by-default toolbar toggle that runs a markdown-aware spell/grammar check via harper.js in a popover with apply actions.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "markdown",
+      "spellcheck",
+      "grammar",
+      "harper",
+      "toolbar"
+    ],
+    "depends-on": [
+      "f3c25236-d72f-4a7b-839a-b7f335b3acd0",
+      "b118c7bc-e163-40f0-bcc8-eb079e835794"
+    ],
+    "related": [
+      "f5d2eb1c-fb0e-48e3-b124-7e730ac8231c"
+    ],
+    "references": [
+      "https://writewithharper.com"
+    ],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "1f2cf9a12c0b338e",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

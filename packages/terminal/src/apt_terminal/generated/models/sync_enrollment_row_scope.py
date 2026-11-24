@@ -2,7 +2,7 @@ from enum import StrEnum
 
 
 class SyncEnrollmentRowScope(StrEnum):
-    CUSTOMER = "customer"
+    AUTHOR = "author"
     ECOSYSTEM = "ecosystem"
     OWNER = "owner"
 

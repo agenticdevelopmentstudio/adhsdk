@@ -1,0 +1,18 @@
+
+| ID | Requirements | Input | Expected | Test |
+|----|-------------|-------|----------|------|
+| read-only-git-001 | raw-output, trimmed-output | In a repo with one unstaged change to `README.md`, args `-C <repo> status --porcelain -unormal --no-renames` | `rawGit` returns ` M README.md\n` (leading space kept); `git` returns `M README.md` | `testRawGitKeepsWhitespaceThatGitTrimsAway` |
+| read-only-git-002 | trimmed-output | `git(["rev-parse", "--abbrev-ref", "HEAD"])` in a repo on branch `fingerprint-branch` | `fingerprint-branch`, no newline | `testSampleReportsTheBranchAndACleanTree` (through the caller) |
+| read-only-git-003 | failure-is-empty, no-throw | `git(["rev-parse", "--abbrev-ref", "HEAD"])` in a directory that is not a repository | `""` | `testSampleReturnsNilOutsideAGitRepository` (through the caller) |
+| read-only-git-004 | failure-is-empty | `git(["no-such-subcommand"])` | `""` | `ReadOnlyGitConformanceTests` (`V#` name matches the vector number) |
+| read-only-git-005 | timeout-is-empty | `git(["-c", "alias.slow=!sleep 30", "slow"])`, a command that does not answer within 5 seconds | `""` after about 5 seconds, and the child is stopped | skipped in `ReadOnlyGitConformanceTests` (needs five real seconds) |
+| read-only-git-006 | path-repaired-missing | `repairedPath(nil)` and `repairedPath("")` | `/usr/bin:/bin:/usr/local/bin:/opt/homebrew/bin` for both | `ReadOnlyGitConformanceTests` (`V#` name matches the vector number) |
+| read-only-git-007 | path-repaired, path-repaired-order | `repairedPath("/opt/homebrew/bin:/custom")` | `/opt/homebrew/bin:/custom:/usr/bin:/bin:/usr/local/bin` | `ReadOnlyGitConformanceTests` (`V#` name matches the vector number) |
+| read-only-git-008 | path-repaired | `repairedPath("/usr/bin:/bin:/usr/sbin:/sbin")` (a GUI-launched minimal path) | `/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/opt/homebrew/bin` | `ReadOnlyGitConformanceTests` (`V#` name matches the vector number) |
+| read-only-git-009 | optional-locks-off | In a tree whose index has stale stat data (a file touched after the last refresh), record the index file's modification time, run `git(["status"])`, then compare | the index file's modification time is unchanged, because the status call did not refresh the index | `ReadOnlyGitConformanceTests` (`V#` name matches the vector number) |
+| read-only-git-010 | optional-locks-off, environment-inherited | The caller's environment has `GIT_OPTIONAL_LOCKS=1` and an extra variable set (a test uses a uniquely named one, since `GIT_DIR` would redirect other tests' repositories); run `git(["-c", "alias.showenv=!env", "showenv"])` | the output contains `GIT_OPTIONAL_LOCKS=0` and the same extra variable | `ReadOnlyGitConformanceTests` (`V#` name matches the vector number) |
+| read-only-git-011 | output-drained | A command printing more than 1 MB (a repo with many branches, `branch --list`) | the full listing is returned and the call does not hang | `ReadOnlyGitConformanceTests` (`V#` name matches the vector number) |
+| read-only-git-012 | stdout-only | A command that writes to standard error and exits 0 | the standard error text is absent from the result | `ReadOnlyGitConformanceTests` (`V#` name matches the vector number) |
+| read-only-git-013 | working-directory | `git(["-C", dir, "rev-parse", "--show-toplevel"])` for a repository other than the caller's directory | the top level of `dir` | `ReadOnlyGitConformanceTests` (`V#` name matches the vector number) |
+| read-only-git-014 | path-repaired, path-repaired-order | `repairedPath("/a::/b:")` (empty segments) | `/a:/b:/usr/bin:/bin:/usr/local/bin:/opt/homebrew/bin` | `ReadOnlyGitConformanceTests` (`V#` name matches the vector number) |
+

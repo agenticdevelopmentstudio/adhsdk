@@ -5,6 +5,12 @@ public struct BrowserConsoleMessage: Sendable, Equatable {
     public var level: String
     public var text: String
     public var timestamp: Date
+
+    public init(level: String, text: String, timestamp: Date) {
+        self.level = level
+        self.text = text
+        self.timestamp = timestamp
+    }
 }
 
 /// The last 200 console messages and uncaught errors of a web view.

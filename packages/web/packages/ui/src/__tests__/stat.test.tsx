@@ -17,6 +17,13 @@ import { SectionLabel, sectionLabelClass } from '../components/section-label'
 import { Pagination } from '../components/pagination'
 import { CopyButton } from '../components/copy-button'
 import { StatCard } from '../blocks/stat-card'
+import { cn } from '../lib/utils'
+
+// Passthrough spy: lets T16 count how often StatusDot's render body runs (it calls cn once per render).
+vi.mock('../lib/utils', async (orig) => {
+  const actual = await orig<typeof import('../lib/utils')>()
+  return { ...actual, cn: vi.fn(actual.cn) }
+})
 
 describe('StatRow / Stat', () => {
   it('renders label and value, tinting the value by tone', () => {
@@ -48,19 +55,98 @@ describe('StatRow / Stat', () => {
 })
 
 describe('StatusDot', () => {
-  it('is decorative (aria-hidden) without a label', () => {
+  const tones: Array<[string, 'muted' | 'accent' | 'blue' | 'orange', string]> = [
+    ['T9', 'muted', 'text-apt-text-dim'],
+    ['T10', 'accent', 'text-apt-gold'],
+    ['T11', 'blue', 'text-apt-blue'],
+    ['T12', 'orange', 'text-apt-orange'],
+  ]
+
+  it('T1 is decorative (aria-hidden) without a label and fills from currentcolor', () => {
     const { container } = render(<StatusDot tone="success" />)
     const dot = container.querySelector('span')!
     expect(dot).toHaveAttribute('aria-hidden', 'true')
     expect(dot.style.background).toBe('currentcolor')
   })
 
-  it('is an accessible image when labeled, and scales its glow with size', () => {
-    const { container } = render(<StatusDot tone="error" size={20} label="down" />)
+  it('T2 is an accessible image when labeled and its tone class sets currentcolor', () => {
+    render(<StatusDot tone="error" size={20} label="down" />)
     const dot = screen.getByRole('img', { name: 'down' })
     expect(dot.className).toContain('text-apt-red')
-    expect(dot.style.boxShadow).toContain('11px') // round(20 * 0.55)
+  })
+
+  it('T3 scales the glow with size and derives it from currentColor', () => {
+    render(<StatusDot tone="error" size={20} label="down" />)
+    const glow = screen.getByRole('img', { name: 'down' }).style.boxShadow
+    expect(glow).toContain('11px') // round(20 * 0.55)
+    expect(glow).toContain('color-mix')
+    expect(glow.toLowerCase()).toContain('currentcolor')
+  })
+
+  it('T4 has no aria-hidden element when labeled', () => {
+    const { container } = render(<StatusDot label="down" />)
     expect(container.querySelector('[aria-hidden="true"]')).toBeNull()
+  })
+
+  it('T5 clamps the glow radius to 6px at small sizes', () => {
+    render(<StatusDot size={8} label="x" />)
+    expect(screen.getByRole('img').style.boxShadow).toContain('6px')
+  })
+
+  it('T6 defaults to the neutral tone', () => {
+    const { container } = render(<StatusDot />)
+    expect(container.querySelector('span')!.className).toContain('text-apt-text-muted')
+  })
+
+  it('T7 sizes the dot in px', () => {
+    const { container } = render(<StatusDot size={18} />)
+    const dot = container.querySelector('span')!
+    expect(dot.style.width).toBe('18px')
+    expect(dot.style.height).toBe('18px')
+  })
+
+  it('T8 merges className after the tone class', () => {
+    const { container } = render(<StatusDot tone="success" className="ml-1" />)
+    const cls = container.querySelector('span')!.className
+    expect(cls).toContain('ml-1')
+    expect(cls).toContain('text-apt-green')
+  })
+
+  it.each(tones)('%s maps the tone to its apt text class', (_id, tone, cls) => {
+    const { container } = render(<StatusDot tone={tone} />)
+    expect(container.querySelector('span')!.className).toContain(cls)
+  })
+
+  it('T13 treats an empty label as decorative with no role', () => {
+    const { container } = render(<StatusDot tone="success" label="" />)
+    const dot = container.querySelector('span')!
+    expect(dot).toHaveAttribute('aria-hidden', 'true')
+    expect(dot).not.toHaveAttribute('role')
+  })
+
+  it('T14 keeps a 6px glow at size 10, exactly at the floor', () => {
+    const { container } = render(<StatusDot size={10} />)
+    expect(container.querySelector('span')!.style.boxShadow).toContain('6px')
+  })
+
+  it('T15 passes the label through verbatim', () => {
+    render(<StatusDot label="Down – 3 nodes" />)
+    expect(screen.getByRole('img')).toHaveAttribute('aria-label', 'Down – 3 nodes')
+  })
+
+  it('T16 is a React.memo wrapper that skips re-render for identical props', () => {
+    expect((StatusDot as unknown as { $$typeof: symbol }).$$typeof).toBe(Symbol.for('react.memo'))
+    const Parent = ({ tick }: { tick: number }) => (
+      <div data-tick={tick}>
+        <StatusDot tone="success" size={10} />
+      </div>
+    )
+    const spy = vi.mocked(cn)
+    const { rerender } = render(<Parent tick={1} />)
+    const afterMount = spy.mock.calls.length
+    expect(afterMount).toBeGreaterThan(0)
+    rerender(<Parent tick={2} />)
+    expect(spy.mock.calls.length).toBe(afterMount)
   })
 })
 

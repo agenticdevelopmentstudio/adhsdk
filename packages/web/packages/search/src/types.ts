@@ -25,17 +25,17 @@ import type { ComponentType, Ref } from 'react'
 
 /** The endpoint paths (joined onto {@link SearchSource.baseUrl}) for one scope. */
 export interface SearchSourceEndpoints {
-  /** Paginated results endpoint, e.g. `/public/papers`. */
+  /** Results endpoint (a /v1 collection: `{ data, has_more }`), e.g. `/v1/papers`. */
   results: string
-  /** Distinct tag-facet endpoint (`{ items: string[] }`), e.g. `/public/papers/tags`. */
+  /** Distinct tag-facet endpoint (`{ items: string[] }`), e.g. `/v1/paper_tags`. */
   tags?: string
-  /** Distinct category-facet endpoint (`{ items: string[] }`), e.g. `/public/papers/categories`. */
+  /** Distinct category-facet endpoint (`{ items: string[] }`), e.g. `/v1/paper_categories`. */
   categories?: string
   /**
    * Full-content endpoint for the preview body fetch — a path TEMPLATE with `:slug`
    * and `:route` placeholders, filled from the selected hit (substitutions are
    * URL-encoded by the preview). Defaults to {@link DEFAULT_CONTENT_ENDPOINT}
-   * (`'/public/users/:slug/papers/:route'`, the public scope), so today's behavior
+   * (`'/v1/papers?author=:slug&route=:route'`, the public scope), so today's behavior
    * needs no config; a non-public scope (e.g. bucket-scoped) overrides just this
    * template — no core edit.
    */
@@ -43,18 +43,19 @@ export interface SearchSourceEndpoints {
 }
 
 /** The default preview full-content endpoint template (the public-papers scope). */
-export const DEFAULT_CONTENT_ENDPOINT = '/public/users/:slug/papers/:route'
+export const DEFAULT_CONTENT_ENDPOINT = '/v1/papers?author=:slug&route=:route'
 
 /**
- * Query-param NAME mapping for the results request. Defaults match the backend
- * (`q`/`tag`/`category`/`page`/`pageSize`); a differently-named source overrides only
- * the keys it differs on. The core never hard-codes these names.
+ * Query-param NAME mapping for the results request. Defaults match the /v1 API
+ * (`q`/`tag`/`category`/`limit`); a differently-named source overrides only the keys it
+ * differs on. The core never hard-codes these names. /v1 pages by cursor, not by page
+ * number, and the search view reads only its first page, so there is no `page` param.
  */
 export interface SearchQueryParamMap {
   q: string
   tag: string
   category: string
-  page: string
+  /** The page-size param (`limit` on /v1). */
   pageSize: string
 }
 
@@ -63,15 +64,14 @@ export const DEFAULT_QUERY_PARAMS: SearchQueryParamMap = {
   q: 'q',
   tag: 'tag',
   category: 'category',
-  page: 'page',
-  pageSize: 'pageSize',
+  pageSize: 'limit',
 }
 
 /**
  * An injected search SCOPE. Combines a base URL, the endpoint paths, and (optionally)
  * the query-param names + page size + fetch options. Supplied by the call site —
  * e.g. the public-papers scope is `{ baseUrl: '/api', endpoints: { results:
- * '/public/papers', tags: '/public/papers/tags', categories: '/public/papers/categories' } }`.
+ * '/v1/papers', tags: '/v1/paper_tags', categories: '/v1/paper_categories' } }`.
  */
 export interface SearchSource {
   /** Prefix the endpoint paths are joined onto (e.g. the same-origin `/api` BFF proxy). */
@@ -89,25 +89,25 @@ export interface SearchSource {
    * they overwrite rather than lose to the same-named user filter — the alternative would let a
    * misconfigured source's scope leak past the corpus it declared.
    *
-   * That "wins" rule holds for EVERY param name, including the paging axes — `buildSearchUrl`
-   * sets the paging params before it applies `fixedParams`, so a source that names one of them
+   * That "wins" rule holds for EVERY param name, including the paging axis — `buildSearchUrl`
+   * sets the page-size param before it applies `fixedParams`, so a source that names it
    * here pins it, permanently, the same as any other fixed param. There is no special-cased
    * exclusion for them: the simpler and more predictable rule is that a fixed param overrides
    * whatever query param shares its name, no exceptions, so a caller that deliberately wants a
    * pinned page or page size is never silently ignored.
    *
    * The KEY has to be the query-string name, not the filter-axis name: `buildSearchUrl` writes
-   * paging under `names.page`/`names.pageSize` — `{ ...DEFAULT_QUERY_PARAMS, ...source.params }`,
-   * i.e. `source.params.page`/`source.params.pageSize` when this same source renames them, and
-   * only the literal `page`/`pageSize` when it does not — and applies `fixedParams` by its keys
-   * literally, with NO pass through that renaming. A source that renames `page` to `p` and then
-   * writes `fixedParams: { page: '1' }` pins nothing: it sets an inert `page` param the code
-   * never reads, while the actually-sent `p` param stays unpinned. Name whatever this source's
-   * OWN `params.page`/`params.pageSize` resolve to (or the `page`/`pageSize` default, unrenamed)
-   * — never the filter-axis name `page`/`pageSize` on faith.
+   * the page size under `names.pageSize` — `{ ...DEFAULT_QUERY_PARAMS, ...source.params }`,
+   * i.e. `source.params.pageSize` when this same source renames it, and
+   * only the literal `limit` when it does not — and applies `fixedParams` by its keys
+   * literally, with NO pass through that renaming. A source that renames `pageSize` to `n` and then
+   * writes `fixedParams: { limit: '5' }` pins nothing: it sets an inert `limit` param the code
+   * never reads, while the actually-sent `n` param stays unpinned. Name whatever this source's
+   * OWN `params.pageSize` resolves to (or the `limit` default, unrenamed)
+   * — never the axis name `pageSize` on faith.
    */
   fixedParams?: Record<string, string>
-  /** Result page size (default 50). */
+  /** Result page size (default 50, at most 100: the widest /v1 page). */
   pageSize?: number
   /** Optional fetch init merged into every request (e.g. `{ cache: 'no-store' }`). */
   fetchInit?: RequestInit
@@ -201,6 +201,8 @@ export interface DocumentTypeConfig<Hit = unknown> {
    * body then appears below — it must NOT render its own metadata header.
    */
   getTitle: (hit: Hit) => string
+  /** A hit from the wire (a /v1 row: snake_case, `created`/`updated` unix seconds) to this type's `Hit`. */
+  fromWire: (wire: unknown) => Hit
   /** The result-row renderer for this type. */
   ResultRow: ComponentType<DocumentResultProps<Hit>>
   /**

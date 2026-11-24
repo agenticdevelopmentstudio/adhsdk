@@ -24,9 +24,11 @@ class ProjectMilestone:
         project_id (str):
         name (str): unique among the project’s live milestones
         description (str):
-        created_at (str):
-        updated_at (str):
-        customer_id (str | Unset): inherited from the owning project by trigger, never sent
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
+        owner_kind (str | Unset): Kind of principal that owns the milestone (inherited from the project): 'customer',
+            'organization', 'application', 'persona' or 'ecosystem'.
+        owner_id (str | Unset): Id of the owning principal.
         target_date (None | str | Unset): date (YYYY-MM-DD); null = undated, an ordinary state — an ordered-but-undated
             plan is a real thing, and requiring a date would only get one invented. Undated milestones sort LAST.
         counts (ProjectMilestoneCounts | Unset): the milestone’s live cards counted by status CATEGORY, every category
@@ -43,9 +45,10 @@ class ProjectMilestone:
     project_id: str
     name: str
     description: str
-    created_at: str
-    updated_at: str
-    customer_id: str | Unset = UNSET
+    created: int
+    updated: int
+    owner_kind: str | Unset = UNSET
+    owner_id: str | Unset = UNSET
     target_date: None | str | Unset = UNSET
     counts: ProjectMilestoneCounts | Unset = UNSET
     created_by: None | str | Unset = UNSET
@@ -64,11 +67,13 @@ class ProjectMilestone:
 
         description = self.description
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
-        customer_id = self.customer_id
+        owner_kind = self.owner_kind
+
+        owner_id = self.owner_id
 
         target_date: None | str | Unset
         if isinstance(self.target_date, Unset):
@@ -99,26 +104,28 @@ class ProjectMilestone:
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
-                "projectId": project_id,
+                "ecosystem_id": ecosystem_id,
+                "project_id": project_id,
                 "name": name,
                 "description": description,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
+                "created": created,
+                "updated": updated,
             }
         )
-        if customer_id is not UNSET:
-            field_dict["customerId"] = customer_id
+        if owner_kind is not UNSET:
+            field_dict["owner_kind"] = owner_kind
+        if owner_id is not UNSET:
+            field_dict["owner_id"] = owner_id
         if target_date is not UNSET:
-            field_dict["targetDate"] = target_date
+            field_dict["target_date"] = target_date
         if counts is not UNSET:
             field_dict["counts"] = counts
         if created_by is not UNSET:
-            field_dict["createdBy"] = created_by
+            field_dict["created_by"] = created_by
         if deleted_at is not UNSET:
-            field_dict["deletedAt"] = deleted_at
+            field_dict["deleted_at"] = deleted_at
         if sync_version is not UNSET:
-            field_dict["syncVersion"] = sync_version
+            field_dict["sync_version"] = sync_version
 
         return field_dict
 
@@ -129,19 +136,21 @@ class ProjectMilestone:
         d = dict(src_dict)
         id = d.pop("id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        project_id = d.pop("projectId")
+        project_id = d.pop("project_id")
 
         name = d.pop("name")
 
         description = d.pop("description")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
-        customer_id = d.pop("customerId", UNSET)
+        owner_kind = d.pop("owner_kind", UNSET)
+
+        owner_id = d.pop("owner_id", UNSET)
 
         def _parse_target_date(data: object) -> None | str | Unset:
             if data is None:
@@ -150,7 +159,7 @@ class ProjectMilestone:
                 return data
             return cast(None | str | Unset, data)
 
-        target_date = _parse_target_date(d.pop("targetDate", UNSET))
+        target_date = _parse_target_date(d.pop("target_date", UNSET))
 
         _counts = d.pop("counts", UNSET)
         counts: ProjectMilestoneCounts | Unset
@@ -166,7 +175,7 @@ class ProjectMilestone:
                 return data
             return cast(None | str | Unset, data)
 
-        created_by = _parse_created_by(d.pop("createdBy", UNSET))
+        created_by = _parse_created_by(d.pop("created_by", UNSET))
 
         def _parse_deleted_at(data: object) -> None | str | Unset:
             if data is None:
@@ -175,9 +184,9 @@ class ProjectMilestone:
                 return data
             return cast(None | str | Unset, data)
 
-        deleted_at = _parse_deleted_at(d.pop("deletedAt", UNSET))
+        deleted_at = _parse_deleted_at(d.pop("deleted_at", UNSET))
 
-        sync_version = d.pop("syncVersion", UNSET)
+        sync_version = d.pop("sync_version", UNSET)
 
         project_milestone = cls(
             id=id,
@@ -185,9 +194,10 @@ class ProjectMilestone:
             project_id=project_id,
             name=name,
             description=description,
-            created_at=created_at,
-            updated_at=updated_at,
-            customer_id=customer_id,
+            created=created,
+            updated=updated,
+            owner_kind=owner_kind,
+            owner_id=owner_id,
             target_date=target_date,
             counts=counts,
             created_by=created_by,

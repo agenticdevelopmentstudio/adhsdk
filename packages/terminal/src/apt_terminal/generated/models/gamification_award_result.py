@@ -43,7 +43,7 @@ class GamificationAwardResult:
             {
                 "awarded": awarded,
                 "total": total,
-                "newBadges": new_badges,
+                "new_badges": new_badges,
             }
         )
 
@@ -59,7 +59,7 @@ class GamificationAwardResult:
         total = d.pop("total")
 
         new_badges = []
-        _new_badges = d.pop("newBadges")
+        _new_badges = d.pop("new_badges")
         for new_badges_item_data in _new_badges:
             new_badges_item = GamificationBadge.from_dict(new_badges_item_data)
 

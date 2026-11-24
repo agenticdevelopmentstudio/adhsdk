@@ -5,7 +5,7 @@ all window lifecycle, frame-persistence, visibility-persistence, and HUD
 behavior as inherited unchanged from `SingleWindowController`, cited through
 `depends-on` rather than restated.
 **Rationale**: `SingleWindowController` already has its own canonical recipe
-(`adhsdk://cookbook/ui/windows/single-window-controller`); restating its
+([adhsdk.ingredient.ui.windows.single-window-controller](cookbook:3f6268b8-410d-4d3c-979c-2a9f9f1534f3)); restating its
 requirements here would duplicate content that has its own source of truth
 and risks drift when that recipe changes, and would misrepresent this file's
 actual (much smaller) scope.

@@ -16,31 +16,41 @@ type HasKey<T, K extends PropertyKey> = K extends keyof T ? true : false
 type IsNever<T> = [T] extends [never] ? true : false
 type IsAny<T> = 0 extends 1 & T ? true : false
 
-type Customers = SuccessBody<'/customer/customers', 'get'>
-// Customer create body — exercises the same server-managed-column stripping that
-// the old /system/feature-flags tests covered (id/createdAt/updatedAt absent from body).
-type CustomerCreate = RequestBody<'/customer/customers', 'post'>
+// A /v1 list answers the Stripe-style envelope; its rows are snake_case.
+type CustomerList = SuccessBody<'/v1/customers', 'get'>
+type Customer = CustomerList['data'][number]
+// Customer create body — exercises the server-managed-column stripping
+// (id/created/updated absent from the body).
+type CustomerCreate = RequestBody<'/v1/customers', 'post'>
+// Update is POST on the item path; every writable column is optional.
+type CustomerUpdate = RequestBody<'/v1/customers/{id}', 'post'>
 
 // Exported so the assertions are referenced (never dead-stripped); any `false`
 // element fails its `Expect<… extends true>` and breaks the build.
 export type Checks = [
   // ── SuccessBody (response side) ──
-  Expect<Extends<Customers, unknown[]>>, //                 a list resolves to an array
-  Expect<Equal<Customers[number]['id'], string>>,
+  Expect<Equal<CustomerList['object'], 'list'>>, //           the list envelope
+  Expect<Equal<CustomerList['has_more'], boolean>>,
+  Expect<Extends<CustomerList['data'], unknown[]>>,
+  Expect<Equal<Customer['id'], string>>,
   // nullability is preserved (the property that caught the admin email/userEmail bug):
-  Expect<Equal<Customers[number]['email'], string | null>>,
-  Expect<HasKey<SuccessBody<'/customer/customers', 'post', 201>, 'id'>>, // status-keyed
-  Expect<Equal<IsNever<Customers>, false>>,
-  Expect<Equal<IsAny<Customers>, false>>,
+  Expect<Equal<Customer['email'], string | null>>,
+  Expect<Equal<Customer['display_name'], string | null>>,
+  Expect<Equal<Customer['created'], number>>, //              unix seconds, not ISO
+  Expect<Equal<HasKey<Customer, 'createdAt'>, false>>, //     no legacy camelCase key
+  Expect<HasKey<SuccessBody<'/v1/customers', 'post', 201>, 'id'>>, // status-keyed
+  Expect<Equal<IsNever<CustomerList>, false>>,
+  Expect<Equal<IsAny<CustomerList>, false>>,
 
   // ── RequestBody (request side) ──
   Expect<HasKey<CustomerCreate, 'email'>>, //               writable columns present
-  Expect<HasKey<CustomerCreate, 'displayName'>>,
+  Expect<HasKey<CustomerCreate, 'display_name'>>,
   Expect<Equal<HasKey<CustomerCreate, 'id'>, false>>, //    server-managed columns stripped
-  Expect<Equal<HasKey<CustomerCreate, 'createdAt'>, false>>,
-  Expect<Equal<HasKey<CustomerCreate, 'updatedAt'>, false>>,
+  Expect<Equal<HasKey<CustomerCreate, 'created'>, false>>,
+  Expect<Equal<HasKey<CustomerCreate, 'updated'>, false>>,
   Expect<Equal<IsNever<CustomerCreate>, false>>,
   Expect<Equal<IsAny<CustomerCreate>, false>>,
+  Expect<Equal<IsNever<CustomerUpdate>, false>>,
 ]
 
 // a valid create payload compiles:
@@ -51,6 +61,10 @@ void okCustomer
 const badCustomer: CustomerCreate = { email: 'x@x.com', slug: 'x', bogus: 1 }
 void badCustomer
 
-// a partial update (PUT) accepts a subset of the writable columns:
-const patch: Partial<RequestBody<'/customer/customers/{id}', 'put'>> = { email: 'new@example.com' }
+// @ts-expect-error — the legacy camelCase name is not a /v1 column.
+const camelCustomer: CustomerCreate = { slug: 'x', displayName: 'X' }
+void camelCustomer
+
+// an update (POST on the item path) accepts a subset of the writable columns:
+const patch: CustomerUpdate = { email: 'new@example.com' }
 void patch

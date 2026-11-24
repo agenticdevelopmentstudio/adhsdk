@@ -14,6 +14,18 @@ export {
   type BackendTokenFields,
 } from './tokens'
 
+export {
+  listAllV1,
+  listV1Page,
+  withV1Query,
+  unixToIso,
+  isoToUnix,
+  V1_PAGE_MAX,
+  type V1List,
+  type V1Deleted,
+  type ListAllV1Options,
+} from './v1'
+
 // Injected by the host so its telemetry fetch-wrapper can tag the physical
 // RequestInit this client retries after a refresh (or the exchange retry after a
 // network drop). The marker and its consumer must share one identity-keyed
@@ -243,7 +255,7 @@ export interface LinkProviderInput {
 }
 
 /** Attach an OAuth identity (obtained via the link-mode redirect) to the
- *  authenticated user. POSTs to the JWT-gated /auth/link-provider; resolves on
+ *  authenticated user. POSTs to the JWT-gated POST /v1/account/login_methods (`type: provider`); resolves on
  *  success, throws AuthHttpError (carrying the backend message) on conflict.
  *
  *  It goes to the AUTHORIZATION SERVER, not to this site's `/api` proxy, and that is
@@ -254,7 +266,7 @@ export interface LinkProviderInput {
  *  correct — but it declares them separately, and the local dev suite ALREADY splits
  *  them: the site's proxy reaches this worktree's own backend while the AS is the
  *  shared auth service. Sent there, the link is written into the wrong database.
- *  `asEndpoint` keeps the historical `/api/auth/link-provider` shape when no AS base
+ *  `asEndpoint` keeps the same-origin `/api/v1/account/login_methods` shape when no AS base
  *  is configured, so an unconfigured build behaves exactly as before. */
 export async function linkProvider(
   input: LinkProviderInput,
@@ -262,8 +274,14 @@ export async function linkProvider(
    *  which is sent verbatim — a base in `input` would be POSTed to the server. */
   opts: { authApiBase?: string } = {},
 ): Promise<void> {
-  await authedRequest(asEndpoint('/auth/link-provider', opts.authApiBase), {
+  await authedRequest(asEndpoint('/v1/account/login_methods', opts.authApiBase), {
     method: 'POST',
-    body: JSON.stringify(input),
+    body: JSON.stringify({
+      type: 'provider',
+      client_slug: input.clientSlug,
+      provider_slug: input.providerSlug,
+      code: input.code,
+      redirect_uri: input.redirectUri,
+    }),
   })
 }

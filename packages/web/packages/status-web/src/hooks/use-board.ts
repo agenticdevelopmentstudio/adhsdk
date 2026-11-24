@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useStatusApi, type StatusApiClient } from "../api/client";
 import type { Board } from "../lib/board-types";
@@ -82,6 +82,12 @@ export function useBoard(opts: { environments?: readonly string[] | null } = {})
   // over them. Null (every environment) shares one cache entry with every other reader.
   const environments = opts.environments ?? null;
   const envKey = environments === null ? null : [...environments].sort().join(",");
+  // When this reader picked the current environment choice. A read for it that is older
+  // than that, and that has not yet been answered or refused since, is whatever the cache
+  // kept from an earlier visit to the same choice, not a sign that reads stopped arriving.
+  const [chosen, setChosen] = useState(() => ({ envKey, at: Date.now() }));
+  if (chosen.envKey !== envKey) setChosen({ envKey, at: Date.now() });
+  const chosenAt = chosen.envKey === envKey ? chosen.at : Date.now();
   const q = useQuery<Board>({
     queryKey: ["board", envKey],
     queryFn: () => fetchBoard(api, envKey),
@@ -112,11 +118,19 @@ export function useBoard(opts: { environments?: readonly string[] | null } = {})
   // one place, so no consumer can render a verdict off a board that cannot back one.
   // A board from a backend older than `freshness` carries no deadline at all: it reads as
   // stale (no deadline parses), the same fail-closed path as an unreadable one.
+  //
+  // Each environment choice has its own cache entry, so going back to a choice used earlier
+  // can hand over that choice's expired board while its first read is still in flight. That
+  // board says nothing about whether reads stopped: until a read made since the choice
+  // answers or fails, it is loading. A read that then fails leaves it stale, as before.
   const nowMs = useNow();
   const data = q.data ?? null;
+  const expired = data != null && !(nowMs <= Date.parse(data.freshness?.staleAt ?? ""));
+  const leftOver = expired && q.isFetching && q.dataUpdatedAt < chosenAt && q.errorUpdatedAt < chosenAt;
   const reason: BoardUnavailableReason | null =
     data == null ? (q.isLoading ? "loading" : "unavailable")
-    : !(nowMs <= Date.parse(data.freshness?.staleAt ?? "")) ? "stale"
+    : leftOver ? "loading"
+    : expired ? "stale"
     : data.freshness.state === "current" ? null
     : data.freshness.state === "no-data" ? "no-data"
     : "frozen";

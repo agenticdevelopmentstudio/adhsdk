@@ -1,0 +1,3 @@
+
+The Three Pane Chat component orchestrates a sophisticated multi-pane chat layout designed for exploratory, structured conversations. It displays three side-by-side columns: an optional topics pane (left), a chat transcript pane (center), and a collapsible detail pane (right). Messages that include popover metadata automatically generate selectable topics, which when activated display their associated detail panel in the detail pane. SVG connectors visually link selected topics to their corresponding messages and message details, providing navigation context. The component manages focus, keyboard navigation, and responsive layout recalculation to adapt to viewport changes and content updates.
+

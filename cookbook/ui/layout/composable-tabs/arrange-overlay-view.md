@@ -1,13 +1,12 @@
 ---
 id: bfc2dcde-d905-4923-bff2-577c85f17d5f
 title: "Composable Tabs Arrange Overlay"
-domain: adhsdk://cookbook/ui/layout/composable-tabs/arrange-overlay-view
 type: ingredient
-version: 1.2.1
+version: 1.2.2
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -22,7 +21,7 @@ tags:
   - toolbar
 depends-on: []
 related:
-  - adhsdk://cookbook/ui/layout/composable-tabs/leaf-pane-view
+  - 4d75a371-181e-4d80-a16b-022d37dc0d48
 references: []
 approved-by: ""
 approved-date: ""
@@ -229,7 +228,7 @@ refreshing availability whenever the tab layout changes.
 | composable-tabs-arrange-overlay-024 | move-items-icons-match-direction | Inspect the "Up" Move item after refreshing availability | Its image is the `arrow.up` icon and its accessibility description equals "Up" |
 | composable-tabs-arrange-overlay-025 | toolbar-buttons-show-icon-and-label | Inspect the Remove button after construction | Its image is the `minus` icon, accessibility description equals "Remove", and the icon is positioned leading of the text |
 | composable-tabs-arrange-overlay-026 | refresh-is-caller-driven | Change what the can-add callback returns without refreshing availability | The Add button's enabled state remains at its previously computed value |
-| composable-tabs-arrange-overlay-027 | computes-initial-availability-at-construction | Construct the view with the can-add callback returning `false` and never refresh availability again | The Add button is disabled immediately after construction |
+| composable-tabs-arrange-overlay-027 | computes-initial-availability-at-construction | Construct the view with default callbacks and never refresh | The Add and Remove buttons are enabled, the Move button is disabled and the Move menu holds a title item plus 4 items |
 | composable-tabs-arrange-overlay-028 | root-and-controls-carry-accessibility-identifiers | Inspect the accessibility identifier on the root view and each control after construction | Equal `composable-tabs.arrange.scrim`, `.add`, `.remove`, `.move`, `.done`, and `.pane-name` respectively |
 | composable-tabs-arrange-overlay-029 | move-items-carry-prefixed-identifiers | Refresh availability after construction | The "Left" item's identifier is `composable-tabs.arrange.move.left` |
 | composable-tabs-arrange-overlay-030 | done-button-has-no-key-equivalent | Inspect the Done button's key equivalent after construction | Equals none (empty) |
@@ -453,9 +452,9 @@ this file.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsArrangeOverlayView.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsArrangeOverlayView.swift` | confirmed (1.2.2) |
 
 ## Design Decisions
 
@@ -497,13 +496,13 @@ changes.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
-| [focus-management](agenticdevelopercookbook://compliance/accessibility#focus-management) | partial | Accessibility |
-| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
-| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | passed | Accessibility |
+| [adc.check.accessibility.focus-management](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/eec52703-a32a-5dee-b763-59a3bac826ea) | partial | Accessibility |
+| [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
+| [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | failed | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 Keyboard-navigable passes because the Add, Remove, Move, and Done controls
 are all standard `NSButton`/`NSPopUpButton` instances that source never
@@ -527,7 +526,7 @@ translations in Platform Notes), and the latter is not a check defined in
 the accessibility compliance catalog, though the same concern is addressed
 directly under **Accessibility Options** below.
 
-`separation-of-concerns` passes because `ComposableTabsArrangeOverlayView` only dims a pane and offers Add, Remove and related buttons that call back into the arranging controller, which performs the actions. `unit-test-coverage` is `failed`: no test file in the Apple test targets references `ComposableTabsArrangeOverlayView`.
+`separation-of-concerns` passes because `ComposableTabsArrangeOverlayView` only dims a pane and offers Add, Remove and related buttons that call back into the arranging controller, which performs the actions. `unit-test-coverage` is `partial`: `ArrangeOverlayViewConformanceTests.swift` tests every vector except `composable-tabs-arrange-overlay-032`, skipped because selection runs off an app-level event monitor that needs real window-server events, and `composable-tabs-arrange-overlay-033`, skipped because the `@MainActor` confinement is enforced at build time and has no runtime check to exercise.
 
 ## Change History
 
@@ -540,3 +539,4 @@ directly under **Accessibility Options** below.
 | 1.1.3 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/layout/composable-tabs/. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added separation-of-concerns and unit-test-coverage compliance rows. Added the confines-to-ui-thread requirement and vector. |
+| 1.2.2 | 2026-11-15 | Mike Fullerton | Conformance tests added (ArrangeOverlayViewConformanceTests.swift; 032 and 033 skipped); unit-test-coverage now partial. |

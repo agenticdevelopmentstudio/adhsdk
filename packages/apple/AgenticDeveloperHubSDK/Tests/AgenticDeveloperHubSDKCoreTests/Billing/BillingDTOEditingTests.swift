@@ -66,4 +66,24 @@ final class BillingDTOEditingTests: XCTestCase {
         XCTAssertEqual(labels["p3cccccc"], "Site — Beta — p3cccc")
         XCTAssertEqual(labels["p4"], "Other")
     }
+
+    // MARK: - Rate-text parsing (billing-editing-005 to 007)
+
+    private var usdFormatter: MoneyFormatter {
+        MoneyFormatter(currency: "USD", locale: Locale(identifier: "en_US"))
+    }
+
+    func testV005_rateParseTrimsWhitespaceAndReturnsCents() {
+        XCTAssertEqual(usdFormatter.billingRate(parsing: " 150.00 "), 15_000)
+    }
+
+    func testV006_rateParseRejectsNonNumbers() {
+        XCTAssertNil(usdFormatter.billingRate(parsing: "abc"))
+    }
+
+    func testV007_rateParseRejectsAValueAboveTheDefaultRateLimit() {
+        XCTAssertEqual(usdFormatter.billingRate(parsing: "100000.00"), 10_000_000, "the limit itself is allowed")
+        XCTAssertNil(usdFormatter.billingRate(parsing: "100000.01"))
+        XCTAssertNil(usdFormatter.billingRate(parsing: "250000"))
+    }
 }

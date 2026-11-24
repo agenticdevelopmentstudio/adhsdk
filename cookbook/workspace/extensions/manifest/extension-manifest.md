@@ -1,13 +1,12 @@
 ---
 id: 68d182dc-3fc0-489c-ab04-ff4da25fc4df
 title: "Extension Manifest"
-domain: adhsdk://cookbook/workspace/extensions/manifest/extension-manifest
 type: ingredient
-version: 1.1.0
+version: 1.2.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-09-27
+modified: 2026-11-13
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -121,7 +120,7 @@ is how a caller learns what, if anything, one decode attempt had to drop.
   extension declares nothing" — which is what makes the empty contributions
   value a reusable stand-in for either case.
 - **contributions-arrays-default-empty**: each of `themes`, `snippets`,
-  `languages`, `commands`, `keybindings`, `configuration`, and
+  `languages`, `grammars`, `commands`, `keybindings`, `configuration`, and
   `languageModelTools` MUST default to an empty list when its manifest key
   is absent.
 - **contributions-dictionaries-default-empty**: each of `menus`, `views`,
@@ -221,6 +220,11 @@ is how a caller learns what, if anything, one decode attempt had to drop.
   `lenient-array-element-isolation`, never the whole manifest.
 - **snippet-strict-shape**: a snippet entry MUST require `language` and
   `path` as strings.
+- **grammar-shape**: a grammar entry MUST require `scopeName` and `path` as
+  strings and MUST treat `language` as an optional string — an injection
+  grammar declares none. `embeddedLanguages`, `tokenTypes` and
+  `injectTo` MUST NOT be carried. A malformed entry MUST fail only that
+  array element, via `lenient-array-element-isolation`.
 - **language-optional-fields**: a language entry MUST require `id` as a
   string and MUST treat `aliases`, `extensions`, `filenames`,
   `filenamePatterns`, `firstLine`, `mimetypes`, `configuration`, and `icon`
@@ -352,6 +356,7 @@ Not applicable — this is a manifest decoder, not a visual component.
 | extension-manifest-026 | language-model-tool-plain-shape, lenient-array-element-isolation | `languageModelTools: [{ name: "a" }, { name: 123 }]` (second entry's `name` wrong type) | The first tool entry decodes; the second is dropped, with a decoding failure at index `1` |
 | extension-manifest-027 | contributions-encode-lossy, decoding-failures-not-encoded | A manifest decoded with one malformed theme (extension-manifest-007), then re-encoded | The re-encoded `themes` list holds only the surviving entries; no decoding-failures field appears anywhere in the output |
 | extension-manifest-028 | manifest-and-contributions-are-thread-safe | Two independent decodes of identical manifest bytes, compared for equality | The two results are equal; both values are safe to use across any concurrency boundary |
+| extension-manifest-029 | grammar-shape, lenient-array-element-isolation | `grammars: [{ language: "widget", scopeName: "source.widget", path: "./w.json", embeddedLanguages: {} }, { scopeName: "text.inject", path: "./i.json" }, { scopeName: 7, path: "./x.json" }]` | Two grammar entries, the second with no `language`; the third is dropped with a decoding failure at index `2` |
 
 ## Edge Cases
 
@@ -527,9 +532,9 @@ writes no log line.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionManifest.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionManifest.swift` | confirmed (1.2.0) |
 
 ## Design Decisions
 
@@ -626,13 +631,13 @@ unequal purely on `unreadableKeys`, not on any field a caller would call
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | partial | Reliability |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | Reliability |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | Reliability |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 
 `explicit-error-handling` is **partial**: every `contributes.*` array/dictionary
 entry failure is recorded as a typed `DecodingFailure` the caller can act on,
@@ -665,6 +670,7 @@ the source, not a hidden one.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.0 | 2026-11-13 | Mike Fullerton | `contributes.grammars` decoded (`language` optional, `scopeName`, `path`). |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to workspace/extensions/manifest/. |
 | 1.0.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: removed source line-number citations; recipes cite files and symbols, not lines. |

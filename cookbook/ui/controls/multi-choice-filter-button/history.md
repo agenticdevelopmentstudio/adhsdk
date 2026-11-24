@@ -7,3 +7,4 @@
 | 1.1.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/controls/. |
 | 1.3.0 | 2026-10-04 | Mike Fullerton | Wrote the archive-rejection, main-thread confinement and autoresizing-translation requirements platform-neutrally with vectors 023-025; resolved the contrast NEEDS REVIEW marker as current behavior (no contrast check) with vector 026 and a pending decision; added separation-of-concerns and unit-test-coverage compliance rows. Renamed the thread-confinement requirement to confines-to-ui-thread with the standard wording. |
+| 1.3.1 | 2026-11-15 | Mike Fullerton | Conformance tests added (MultiChoiceFilterButtonConformanceTests.swift, 23 of 26 vectors); unit-test-coverage now partial (016, 023, 024 skipped). |

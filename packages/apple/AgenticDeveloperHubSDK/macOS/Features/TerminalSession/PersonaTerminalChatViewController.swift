@@ -195,31 +195,45 @@ public final class PersonaTerminalChatViewController: NSViewController {
               let template = pluginManager.template(pluginIdentifier: configuration.pluginIdentifier,
                                                     templateId: configuration.templateId),
               let resolved = AIProviderResolver.resolve(configuration, manager: pluginManager) else {
-            fillModels(popup, models: [], providerDefault: nil)
+            fillModels(popup, models: [], providerDefault: nil, manager: nil)
             return
         }
-        fillModels(popup, models: template.models, providerDefault: resolved.model)
+        let manager = ProviderModels.manager(
+            pluginIdentifier: configuration.pluginIdentifier, template: template,
+            baseURL: resolved.values["baseURL"], apiKey: resolved.values["apiKey"])
+        fillModels(popup, models: Self.offered(manager.list), providerDefault: resolved.model, manager: manager)
 
-        guard ModelChooserContent.supportsLiveModels(pluginIdentifier: configuration.pluginIdentifier)
-        else { return }
-        let baseURL = resolved.values["baseURL"] ?? ""
-        let apiKey = resolved.values["apiKey"]
+        guard manager.hasLiveSource else { return }
         modelFetch = Task { [weak self] in
-            let live = await OpenAIModelCatalog.fetch(baseURL: baseURL, apiKey: apiKey)
+            let live = await manager.refresh()
             guard !Task.isCancelled, !live.isEmpty, let self, let popup = self.modelPopup else { return }
-            self.fillModels(popup, models: live, providerDefault: resolved.model)
+            self.fillModels(popup, models: Self.offered(live), providerDefault: resolved.model, manager: manager)
         }
     }
 
-    private func fillModels(_ popup: NSPopUpButton, models: [String], providerDefault: String?) {
+    /// Every model the connection offers, the newest of each family first and
+    /// the older versions and variants after them. The popup has no All
+    /// versions switch like the chooser's, so it lists them all: a persona may
+    /// need a pinned older model or a fast variant.
+    private static func offered(_ list: ProviderModelList) -> [String] {
+        let latest = list.latestIDs
+        let newest = Set(latest)
+        return latest + list.allIDs.filter { !newest.contains($0) }
+    }
+
+    /// Fills the model popup. Items are titled with the manager's names
+    /// (`Opus 5.5`) and carry the model id as their represented object.
+    private func fillModels(_ popup: NSPopUpButton, models: [String], providerDefault: String?,
+                            manager: (any ProviderModelManager)?) {
+        func name(_ id: String) -> String { manager?.displayName(for: id) ?? id }
         popup.removeAllItems()
-        let defaultTitle = providerDefault.map { "Provider default (\($0))" } ?? "Provider default"
+        let defaultTitle = providerDefault.map { "Provider default (\(name($0)))" } ?? "Provider default"
         popup.addItem(withTitle: defaultTitle)
         popup.lastItem?.representedObject = nil
         var offered = models
         if let modelOverride, !offered.contains(modelOverride) { offered.append(modelOverride) }
         for model in offered {
-            popup.addItem(withTitle: model)
+            popup.addItem(withTitle: name(model))
             popup.lastItem?.representedObject = model
         }
         if let modelOverride,

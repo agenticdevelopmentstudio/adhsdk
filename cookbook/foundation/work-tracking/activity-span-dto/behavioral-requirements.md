@@ -1,0 +1,22 @@
+
+- **conformances**: `ActivitySpanDTO` MUST conform to `Codable`, `Sendable`, `Equatable` and `Identifiable`.
+- **identity-field**: The type MUST expose `id` as a `String`, which serves as the `Identifiable` identity.
+- **default-id**: When `init` is called without an `id`, the type MUST generate one from `UUID().uuidString`.
+- **required-init-arguments**: `init` MUST require `bundleId`, `appName`, `startedAt` and `tz`; every other argument MUST have a default.
+- **string-defaults**: `windowTitle`, `workingPath`, `repoRoot`, `branch`, `endedAt` and `lastSeenAt` MUST each default to the empty string.
+- **all-strings**: Every field MUST be a `String`, including the timestamps, so the value carries no `Date` type.
+- **immutable-fields**: `id`, `bundleId`, `appName`, `workingPath`, `repoRoot`, `branch`, `startedAt` and `tz` MUST be immutable (`let`) after construction.
+- **mutable-fields**: `windowTitle`, `endedAt` and `lastSeenAt` MUST be mutable (`var`) after construction.
+- **working-path-sentinel**: An empty `workingPath` MUST mean the path is unresolved.
+- **repo-root-sentinel**: An empty `repoRoot` MUST mean the span has no repository.
+- **started-at-format**: Callers MUST supply `startedAt` as an ISO-8601 UTC timestamp, as the source comment states; the type does not enforce it.
+- **tz-format**: Callers SHOULD supply `tz` as a time zone identifier string such as `America/Los_Angeles`; the type does not validate it.
+- **ended-at-sentinel**: An empty `endedAt` MUST mean the span is still open.
+- **last-seen-sentinel**: An empty `lastSeenAt` MUST mean no heartbeat has been recorded yet.
+- **is-open-derivation**: `isOpen` MUST be true exactly when `endedAt` is empty.
+- **is-open-not-encoded**: `isOpen` MUST be a computed property and MUST NOT be a stored or encoded field.
+- **codable-synthesis**: Encoding and decoding MUST use the compiler-synthesized `Codable` keyed by the property names (`id`, `bundleId`, `appName`, `windowTitle`, `workingPath`, `repoRoot`, `branch`, `startedAt`, `endedAt`, `tz`, `lastSeenAt`).
+- **snake-case-by-strategy**: The type MUST declare no `CodingKeys`; snake_case on the wire MUST come from the caller's key strategy (`convertToSnakeCase` and `convertFromSnakeCase`), as the models test does. The wire key format therefore belongs to the caller; a caller that uses the default encoder gets the camelCase property names.
+- **no-validation**: The type MUST NOT validate or normalize any field at construction or decode; every string is stored as given.
+- **value-semantics**: Copies MUST be independent values; mutation of a copy MUST NOT affect the original.
+

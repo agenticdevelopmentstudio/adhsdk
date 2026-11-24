@@ -16,22 +16,28 @@ class Bookmark:
     """
     Attributes:
         id (str):
-        customer_id (str):
+        customer_id (str): The customer who owns the bookmark, or '' when the owner is not a customer. Kept for clients
+            built before the pairs; read ownerKind/ownerId instead.
+        owner_kind (str): Kind of principal that owns the bookmark: 'customer', 'organization', 'application', 'persona'
+            or 'ecosystem'.
+        owner_id (str): Id of the owning principal.
         ecosystem_id (str):
         target_kind (str):
         target_id (str):
         notify (bool):
-        created_at (str):
+        created (int): Unix timestamp, in seconds.
         deleted_at (None | str | Unset):
     """
 
     id: str
     customer_id: str
+    owner_kind: str
+    owner_id: str
     ecosystem_id: str
     target_kind: str
     target_id: str
     notify: bool
-    created_at: str
+    created: int
     deleted_at: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -39,6 +45,10 @@ class Bookmark:
         id = self.id
 
         customer_id = self.customer_id
+
+        owner_kind = self.owner_kind
+
+        owner_id = self.owner_id
 
         ecosystem_id = self.ecosystem_id
 
@@ -48,7 +58,7 @@ class Bookmark:
 
         notify = self.notify
 
-        created_at = self.created_at
+        created = self.created
 
         deleted_at: None | str | Unset
         if isinstance(self.deleted_at, Unset):
@@ -61,16 +71,18 @@ class Bookmark:
         field_dict.update(
             {
                 "id": id,
-                "customerId": customer_id,
-                "ecosystemId": ecosystem_id,
-                "targetKind": target_kind,
-                "targetId": target_id,
+                "customer_id": customer_id,
+                "owner_kind": owner_kind,
+                "owner_id": owner_id,
+                "ecosystem_id": ecosystem_id,
+                "target_kind": target_kind,
+                "target_id": target_id,
                 "notify": notify,
-                "createdAt": created_at,
+                "created": created,
             }
         )
         if deleted_at is not UNSET:
-            field_dict["deletedAt"] = deleted_at
+            field_dict["deleted_at"] = deleted_at
 
         return field_dict
 
@@ -79,17 +91,21 @@ class Bookmark:
         d = dict(src_dict)
         id = d.pop("id")
 
-        customer_id = d.pop("customerId")
+        customer_id = d.pop("customer_id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        owner_kind = d.pop("owner_kind")
 
-        target_kind = d.pop("targetKind")
+        owner_id = d.pop("owner_id")
 
-        target_id = d.pop("targetId")
+        ecosystem_id = d.pop("ecosystem_id")
+
+        target_kind = d.pop("target_kind")
+
+        target_id = d.pop("target_id")
 
         notify = d.pop("notify")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
         def _parse_deleted_at(data: object) -> None | str | Unset:
             if data is None:
@@ -98,16 +114,18 @@ class Bookmark:
                 return data
             return cast(None | str | Unset, data)
 
-        deleted_at = _parse_deleted_at(d.pop("deletedAt", UNSET))
+        deleted_at = _parse_deleted_at(d.pop("deleted_at", UNSET))
 
         bookmark = cls(
             id=id,
             customer_id=customer_id,
+            owner_kind=owner_kind,
+            owner_id=owner_id,
             ecosystem_id=ecosystem_id,
             target_kind=target_kind,
             target_id=target_id,
             notify=notify,
-            created_at=created_at,
+            created=created,
             deleted_at=deleted_at,
         )
 

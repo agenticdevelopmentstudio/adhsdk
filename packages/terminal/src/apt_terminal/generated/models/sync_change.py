@@ -55,7 +55,7 @@ class SyncChange:
                 "resource": resource,
                 "id": id,
                 "op": op,
-                "syncVersion": sync_version,
+                "sync_version": sync_version,
             }
         )
         if data is not UNSET:
@@ -74,7 +74,7 @@ class SyncChange:
 
         op = SyncChangeOp(d.pop("op"))
 
-        sync_version = d.pop("syncVersion")
+        sync_version = d.pop("sync_version")
 
         _data = d.pop("data", UNSET)
         data: SyncChangeData | Unset

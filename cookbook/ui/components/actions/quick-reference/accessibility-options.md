@@ -1,0 +1,2 @@
+
+Known limitation: the component inherits focus management and popover behavior from the shared Popover primitive. It adds no handling of its own for system accessibility display options such as Reduce Motion, Increase Contrast, or Differentiate Without Color. The contrast result in Compliance is `partial` for the same reason: it depends on how the `apt-*` tokens resolve, which this component does not check.

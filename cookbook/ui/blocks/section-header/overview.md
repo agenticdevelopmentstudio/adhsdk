@@ -1,0 +1,3 @@
+
+A section header is a layout component that anchors a content area with a prominent title, an optional descriptive eyebrow label, contextual help, and action controls. Commonly used to introduce major sections of a dashboard or content view. The component organizes a left section (title and eyebrow) and right section (actions and help) in a horizontal flex layout with clear visual hierarchy. A header that names its whole pane can opt in with `paneTitle`, and inside a detail stack its title then moves up into the stack's detail strip (see the Detail Title ingredient, [adhsdk.ingredient.ui.blocks.detail-title](cookbook:fd3575ab-c4a4-480d-84ff-317a282bc359)), leaving the eyebrow, actions and help in the pane.
+

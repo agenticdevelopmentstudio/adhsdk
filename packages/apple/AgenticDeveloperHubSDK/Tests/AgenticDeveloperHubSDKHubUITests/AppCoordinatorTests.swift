@@ -8,11 +8,17 @@ import AgenticDeveloperHubSDKHubService
 @MainActor
 final class AppCoordinatorTests: XCTestCase {
     private static let userJSON =
-        #"{"id":"u1","email":"a@b.c","name":"Ada","avatarUrl":"","slug":"ada","#
-        + #""publicProfileEnabled":false,"profileVisibility":"public","capabilities":[]}"#
+        #"{"object":"account","id":"u1","email":"a@b.c","name":"Ada","avatar_url":"","slug":"ada","#
+        + #""public_profile_enabled":false,"profile_visibility":"public","capabilities":[]}"#
+    /// `GET /v1/account` answers the profile plus whichever sub-resources `include[]` asked for.
+    private static func account(workspacePrefs: String = "{}", appearance: String? = nil) -> String {
+        let extra = appearance.map { #","appearance":{"prefs":\#($0)}"# } ?? ""
+        return String(userJSON.dropLast()) + #","workspace_prefs":{"prefs":\#(workspacePrefs)}\#(extra)}"#
+    }
     private static let workspacesJSON =
-        #"[{"slug":"ada","name":"Ada","type":"individual"},"#
-        + #"{"slug":"acme","name":"Acme","type":"organization"}]"#
+        #"{"object":"workspace","slug":"ada","name":"Ada","type":"individual"},"#
+        + #"{"object":"workspace","slug":"acme","name":"Acme","type":"organization"}"#
+    private static let workspaceList = StubClientTransport.list([workspacesJSON])
     private static let ada = HubWorkspace(slug: "ada", name: "Ada", type: .individual)
     private static let acme = HubWorkspace(slug: "acme", name: "Acme", type: .organization)
 
@@ -120,10 +126,11 @@ final class AppCoordinatorTests: XCTestCase {
         let harness = makeHarness(
             session: HubSession(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
         )
-        harness.stub.on(.get, "/auth/me", status: 200, json: Self.userJSON)
-        harness.stub.on(.get, "/workspaces", status: 200, json: Self.workspacesJSON)
-        harness.stub.on(.get, "/me/workspace-prefs", status: 200, json: #"{"prefs":{}}"#)
-        harness.stub.on(.get, "/me/appearance", status: 200, json: #"{"prefs":{"colorMode":"dark"}}"#)
+        harness.stub.on(
+            .get, "/v1/account", status: 200,
+            json: Self.account(appearance: #"{"color_mode":"dark"}"#)
+        )
+        harness.stub.on(.get, "/v1/workspaces", status: 200, json: Self.workspaceList)
         return harness
     }
 
@@ -148,7 +155,7 @@ final class AppCoordinatorTests: XCTestCase {
         let harness = makeHarness()
         await harness.coordinator.start()
         XCTAssertEqual(harness.coordinator.phase, .signIn)
-        XCTAssertEqual(harness.stub.requestCount(.get, "/auth/me"), 0)
+        XCTAssertEqual(harness.stub.requestCount(.get, "/v1/account"), 0)
     }
 
     func testSessionLoadsTheWorkspaceAndBecomesReady() async {
@@ -166,7 +173,7 @@ final class AppCoordinatorTests: XCTestCase {
         let harness = makeHarness(
             session: HubSession(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: nil)
         )
-        harness.stub.on(.get, "/auth/me", status: 401, json: #"{"error":{"message":"expired"}}"#)
+        harness.stub.on(.get, "/v1/account", status: 401, json: StubClientTransport.error("expired"))
         await harness.coordinator.start()
         XCTAssertEqual(harness.coordinator.phase, .signIn)
     }
@@ -175,16 +182,15 @@ final class AppCoordinatorTests: XCTestCase {
         let harness = makeHarness(
             session: HubSession(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
         )
-        harness.stub.on(.get, "/auth/me") { _, _ in throw URLError(.notConnectedToInternet) }
+        harness.stub.on(.get, "/v1/account") { _, _ in throw URLError(.notConnectedToInternet) }
         await harness.coordinator.start()
         guard case .error(let message) = harness.coordinator.phase else {
             return XCTFail("expected error, got \(harness.coordinator.phase)")
         }
         XCTAssertEqual(message, "Could not reach the server. Check your connection and try again.")
 
-        harness.stub.on(.get, "/auth/me", status: 200, json: Self.userJSON)
-        harness.stub.on(.get, "/workspaces", status: 200, json: Self.workspacesJSON)
-        harness.stub.on(.get, "/me/workspace-prefs", status: 200, json: #"{"prefs":{}}"#)
+        harness.stub.on(.get, "/v1/account", status: 200, json: Self.account())
+        harness.stub.on(.get, "/v1/workspaces", status: 200, json: Self.workspaceList)
         await harness.coordinator.retry()
         let isReady = await waitUntil { harness.coordinator.phase == .ready(Self.ada) }
         XCTAssertTrue(isReady)
@@ -192,13 +198,13 @@ final class AppCoordinatorTests: XCTestCase {
 
     func testWorkspaceListFailureIsAnErrorAndRetryRecovers() async {
         let harness = signedInHarness()
-        harness.stub.on(.get, "/workspaces", status: 500, json: #"{"error":"boom"}"#)
+        harness.stub.on(.get, "/v1/workspaces", status: 500, json: StubClientTransport.error("boom"))
         await harness.coordinator.start()
         let hasError = await waitUntil {
             if case .error = harness.coordinator.phase { return true } else { return false }
         }
         XCTAssertTrue(hasError)
-        harness.stub.on(.get, "/workspaces", status: 200, json: Self.workspacesJSON)
+        harness.stub.on(.get, "/v1/workspaces", status: 200, json: Self.workspaceList)
         await harness.coordinator.retry()
         let isReady = await waitUntil { harness.coordinator.phase == .ready(Self.ada) }
         XCTAssertTrue(isReady)
@@ -208,7 +214,7 @@ final class AppCoordinatorTests: XCTestCase {
 
     func testSelectWorkspaceSwitchesAndUnknownSlugIsNotMember() async {
         let harness = signedInHarness()
-        harness.stub.on(.put, "/me/workspace-prefs", status: 200, json: #"{"prefs":{"slug":"acme"}}"#)
+        harness.stub.on(.post, "/v1/account", status: 200, json: Self.account(workspacePrefs: #"{"slug":"acme"}"#))
         await harness.coordinator.start()
         let isReady = await waitUntil { harness.coordinator.phase == .ready(Self.ada) }
         XCTAssertTrue(isReady)
@@ -234,7 +240,7 @@ final class AppCoordinatorTests: XCTestCase {
 
     func testLogOutClearsEverythingAndGoesToSignIn() async {
         let harness = signedInHarness()
-        harness.stub.on(.post, "/auth/revoke", status: 200, json: "{}")
+        harness.stub.on(.post, "/v1/auth/sessions/revoke", status: 200, json: "{}")
         await harness.coordinator.start()
         let isReady = await waitUntil { harness.coordinator.phase == .ready(Self.ada) }
         XCTAssertTrue(isReady)
@@ -243,12 +249,12 @@ final class AppCoordinatorTests: XCTestCase {
         harness.coordinator.confirmDiscard = { false }
         await harness.coordinator.logOut()
         XCTAssertEqual(harness.coordinator.phase, .ready(Self.ada))
-        XCTAssertEqual(harness.stub.requestCount(.post, "/auth/revoke"), 0)
+        XCTAssertEqual(harness.stub.requestCount(.post, "/v1/auth/sessions/revoke"), 0)
 
         harness.coordinator.confirmDiscard = { true }
         await harness.coordinator.logOut()
         XCTAssertEqual(harness.coordinator.phase, .signIn)
-        XCTAssertEqual(harness.stub.requestCount(.post, "/auth/revoke"), 1)
+        XCTAssertEqual(harness.stub.requestCount(.post, "/v1/auth/sessions/revoke"), 1)
         XCTAssertNil(isolated.defaults.array(forKey: SessionController.recentsKey))
         XCTAssertNil(harness.store.currentSession())
         XCTAssertEqual(harness.coordinator.workspaces.state, .idle)
@@ -296,8 +302,8 @@ final class AppCoordinatorTests: XCTestCase {
             transportSource: StaticTransportSource(.direct(transport: stub)),
             initialTransport: .direct(transport: stub)
         )
-        stub.on(.get, "/auth/me", status: 200, json: Self.userJSON)
-        stub.on(.post, "/auth/revoke", status: 200, json: "{}")
+        stub.on(.get, "/v1/account", status: 200, json: Self.userJSON)
+        stub.on(.post, "/v1/auth/sessions/revoke", status: 200, json: "{}")
         let sessionController = SessionController(
             environment: environment,
             configuration: SignInConfiguration(

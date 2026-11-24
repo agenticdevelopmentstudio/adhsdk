@@ -28,16 +28,22 @@ public final class PartnerWindowController: SingleWindowController {
     private let arrangeButton = ArrangeModeTitlebarButton(accessibilityID: "partner-window.arrange-button")
     private var backdropObserver: ThemePaletteObserver?
 
-    public static func present(controller: PartnerController) {
-        ensureCurrent(controller: controller)
-        current?.showWindow()
+    /// Shows the singleton, constructing it first if needed, and returns it, so a caller
+    /// can act on the window it just showed rather than look `current` up afterwards.
+    @discardableResult
+    public static func present(controller: PartnerController) -> PartnerWindowController {
+        let window = ensureCurrent(controller: controller)
+        window.showWindow()
+        return window
     }
 
     /// Constructs the singleton (registering it with `WindowManager.registry`) without showing it.
-    public static func ensureCurrent(controller: PartnerController) {
-        if current == nil {
-            current = PartnerWindowController(controller: controller)
-        }
+    @discardableResult
+    public static func ensureCurrent(controller: PartnerController) -> PartnerWindowController {
+        if let current { return current }
+        let made = PartnerWindowController(controller: controller)
+        current = made
+        return made
     }
 
     public override func close() {
@@ -87,6 +93,7 @@ public final class PartnerWindowController: SingleWindowController {
                    contentViewController: SafeAreaHostViewController(child: split, pinsToSafeArea: false))
 
         self.windowTitle = "Coding Partner"
+        self.windowTitleSymbolName = "person.2"
         self.windowStyleMask = [.titled, .closable, .resizable, .miniaturizable, .fullSizeContentView]
         self.windowSpec = WindowSpec(
             defaultSize: NSSize(width: 1100, height: 720),

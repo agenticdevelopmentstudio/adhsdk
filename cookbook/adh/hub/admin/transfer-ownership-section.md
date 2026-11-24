@@ -1,7 +1,6 @@
 ---
 id: da441eaa-795d-4447-99b1-356186855921
 title: "Transfer Ownership Section"
-domain: adhsdk://cookbook/adh/hub/admin/transfer-ownership-section
 type: ingredient
 version: 1.2.3
 status: review
@@ -21,11 +20,11 @@ tags:
   - settings
   - transfer
 depends-on:
-  - adhsdk://recipes/disclosure
-  - adhsdk://recipes/button
-  - adhsdk://recipes/dialog
+  - c99e2822-f5a9-4e84-8740-9341880bb82a
+  - f3c25236-d72f-4a7b-839a-b7f335b3acd0
+  - 972be0d0-a9f5-45cd-a23b-c8329410b3d1
 related:
-  - adhsdk://cookbook/adh/hub/admin/delete-entity-section
+  - 96bc198e-c726-476a-bc4a-ddc1d5c0c2f8
 references: []
 approved-by: ""
 approved-date: ""
@@ -423,9 +422,9 @@ Not applicable: no logging call or logger reference appears anywhere in this com
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/adh-ui/src/blocks/transfer-ownership-section.tsx` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/adh-ui/src/blocks/transfer-ownership-section.tsx` | unverified |
 
 ## Design Decisions
 
@@ -467,9 +466,9 @@ Platform scope: React/Web.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | Accessibility |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
 `partial` because the source both satisfies and falls short of this check: the root `<section aria-label>`, the distinct Disclosure/dropdown trigger labels (`trigger-button-labeled-distinctly`), and the `Label htmlFor` on the confirm `Input` give screen-reader users meaningful, unambiguous labels, but the dialog's "Checking…"-to-preview transition has no live region (see the Accessibility section above), so a screen-reader user who already opened the dialog is not told when its content changes.
 

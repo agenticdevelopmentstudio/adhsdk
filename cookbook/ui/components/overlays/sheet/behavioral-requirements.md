@@ -1,0 +1,19 @@
+
+- **render-compound-components**: Component MUST export individual compound parts: Sheet (root), SheetTrigger, SheetClose, SheetContent, SheetHeader, SheetFooter, SheetTitle, and SheetDescription. `SheetPortal` and `SheetOverlay` are module-local helpers used only inside SheetContent; they are not exported and are not importable by consumers.
+- **position-by-side**: SheetContent MUST position the drawer based on a `side` prop ("top" | "right" | "bottom" | "left"), with default value "right".
+- **render-overlay**: Component MUST render an overlay element with semi-transparent dark background that appears behind the drawer.
+- **backdrop-blur**: Overlay MUST blur the content behind it on platforms that support background blur.
+- **close-button-default-visible**: SheetContent MUST render a close button by default in the top-right corner.
+- **close-button-visibility-control**: SheetContent MUST accept a `showCloseButton` boolean prop (default `true`) to control close button visibility.
+- **close-icon**: Close button MUST render a close ("X") icon.
+- **close-button-accessible-label**: Close button MUST include a screen-reader-accessible label ("Close") identifying its purpose to assistive technology.
+- **animate-transitions**: Drawer content and overlay MUST animate with a CSS transition on appearance and disappearance.
+- **animation-scale**: Animation duration MUST be calculated using the CSS custom property `--apt-anim-scale` (default 1), with specific durations: 150ms for overlay, 200ms for drawer. A scale of 0 or a negative value MUST result in an instant (zero-duration) transition, since a non-positive value multiplied against either base duration computes to zero or less and CSS clamps a negative transition-duration to 0.
+- **close-on-overlay-click**: Clicking the overlay MUST close the drawer by default. Callers MAY disable this dismissal.
+- **width-constrained-on-sides**: When positioned left or right, SheetContent MUST constrain width to 75% of the viewport, capped at 24rem on viewports 640px wide or wider.
+- **content-composition-props**: Sheet, SheetTrigger, SheetClose, and SheetContent MUST accept and pass through additional component props to the parts they wrap. Internally, the module-local `SheetPortal` and `SheetOverlay` helpers do the same, but that is unreachable from outside the module since neither is exported (see **render-compound-components**).
+- **header-footer-divs**: SheetHeader and SheetFooter MUST render as plain container elements with predefined padding and a column layout.
+- **title-description-typography**: SheetTitle and SheetDescription MUST render the sheet's title and description with styled typography, and expose them to assistive technology as the dialog's name and description.
+- **close-on-escape**: Pressing Escape while the drawer is open MUST close it.
+- **restore-focus-on-close**: When the drawer opens, focus MUST move into it; when it closes, focus MUST return to the element that opened it.
+- **full-width-on-top-bottom**: When positioned top or bottom, SheetContent MUST span the full width of the viewport.

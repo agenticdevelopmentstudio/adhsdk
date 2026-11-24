@@ -1,0 +1,1 @@
+Not applicable: this module has no configurable options. The four constant lists are fixed and specified by `ranges-list`, `dimensions-list`, `vercel-breakdowns-list` and `vitals-list` under Behavioral Requirements. The module reads no environment variables or settings and takes no injected dependency. The runtime window (`24h`) and the active-issue test are fixed by the server.

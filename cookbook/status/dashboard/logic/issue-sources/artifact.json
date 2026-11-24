@@ -1,15 +1,14 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "2d763e2e-ef33-4d49-957e-6b8ced23218e",
     "title": "Issue Sources",
-    "domain": "adhsdk://cookbook/status/dashboard/logic/issue-sources",
     "type": "ingredient",
-    "version": "1.1.0",
+    "version": "2.0.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-09-27",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -21,15 +20,15 @@
     "tags": [],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/status/dashboard/state/source-filter",
-      "adhsdk://cookbook/status/dashboard/logic/board-types",
-      "adhsdk://cookbook/status/dashboard/logic/endpoint-kinds"
+      "3f2ae6c1-bc07-40ab-b15c-bb4b8c77986b",
+      "15c61cfc-543c-493d-b686-c605b773be83",
+      "f1167221-f233-4b5d-822c-ae26de4634db"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "d6b465bf12721a98",
+  "synced": "c2057c5e376c4078",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -48,7 +47,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

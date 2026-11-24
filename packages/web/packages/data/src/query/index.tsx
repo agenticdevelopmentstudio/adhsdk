@@ -155,3 +155,11 @@ export function ToolkitQueryProvider({ children }: { children: ReactNode }) {
 export function useToolkitQueryClient(): QueryClientType {
   return useQueryClient(getToolkitQueryClient());
 }
+
+export {
+  useBatchRun,
+  type BatchItem,
+  type BatchRunState,
+  type UseBatchRunOptions,
+  type BatchRunController,
+} from "./use-batch-run";

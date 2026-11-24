@@ -25,9 +25,9 @@ final class BrowserAutomationTests: XCTestCase {
             q.addEventListener('change', e => out.textContent += ' change');
             </script>
             """)
-        let snap = try await a.snapshot(.init())
+        let snap = try await a.agentSnapshot(.init())
         let delta = try await a.fill(ref: "e1", generation: snap.generation, value: "hello")
-        let text = try await a.text(scope: nil)
+        let text = try await a.pageText(scope: nil)
         XCTAssertEqual(text, "input:hello change")
         XCTAssertTrue(delta.changed)
     }
@@ -39,9 +39,9 @@ final class BrowserAutomationTests: XCTestCase {
             q.addEventListener('keydown', e => { if (e.key === 'Enter') out.textContent = 'enter:' + q.value; });
             </script>
             """)
-        let snap = try await a.snapshot(.init())
+        let snap = try await a.agentSnapshot(.init())
         _ = try await a.type(ref: "e1", generation: snap.generation, text: "cd", submit: true)
-        let shown = try await a.text(scope: nil)
+        let shown = try await a.pageText(scope: nil)
         XCTAssertEqual(shown, "enter:abcd")
     }
 
@@ -52,15 +52,15 @@ final class BrowserAutomationTests: XCTestCase {
             <input id="q" type="number"><span id="out"></span>
             <script>q.addEventListener('input', () => out.textContent = 'input:' + q.value)</script>
             """)
-        let snap = try await a.snapshot(.init())
+        let snap = try await a.agentSnapshot(.init())
         _ = try await a.type(ref: "e1", generation: snap.generation, text: "19.99", submit: false)
-        let shown = try await a.text(scope: nil)
+        let shown = try await a.pageText(scope: nil)
         XCTAssertEqual(shown, "input:19.99")
     }
 
     func testTypeAnInvalidDateIsASentence() async throws {
         let (_, a) = await make(html: "<input id=\"q\" type=\"date\">")
-        let snap = try await a.snapshot(.init())
+        let snap = try await a.agentSnapshot(.init())
         do {
             _ = try await a.type(ref: "e1", generation: snap.generation, text: "soon", submit: false)
             XCTFail("expected a refusal")
@@ -79,9 +79,9 @@ final class BrowserAutomationTests: XCTestCase {
             q.addEventListener('input', () => out.textContent = q.value);
             </script>
             """)
-        let snap = try await a.snapshot(.init())
+        let snap = try await a.agentSnapshot(.init())
         _ = try await a.type(ref: "e1", generation: snap.generation, text: "R&D(1)", submit: false)
-        let shown = try await a.text(scope: nil)
+        let shown = try await a.pageText(scope: nil)
         XCTAssertEqual(shown, "R&D(1)")
     }
 
@@ -109,15 +109,15 @@ final class BrowserAutomationTests: XCTestCase {
             });
             </script>
             """)
-        let snap = try await a.snapshot(.init())
+        let snap = try await a.agentSnapshot(.init())
         _ = try await a.type(ref: "e1", generation: snap.generation, text: "cd", submit: false)
-        let shown = try await a.text(scope: nil)
+        let shown = try await a.pageText(scope: nil)
         XCTAssertEqual(shown, "seen:abcd")
     }
 
     func testClickLinkNavigatesAndDeltaReportsIt() async throws {
         let (_, a) = await make(html: "<a href=\"#second\" onclick=\"document.title='Second'\">Go</a>")
-        let snap = try await a.snapshot(.init())
+        let snap = try await a.agentSnapshot(.init())
         let delta = try await a.click(ref: "e1", generation: snap.generation, native: false)
         XCTAssertEqual(delta.title, "Second")
         XCTAssertTrue(delta.url?.hasSuffix("#second") ?? false)
@@ -125,8 +125,8 @@ final class BrowserAutomationTests: XCTestCase {
 
     func testStaleGenerationIsRefused() async throws {
         let (_, a) = await make(html: "<button>One</button>")
-        let snap = try await a.snapshot(.init())
-        _ = try await a.snapshot(.init())
+        let snap = try await a.agentSnapshot(.init())
+        _ = try await a.agentSnapshot(.init())
         do {
             _ = try await a.click(ref: "e1", generation: snap.generation, native: false)
             XCTFail("expected stale")
@@ -137,7 +137,7 @@ final class BrowserAutomationTests: XCTestCase {
 
     func testClickOnRemovedElementIsStale() async throws {
         let (_, a) = await make(html: "<button id=\"b\">One</button>")
-        let snap = try await a.snapshot(.init())
+        let snap = try await a.agentSnapshot(.init())
         _ = try await a.evaluate("document.getElementById('b').remove()")
         do {
             _ = try await a.click(ref: "e1", generation: snap.generation, native: false)
@@ -151,7 +151,7 @@ final class BrowserAutomationTests: XCTestCase {
         let page = OffscreenWebView()
         await page.load(html: "", baseURL: nil)
         let a = BrowserAutomation(webView: page.webView, console: BrowserConsoleLog())
-        let snap = try await a.snapshot(.init())
+        let snap = try await a.agentSnapshot(.init())
         XCTAssertEqual(snap.text, "- document:\n")
     }
 
@@ -160,12 +160,12 @@ final class BrowserAutomationTests: XCTestCase {
             <select id="s"><option value="a">Alpha</option><option value="b">Beta</option></select>
             <span id="out"></span><script>s.addEventListener('change', () => out.textContent = s.value)</script>
             """)
-        let snap = try await a.snapshot(.init())
+        let snap = try await a.agentSnapshot(.init())
         _ = try await a.select(ref: "e1", generation: snap.generation, value: "Beta")
-        let shown = try await a.text(scope: "#out")
+        let shown = try await a.pageText(scope: "#out")
         XCTAssertEqual(shown, "b")
         _ = try await a.select(ref: "e1", generation: snap.generation, value: "a")
-        let shownAgain = try await a.text(scope: "#out")
+        let shownAgain = try await a.pageText(scope: "#out")
         XCTAssertEqual(shownAgain, "a")
     }
 
@@ -175,20 +175,20 @@ final class BrowserAutomationTests: XCTestCase {
         let (_, a) = await make(html: """
             <select id="s"><option value="free">Free</option><option value="pro" selected>Pro</option></select>
             """)
-        let snap = try await a.snapshot(.init())
+        let snap = try await a.agentSnapshot(.init())
         do {
             _ = try await a.fill(ref: "e1", generation: snap.generation, value: "Free")
             XCTFail("expected a refusal")
         } catch let error as BrowserAutomationError {
             XCTAssertEqual(error.description, "the page refused: a select cannot be filled; use browser_select")
         }
-        let after = try await a.snapshot(.init())
+        let after = try await a.agentSnapshot(.init())
         XCTAssertTrue(after.text.contains("[value=\"pro\"]"), after.text)
     }
 
     func testTypeIntoACheckboxIsRefusedTowardBrowserClick() async throws {
         let (_, a) = await make(html: "<input type=\"checkbox\" checked>")
-        let snap = try await a.snapshot(.init())
+        let snap = try await a.agentSnapshot(.init())
         do {
             _ = try await a.type(ref: "e1", generation: snap.generation, text: "false", submit: false)
             XCTFail("expected a refusal")
@@ -199,7 +199,7 @@ final class BrowserAutomationTests: XCTestCase {
 
     func testTypeIntoARangeIsRefused() async throws {
         let (_, a) = await make(html: "<input id=\"r\" type=\"range\" value=\"50\">")
-        let snap = try await a.snapshot(.init())
+        let snap = try await a.agentSnapshot(.init())
         do {
             _ = try await a.type(ref: "e1", generation: snap.generation, text: "75", submit: false)
             XCTFail("expected a refusal")
@@ -213,9 +213,9 @@ final class BrowserAutomationTests: XCTestCase {
             <button id="b">Hi</button><span id="out"></span>
             <script>b.addEventListener('mouseover', () => out.textContent = 'over')</script>
             """)
-        let snap = try await a.snapshot(.init())
+        let snap = try await a.agentSnapshot(.init())
         _ = try await a.hover(ref: "e1", generation: snap.generation)
-        let shown = try await a.text(scope: "#out")
+        let shown = try await a.pageText(scope: "#out")
         XCTAssertEqual(shown, "over")
     }
 
@@ -225,20 +225,20 @@ final class BrowserAutomationTests: XCTestCase {
             <script>q.focus(); q.addEventListener('keydown', e => out.textContent = (e.metaKey ? 'meta+' : '') + e.key)</script>
             """)
         _ = try await a.pressKey("Meta+a")
-        let shown = try await a.text(scope: nil)
+        let shown = try await a.pageText(scope: nil)
         XCTAssertEqual(shown, "meta+a")
     }
 
     func testWaitForTextResolvesWhenTextAppears() async throws {
         let (_, a) = await make(html: "<div id=\"d\"></div><script>setTimeout(() => d.textContent = 'ready', 200)</script>")
-        let result = try await a.wait(for: .text("ready"), timeout: 5)
+        let result = try await a.wait(for: .text("ready"), timeout: 5, pageText: { await a.agentText() })
         XCTAssertTrue(result.satisfied)
     }
 
     func testWaitForTextTimesOutWithASentence() async throws {
         let (_, a) = await make(html: "<div>nothing</div>")
         do {
-            _ = try await a.wait(for: .text("never"), timeout: 0.3)
+            _ = try await a.wait(for: .text("never"), timeout: 0.3, pageText: { await a.agentText() })
             XCTFail("expected timeout")
         } catch let error as BrowserAutomationError {
             XCTAssertEqual(error.description, "timed out waiting for text \"never\"")
@@ -253,7 +253,7 @@ final class BrowserAutomationTests: XCTestCase {
 
     func testAlertIsDismissedAndReported() async throws {
         let (_, a) = await make(html: "<button onclick=\"alert('hi')\">A</button>")
-        let snap = try await a.snapshot(.init())
+        let snap = try await a.agentSnapshot(.init())
         let delta = try await a.click(ref: "e1", generation: snap.generation, native: false)
         XCTAssertEqual(delta.dialog?.kind, .alert)
         XCTAssertEqual(delta.dialog?.message, "hi")
@@ -306,11 +306,56 @@ final class BrowserAutomationTests: XCTestCase {
             <form id="f"><input id="q"><span id="out"></span></form>
             <script>q.addEventListener('input', () => out.textContent = 'typed')</script>
             """)
-        let snap = try await a.snapshot(.init())
-        let delta = try await a.fill(ref: "e2", generation: snap.generation, value: "x")
+        let snap = try await a.agentSnapshot(.init())
+        let ref = try XCTUnwrap(Self.ref(ofRole: "textbox", in: snap.text), snap.text)
+        let delta = try await a.fill(ref: ref, generation: snap.generation, value: "x")
         XCTAssertTrue(delta.changed)
-        XCTAssertTrue(delta.focused?.contains("- form") ?? false)
-        XCTAssertTrue(delta.focused?.contains("typed") ?? false)
+        // The action reports only the focused landmark's ref; the tool set
+        // renders it from the agent page (AgentGatekeeperRoutingTests).
+        let form = try XCTUnwrap(Self.ref(ofRole: "form", in: snap.text), snap.text)
+        XCTAssertEqual(delta.focusedRef, form)
+        XCTAssertNil(delta.focused)
+    }
+
+    /// A text wait reads the agent page's text, never the raw page's: without
+    /// a reader it is refused rather than answered from the DOM.
+    func testTextWaitWithoutAgentTextIsRefused() async throws {
+        let (_, a) = await make(html: "<p>ready</p>")
+        do {
+            _ = try await a.wait(for: .text("ready"), timeout: 0.3)
+            XCTFail("expected a refusal")
+        } catch let error as BrowserAutomationError {
+            XCTAssertEqual(error, .script("a text wait needs the agent page's text"))
+        }
+    }
+
+    /// The first ref on a snapshot line of `role`.
+    private static func ref(ofRole role: String, in snapshot: String) -> String? {
+        for line in snapshot.split(separator: "\n")
+        where line.trimmingCharacters(in: .whitespaces).hasPrefix("- \(role)") {
+            if let range = line.range(of: #"\[ref=(e\d+)\]"#, options: .regularExpression) {
+                return String(line[range].dropFirst(5).dropLast())
+            }
+        }
+        return nil
+    }
+
+    /// A delta snapshot after the target moved to another tab is a full
+    /// snapshot of that tab, not a diff against the tab left behind.
+    func testRetargetingToAnotherPageResetsTheDeltaBaseline() async throws {
+        let html = "<button>Same</button>"
+        let (_, a) = await make(html: html)
+        let (other, _) = await make(html: html)
+        var options = BrowserSnapshotOptions()
+        let first = try await a.agentSnapshot(options)
+        options.delta = true
+        let sameTab = try await a.agentSnapshot(options)
+        XCTAssertTrue(sameTab.text.contains("no change"), "the baseline holds on one page")
+
+        a.retarget(to: WebKitPageDriver(webView: other.webView), console: BrowserConsoleLog())
+        let moved = try await a.agentSnapshot(options)
+        XCTAssertFalse(moved.text.contains("no change"), moved.text)
+        XCTAssertEqual(moved.text, first.text)
     }
 
     func testScreenshotIsPNGAndCapped() async throws {
@@ -430,9 +475,9 @@ final class BrowserAutomationTests: XCTestCase {
 
     func testStaleRefFromPreviousDocumentIsRefused() async throws {
         let (page, a) = await make(html: "<button>One</button>")
-        let first = try await a.snapshot(.init())
+        let first = try await a.agentSnapshot(.init())
         await page.load(html: "<button>Two</button>")
-        _ = try await a.snapshot(.init())
+        _ = try await a.agentSnapshot(.init())
         do {
             _ = try await a.click(ref: "e1", generation: first.generation, native: false)
             XCTFail("expected stale")
@@ -460,7 +505,7 @@ final class BrowserAutomationTests: XCTestCase {
         let (_, a) = await make(html: "<p>x</p>")
         var seen: [Bool] = []
         a.onDriveStateChange = { seen.append($0) }
-        _ = try await a.drive { try await a.text(scope: nil) }
+        _ = try await a.drive { try await a.pageText(scope: nil) }
         XCTAssertEqual(seen, [true, false])
         XCTAssertFalse(a.isActionInFlight)
     }
@@ -481,7 +526,7 @@ final class BrowserAutomationTests: XCTestCase {
         let y = 30 / viewport.height * Double(image.pixelsHigh)
         XCTAssertNotEqual(Int(x), 60, "the image must not be 1:1 with CSS pixels for this to test anything")
         _ = try await a.clickAt(x: x, y: y)
-        _ = try await a.wait(for: .text("clicked"), timeout: 3)
+        _ = try await a.wait(for: .text("clicked"), timeout: 3, pageText: { await a.agentText() })
     }
 
     /// An element screenshot's origin is the element, not the viewport.
@@ -491,11 +536,35 @@ final class BrowserAutomationTests: XCTestCase {
             <span id="out"></span><script>b.addEventListener('click', () => out.textContent = 'clicked')</script>
             """)
         page.orderInOffscreen()
-        let snap = try await a.snapshot(.init())
+        let snap = try await a.agentSnapshot(.init())
         let png = try await a.screenshot(ref: "e1", generation: snap.generation)
         let image = try XCTUnwrap(NSBitmapImageRep(data: png))
         _ = try await a.clickAt(x: Double(image.pixelsWide) / 2, y: Double(image.pixelsHigh) / 2)
-        _ = try await a.wait(for: .text("clicked"), timeout: 3)
+        _ = try await a.wait(for: .text("clicked"), timeout: 3, pageText: { await a.agentText() })
+    }
+
+    /// Read only access may not move the page: an element screenshot that
+    /// may not scroll refuses an element below the fold and leaves the page
+    /// where it was, and captures one in view without scrolling.
+    func testAnElementScreenshotThatMayNotScrollLeavesThePageAlone() async throws {
+        let (page, a) = await make(html: """
+            <button style="position:absolute;left:10px;top:10px;width:100px;height:40px">Top</button>
+            <button style="position:absolute;left:10px;top:4000px;width:100px;height:40px">Far</button>
+            """)
+        page.orderInOffscreen()
+        let snap = try await a.agentSnapshot(.init())
+        do {
+            _ = try await a.screenshot(ref: "e2", generation: snap.generation, scrolls: false)
+            XCTFail("expected a refusal")
+        } catch let error as BrowserAutomationError {
+            XCTAssertEqual(error, .notInView("e2"))
+        }
+        let scrolledAfterRefusal = try await a.evaluate("window.scrollY")
+        XCTAssertEqual(scrolledAfterRefusal, "0")
+        let png = try await a.screenshot(ref: "e1", generation: snap.generation, scrolls: false)
+        XCTAssertNotNil(NSBitmapImageRep(data: png))
+        let scrolledAfterCapture = try await a.evaluate("window.scrollY")
+        XCTAssertEqual(scrolledAfterCapture, "0")
     }
 
     func testClickAtWithoutAScreenshotIsASentence() async throws {
@@ -514,9 +583,9 @@ final class BrowserAutomationTests: XCTestCase {
             <button id="b" style="position:absolute;left:10px;top:10px;width:100px;height:40px">Hi</button>
             <span id="out"></span><script>b.addEventListener('click', () => out.textContent = 'clicked')</script>
             """)
-        let snap = try await a.snapshot(.init())
+        let snap = try await a.agentSnapshot(.init())
         _ = try await a.click(ref: "e1", generation: snap.generation, native: true)
-        _ = try await a.wait(for: .text("clicked"), timeout: 3)
+        _ = try await a.wait(for: .text("clicked"), timeout: 3, pageText: { await a.agentText() })
     }
 }
 

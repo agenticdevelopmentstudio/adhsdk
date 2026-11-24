@@ -35,7 +35,7 @@ class AiProcessingJobLlmConnectionType0:
         if auth is not UNSET:
             field_dict["auth"] = auth
         if default_query is not UNSET:
-            field_dict["defaultQuery"] = default_query
+            field_dict["default_query"] = default_query
 
         return field_dict
 
@@ -44,7 +44,7 @@ class AiProcessingJobLlmConnectionType0:
         d = dict(src_dict)
         auth = d.pop("auth", UNSET)
 
-        default_query = d.pop("defaultQuery", UNSET)
+        default_query = d.pop("default_query", UNSET)
 
         ai_processing_job_llm_connection_type_0 = cls(
             auth=auth,

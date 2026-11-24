@@ -1,4 +1,4 @@
-// Projects API client — wired to the typed backend `/api/project/*` surface.
+// Projects API client — wired to the typed backend `/api/v1/*` surface.
 //
 // Mirrors `src/api/teams.ts` (a `toX` mapper per entity, a `BASE` const, a CRUD
 // object over `authedJson`/`authedRequest`), with two deliberate differences:
@@ -11,8 +11,9 @@
 // their own clients (`project-work-items.ts`, `project-activity.ts`), mirroring
 // the teams.ts + team-members.ts split.
 
-import { authedJson, authedRequest } from "../http";
-import { compact, enc, sortByText, workspaceQuery } from "../client-helpers";
+import { authedJson, authedRequest, withV1Query } from "../http";
+import { compact, enc, sortByText } from "../client-helpers";
+import { v1Json, v1List, v1Write } from "../v1-case";
 import type {
   EstimateScale,
   PriorityScale,
@@ -32,7 +33,13 @@ import type {
   SavedViewPatchBody,
 } from "./wire";
 
-const BASE = "/api/project/projects";
+const BASE = "/api/v1/projects";
+/** `subjectProject` is the one call with no /v1 equivalent (see there). */
+const LEGACY_BASE = "/api/project/projects";
+
+/** `url` with the optional `?workspace=` pin. */
+const scoped = (url: string, opts?: { workspace?: string }): string =>
+  withV1Query(url, { workspace: opts?.workspace || undefined });
 
 /* ── Work-item key prefixes ───────────────────────────────────────────── */
 
@@ -244,13 +251,13 @@ export const projectsApi = {
   // is org-owned). Without it, list falls back to ownership REACH (owned +
   // participating) and create stamps the caller.
   async list(opts?: { workspace?: string }): Promise<Project[]> {
-    const rows = await authedJson<ProjectRow[]>(`${BASE}${workspaceQuery(opts)}`);
+    const rows = await v1List<ProjectRow>(scoped(BASE, opts));
     return sortByText(rows.map(toProject), (p) => p.name);
   },
 
   async get(id: string): Promise<Project | null> {
     try {
-      return toProject(await authedJson<ProjectRow>(`${BASE}/${enc(id)}`));
+      return toProject(await v1Json<ProjectRow>(`${BASE}/${enc(id)}`));
     } catch {
       // Backend 404s with a thrown error; the UI contract is null-for-missing.
       return null;
@@ -265,8 +272,10 @@ export const projectsApi = {
     subjectKind: "ecosystem" | "persona",
     subjectId: string,
   ): Promise<Project | null> {
+    // No /v1 equivalent: `GET /v1/projects` declares only a `program` filter, so a subject lookup
+    // stays on the legacy route (camelCase, bare array) until the spec grows one.
     const rows = await authedJson<ProjectRow[]>(
-      `${BASE}?subjectKind=${enc(subjectKind)}&subjectId=${enc(subjectId)}`,
+      `${LEGACY_BASE}?subjectKind=${enc(subjectKind)}&subjectId=${enc(subjectId)}`,
     );
     return rows[0] ? toProject(rows[0]) : null;
   },
@@ -284,10 +293,7 @@ export const projectsApi = {
       ...compact({ description: input.description, color: input.color }),
     };
     return toProject(
-      await authedJson<ProjectRow>(`${BASE}${workspaceQuery(opts)}`, {
-        method: "POST",
-        body: JSON.stringify(body),
-      }),
+      await v1Json<ProjectRow>(scoped(BASE, opts), v1Write("POST", body)),
     );
   },
 
@@ -301,10 +307,7 @@ export const projectsApi = {
     // `archivedAt: null` un-archive is sent, not stripped.
     const body: ProjectPatchBody = compact(patch);
     return toProject(
-      await authedJson<ProjectRow>(`${BASE}/${enc(id)}`, {
-        method: "PATCH",
-        body: JSON.stringify(body),
-      }),
+      await v1Json<ProjectRow>(`${BASE}/${enc(id)}`, v1Write("POST", body)),
     );
   },
 
@@ -314,9 +317,7 @@ export const projectsApi = {
 
   statuses: {
     async list(projectId: string): Promise<ProjectStatus[]> {
-      const rows = await authedJson<ProjectStatusRow[]>(
-        `${BASE}/${enc(projectId)}/statuses`,
-      );
+      const rows = await v1List<ProjectStatusRow>(`${BASE}/${enc(projectId)}/statuses`);
       return rows.map(toProjectStatus); // server orders by position
     },
 
@@ -336,9 +337,9 @@ export const projectsApi = {
         ...compact({ position: input.position }),
       };
       return toProjectStatus(
-        await authedJson<ProjectStatusRow>(
+        await v1Json<ProjectStatusRow>(
           `${BASE}/${enc(projectId)}/statuses`,
-          { method: "POST", body: JSON.stringify(body) },
+          v1Write("POST", body),
         ),
       );
     },
@@ -354,9 +355,9 @@ export const projectsApi = {
     ): Promise<ProjectStatus> {
       const body: ProjectStatusPatchBody = compact(patch);
       return toProjectStatus(
-        await authedJson<ProjectStatusRow>(
+        await v1Json<ProjectStatusRow>(
           `${BASE}/${enc(projectId)}/statuses/${enc(statusId)}`,
-          { method: "PATCH", body: JSON.stringify(body) },
+          v1Write("POST", body),
         ),
       );
     },
@@ -379,15 +380,15 @@ export const projectsApi = {
    *  may carry a label that is not in it yet, which is exactly what typing a new one does.
    *  Read-only: a label comes into existence by being used, not by being declared. */
   async labels(projectId: string): Promise<string[]> {
-    const body = await authedJson<ProjectLabelsRow>(`${BASE}/${enc(projectId)}/labels`);
-    return body.items;
+    const body = await v1Json<{ labels: ProjectLabelsRow }>(
+      `${BASE}/${enc(projectId)}?include[]=labels`,
+    );
+    return body.labels.items;
   },
 
   participants: {
     async list(projectId: string): Promise<ProjectParticipant[]> {
-      const rows = await authedJson<ProjectParticipantRow[]>(
-        `${BASE}/${enc(projectId)}/participants`,
-      );
+      const rows = await v1List<ProjectParticipantRow>(`${BASE}/${enc(projectId)}/participants`);
       return rows.map(toProjectParticipant); // server orders by addedAt
     },
 
@@ -403,9 +404,9 @@ export const projectsApi = {
         participantId: input.participantId,
       };
       return toProjectParticipant(
-        await authedJson<ProjectParticipantRow>(
+        await v1Json<ProjectParticipantRow>(
           `${BASE}/${enc(projectId)}/participants`,
-          { method: "POST", body: JSON.stringify(body) },
+          v1Write("POST", body),
         ),
       );
     },
@@ -429,9 +430,7 @@ export const projectsApi = {
    *  else can open is a bookmark, which the address bar already is). */
   savedViews: {
     async list(projectId: string): Promise<SavedView[]> {
-      const rows = await authedJson<SavedViewRow[]>(
-        `${BASE}/${enc(projectId)}/saved-views`,
-      );
+      const rows = await v1List<SavedViewRow>(`${BASE}/${enc(projectId)}/saved_views`);
       return rows.map(toSavedView); // server orders by name
     },
 
@@ -441,10 +440,7 @@ export const projectsApi = {
     ): Promise<SavedView> {
       const body: SavedViewCreateBody = { name: input.name, config: input.config };
       return toSavedView(
-        await authedJson<SavedViewRow>(`${BASE}/${enc(projectId)}/saved-views`, {
-          method: "POST",
-          body: JSON.stringify(body),
-        }),
+        await v1Json<SavedViewRow>(`${BASE}/${enc(projectId)}/saved_views`, v1Write("POST", body)),
       );
     },
 
@@ -455,16 +451,16 @@ export const projectsApi = {
     ): Promise<SavedView> {
       const body: SavedViewPatchBody = compact(patch);
       return toSavedView(
-        await authedJson<SavedViewRow>(
-          `${BASE}/${enc(projectId)}/saved-views/${enc(viewId)}`,
-          { method: "PATCH", body: JSON.stringify(body) },
+        await v1Json<SavedViewRow>(
+          `${BASE}/${enc(projectId)}/saved_views/${enc(viewId)}`,
+          v1Write("POST", body),
         ),
       );
     },
 
     remove(projectId: string, viewId: string): Promise<void> {
       return authedRequest(
-        `${BASE}/${enc(projectId)}/saved-views/${enc(viewId)}`,
+        `${BASE}/${enc(projectId)}/saved_views/${enc(viewId)}`,
         { method: "DELETE" },
       );
     },

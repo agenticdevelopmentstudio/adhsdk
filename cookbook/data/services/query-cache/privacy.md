@@ -1,7 +1,7 @@
 
 - **Data collected**: This component collects no new personal data. It
   reads the already-stored access token's subject claim, via reading the
-  token's subject claim (documented by the authentication client recipe),
+  token's subject claim (documented by [adhsdk.ingredient.data.services.auth.auth-client](cookbook:3ea9329e-5acc-4c43-b5ce-bb8c50570104)),
   solely to compare it against the previously seen value; it never displays,
   re-derives, or persists that claim itself.
 - **Storage**: The last-seen subject lives in an in-memory, module-scope

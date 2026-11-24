@@ -1,0 +1,10 @@
+
+| Name | Domain | Role | Required | Configuration |
+|---|---|---|---|---|
+| Topic Detail | [adhsdk.ingredient.ui.blocks.topic-detail](cookbook:8fa7aaae-df62-44ea-b10c-182f3094ed9f) | One rail per hierarchy level (icon+name rows, optional left-aligned `title`, controllable collapse/cover, header `+` create affordance, `selectionStyle` bar/marker, whole-branch hover reveal when covered, full-width pane in narrow mode). | yes | `title`, `items`, `selectedId`, `onSelect`, `onNew`/`newLabel`/`newActive`, `collapsed`/`onCollapsedChange`, `covered`, `isRoot`, `selectionStyle`, `panePadding={false}`. |
+| Resizable Split | [adhsdk.ingredient.ui.components.layout.resizable-split](cookbook:c21473ee-a075-4800-96db-ff3de0888515) | Drag-to-resize the boundary between a topic list and the rest, with snap-to-undisclose / snap-to-full. | yes | Per-rail draggable divider; min/max + snap thresholds. |
+| Disclosure | [adhsdk.ingredient.ui.components.layout.disclosure](cookbook:c99e2822-f5a9-4e84-8740-9341880bb82a) | The animated disclosure (collapse/expand) of a topic list to/from its icon strip. | yes | Upper-right toggle in the `minimized` style; the default `covered` style rides the child's upper-left leading slot instead. Animated unless reduced-motion. |
+| Alert & Dialog | [adhsdk.recipe.alert-and-dialog](cookbook:550f00f7-bfb2-415e-9b15-bd5dce015500) | The modal opened by a list's "new topic" button to create an item, AND the shared 2-action Discard/Stay unsaved-work prompt the package raises before a drill-down Back / breadcrumb-up discards a dirty leaf. | yes | New-item modal (returns the created id); the shared `UnsavedChangesAlert` (driven by `exitGuard`, never saves). |
+
+> **Reference consumer.** Examples throughout this recipe are illustrated against this toolkit's own ADH hub integration — Work Items, the status board, `WorkspaceShell`, `ResourceTab` — to keep every requirement concretely testable. These names identify one consumer, not the contract: substitute `{{app_domain}}`, `{{workspace_slug}}` and your own feature/entity names when implementing this recipe elsewhere.
+

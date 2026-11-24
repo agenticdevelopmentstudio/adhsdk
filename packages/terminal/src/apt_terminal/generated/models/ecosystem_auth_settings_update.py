@@ -54,29 +54,29 @@ class EcosystemAuthSettingsUpdate:
         field_dict.update(self.additional_properties)
         field_dict.update({})
         if signup_mode is not UNSET:
-            field_dict["signupMode"] = signup_mode
+            field_dict["signup_mode"] = signup_mode
         if login_enabled is not UNSET:
-            field_dict["loginEnabled"] = login_enabled
+            field_dict["login_enabled"] = login_enabled
         if password_enabled is not UNSET:
-            field_dict["passwordEnabled"] = password_enabled
+            field_dict["password_enabled"] = password_enabled
         if allowed_providers is not UNSET:
-            field_dict["allowedProviders"] = allowed_providers
+            field_dict["allowed_providers"] = allowed_providers
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        _signup_mode = d.pop("signupMode", UNSET)
+        _signup_mode = d.pop("signup_mode", UNSET)
         signup_mode: EcosystemAuthSettingsUpdateSignupMode | Unset
         if isinstance(_signup_mode, Unset):
             signup_mode = UNSET
         else:
             signup_mode = EcosystemAuthSettingsUpdateSignupMode(_signup_mode)
 
-        login_enabled = d.pop("loginEnabled", UNSET)
+        login_enabled = d.pop("login_enabled", UNSET)
 
-        password_enabled = d.pop("passwordEnabled", UNSET)
+        password_enabled = d.pop("password_enabled", UNSET)
 
         def _parse_allowed_providers(data: object) -> list[str] | None | Unset:
             if data is None:
@@ -93,7 +93,7 @@ class EcosystemAuthSettingsUpdate:
                 pass
             return cast(list[str] | None | Unset, data)
 
-        allowed_providers = _parse_allowed_providers(d.pop("allowedProviders", UNSET))
+        allowed_providers = _parse_allowed_providers(d.pop("allowed_providers", UNSET))
 
         ecosystem_auth_settings_update = cls(
             signup_mode=signup_mode,

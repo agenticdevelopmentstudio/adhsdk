@@ -1,0 +1,23 @@
+
+- **Corner radius**: Not specified in source; uses CSS classes (fl-input, fl-item, etc.)
+- **Padding**: Not specified in source; controlled by CSS classes
+- **Font**: Not specified in source; controlled by CSS classes
+- **Background**: Not specified in source; controlled by CSS classes
+- **Foreground/Text**: Not specified in source; controlled by CSS classes
+- **Border**: `.fl-input` has a 1px border by default; on `:focus` its border-color changes to `var(--color-accent, #1e3a5f)` with an added 2px box-shadow ring (`var(--color-accent-dim)`), and `.fl-item-button` shows a background change (no outline) on `:focus-visible` (source: filtered-list.css). Other border details are otherwise controlled by CSS classes.
+- **Shadow**: Not specified in source; controlled by CSS classes
+- **Min/Max size**: Input is width: 100%; list items are full-width within the root container
+- **CSS class structure**:
+  - `fl-root`: Root container wrapper
+  - `fl-input`: Text input field
+  - `fl-list`: Unordered list element
+  - `fl-item`: List item element
+  - `fl-item--active`: Applied to active/highlighted item
+  - `fl-item--clickable`: Applied to items when onSelect is provided
+  - `fl-item-button`: Button wrapper around item content when clickable
+  - `fl-title`: Title text within an item
+  - `fl-subtitle`: Subtitle text within an item
+  - `fl-details`: Details text within an item
+  - `fl-empty`: Empty state message element
+  - `fl-footer`: Footer element
+

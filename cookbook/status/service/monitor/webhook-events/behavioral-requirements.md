@@ -31,7 +31,7 @@
 - **vercel-branch**: A returned Vercel row's `branch` field MUST be `meta.githubCommitRef ?? null`.
 - **vercel-commit-repo**: A returned Vercel row's `commitRepo` field MUST be the string `` <githubCommitOrg>/<githubCommitRepo> `` when both `meta.githubCommitOrg` and `meta.githubCommitRepo` are truthy, otherwise `null`.
 - **vercel-url**: A returned Vercel row's `url` field MUST be `event.payload.links.deployment` when present, otherwise, when `event.payload.deployment.url` is present, MUST be that value prefixed with the literal `` https:// ``, otherwise MUST be `null`.
-- **vercel-created-at**: A returned Vercel row's `createdAt` field MUST be `toValidDate(event.createdAt) ?? new Date()` — the current wall-clock time (the webhook's receipt time) whenever `event.createdAt` is absent or does not parse to a finite `Date` via `toValidDate` (`./provider-deploy`, adhsdk://cookbook/status/service/monitor/provider-deploy). Per the source's own comment, "a webhook is often the only witness of a terminal state, so approximate time beats a dropped event (and an Invalid Date must never leave this boundary)."
+- **vercel-created-at**: A returned Vercel row's `createdAt` field MUST be `toValidDate(event.createdAt) ?? new Date()` — the current wall-clock time (the webhook's receipt time) whenever `event.createdAt` is absent or does not parse to a finite `Date` via `toValidDate` (`./provider-deploy`, [adhsdk.ingredient.status.service.monitor.provider-deploy](cookbook:7ba98112-0f6d-4236-ab6b-aa18b72d76bd)). Per the source's own comment, "a webhook is often the only witness of a terminal state, so approximate time beats a dropped event (and an Invalid Date must never leave this boundary)."
 
 ### Railway Status Derivation
 

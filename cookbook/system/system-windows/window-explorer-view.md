@@ -1,13 +1,12 @@
 ---
 id: 8aee173a-25e4-443e-a9ab-d629b58817e1
 title: "Window Explorer View"
-domain: adhsdk://cookbook/system/system-windows/window-explorer-view
 type: ingredient
-version: 1.2.1
+version: 1.2.2
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -21,7 +20,7 @@ tags:
   - window-selection
 depends-on: []
 related:
-  - adhsdk://cookbook/ui/controls/badge
+  - 2cfe57f0-cdd4-4723-a6e0-2ce4f136ce7f
 references: []
 approved-by: ""
 approved-date: ""
@@ -222,7 +221,7 @@ resulting set of selected window ids via a binding.
   theme palette, except the context badge's stored-color-or-fallback-blue
   color, which is not a palette color; contrast is a design-system-level
   concern outside this view's own decisions, per
-  `agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages`.
+  [adc.guideline.cookbook.ui.platform-design-languages](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2).
 
 ## Conformance Test Vectors
 
@@ -355,7 +354,7 @@ instead.
 | Option | Behavior |
 |--------|----------|
 | Reduce Motion | Not applicable: no custom animated transition (movement, scaling, sliding, zooming, or pulsing) is implemented anywhere in this file; the only motion is the system-rendered indeterminate progress spinner, which this view does not implement or control. |
-| Increase Contrast | Not applicable at this layer for most colors: every color other than the context badge's fallback blue is sourced from the shared theme palette; contrast handling for those is a design-system-level concern this view does not decide, per `agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages`. The context badge's stored-color-or-fallback-blue (see **window-context-badge**) is the one exception: it is a fixed system color outside the theme, so Increase Contrast has no effect on it. |
+| Increase Contrast | Not applicable at this layer for most colors: every color other than the context badge's fallback blue is sourced from the shared theme palette; contrast handling for those is a design-system-level concern this view does not decide, per [adc.guideline.cookbook.ui.platform-design-languages](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2). The context badge's stored-color-or-fallback-blue (see **window-context-badge**) is the one exception: it is a fixed system color outside the theme, so Increase Contrast has no effect on it. |
 | Differentiate Without Color | Handled: the context badge pairs its color with the context's name as text, not color alone; the Accessibility banner pairs its warning tint with an exclamation-triangle icon and explanatory text; and every selection state is shown by the checkbox glyph itself, not by color. |
 
 ## Feature Flags
@@ -466,9 +465,9 @@ anywhere in the source.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemWindows/UI/WindowExplorerView.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemWindows/UI/WindowExplorerView.swift` | confirmed (1.2.2) |
 
 ## Design Decisions
 
@@ -497,15 +496,15 @@ palette.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | Accessibility |
-| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
-| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
-| [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
-| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | partial | Internationalization |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | partial | Internationalization |
-| [data-minimization](agenticdevelopercookbook://compliance/privacy-and-data#data-minimization) | passed | Privacy & Data |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | partial | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
+| [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
+| [adc.check.accessibility.dynamic-type-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f3dbcab7-ac3d-5043-9379-0da07ceaa32b) | partial | Accessibility |
+| [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | partial | Internationalization |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | partial | Internationalization |
+| [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | Privacy & Data |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
 
 `screen-reader-support` is partial because the refresh button has no explicit
 `.accessibilityLabel` (see **refresh-button-label**);
@@ -522,12 +521,13 @@ whether that palette scales with the system text-size setting.
 only currently-running window data needed for display, filtered by
 `appState.settings.hiddenApps`, and persists nothing.
 
-`separation-of-concerns` is `partial` because `WindowExplorerView` renders the grouped list but its `refreshAsync` also enumerates windows, filters them by size, visibility and hidden apps, and enriches titles through the accessibility API inside the view, work that belongs in a model or service the view reads from. `unit-test-coverage` is `failed` because no test references `WindowExplorerView` or `AppWindowGroup` anywhere in the repository's test targets.
+`separation-of-concerns` is `partial` because `WindowExplorerView` renders the grouped list but its `refreshAsync` also enumerates windows, filters them by size, visibility and hidden apps, and enriches titles through the accessibility API inside the view, work that belongs in a model or service the view reads from. `unit-test-coverage` is `failed`: `WindowExplorerViewConformanceTests.swift` (under `Tests/AgenticDeveloperHubSDKMacOSTests/SystemWindows/`) names all 34 vectors, but every one is skipped because the behavior sits in the view's private body and its private `refreshAsync` scan, which reads the live window server, `NSWorkspace` and the Accessibility API directly, with no seam a unit test can drive. Moving the scan into a model, as the separation-of-concerns note asks, would make the filter, enrichment, sorting, selection and select-all vectors testable.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.2 | 2026-11-15 | Mike Fullerton | Conformance test file added (WindowExplorerViewConformanceTests.swift, 0 of 34 vectors testable, all 34 skipped with a reason: view-internal logic with no seam); unit-test-coverage stays failed. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Cited separation-of-concerns and unit-test-coverage in Compliance |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to system/system-windows/. |
 | 1.1.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

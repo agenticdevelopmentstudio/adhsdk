@@ -25,10 +25,23 @@
   when it returns a tabs list that is empty, collapsing "nothing was
   ever persisted" and "the load failed" into the same result.
 - **initial-tabs-default-when-nothing-stored**: When reading stored tabs
-  returns nothing, computing the initial tabs MUST return exactly one
-  tab record titled `"Tab 1"` with its root set to the layout's own
-  blueprint, that tab's own id as the active tab id, and a single top
-  edge as the enabled edges.
+  returns nothing, computing the initial tabs MUST return one tab record
+  titled `"Tab 1"` per edge of the app-wide tab positions (in the fixed
+  edge order), all in one group, each rooted on the first-open blueprint
+  (the layout's own blueprint when there is no arrangement source to
+  copy), the first one's id as the active tab id, and no stored edge
+  choice as the enabled edges.
+- **edge-choice-is-explicit-only**: The enabled edges a workspace reports
+  and persists are the user's explicit Tab Bars choice for this project,
+  or absent when they never made one; an absent choice MUST mean "follow
+  the app-wide tab positions". Computing the initial tabs MUST return the
+  stored choice unchanged (absent included), and the first-open seed taken
+  from an arrangement source MUST carry only the pane arrangement, never
+  that source's edges.
+- **global-enabled-edges**: The workspace MUST expose the app-wide tab
+  positions as an edge list in the fixed edge order (top, right, bottom,
+  left), read from the setting each time it is asked, for callers that
+  have no stored choice to use.
 - **stored-tab-trees-repaired-against-current-spec**: When tabs are
   stored, computing the initial tabs MUST rewrite every tab's root by
   reconciling it against the layout's current spec before doing anything
@@ -48,7 +61,8 @@
   returned tabs, and MUST otherwise fall back to the first returned
   tab's own id.
 - **persist-tabs-swallows-failure**: Persisting tabs MUST save the given
-  tabs, active-tab id, and enabled edges to the database, and on failure
+  tabs, active-tab id, and edge choice (absent writes no edges) to the
+  database, and on failure
   MUST log the error and MUST NOT throw, retry, or otherwise signal the
   failure to its caller.
 - **pane-state-scoped-by-node-and-key**: Reading and writing pane state

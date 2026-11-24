@@ -22,10 +22,10 @@ const item = (over: Partial<InsightItem> = {}): InsightItem => ({
   provider: "anthropic",
   sku: "claude-sonnet",
   quantities: { input_tokens: 2_000_000, output_tokens: 500_000 },
-  capturedMicros: 0,
-  costMicros: null,
+  captured_micros: 0,
+  cost_micros: null,
   source: "unpriced",
-  unpricedLines: 4,
+  unpriced_lines: 4,
   lines: 4,
   rates: [],
   ...over,
@@ -61,9 +61,9 @@ describe("SetPriceDialog", () => {
       category: "llm",
       provider: "anthropic",
       sku: "claude-sonnet",
-      quantityKey: "input_tokens",
-      microsPerUnit: "0.15",
-      effectiveFrom: "2026-09-30",
+      quantity_key: "input_tokens",
+      micros_per_unit: "0.15",
+      effective_from: "2026-09-30",
     });
   });
 
@@ -76,7 +76,7 @@ describe("SetPriceDialog", () => {
     });
     fireEvent.click(save());
     await waitFor(() => expect(createAsync).toHaveBeenCalled());
-    expect(createAsync.mock.calls[0]![0].microsPerUnit).toBe("15");
+    expect(createAsync.mock.calls[0]![0].micros_per_unit).toBe("15");
   });
 
   it("refuses a conversion past 12 fractional digits with a field error and sends nothing", () => {
@@ -97,12 +97,12 @@ describe("SetPriceDialog", () => {
       category: "llm" as const,
       provider: "anthropic",
       sku,
-      quantityKey: "input_tokens",
-      microsPerUnit,
-      effectiveFrom,
+      quantity_key: "input_tokens",
+      micros_per_unit: microsPerUnit,
+      effective_from: effectiveFrom,
       note: "",
-      createdAt: "2026-01-01T00:00:00Z",
-      createdByUserId: null,
+      created: 1767225600,
+      created_by_user_id: null,
     });
     const price = () => screen.getByLabelText("input_tokens price") as HTMLInputElement;
 
@@ -172,6 +172,6 @@ describe("SetPriceDialog", () => {
     createAsync.mockResolvedValue({});
     fireEvent.click(save());
     await waitFor(() => expect(createAsync).toHaveBeenCalledTimes(3));
-    expect(createAsync.mock.calls[2]![0].quantityKey).toBe("output_tokens");
+    expect(createAsync.mock.calls[2]![0].quantity_key).toBe("output_tokens");
   });
 });

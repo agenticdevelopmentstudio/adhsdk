@@ -172,6 +172,7 @@ public final class SessionsWindowController: SingleWindowController {
         }
 
         self.windowTitle = "Stenographer — Sessions"
+        self.windowTitleSymbolName = "clock.arrow.circlepath"
         self.windowStyleMask = [.titled, .closable, .resizable, .miniaturizable]
         self.windowSpec = WindowSpec(
             defaultSize: NSSize(width: 360, height: 300),

@@ -35,22 +35,22 @@ class TemplateSyncKeysType0:
 
         field_dict.update({})
         if models_dev is not UNSET:
-            field_dict["modelsDev"] = models_dev
+            field_dict["models_dev"] = models_dev
         if openrouter is not UNSET:
             field_dict["openrouter"] = openrouter
         if arena_vendor is not UNSET:
-            field_dict["arenaVendor"] = arena_vendor
+            field_dict["arena_vendor"] = arena_vendor
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        models_dev = d.pop("modelsDev", UNSET)
+        models_dev = d.pop("models_dev", UNSET)
 
         openrouter = d.pop("openrouter", UNSET)
 
-        arena_vendor = d.pop("arenaVendor", UNSET)
+        arena_vendor = d.pop("arena_vendor", UNSET)
 
         template_sync_keys_type_0 = cls(
             models_dev=models_dev,

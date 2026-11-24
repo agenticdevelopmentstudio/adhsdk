@@ -20,13 +20,17 @@ export const DEFAULT_DEBOUNCE_MS = 250
  */
 export const DEFAULT_TIMEOUT_MS = 15000
 
-/** The paginated results envelope every source returns (mirrors `GET /public/papers`). */
-export interface SearchResultEnvelope<Hit> {
-  items: Hit[]
-  total: number
-  page: number
-  pageSize: number
+/** The /v1 collection envelope every source returns (`GET /v1/papers`): rows plus a cursor flag.
+ *  There is no total: `has_more` says whether rows follow the page. */
+export interface SearchResultEnvelope<Wire> {
+  object: 'list'
+  data: Wire[]
+  has_more: boolean
+  url: string
 }
+
+/** The widest page /v1 serves. */
+const V1_PAGE_MAX = 100
 
 export type SearchPhase = 'idle' | 'loading' | 'ready' | 'error'
 
@@ -42,7 +46,7 @@ export function isActiveSearch(filters: SearchFilters): boolean {
 }
 
 /**
- * The search state. `items`/`total` hold the LAST successful page and are retained
+ * The search state. `items`/`total`/`hasMore` hold the LAST successful page and are retained
  * across a re-query, so typing never flashes the list back to a skeleton (the
  * AuthorPapersIndex behavior, generalised). `settled` flips true after the first
  * response resolves so the initial skeleton shows only before any data exists.
@@ -52,7 +56,10 @@ export function isActiveSearch(filters: SearchFilters): boolean {
 export interface DocumentSearchState<Hit> {
   phase: SearchPhase
   items: Hit[]
+  /** How many hits the page holds; with `hasMore`, a lower bound on the corpus match. */
   total: number
+  /** More hits match than the page holds. */
+  hasMore: boolean
   error: string | null
   settled: boolean
   /** Re-run the current query NOW, bypassing the debounce (Enter-commit / retry). */
@@ -69,23 +76,21 @@ function joinPath(base: string, path: string): string {
 
 /**
  * Build the results request URL from the injected scope — applying the source's
- * query-param NAME mapping (defaults `q`/`tag`/`category`/`page`/`pageSize`). The core
+ * query-param NAME mapping (defaults `q`/`tag`/`category`/`limit`). The core
  * holds no literal endpoint or public-only query string; everything comes from `source`.
  * Empty axes are omitted so a blank filter is never sent. Pure + exported for testing.
  */
 export function buildSearchUrl(
   source: SearchSource,
   filters: SearchFilters,
-  page: number,
 ): string {
   const names = { ...DEFAULT_QUERY_PARAMS, ...source.params }
-  const pageSize = source.pageSize ?? DEFAULT_PAGE_SIZE
+  const pageSize = Math.min(source.pageSize ?? DEFAULT_PAGE_SIZE, V1_PAGE_MAX)
   const qs = new URLSearchParams()
   const q = filters.q.trim()
   if (q) qs.set(names.q, q)
   if (filters.tag) qs.set(names.tag, filters.tag)
   if (filters.category) qs.set(names.category, filters.category)
-  qs.set(names.page, String(page))
   qs.set(names.pageSize, String(pageSize))
   // Scope params LAST, so they win over a user filter rather than the other way round.
   // `fixedParams` is the corpus's SCOPE, not a filter default — `types.ts`'s docblock calls it
@@ -128,19 +133,18 @@ function isTimeoutError(err: unknown): boolean {
   return err instanceof DOMException && err.name === 'TimeoutError'
 }
 
-async function fetchResults<Hit>(
+async function fetchResults(
   source: SearchSource,
   filters: SearchFilters,
-  page: number,
   signal: AbortSignal,
   timeoutMs: number,
-): Promise<SearchResultEnvelope<Hit>> {
-  const res = await fetch(buildSearchUrl(source, filters, page), {
+): Promise<SearchResultEnvelope<unknown>> {
+  const res = await fetch(buildSearchUrl(source, filters), {
     ...source.fetchInit,
     signal: withTimeout(signal, timeoutMs),
   })
   if (!res.ok) throw new Error(`Search request failed (HTTP ${res.status}).`)
-  return (await res.json()) as SearchResultEnvelope<Hit>
+  return (await res.json()) as SearchResultEnvelope<unknown>
 }
 
 /** Stable serialization of the scope so an inline `source` object can't loop the effect.
@@ -169,11 +173,13 @@ export function filterKeyOf(filters: SearchFilters): string {
   return JSON.stringify([filters.q, filters.tag, filters.category])
 }
 
-export interface UseDocumentSearchOptions {
+export interface UseDocumentSearchOptions<Hit = unknown> {
   /** Debounce (ms) before a filter change fires a request (default 250). */
   debounceMs?: number
   /** Per-request timeout (ms) before the fetch aborts into the error state (default 15000). */
   timeoutMs?: number
+  /** Turns a wire row into a `Hit` (a document type's `fromWire`). Omitted: rows pass through. */
+  toHit?: (wire: unknown) => Hit
 }
 
 /**
@@ -186,14 +192,17 @@ export interface UseDocumentSearchOptions {
 export function useDocumentSearch<Hit>(
   source: SearchSource,
   filters: SearchFilters,
-  options: UseDocumentSearchOptions = {},
+  options: UseDocumentSearchOptions<Hit> = {},
 ): DocumentSearchState<Hit> {
-  const { debounceMs = DEFAULT_DEBOUNCE_MS, timeoutMs = DEFAULT_TIMEOUT_MS } = options
+  const { debounceMs = DEFAULT_DEBOUNCE_MS, timeoutMs = DEFAULT_TIMEOUT_MS, toHit } = options
+  const toHitRef = useRef(toHit)
+  toHitRef.current = toHit
 
   const active = isActiveSearch(filters)
 
   const [items, setItems] = useState<Hit[]>([])
   const [total, setTotal] = useState(0)
+  const [hasMore, setHasMore] = useState(false)
   const [phase, setPhase] = useState<SearchPhase>(active ? 'loading' : 'idle')
   const [error, setError] = useState<string | null>(null)
   const [settled, setSettled] = useState(false)
@@ -225,6 +234,7 @@ export function useDocumentSearch<Hit>(
       immediateRef.current = false
       setItems([])
       setTotal(0)
+      setHasMore(false)
       setError(null)
       setPhase('idle')
       setSettled(false)
@@ -239,17 +249,19 @@ export function useDocumentSearch<Hit>(
     setError(null)
 
     const run = (): void => {
-      void fetchResults<Hit>(
+      void fetchResults(
         sourceRef.current,
         filtersRef.current,
-        1,
         controller.signal,
         timeoutMs,
       )
         .then((env) => {
           if (!live) return
-          setItems(env.items ?? [])
-          setTotal(env.total ?? 0)
+          const rows = Array.isArray(env.data) ? env.data : []
+          const map = toHitRef.current ?? ((wire: unknown) => wire as Hit)
+          setItems(rows.map(map))
+          setTotal(rows.length)
+          setHasMore(env.has_more === true)
           setPhase('ready')
           setSettled(true)
         })
@@ -277,7 +289,7 @@ export function useDocumentSearch<Hit>(
     }
   }, [sourceKey, filterKey, debounceMs, timeoutMs, nonce])
 
-  return { phase, items, total, error, settled, refresh }
+  return { phase, items, total, hasMore, error, settled, refresh }
 }
 
 /**

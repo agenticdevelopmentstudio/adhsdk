@@ -7,7 +7,17 @@ import AgenticDeveloperHubSDKDatabase
 @MainActor
 public final class GeneralSettingsPanelViewController: ComposableSettings.SettingsPanelViewController {
 
-    public init() {
+    /// Whether Tab Behavior offers “New” menu item prefers tabs to windows,
+    /// for an app whose File ▸ New can open either.
+    private let showsNewPrefersTabs: Bool
+
+    /// Whether Tab Behavior offers “Single documents open in”, for an app
+    /// that opens files in Document windows (`DocumentWindowsFeature`).
+    private let showsSingleDocumentsOpenIn: Bool
+
+    public init(showsNewPrefersTabs: Bool = false, showsSingleDocumentsOpenIn: Bool = false) {
+        self.showsNewPrefersTabs = showsNewPrefersTabs
+        self.showsSingleDocumentsOpenIn = showsSingleDocumentsOpenIn
         super.init(with: ComposableSettings.SettingsPanelDescriptor(
             title: "General",
             icon: NSImage(systemSymbolName: "gearshape", accessibilityDescription: nil)
@@ -18,8 +28,29 @@ public final class GeneralSettingsPanelViewController: ComposableSettings.Settin
         fatalError("init(coder:) has not been implemented")
     }
 
+    static let newPrefersTabsTitle = "“New” menu item prefers tabs to windows"
+    static let singleDocumentsOpenInTitle = "Single documents open in:"
+
     public override var helpContent: ComposableSettings.PanelHelp? {
-        ComposableSettings.PanelHelp(topics: [
+        let newTopic = ComposableSettings.PanelHelp.Topic(
+            title: Self.newPrefersTabsTitle,
+            body: "File ▸ New (⌘N) over a Coding Project window normally opens another "
+                + "Coding Project window, and over a File Browser window asks for a folder "
+                + "to open in a new one. With this on, it opens a new tab in the window in "
+                + "front instead, as File ▸ New Tab does."
+        )
+        let singleDocumentsTopic = ComposableSettings.PanelHelp.Topic(
+            title: "Single Documents",
+            body: "Where a file opened on its own lands — one chosen with Open With in the "
+                + "Finder, named on the command line, or entered in File ▸ Open Location. "
+                + "“\(SingleDocumentOpenMode.tabs.displayName)” gathers them as tabs of one "
+                + "Document window; “\(SingleDocumentOpenMode.windows.displayName)” gives each "
+                + "file a window of its own. A file that already has its own window comes "
+                + "forward there either way."
+        )
+        let tabTopics = (showsNewPrefersTabs ? [newTopic] : [])
+            + (showsSingleDocumentsOpenIn ? [singleDocumentsTopic] : [])
+        return ComposableSettings.PanelHelp(topics: tabTopics + [
             .init(
                 title: "Launch at Login",
                 body: "\(AppStorageLocation.displayName) works best when it starts automatically "
@@ -36,6 +67,13 @@ public final class GeneralSettingsPanelViewController: ComposableSettings.Settin
                     + "themselves, with their pane layout, not just empty frames."
             ),
             .init(
+                title: "Tab Position",
+                body: "Which edges of a tabbed window show tab bars: any of top, left, right and "
+                    + "bottom, the same choice as View ▸ Tab Position. At least one edge stays on. "
+                    + "A project window whose Tab Bars you set yourself keeps its own edges, and a "
+                    + "browser pane can override them in its settings."
+            ),
+            .init(
                 title: "Recent Documents",
                 body: "How many entries the recent-documents list keeps. Zero switches it "
                     + "off entirely, which is the setting to use on a shared machine — the "
@@ -48,6 +86,9 @@ public final class GeneralSettingsPanelViewController: ComposableSettings.Settin
         super.viewDidLoad()
         self.settingsView.addGroup(createStartupGroup())
         self.settingsView.addGroup(createWindowBehaviorGroup())
+        if showsNewPrefersTabs || showsSingleDocumentsOpenIn {
+            self.settingsView.addGroup(createTabBehaviorGroup())
+        }
     }
 
     private func createStartupGroup() -> ComposableSettings.GroupView {
@@ -89,6 +130,58 @@ public final class GeneralSettingsPanelViewController: ComposableSettings.Settin
             )
         ))
 
+        group.addSettingSubview(makeTabPositionRow())
+
         return group
     }
+
+    private func createTabBehaviorGroup() -> ComposableSettings.GroupView {
+        let group = ComposableSettings.GroupView(withTitle: "Tab Behavior")
+
+        if showsNewPrefersTabs {
+            let checkbox = ComposableSettings.CheckboxView(with: ComposableSettings.ViewModel<Bool>(
+                title: Self.newPrefersTabsTitle,
+                setting: UserSettings.projectsNewOpensTabs
+            ))
+            _ = checkbox.accessibilityID("settings.general.new-prefers-tabs")
+            group.addSettingSubview(checkbox)
+        }
+
+        if showsSingleDocumentsOpenIn {
+            let choices = SingleDocumentOpenMode.allCases.map {
+                ComposableSettings.ChoiceViewModel<SingleDocumentOpenMode>.Choice(
+                    label: $0.displayName,
+                    value: $0
+                )
+            }
+            let popup = ComposableSettings.PopupMenuChoiceView<SingleDocumentOpenMode>(
+                viewModel: ComposableSettings.ChoiceViewModel<SingleDocumentOpenMode>(
+                    title: Self.singleDocumentsOpenInTitle,
+                    setting: UserSettings.singleDocumentsOpenIn,
+                    choices: choices
+                )
+            )
+            _ = popup.accessibilityID("settings.general.single-documents-open-in")
+            group.addSettingSubview(popup)
+        }
+
+        return group
+    }
+
+    /// The app-wide tab positions, kept in step with View ▸ Tab Position.
+    private func makeTabPositionRow() -> TabPositionsSettingView {
+        let row = TabPositionsSettingView(
+            get: { UserSettings.tabsPositions.value },
+            set: { UserSettings.tabsPositions.value = $0 },
+            identifierPrefix: "settings.general.tab-position"
+        )
+        tabPositionsObserver = UserSettingObserver(UserSettings.tabsPositions) { [weak row] _ in
+            row?.refresh()
+        }
+        return row
+    }
+
+    /// Follows the setting while the panel is up, for a change made from
+    /// the View menu.
+    private var tabPositionsObserver: UserSettingObserver<TabPositions>?
 }

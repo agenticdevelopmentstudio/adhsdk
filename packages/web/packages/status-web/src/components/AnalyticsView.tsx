@@ -27,7 +27,7 @@ import {
   VitalsTable,
 } from "./AnalyticsParts";
 import { AnalyticsSitePage } from "./AnalyticsSitePage";
-import { DashboardPanel, eitherSection } from "./DashboardParts";
+import { DashboardPanel, eitherSection, VIEWS_MISSING, viewsMissing } from "./DashboardParts";
 import { OptionSection, OptionsGear, optionRow } from "./OptionsGear";
 import { useStatusHost } from "./StatusHost";
 
@@ -170,6 +170,7 @@ export function AnalyticsView({
   const query = useAnalyticsDashboard(range);
   const body = query.data;
   const sections = body?.sections ?? EMPTY_SECTIONS;
+  const noViews = viewsMissing(body);
   const views = body?.views ?? EMPTY_VIEWS;
   // A failed read keeps the last body (TanStack Query holds on to it), and that body may have
   // been taken mid-refresh: claiming it is still filling in would leave "Refreshing…" and the
@@ -203,7 +204,12 @@ export function AnalyticsView({
 
         {site !== null ? (
           // With no answer at all there is no report to draw: the alert above is the whole story.
-          (body || refreshing) && (
+          // The report is drawn from the views, so an answer without them is said to be that.
+          noViews ? (
+            <p role="alert" className="m-0 font-mono text-xs text-apt-gold">
+              {VIEWS_MISSING}
+            </p>
+          ) : (body || refreshing) && (
             <AnalyticsSitePage
               site={site}
               range={range}
@@ -247,6 +253,7 @@ export function AnalyticsView({
               section={eitherSection({ PostHog: sections.traffic, Vercel: sections.vercel })}
               configured={posthogOn || vercelOn}
               refreshing={refreshing}
+              unavailable={noViews ? VIEWS_MISSING : undefined}
               skeletonHeight={240}
               note={PAGEVIEWS_NOTE}
             >
@@ -259,6 +266,7 @@ export function AnalyticsView({
               section={eitherSection({ PostHog: sections.traffic, Vercel: sections.vercel })}
               configured={posthogOn || vercelOn}
               refreshing={refreshing}
+              unavailable={noViews ? VIEWS_MISSING : undefined}
               note="Select a site to open it. A dash means that source has not seen the site. Errors, failed requests and p95 come from PostHog."
             >
               {() => (
@@ -276,6 +284,7 @@ export function AnalyticsView({
                 section={sections.paths}
                 configured={posthogOn}
                 refreshing={refreshing}
+                unavailable={noViews ? VIEWS_MISSING : undefined}
               >
                 {() => (
                   <BarList
@@ -295,6 +304,7 @@ export function AnalyticsView({
                   section={sections.dimensions}
                   configured={posthogOn}
                   refreshing={refreshing}
+                  unavailable={noViews ? VIEWS_MISSING : undefined}
                   note={sections.dimensions.data?.truncated ? "The rarest combinations were cut off, so small rows may be short." : undefined}
                 >
                   {() => (
@@ -313,6 +323,7 @@ export function AnalyticsView({
                 section={sections.vercel}
                 configured={vercelOn}
                 refreshing={refreshing}
+                unavailable={noViews ? VIEWS_MISSING : undefined}
                 note={projectsNote(vercel)}
               >
                 {() => (
@@ -337,6 +348,7 @@ export function AnalyticsView({
                   section={sections.vercel}
                   configured={vercelOn}
                   refreshing={refreshing}
+                  unavailable={noViews ? VIEWS_MISSING : undefined}
                 >
                   {() => (
                     <BarList
@@ -357,6 +369,7 @@ export function AnalyticsView({
               section={sections.vitals}
               configured={posthogOn}
               refreshing={refreshing}
+              unavailable={noViews ? VIEWS_MISSING : undefined}
               note={VITALS_NOTE}
             >
               {() => (

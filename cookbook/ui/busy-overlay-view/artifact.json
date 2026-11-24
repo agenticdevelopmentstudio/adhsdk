@@ -1,0 +1,59 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "9f93e781-d196-438c-82f7-25c89f90a0b2",
+    "title": "Busy Overlay View",
+    "type": "ingredient",
+    "version": "1.0.1",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-14",
+    "modified": "2026-11-14",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "A blurred layer with a spinner and optional message laid over a whole host view that swallows all pointer input until its owner hides it.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "ui",
+      "overlay",
+      "busy",
+      "progress"
+    ],
+    "depends-on": [],
+    "related": [
+      "0bc93127-4078-4bc6-a250-04dde181788b"
+    ],
+    "references": [
+      "https://developer.apple.com/design/human-interface-guidelines/progress-indicators"
+    ],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "ef38c73f15ffff29",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

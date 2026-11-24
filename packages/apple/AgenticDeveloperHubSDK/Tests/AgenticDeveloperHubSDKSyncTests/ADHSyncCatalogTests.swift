@@ -9,8 +9,8 @@ final class ADHSyncCatalogTests: XCTestCase {
     /// update these by hand. They already drifted once (79/27 -> 97/44) across three
     /// regenerations before anyone noticed.
     func testCatalogShape() {
-        XCTAssertEqual(ADHSyncCatalog.all.count, 97)
-        XCTAssertEqual(ADHSyncCatalog.pullOnly.count, 44)
+        XCTAssertEqual(ADHSyncCatalog.all.count, 100)
+        XCTAssertEqual(ADHSyncCatalog.pullOnly.count, 49)
         // pullOnly ⊆ all
         let names = Set(ADHSyncCatalog.all.map(\.resource))
         XCTAssertTrue(ADHSyncCatalog.pullOnly.isSubset(of: names))
@@ -26,7 +26,7 @@ final class ADHSyncCatalogTests: XCTestCase {
         // push-mode spot checks
         XCTAssertTrue(ADHSyncCatalog.pullOnly.contains("social.follows"))
         XCTAssertFalse(ADHSyncCatalog.pullOnly.contains("content.contacts"))
-        // all v1 today
-        XCTAssertTrue(ADHSyncCatalog.all.allSatisfy { $0.schemaVersion == 1 })
+        // all v2 today
+        XCTAssertTrue(ADHSyncCatalog.all.allSatisfy { $0.schemaVersion == 2 })
     }
 }

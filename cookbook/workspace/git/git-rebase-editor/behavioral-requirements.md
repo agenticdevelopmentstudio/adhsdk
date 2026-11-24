@@ -1,0 +1,15 @@
+
+### Rows
+
+- **rebase-rows**: The table MUST show one row per plan entry in the plan's order, oldest at the top, in three columns: `action`, a pop-up of the six actions by name (`pick`, `reword`, `edit`, `squash`, `fixup`, `drop`) with the entry's selected; `sha`, the commit's first 8 characters; `subject`, the entry's subject.
+- **rebase-reword-field**: For a `reword` entry the subject cell MUST be an editable text field holding the entry's message (its whole message, body included), and every keystroke and the end of editing MUST set that message in `plan`. The field MUST wrap and show every line of the message, and the row MUST be as tall as the message's lines, and as the text measured at the field's width (the frame the table lays the subject cell out in, `frameOfCell`) when a line wraps, growing and shrinking as lines are added or removed and as the column is resized. Return and Enter in the field MUST insert a newline into the message and never end the edit, so they never reach `Start Rebase`. Every other action shows the subject as a label; the message is not shown for them.
+- **rebase-action-change**: Choosing an action in a row's pop-up MUST set that entry's action in `plan` and redraw the row. Switching to `reword` an entry with no message MUST fill the message with its subject, so the field never starts empty.
+- **rebase-reorder**: Rows MUST be draggable to a new place, drop-above as the table names it: the entry moves to sit above the row it was dropped on (after the last for the end), and the moved row is selected. A drop onto its own place moves nothing. The drag MUST carry the row's index on a pasteboard type local to the table (`com.agenticdeveloperhub.git.rebase.row`), and the table MUST accept only drags it started.
+- **rebase-move-buttons**: `Move Up` (`git.rebase.moveUp`, ⌥⌘↑) and `Move Down` (`git.rebase.moveDown`, ⌥⌘↓) MUST move the selected row one place up or down, as a drop would, keeping it selected; a reword field being edited MUST stay in its edit, with its selection, after the move. A move made before the view loads MUST reorder `plan` without loading the view. Each MUST be disabled while there is no selection or the selected row is already at that end, so reordering never needs a drag.
+
+### Buttons
+
+- **rebase-start-enablement**: `Start Rebase` MUST be enabled exactly while `plan.validationError` is nil, re-checked after every change, and carry that reason as its tooltip while it is not (no tooltip otherwise). The reason is never shown as inline text.
+- **rebase-finish**: `Start Rebase` MUST end any field editing and call `onFinish` with `plan`; `Cancel` MUST call `onFinish` with nil. Either clears `onFinish` first, so it is called at most once. Return is Start's key equivalent and Escape Cancel's, except inside a reword's field, which takes Return as a newline (**rebase-reword-field**).
+- **rebase-runs-nothing**: The editor MUST NOT run git; running the plan is the caller's.
+- **rebase-ui-thread**: The editor MUST be used on the UI thread.

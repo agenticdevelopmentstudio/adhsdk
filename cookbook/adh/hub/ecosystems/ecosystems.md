@@ -1,13 +1,12 @@
 ---
 id: 201572ee-2e0f-4839-94f5-252f8044c4bf
 title: "Ecosystems"
-domain: adhsdk://cookbook/adh/hub/ecosystems/ecosystems
 type: ingredient
-version: 1.3.0
+version: 2.0.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -24,34 +23,10 @@ tags:
   - products
   - rdid
   - slug
-  - forms
-  - features
 depends-on: []
 related:
-  - adhsdk://cookbook/data/services/auth/auth-client
-references:
-  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/EcosystemsDataSource.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/EcosystemsModels.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/EcosystemsModule.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/EcosystemTopic.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/EcosystemSettingsTopic.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Hub/HubError.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/HubError+Wrap.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/RailPath.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/Slug.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/FormDetails.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKHubTests/EcosystemsModuleTests.swift (adhsdk)
-  - packages/web/packages/data/src/ecosystems/ecosystems.ts (adhsdk)
-  - packages/web/packages/data/src/ecosystems/identifiers.ts (adhsdk)
-  - packages/web/packages/data/src/ecosystems/use-workspace-default-ecosystem.ts (adhsdk)
-  - packages/web/packages/data/src/ecosystems/ecosystem-invitations.ts (adhsdk)
-  - packages/web/packages/data/src/ecosystems/ecosystem-features.ts (adhsdk)
-  - packages/web/packages/data/src/ecosystems/wire.ts (adhsdk)
-  - packages/web/packages/data/src/http.ts (adhsdk)
-  - packages/web/packages/data/src/client-helpers.ts (adhsdk)
-  - packages/web/packages/data/src/ecosystems/__tests__/ecosystems.test.ts (adhsdk)
-  - packages/web/packages/data/src/ecosystems/__tests__/use-workspace-default-ecosystem.test.tsx (adhsdk)
-  - packages/web/packages/data/src/ecosystems/__tests__/ecosystem-features.test.tsx (adhsdk)
+  - 3ea9329e-5acc-4c43-b5ce-bb8c50570104
+references: []
 approved-by: ""
 approved-date: ""
 ---
@@ -60,13 +35,13 @@ approved-date: ""
 
 ## Overview
 
-`hub-domain-ecosystems` is the Ecosystems ("Products") domain of the hub: the
+The Ecosystems ingredient is the Ecosystems ("Products") domain of the hub: the
 non-UI logic that lists, creates, renames, and deletes an *ecosystem* — a
 reverse-domain-identified (rdid) product row that can itself own child
 ecosystems, and that other domains (applications, buckets, customers) hang
 off of. Two independent, source-of-truth reference implementations model the
-identical contract from opposite ends of one system; this recipe covers both
-together, and Platform Notes and Reference Implementations describe how each
+identical contract from opposite ends of one system; this ingredient covers both
+together, and Platform Notes describes how each
 realizes it.
 
 Both implementations model the same backend fact: an ecosystem's public
@@ -281,6 +256,12 @@ has no counterpart for it in these sources.
 - **auth-settings-bespoke-routes**: Reading and updating an ecosystem's auth
   settings MUST use their own dedicated route rather than the generic
   ecosystems create/read/update/delete base.
+- **auth-settings-login-allow-list-mapping**: Auth settings read from the
+  wire MUST carry `loginAllowedEmails` from `login_allowed_emails`,
+  reading an absent field as `null` (every customer may sign in) and keeping
+  `[]` (no customer may) distinct from it. An auth-settings patch that sets the
+  field MUST send it as `login_allowed_emails`, sending an explicit
+  `null` rather than omitting it.
 
 ### Child ecosystems
 
@@ -311,7 +292,7 @@ has no counterpart for it in these sources.
   entity-agnostic identifier-rename mechanism (shared across
   ecosystem/application/persona/namespace/organization) MUST NOT be used to
   rename an ecosystem's address — the ecosystem update call that carries
-  `slug` is the correct route for that, per **update-slug-sent-on-presence**.
+  `slug` is the correct route for that, per #requirements/update-slug-sent-on-presence.
 - **ecosystem-id-for-slug-ownership-first**: Resolving an ecosystem id for a
   slug MUST first try to resolve the caller's own workspace-scoped default
   for that slug; on any failure other than not-found, it MUST rethrow
@@ -464,10 +445,11 @@ has no counterpart for it in these sources.
   pass the add and remove lists through as given — it does not deduplicate
   keys or reject a key present in both; because adds run first, such a key
   is provisioned and then removed.
-- **features-mutation-null-id-unguarded**: the feature-provisioning mutations accept an
-  ecosystem id that may be absent and MUST proceed without a guard; a mutation fired before the id
-  resolves sends its request to a path segment holding a literal absent-marker rather than failing
-  fast on the client.
+- **features-mutation-null-id-unguarded**: the feature-provisioning mutations SHOULD
+  reject a call whose ecosystem id is absent before any request is sent, or take a
+  non-optional id. Today the id is optional and unguarded: a mutation fired before the id
+  resolves sends its request to a path segment holding a literal absent-marker rather than
+  failing fast on the client. A port SHOULD NOT copy that behavior.
 
 ## Appearance
 
@@ -495,57 +477,57 @@ owns accessibility presentation.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| hub-domain-ecosystems-001 | ecosystem-decode-default-fallback, ecosystem-identifier-prefix | Decode a payload for id `org.acme.shop`, slug `shop`, name `Shop`, with created/updated timestamps but no `isDefault` and no `canManage` field | `isDefault` is `false`; the ecosystem is manageable; the identifier prefix is `"org.acme."` |
-| hub-domain-ecosystems-002 | ecosystem-identifier-prefix | The identifier prefix of an ecosystem whose id is `"shop"` (no `.`) | `""` |
-| hub-domain-ecosystems-003 | root-level-hides-defaults, root-level-shape | The root listing over three rows: one default row and two ordinary rows (`shop`, `blog`) | Items list only the two ordinary rows (`"org.acme.shop"`, `"org.acme.blog"`); title `"Products"`; empty message `"No products yet."`; create action titled `"New Product"` |
-| hub-domain-ecosystems-004 | topics-level-shape | Descending into an ecosystem with three topics registered in order: a storage group topic, the child-ecosystems topic, the settings topic | A list with id `"ecosystem-topics"` and items `["storage","child-ecosystems","settings"]` in that same caller-supplied order |
-| hub-domain-ecosystems-005 | child-manageability-gate-first, not-manageable-copy | Descending into an ecosystem whose `canManage` is `false` | A detail view with id `"ecosystem:org.acme.shop:not-manageable"`, the fixed not-manageable title, and the fixed not-manageable message |
-| hub-domain-ecosystems-006 | topic-group-level-shape | Descending into the `"storage"` group topic, then its `"all-data"` child | The group's own list, id `"ecosystem-group:storage"`; the child detail carries id `"ecosystem:org.acme.shop:all-data"` |
-| hub-domain-ecosystems-007 | topic-dispatch-by-entry-id, child-by-id-not-found-is-empty | Descending into an unknown ecosystem, and into a known ecosystem but an unknown topic | Both resolve to an empty result |
-| hub-domain-ecosystems-008 | settings-form-fields, settings-values-region-hardcoded | Opening the settings view for `shop` (description: `"Storefront"`) | Fields in order `["name","slug","id","description","region"]`; values `name="Shop"`, `slug="shop"`, `id="org.acme.shop"`, `description="Storefront"`, `region="coming soon"`; the `id` field is not editable; delete action titled `"Delete Product"` |
-| hub-domain-ecosystems-009 | settings-save-identifier-derivation, settings-save-excludes-region | Changing name to `"Web Shop"` and slug to `"web-shop"` in the settings form, then saving | The update call carries id `"org.acme.shop"`, slug `"web-shop"`, name `"Web Shop"`, description `"Storefront"`, and no region value |
-| hub-domain-ecosystems-010 | settings-save-conflict-mapping | The update call fails with a conflict while saving a settings change to slug `"blog"` | The save fails with the message `"Identifier \"org.acme.blog\" is already in use."` |
-| hub-domain-ecosystems-011 | settings-delete-action | Invoking the settings delete action for `shop` | The delete operation is called for `"org.acme.shop"` |
-| hub-domain-ecosystems-012 | child-ecosystems-list-shape, child-ecosystems-recurse-via-rail | Descending `shop → child-ecosystems`, listing one child `shop.eu`, then descending into it and its settings topic | The list has id `"child-ecosystems-list"` and a create action titled `"New Ecosystem"`; the nested settings detail carries id `"ecosystem:org.acme.shop.eu:settings"` |
-| hub-domain-ecosystems-013 | create-form-prefix-resolution, create-form-identifier-derivation | Creating a new top-level ecosystem with slug `"shop"` when the caller's infrastructure id is `"org.acme"` | The created identifier is `"org.acme.shop"` with no parent |
-| hub-domain-ecosystems-014 | create-form-prefix-resolution | Creating a child ecosystem with slug `"eu"` under a parent whose id is `"org.acme.shop"` | The created identifier is `"org.acme.shop.eu"` with parent `"org.acme.shop"` |
-| hub-domain-ecosystems-015 | create-form-slug-max-length, create-form-duplicate-probe, create-form-conflict-mapping | Three create attempts: a 65-character slug; the slug `"taken"` which already exists; the slug `"fresh"` whose create call reports a conflict | Errors respectively: `"Slug must be 64 characters or fewer."`, `"Identifier \"org.acme.taken\" is already in use."`, `"An ecosystem with identifier \"org.acme.fresh\" already exists."`; no create call ever completes |
-| hub-domain-ecosystems-016 | create-form-slug-lowercased | Saving a new ecosystem with name `"Shop"`, slug `"SHOP"`, description `"Storefront"` | The create call's slug is `"shop"` and its identifier is `"org.acme.shop"` |
-| hub-domain-ecosystems-017 | settings-save-slug-lowercased | Saving a settings change with name `"Shop"`, slug `"SHOP"`, description `"Storefront"` | The update call's id is `"org.acme.shop"` and its slug is `"shop"` |
-| hub-domain-ecosystems-018 | root-level-errors-wrap | The list call fails while fetching the root listing | The failure surfaces as a domain error |
-| hub-domain-ecosystems-019 | to-ecosystem-field-mapping | Mapping a stored row with id `"com.acme"` and a primary domain of `"acme.com"` | id and identifier both `"com.acme"`; domain `"acme.com"` |
-| hub-domain-ecosystems-020 | to-ecosystem-field-mapping | Mapping a stored row whose description, region, and primary domain columns are all null | description, region, and domain are all `""` |
-| hub-domain-ecosystems-021 | create-body-shape | Creating an ecosystem with identifier `"ecosystem.fishlamp.adh"` | The sent body has id `"ecosystem.fishlamp.adh"` and slug `"adh"` |
-| hub-domain-ecosystems-022 | create-body-shape | Creating an ecosystem with the two-segment identifier `"ecosystem.adh"` | The sent slug is `"adh"` |
-| hub-domain-ecosystems-023 | create-scoping-url | Creating a child ecosystem with identifier `"ecosystem.fishlamp.adh.sub"` scoped to parent `"ecosystem.fishlamp.adh"` | The request is scoped to that parent; the sent slug is `"sub"` |
-| hub-domain-ecosystems-024 | create-scoping-url | Creating an ecosystem with identifier `"ecosystem.fishlamp.adh"` scoped to workspace `"fishlamp"` | The request is scoped to that workspace |
-| hub-domain-ecosystems-025 | update-slug-sent-on-presence, update-single-put | Updating `"ecosystem.fishlamp.adh"` with a new identifier ending `"adh2"` and a new name `"N"` | Exactly one request, addressed to `"ecosystem.fishlamp.adh"`; body carries slug `"adh2"` and name `"N"` |
-| hub-domain-ecosystems-026 | update-slug-sent-on-presence | Updating an ecosystem whose submitted identifier equals its stored id (`"ecosystem.fishlamp.adh"`), but whose slug column had drifted to `"chosen"` | The sent slug is `"adh"` (the healing rename); the returned slug is `"adh"` |
-| hub-domain-ecosystems-027 | update-omits-unset-fields | Updating `"ecosystem.fishlamp.adh"` with only a new name `"Renamed"`, no identifier | The sent body has no slug field; the name is updated |
-| hub-domain-ecosystems-028 | update-returns-server-derived-row | Updating `"ecosystem.fishlamp.adh"` with a malformed identifier `"ecosystem.WRONG.adh2"`; the server echoes back `"ecosystem.fishlamp.adh2"` | The returned id and identifier equal `"ecosystem.fishlamp.adh2"`, never the caller's malformed value |
-| hub-domain-ecosystems-029 | workspace-default-ecosystem-id-shape | Resolving the workspace default ecosystem id for workspace `"fishlamp"` with one matching row | The request is scoped to `workspace=fishlamp` and infrastructure; the result carries that row's id and `canManage: true` |
-| hub-domain-ecosystems-030 | workspace-default-ecosystem-id-shape | Resolving the workspace default ecosystem id with no workspace given | The request is scoped to the caller's own infrastructure row, with no workspace parameter |
-| hub-domain-ecosystems-031 | workspace-default-ecosystem-id-shape | Resolving the workspace default ecosystem id for workspace `"fishlamp"` where the result is an empty list | Resolves to nothing (never an undefined/absent-marker value) |
-| hub-domain-ecosystems-032 | workspace-default-ecosystem-id-shape | A row whose `canManage` is explicitly `false` | The result's `canManage` is `false` |
-| hub-domain-ecosystems-033 | ecosystem-id-for-slug-ownership-first | Resolving an ecosystem id for slug `"fishlamp"`, where the workspace lookup succeeds on the first call | Exactly one request, scoped to that workspace's infrastructure row |
-| hub-domain-ecosystems-034 | ecosystem-id-for-slug-ownership-first | Resolving an ecosystem id for slug `"zed"`, where the workspace lookup reports not-found | Falls back to a raw scan and returns the row whose slug is `"zed"` |
-| hub-domain-ecosystems-035 | ecosystem-id-for-slug-ownership-first | Resolving an ecosystem id for slug `"fishlamp"`, where the workspace lookup fails with a permission error | The permission error is rethrown; exactly one request is made, with no fallback scan |
-| hub-domain-ecosystems-036 | workspace-default-hook-always-enabled, workspace-default-hook-no-retry | Rendering the workspace-default-ecosystem query with no workspace slug | The query runs immediately (never disabled); it is configured not to retry |
-| hub-domain-ecosystems-037 | features-remove-404-is-success | Removing a feature whose delete request fails with not-found | Resolves with no value (treated as success) |
-| hub-domain-ecosystems-038 | features-remove-rethrows-other-errors | Removing a feature whose delete request fails with a server error | The failure is rethrown |
-| hub-domain-ecosystems-039 | features-remove-single-delete, features-bespoke-route | Removing a feature whose delete request succeeds | One delete request is sent, addressed to that ecosystem and feature key; resolves with no value |
-| hub-domain-ecosystems-040 | features-apply-removals-all-settled, features-apply-names-failed-keys, features-apply-skips-empty-add | Applying a change with no adds and three removals, where the middle removal fails with a server error and the other two succeed | Exactly three removal requests are sent, no add request; the change fails, naming only the failed key |
-| hub-domain-ecosystems-041 | features-apply-404-removal-succeeds | The same change, but the failing removal reports not-found instead | The change succeeds, with no error |
-| hub-domain-ecosystems-042 | features-provision-one-request, features-provision-returns-full-list | Provisioning two feature keys for an ecosystem whose server response lists three provisioned features | Exactly one add request carrying both keys; resolves to the full three-row list |
-| hub-domain-ecosystems-043 | features-catalog-order-preserved, features-coming-soon-passthrough | Fetching the catalog, whose server response lists a coming-soon entry after an ordinary one | Resolves in that same order; the coming-soon entry is still present with its flag set |
-| hub-domain-ecosystems-044 | features-list-all-states | Listing an ecosystem's features, whose server response includes rows in every state | All rows are returned unfiltered |
-| hub-domain-ecosystems-045 | features-provisioned-query-gated, features-query-keys | Rendering the provisioned-features query with no ecosystem id | No request is issued; the cache key carries the empty marker |
-| hub-domain-ecosystems-046 | features-provision-writes-cache-then-invalidates | Provisioning one feature key, whose add request resolves with a fresh list | The provisioned-features cache is set to that list immediately on success, then that entry is invalidated |
-| hub-domain-ecosystems-047 | features-apply-adds-first, features-apply-invalidates-on-settle | Applying a change with one add and one removal, where the add request fails with a server error | The change fails with that error; no removal request is ever sent; the provisioned-features cache entry is still invalidated |
-| hub-domain-ecosystems-048 | features-catalog-stale-time, features-query-keys | Rendering the feature-catalog query twice within 30 minutes | One catalog fetch; the second render is served from cache |
-| hub-domain-ecosystems-049 | features-path-segments-encoded | Removing a feature whose ecosystem id and feature key both contain characters needing escaping | Both are percent-encoded in the request path |
-| hub-domain-ecosystems-050 | features-remove-hook-invalidates | Removing one feature whose delete request succeeds | The provisioned-features cache entry is invalidated; nothing is written to it directly |
-| hub-domain-ecosystems-051 | ecosystem-id-for-slug-ownership-first | Resolving an ecosystem id for slug `"fishlamp"`, where the workspace lookup resolves to an empty result rather than failing | Falls back to the raw scan |
+| ecosystems-001 | ecosystem-decode-default-fallback, ecosystem-identifier-prefix | Decode a payload for id `org.acme.shop`, slug `shop`, name `Shop`, with created/updated timestamps but no `isDefault` and no `canManage` field | `isDefault` is `false`; the ecosystem is manageable; the identifier prefix is `"org.acme."` |
+| ecosystems-002 | ecosystem-identifier-prefix | The identifier prefix of an ecosystem whose id is `"shop"` (no `.`) | `""` |
+| ecosystems-003 | root-level-hides-defaults, root-level-shape | The root listing over three rows: one default row and two ordinary rows (`shop`, `blog`) | Items list only the two ordinary rows (`"org.acme.shop"`, `"org.acme.blog"`); title `"Products"`; empty message `"No products yet."`; create action titled `"New Product"` |
+| ecosystems-004 | topics-level-shape | Descending into an ecosystem with three topics registered in order: a storage group topic, the child-ecosystems topic, the settings topic | A list with id `"ecosystem-topics"` and items `["storage","child-ecosystems","settings"]` in that same caller-supplied order |
+| ecosystems-005 | child-manageability-gate-first, not-manageable-copy | Descending into an ecosystem whose `canManage` is `false` | A detail view with id `"ecosystem:org.acme.shop:not-manageable"`, the fixed not-manageable title, and the fixed not-manageable message |
+| ecosystems-006 | topic-group-level-shape | Descending into the `"storage"` group topic, then its `"all-data"` child | The group's own list, id `"ecosystem-group:storage"`; the child detail carries id `"ecosystem:org.acme.shop:all-data"` |
+| ecosystems-007 | topic-dispatch-by-entry-id, child-by-id-not-found-is-empty | Descending into an unknown ecosystem, and into a known ecosystem but an unknown topic | Both resolve to an empty result |
+| ecosystems-008 | settings-form-fields, settings-values-region-hardcoded | Opening the settings view for `shop` (description: `"Storefront"`) | Fields in order `["name","slug","id","description","region"]`; values `name="Shop"`, `slug="shop"`, `id="org.acme.shop"`, `description="Storefront"`, `region="coming soon"`; the `id` field is not editable; delete action titled `"Delete Product"` |
+| ecosystems-009 | settings-save-identifier-derivation, settings-save-excludes-region | Changing name to `"Web Shop"` and slug to `"web-shop"` in the settings form, then saving | The update call carries id `"org.acme.shop"`, slug `"web-shop"`, name `"Web Shop"`, description `"Storefront"`, and no region value |
+| ecosystems-010 | settings-save-conflict-mapping | The update call fails with a conflict while saving a settings change to slug `"blog"` | The save fails with the message `"Identifier \"org.acme.blog\" is already in use."` |
+| ecosystems-011 | settings-delete-action | Invoking the settings delete action for `shop` | The delete operation is called for `"org.acme.shop"` |
+| ecosystems-012 | child-ecosystems-list-shape, child-ecosystems-recurse-via-rail | Descending `shop → child-ecosystems`, listing one child `shop.eu`, then descending into it and its settings topic | The list has id `"child-ecosystems-list"` and a create action titled `"New Ecosystem"`; the nested settings detail carries id `"ecosystem:org.acme.shop.eu:settings"` |
+| ecosystems-013 | create-form-prefix-resolution, create-form-identifier-derivation | Creating a new top-level ecosystem with slug `"shop"` when the caller's infrastructure id is `"org.acme"` | The created identifier is `"org.acme.shop"` with no parent |
+| ecosystems-014 | create-form-prefix-resolution | Creating a child ecosystem with slug `"eu"` under a parent whose id is `"org.acme.shop"` | The created identifier is `"org.acme.shop.eu"` with parent `"org.acme.shop"` |
+| ecosystems-015 | create-form-slug-max-length, create-form-duplicate-probe, create-form-conflict-mapping | Three create attempts: a 65-character slug; the slug `"taken"` which already exists; the slug `"fresh"` whose create call reports a conflict | Errors respectively: `"Slug must be 64 characters or fewer."`, `"Identifier \"org.acme.taken\" is already in use."`, `"An ecosystem with identifier \"org.acme.fresh\" already exists."`; no create call ever completes |
+| ecosystems-016 | create-form-slug-lowercased | Saving a new ecosystem with name `"Shop"`, slug `"SHOP"`, description `"Storefront"` | The create call's slug is `"shop"` and its identifier is `"org.acme.shop"` |
+| ecosystems-017 | settings-save-slug-lowercased | Saving a settings change with name `"Shop"`, slug `"SHOP"`, description `"Storefront"` | The update call's id is `"org.acme.shop"` and its slug is `"shop"` |
+| ecosystems-018 | root-level-errors-wrap | The list call fails while fetching the root listing | The failure surfaces as a domain error |
+| ecosystems-019 | to-ecosystem-field-mapping | Mapping a stored row with id `"com.acme"` and a primary domain of `"acme.com"` | id and identifier both `"com.acme"`; domain `"acme.com"` |
+| ecosystems-020 | to-ecosystem-field-mapping | Mapping a stored row whose description, region, and primary domain columns are all null | description, region, and domain are all `""` |
+| ecosystems-021 | create-body-shape | Creating an ecosystem with identifier `"ecosystem.fishlamp.adh"` | The sent body has id `"ecosystem.fishlamp.adh"` and slug `"adh"` |
+| ecosystems-022 | create-body-shape | Creating an ecosystem with the two-segment identifier `"ecosystem.adh"` | The sent slug is `"adh"` |
+| ecosystems-023 | create-scoping-url | Creating a child ecosystem with identifier `"ecosystem.fishlamp.adh.sub"` scoped to parent `"ecosystem.fishlamp.adh"` | The request is scoped to that parent; the sent slug is `"sub"` |
+| ecosystems-024 | create-scoping-url | Creating an ecosystem with identifier `"ecosystem.fishlamp.adh"` scoped to workspace `"fishlamp"` | The request is scoped to that workspace |
+| ecosystems-025 | update-slug-sent-on-presence, update-single-put | Updating `"ecosystem.fishlamp.adh"` with a new identifier ending `"adh2"` and a new name `"N"` | Exactly one request, addressed to `"ecosystem.fishlamp.adh"`; body carries slug `"adh2"` and name `"N"` |
+| ecosystems-026 | update-slug-sent-on-presence | Updating an ecosystem whose submitted identifier equals its stored id (`"ecosystem.fishlamp.adh"`), but whose slug column had drifted to `"chosen"` | The sent slug is `"adh"` (the healing rename); the returned slug is `"adh"` |
+| ecosystems-027 | update-omits-unset-fields | Updating `"ecosystem.fishlamp.adh"` with only a new name `"Renamed"`, no identifier | The sent body has no slug field; the name is updated |
+| ecosystems-028 | update-returns-server-derived-row | Updating `"ecosystem.fishlamp.adh"` with a malformed identifier `"ecosystem.WRONG.adh2"`; the server echoes back `"ecosystem.fishlamp.adh2"` | The returned id and identifier equal `"ecosystem.fishlamp.adh2"`, never the caller's malformed value |
+| ecosystems-029 | workspace-default-ecosystem-id-shape | Resolving the workspace default ecosystem id for workspace `"fishlamp"` with one matching row | The request is scoped to `workspace=fishlamp` and infrastructure; the result carries that row's id and `canManage: true` |
+| ecosystems-030 | workspace-default-ecosystem-id-shape | Resolving the workspace default ecosystem id with no workspace given | The request is scoped to the caller's own infrastructure row, with no workspace parameter |
+| ecosystems-031 | workspace-default-ecosystem-id-shape | Resolving the workspace default ecosystem id for workspace `"fishlamp"` where the result is an empty list | Resolves to nothing (never an undefined/absent-marker value) |
+| ecosystems-032 | workspace-default-ecosystem-id-shape | A row whose `canManage` is explicitly `false` | The result's `canManage` is `false` |
+| ecosystems-033 | ecosystem-id-for-slug-ownership-first | Resolving an ecosystem id for slug `"fishlamp"`, where the workspace lookup succeeds on the first call | Exactly one request, scoped to that workspace's infrastructure row |
+| ecosystems-034 | ecosystem-id-for-slug-ownership-first | Resolving an ecosystem id for slug `"zed"`, where the workspace lookup reports not-found | Falls back to a raw scan and returns the row whose slug is `"zed"` |
+| ecosystems-035 | ecosystem-id-for-slug-ownership-first | Resolving an ecosystem id for slug `"fishlamp"`, where the workspace lookup fails with a permission error | The permission error is rethrown; exactly one request is made, with no fallback scan |
+| ecosystems-036 | workspace-default-hook-always-enabled, workspace-default-hook-no-retry | Rendering the workspace-default-ecosystem query with no workspace slug | The query runs immediately (never disabled); it is configured not to retry |
+| ecosystems-037 | features-remove-404-is-success | Removing a feature whose delete request fails with not-found | Resolves with no value (treated as success) |
+| ecosystems-038 | features-remove-rethrows-other-errors | Removing a feature whose delete request fails with a server error | The failure is rethrown |
+| ecosystems-039 | features-remove-single-delete, features-bespoke-route | Removing a feature whose delete request succeeds | One delete request is sent, addressed to that ecosystem and feature key; resolves with no value |
+| ecosystems-040 | features-apply-removals-all-settled, features-apply-names-failed-keys, features-apply-skips-empty-add | Applying a change with no adds and three removals, where the middle removal fails with a server error and the other two succeed | Exactly three removal requests are sent, no add request; the change fails, naming only the failed key |
+| ecosystems-041 | features-apply-404-removal-succeeds | The same change, but the failing removal reports not-found instead | The change succeeds, with no error |
+| ecosystems-042 | features-provision-one-request, features-provision-returns-full-list | Provisioning two feature keys for an ecosystem whose server response lists three provisioned features | Exactly one add request carrying both keys; resolves to the full three-row list |
+| ecosystems-043 | features-catalog-order-preserved, features-coming-soon-passthrough | Fetching the catalog, whose server response lists a coming-soon entry after an ordinary one | Resolves in that same order; the coming-soon entry is still present with its flag set |
+| ecosystems-044 | features-list-all-states | Listing an ecosystem's features, whose server response includes rows in every state | All rows are returned unfiltered |
+| ecosystems-045 | features-provisioned-query-gated, features-query-keys | Rendering the provisioned-features query with no ecosystem id | No request is issued; the cache key carries the empty marker |
+| ecosystems-046 | features-provision-writes-cache-then-invalidates | Provisioning one feature key, whose add request resolves with a fresh list | The provisioned-features cache is set to that list immediately on success, then that entry is invalidated |
+| ecosystems-047 | features-apply-adds-first, features-apply-invalidates-on-settle | Applying a change with one add and one removal, where the add request fails with a server error | The change fails with that error; no removal request is ever sent; the provisioned-features cache entry is still invalidated |
+| ecosystems-048 | features-catalog-stale-time, features-query-keys | Rendering the feature-catalog query twice within 30 minutes | One catalog fetch; the second render is served from cache |
+| ecosystems-049 | features-path-segments-encoded | Removing a feature whose ecosystem id and feature key both contain characters needing escaping | Both are percent-encoded in the request path |
+| ecosystems-050 | features-remove-hook-invalidates | Removing one feature whose delete request succeeds | The provisioned-features cache entry is invalidated; nothing is written to it directly |
+| ecosystems-051 | ecosystem-id-for-slug-ownership-first | Resolving an ecosystem id for slug `"fishlamp"`, where the workspace lookup resolves to an empty result rather than failing | Falls back to the raw scan |
 
 ## Edge Cases
 
@@ -555,12 +537,12 @@ owns accessibility presentation.
   reject it before any network call. Resolving the workspace default
   ecosystem id with an empty result list MUST resolve to nothing, never an
   undefined/absent-marker value or a thrown error
-  (hub-domain-ecosystems-031); resolving an ecosystem id for a slug then
+  (ecosystems-031); resolving an ecosystem id for a slug then
   falls back to the raw scan, and MUST resolve to nothing only when that
-  scan is also empty (hub-domain-ecosystems-051).
+  scan is also empty (ecosystems-051).
 - **Boundary/malformed values**: A slug at exactly 64 characters — MUST be
   accepted; at 65 — MUST be rejected with the fixed message
-  (hub-domain-ecosystems-015). A non-rdid identifier passed to create/update
+  (ecosystems-015). A non-rdid identifier passed to create/update
   (no `.` at all) — the client MUST pass its whole value through as `slug`
   unmodified via the leaf-extraction fallback, deliberately letting the
   SERVER reject the malformed address rather than fabricating a
@@ -595,16 +577,16 @@ owns accessibility presentation.
   specific case: sending the handle's own current value as the new
   identifier is a genuine slug change (matching the stale handle) that a
   naive diff-against-id would have silently skipped
-  (update-slug-sent-on-presence, hub-domain-ecosystems-026).
+  (#requirements/update-slug-sent-on-presence, ecosystems-026).
 - **Feature removal already done**: a removal whose delete request reports
   not-found (a double-click, a stale list, a second tab racing the same
   removal) MUST resolve as success, and inside a batch apply it MUST count
-  as a successful removal (hub-domain-ecosystems-037, -041).
+  as a successful removal (ecosystems-037, -041).
 - **Feature batch partial failure**: A batch apply whose adds succeed but
   some removals fail with a non-not-found error MUST keep the adds, still
   attempt every other removal, reject naming only the failed keys, and
-  invalidate the provisioned list (hub-domain-ecosystems-040). A failed add
-  MUST reject before any removal is sent (hub-domain-ecosystems-047);
+  invalidate the provisioned list (ecosystems-040). A failed add
+  MUST reject before any removal is sent (ecosystems-047);
   whether the backend's batch transaction rolls back whole is the
   backend's contract, which this client relies on and does not verify.
 - **Empty feature change**: A batch apply with nothing to add MUST send no
@@ -622,7 +604,7 @@ owns accessibility presentation.
   client-side refusal.
 - **Feature hooks with no ecosystem id**: the provisioned-features query
   MUST NOT fetch while the id is nothing/undefined/empty; the mutations do
-  not guard it (see the features-mutation-null-id-unguarded requirement).
+  not guard it today, though they SHOULD (see #requirements/features-mutation-null-id-unguarded).
 - **Concurrent feature changes**: the removals inside one batch apply run
   in parallel; they touch distinct keys, so their completion order does not
   affect the result, and the list is re-read once on settle. Two sessions
@@ -651,7 +633,7 @@ owns accessibility presentation.
 Not applicable — this component owns no URL scheme, Android intent filter,
 or platform deep-link registration. Rail navigation position is expressed
 as a path resolved against the topic tree, which a separate rail-hosting
-view (not part of this recipe) is responsible for turning into or out of
+view (not part of this ingredient) is responsible for turning into or out of
 any real deep link. The ecosystems/identifiers HTTP routes are API routes,
 not front-end deep links.
 
@@ -666,7 +648,7 @@ not front-end deep links.
   slug-too-long message ("Slug must be 64 characters or fewer."), every
   field label (`"Display Name"`, `"Slug"`, `"Identifier"`, `"Description"`,
   `"Geographic Region"`), and every "already in use"/"already exists"
-  validation message this recipe's requirements quote.
+  validation message this ingredient's requirements quote.
 - **Hardcoded strings (API-client implementation)**: every thrown-error
   friendly message (the "already exists"/"already in use" conflict
   messages), and the batch-apply's `Couldn't remove: <keys>` error. Catalog
@@ -704,14 +686,18 @@ analytics or telemetry event.
   `slug`/`identifier`, `description`, `region`, primary domain, timestamps,
   and the caller's own `canManage` flag. None of these fields are personal
   data about an end user; they describe a product/ecosystem record, not a
-  person.
+  person. Two fields do refer to people: the auth settings' `loginAllowedEmails`, the
+  email addresses an owner lists as allowed to sign in, which are contact details; and the
+  provisioner principal id on a provisioned feature row, an opaque id. The emails are
+  carried only as the owner typed them (trimmed and lowercased) between the hub and the
+  backend, and nothing here stores them beyond the in-memory query cache.
 - **Storage**: One reference implementation holds no cache of its own —
   every call is a live round-trip to whatever data source the host
   supplies. The other holds results in a shared in-memory query-client
   cache, keyed as documented under each hook/query above; nothing in this
   component writes to durable browser/device storage.
 - **Transmission**: All calls travel through the injected data source or
-  the shared Bearer-token client (see `auth-client`); this component itself
+  the shared Bearer-token client (see [adhsdk.ingredient.data.services.auth.auth-client](cookbook:3ea9329e-5acc-4c43-b5ce-bb8c50570104)); this component itself
   attaches no credentials and reads no cookies.
 - **Retention**: One reference implementation retains nothing between
   calls. The other's cache entries persist per their cache key until
@@ -792,7 +778,7 @@ component.
   re-map a specific case — never a raw `Error` reaching a topic or the
   module. Rail navigation position is expressed as an `[HTDVItem]` path
   resolved through `RailPath.id(at:in:)` (`Support/RailPath.swift`);
-  `HTDVItem`/`HTDVLevel`/`HTDVDetail` are this recipe's "rail item"/"list"/
+  `HTDVItem`/`HTDVLevel`/`HTDVDetail` are this ingredient's "rail item"/"list"/
   "detail view" vocabulary. This implementation has no feature-picker data
   source in these sources — a port of the picker starts from the other
   reference implementation's contract.
@@ -837,7 +823,7 @@ component.
 
   Every error this implementation raises is a plain `Error` carrying a
   numeric `.status` (`AuthHttpError`-shaped, from `@adh-sdk/auth`'s
-  Bearer-token client — see `auth-client`); `isNotFound`/`isConflict`/
+  Bearer-token client — see [adhsdk.ingredient.data.services.auth.auth-client](cookbook:3ea9329e-5acc-4c43-b5ce-bb8c50570104)); `isNotFound`/`isConflict`/
   `rethrowConflict` (`client-helpers.ts`, `http.ts`) are the conflict/
   not-found mapping helpers every requirement above that mentions
   surfacing a conflict or a not-found result relies on.
@@ -866,7 +852,7 @@ component.
   `await` replaces every `Promise`/Swift `async throws` call; a custom
   `HubError`-equivalent exception hierarchy (or a `Result<T, HubError>`)
   should carry the same `notFound`/`conflict`/`validation` distinctions
-  this recipe's error-mapping requirements rely on, since WinUI has no
+  this ingredient's error-mapping requirements rely on, since WinUI has no
   built-in typed-error convention of its own to inherit. For the feature
   picker: a `FeaturesClient` over `HttpClient` exposes `GetCatalogAsync`
   (deserialize `{ features }` with `System.Text.Json`, keep server order),
@@ -890,10 +876,26 @@ component.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/data/src/ecosystems/` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/data/src/ecosystems/` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/` | confirmed (1.4.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/EcosystemsDataSource.swift` | confirmed (1.4.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/EcosystemsModule.swift` | confirmed (1.4.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/EcosystemSettingsTopic.swift` | confirmed (1.4.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/HubError+Wrap.swift` | confirmed (1.4.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/RailPath.swift` | confirmed (1.4.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/FormDetails.swift` | confirmed (1.4.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKHubTests/EcosystemsModuleTests.swift` | confirmed (1.4.0) |
+| web | `packages/web/packages/data/src/ecosystems/ecosystems.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/data/src/ecosystems/identifiers.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/data/src/ecosystems/use-workspace-default-ecosystem.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/data/src/ecosystems/ecosystem-invitations.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/data/src/ecosystems/ecosystem-features.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/data/src/ecosystems/wire.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/data/src/ecosystems/__tests__/ecosystems.test.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/data/src/ecosystems/__tests__/use-workspace-default-ecosystem.test.tsx` | confirmed (2.0.0) |
+| web | `packages/web/packages/data/src/ecosystems/__tests__/ecosystem-features.test.tsx` | confirmed (2.0.0) |
 
 ## Design Decisions
 
@@ -963,7 +965,7 @@ form expose no `primaryDomain`/`domain` field, while the web `Ecosystem`
 interface and settings-equivalent panes do (`domain`, mapped from
 `primaryDomain`).
 **Rationale**: This is a genuine, current cross-platform divergence, not
-an inconsistency in this recipe's sourcing: the Apple Hub UI for editing a
+an inconsistency in this ingredient's sourcing: the Apple Hub UI for editing a
 custom domain has not been built yet, while the web client already models
 the field end-to-end (`EcosystemInput.domain`, `toEcosystem`,
 `EcosystemPutBody.primaryDomain`). A future Apple settings field for it
@@ -979,7 +981,7 @@ recipe.
 **Rationale**: Those mappers are shared with the platform-admin
 invitations hooks referenced in this file's own header comment
 (`packages/web/packages/features/adh-admin/src/api/invitations.ts`) — they belong to the
-Invitations feature's own contract, not to Ecosystems. This recipe
+Invitations feature's own contract, not to Ecosystems. This ingredient
 documents what the Ecosystems-owned hooks in `ecosystem-invitations.ts`
 do with their query keys, endpoints, and cache invalidation, and treats
 the mappers' internal field-by-field shape as a different component's
@@ -1015,27 +1017,25 @@ kept so the owner can see what is coming; the picker disables them and the
 backend refuses to provision them, so the client needs no filter.
 **Approved**: pending
 
-**Decision**: the feature-provisioning mutations have no client-side guard against an absent ecosystem id and will send a request with a literal absent-marker in the path.
-
-**Rationale**: the id is optional in the mutation signature and nothing checks it before use; closing the gap would take either a guard that rejects the call before any request is made or a non-optional id parameter.
-
+**Decision**: the feature-provisioning mutations SHOULD reject an absent ecosystem id before any request is sent, or take a non-optional id; today they do neither.
+**Rationale**: failing fast on the client avoids sending a request to a path holding a literal absent-marker; the gap is kept visible here as a known gap until a guard lands.
 **Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [error-response-handling](agenticdevelopercookbook://compliance/access-patterns#error-response-handling) | passed | Access Patterns |
-| [retry-with-backoff](agenticdevelopercookbook://compliance/access-patterns#retry-with-backoff) | failed | Access Patterns |
-| [offline-behavior](agenticdevelopercookbook://compliance/access-patterns#offline-behavior) | failed | Access Patterns |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | partial | Reliability |
-| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | partial | Security |
-| [data-minimization](agenticdevelopercookbook://compliance/privacy-and-data#data-minimization) | passed | Privacy and Data |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | partial | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | passed | Access Patterns |
+| [adc.check.access-patterns.retry-with-backoff](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bcb17bfe-d2d6-53f3-b2af-06b7eea3da61) | failed | Access Patterns |
+| [adc.check.access-patterns.offline-behavior](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/df7f401a-39be-5c60-bab4-85dd95bd1ab1) | failed | Access Patterns |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | partial | Reliability |
+| [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | partial | Security |
+| [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | Privacy and Data |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | partial | Reliability |
 
 `separation-of-concerns` **passed**: `EcosystemsDataSource` is a pure I/O
 boundary the module never bypasses; topics compose via the
@@ -1046,23 +1046,24 @@ separate from the UI-facing `Ecosystem` type. `explicit-error-handling`
 (`HubError.notFound`→`.empty`, `HubError.conflict`→`.validation`,
 `isNotFound`→`null`, a 409→`rethrowConflict`) or wraps/rethrows
 unconditionally (`HubError.wrap`) — no path silently swallows a failure.
-`unit-test-coverage` **passed**: `EcosystemsModuleTests.swift` exercises
-every public path this recipe documents (root listing, manageability
-gate, topic dispatch, settings save/delete, child-ecosystem recursion,
-create-form validation and prefix resolution), and `ecosystems.test.ts`
-does the same for the web client's mapper, create/update body shapes, and
-`ecosystemIdForSlug`'s ownership-first resolution; `ecosystem-features.test.tsx`
-pins `remove`'s 404-as-success and rethrow paths and `useApplyFeatureChange`'s
-all-settled removal and failed-key message (the catalog, list and provision
-calls and their hooks' cache writes have no direct test). `error-response-handling`
+`unit-test-coverage` **partial**: 33 of the 51 conformance vectors
+(`ecosystems-019` through `-051`) are covered by passing web tests in
+`ecosystems.test.ts`, `ecosystem-features.test.tsx` and
+`use-workspace-default-ecosystem.test.tsx`, one test per vector. Vectors
+`ecosystems-001` through `-018` describe the Apple `EcosystemsModule` and
+`Ecosystem` type, which the web client has no equivalent of; they are
+exercised by `EcosystemsModuleTests.swift` (root listing, manageability gate,
+topic dispatch, settings save/delete, child-ecosystem recursion, create-form
+validation and prefix resolution) and are `it.skip` placeholders in the web
+suite, so no web test counts them. `error-response-handling`
 **passed**: `isNotFound`/`isConflict` and `HubError.notFound`/`.conflict`
 consistently distinguish "missing" from "already exists" from every other
 failure on both platforms, and `ecosystemIdForSlug` explicitly rethrows a
 non-404 rather than treating it as license to fall back
-(hub-domain-ecosystems-035). `retry-with-backoff` **failed**: no file in
+(ecosystems-035). `retry-with-backoff` **failed**: no file in
 either implementation retries a failed ecosystems/identifiers request —
 the underlying `authedJson`'s 401-refresh-and-retry-once is a different,
-cross-cutting auth concern (see `auth-client`), not a retry of this
+cross-cutting auth concern (see [adhsdk.ingredient.data.services.auth.auth-client](cookbook:3ea9329e-5acc-4c43-b5ce-bb8c50570104)), not a retry of this
 domain's own operations. `offline-behavior` **failed**: neither
 implementation defines an offline-cache-first read path or a
 queued-write-when-offline behavior; every operation is a live round-trip
@@ -1082,21 +1083,24 @@ pure slice with no validation of its own by design (see Edge Cases); the
 server's unique-address constraint and `id`-vs-leaf assertion are the
 real authority on both platforms, which this component deliberately
 relies on rather than duplicating. `data-minimization` **passed**: every
-field this component reads or writes is ecosystem/product metadata, never
-end-user personal data. `no-hardcoded-strings` **failed**: every
-user-facing string this recipe documents (labels, warnings, validation
+field this component reads or writes is ecosystem/product metadata, apart from
+the `loginAllowedEmails` email addresses, which are contact details the owner chose to
+list and are needed to decide who may sign in, and the provisioner principal id, an
+opaque id. `no-hardcoded-strings` **failed**: every
+user-facing string this ingredient documents (labels, warnings, validation
 messages) is fixed English with no lookup table or locale parameter on
 either platform (see Localization) — a plain, honestly-reported gap, not
 a hidden one. `fault-tolerance` **partial**: `useApplyFeatureChange`
 keeps going past a failed removal and reports it by name rather than
 aborting, and `FeatureSubscriptionTier` is an open string so an unknown
 tier cannot break parsing; but the feature mutation hooks accept a
-nullable `ecosystemId` and send it unguarded (see the features-mutation-null-id-unguarded requirement).
+nullable `ecosystemId` and send it unguarded (a known gap) (see #requirements/features-mutation-null-id-unguarded).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 2.0.0 | 2026-11-15 | Mike Fullerton | Auth settings carry the login allow-list by email (loginAllowedEmails, login_allowed_emails); privacy and compliance treat the emails as contact details |
 | 1.3.0 | 2026-10-04 | Mike Fullerton | Resolve open-question markers against the code; restate unimplemented behavior as current behavior with pending Decisions. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to adh/hub/ecosystems/. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

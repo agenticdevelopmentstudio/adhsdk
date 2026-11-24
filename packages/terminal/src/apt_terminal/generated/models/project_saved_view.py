@@ -25,8 +25,8 @@ class ProjectSavedView:
         name (str): unique among this project’s live views
         config (ProjectSavedViewConfig): opaque client-defined view config (view id, filter, sort). Stored whole, never
             interpreted; must be a JSON object and serialize to at most 8192 bytes.
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
         created_by (None | str | Unset): who saved it; confers nothing
     """
 
@@ -35,8 +35,8 @@ class ProjectSavedView:
     project_id: str
     name: str
     config: ProjectSavedViewConfig
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     created_by: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -51,9 +51,9 @@ class ProjectSavedView:
 
         config = self.config.to_dict()
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         created_by: None | str | Unset
         if isinstance(self.created_by, Unset):
@@ -66,16 +66,16 @@ class ProjectSavedView:
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
-                "projectId": project_id,
+                "ecosystem_id": ecosystem_id,
+                "project_id": project_id,
                 "name": name,
                 "config": config,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
+                "created": created,
+                "updated": updated,
             }
         )
         if created_by is not UNSET:
-            field_dict["createdBy"] = created_by
+            field_dict["created_by"] = created_by
 
         return field_dict
 
@@ -86,17 +86,17 @@ class ProjectSavedView:
         d = dict(src_dict)
         id = d.pop("id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        project_id = d.pop("projectId")
+        project_id = d.pop("project_id")
 
         name = d.pop("name")
 
         config = ProjectSavedViewConfig.from_dict(d.pop("config"))
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         def _parse_created_by(data: object) -> None | str | Unset:
             if data is None:
@@ -105,7 +105,7 @@ class ProjectSavedView:
                 return data
             return cast(None | str | Unset, data)
 
-        created_by = _parse_created_by(d.pop("createdBy", UNSET))
+        created_by = _parse_created_by(d.pop("created_by", UNSET))
 
         project_saved_view = cls(
             id=id,
@@ -113,8 +113,8 @@ class ProjectSavedView:
             project_id=project_id,
             name=name,
             config=config,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
             created_by=created_by,
         )
 

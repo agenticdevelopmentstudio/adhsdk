@@ -1,0 +1,15 @@
+{
+  "version": "156.0.26+g8ea0c73+chromium-156.0.8078.88",
+  "chromium": "156.0.8078.88",
+  "url": "https://cef-builds.spotifycdn.com",
+  "distributions": {
+    "arm64": {
+      "file": "cef_binary_156.0.26+g8ea0c73+chromium-156.0.8078.88_macosarm64_minimal.tar.bz2",
+      "sha1": "ca4fafe7a9c52d9f28200bb8713971a9662b891c"
+    },
+    "x86_64": {
+      "file": "cef_binary_156.0.26+g8ea0c73+chromium-156.0.8078.88_macosx64_minimal.tar.bz2",
+      "sha1": "f0f47aa3cdefa7eea54f2e8c6e73c68b4db125f3"
+    }
+  }
+}

@@ -26,6 +26,13 @@ public final class WindowRegistry {
         entries[controller.windowID] = WeakBox(controller: controller)
     }
 
+    /// Removes `controller`'s entry, when it is still the one under its id.
+    public func unregister(_ controller: SingleWindowController) {
+        guard let box = entries[controller.windowID],
+              box.controller == nil || box.controller === controller else { return }
+        entries[controller.windowID] = nil
+    }
+
     /// Returns the live controller for `id`, or `nil` if none is registered
     /// or the previously-registered one has been deallocated.
     public func controller(forID id: String) -> SingleWindowController? {

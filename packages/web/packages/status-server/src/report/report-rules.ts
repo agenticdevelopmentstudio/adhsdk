@@ -11,6 +11,7 @@ import type {
   SiteHealthRow,
 } from '../telemetry/dashboard/types';
 import type { RuntimeErrorGroup, RuntimeErrorsReport } from '../telemetry/types';
+import { isFailureRateHigh } from '../telemetry/dashboard/views';
 import {
   REPORT_SCHEMA,
   REPORT_SOURCES,
@@ -290,7 +291,13 @@ export function digestDeploys(input: DeploysInput, boardProblems: readonly Probl
   if (live.configDegraded) notes.push(`monitor config fell back to the static list: ${live.configReason ?? 'reason unknown'}`);
   for (const [name, health] of Object.entries(live.providers).sort(([a], [b]) => byText(a, b))) {
     if (!health.configured) unconfigured.push(name);
-    else if (!health.ok) findings.push(finding('major', `provider:${name}`, `${name} API unreachable from the monitor`));
+    else if (!health.ok) {
+      // The board grades an unreachable platform (minor: the deploys it watches are not down), and
+      // this finding replaces the board's problem, so it keeps the board's grade rather than
+      // inventing a worse one.
+      const board = boardProblems?.find((p) => parsePlatformHealthTarget(p.target) === name);
+      findings.push(finding(board?.severity ?? 'minor', `provider:${name}`, `${name} API unreachable from the monitor`));
+    }
   }
 
   const latest = newestPerTarget(live.deployments);
@@ -389,14 +396,28 @@ export function activeIssueOrder(a: ErrorIssue, b: ErrorIssue): number {
 const siteTrouble = (r: SiteHealthRow): number => (r.errors ?? 0) + (r.failures ?? 0);
 
 /**
+ * A site is a finding when its client errors and failed requests together reach the dashboard's
+ * own failure-rate line (FAILURE_RATE_HIGH in views.ts, 5% of its requests), so one aborted request in a
+ * month of traffic is not "attention". Errors with no requests to weigh them against still count.
+ */
+export function siteTroubled(r: SiteHealthRow): boolean {
+  const trouble = siteTrouble(r);
+  if ((r.requests ?? 0) === 0) return trouble > 0;
+  return isFailureRateHigh(trouble, r.requests);
+}
+
+/**
  * True only when the GlitchTip issue list can stand in for the board's per-project errors
- * problems: it was read, its last refresh did not fail, no refresh was still running at the
- * deadline, and it was read to the end. A cached list from before a new crash would otherwise
- * hide that crash from every finding.
+ * problems: it was read, its last refresh did not fail, no GlitchTip refresh was still running
+ * at the deadline, and it was read to the end. A cached list from before a new crash would
+ * otherwise hide that crash from every finding. A PostHog refresh says nothing about the list,
+ * so it does not count: a slow PostHog would otherwise put every crash in twice.
  */
 export function glitchtipListCurrent(data: ErrorsDashboardResponse): boolean {
   const { issues } = data.sections;
-  return issues.data !== null && issues.error === null && !data.refreshing && issues.data.summary.complete;
+  return (
+    issues.data !== null && issues.error === null && !data.refreshingSources.glitchtip && issues.data.summary.complete
+  );
 }
 
 export function digestErrors(data: ErrorsDashboardResponse): Digest<ErrorsReportSection> {
@@ -442,7 +463,7 @@ export function digestErrors(data: ErrorsDashboardResponse): Digest<ErrorsReport
 
   const siteRows = [...(sites.data ?? [])].sort((a, b) => siteTrouble(b) - siteTrouble(a) || byText(a.host, b.host));
   for (const row of siteRows.slice(0, SITE_ROW_CAP)) {
-    if (siteTrouble(row) === 0) continue;
+    if (!siteTroubled(row)) continue;
     findings.push(
       finding('minor', 'posthog', `${row.host}: ${row.errors ?? 0} client errors, ${row.failures ?? 0} failed of ${row.requests ?? 0} requests`, {
         detail: row.p95Ms !== null ? `p95 ${row.p95Ms}ms` : null,

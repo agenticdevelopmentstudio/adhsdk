@@ -55,12 +55,12 @@ class UsageFixedCostCreate:
             {
                 "provider": provider,
                 "label": label,
-                "monthlyMicros": monthly_micros,
-                "effectiveFrom": effective_from,
+                "monthly_micros": monthly_micros,
+                "effective_from": effective_from,
             }
         )
         if effective_to is not UNSET:
-            field_dict["effectiveTo"] = effective_to
+            field_dict["effective_to"] = effective_to
         if note is not UNSET:
             field_dict["note"] = note
 
@@ -73,9 +73,9 @@ class UsageFixedCostCreate:
 
         label = d.pop("label")
 
-        monthly_micros = d.pop("monthlyMicros")
+        monthly_micros = d.pop("monthly_micros")
 
-        effective_from = datetime.date.fromisoformat(d.pop("effectiveFrom"))
+        effective_from = datetime.date.fromisoformat(d.pop("effective_from"))
 
         def _parse_effective_to(data: object) -> datetime.date | None | Unset:
             if data is None:
@@ -92,7 +92,7 @@ class UsageFixedCostCreate:
                 pass
             return cast(datetime.date | None | Unset, data)
 
-        effective_to = _parse_effective_to(d.pop("effectiveTo", UNSET))
+        effective_to = _parse_effective_to(d.pop("effective_to", UNSET))
 
         note = d.pop("note", UNSET)
 

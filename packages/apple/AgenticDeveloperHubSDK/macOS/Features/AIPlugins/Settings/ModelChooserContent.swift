@@ -7,10 +7,10 @@ import AIPluginKit
 /// list/badge/spec logic is unit-testable without AppKit.
 public enum ModelChooserContent {
 
-    /// Only OpenAI-shaped endpoints serve `GET {baseURL}/models`; gate live fetching
-    /// on plugin identity (mirrors the retired `LLMProvidersView.supportsLiveModels`).
+    /// Only OpenAI-shaped endpoints serve `GET {baseURL}/models`. Which providers
+    /// load their list live at all is `ProviderModels.manager`'s call.
     public static func supportsLiveModels(pluginIdentifier: String) -> Bool {
-        pluginIdentifier.hasSuffix(".openai-compatible") || pluginIdentifier.hasSuffix(".openai")
+        ProviderModels.isOpenAIStyle(pluginIdentifier: pluginIdentifier)
     }
 
     /// The listed models plus `current` when it isn't already present, so a
@@ -53,7 +53,8 @@ public enum ModelChooserContent {
         }
     }
 
-    /// The chooser's list filter: the search field's substring, the "good for"
+    /// The chooser's list filter: the search field's "any" match on the id
+    /// (`ModelPickerItem.matches`), the "good for"
     /// facets, and the fits-this-Mac box. The three are independent — a model must
     /// survive all of them.
     ///
@@ -61,26 +62,38 @@ public enum ModelChooserContent {
     /// is where a local model's only prose comes from; without it every model on a
     /// local server would be facet-less.
     ///
-    /// `keeping` is the currently chosen model, which survives every filter — same
-    /// rule as `offeredModels(listed:current:)`. Filtering it out would move the
-    /// selection to whatever landed at row 0, and the filters re-run on their own
-    /// when late sizes and blurbs arrive, so the choice could change with nobody
-    /// touching anything.
+    /// `keeping` is the currently chosen model, which survives the facet and fit
+    /// filters — same rule as `offeredModels(listed:current:)`. Those re-run on
+    /// their own when late sizes and blurbs arrive, so filtering the choice out
+    /// would move the selection to whatever landed at row 0 with nobody touching
+    /// anything. The typed query is different: it only changes when someone
+    /// types, and a model that doesn't match what they typed has no business at
+    /// the top of the list (it used to stay there, selected, under any query).
+    ///
+    /// With a query, the rows come back best match first — prefix, then
+    /// contiguous run, then scattered letters (`ModelPickerItem.matchRank`) —
+    /// and in their listed order within each of those.
     public static func filter(_ items: [ModelPickerItem], query: String,
                               uses: Set<ModelUseFacet> = [],
                               descriptions: [String: String] = [:],
                               fit: FitFilter? = nil,
                               keeping: String = "") -> [ModelPickerItem] {
-        let needle = query.trimmingCharacters(in: .whitespaces).lowercased()
-        return items.filter { item in
-            if item.id == keeping, !keeping.isEmpty { return true }
+        let needle = query.trimmingCharacters(in: .whitespaces)
+        let kept = items.filter { item in
+            let matchesQuery = needle.isEmpty || item.matches(needle)
+            if item.id == keeping, !keeping.isEmpty { return matchesQuery }
             if !uses.isEmpty {
                 let facets = ModelUseFacet.facets(for: item.info, extraText: descriptions[item.id])
                 guard ModelUseFacet.matches(facets: facets, selected: uses) else { return false }
             }
             if let fit, !fit.keeps(item.id) { return false }
-            return needle.isEmpty || item.matches(needle)
+            return matchesQuery
         }
+        guard !needle.isEmpty else { return kept }
+        return kept.enumerated()
+            .map { (rank: $0.element.matchRank(needle) ?? Int.max, order: $0.offset, item: $0.element) }
+            .sorted { ($0.rank, $0.order) < ($1.rank, $1.order) }
+            .map(\.item)
     }
 
     /// Capability badges — prefer the live server list (title-cased), else what the

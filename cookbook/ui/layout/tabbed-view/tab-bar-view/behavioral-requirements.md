@@ -127,6 +127,8 @@
   give its close button the accessibility identifier `tab-bar.close.<id>`
   and MUST give the tab button itself `tab-bar.select.<id>`, both keyed by
   the tab's own id.
+- **close-button-has-tooltip**: Creating a tab button MUST give its close
+  button the tooltip "Close Tab", naming the action rather than the icon.
 - **selecting-a-tab-restyles-its-button**: Selecting a tab MUST fill its
   background with the `selection` palette role, set its title's color role
   to `selectionText`, and set its close icon's tint to `selectionText` when

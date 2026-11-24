@@ -22,7 +22,11 @@ import WebKit
 /// SPI: `_holdWindowResizeSnapshotIfNeeded` is WebKit's private hook, answered
 /// here by selector. Where a WebKit has no such method nothing calls this one,
 /// and the web view behaves as any other.
-public final class LiveResizingWebView: WKWebView {
+///
+/// Not `final`, so the browser pane's `BrowserWebView` (same module) keeps this
+/// behaviour while it gates input; not `open`, because nothing outside the
+/// module subclasses it. The extension web view uses this class unchanged.
+public class LiveResizingWebView: WKWebView {
     @objc(_holdWindowResizeSnapshotIfNeeded)
     private func holdWindowResizeSnapshotIfNeeded() -> Bool { false }
 }

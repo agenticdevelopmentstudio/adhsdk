@@ -1,0 +1,4 @@
+
+The `closeLabel` prop's value, when supplied by the caller, should be localized by the caller — ContentOverlay performs no translation itself. The default value used when `closeLabel` is omitted, `'← back'`, is a hardcoded English string with a decorative arrow glyph baked into the same text node; it is not sourced from a localization resource and does not adapt to locale. Callers targeting non-English locales MUST always pass a localized `closeLabel` rather than relying on the default. See **default-close-label**.
+
+The default `'← back'` bakes a left-pointing arrow into the text, which points the wrong way in right-to-left locales. The source does not mirror it. Callers in RTL locales should pass a localized `closeLabel` with the arrow omitted or mirrored, and a port may keep the arrow as a separate, mirrored icon rather than part of the text.

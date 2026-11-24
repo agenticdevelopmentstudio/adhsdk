@@ -35,7 +35,7 @@ class StoragePresignedUpload:
         field_dict.update(
             {
                 "attachment": attachment,
-                "uploadUrl": upload_url,
+                "upload_url": upload_url,
             }
         )
 
@@ -48,7 +48,7 @@ class StoragePresignedUpload:
         d = dict(src_dict)
         attachment = StorageAttachment.from_dict(d.pop("attachment"))
 
-        upload_url = d.pop("uploadUrl")
+        upload_url = d.pop("upload_url")
 
         storage_presigned_upload = cls(
             attachment=attachment,

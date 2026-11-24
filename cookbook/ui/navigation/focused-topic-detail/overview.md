@@ -1,41 +1,10 @@
 
-This recipe defines the **general FTD contract** that governs *every* route built
-on the Focused Topic Detail view. Concrete instantiations (Ecosystems, Teams,
-Persona APIs) live in **## Instantiations**, below; when a general statement here
-and an instantiation's own value seem to disagree, the general contract wins and
-the instantiation is the one that's wrong.
+`FocusedTopicDetail` is a block in `@adh-sdk/ui` that frames a collection of items of one kind. At any moment the reader is either focused on one item or looking at all of them.
 
-A **Focused Topic Detail (FTD)** view manages a *collection of entities of one
-kind* (ecosystems, teams, persona-services, …). At any moment the user is either:
+- **Focused**: the rail lists that item's topics, the active topic is selected, and the pane shows a section header followed by whatever the consumer passes as `children`.
+- **All** (nothing focused): the topics dim and cannot be chosen, the gold selection bar sits on the selector row, and the pane shows a header and a grid of cards, one per item. Clicking a card focuses that item.
 
-- **Focused on one entity** — a left-hand **topic list** of that entity's sections, and a right-hand **detail panel** for the selected topic; or
-- **Surveying all entities** — the **"All" view**, a browsable index of every entity in the collection.
+A selector popup at the top of the rail switches between items and All, and can offer a New entry. The block composes four existing blocks and nothing else: `PopupMenu`, `TopicDetail`, `SectionHeader` and `ResourceCard`. It owns no state. The consumer holds `focusedId` and `activeTopicId` and passes the change callbacks. What goes inside the focused pane is the consumer's content.
 
-The user moves between entities (and into "All") through a single **selector
-popup** at the top-left of the view. The canonical implementation is the shared
-`FocusedTopicDetail` block in `@adh-sdk/ui/blocks` (master/detail
-layout) — all FTD routes compose it; none hand-roll the layout.
-
-**Terminology / parameters.** Every FTD route binds these parameters (Ecosystems
-values shown for reference — see **Instantiations**):
-
-| Parameter | Meaning | Ecosystems value |
-|---|---|---|
-| `Entity` | Singular display name of the managed thing | **Ecosystem** |
-| `Entities` | Plural | **Ecosystems** |
-| `basePath` | Route root | `/ecosystems` |
-| `rdid` | The **mutable** reverse-domain **identifier** that uniquely names an entity; shown as the **Identifier** field; maps to an immutable internal UUID via `registry.identifiers` | `identifier` (e.g. `{{org_package}}.myecosystem`) |
-| `topics` | Ordered sections shown in the topic list | Ecosystem, Applications, Buckets, Users |
-| `childEntities` | Dependent data a delete cascades through (used in delete copy) | applications, buckets, and users |
-
-The identifier is the entity's **public, mutable** name; internally the row is
-keyed by an immutable UUID, and `registry.identifiers` maps rdid → UUID so the
-identifier can change without breaking UUID foreign keys.
-
-Every `{id}` route segment — and the persisted `lastId` — is the **rdid**, never
-the immutable UUID; the two exchange only through `registry.identifiers`.
-Because the rdid is mutable, a deep link built from a pre-rename rdid no longer
-matches any entity once the rename lands: the resolver treats an unrecognized
-id exactly like a stale `lastId` (see **Edge Cases**) and falls back to the All
-view rather than a 404.
+The source does not implement renaming an item's identifier, deleting an item, an All-view filter, a list or card toggle, or remembering the last focus. A route that wants those builds them around this block.
 

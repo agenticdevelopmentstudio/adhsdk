@@ -144,6 +144,59 @@ final class PaneViewControllerTests: XCTestCase {
             NSLayoutConstraint.Priority(rawValue: 1))
     }
 
+    // MARK: - Hidden title bar
+
+    /// How far the content's top sits below the pane's top.
+    private func contentTopGap(of pane: PaneViewController) throws -> CGFloat {
+        pane.view.layoutSubtreeIfNeeded()
+        let content = try XCTUnwrap(pane.contentViewController?.view)
+        let frame = pane.view.convert(content.bounds, from: content)
+        return pane.view.bounds.maxY - frame.maxY
+    }
+
+    /// The bar is hidden *and* the content starts at the top: the bar's
+    /// required height would otherwise leave a 26pt gap where it was.
+    func testAPaneWithoutATitleBarLaysItsContentFromTheTop() throws {
+        let pane = TestPane(content: RichContent())
+        pane.showsTitleBar = false
+        pane.loadViewIfNeeded()
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 300, height: 200),
+            styleMask: [.titled], backing: .buffered, defer: false)
+        window.contentView = pane.view
+        windows.append(window)
+
+        XCTAssertTrue(pane.titleBar.isHidden)
+        XCTAssertEqual(try contentTopGap(of: pane), 0, accuracy: 0.5)
+    }
+
+    /// Stamped after the view loaded — which is when a split stamps a pane it
+    /// already holds — the switch still re-lays the content, both ways.
+    func testHidingTheTitleBarAfterLoadMovesTheContentUpAndBack() throws {
+        let (pane, _) = loadedPane(content: RichContent())
+        let withBar = try contentTopGap(of: pane)
+        XCTAssertGreaterThan(withBar, 0, "the bar holds the content down")
+
+        pane.showsTitleBar = false
+        XCTAssertTrue(pane.titleBar.isHidden)
+        XCTAssertEqual(try contentTopGap(of: pane), 0, accuracy: 0.5)
+
+        pane.showsTitleBar = true
+        XCTAssertFalse(pane.titleBar.isHidden)
+        XCTAssertEqual(try contentTopGap(of: pane), withBar, accuracy: 0.5)
+    }
+
+    /// Restoring from a minimize puts the chrome back — but not a bar the pane
+    /// was told not to have.
+    func testRestoringDoesNotReShowAHiddenTitleBar() {
+        let (pane, _) = loadedPane(content: RichContent())
+        pane.showsTitleBar = false
+        pane.setMinimized(to: .top)
+        XCTAssertTrue(pane.titleBar.isHidden)
+        pane.setMinimized(to: nil)
+        XCTAssertTrue(pane.titleBar.isHidden)
+    }
+
     // MARK: - Title
 
     func testTitleComesFromTheContentAndFollowsItsChanges() {

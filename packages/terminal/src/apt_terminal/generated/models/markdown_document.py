@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, TypeVar, cast
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
+from ..models.markdown_document_author_kind import MarkdownDocumentAuthorKind
 from ..models.markdown_document_kind import MarkdownDocumentKind
 from ..models.markdown_document_owner_kind import MarkdownDocumentOwnerKind
 from ..models.markdown_document_stage import MarkdownDocumentStage
@@ -24,7 +25,6 @@ class MarkdownDocument:
     """
     Attributes:
         id (str):
-        customer_id (str): The CREATOR/author (public routes key on this).
         ecosystem_id (str): Ecosystem (tenant) id.
         owner_kind (MarkdownDocumentOwnerKind): The kind of principal that OWNS the doc (what access scopes by).
         owner_id (str): The owning principal (customer or organization id); server-stamped from the verified ?workspace=
@@ -43,9 +43,12 @@ class MarkdownDocument:
         content_hash (str): SHA-256 hex of content (ETag).
         size_bytes (int):
         current_version (int): The current revision number (incremented on every edit).
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
         is_deleted (bool):
+        author_kind (MarkdownDocumentAuthorKind | Unset): Kind of principal that created the doc (public routes key on a
+            customer author); null when nobody did (a storage token).
+        author_id (None | str | Unset): Id of that principal.
         deleted_at (None | str | Unset):
         frontmatter (MarkdownDocumentFrontmatterType0 | None | Unset):
         category (None | str | Unset): Optional classification label.
@@ -54,7 +57,6 @@ class MarkdownDocument:
     """
 
     id: str
-    customer_id: str
     ecosystem_id: str
     owner_kind: MarkdownDocumentOwnerKind
     owner_id: str
@@ -67,9 +69,11 @@ class MarkdownDocument:
     content_hash: str
     size_bytes: int
     current_version: int
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     is_deleted: bool
+    author_kind: MarkdownDocumentAuthorKind | Unset = UNSET
+    author_id: None | str | Unset = UNSET
     deleted_at: None | str | Unset = UNSET
     frontmatter: MarkdownDocumentFrontmatterType0 | None | Unset = UNSET
     category: None | str | Unset = UNSET
@@ -83,8 +87,6 @@ class MarkdownDocument:
         )
 
         id = self.id
-
-        customer_id = self.customer_id
 
         ecosystem_id = self.ecosystem_id
 
@@ -110,11 +112,21 @@ class MarkdownDocument:
 
         current_version = self.current_version
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         is_deleted = self.is_deleted
+
+        author_kind: str | Unset = UNSET
+        if not isinstance(self.author_kind, Unset):
+            author_kind = self.author_kind.value
+
+        author_id: None | str | Unset
+        if isinstance(self.author_id, Unset):
+            author_id = UNSET
+        else:
+            author_id = self.author_id
 
         deleted_at: None | str | Unset
         if isinstance(self.deleted_at, Unset):
@@ -153,34 +165,37 @@ class MarkdownDocument:
         field_dict.update(
             {
                 "id": id,
-                "customerId": customer_id,
-                "ecosystemId": ecosystem_id,
-                "ownerKind": owner_kind,
-                "ownerId": owner_id,
+                "ecosystem_id": ecosystem_id,
+                "owner_kind": owner_kind,
+                "owner_id": owner_id,
                 "title": title,
                 "content": content,
                 "tags": tags,
                 "visibility": visibility,
                 "stage": stage,
                 "kind": kind,
-                "contentHash": content_hash,
-                "sizeBytes": size_bytes,
-                "currentVersion": current_version,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
-                "isDeleted": is_deleted,
+                "content_hash": content_hash,
+                "size_bytes": size_bytes,
+                "current_version": current_version,
+                "created": created,
+                "updated": updated,
+                "is_deleted": is_deleted,
             }
         )
+        if author_kind is not UNSET:
+            field_dict["author_kind"] = author_kind
+        if author_id is not UNSET:
+            field_dict["author_id"] = author_id
         if deleted_at is not UNSET:
-            field_dict["deletedAt"] = deleted_at
+            field_dict["deleted_at"] = deleted_at
         if frontmatter is not UNSET:
             field_dict["frontmatter"] = frontmatter
         if category is not UNSET:
             field_dict["category"] = category
         if public_route is not UNSET:
-            field_dict["publicRoute"] = public_route
+            field_dict["public_route"] = public_route
         if latest_version_id is not UNSET:
-            field_dict["latestVersionId"] = latest_version_id
+            field_dict["latest_version_id"] = latest_version_id
 
         return field_dict
 
@@ -193,13 +208,11 @@ class MarkdownDocument:
         d = dict(src_dict)
         id = d.pop("id")
 
-        customer_id = d.pop("customerId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        owner_kind = MarkdownDocumentOwnerKind(d.pop("owner_kind"))
 
-        owner_kind = MarkdownDocumentOwnerKind(d.pop("ownerKind"))
-
-        owner_id = d.pop("ownerId")
+        owner_id = d.pop("owner_id")
 
         title = d.pop("title")
 
@@ -213,17 +226,33 @@ class MarkdownDocument:
 
         kind = MarkdownDocumentKind(d.pop("kind"))
 
-        content_hash = d.pop("contentHash")
+        content_hash = d.pop("content_hash")
 
-        size_bytes = d.pop("sizeBytes")
+        size_bytes = d.pop("size_bytes")
 
-        current_version = d.pop("currentVersion")
+        current_version = d.pop("current_version")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
-        is_deleted = d.pop("isDeleted")
+        is_deleted = d.pop("is_deleted")
+
+        _author_kind = d.pop("author_kind", UNSET)
+        author_kind: MarkdownDocumentAuthorKind | Unset
+        if isinstance(_author_kind, Unset):
+            author_kind = UNSET
+        else:
+            author_kind = MarkdownDocumentAuthorKind(_author_kind)
+
+        def _parse_author_id(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        author_id = _parse_author_id(d.pop("author_id", UNSET))
 
         def _parse_deleted_at(data: object) -> None | str | Unset:
             if data is None:
@@ -232,7 +261,7 @@ class MarkdownDocument:
                 return data
             return cast(None | str | Unset, data)
 
-        deleted_at = _parse_deleted_at(d.pop("deletedAt", UNSET))
+        deleted_at = _parse_deleted_at(d.pop("deleted_at", UNSET))
 
         def _parse_frontmatter(data: object) -> MarkdownDocumentFrontmatterType0 | None | Unset:
             if data is None:
@@ -267,7 +296,7 @@ class MarkdownDocument:
                 return data
             return cast(None | str | Unset, data)
 
-        public_route = _parse_public_route(d.pop("publicRoute", UNSET))
+        public_route = _parse_public_route(d.pop("public_route", UNSET))
 
         def _parse_latest_version_id(data: object) -> None | str | Unset:
             if data is None:
@@ -276,11 +305,10 @@ class MarkdownDocument:
                 return data
             return cast(None | str | Unset, data)
 
-        latest_version_id = _parse_latest_version_id(d.pop("latestVersionId", UNSET))
+        latest_version_id = _parse_latest_version_id(d.pop("latest_version_id", UNSET))
 
         markdown_document = cls(
             id=id,
-            customer_id=customer_id,
             ecosystem_id=ecosystem_id,
             owner_kind=owner_kind,
             owner_id=owner_id,
@@ -293,9 +321,11 @@ class MarkdownDocument:
             content_hash=content_hash,
             size_bytes=size_bytes,
             current_version=current_version,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
             is_deleted=is_deleted,
+            author_kind=author_kind,
+            author_id=author_id,
             deleted_at=deleted_at,
             frontmatter=frontmatter,
             category=category,

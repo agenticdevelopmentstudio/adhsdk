@@ -1,0 +1,7 @@
+
+- **Null or undefined children**: When children is null or undefined, the body element renders empty. Expected behavior: no error, body is rendered and visible (empty). (MUST render without error)
+- **Empty closeLabel**: When closeLabel is an empty string, the close button renders with no visible text and, since the source provides no fallback label, no accessible name either. Expected behavior: button remains present and clickable (SHOULD allow empty string), but is not identifiable to screen reader users in this state. Callers SHOULD avoid passing an empty `closeLabel`.
+- **Multiple rapid closes**: User clicks close button multiple times in rapid succession. Expected behavior: onClose is invoked once per click; multiple invocations are not merged. (MUST invoke per click)
+- **Missing onClose callback**: `onClose` is a required prop (`onClose: () => void`, non-optional in the TypeScript signature), and the click handler performs no runtime check before calling it. If a caller bypasses the type system and omits `onClose`, clicking the close button calls `undefined` and throws. Expected behavior: a runtime error on click (MUST NOT be silently swallowed — the component makes no defensive null check for a required prop).
+- **className with special characters**: className contains spaces, hyphens, or other CSS class name characters. Expected behavior: className is concatenated into the class string as-is. (SHOULD preserve className as provided)
+

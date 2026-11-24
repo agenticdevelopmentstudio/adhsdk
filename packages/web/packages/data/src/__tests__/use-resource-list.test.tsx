@@ -1,9 +1,11 @@
 /// <reference types="@testing-library/jest-dom/vitest" />
-import { render, screen, waitFor, cleanup, act } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { render, renderHook, screen, waitFor, cleanup, act } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { notifyManager } from '@tanstack/react-query'
-import { useResourceList, revalidateResources } from '../use-resource-list'
-import { getToolkitQueryClient } from '../query'
+import { setAuthErrorReporter } from '@adh-sdk/auth'
+import { useResourceList, revalidateResources, makeEntityDeleteHandler } from '../use-resource-list'
+import { readLastId, writeLastId } from '../ftd-storage'
+import { RESOURCE_GC_TIME, getToolkitQueryClient } from '../query'
 
 // Notify observers SYNCHRONOUSLY. react-query's default scheduler is a real `setTimeout(fn, 0)` —
 // it batches notifications into a macrotask — and `act(async …)` drains microtasks only, so a
@@ -318,5 +320,210 @@ describe('revalidateResources', () => {
 
     expect(boom).toHaveBeenCalledTimes(2)
     expect(ok).toHaveBeenCalledTimes(2)
+  })
+})
+
+// Conformance vectors for resource-data (cookbook/data/services/resource-data).
+describe('resource-list conformance', () => {
+  const reporter = vi.fn()
+
+  beforeEach(() => {
+    reporter.mockReset()
+    setAuthErrorReporter(reporter)
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+  })
+  afterEach(() => {
+    setAuthErrorReporter(null)
+    vi.restoreAllMocks()
+  })
+
+  const mountList = <T,>(cacheKey: string, load: () => Promise<T[]>, opts?: { reportErrors?: boolean }) =>
+    renderHook((p: { load: () => Promise<T[]> }) => useResourceList<T>(cacheKey, p.load, opts), {
+      initialProps: { load },
+    })
+  const flush = () => act(async () => {})
+
+  it('resource-data-056 the list cache key is ("resource-list", tenant, cacheKey)', async () => {
+    signInAs('t1')
+    mountList('projects', () => Promise.resolve(['a']))
+    await flush()
+    expect(getToolkitQueryClient().getQueryData(['resource-list', 't1', 'projects'])).toEqual(['a'])
+  })
+
+  it('resource-data-057 revalidateResources invalidates every entry whose key matches', async () => {
+    signInAs('t1')
+    const workspaces = vi.fn(() => Promise.resolve(['w']))
+    const other = vi.fn(() => Promise.resolve(['o']))
+    mountList('workspaces', workspaces)
+    mountList('organizations', other)
+    await flush()
+    await act(async () => revalidateResources((key) => key === 'workspaces'))
+    expect(workspaces).toHaveBeenCalledTimes(2)
+    expect(other).toHaveBeenCalledTimes(1)
+  })
+
+  it('resource-data-058 a failed load is reported by default, naming feature, step and cache key', async () => {
+    signInAs('t1')
+    const boom = new Error('list load failed 058')
+    mountList('projects', () => Promise.reject(boom))
+    await flush()
+    expect(reporter).toHaveBeenCalledTimes(1)
+    expect(reporter).toHaveBeenCalledWith(boom, {
+      feature: 'resource-list',
+      step: 'load',
+      basePath: 'projects',
+    })
+  })
+
+  it('resource-data-059 a failed load is not retried', async () => {
+    signInAs('t1')
+    const load = vi.fn(() => Promise.reject(new Error('list load failed 059')))
+    mountList('projects', load, { reportErrors: false })
+    await flush()
+    await new Promise((r) => setTimeout(r, 50))
+    expect(load).toHaveBeenCalledTimes(1)
+  })
+
+  it('resource-data-060 the entry retains for the 30-minute resource gc time', async () => {
+    signInAs('t1')
+    mountList('projects', () => Promise.resolve(['a']))
+    await flush()
+    const query = getToolkitQueryClient()
+      .getQueryCache()
+      .find({ queryKey: ['resource-list', 't1', 'projects'] })
+    expect(RESOURCE_GC_TIME).toBe(1_800_000)
+    expect(query?.gcTime).toBe(1_800_000)
+  })
+
+  it('resource-data-061 the same load identity across renders causes no cancel or refresh', async () => {
+    signInAs('t1')
+    const load = vi.fn(() => Promise.resolve(['a']))
+    const cancel = vi.spyOn(getToolkitQueryClient(), 'cancelQueries')
+    const { rerender } = mountList('projects', load)
+    await flush()
+    rerender({ load })
+    rerender({ load })
+    await flush()
+    expect(cancel).not.toHaveBeenCalled()
+    expect(load).toHaveBeenCalledTimes(1)
+  })
+
+  it('resource-data-062 a new load identity with the same key and tenant cancels and refreshes', async () => {
+    signInAs('t1')
+    const first = vi.fn(() => Promise.resolve(['first']))
+    const second = vi.fn(() => Promise.resolve(['second']))
+    const cancel = vi.spyOn(getToolkitQueryClient(), 'cancelQueries')
+    const { result, rerender } = mountList('projects', first)
+    await flush()
+    rerender({ load: second })
+    await flush()
+    expect(cancel).toHaveBeenCalledTimes(1)
+    expect(second).toHaveBeenCalledTimes(1)
+    expect(result.current.items).toEqual(['second'])
+  })
+
+  it('resource-data-063 reload rejects with the same error the refresh resolved with', async () => {
+    signInAs('t1')
+    const boom = new Error('list load failed 063')
+    const { result } = mountList('projects', () => Promise.reject(boom), { reportErrors: false })
+    await flush()
+    await act(async () => {
+      await expect(result.current.reload()).rejects.toBe(boom)
+    })
+  })
+
+  it('resource-data-064 setItems writes the rows straight into the cache', async () => {
+    signInAs('t1')
+    const { result } = mountList<string>('projects', () => Promise.resolve(['a']))
+    await flush()
+    act(() => result.current.setItems(['x', 'y']))
+    expect(getToolkitQueryClient().getQueryData(['resource-list', 't1', 'projects'])).toEqual(['x', 'y'])
+    expect(result.current.items).toEqual(['x', 'y'])
+    act(() => result.current.setItems((prev) => [...(prev ?? []), 'z']))
+    expect(result.current.items).toEqual(['x', 'y', 'z'])
+  })
+
+  it('resource-data-065 isFetching is true while the first read is pending', () => {
+    signInAs('t1')
+    const { result } = mountList('projects', () => new Promise<string[]>(() => {}))
+    expect(result.current.items).toBeNull()
+    expect(result.current.isFetching).toBe(true)
+  })
+
+  it('resource-data-066 errorStatus carries the status of a conflict failure', async () => {
+    signInAs('t1')
+    const { result } = mountList(
+      'projects',
+      () => Promise.reject(Object.assign(new Error('conflict'), { status: 409 })),
+      { reportErrors: false },
+    )
+    await flush()
+    expect(result.current.errorStatus).toBe(409)
+  })
+
+  it('resource-data-067 a non-Error failure reads as "Failed to load."', async () => {
+    signInAs('t1')
+    const { result } = mountList('projects', () => Promise.reject({ nope: true }), { reportErrors: false })
+    await flush()
+    expect(result.current.error).toBe('Failed to load.')
+    expect(result.current.errorStatus).toBeNull()
+  })
+})
+
+describe('makeEntityDeleteHandler', () => {
+  const setup = (over: { del?: () => Promise<void>; reload?: () => Promise<void> } = {}) => {
+    const order: string[] = []
+    const router = { push: vi.fn((href: string) => order.push(`push ${href}`)) }
+    const del = vi.fn(over.del ?? (() => Promise.resolve()))
+    const reload = vi.fn(
+      over.reload ??
+        (() => {
+          order.push('reload')
+          return Promise.resolve()
+        }),
+    )
+    const handler = makeEntityDeleteHandler({ basePath: '/projects', id: 'p-1', router, del, reload })
+    return { order, router, del, reload, handler }
+  }
+
+  it('resource-data-068 clears the matching last id, then navigates to the all view, then reloads', async () => {
+    writeLastId('/projects', 'p-1')
+    const { order, router, handler } = setup()
+    const origPush = router.push.getMockImplementation()!
+    let lastIdAtPush: string | null | undefined
+    router.push.mockImplementation((href: string) => {
+      lastIdAtPush = readLastId('/projects')
+      return origPush(href)
+    })
+    await handler()
+    expect(lastIdAtPush).toBeNull()
+    expect(readLastId('/projects')).toBeNull()
+    expect(router.push).toHaveBeenCalledWith('/projects/all', { scroll: false })
+    expect(order).toEqual(['push /projects/all', 'reload'])
+    localStorage.clear()
+  })
+
+  it('resource-data-069 leaves a different last id alone; still navigates and reloads', async () => {
+    writeLastId('/projects', 'other')
+    const { router, reload, handler } = setup()
+    await handler()
+    expect(readLastId('/projects')).toBe('other')
+    expect(router.push).toHaveBeenCalledTimes(1)
+    expect(reload).toHaveBeenCalledTimes(1)
+    localStorage.clear()
+  })
+
+  it('resource-data-070 a failing delete rejects the handler and never navigates', async () => {
+    const boom = new Error('delete failed')
+    const { router, reload, handler } = setup({ del: () => Promise.reject(boom) })
+    await expect(handler()).rejects.toBe(boom)
+    expect(router.push).not.toHaveBeenCalled()
+    expect(reload).not.toHaveBeenCalled()
+  })
+
+  it('resource-data-071 a failing reload is swallowed and the handler resolves', async () => {
+    const { router, handler } = setup({ reload: () => Promise.reject(new Error('reload failed')) })
+    await expect(handler()).resolves.toBeUndefined()
+    expect(router.push).toHaveBeenCalledTimes(1)
   })
 })

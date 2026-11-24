@@ -1,0 +1,57 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "86b4d53c-8122-480c-9a33-43e08b063469",
+    "title": "TopicSelectHint",
+    "type": "ingredient",
+    "version": "1.1.1",
+    "status": "review",
+    "language": "en",
+    "created": "2026-09-22",
+    "modified": "2026-09-25",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "A centered card prompt for selecting an item from a list when no selection is active.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "selection",
+      "placeholder",
+      "empty-state"
+    ],
+    "depends-on": [],
+    "related": [
+      "e86eb195-1ec2-4b12-8a24-79f8c03f65ce",
+      "ea565474-df7a-42bd-9613-5dd0cd861911"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "dff45816b2c62808",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

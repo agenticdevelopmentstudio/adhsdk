@@ -1,0 +1,2 @@
+- **Reduce Motion**: The pressed dip (`translate-y-px`, a 1px translation animated by `transition-all`) is the only motion. The source has no `motion-reduce:` variant, so Reduce Motion does not turn it off. The dip is a single pixel and appears only while a pointer is held, so no requirement is added for it.
+- **Increase Contrast** and **Differentiate Without Color**: Not applicable to the component itself; it renders theme tokens, which may reflect platform accessibility settings.

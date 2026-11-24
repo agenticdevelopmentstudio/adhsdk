@@ -20,14 +20,14 @@ class PublicOrgProfile:
         slug (str):
         display_name (str):
         description (None | str):
-        created_at (str):
+        created (int): Unix timestamp, in seconds.
         personas (list[PublicPersonaSummary]):
     """
 
     slug: str
     display_name: str
     description: None | str
-    created_at: str
+    created: int
     personas: list[PublicPersonaSummary]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -39,7 +39,7 @@ class PublicOrgProfile:
         description: None | str
         description = self.description
 
-        created_at = self.created_at
+        created = self.created
 
         personas = []
         for personas_item_data in self.personas:
@@ -51,9 +51,9 @@ class PublicOrgProfile:
         field_dict.update(
             {
                 "slug": slug,
-                "displayName": display_name,
+                "display_name": display_name,
                 "description": description,
-                "createdAt": created_at,
+                "created": created,
                 "personas": personas,
             }
         )
@@ -67,7 +67,7 @@ class PublicOrgProfile:
         d = dict(src_dict)
         slug = d.pop("slug")
 
-        display_name = d.pop("displayName")
+        display_name = d.pop("display_name")
 
         def _parse_description(data: object) -> None | str:
             if data is None:
@@ -76,7 +76,7 @@ class PublicOrgProfile:
 
         description = _parse_description(d.pop("description"))
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
         personas = []
         _personas = d.pop("personas")
@@ -89,7 +89,7 @@ class PublicOrgProfile:
             slug=slug,
             display_name=display_name,
             description=description,
-            created_at=created_at,
+            created=created,
             personas=personas,
         )
 

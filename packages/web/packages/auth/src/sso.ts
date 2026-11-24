@@ -740,7 +740,7 @@ export interface CentralEmailLoginParams extends CentralLoginTarget {
  * the exchange code and this never returns; a `null` therefore means "navigating".
  * A non-null {@link MfaChallenge} means the account owes a second factor — complete
  * it with {@link centralCompleteMfaCode} / {@link centralCompleteMfaPasskey}, NOT
- * with the site's own `/api/auth/login/mfa`: only the central completions mint the
+ * with the site's own `/api/v1/auth/sessions`: only the central completions mint the
  * central session, and finishing a central password step on the site route is how a
  * login ends up half-done.
  */
@@ -840,7 +840,7 @@ function randomNonce(): string {
 /** Start the link-mode redirect: a top-level navigation to the AS
  *  /oauth/signin/start?link=1. Goes DIRECTLY to the AS host (not the /api proxy)
  *  so /start and /callback share a host for the oauth_state cookie. The link is
- *  authorized later by the bearer token on /auth/link-provider, not here.
+ *  authorized later by the bearer token on /v1/account/login_methods, not here.
  *
  *  Stashes an unguessable `linkNonce` (round-tripped through the signed state and
  *  echoed back in the callback fragment) so the page completing the `#link_code`

@@ -6,11 +6,15 @@ app's bundle identifier — Category: the store's own type name.
 |-------|-------|----------------|
 | the underlying add/update call did not report success in `set` | error | interpolates the account key and the resulting status |
 | the underlying lookup call reported a status other than success or item-not-found in `copyValue` | error | interpolates the account key and the resulting status |
-| a secret was recovered from a legacy access-group scope or a retired service and re-stored under the current scope | info | interpolates the account key and the scope it was recovered from |
+| the underlying lookup call in `read` reported a status other than success or item-not-found | error | interpolates the account key and the resulting status |
+| a secret was recovered from a retired service and re-stored under the current service | info | interpolates the account key; the message does not name which retired service |
+
+Recovery from a legacy access-group scope or the login keychain logs
+nothing.
 
 No log call in the secret store interpolates the secret value itself (see
 `keychain-secret-value-not-logged` above). The other five utilities in this
-recipe produce no log output at all; the logger factory contract only
+ingredient produce no log output at all; the logger factory contract only
 provides the factory the secret store and other conforming types build
 their logger from.
 

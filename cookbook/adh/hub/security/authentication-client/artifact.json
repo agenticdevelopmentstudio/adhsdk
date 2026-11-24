@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "65fbb2b1-ca41-499f-ac03-7ecc0e206dcc",
     "title": "Authentication Client",
-    "domain": "adhsdk://cookbook/adh/hub/security/authentication-client",
     "type": "ingredient",
     "version": "1.2.0",
     "status": "review",
@@ -39,7 +38,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "8b5f9e948f493b4c",
+  "synced": "2e437845aad5826b",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -58,7 +57,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

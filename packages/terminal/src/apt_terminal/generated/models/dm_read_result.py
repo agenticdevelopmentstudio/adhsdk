@@ -31,7 +31,7 @@ class DmReadResult:
         field_dict.update(
             {
                 "success": success,
-                "unreadCount": unread_count,
+                "unread_count": unread_count,
             }
         )
 
@@ -42,7 +42,7 @@ class DmReadResult:
         d = dict(src_dict)
         success = d.pop("success")
 
-        unread_count = d.pop("unreadCount")
+        unread_count = d.pop("unread_count")
 
         dm_read_result = cls(
             success=success,

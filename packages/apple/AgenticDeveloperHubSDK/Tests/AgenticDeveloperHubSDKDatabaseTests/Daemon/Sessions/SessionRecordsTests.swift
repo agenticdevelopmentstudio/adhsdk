@@ -10,20 +10,23 @@ final class SessionRecordsTests: XCTestCase {
     private var store: DaemonDatabase!
     private var path: String!
 
+    private var harness: ClaudePipelineTestHarness!
+
     override func setUpWithError() throws {
         (store, path) = try TestDaemonDatabase.makeSessionDatabase()
+        let pipeline = URL(fileURLWithPath: path).deletingLastPathComponent().appendingPathComponent("pipeline")
+        harness = try ClaudePipelineTestHarness(directory: pipeline, database: store)
     }
 
     override func tearDownWithError() throws {
+        harness = nil
         store = nil
         TestDaemonDatabase.remove(path: path)
     }
 
     private func start(_ id: String) throws {
-        try store.ingestEvent(
-            eventType: "SessionStart", timestamp: "2026-06-01T12:00:00Z",
-            hookData: ["session_id": id, "cwd": "/tmp/\(id)"]
-        )
+        try harness.ingest(ClaudePipelineTestHarness.event(
+            "SessionStart", sessionId: id, timestamp: "2026-06-01T12:00:00Z", cwd: "/tmp/\(id)"))
     }
 
     func testUpdateSessionStatusIsReadBack() throws {

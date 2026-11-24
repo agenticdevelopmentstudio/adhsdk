@@ -1,0 +1,11 @@
+
+- **Null and empty input**: empty stdin, non-JSON stdin and JSON that is not an object each yield an empty `hook_data` before the lifted keys are added, and the event is still captured (MUST, per `hook-data-from-stdin`). A payload without `session_id` is still captured; this command does not require one, unlike `HookEnvelopeBuilder`.
+- **Empty event**: `--event ""` is treated as absent and nothing is written (MUST, per `event-flag-required`).
+- **Boundary values**: `--ppid` that does not parse as an integer, including the empty string and values with trailing characters, falls through to `claudePid` (MUST, per `ppid-resolution`). `SHLVL` that does not parse as an integer is omitted from `context.shell`.
+- **Duplicate flags**: when the same key appears twice the later value replaces the earlier (the parser assigns into a dictionary); see `duplicate-flag-last-wins`.
+- **Error states**: a payload that cannot be parsed, an unreadable working directory (`cwd` becomes the empty string), a failed `uname` call (`system` becomes an empty object) and a failed drop-file write are all absorbed, and the exit status stays 0 (MUST). The write failure leaves no trace: nothing is logged and the event is lost for that invocation.
+- **Concurrent access**: hook commands for different events can run as separate processes at the same time. The type holds no shared state, and unique drop-file names are the drop writer's responsibility (see `HookDropWriter`). Within one process the code is synchronous and single-threaded.
+- **Offline or disconnected state**: not applicable — this command never opens a network connection or a socket; it only writes a file, which is how it behaves when no daemon is listening.
+- **Headless sessions**: a programmatic `claude` that a daemon's own app runs exports `ADH_SDK_HEADLESS` and is never tracked, even when the command is invoked directly or the daemon was down, so no headless drop file can be quarantined and later replayed into a phantom session (MUST).
+- **Token walk finds nothing**: the token falls back to the forwarded `CLAUDE_CODE_OAUTH_TOKEN`, which the source describes as likely empty; `accountName` then receives that value or nil and decides what to return (MUST pass it through).
+

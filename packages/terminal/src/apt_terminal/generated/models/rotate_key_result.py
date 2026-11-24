@@ -27,7 +27,7 @@ class RotateKeyResult:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "publicKey": public_key,
+                "public_key": public_key,
             }
         )
 
@@ -36,7 +36,7 @@ class RotateKeyResult:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        public_key = d.pop("publicKey")
+        public_key = d.pop("public_key")
 
         rotate_key_result = cls(
             public_key=public_key,

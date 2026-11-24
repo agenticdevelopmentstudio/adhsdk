@@ -1,13 +1,12 @@
 ---
 id: 63f8a602-58f8-4fdc-9461-b959be427a4d
 title: "Status Web Colors"
-domain: adhsdk://cookbook/status/dashboard/logic/colors
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-09-27
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -18,7 +17,7 @@ platforms:
 tags: []
 depends-on: []
 related:
-  - adhsdk://cookbook/status/dashboard/session-client
+  - 5935b39d-9451-48c1-8b99-bd510d66d1a0
 references: []
 approved-by: ""
 approved-date: ""
@@ -194,9 +193,9 @@ Not applicable: the module contains no logging calls.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-web/src/lib/colors.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-web/src/lib/colors.ts` | confirmed (1.0.3) |
 
 ## Design Decisions
 
@@ -236,13 +235,13 @@ Not applicable: the module contains no logging calls.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | best-practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | best-practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | best-practices |
 
 **Separation of concerns.** The module holds only color data and two pure helpers, with no React, DOM or I/O; components apply the values and the theme package owns the token values.
 
-**Unit test coverage.** There is no `colors.test.ts`, and no test asserts `envColor`, `envBadgeLabel` or the table contents; `row-model.test.ts` covers only `row-model`'s own tone colors.
+**Unit test coverage.** `colors.test.ts` covers every conformance vector (colors-001 to colors-026): the status tables, `envColor`, `envBadgeLabel`, `PALETTE`, `COLORS` and `TINT`.
 
 **Explicit error handling.** `envColor` handles nullish and unknown input with an explicit fallback, and missing status keys return `undefined` for the caller to handle. The env lookups do not restrict themselves to own keys, so inherited object members leak through as non-string values (see env-object-prototype-keys), and `envBadgeLabel` throws on nullish input, which its type signature forbids.
 
@@ -250,6 +249,7 @@ Not applicable: the module contains no logging calls.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (colors.test.ts, 26 of 26 vectors); unit-test-coverage now passed. |
 | 1.0.2 | 2026-09-27 | Mike Fullerton | Moved into the concept grouping. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.0.0 | 2026-09-24 | Mike Fullerton | Initial creation from `status-web/src/lib/colors.ts` |

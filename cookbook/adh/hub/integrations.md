@@ -1,13 +1,12 @@
 ---
 id: 45c318d7-dd3e-491c-8811-eb2a3d79bca9
 title: "Integrations"
-domain: adhsdk://cookbook/adh/hub/integrations
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-09-27
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -24,8 +23,8 @@ tags:
   - webhooks
 depends-on: []
 related:
-  - adhsdk://cookbook/adh/hub/access
-  - adhsdk://cookbook/adh/hub/ecosystems/ecosystem-config
+  - 39a7192e-7e1e-4e93-b615-312a5ddf69b0
+  - 87ca0139-6cd0-46dd-a9fb-40ad3406f175
 references:
   - packages/web/packages/data/src/integrations/integrations.ts (adhsdk)
   - packages/web/packages/data/src/integrations/wire.ts (adhsdk)
@@ -293,37 +292,37 @@ Not applicable — this is the integrations data-access client, not a visual com
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| hub-domain-integrations-001 | provider-catalog-fetch | list providers, against a response `{ providers: [{ providerId: "github", authMethod: "github_app", testable: true, ... }] }` | Request URL is `/api/integrations/providers`; resolves to that array unwrapped from the envelope |
-| hub-domain-integrations-002 | provider-config-list | list provider configs for ecosystem id "eco-1" | `GET /api/integrations/ecosystems/eco-1/provider-configs`; resolves to the configs array unwrapped |
+| hub-domain-integrations-001 | provider-catalog-fetch | list providers, against a list response holding `{ provider_id: "github", auth_method: "github_app", testable: true, ... }` | Request URL is `/api/v1/integrations/providers`; resolves to that array unwrapped from the envelope, in domain (camelCase) shape |
+| hub-domain-integrations-002 | provider-config-list | list provider configs for ecosystem id "eco-1" | `GET /api/v1/integrations/provider_configs?ecosystem=eco-1`; resolves to the configs array unwrapped |
 | hub-domain-integrations-003 | provider-config-get-by-provider-id, provider-config-get-not-found-null | get provider config for ecosystem id "eco-1", provider id "github", against a `404` response | Resolves to `null`, does not throw |
-| hub-domain-integrations-004 | provider-config-put-preserves-blank-secret | save provider config for ecosystem id "eco-1", provider id "github", with body `{ clientId: "x" }` (no `clientSecret`) | `PUT /api/integrations/ecosystems/eco-1/provider-configs/github` with body `{ clientId: "x" }` only; the stored secret is unchanged per the field's own contract |
-| hub-domain-integrations-005 | provider-config-delete-by-provider-id | delete provider config for ecosystem id "eco-1", provider id "github" | `DELETE /api/integrations/ecosystems/eco-1/provider-configs/github`; resolves to `undefined` |
-| hub-domain-integrations-006 | provider-config-create | create provider config for ecosystem id "eco-1" with body `{ providerId: "github", name: "Prod" }` | `POST /api/integrations/ecosystems/eco-1/provider-configs` (no trailing id) with that body; resolves to a provider config record |
-| hub-domain-integrations-007 | provider-config-get-by-id, provider-config-two-address-schemes-share-a-url-shape | get provider config for ecosystem id "eco-1" by id "cfg-uuid-1" | `GET /api/integrations/ecosystems/eco-1/provider-configs/cfg-uuid-1` — an identical URL template to the provider-id lookup's, differing only in what the trailing segment addresses |
+| hub-domain-integrations-004 | provider-config-put-preserves-blank-secret | save provider config for ecosystem id "eco-1", provider id "github", with body `{ clientId: "x" }` (no `clientSecret`) | `POST /api/v1/integrations/provider_configs/github` with body `{ client_id: "x", ecosystem: "eco-1" }` only; no `client_secret` field, so the stored secret is unchanged per the field's own contract |
+| hub-domain-integrations-005 | provider-config-delete-by-provider-id | delete provider config for ecosystem id "eco-1", provider id "github" | `DELETE /api/v1/integrations/provider_configs/github?ecosystem=eco-1`; resolves to `undefined` |
+| hub-domain-integrations-006 | provider-config-create | create provider config for ecosystem id "eco-1" with body `{ providerId: "github", name: "Prod" }` | `POST /api/v1/integrations/provider_configs` (no trailing id) with body `{ provider_id: "github", name: "Prod", ecosystem: "eco-1" }`; resolves to a provider config record |
+| hub-domain-integrations-007 | provider-config-get-by-id, provider-config-two-address-schemes-share-a-url-shape | get provider config for ecosystem id "eco-1" by id "cfg-uuid-1" | `GET /api/v1/integrations/provider_configs/cfg-uuid-1?ecosystem=eco-1` — an identical URL template to the provider-id lookup's, differing only in what the trailing segment addresses |
 | hub-domain-integrations-008 | provider-config-get-by-id-not-found-null | get provider config for ecosystem id "eco-1" by id "cfg-missing", against a `404` response | Resolves to `null`, does not throw |
-| hub-domain-integrations-009 | provider-config-update-by-id | update provider config "cfg-1" in ecosystem "eco-1" with body `{ name: "Renamed" }` | `PUT /api/integrations/ecosystems/eco-1/provider-configs/cfg-1` with body `{ name: "Renamed" }` |
-| hub-domain-integrations-010 | provider-config-delete-by-id | delete provider config "cfg-1" in ecosystem "eco-1" | `DELETE /api/integrations/ecosystems/eco-1/provider-configs/cfg-1`; resolves to `undefined` |
-| hub-domain-integrations-011 | test-saved-config, test-result-ok-false-is-not-an-error | test saved config "cfg-1" in ecosystem "eco-1", against a stub returning `{ ok: false, summary: "Invalid token", notes: [] }` | `POST /api/integrations/ecosystems/eco-1/provider-configs/cfg-1/test`; resolves (does not throw) to that body |
-| hub-domain-integrations-012 | test-saved-config-github-app-also-connects | test a `github_app` saved config, stub returns `{ ok: true, adopted: { connected: [...], skipped: [] } }` | Resolves with `adopted` present; caller must refresh its connection list |
-| hub-domain-integrations-013 | test-draft-credentials-writes-nothing, test-draft-credentials-with-stored-secret | test draft credentials for provider "github" with body `{ ecosystemId: "eco-1", providerConfigId: "cfg-1" }` (`clientSecret` omitted) | `POST /api/integrations/providers/github/test-credentials` with `providerConfigId` and no `clientSecret`; tests the stored secret; creates no config, connection, or cache |
-| hub-domain-integrations-014 | transfer-request-shape, transfer-moves-credential-connections-and-caches-together, transfer-mints-new-rdid | transfer config "cfg-1" from ecosystem "eco-1" with body `{ targetEcosystemId: "eco-2" }` | `POST .../cfg-1/transfer`; the result's config has `ecosystemId === "eco-2"` with a new `rdid`; the result's connections and repository caches are both present in the same result |
-| hub-domain-integrations-015 | transfer-connections-count-is-live-only | A transfer moving 3 connection rows, 1 already disconnected | the result's connection count is 2 |
-| hub-domain-integrations-016 | rotate-webhook-secret-request-shape, rotate-webhook-secret-is-destructive | rotate webhook secret for config "cfg-1" in ecosystem "eco-1" | `POST .../cfg-1/rotate-webhook-secret` with no body; returns the updated config; the previously stored secret is no longer the one returned |
+| hub-domain-integrations-009 | provider-config-update-by-id | update provider config "cfg-1" in ecosystem "eco-1" with body `{ name: "Renamed" }` | `POST /api/v1/integrations/provider_configs/cfg-1` with body `{ name: "Renamed", ecosystem: "eco-1" }` |
+| hub-domain-integrations-010 | provider-config-delete-by-id | delete provider config "cfg-1" in ecosystem "eco-1" | `DELETE /api/v1/integrations/provider_configs/cfg-1?ecosystem=eco-1`; resolves to `undefined` |
+| hub-domain-integrations-011 | test-saved-config, test-result-ok-false-is-not-an-error | test saved config "cfg-1" in ecosystem "eco-1", against a stub returning `{ ok: false, summary: "Invalid token", notes: [] }` | `POST /api/v1/integrations/provider_configs/cfg-1/test` with body `{ ecosystem: "eco-1" }`; resolves (does not throw) to that body |
+| hub-domain-integrations-012 | test-saved-config-github-app-also-connects | test a `github_app` saved config, stub returns `{ ok: true, adopted: { connected: [...], skipped: [] } }` | Resolves with `adopted` present, mapped to domain shape; caller must refresh its connection list |
+| hub-domain-integrations-013 | test-draft-credentials-writes-nothing, test-draft-credentials-with-stored-secret | test draft credentials for provider "github" with body `{ ecosystemId: "eco-1", providerConfigId: "cfg-1" }` (`clientSecret` omitted) | `POST /api/v1/integrations/providers/github/test_credentials` with body `{ ecosystem_id: "eco-1", provider_config_id: "cfg-1" }` and no `client_secret`; tests the stored secret; creates no config, connection, or cache |
+| hub-domain-integrations-014 | transfer-request-shape, transfer-moves-credential-connections-and-caches-together, transfer-mints-new-rdid | transfer config "cfg-1" from ecosystem "eco-1" with body `{ targetEcosystemId: "eco-2" }`, against a stub returning the moved config (ecosystem "eco-2", a new rdid), 3 connections and 2 repository caches | `POST /api/v1/integrations/provider_configs/cfg-1/transfer` with body `{ target_ecosystem_id: "eco-2", ecosystem: "eco-1" }`; the result's config has `ecosystemId === "eco-2"` with the new `rdid`; its `connections` and `repositoryCaches` are both present in the same result |
+| hub-domain-integrations-015 | transfer-connections-count-is-live-only | A transfer moving 3 connection rows, 1 already disconnected | the result's connection count is 2 (counted server-side; the client passes it through) |
+| hub-domain-integrations-016 | rotate-webhook-secret-request-shape, rotate-webhook-secret-is-destructive | rotate webhook secret for config "cfg-1" in ecosystem "eco-1", against a stub returning a config with a new webhook secret | `POST /api/v1/integrations/provider_configs/cfg-1/rotate_webhook_secret` with body `{ ecosystem: "eco-1" }`; returns the updated config carrying the new secret |
 | hub-domain-integrations-017 | rotate-webhook-secret-also-generates-first-secret | rotate webhook secret on a config whose deliverability-webhook secret is `null` | The returned config's deliverability-webhook secret is non-null |
-| hub-domain-integrations-018 | connections-list-scoped-by-ecosystem | list connections for ecosystem "eco-1" | `GET /api/integrations?ecosystemId=eco-1`; resolves to the connections array unwrapped |
-| hub-domain-integrations-019 | connect-request-shape, connect-every-variant-names-ecosystem | connect with body `{ type: "oauth", providerId: "github", serviceType: "repos", ecosystemId: "eco-1", code: "abc", redirectUri: "https://x/cb", state: "s.sig" }` | `POST /api/integrations/connect` with that body verbatim; resolves to a connection record |
-| hub-domain-integrations-020 | connect-github-app-has-no-code | connect with body `{ type: "github_app", providerId: "github", serviceType: "repos", ecosystemId: "eco-1", installationId: "12345", state: "s.sig" }` | Request body has `installationId` and no `code` field |
-| hub-domain-integrations-021 | connect-app-password-source-exclusivity-delegated | connect with body `{ type: "app_password", providerId: "mastodon", serviceType: "posts", ecosystemId: "eco-1", identifier: "me", password: "pw", providerConfigId: "cfg-1" }` (both inline credentials AND `providerConfigId` present) | The body is sent unchanged; connecting performs no client-side rejection of the combination |
-| hub-domain-integrations-022 | disconnect-request-shape | disconnect connection "conn-1" | `DELETE /api/integrations/conn-1`; resolves to `undefined` |
-| hub-domain-integrations-023 | sync-request-shape, sync-no-worker-throws-503 | sync connection "conn-1" against a `503` response | `POST /api/integrations/conn-1/sync`; throws an error with `status: 503` |
-| hub-domain-integrations-024 | patch-settings-request-shape | patch settings for connection "conn-1" with body `{ gmailLabelIds: ["INBOX"] }` | `PATCH /api/integrations/conn-1/settings` with that body; resolves to `{ ok, syncSettings }` |
-| hub-domain-integrations-025 | auth-url-request-shape | get auth URL for provider "github" with `{ ecosystemId: "eco-1", redirectUri: "https://x/cb" }` | `GET .../providers/github/auth-url?ecosystemId=eco-1&redirectUri=...` with no `serviceType`/`scopes` parameter present |
-| hub-domain-integrations-026 | install-url-request-shape | get install URL for provider "github" with `{ ecosystemId: "eco-1" }` | `GET .../providers/github/install-url?ecosystemId=eco-1` with no `redirectUri` or `scopes` parameter anywhere in the URL |
-| hub-domain-integrations-027 | adopt-installations-request-shape | adopt installations for provider "github" with `{ ecosystemId: "eco-1", providerConfigId: "cfg-1" }` | `POST .../providers/github/adopt-installations` with that body; resolves to `{ connected, skipped }` |
+| hub-domain-integrations-018 | connections-list-scoped-by-ecosystem | list connections for ecosystem "eco-1" | `GET /api/v1/integrations/connections?ecosystem_id=eco-1`; resolves to the connections array unwrapped |
+| hub-domain-integrations-019 | connect-request-shape, connect-every-variant-names-ecosystem | connect with body `{ type: "oauth", providerId: "github", serviceType: "repos", ecosystemId: "eco-1", code: "abc", redirectUri: "https://x/cb", state: "s.sig" }` | `POST /api/v1/integrations/connect_sessions` with the body in wire shape plus `flow: "connect"`; resolves to a connection record |
+| hub-domain-integrations-020 | connect-github-app-has-no-code | connect with body `{ type: "github_app", providerId: "github", serviceType: "repos", ecosystemId: "eco-1", installationId: "12345", state: "s.sig" }` | Request body has `installation_id` and no `code` field |
+| hub-domain-integrations-021 | connect-app-password-source-exclusivity-delegated | connect with body `{ type: "app_password", providerId: "mastodon", serviceType: "posts", ecosystemId: "eco-1", identifier: "me", password: "pw", providerConfigId: "cfg-1" }` (both inline credentials AND `providerConfigId` present) | The fields are sent together; connecting performs no client-side rejection of the combination |
+| hub-domain-integrations-022 | disconnect-request-shape | disconnect connection "conn-1" | `DELETE /api/v1/integrations/connections/conn-1`; resolves to `undefined` |
+| hub-domain-integrations-023 | sync-request-shape, sync-no-worker-throws-503 | sync connection "conn-1" against a `503` response | `POST /api/v1/integrations/connections/conn-1/sync`; throws an error with `status: 503` |
+| hub-domain-integrations-024 | patch-settings-request-shape | patch settings for connection "conn-1" with body `{ gmailLabelIds: ["INBOX"] }` | `POST /api/v1/integrations/connections/conn-1` with body `{ gmail_label_ids: ["INBOX"] }`; resolves to `{ ok, syncSettings }` |
+| hub-domain-integrations-025 | auth-url-request-shape | get auth URL for provider "github" with `{ ecosystemId: "eco-1", redirectUri: "https://x/cb" }` | `POST /api/v1/integrations/connect_sessions` with body `{ flow: "oauth", provider: "github", ecosystem_id: "eco-1", redirect_uri: "https://x/cb" }`; no `service_type`/`scopes` field present |
+| hub-domain-integrations-026 | install-url-request-shape | get install URL for provider "github" with `{ ecosystemId: "eco-1" }` | `POST /api/v1/integrations/connect_sessions` with body `{ flow: "install", provider: "github", ecosystem_id: "eco-1" }`; no `redirect_uri` or `scopes` field anywhere |
+| hub-domain-integrations-027 | adopt-installations-request-shape | adopt installations for provider "github" with `{ ecosystemId: "eco-1", providerConfigId: "cfg-1" }` | `POST /api/v1/integrations/providers/github/adopt_installations` with body `{ ecosystem_id: "eco-1", provider_config_id: "cfg-1" }`; resolves to `{ connected, skipped }` |
 | hub-domain-integrations-028 | adopt-installations-requires-config-id | constructing an adopt-installations body without `providerConfigId` | Fails to typecheck against the required field; confirmed by the type declaration, no runtime test needed |
-| hub-domain-integrations-029 | adopt-installations-idempotent | adopt installations called twice with the same `providerConfigId` against an installation already connected | The second call reports it under `skipped`, not `connected`; no duplicate connection is created |
-| hub-domain-integrations-030 | register-instance-request-shape, register-instance-config-id-overrides-instance-url | register instance for provider "mastodon" with `{ ecosystemId: "eco-1", instanceUrl: "https://example.social", redirectUri: "https://x/cb", providerConfigId: "cfg-1" }` | `POST .../providers/mastodon/register-instance` with that body; the returned `clientId` is sourced from "cfg-1", even though `instanceUrl` is present in the sent body |
-| hub-domain-integrations-031 | create-link-token-request-shape | create link token for provider "plaid" (no body) | `POST .../providers/plaid/link-token` with body `{}`; resolves to `{ linkToken }` |
+| hub-domain-integrations-029 | adopt-installations-idempotent | adopt installations called twice with the same `providerConfigId` against an installation already connected | The second call reports it under `skipped`, not `connected`; no duplicate connection is created (server-side behavior) |
+| hub-domain-integrations-030 | register-instance-request-shape, register-instance-config-id-overrides-instance-url | register instance for provider "mastodon" with `{ ecosystemId: "eco-1", instanceUrl: "https://example.social", redirectUri: "https://x/cb", providerConfigId: "cfg-1" }` | `POST /api/v1/integrations/providers/mastodon/register_instance` with those fields in wire shape; the result maps `authorize_url` and `client_id` to `authorizeUrl` and `clientId` (the server sources the client id from "cfg-1") |
+| hub-domain-integrations-031 | create-link-token-request-shape | create link token for provider "plaid" with `{ ecosystemId: "eco-1" }` | `POST /api/v1/integrations/connect_sessions` with body `{ flow: "link_token", provider: "plaid", ecosystem_id: "eco-1" }`; resolves to `{ linkToken }` |
 | hub-domain-integrations-032 | oauth-callback-path-fixed, oauth-callback-url-is-origin-relative | build the OAuth callback URL with the page origin `"https://app.example.test"` | Returns `"https://app.example.test/integrations/oauth-callback"` |
 | hub-domain-integrations-033 | decode-state-claims-grammar | decode OAuth state claims from `"nodothere"` | Returns `null` (no `.` present) |
 | hub-domain-integrations-034 | decode-state-claims-grammar | decode OAuth state claims from `".abc"` | Returns `null` (the `.` is the first character) |
@@ -333,14 +332,13 @@ Not applicable — this is the integrations data-access client, not a visual com
 | hub-domain-integrations-038 | decode-state-claims-never-verifies-signature | The same well-formed claims prefix from vector 036, but with an arbitrary, invalid signature suffix | Still returns the decoded claims — the signature is never checked |
 | hub-domain-integrations-039 | state-freshness-window, state-freshness-constants | check OAuth state freshness for `{ iat: 0 }` at time `630000` | Returns `true` (exactly at the widened upper bound: `600000 + 30000`) |
 | hub-domain-integrations-040 | state-freshness-window | check OAuth state freshness for `{ iat: 0 }` at time `630001` | Returns `false` (one millisecond past the widened upper bound) |
-| hub-domain-integrations-041 | state-freshness-window | check OAuth state freshness for `{ iat: 100000 }` at time `9999` | Returns `true` (`now - iat = -90001`... boundary case: exactly `-90000` is the widened lower bound, one past it is `false`) |
-| hub-domain-integrations-042 | every-identifier-url-encoded | disconnect connection id `"a/b"` | `DELETE /api/integrations/a%2Fb` |
+| hub-domain-integrations-041 | state-freshness-window | check OAuth state freshness for `{ iat: 100000 }` at time `10000`, then at time `9999` | `true` at `10000` (age `-90000`, exactly the widened lower bound: `60000 + 30000`); `false` at `9999` (one past it) |
+| hub-domain-integrations-042 | every-identifier-url-encoded | disconnect connection id `"a/b"` | `DELETE /api/v1/integrations/connections/a%2Fb` |
 | hub-domain-integrations-043 | no-client-side-cache, stateless-module | list providers, called twice in a row | Two separate HTTP requests are issued; the second call is not served from any in-module cache |
 | hub-domain-integrations-044 | errors-propagate-except-not-found-lookups | get provider config for ecosystem "eco-1", provider "github", against a `500` response | The `500` propagates as a thrown error; it is not converted to `null` (unlike a `404`) |
 | hub-domain-integrations-045 | secrets-are-write-only | list provider configs for ecosystem "eco-1", response body | No element of the resolved array has a `clientSecret` field; each has only `hasSecret: boolean` |
 | hub-domain-integrations-046 | ecosystem-scoping-authorized-server-side | list connections for ecosystem "eco-2", called by a caller who does not own "eco-2" | The call rejects with an error, `status: 403` |
 | hub-domain-integrations-047 | session-refresh-waterfall | Any client call's first response is `401`; a token refresh resolves a new token | The request is retried once with the new token; a `401` on that retry throws an error with `status: 401` — traced to the shared authenticated-fetch mechanism, exercised only indirectly through this client |
-
 ## Edge Cases
 
 - **Null and empty input — path identifiers**: ecosystem id / provider id / config id / connection id
@@ -518,9 +516,9 @@ Not applicable: this component contains no logging call of any kind.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/data/src/integrations/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/data/src/integrations/` | confirmed (1.1.1) |
 
 ## Design Decisions
 
@@ -578,21 +576,21 @@ enforces.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | partial | Security |
-| [secure-storage](agenticdevelopercookbook://compliance/security#secure-storage) | partial | Security |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | partial | Reliability |
-| [error-response-handling](agenticdevelopercookbook://compliance/access-patterns#error-response-handling) | partial | Access Patterns |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | partial | Security |
+| [adc.check.security.secure-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bb5dfc9b-c5b0-54fa-882f-007ae7dad0e9) | partial | Security |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | partial | Reliability |
+| [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | partial | Access Patterns |
 
 `separation-of-concerns` passes: `integrations.ts`/`wire.ts` contain zero UI or presentation code — both
 files are a plain request-builder layer consumed by a separate presentation layer, per the module's own
-top-of-file comment. `unit-test-coverage` is `failed`: none of `integrationsApi`'s twenty methods, nor
-`decodeOAuthStateClaims`/`isOAuthStateFresh`, has a test file adjacent to `integrations.ts`/`wire.ts`
-anywhere in this checkout — the closest exercise of `decodeOAuthStateClaims`/`isOAuthStateFresh` is an
-indirect one, through a consumer component's own test (`IntegrationsOAuthCallback.test.tsx`), which is
-outside this component's given sources. `explicit-error-handling` passes: every failure either throws
+top-of-file comment. `unit-test-coverage` is `partial`: `__tests__/integrations.test.ts` covers 42 of the 47 conformance
+vectors with passing tests. Vectors `hub-domain-integrations-015` and `-017` (live-only connection
+count, first-secret generation) and `-029` (adopt idempotency) are server-side behavior; `-028` is a
+compile-time property; `-047` (401 refresh waterfall) belongs to the shared `authedFetch` — all five
+are skipped. `explicit-error-handling` passes: every failure either throws
 `AuthHttpError` (via the shared `authedFetch`) or is the explicit `isNotFound`-gated `null` return in
 `getProviderConfig`/`getProviderConfigById`; nothing in this file catches and discards an error.
 `input-sanitization` is `partial`: `decodeOAuthStateClaims`'s grammar and field-type checks
@@ -617,6 +615,7 @@ method offers no per-code handling beyond the generic `AuthHttpError` propagatio
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-11-14 | Mike Fullerton | Conformance tests added (integrations.test.ts, 42 of 47 vectors); unit-test-coverage now partial. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to adh/hub/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.0.0 | 2026-09-24 | Mike Fullerton | Initial creation |

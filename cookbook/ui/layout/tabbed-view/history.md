@@ -7,3 +7,5 @@
 | 1.1.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/layout/. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added separation-of-concerns and unit-test-coverage compliance rows. Added the confines-to-ui-thread requirement and vector. |
+| 1.3.0 | 2026-11-14 | Mike Fullerton | Center outline and tab strips can be hidden |
+| 1.4.0 | 2026-11-15 | Mike Fullerton | Global tab positions: edges follow tabs.positions (default top, never empty) until set explicitly; single-edge hosts use the primary edge; top accessory independent of edges. View > Tab Position menu, System > General Tab position row, browser pane override `browser.tabs.positions`. |

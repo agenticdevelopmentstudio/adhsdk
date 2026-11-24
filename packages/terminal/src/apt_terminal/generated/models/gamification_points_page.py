@@ -48,7 +48,7 @@ class GamificationPointsPage:
                 "items": items,
                 "total": total,
                 "page": page,
-                "pageSize": page_size,
+                "page_size": page_size,
             }
         )
 
@@ -70,7 +70,7 @@ class GamificationPointsPage:
 
         page = d.pop("page")
 
-        page_size = d.pop("pageSize")
+        page_size = d.pop("page_size")
 
         gamification_points_page = cls(
             items=items,

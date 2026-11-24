@@ -1,0 +1,10 @@
+
+| Version | Date | Author | Summary |
+|---------|------|--------|---------|
+| 1.4.1 | 2026-11-16 | Mike Fullerton | Final review: word-emphasis budget, selection kept across reloads, non-ancestor rebase rows; reword field newlines, row heights, Move Up/Down; selectRows; merge view cap |
+| 1.4.0 | 2026-11-15 | Mike Fullerton | A right-click with a `menuProvider` set selects the clicked row when it is outside the selection and returns the provider's menu; `clearSelection()`; vectors 018-019 |
+| 1.3.0 | 2026-11-13 | Mike Fullerton | Long rows index their runs once and each frame touches only the runs under the slice or drawn glyphs; the cache limits are soft and the cache is trimmed back to them when a frame ends. |
+| 1.2.0 | 2026-11-13 | Mike Fullerton | Long ASCII rows in a column-true font are sliced by column with no layout; other long rows use a cache sized to twice the visible rows that never evicts a row of the current frame; a row's content MUST NOT change between reloadData() calls. |
+| 1.1.0 | 2026-11-13 | Mike Fullerton | Long rows draw from a cached per-row layout, only the glyphs under the dirty rect, so split and whole drawing agree; the gutter view carries `<identifier>.gutter`. |
+| 1.0.1 | 2026-11-13 | Mike Fullerton | Long rows lay out only the visible slice; gutter column widths come from the data source and values are clipped; the gutter is pinned to the visible left edge. |
+| 1.0.0 | 2026-11-13 | Mike Fullerton | Initial creation |

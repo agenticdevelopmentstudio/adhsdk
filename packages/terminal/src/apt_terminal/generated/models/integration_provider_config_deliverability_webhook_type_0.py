@@ -42,7 +42,7 @@ class IntegrationProviderConfigDeliverabilityWebhookType0:
         field_dict.update(
             {
                 "url": url,
-                "secretHeader": secret_header,
+                "secret_header": secret_header,
                 "secret": secret,
                 "instruction": instruction,
             }
@@ -55,7 +55,7 @@ class IntegrationProviderConfigDeliverabilityWebhookType0:
         d = dict(src_dict)
         url = d.pop("url")
 
-        secret_header = d.pop("secretHeader")
+        secret_header = d.pop("secret_header")
 
         def _parse_secret(data: object) -> None | str:
             if data is None:

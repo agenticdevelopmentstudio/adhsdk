@@ -83,10 +83,10 @@ class AiProcessingNode:
                 "providers": providers,
                 "config": config,
                 "online": online,
-                "firstSeenAt": first_seen_at,
-                "lastSeenAt": last_seen_at,
-                "jobsCompleted": jobs_completed,
-                "jobsFailed": jobs_failed,
+                "first_seen_at": first_seen_at,
+                "last_seen_at": last_seen_at,
+                "jobs_completed": jobs_completed,
+                "jobs_failed": jobs_failed,
             }
         )
 
@@ -116,13 +116,13 @@ class AiProcessingNode:
 
         online = d.pop("online")
 
-        first_seen_at = d.pop("firstSeenAt")
+        first_seen_at = d.pop("first_seen_at")
 
-        last_seen_at = d.pop("lastSeenAt")
+        last_seen_at = d.pop("last_seen_at")
 
-        jobs_completed = d.pop("jobsCompleted")
+        jobs_completed = d.pop("jobs_completed")
 
-        jobs_failed = d.pop("jobsFailed")
+        jobs_failed = d.pop("jobs_failed")
 
         ai_processing_node = cls(
             id=id,

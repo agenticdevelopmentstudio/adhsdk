@@ -41,9 +41,9 @@ class PollTally:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "pollId": poll_id,
+                "poll_id": poll_id,
                 "options": options,
-                "myOptionIds": my_option_ids,
+                "my_option_ids": my_option_ids,
             }
         )
 
@@ -54,7 +54,7 @@ class PollTally:
         from ..models.poll_tally_option import PollTallyOption
 
         d = dict(src_dict)
-        poll_id = d.pop("pollId")
+        poll_id = d.pop("poll_id")
 
         options = []
         _options = d.pop("options")
@@ -63,7 +63,7 @@ class PollTally:
 
             options.append(options_item)
 
-        my_option_ids = cast(list[str], d.pop("myOptionIds"))
+        my_option_ids = cast(list[str], d.pop("my_option_ids"))
 
         poll_tally = cls(
             poll_id=poll_id,

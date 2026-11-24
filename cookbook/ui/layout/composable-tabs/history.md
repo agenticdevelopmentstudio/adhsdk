@@ -8,3 +8,4 @@
 | 1.1.3 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/layout/. |
 | 1.3.0 | 2026-10-04 | Mike Fullerton | Resolved the non-pointer-resize NEEDS REVIEW marker as current behavior (pointer-only divider resize) with a vector and a pending decision; added separation-of-concerns (passed) and unit-test-coverage (partial) compliance rows. Added the confines-to-ui-thread requirement and vector. Compliance rationale credits the thickness and clamp tests. |
+| 1.3.1 | 2026-11-15 | Mike Fullerton | Conformance tests added (ComposableTabsConformanceTests.swift; 16 vectors skipped with reasons); unit-test-coverage now partial. |

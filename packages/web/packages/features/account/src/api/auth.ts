@@ -5,7 +5,7 @@
 //
 // Request/response shapes below are TRANSCRIBED from the backend rather than
 // imported from `@adh-sdk/adh-api-types`, unlike hub's original (which typed
-// them as `SuccessBody<'/auth/me', 'get'>` etc). That package's name starts with
+// them as `SuccessBody<'/v1/account', 'get'>` etc). That package's name starts with
 // `@adh-sdk/adh`, which `tools/check_boundaries.py`'s `_is_vocabulary`
 // check classifies as the adh VOCABULARY tier (name === '@adh-sdk/adh' or
 // name.startswith('@adh-sdk/adh-')) — confirmed by running the guard with
@@ -16,7 +16,7 @@
 //
 // Fields copied verbatim from `packages/adh-api-types/src/schema.ts` as of this
 // move: `components.schemas.User` (the `Me` shape), and the request bodies for
-// `PATCH /auth/me` and `POST /auth/change-password`. Unlike the generated
+// `POST /v1/account` and `POST /v1/account/change_password`. Unlike the generated
 // SuccessBody/RequestBody helpers, these do NOT auto-track a backend schema change
 // — a rename/removal there silently stops matching this file rather than failing
 // `tsc`.
@@ -24,7 +24,7 @@ import { useQuery } from "@tanstack/react-query";
 import { authedJson, authedRequest } from "@adh-sdk/auth/client";
 
 /**
- * The signed-in user exactly as the backend's GET /auth/me returns it
+ * The signed-in user exactly as the backend's GET /v1/account returns it, mapped to camelCase
  * (schema.ts `components.schemas.User`).
  */
 export interface Me {
@@ -41,12 +41,36 @@ export interface Me {
   capabilities: string[];
 }
 
+interface V1Me {
+  id: string;
+  email: string;
+  name: string;
+  avatar_url: string;
+  slug: string | null;
+  public_profile_enabled: boolean;
+  profile_visibility: "public" | "hub" | "private";
+  capabilities: string[];
+}
+
+function meFromV1(raw: V1Me): Me {
+  return {
+    id: raw.id,
+    email: raw.email,
+    name: raw.name,
+    avatarUrl: raw.avatar_url,
+    slug: raw.slug,
+    publicProfileEnabled: raw.public_profile_enabled,
+    profileVisibility: raw.profile_visibility,
+    capabilities: raw.capabilities,
+  };
+}
+
 export const ME_QUERY_KEY = ["auth", "me"] as const;
 
 export function useCurrentUser() {
   return useQuery<Me>({
     queryKey: ME_QUERY_KEY,
-    queryFn: () => authedJson<Me>("/api/auth/me"),
+    queryFn: async () => meFromV1(await authedJson<V1Me>("/api/v1/account")),
     retry: false,
   });
 }
@@ -64,10 +88,16 @@ export function updateMe(body: {
   publicProfileEnabled?: boolean;
   profileVisibility?: "public" | "hub" | "private";
 }): Promise<Me> {
-  return authedJson<Me>("/api/auth/me", {
-    method: "PATCH",
-    body: JSON.stringify(body),
-  });
+  return authedJson<V1Me>("/api/v1/account", {
+    method: "POST",
+    body: JSON.stringify({
+      name: body.name,
+      slug: body.slug,
+      avatar_url: body.avatarUrl,
+      public_profile_enabled: body.publicProfileEnabled,
+      profile_visibility: body.profileVisibility,
+    }),
+  }).then(meFromV1);
 }
 
 // MOVED to @adh-sdk/data in hub too. The endpoint answers about the ONE
@@ -78,15 +108,18 @@ export { checkWorkspaceSlugAvailable as checkSlugAvailable } from "@adh-sdk/data
 
 /**
  * Change the signed-in user's password.
- * Real backend: POST /api/auth/change-password. On a bad current password the
+ * Real backend: POST /api/v1/account/change_password. On a bad current password the
  * backend responds non-2xx and authedRequest throws with its error message.
  */
 export function changePassword(body: {
   currentPassword: string;
   newPassword: string;
 }): Promise<void> {
-  return authedRequest("/api/auth/change-password", {
+  return authedRequest("/api/v1/account/change_password", {
     method: "POST",
-    body: JSON.stringify(body),
+    body: JSON.stringify({
+      current_password: body.currentPassword,
+      new_password: body.newPassword,
+    }),
   });
 }

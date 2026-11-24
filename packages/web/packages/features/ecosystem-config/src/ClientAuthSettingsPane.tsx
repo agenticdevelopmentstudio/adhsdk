@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 import { useResourceItemQuery, useResourceItemWriter } from "@adh-sdk/data";
 import {
@@ -16,7 +16,13 @@ import {
   type DetailsSection,
 } from "@adh-sdk/resource";
 import { ClientAuthPolicyFields } from "./ClientAuthFields";
-import { policyPatch, samePolicy } from "./client-auth-model";
+import {
+  ALLOW_LIST_NOT_SAVED,
+  allowListDropped,
+  policyError,
+  policyPatch,
+  samePolicy,
+} from "./client-auth-model";
 
 /** The cache key the ecosystem's client auth is read under. An application's override section
  *  reads the same entry for the providers and the ecosystem's settings. */
@@ -55,13 +61,22 @@ export function ClientAuthSettingsPane({
   useReportBusy(isFetching);
 
   const draft = useSettingsDraft<EcosystemClientAuth, ClientAuthPolicy>(config, toDraft, samePolicy);
+  // Bumped on every re-seed (Cancel, a save, a background refetch of an unedited record), so the
+  // allow-list editor's own rows follow the draft back.
+  const [generation, setGeneration] = useState(0);
+  const [seedSeen, setSeedSeen] = useState(draft.seed);
+  if (seedSeen !== draft.seed) {
+    setSeedSeen(draft.seed);
+    setGeneration((g) => g + 1);
+  }
+  const blockedReason = policyError(draft.draft);
 
   // Handed to the pane as its own section: this component renders the DetailsPane, so a
   // `useDetailsSection` call here would sit outside the pane's scope.
   const section: DetailsSection = {
     dirty: draft.dirty,
-    canSave: true,
-    blockedReason: null,
+    canSave: blockedReason === null,
+    blockedReason,
     save: async () => {
       if (!ecosystemId || !draft.draft || !draft.seed) return;
       const settings = policyPatch(draft.draft, draft.seed);
@@ -73,9 +88,15 @@ export function ClientAuthSettingsPane({
       }
       const updated = await clientAuthApi.updateEcosystem(ecosystemId, { settings });
       writeConfig(ecosystemId, updated);
+      // The other fields did save, so the cache takes the answer. The draft keeps the owner's
+      // list and the save fails loudly, instead of re-seeding the switch back off.
+      if (allowListDropped(settings, updated.settings)) throw new Error(ALLOW_LIST_NOT_SAVED);
       draft.commit(updated);
     },
-    reset: draft.reset,
+    reset: () => {
+      draft.reset();
+      setGeneration((g) => g + 1);
+    },
   };
 
   const current = draft.draft;
@@ -101,6 +122,7 @@ export function ClientAuthSettingsPane({
           policy={current}
           providers={config.providers}
           onChange={(patch) => draft.patch(patch)}
+          generation={generation}
         />
       )}
     </DetailsPane>

@@ -54,7 +54,7 @@ describe('AuthCallback', () => {
       vi.fn(async (input: RequestInfo | URL) => {
         const url = String(input)
         // Bootstrap refresh on mount → no session yet.
-        if (url.includes('/api/auth/refresh')) {
+        if (url.includes('/api/v1/auth/sessions/refresh')) {
           return { ok: false, status: 401, json: async () => ({}) } as Response
         }
         // The one-time-code exchange → a real session.
@@ -86,7 +86,7 @@ describe('AuthCallback', () => {
       'fetch',
       vi.fn(async (input: RequestInfo | URL) => {
         const url = String(input)
-        if (url.includes('/api/auth/refresh')) {
+        if (url.includes('/api/v1/auth/sessions/refresh')) {
           return { ok: false, status: 401, json: async () => ({}) } as Response
         }
         // The exchange POST never completes — connection drop / request blocked.

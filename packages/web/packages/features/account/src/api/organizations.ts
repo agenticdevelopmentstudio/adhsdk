@@ -3,7 +3,7 @@
 // with the identical 5 methods (resolve/create/rename/archive/restore: same
 // relative paths, same HTTP methods, same request bodies, same error handling)
 // and the identical `Organization`/`OrganizationCreateInput`/`OrganizationProvisioned`/
-// `OrganizationRenameInput`/`OrganizationRenamed`/`OrganizationRestored` wire types,
+// `OrganizationRenameInput`/`OrganizationRenamed` wire types,
 // transcribed from `adh-api-types` for the exact same MECHANISM-tier boundary reason
 // this package hit (see check_boundaries.py's `_is_vocabulary`). This package
 // already depends on `@adh-sdk/data`, so re-exporting keeps ONE maintained
@@ -23,5 +23,4 @@ export {
   type OrganizationProvisioned,
   type OrganizationRenameInput,
   type OrganizationRenamed,
-  type OrganizationRestored,
 } from "@adh-sdk/data/organizations";

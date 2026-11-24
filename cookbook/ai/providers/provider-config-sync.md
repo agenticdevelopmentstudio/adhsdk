@@ -1,7 +1,6 @@
 ---
 id: 1d7812e7-28cb-4874-897f-43aab62fe009
 title: "Provider Configuration Synchronization"
-domain: adhsdk://cookbook/ai/providers/provider-config-sync
 type: ingredient
 version: 1.2.0
 status: review
@@ -22,7 +21,7 @@ tags:
   - wire-contract
 depends-on: []
 related:
-  - adhsdk://cookbook/ai/providers/provider-config-keys
+  - 0f65ea61-3b0f-4a9b-842e-912555b7af62
 references:
   - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIProviderConfigSync.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Tests/AIPluginKitTests/AIProviderConfigSyncTests.swift (adhsdk)
@@ -342,12 +341,6 @@ Not applicable: this component contains no logging call of any kind.
 - **React/Web**: model as a plain TypeScript interface — `interface AIProviderConfigSync { enabled: boolean; selectedConfigId?: string; configs: ResolvedProviderConfig[] }` — with `id`s as `string` (JavaScript has no native `UUID` type). Replicating `selected-config-id-omits-key-when-nil` needs care: `JSON.stringify` omits a key whose value is `undefined` but keeps one whose value is `null`, so the field must be typed/constructed as `selectedConfigId?: string` (and left `undefined`, never set to `null`) to match Swift's "omit the key entirely" behavior exactly.
 - **WinUI 3**: model as C# `record`s using `System.Text.Json` — e.g. `public sealed record AIProviderConfigSync(bool Enabled, Guid? SelectedConfigId, IReadOnlyList<ResolvedProviderConfig> Configs);` and `public sealed record ResolvedProviderConfig(Guid Id, string Name, string PluginIdentifier, string TemplateId, string Model, IReadOnlyDictionary<string, string> Values, IReadOnlyDictionary<string, string> Secrets);`. Apply `[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]` (or an equivalent serializer option) to `SelectedConfigId` to reproduce `selected-config-id-omits-key-when-nil` — `System.Text.Json` writes `null` by default for a `null` nullable property, unlike Swift's key-omitting `encodeIfPresent`. Normalize `Guid.ToString()` (default `"D"` format, lowercase) to uppercase with `.ToUpperInvariant()` — or normalize consistently on read — so `id`/`selectedConfigId` values match byte-for-byte against Foundation's uppercase `uuidString` on the Apple side of the wire. `IReadOnlyDictionary<string, string>`/`Dictionary<string, string>` replace `[String: String]` for `Values`/`Secrets`; preserve `empty-secret-clears-credential` by treating a present key with an empty string the same as the Swift side does, not as equivalent to the key's absence.
 
-## Reference Implementations
-
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIProviderConfigSync.swift` |
-
 ## Design Decisions
 
 **Decision**: The sync envelope carries the entire provider registry (every resolved-configuration record plus the current selection) in one payload, rather than an incremental add/remove/update delta.
@@ -374,12 +367,12 @@ Not applicable: this component contains no logging call of any kind.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | Reliability |
-| [data-minimization](agenticdevelopercookbook://compliance/privacy-and-data#data-minimization) | partial | Privacy and Data |
-| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | failed | Security |
-| [secure-storage](agenticdevelopercookbook://compliance/security#secure-storage) | partial | Security |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
+| [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | partial | Privacy and Data |
+| [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | failed | Security |
+| [adc.check.security.secure-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bb5dfc9b-c5b0-54fa-882f-007ae7dad0e9) | partial | Security |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 `separation-of-concerns` passes because this component performs no storage, no transport, and no business logic of its own; it is only the data shape shared between an app-side sender and a daemon-side receiver, neither of which lives in this file. `idempotent-operations` passes because encoding, decoding, and equality are all deterministic computations of a value's stored properties, with no shared state that could make repeated calls diverge (see `serialized-field-names`, `structural-equality`). `data-minimization` is `partial`: the resolved-configuration record carries a configuration's *entire* resolved value and secret bag in one undifferentiated pair of maps, with no narrower, credential-free view for a caller that only needs identity or model, and no redaction on the type's default description, which prints `secrets` verbatim if ever logged or printed (see `Disclosure safeguard` in Privacy). `input-sanitization` fails because neither `configs`' identifier uniqueness nor `selectedConfigId`'s reference into `configs` is validated at construction or decode time (see `configs-id-uniqueness-unenforced`). `secure-storage` is `partial`: the `values`/`secrets` split gives a future receiver a clean signal for which fields need a secure store, but nothing in this file enforces that a receiver actually routes `secrets` there — that enforcement, like the receiver itself, does not yet exist in this repository (see `sync-application-unimplemented`).
 

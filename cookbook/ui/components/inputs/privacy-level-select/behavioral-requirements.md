@@ -1,0 +1,35 @@
+
+- **render-trigger-with-current-level**: Component MUST display a button trigger showing the current privacy level's label and icon.
+- **render-chevron-icon**: Component MUST display a chevrons-up-down icon (14px) in the trigger, right-aligned, to indicate expandable state.
+- **open-popover-on-trigger-click**: Component MUST open the popover menu when the user clicks the trigger button.
+- **close-popover-on-selection**: Component MUST close the popover and call `onChange` with the selected level when the user clicks or activates an option.
+- **close-popover-on-escape**: Component MUST close the popover when the user presses the Escape key while focused on the listbox.
+- **navigate-with-arrow-keys**: Component MUST move focus through options when the user presses ArrowUp or ArrowDown while the popover is open.
+- **clamp-navigation-at-bounds**: Component MUST prevent cursor movement beyond the first and last navigable option (only-me, hub, public); the disabled "Team / Org" option MUST NOT be reachable via arrow keys.
+- **select-with-enter-or-space**: Component MUST select the currently highlighted option when the user presses Enter or Space while the popover is open.
+- **open-popover-with-trigger-keys**: Component MUST open the popover when the user presses ArrowDown, Enter, or Space while focused on the trigger and the popover is closed.
+- **display-all-three-enabled-options**: Component MUST render exactly three selectable options: "Only me" (Lock icon), "Hub members" (Users icon), and "Public" (Globe icon), each with a label and description.
+- **show-check-on-selected-option**: Component MUST display a gold check mark icon (14px) only on the currently selected option.
+- **display-disabled-coming-soon-option**: Component MUST display a fourth option "Team / Org" marked as disabled and visually distinct (40% opacity), with a "Coming soon" badge and description "Visible to members of your organization".
+- **highlight-hovered-option**: Component MUST apply a background highlight when the user hovers over an option.
+- **highlight-keyboard-focused-option**: Component MUST apply a background highlight to the option currently pointed to by keyboard navigation (cursor state).
+- **respect-disabled-prop**: Component MUST prevent opening the popover and make the trigger non-interactive when `disabled={true}`.
+- **apply-disabled-styling**: Component MUST render the trigger with reduced opacity (50%) and a `not-allowed` cursor when disabled.
+- **focus-listbox-on-open**: Component MUST move focus to the internal listbox surface when the popover opens.
+- **reset-cursor-to-value-on-open**: Component MUST set the keyboard cursor to the currently selected level when the popover opens.
+- **read-value-prop**: Component MUST use the `value` prop to determine the current selection and update the trigger label and icon and the check mark whenever `value` changes. The keyboard cursor (highlight) is not tied to `value` after open: it is reset to `value` only when the popover opens (see **reset-cursor-to-value-on-open**), so an external `value` change while the popover is open leaves the cursor where it was.
+- **call-onchange-with-selected-level**: Component MUST call the `onChange` callback with a `PrivacyLevel` value ('only-me', 'hub', or 'public') when the user commits a selection.
+- **support-aria-label**: Component MUST accept an `ariaLabel` prop and apply it to the trigger and listbox for accessible naming.
+- **apply-aria-haspopup**: Component MUST set `aria-haspopup="listbox"` on the trigger to indicate a listbox menu is available.
+- **apply-aria-expanded**: Component MUST set `aria-expanded` to `true` on the trigger when the popover is open and `false` when closed.
+- **apply-aria-activedescendant**: Component MUST set `aria-activedescendant` on the listbox to the ID of the currently highlighted option when the popover is open.
+- **apply-role-listbox**: Component MUST set `role="listbox"` on the popover surface to identify it as a listbox container.
+- **apply-role-option-to-entries**: Component MUST set `role="option"` on each option (both enabled and disabled) to identify them as listbox options.
+- **set-aria-selected**: Component MUST set `aria-selected="true"` on the currently selected option and `aria-selected="false"` on all others.
+- **set-aria-disabled-on-coming-soon**: Component MUST set `aria-disabled="true"` on the disabled "Team / Org" option.
+- **support-custom-class-name**: Component MUST accept a `className` prop and merge it with the trigger's default classes so caller-provided classes are added to, not swapped in for, the defaults.
+- **prevent-default-on-trigger-keys**: Component MUST suppress the browser's default handling of ArrowDown, Enter, and Space when they are used to open the popover from the trigger.
+- **prevent-default-on-navigation-keys**: Component MUST suppress the browser's default handling of ArrowUp, ArrowDown, Enter, Space, and Escape while the popover is open (so, for example, the page does not scroll).
+- **use-unique-option-ids**: Component MUST generate unique HTML IDs for each option so ARIA linking (`aria-activedescendant`, the option's own `id`) stays correct when multiple instances of the component render on the same page.
+- **truncate-trigger-text**: Component MUST truncate the label text in the trigger to prevent horizontal overflow; the icon MUST NOT shrink or be truncated.
+

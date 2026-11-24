@@ -42,7 +42,7 @@ class IntegrationTransferResult:
             {
                 "config": config,
                 "connections": connections,
-                "repositoryCaches": repository_caches,
+                "repository_caches": repository_caches,
             }
         )
 
@@ -57,7 +57,7 @@ class IntegrationTransferResult:
 
         connections = d.pop("connections")
 
-        repository_caches = d.pop("repositoryCaches")
+        repository_caches = d.pop("repository_caches")
 
         integration_transfer_result = cls(
             config=config,

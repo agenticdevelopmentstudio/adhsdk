@@ -1,0 +1,5 @@
+
+- **className provided without a matching size or color utility**: When `className` is undefined, falsy, empty, or does not include a `size-*`/`text-*` utility, `tailwind-merge` leaves the corresponding default (1rem size, muted color) unaffected. Behavior: MUST use the default for whichever axis (size, color) `className` doesn't override, without error.
+- **Very large classname overrides**: When `className` includes extreme size values (e.g., `size-96`), the component MUST render at that size without clipping or overflow issues (layout depends on parent container). Behavior: MUST render without error; parent container is responsible for containing the size.
+- **Reduced-motion preference enabled**: The component does not query `prefers-reduced-motion` itself, so the Tailwind `animate-spin` class keeps animating even when the OS/browser motion-reduction setting is enabled. Behavior: the animation continues to run; a caller who needs to honor the preference must override it via `className` (e.g. a `motion-reduce:` utility) — see Accessibility Options.
+

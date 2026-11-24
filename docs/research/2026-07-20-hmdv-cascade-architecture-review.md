@@ -3,7 +3,7 @@
 Requested by Mike after the 1.15.x rounds ("take a step back and do an architectural review —
 clearly you're flailing around and making it worse"). Scope: the cascading disclosure style of
 `hierarchical-menu-detail.tsx` (~3,300 lines), `cascade-rules.ts`, the spec
-(`recipes/hierarchical-topic-detail.md` 1.15.2), and the hub's wiring (`WorkspaceShell`,
+(the hierarchical-topic-detail recipe 1.15.2, now `cookbook/ui/blocks/hierarchical-topic-detail/`), and the hub's wiring (`WorkspaceShell`,
 `WorkspaceHome`, the chrome-published feature levels).
 
 ## Verdict

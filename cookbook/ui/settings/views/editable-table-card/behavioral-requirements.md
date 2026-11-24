@@ -2,7 +2,7 @@
 - **columns-in-declared-order**: The table MUST show one column per declared column, in declared order, with the declared titles and widths.
 - **sort-reports-only**: Only sortable columns MUST carry sorting; clicking one MUST report the column id and direction and MUST NOT reorder rows, which stay in the order given.
 - **rows-in-given-order**: The table MUST show one row per given row, in order.
-- **empty-message**: An empty table MUST hide its header and show the empty message; a non-empty table MUST hide the message.
+- **empty-message**: An empty table MUST hide its header and show the empty message, unless its owner keeps the header (because it carries controls of its own); a non-empty table MUST hide the message.
 - **visible-row-count**: The table MUST size itself to show a configurable number of rows, six by default.
 - **toggle-cells-report**: A toggle cell MUST show its state as a switch and report the row id, the column id and the new state when changed.
 - **indicator-cells**: An indicator cell MUST show a filled mark for on and a hollow mark for off, with an accessibility label of its title followed by on or off.

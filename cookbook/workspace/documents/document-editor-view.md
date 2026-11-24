@@ -1,13 +1,12 @@
 ---
 id: 4205c688-865a-4d74-890d-f803ee66fdcb
 title: "Document Editor"
-domain: adhsdk://cookbook/workspace/documents/document-editor-view
 type: ingredient
-version: 1.2.2
+version: 2.1.0
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-16
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -20,12 +19,12 @@ tags:
   - editor
   - pane
 depends-on:
-  - adhsdk://cookbook/workspace/documents/breadcrumb-view
-  - adhsdk://cookbook/workspace/files/file-editor-view
+  - c2417a5c-953b-458e-856b-2c4f7e3a6fde
+  - 9b1b54d5-e514-479f-b9f9-0a03cf4ebbc9
 related:
-  - adhsdk://cookbook/workspace/documents/breadcrumb-view
-  - adhsdk://cookbook/workspace/files/file-editor-view
-  - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
+  - c2417a5c-953b-458e-856b-2c4f7e3a6fde
+  - 9b1b54d5-e514-479f-b9f9-0a03cf4ebbc9
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2
 references: []
 approved-by: ""
 approved-date: ""
@@ -81,9 +80,9 @@ This component is one editor inside one pane of one tab. It hosts a breadcrumb a
 
 ### Layout & Content Hosting
 
-- **breadcrumb-above-content**: The component's view MUST arrange the breadcrumb directly above the hosted editor content in a vertical stack with 0 spacing between them and a fill distribution.
-- **breadcrumb-fixed-height**: The breadcrumb MUST be constrained to a fixed height of `24` points.
-- **content-spans-container-width**: The breadcrumb and the hosted editor content MUST each have their leading and trailing edges pinned to the containing stack's leading and trailing edges.
+- **breadcrumb-above-content**: The component's view MUST arrange the navigation bar, which holds the breadcrumb, directly above the hosted editor content in a vertical stack with 0 spacing between them and a fill distribution.
+- **breadcrumb-fixed-height**: The breadcrumb MUST be constrained to the navigation row's height (see **navigation-row-height**).
+- **content-spans-container-width**: The navigation bar and the hosted editor content MUST each have their leading and trailing edges pinned to the containing stack's leading and trailing edges.
 - **root-view-initial-frame**: The component's root view MUST be created with an initial size of `520`×`424` points, with the stack pinned to all four of the root view's edges.
 - **content-uses-themed-root**: The hosted content MUST be wrapped with the shared theming root so it reads the app's theme palette and paints the theme's window background.
 - **hosts-file-editor-view**: The component MUST host a file editor, supplying it the current selection, the display-option overrides, the document store, the save scheduler, the language services, and an open-file callback that forwards its URL to the open-request callback.
@@ -92,8 +91,21 @@ This component is one editor inside one pane of one tab. It hosts a breadcrumb a
 
 - **breadcrumb-selection-routes-out**: A URL chosen through the breadcrumb (a crumb, or a file from its popover) MUST be reported through the open-request callback, not opened directly in this editor.
 - **editor-open-request-routes-out**: A URL the hosted file editor resolves and reports through its open-file callback MUST be reported through the open-request callback, not opened directly in this editor.
+- **history-segment-lists-the-trail**: The navigation row's control MUST
+  be back, a document segment, and forward. Clicking the document segment
+  MUST pop down the editor's own trail — the same entries back and forward
+  walk — most recent first, each with its file's name and icon, the one
+  showing checked. The segment MUST be disabled while the trail is empty.
+- **choosing-from-the-trail-is-a-step-along-it**: Choosing an entry MUST
+  show that file in this editor and move the trail's cursor to it without
+  adding, removing or reordering entries; choosing the entry already
+  showing MUST do nothing.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
-
+- **navigation-bar-spans-the-pane**: The component MUST take the pane's content spacing itself (the pane pins it flush) and apply it only to the editor area beneath the navigation bar, so the bar runs the pane's full width from its top edge with its one-point outline-colored line beneath it, and the code editor and the Markdown editor are held off the remaining edges by that spacing. A change to the spacing MUST be applied again without accumulating.
+- **navigation-row-height**: The navigation row (back/forward, the recent-documents menu, then the breadcrumb) MUST be `28` points high.
+- **back-forward-is-outlined**: The back/forward control MUST carry a one-point outline in the theme's outline color with a `6`-point corner radius round all of its segments, marking it as one enclosed tool in the bar, and MUST follow theme changes.
+- **markdown-opens-on-single-preview**: When its owner asks for it, the component MUST put its Markdown editor in the single-pane layout on the preview, whatever layout and pane were last chosen anywhere else, and MUST NOT record that as the user's choice; a layout or pane the user then chooses in the editor MUST be recorded as usual. The Document tabs container MUST pass the request to every editor it holds or later creates.
+- **markdown-tabs-follow-tab-position**: The Markdown editor's Markdown and Preview tabs MUST sit on the primary edge of the app-wide tab position setting, in every layout, and MUST move to the new primary edge, in order and with the selection kept, when that setting changes.
 ## Appearance
 
 - **Corner radius**: None set by this file.
@@ -159,8 +171,8 @@ This component is one editor inside one pane of one tab. It hosts a breadcrumb a
 | devc-037 | rows-refresh-on-options-change | Build the option rows, then let the popover close so the kept row references become unset; then set the "show overview" override to true | No crash occurs; the refresh operation's writes to the released rows are no-ops |
 | devc-026 | pane-override-isolated | Two component instances, each with its own independent display-option overrides; toggle "Show line numbers" on the first via its row | The first's resolved "show line numbers" value flips and its overridden state becomes true; the second's resolved value and overridden state are unchanged |
 | devc-027 | reset-does-not-affect-other-panes-or-global | Override "Show line numbers" on both of two instances, then click the first's reset button | The first's overridden state becomes false; the second's stays true; the app-wide "show line numbers" setting is unchanged |
-| devc-028 | breadcrumb-above-content | Load the component's view | The root stack's child views are, in order, the breadcrumb then the hosted content; its orientation is vertical; its spacing is 0 |
-| devc-029 | breadcrumb-fixed-height | Load the component's view | The breadcrumb's height constraint constant is `24` |
+| devc-028 | breadcrumb-above-content | Load the component's view | The root stack's child views are, in order, the navigation bar (holding the breadcrumb) then the hosted content; its orientation is vertical; its spacing is 0 |
+| devc-029 | breadcrumb-fixed-height | Load the component's view | The breadcrumb's height equals the navigation row's, which is `28` |
 | devc-030 | content-spans-container-width | Load the component's view | Both the breadcrumb's and the hosted content's leading/trailing edges pin to the stack's leading/trailing edges |
 | devc-031 | root-view-initial-frame | Load the component's view | The returned root view's initial position and size is `(0, 0, 520, 424)`; the stack's top/bottom/leading/trailing edges pin to the root view's edges |
 | devc-032 | content-uses-themed-root | Inspect the hosted content's root-view wrapping | The shared theming root is applied — verified by code inspection; this wrapping cannot be introspected by an automated test |
@@ -169,7 +181,7 @@ This component is one editor inside one pane of one tab. It hosts a breadcrumb a
 | devc-035 | editor-open-request-routes-out | Install a callback on the open-request callback; invoke the hosted content's open-file callback with a URL | The open-request callback is called with that URL |
 | devc-038 | construction-title-change | Install a callback on the title-change callback; construct the component whose pane-state store has the file-URL key set to an existing file's path | The callback is called during construction |
 | devc-039 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
-
+| devc-040 | markdown-tabs-follow-tab-position | Open a Markdown file in the single-pane layout with the tab position setting at top; change the setting to leading | The Markdown and Preview tabs move from the top edge to the leading edge, the selected tab unchanged |
 ## Edge Cases
 
 - **Null/empty input**: The displayed file being unset clears the selection and the breadcrumb (see **set-file-url-updates-selection**, **set-file-url-updates-breadcrumb**). The project root and the pane-state store are required values supplied at initialization, so neither has a null case to handle here.
@@ -249,14 +261,17 @@ Not applicable: no logging call appears anywhere in this file.
 - **SwiftUI**: The hosted content is already SwiftUI (a private wrapper struct forwarding to `FileEditorView`; see the AppKit / UIKit note below); a fully SwiftUI rebuild of the outer shell would replace the `NSViewController`/`NSStackView` wrapper with a `VStack(spacing: 0)` containing a SwiftUI breadcrumb view (see its own recipe) constrained to a `24`pt frame height and the `FileEditorView` filling the remaining space, driven by an `@Observable` pane view model exposing `fileURL`, `paneTitle`, and the resolved option values in place of `EditorOptionsOverride`'s `ObservableObject`/Combine publisher, and applying `.themedRoot()` once at that `VStack`'s root exactly as this file does today.
 - **Compose**: Model the pane as a `Column` with a fixed-height (`24.dp`-equivalent) breadcrumb `Row` and a `Box(Modifier.weight(1f))` for the editor content. Hold the per-pane option overrides in a small `ViewModel`-scoped `StateFlow` per option, each resolving to a `Boolean?` (absent, meaning "follow the app-wide `DataStore` preference") exactly as `EditorOptionsOverride` does, and observe the shared `DataStore` flow the same way `EditorOptionsOverride.observeGlobals()` observes `UserSettings`, republishing the resolved values so a change in either scope updates any visible options sheet.
 - **React/Web**: Render a flex column: a fixed-height breadcrumb bar, then a `flex: 1; overflow: auto` editor container. Hold `fileURL` and the three option overrides in per-instance React state (not global state), persisting them to a per-pane key in `sessionStorage`/`localStorage` (mirroring the pane-scoped `PaneStateStore` key), and resolve each option as `paneOverride ?? globalSetting` on every render rather than snapshotting it once, so a later change to the global setting is still picked up by a pane that has not overridden that option.
-- **AppKit / UIKit**: Source: `DocumentEditorViewController.swift` (`packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/DocumentPane/`), AppKit-only — `NSViewController` with a plain `NSView` root, `NSHostingView` hosting a private `DocumentEditorPaneView` SwiftUI struct that forwards to `FileEditorView`, `NSStackView` (vertical, `spacing: 0`, `distribution: .fill`) for breadcrumb-over-content layout, `NSButton` (`bezelStyle: .rounded`) for the reset button, `WindowOptionsToggle` for the three toggle rows, and Combine for observing `EditorOptionsOverride`'s published changes; nothing in this file targets UIKit/iOS. `init(coder:)` is unsupported and calls `fatalError`, since this controller is always constructed in code, never from a saved interface file (`NSCoder`). Directory detection queries `url.resourceValues(forKeys: [.isDirectoryKey])` via `try?`, defaulting to `false` on failure; `restoreStoredDocument()` checks `FileManager.default.fileExists(atPath:)` (true for a directory as well as a file) and clears the stored key when it returns `false`; `FileEditorView`'s own `openableNode` filter is what actually excludes a restored directory from being openable content. The whole controller is `@MainActor`-isolated, and `EditorOptionsOverride`'s debounced persistence is scheduled with `DispatchQueue.main.asyncAfter`, so both land on the main actor; `show(_:persist:)` is the shared internal entry point for every path that changes the displayed file. The hosted content is wrapped with `.themedRoot()` (default `paintsBackground: true`), which supplies the theme's `windowBackground` and `primaryText` colors. The dependencies threaded through to the hosted `FileEditorView` are typed as `TextDocumentStore`, `TextDocumentSaveScheduler`, and `ProjectLanguageServices?`; the pane-state dependency is typed as `PaneStateStore`, with `EphemeralPaneStateStore` as the in-memory implementation used in tests. No `Logger`/`os_log` call and no `String(localized:)`/`.strings`-catalog lookup appears anywhere in this file. A UIKit port would replace the gear-triggered popover (owned by the pane chrome, out of scope) with an options screen presented from a toolbar item, since iOS has no macOS-style gear-popover convention, and would need to post an explicit `UIAccessibility.post(notification: .screenChanged, argument:)` (or similar) when the displayed file changes, since the retitle-only signal this file provides (the title-change callback) is not itself an accessibility announcement on macOS either (see Announce state changes in Accessibility).
+- **AppKit / UIKit**: Source: `DocumentEditorViewController.swift` (`packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/DocumentPane/`), AppKit-only — `NSViewController` with a plain `NSView` root, `NSHostingView` hosting a private `DocumentEditorPaneView` SwiftUI struct that forwards to `FileEditorView`, `NSStackView` (vertical, `spacing: 0`, `distribution: .fill`) for breadcrumb-over-content layout, `NSButton` (`bezelStyle: .rounded`) for the reset button, `WindowOptionsToggle` for the three toggle rows, and Combine for observing `EditorOptionsOverride`'s published changes; nothing in this file targets UIKit/iOS. `init(coder:)` is unsupported and calls `fatalError`, since this controller is always constructed in code, never from a saved interface file (`NSCoder`). Directory detection queries `url.resourceValues(forKeys: [.isDirectoryKey])` via `try?`, defaulting to `false` on failure; `restoreStoredDocument()` checks `FileManager.default.fileExists(atPath:)` (true for a directory as well as a file) and clears the stored key when it returns `false`; `FileEditorView`'s own `openableNode` filter is what actually excludes a restored directory from being openable content. The whole controller is `@MainActor`-isolated, and `EditorOptionsOverride`'s debounced persistence is scheduled with `DispatchQueue.main.asyncAfter`, so both land on the main actor; `show(_:persist:)` is the shared internal entry point for every path that changes the displayed file. The hosted content is wrapped with `.themedRoot()` (default `paintsBackground: true`), which supplies the theme's `windowBackground` and `primaryText` colors. The dependencies threaded through to the hosted `FileEditorView` are typed as `TextDocumentStore`, `TextDocumentSaveScheduler`, and `ProjectLanguageServices?`; the pane-state dependency is typed as `PaneStateStore`, with `EphemeralPaneStateStore` as the in-memory implementation used in tests. The Markdown editor (`MarkdownPaneViewController`) sets `keepsTabsOnPrimaryEdge` on its single, Markdown and preview `MultiTabbedViewController` frames and adds and selects its tabs on each frame's `primaryEdge`, which follows `UserSettings.tabsPositions`. No `Logger`/`os_log` call and no `String(localized:)`/`.strings`-catalog lookup appears anywhere in this file. A UIKit port would replace the gear-triggered popover (owned by the pane chrome, out of scope) with an options screen presented from a toolbar item, since iOS has no macOS-style gear-popover convention, and would need to post an explicit `UIAccessibility.post(notification: .screenChanged, argument:)` (or similar) when the displayed file changes, since the retitle-only signal this file provides (the title-change callback) is not itself an accessibility announcement on macOS either (see Announce state changes in Accessibility).
 - **WinUI 3**: Rebuild the shell as a `UserControl` containing a two-row `Grid`: a fixed-height row (`GridLength` matching the `24`px breadcrumb height) hosting a `BreadcrumbBar`-based analogue (see the Breadcrumb View recipe) and a content row hosting the editor. Persist the open file's path per pane through an `ApplicationData.Current.LocalSettings` composite key mirroring `PaneStateStore`'s per-pane prefix, restoring it in the control's `Loaded` handler and clearing that key when `StorageFile.GetFileFromPathAsync` throws `FileNotFoundException` (mirroring **missing-file-restore**). Model the three toggles and the reset button as a `Flyout` (or `MenuFlyoutSubItem`) opened from a gear `AppBarButton`, using three `ToggleSwitch` controls bound to a small object that resolves each option as "pane override, else roaming `ApplicationData` setting" exactly as `EditorOptionsOverride` does, and refresh the flyout's `ToggleSwitch.IsOn` and the reset button's `IsEnabled` from that object's change event the same way `refreshOptionRows()` does. Route a URL this control cannot open in place through a routed or bubbled event rather than a closure, mirroring `onOpenRequest`, since WinUI favors events over stored closures for cross-control communication.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/DocumentPane/DocumentEditorViewController.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/DocumentPane/DocumentEditorViewController.swift` | confirmed (2.0.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chrome/BackForwardControl.swift` | confirmed (2.0.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/DocumentPane/DocumentEditorViewController.swift` | confirmed (2.0.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MarkdownPane/MarkdownPaneViewController.swift` | confirmed (2.0.0) |
 
 ## Design Decisions
 
@@ -280,11 +295,11 @@ Not applicable: no logging call appears anywhere in this file.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | Accessibility |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
-| [state-recovery](agenticdevelopercookbook://compliance/reliability#state-recovery) | partial | Reliability |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
+| [adc.check.reliability.state-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/6e64e2f2-28ad-55d5-a8ed-cee075366674) | partial | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 The `screen-reader-support` status is partial: the reset button's and each toggle's accessibility labels and identifiers are set explicitly (see Accessibility, **toggle-accessibility-identifiers**, **reset-accessibility-identity**), but this file posts no accessibility notification of its own when the displayed file changes, so any announcement to a screen reader depends entirely on the enclosing chrome (see Accessibility, Announce state changes). The `no-hardcoded-strings` status is failed because six user-facing strings in this file are hardcoded English literals with no localization mechanism (see Localization). The `state-recovery` status is partial because this file specifies only that it reads and writes one key on a caller-supplied `PaneStateStore`; the actual durability guarantee belongs to whichever concrete store the caller supplies (see Privacy, Storage).
 
@@ -301,3 +316,5 @@ The `screen-reader-support` status is partial: the reset button's and each toggl
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to workspace/documents/. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added separation-of-concerns (passed) and unit-test-coverage (partial) compliance rows. |
 | 1.2.2 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
+| 2.0.0 | 2026-11-15 | Mike Fullerton | Recent-documents menu between back and forward; navigation-bar-spans-the-pane, navigation-row-height, back-forward-is-outlined and markdown-opens-on-single-preview; the breadcrumb takes the 28-point navigation row's height inside the navigation bar (breadcrumb-fixed-height, breadcrumb-above-content, content-spans-container-width, devc-028 and devc-029 updated). |
+| 2.1.0 | 2026-11-16 | Mike Fullerton | The Markdown editor's tabs follow the global tab position's primary edge. |

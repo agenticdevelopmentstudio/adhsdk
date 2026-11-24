@@ -124,17 +124,31 @@ final class PartnerStoreReviewsTests: XCTestCase {
         XCTAssertEqual(seen, [.reviews, .reviews])
     }
 
-    func testVersionOneDatabaseMigratesToTwoKeepingRows() throws {
+    func testVersionOneDatabaseMigratesToTheLatestKeepingRows() throws {
         try store.setValue("keep", forKey: "probe")
         try store.upsert(PartnerJob(id: "j", name: "J", isEnabled: true, scheduleSeconds: nil, guidelines: "g",
                                     steps: [], isBuiltIn: false))
         store = nil
-        rawExec("DROP TABLE review; DROP TABLE review_setting; DELETE FROM schema_migrations WHERE version = 2")
+        rawExec("DROP TABLE review; DROP TABLE review_setting; DELETE FROM schema_migrations WHERE version >= 2")
         store = try PartnerStore(path: databasePath)
-        XCTAssertEqual(try store.schemaVersion(), 2)
+        XCTAssertEqual(try store.schemaVersion(), PartnerStore.currentSchemaVersion)
         XCTAssertEqual(try store.value(forKey: "probe"), "keep")
         XCTAssertEqual(try store.jobs().map(\.id), ["j"])
         try store.insertReview(makeReview("a"))
         XCTAssertEqual(try store.reviews(state: nil).count, 1)
+    }
+
+    func testVersionTwoDatabaseGainsThePathIndex() throws {
+        try store.insertReview(makeReview("a"))
+        store = nil
+        rawExec("DROP INDEX idx_review_path_sha; DELETE FROM schema_migrations WHERE version = 3")
+        store = try PartnerStore(path: databasePath)
+        XCTAssertEqual(try store.schemaVersion(), 3)
+        let indexes = try store.locked {
+            try store.runQuery("SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'review'",
+                               []) { $0.text(0) }
+        }
+        XCTAssertTrue(indexes.contains("idx_review_path_sha"))
+        XCTAssertEqual(try store.reviews(state: nil).map(\.id), ["a"])
     }
 }

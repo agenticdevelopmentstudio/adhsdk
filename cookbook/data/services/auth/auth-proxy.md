@@ -1,13 +1,12 @@
 ---
 id: 4a345333-b18d-48f1-806d-453c15155dfa
 title: "Authentication Proxy"
-domain: adhsdk://cookbook/data/services/auth/auth-proxy
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -159,7 +158,7 @@ Not applicable — this is a server-side request-forwarding proxy, not a visual 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
 | auth-client-server-001 | backend-url-explicit-override | Backend-URL resolution given `{ API_BACKEND_URL: 'https://custom.example', NODE_ENV: 'production' }` | Returns `'https://custom.example'` |
-| auth-client-server-002 | backend-url-empty-override-ignored | Backend-URL resolution given `{ API_BACKEND_URL: '', NODE_ENV: 'production' }` | Returns `'https://api.agenticdeveloperhub.com'` (empty string is falsy) — derived directly from the truthiness check; no dedicated test exists |
+| auth-client-server-002 | backend-url-empty-override-ignored | Backend-URL resolution given `{ API_BACKEND_URL: '', NODE_ENV: 'production' }` | Returns `'https://api.agenticdeveloperhub.com'` (empty string is falsy) |
 | auth-client-server-003 | backend-url-production-default | Backend-URL resolution given `{ NODE_ENV: 'production' }` | Returns `'https://api.agenticdeveloperhub.com'` |
 | auth-client-server-004 | backend-url-development-default | Backend-URL resolution given `{ NODE_ENV: 'development' }` | Returns `'http://localhost:3000'` |
 | auth-client-server-005 | backend-url-development-default | Backend-URL resolution given `{}` | Returns `'http://localhost:3000'` |
@@ -356,9 +355,9 @@ writes to a log at any level.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/auth/src/server/proxy.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/auth/src/server/proxy.ts` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -399,20 +398,19 @@ writes to a log at any level.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | passed | Security |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | failed | Best Practices |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | passed | Reliability |
-| [no-pii-in-logs](agenticdevelopercookbook://compliance/privacy-and-data#no-pii-in-logs) | passed | Privacy and Data |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
+| [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | passed | Security |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | failed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | Reliability |
+| [adc.check.privacy-and-data.no-pii-in-logs](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/23bca2e1-dc0f-5ff4-beaf-03891ad48e6b) | passed | Privacy and Data |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
 The `explicit-error-handling` failure reflects facts recorded in Edge Cases:
 a path segment that is invalid in a URL makes `fetch` throw a `TypeError`
 that neither `proxyToBackend` nor `makeProxyHandlers` catches. The proxy
 also sets no outbound timeout and does not forward cancellation.
 
-`unit-test-coverage` is partial because `proxy.test.ts` in the auth package's `__tests__` directory exercises backend-URL resolution (explicit setting, production default, development default) and the forced `identity` Accept-Encoding on the forwarded request, but the invalid-path-segment `TypeError`, the missing outbound timeout and the cancellation non-forwarding recorded in Edge Cases have no test.
-
+`unit-test-coverage` is passed: `proxy.test.ts` in the auth package's `__tests__` directory asserts all 22 conformance vectors (backend-URL resolution, target and query building, header handling, redirect and body forwarding, the five generated handlers, and the opaque credential pass-through). The invalid-path-segment `TypeError`, the missing outbound timeout and the cancellation non-forwarding recorded in Edge Cases are not conformance vectors and have no test.
 ## Change History
 
 | Version | Date | Author | Summary |
@@ -422,3 +420,4 @@ also sets no outbound timeout and does not forward cancellation.
 | 1.0.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to data/services/auth/. |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Cite unit-test-coverage in Compliance. |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (proxy.test.ts, 22 of 22 vectors); unit-test-coverage now passed. |

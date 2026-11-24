@@ -1,7 +1,7 @@
 
 | Name | Domain | Role | Required | Configuration |
 |---|---|---|---|---|
-| Field | adhsdk://recipes/field | Label + optional hint wrapper around each non-boolean control | yes | `label` = `name` (+ ` *` when required); `hint="JSON"` for object/array/unknown columns |
+| Field | [adhsdk.ingredient.ui.blocks.field](cookbook:0c199036-81c3-47c3-9e79-e4b8187ca69a) | Label + optional hint wrapper around each non-boolean control | yes | `label` = `name` (+ ` *` when required); `hint="JSON"` for object/array/unknown columns |
 
 Composed shared primitives without their own recipe domains: the per-type
 control picker (rendering a select, checkbox, textarea, or text input

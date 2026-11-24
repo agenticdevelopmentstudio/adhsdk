@@ -5,7 +5,7 @@
  * which is the one component they all mount and the only place `useAuth()` is guaranteed to
  * resolve). The rule it enforces is the whole feature:
  *
- *   signed in  → the colour mode + a11y prefs saved against the USER (GET /api/me/appearance)
+ *   signed in  → the colour mode + a11y prefs saved against the USER (GET /api/v1/account?include[]=appearance)
  *   signed out → no prefs to speak of, so follow the OPERATING SYSTEM (colour mode 'auto')
  *
  * It has to be a server round-trip rather than a cookie or localStorage: the ~45 brand sites live

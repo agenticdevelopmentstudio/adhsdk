@@ -1,13 +1,12 @@
 ---
 id: 7ba98112-0f6d-4236-ab6b-aa18b72d76bd
 title: "Status Server Monitor Provider Deploy"
-domain: adhsdk://cookbook/status/service/monitor/provider-deploy
 type: ingredient
-version: 1.0.3
+version: 1.0.4
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -22,8 +21,8 @@ tags:
   - server
 depends-on: []
 related:
-  - adhsdk://cookbook/status/service/monitor/deploy-status
-  - adhsdk://cookbook/status/service/monitor/deploy-view
+  - 96009fcc-e32e-4a40-9b3c-8b4f83f1cfec
+  - 9b95bde8-c47e-40a4-a21c-4a84c23ddbf1
 references:
   - packages/web/packages/status-server/src/monitor/provider-deploy.ts (adhsdk)
   - packages/web/packages/status-server/test/timestamp-validation.test.ts (adhsdk)
@@ -40,7 +39,7 @@ approved-date: ""
 
 ## Overview
 
-`provider-deploy.ts` (`packages/web/packages/status-server/src/monitor/provider-deploy.ts`) is a pure, synchronous logic module in the status backend. It exports the `ProviderDeploy` interface — a deployment exactly as a provider fetcher or webhook mapper reports it, described by the file's own header comment as "structurally the old deployments-table row minus the storage-only columns" (a `liveHost` is stamped from config at serve time; a `fetchedAt` was a storage artifact) — the trust-boundary timestamp parser `toValidDate`, and `providerDeployToDTO`, which shapes a `ProviderDeploy` plus a resolved `liveHost` into the wire `DeploymentDTO` (`types.ts`) that the client renders. `providerDeployToDTO` composes two other pure modules external to this file: `combinedStatus` from `deploy-status.ts` (adhsdk://cookbook/status/service/monitor/deploy-status) derives the single `status` field, and `deployEnv` plus `isRealEnvDeployRow` from `deploy-view.ts` (adhsdk://cookbook/status/service/monitor/deploy-view) derive the `tier` field. Every provider fetcher (`fetch-vercel.ts`, `fetch-railway.ts`, `fetch-cloudflare.ts`, `fetch-vercel-projects.ts`) and the webhook mapper (`webhook-events.ts`) import `toValidDate` and the `ProviderDeploy` type to construct rows at the trust boundary; `routes/reads.ts` is `providerDeployToDTO`'s only caller, once for a persisted row (via its own `rowToProviderDeploy`, which stamps `confirmedAt` from the row's `fetched_at`) and once for a live-buffer overlay row (whose `confirmedAt` is stamped from the webhook's own receipt time). This file performs no network call, no database read or write, and holds no state between calls; its one side effect is a single `console.error` call inside the module-private `isoOf` helper, reached only when a legacy row's `createdAt` is already an Invalid Date.
+`provider-deploy.ts` (`packages/web/packages/status-server/src/monitor/provider-deploy.ts`) is a pure, synchronous logic module in the status backend. It exports the `ProviderDeploy` interface — a deployment exactly as a provider fetcher or webhook mapper reports it, described by the file's own header comment as "structurally the old deployments-table row minus the storage-only columns" (a `liveHost` is stamped from config at serve time; a `fetchedAt` was a storage artifact) — the trust-boundary timestamp parser `toValidDate`, and `providerDeployToDTO`, which shapes a `ProviderDeploy` plus a resolved `liveHost` into the wire `DeploymentDTO` (`types.ts`) that the client renders. `providerDeployToDTO` composes two other pure modules external to this file: `combinedStatus` from `deploy-status.ts` ([adhsdk.ingredient.status.service.monitor.deploy-status](cookbook:96009fcc-e32e-4a40-9b3c-8b4f83f1cfec)) derives the single `status` field, and `deployEnv` plus `isRealEnvDeployRow` from `deploy-view.ts` ([adhsdk.ingredient.status.service.monitor.deploy-view](cookbook:9b95bde8-c47e-40a4-a21c-4a84c23ddbf1)) derive the `tier` field. Every provider fetcher (`fetch-vercel.ts`, `fetch-railway.ts`, `fetch-cloudflare.ts`, `fetch-vercel-projects.ts`) and the webhook mapper (`webhook-events.ts`) import `toValidDate` and the `ProviderDeploy` type to construct rows at the trust boundary; `routes/reads.ts` is `providerDeployToDTO`'s only caller, once for a persisted row (via its own `rowToProviderDeploy`, which stamps `confirmedAt` from the row's `fetched_at`) and once for a live-buffer overlay row (whose `confirmedAt` is stamped from the webhook's own receipt time). This file performs no network call, no database read or write, and holds no state between calls; its one side effect is a single `console.error` call inside the module-private `isoOf` helper, reached only when a legacy row's `createdAt` is already an Invalid Date.
 
 ## Behavioral Requirements
 
@@ -63,8 +62,8 @@ approved-date: ""
 - **dto-passthrough-fields**: `providerDeployToDTO(d, liveHost)` MUST copy `id`, `platform`, `projectName`, `buildPhase`, `deployPhase`, `environment`, `commitHash`, `commitMessage`, `branch`, `commitRepo`, and `url` from `d` to the returned `DeploymentDTO` unchanged.
 - **dto-provider-project-id-coalesce**: `providerDeployToDTO` MUST set the result's `providerProjectId` to `d.providerProjectId ?? null`; per the mapper's own comment, this converts an absent field to an explicit wire `null` (rather than an absent JSON key) so a consumer can distinguish "this row has no provider-issued id" from "this DTO predates the field."
 - **dto-error-text-coalesce**: `providerDeployToDTO` MUST set the result's `errorText` to `d.errorText ?? null`.
-- **dto-status-derivation**: `providerDeployToDTO` MUST set the result's `status` to `combinedStatus({ buildPhase: d.buildPhase, deployPhase: d.deployPhase })` (adhsdk://cookbook/status/service/monitor/deploy-status, external to this file).
-- **dto-tier-gate**: `providerDeployToDTO` MUST set the result's `tier` to `null` when `isRealEnvDeployRow(d.platform, d.environment)` returns `false`, and MUST otherwise set `tier` to `deployEnv(d.platform, d.projectName, d.environment, d.branch ?? null)` (both adhsdk://cookbook/status/service/monitor/deploy-view, external to this file). Per the mapper's own comment, this gate MUST be evaluated and applied before `deployEnv` is called, because `deployEnv` itself has no "not a deployment of any tier" answer to give — a Vercel preview reports no `environment` yet its `branch` names a feature ref and its `projectName` is the production project's, so both of `deployEnv`'s own fallback signals would otherwise badge it with a tier it does not have.
+- **dto-status-derivation**: `providerDeployToDTO` MUST set the result's `status` to `combinedStatus({ buildPhase: d.buildPhase, deployPhase: d.deployPhase })` ([adhsdk.ingredient.status.service.monitor.deploy-status](cookbook:96009fcc-e32e-4a40-9b3c-8b4f83f1cfec), external to this file).
+- **dto-tier-gate**: `providerDeployToDTO` MUST set the result's `tier` to `null` when `isRealEnvDeployRow(d.platform, d.environment)` returns `false`, and MUST otherwise set `tier` to `deployEnv(d.platform, d.projectName, d.environment, d.branch ?? null)` (both [adhsdk.ingredient.status.service.monitor.deploy-view](cookbook:9b95bde8-c47e-40a4-a21c-4a84c23ddbf1), external to this file). Per the mapper's own comment, this gate MUST be evaluated and applied before `deployEnv` is called, because `deployEnv` itself has no "not a deployment of any tier" answer to give — a Vercel preview reports no `environment` yet its `branch` names a feature ref and its `projectName` is the production project's, so both of `deployEnv`'s own fallback signals would otherwise badge it with a tier it does not have.
 - **dto-live-host-passthrough**: `providerDeployToDTO` MUST set the result's `liveHost` to its own `liveHost` parameter unchanged; it MUST NOT derive `liveHost` from any field of `d`.
 - **iso-serialize-valid-date**: The module-private `isoOf(id, d)` helper MUST return `d.toISOString()` when `Number.isFinite(d.getTime())` is `true`.
 - **iso-serialize-invalid-date-fail-soft**: `isoOf(id, d)` MUST NOT throw when `d` is an Invalid Date; it MUST instead log an error identifying `id` and the fact that the value being serialized is an invalid `createdAt` (via `console.error`), and MUST return `new Date(0).toISOString()` — the Unix epoch, ISO-encoded.
@@ -99,8 +98,8 @@ Not applicable — this is a data-shape and pure-mapping module, not a visual co
 | status-server-monitor-provider-deploy-010 | dto-tier-gate | `providerDeployToDTO(deploy({ projectName: 'hub', branch: 'prepared' }), null)` where `deploy()` defaults to `{ platform: 'vercel', projectName: 'hub-help-testing', environment: 'production', branch: null, ... }` | `dto.tier === 'testing'` and `dto.environment === 'production'` (the raw promotion target is preserved alongside the derived tier) — `deploy-env.test.ts` › "providerDeployToDTO stamps the tier" › "derives it from the branch, alongside the RAW promotion target" |
 | status-server-monitor-provider-deploy-011 | dto-tier-gate | `providerDeployToDTO(deploy(), null)`; `providerDeployToDTO(deploy({ projectName: 'hub' }), null)` | `'testing'` and `'production'` respectively — with no branch, `deployEnv` falls back to the project-name rule — `deploy-env.test.ts` › "falls back to the name rule when the row has no branch" |
 | status-server-monitor-provider-deploy-012 | dto-tier-gate | `providerDeployToDTO(deploy({ environment: null, branch: 'feature/x' }), null)`; `providerDeployToDTO(deploy({ environment: '' }), null)` | Both `dto.tier === null` — a Vercel preview (no real `environment`) is never assigned a tier even though its branch or project name would otherwise suggest one — `deploy-env.test.ts` › "is NULL for a Vercel preview, which is not a deployment of any tier" |
-| status-server-monitor-provider-deploy-013 | dto-phase-confirmed-at-fallback | `providerDeployToDTO({ ...deploy(), confirmedAt: undefined }, null)` vs. `providerDeployToDTO({ ...deploy(), confirmedAt: new Date(2000) }, null)` | The first result's `phaseConfirmedAt` equals `isoOf` applied to `createdAt` (`new Date(1000).toISOString()`); the second's equals `isoOf` applied to the supplied `confirmedAt` (`new Date(2000).toISOString()`) — traced to the mapper's `d.confirmedAt ?? d.createdAt` expression; no dedicated test exercises `phaseConfirmedAt` directly in this package |
-| status-server-monitor-provider-deploy-014 | dto-provider-project-id-coalesce, dto-error-text-coalesce | `providerDeployToDTO({ id: 'ry_1', platform: 'railway', projectName: 'p', buildPhase: null, deployPhase: 'none', environment: null, commitHash: null, commitMessage: null, branch: null, commitRepo: null, url: null, createdAt: new Date(0) }, null)` (both `providerProjectId` and `errorText` omitted) | `dto.providerProjectId === null` and `dto.errorText === null` — traced directly to the mapper's `?? null` expressions; no dedicated test asserts these two fields in isolation in this package |
+| status-server-monitor-provider-deploy-013 | dto-phase-confirmed-at-fallback | `providerDeployToDTO({ ...deploy(), confirmedAt: undefined }, null)` vs. `providerDeployToDTO({ ...deploy(), confirmedAt: new Date(2000) }, null)` | The first result's `phaseConfirmedAt` equals `isoOf` applied to `createdAt` (`new Date(1000).toISOString()`); the second's equals `isoOf` applied to the supplied `confirmedAt` (`new Date(2000).toISOString()`) — traced to the mapper's `d.confirmedAt ?? d.createdAt` expression; `deploy-env.test.ts` › "providerDeployToDTO field coalescing" › "status-server-monitor-provider-deploy-013: ..." |
+| status-server-monitor-provider-deploy-014 | dto-provider-project-id-coalesce, dto-error-text-coalesce | `providerDeployToDTO({ id: 'ry_1', platform: 'railway', projectName: 'p', buildPhase: null, deployPhase: 'none', environment: null, commitHash: null, commitMessage: null, branch: null, commitRepo: null, url: null, createdAt: new Date(0) }, null)` (both `providerProjectId` and `errorText` omitted) | `dto.providerProjectId === null` and `dto.errorText === null` — traced directly to the mapper's `?? null` expressions; `deploy-env.test.ts` › "providerDeployToDTO field coalescing" › "status-server-monitor-provider-deploy-014: ..." |
 
 ## Edge Cases
 
@@ -163,9 +162,9 @@ Subsystem: `status-server` | Category: `provider-deploy`
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/monitor/provider-deploy.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/monitor/provider-deploy.ts` | confirmed (1.0.4) |
 
 ## Design Decisions
 
@@ -189,17 +188,18 @@ Subsystem: `status-server` | Category: `provider-deploy`
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
 
-`unit-test-coverage` is `partial`: `timestamp-validation.test.ts` gives `toValidDate` thorough coverage of its accept and reject branches, and separately asserts `isoOf`'s fail-soft epoch substitution through `providerDeployToDTO`'s `createdAt` field; `deploy-env.test.ts` separately gives the `tier` derivation (the gate plus both of `deployEnv`'s fallback paths) thorough coverage through `providerDeployToDTO`. But `dto-passthrough-fields`, `dto-provider-project-id-coalesce`, `dto-error-text-coalesce`, and `dto-phase-confirmed-at-fallback` have no dedicated assertion anywhere in this package — each is exercised only incidentally, as an unasserted field on a `DeploymentDTO` object the `tier`/`createdAt`-focused tests construct for another purpose. `separation-of-concerns` passes: this file's only responsibility is the `ProviderDeploy` data shape, trust-boundary timestamp parsing, and DTO shaping composed from two other pure modules' exported derivations; it performs no I/O, no persistence, and no presentation of its own. `explicit-error-handling` passes: `toValidDate` converts every unparseable or out-of-range input into an explicit `null` return rather than letting a downstream `.toISOString()` throw later, and `isoOf`'s fail-soft path logs the specific failure (naming the deploy's `id`) via `console.error` rather than silently substituting a value with no signal. `fault-tolerance` passes: `providerDeployToDTO` accepts a `ProviderDeploy` whose `createdAt` or `confirmedAt` may already be an Invalid Date — data this file did not itself validate at construction time — and still returns a well-formed `DeploymentDTO` rather than throwing, per `iso-serialize-invalid-date-fail-soft`.
+`unit-test-coverage` is `passed`: `timestamp-validation.test.ts` gives `toValidDate` thorough coverage of its accept and reject branches (vectors 001-008) and asserts `isoOf`'s fail-soft epoch substitution through `providerDeployToDTO`'s `createdAt` field (009); `deploy-env.test.ts` gives the `tier` derivation (010-012) and, in its "field coalescing" suite, the `phaseConfirmedAt` fallback (013) and the `providerProjectId` and `errorText` null coalescing (014) thorough coverage through `providerDeployToDTO`. `separation-of-concerns` passes: this file's only responsibility is the `ProviderDeploy` data shape, trust-boundary timestamp parsing, and DTO shaping composed from two other pure modules' exported derivations; it performs no I/O, no persistence, and no presentation of its own. `explicit-error-handling` passes: `toValidDate` converts every unparseable or out-of-range input into an explicit `null` return rather than letting a downstream `.toISOString()` throw later, and `isoOf`'s fail-soft path logs the specific failure (naming the deploy's `id`) via `console.error` rather than silently substituting a value with no signal. `fault-tolerance` passes: `providerDeployToDTO` accepts a `ProviderDeploy` whose `createdAt` or `confirmedAt` may already be an Invalid Date — data this file did not itself validate at construction time — and still returns a well-formed `DeploymentDTO` rather than throwing, per `iso-serialize-invalid-date-fail-soft`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.4 | 2026-11-14 | Mike Fullerton | Conformance tests added (deploy-env.test.ts, 14 of 14 vectors; 001-012 already covered by timestamp-validation.test.ts and deploy-env.test.ts); unit-test-coverage now passed. |
 | 1.0.3 | 2026-10-04 | Mike Fullerton | Inverted prohibitions (none/neither/no X MUST) restated as MUST NOT. |
 | 1.0.2 | 2026-09-27 | Mike Fullerton | Moved into the concept grouping. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

@@ -1,0 +1,7 @@
+
+| Version | Date | Author | Summary |
+|---|---|---|---|
+| 1.2.1 | 2026-09-25 | Mike Fullerton | Restored on-main 1.0.0 Change History wording ("Initial recipe" not "Initial ingredient"); added missing separation-of-concerns/unit-test-coverage Compliance rows. |
+| 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirement IDs to subject-only kebab-case; narrow render-plain-text to the inactive state; add noop-on-empty-text (remaps T11) and pauseMs/minDuration test vectors (T12/T13); name the exact cursive-script Unicode set; rewrite Platform Notes for SwiftUI/Compose/AppKit-UIKit/WinUI 3 with correct APIs and per-platform cursive-skip/word-wrap/accessible-text coverage; reformat Design Decisions into Decision/Rationale/Approved form and add a reduced-motion opt-out decision; resolve the Accessibility Options contradiction; rewrite Compliance as canonical linked checks; add references; correct Change History wording and authorship. |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | AI-assisted (Claude Haiku 4.5): bump version, update modified date, add all template sections (Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, Privacy marked not applicable; expand Platform Notes with concrete WinUI/AppKit/UIKit/Compose guidance). |
+| 1.0.0 | 2026-07-03 | Mike Fullerton | Initial recipe; documents the decorative traveling-lens effect, its sweep params, and the preserved accessible text. |

@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
-    "id": "55878D7D-97F1-420A-A732-680AC39C8FF4",
+    "id": "55878d7d-97f1-420a-a732-680ac39c8ff4",
     "title": "Expiring Memo",
-    "domain": "adhsdk://cookbook/foundation/collections/expiring-memo",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -26,13 +25,13 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/foundation/collections/lru-cache"
+      "fa95bd9d-de48-4b37-8b30-748dc7b09280"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "9c61dc01c9a6dfc9",
+  "synced": "7dfe7a1069aac898",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -51,7 +50,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

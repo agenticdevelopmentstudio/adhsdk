@@ -1,0 +1,1 @@
+Not applicable — `Account` is a protocol and value types with no options. Every property (`id`, `displayName`, `summary`, `signupURL`, `onChange`) is supplied by the conformer and specified under Behavioral Requirements, and `AccountUser.avatarURL` is an optional field of the value type.

@@ -1,0 +1,13 @@
+
+| ID | Requirements | Input | Expected |
+|----|-------------|-------|----------|
+| git-conflict-document-001 | conflict-structure | Parse `top`, a conflict `HEAD`/`ours one`/`theirs one`/`topic`, `middle`, a second such conflict, `bottom`, with a trailing newline. | Five segments: common `top`, the first conflict with labels `HEAD` and `topic`, common `middle`, the second conflict, common `bottom`; two conflicts; ends with a newline. |
+| git-conflict-document-002 | conflict-diff3-base, conflict-structure | Parse `<<<<<<< HEAD:a.txt`, `ours`, `\|\|\|\|\|\|\| merged common ancestors`, `base 1`, `base 2`, `=======`, `theirs`, `>>>>>>> feature branch`. | One conflict with base `base 1`, `base 2`, labels `HEAD:a.txt` and `feature branch`; resolved to base gives `base 1\nbase 2\n`. |
+| git-conflict-document-003 | conflict-markers, conflict-resolve-empty | Parse `<<<<<<<`, `=======`, `theirs`, `>>>>>>>`. | One conflict with empty ours, no base and empty labels; resolved to ours gives the empty string; to theirs gives `theirs\n`. |
+| git-conflict-document-004 | conflict-trailing-newline | Parse `a`, a conflict `x`/`o`/`t`/`y`, `z` with no trailing newline; resolve to theirs. | Not ending with a newline; resolved text is `a\nt\nz`. |
+| git-conflict-document-005 | conflict-no-document | Parse a conflict with no closing marker; one with neither separator nor closing marker; plain text; the empty string. | Each is no document. |
+| git-conflict-document-006 | conflict-lookalikes, conflict-markers | Parse `=======`, `<<<<<<<< eight`, `<<<<<<< HEAD`, `<<<<<<< inner`, `=======`, `t`, `>>>>>>> x`, `>>>>>>> after`. | Common `=======`, `<<<<<<<< eight`; a conflict with ours `<<<<<<< inner` and theirs `t`; common `>>>>>>> after`. |
+| git-conflict-document-007 | conflict-crlf | Parse `a\r\n<<<<<<< o\r\nx\r\n=======\r\ny\r\n>>>>>>> t\r\n`; resolve to ours. | Ends with a newline; resolved text is `a\r\nx\r\n`. |
+| git-conflict-document-008 | conflict-resolve-choices | The two-conflict text of 001 resolved with the same choice for both, for each of ours, theirs, ours then theirs, theirs then ours; and with ours then theirs per conflict. | The common lines kept, each conflict replaced by the chosen lines in the chosen order. |
+| git-conflict-document-009 | conflict-resolve-incomplete | The text of 001 resolved with a choice for conflict 0 only, with no choices, and with base for a conflict that has no base. | Nothing, in each case. |
+| git-conflict-document-010 | conflict-resolve-choices | A real two-conflict merge in a temporary repository, the working file resolved to ours for every conflict. | Equal to the file at index stage 2 (`git show :2:a.txt`), which is our branch's file. |

@@ -32,21 +32,21 @@ struct SystemWindowMatcherTests {
         )
     }
 
-    @Test("app-name mismatch scores 0")
+    @Test("window-matching-001: app-name mismatch scores 0")
     func appMismatch() {
         let matcher = SystemWindowMatcher()
         let fingerprint = makeFingerprint(app: "Xcode", pattern: "Proj", strategy: .appAndTitleSubstring)
         #expect(matcher.score(window: makeWindow(app: "Other", title: "Proj"), against: fingerprint) == 0)
     }
 
-    @Test("appOnly matches any same-app window")
+    @Test("window-matching-002: appOnly matches any same-app window")
     func appOnly() {
         let matcher = SystemWindowMatcher()
         let fingerprint = makeFingerprint(app: "Terminal", pattern: "", strategy: .appOnly)
         #expect(matcher.score(window: makeWindow(app: "Terminal", title: "anything"), against: fingerprint) == 80)
     }
 
-    @Test("a one-character substring pattern does not over-match")
+    @Test("window-matching-003: a one-character substring pattern does not over-match")
     func shortSubstringGuarded() {
         let matcher = SystemWindowMatcher()
         let fingerprint = makeFingerprint(app: "TestApp", pattern: "a", strategy: .appAndTitleSubstring)
@@ -54,14 +54,14 @@ struct SystemWindowMatcherTests {
         #expect(matcher.score(window: makeWindow(app: "TestApp", title: "banana"), against: fingerprint) == 0)
     }
 
-    @Test("a multi-character substring matches at 60")
+    @Test("window-matching-004: a multi-character substring matches at 60")
     func substringMatches() {
         let matcher = SystemWindowMatcher()
         let fingerprint = makeFingerprint(app: "TestApp", pattern: "ban", strategy: .appAndTitleSubstring)
         #expect(matcher.score(window: makeWindow(app: "TestApp", title: "banana"), against: fingerprint) == 60)
     }
 
-    @Test("regex strategy matches a whole title family")
+    @Test("window-matching-005: regex strategy matches a whole title family")
     func regexFamily() {
         let matcher = SystemWindowMatcher()
         let fingerprint = makeFingerprint(app: "TestApp", pattern: "JIRA-\\d+", strategy: .appAndTitleRegex)
@@ -71,7 +71,7 @@ struct SystemWindowMatcherTests {
         #expect(matcher.score(window: miss, against: fingerprint) == 0)
     }
 
-    @Test("display match adds a bonus")
+    @Test("window-matching-006: display match adds a bonus")
     func displayBonus() {
         let matcher = SystemWindowMatcher()
         let fingerprint = makeFingerprint(app: "Terminal", pattern: "", strategy: .appOnly, display: 7)
@@ -79,7 +79,7 @@ struct SystemWindowMatcherTests {
         #expect(matcher.score(window: window, against: fingerprint) == 90)
     }
 
-    @Test("sub-threshold matches stay reported, not silently consumed")
+    @Test("window-matching-007: sub-threshold matches stay reported, not silently consumed")
     func subThresholdReported() {
         let matcher = SystemWindowMatcher()
         let fingerprint = makeFingerprint(app: "TestApp", pattern: "ban", strategy: .appAndTitleSubstring)
@@ -99,7 +99,7 @@ struct SystemWindowMatcherTests {
         #expect(lower.matched.count == 1)
     }
 
-    @Test("greedy assignment is deterministic for tied scores")
+    @Test("window-matching-008: greedy assignment is deterministic for tied scores")
     func deterministicTies() {
         let matcher = SystemWindowMatcher()
         let appOnly = makeFingerprint(app: "Terminal", pattern: "", strategy: .appOnly)
@@ -124,7 +124,7 @@ struct SystemWindowMatcherTests {
         #expect(first.matched.count == 2)
     }
 
-    @Test("MatchResult equality distinguishes different unmatched snapshots")
+    @Test("window-matching-009: MatchResult equality distinguishes different unmatched snapshots")
     func matchResultEquality() {
         let snapA = (contextID: UUID(), snapshotID: UUID())
         let snapB = (contextID: UUID(), snapshotID: UUID())
@@ -132,5 +132,86 @@ struct SystemWindowMatcherTests {
         let rhs = SystemWindowMatcher.MatchResult(matched: [], unmatchedSnapshots: [snapB], unassignedWindows: [])
         #expect(lhs != rhs)
         #expect(lhs == lhs)
+    }
+
+    // MARK: - Fingerprint fallback and scoring edge cases
+
+    @Test("window-matching-019: an unknown app fingerprints by the full title with the substring strategy")
+    func fingerprintFallback() {
+        let matcher = SystemWindowMatcher(registry: HeuristicRegistry())
+        let window = makeWindow(app: "UnknownApp", title: "Report.pdf", display: 3)
+        let fingerprint = matcher.fingerprint(window: window)
+        #expect(fingerprint == makeFingerprint(
+            app: "UnknownApp", pattern: "Report.pdf", strategy: .appAndTitleSubstring, display: 3
+        ))
+    }
+
+    @Test("window-matching-020: an empty title fingerprints as app-only with an empty pattern")
+    func fingerprintEmptyTitle() {
+        let matcher = SystemWindowMatcher(registry: HeuristicRegistry())
+        let fingerprint = matcher.fingerprint(window: makeWindow(app: "UnknownApp", title: ""))
+        #expect(fingerprint.matchStrategy == .appOnly)
+        #expect(fingerprint.titlePattern.isEmpty)
+    }
+
+    @Test("window-matching-021: exact strategy matches case-insensitively and rejects extra text")
+    func scoreExact() {
+        let matcher = SystemWindowMatcher(registry: HeuristicRegistry())
+        let fingerprint = makeFingerprint(app: "UnknownApp", pattern: "report", strategy: .appAndTitleExact)
+        #expect(matcher.score(window: makeWindow(app: "UnknownApp", title: "REPORT"), against: fingerprint) == 80)
+        #expect(matcher.score(window: makeWindow(app: "UnknownApp", title: "report 2"), against: fingerprint) == 0)
+    }
+
+    @Test("window-matching-022: a stored pattern longer than the live title does not match")
+    func scoreSubstringDirection() {
+        let matcher = SystemWindowMatcher(registry: HeuristicRegistry())
+        let fingerprint = makeFingerprint(
+            app: "UnknownApp", pattern: "project alpha", strategy: .appAndTitleSubstring
+        )
+        #expect(matcher.score(window: makeWindow(app: "UnknownApp", title: "alpha"), against: fingerprint) == 0)
+    }
+
+    @Test("window-matching-023: an invalid stored regex scores 0")
+    func scoreRegexInvalid() {
+        let matcher = SystemWindowMatcher(registry: HeuristicRegistry())
+        let fingerprint = makeFingerprint(app: "TestApp", pattern: "[", strategy: .appAndTitleRegex)
+        // The vector also expects one logged error; os_log output is not observable from a unit test.
+        #expect(matcher.score(window: makeWindow(app: "TestApp", title: "["), against: fingerprint) == 0)
+    }
+
+    @Test("window-matching-024: only dormant snapshots are re-matched and assigned windows are excluded")
+    func excludesAssignedWindows() {
+        let matcher = SystemWindowMatcher(registry: HeuristicRegistry())
+        let appOnly = makeFingerprint(app: "Terminal", pattern: "", strategy: .appOnly)
+        let live = SystemWindowSnapshot(
+            windowID: 7, fingerprint: appOnly, savedFrame: .zero, display: 0, app: "Terminal", title: ""
+        )
+        let dormant = makeSnapshot(app: "Terminal", fingerprint: appOnly)
+        let context = SystemWindowContext(name: "C", windowSnapshots: [live, dormant])
+        let windows = [
+            makeWindow(id: 7, app: "Terminal", title: "one"),
+            makeWindow(id: 8, app: "Terminal", title: "two")
+        ]
+
+        let result = matcher.matchWindows(contexts: [context], liveWindows: windows)
+        #expect(result.matched.count == 1)
+        #expect(result.matched.first?.snapshotID == dormant.id)
+        #expect(result.matched.first?.window.id == 8)
+        #expect(!result.unassignedWindows.contains { $0.id == 7 })
+    }
+
+    @Test("window-matching-031: a substring match on the same display scores 70 and is not auto-assigned")
+    func substringDefaultThreshold() {
+        let matcher = SystemWindowMatcher(registry: HeuristicRegistry())
+        let fingerprint = makeFingerprint(
+            app: "TestApp", pattern: "ban", strategy: .appAndTitleSubstring, display: 1
+        )
+        let window = makeWindow(id: 5, app: "TestApp", title: "banana", display: 1)
+        #expect(matcher.score(window: window, against: fingerprint) == 70)
+
+        let snapshot = makeSnapshot(app: "TestApp", fingerprint: fingerprint)
+        let context = SystemWindowContext(name: "C", windowSnapshots: [snapshot])
+        let result = matcher.matchWindows(contexts: [context], liveWindows: [window])
+        #expect(result.matched.isEmpty)
     }
 }

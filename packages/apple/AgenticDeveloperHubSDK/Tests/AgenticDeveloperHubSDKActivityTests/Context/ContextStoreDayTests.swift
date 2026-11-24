@@ -14,7 +14,7 @@ final class ContextStoreDayTests: XCTestCase {
 
     override func setUpWithError() throws {
         dir = URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent("olylo-ctxday-\(UUID().uuidString)")
+            .appendingPathComponent("temporal-ctxday-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         db = try BoundedDatabase(path: dir.appendingPathComponent("test.sqlite").path)
         store = ContextStore(database: db)

@@ -9,7 +9,7 @@ export interface UseAppearanceSettings {
  *
  * The toolkit's `useAppearancePreferences` is deliberately transport-agnostic: it owns the prefs,
  * the document, and the per-browser cache, and knows nothing about adh's backend. This hook adds
- * the one adh-specific half — persisting to the signed-in USER (PUT /api/me/appearance), which is
+ * the one adh-specific half — persisting to the signed-in USER (POST /api/v1/account, `appearance`), which is
  * what lets the choice made here follow them to the other ~44 sites instead of dying in this
  * origin's localStorage.
  *

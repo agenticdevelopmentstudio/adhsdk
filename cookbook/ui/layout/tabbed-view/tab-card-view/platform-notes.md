@@ -34,7 +34,7 @@
   `prefers-reduced-motion: reduce` media query per the Reduce Motion gap
   above. Use CSS `text-overflow: ellipsis` for tail truncation, `direction:
   rtl` on an inner span for head truncation (the directory-label case), and
-  a `<button aria-label="Close">` for the close control.
+  a `<button aria-label="Close Tab">` for the close control.
 - **AppKit/UIKit** (source platform): Implemented in
   `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/TabPane/TabPaneView.swift`
   (`TabPaneView`, plus the file-private `InsetBox`, `CardSides`, and
@@ -89,7 +89,7 @@
   header's extra width — followed by a close `Button` in the fourth column,
   styled borderless (`Style="{StaticResource TransparentButtonStyle}"` or
   equivalent), sized `14x14`, using the Segoe Fluent Icons `&#xE711;`
-  ("Cancel") glyph, with `AutomationProperties.Name="Close"`. Represent the
+  ("Cancel") glyph, with `AutomationProperties.Name="Close Tab"`. Represent the
   status symbols as a horizontal `ItemsRepeater`/`StackPanel` of `14x14`
   `FontIcon`s, each with its own `AutomationProperties.Name` bound to the
   caller-supplied label. Bind `MinWidth`/`MinHeight` growth to the hosted

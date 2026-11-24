@@ -43,6 +43,10 @@ extension ComposableSettings {
             // AppKit gives a bare switch no name, so VoiceOver would announce it
             // as an unlabelled control; the visible label is its title element.
             self.toggle.setAccessibilityTitleUIElement(self.label)
+            // Named after the setting, so automation can find the switch.
+            if let observer = viewModel.settingObserver as? UserSettingObserver<Bool> {
+                self.toggle.setAccessibilityIdentifier("setting.\(observer.setting.name)")
+            }
 
             viewModel.onChange = { [weak self] _ in
                 self?.update()

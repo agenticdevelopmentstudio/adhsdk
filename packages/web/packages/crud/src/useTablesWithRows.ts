@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import {
   authedJson,
   AuthHttpError,
+  type V1List,
   onSessionChange,
   readTokenSubject,
 } from '@adh-sdk/auth/client'
@@ -198,8 +199,8 @@ export function useTablesWithRows(
         const list = listUrl(t, scope, scopeEcosystemId)
         const probe = `${list}${list.includes('?') ? '&' : '?'}limit=1`
         try {
-          const rows = await authedJson<unknown[]>(probe, { signal: controller.signal })
-          if (!Array.isArray(rows) || rows.length === 0) {
+          const page = await authedJson<V1List<unknown>>(probe, { signal: controller.signal })
+          if (!Array.isArray(page?.data) || page.data.length === 0) {
             empty.add(t.key)
           } else {
             found.add(t.key)

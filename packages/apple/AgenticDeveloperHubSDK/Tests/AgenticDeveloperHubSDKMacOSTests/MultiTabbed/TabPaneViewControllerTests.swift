@@ -228,6 +228,10 @@ final class TabPaneViewControllerTests: XCTestCase {
         XCTAssertEqual(pane.paneView.directoryLabel.accessibilityIdentifier(), "tab-pane.directory.\(id)")
         XCTAssertEqual(pane.paneView.summaryLabel.accessibilityIdentifier(), "tab-pane.summary.\(id)")
         XCTAssertEqual(pane.paneView.closeButton.accessibilityIdentifier(), "tab-pane.close.\(id)")
+        // tab-pane-052: the tooltip names the action.
+        XCTAssertEqual(pane.paneView.closeButton.toolTip, "Close Tab")
+        // The icon's description matches the tooltip, as the tab bar's does.
+        XCTAssertEqual(pane.paneView.closeButton.image?.accessibilityDescription, "Close Tab")
     }
 
     /// The close button belongs on the end of the card facing away from the

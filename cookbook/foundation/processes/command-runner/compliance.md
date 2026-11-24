@@ -1,11 +1,11 @@
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [timeout-handling](agenticdevelopercookbook://compliance/reliability#timeout-handling) | partial | Reliability |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | partial | Reliability |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
 
 Notes: `separation-of-concerns` passes because `CommandRunner` owns exactly one concern — running one `Process` to completion, drained and bounded — while every policy choice (which tool to run, what `timeout` or `byteCeiling` to use, what to do with a timed-out or aborted `Outcome`) belongs to its callers, per `VSIXArchive.expand`'s use of it (`VSIXArchive.swift`). `unit-test-coverage` passes because `CommandRunnerTests.swift` carries thirteen tests with concrete, meaningful assertions covering draining, throwing, the timeout escalation, and every watchdog interaction, not just a happy path. `explicit-error-handling` is partial: the one error path the type itself can raise (`process.run()` throwing) is propagated unchanged with no swallowing, but `abandoned-pipe-write-end` means a bounded-out drain reports success indistinguishably from a complete one, which is a silent-in-the-return-value gap rather than a thrown or logged error. `timeout-handling` is partial for the same reason from the reliability angle: a normal timeout leaves the system in the well-defined state this recipe traces throughout (`Outcome.status`, cleared handlers, a killed process), but the one case where `terminationGrace`'s drain bound is actually exercised by a lingering grandchild is exactly the case this recipe cannot verify leaves `Outcome`'s buffers complete. `fault-tolerance` passes because the type explicitly guards the one input state that would otherwise crash it — reading `terminationStatus` from a process that never exited — rather than letting Foundation's uncatchable Objective-C exception propagate.
 

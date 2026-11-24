@@ -25,7 +25,7 @@ class UsageRate:
         micros_per_unit (str): Exact decimal µUSD per unit (numeric text, never a float)
         effective_from (datetime.date):
         note (str):
-        created_at (datetime.datetime):
+        created (int): Unix timestamp, in seconds.
         created_by_user_id (None | UUID):
     """
 
@@ -37,7 +37,7 @@ class UsageRate:
     micros_per_unit: str
     effective_from: datetime.date
     note: str
-    created_at: datetime.datetime
+    created: int
     created_by_user_id: None | UUID
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -58,7 +58,7 @@ class UsageRate:
 
         note = self.note
 
-        created_at = self.created_at.isoformat()
+        created = self.created
 
         created_by_user_id: None | str
         if isinstance(self.created_by_user_id, UUID):
@@ -74,12 +74,12 @@ class UsageRate:
                 "category": category,
                 "provider": provider,
                 "sku": sku,
-                "quantityKey": quantity_key,
-                "microsPerUnit": micros_per_unit,
-                "effectiveFrom": effective_from,
+                "quantity_key": quantity_key,
+                "micros_per_unit": micros_per_unit,
+                "effective_from": effective_from,
                 "note": note,
-                "createdAt": created_at,
-                "createdByUserId": created_by_user_id,
+                "created": created,
+                "created_by_user_id": created_by_user_id,
             }
         )
 
@@ -96,15 +96,15 @@ class UsageRate:
 
         sku = d.pop("sku")
 
-        quantity_key = d.pop("quantityKey")
+        quantity_key = d.pop("quantity_key")
 
-        micros_per_unit = d.pop("microsPerUnit")
+        micros_per_unit = d.pop("micros_per_unit")
 
-        effective_from = datetime.date.fromisoformat(d.pop("effectiveFrom"))
+        effective_from = datetime.date.fromisoformat(d.pop("effective_from"))
 
         note = d.pop("note")
 
-        created_at = datetime.datetime.fromisoformat(d.pop("createdAt"))
+        created = d.pop("created")
 
         def _parse_created_by_user_id(data: object) -> None | UUID:
             if data is None:
@@ -119,7 +119,7 @@ class UsageRate:
                 pass
             return cast(None | UUID, data)
 
-        created_by_user_id = _parse_created_by_user_id(d.pop("createdByUserId"))
+        created_by_user_id = _parse_created_by_user_id(d.pop("created_by_user_id"))
 
         usage_rate = cls(
             id=id,
@@ -130,7 +130,7 @@ class UsageRate:
             micros_per_unit=micros_per_unit,
             effective_from=effective_from,
             note=note,
-            created_at=created_at,
+            created=created,
             created_by_user_id=created_by_user_id,
         )
 

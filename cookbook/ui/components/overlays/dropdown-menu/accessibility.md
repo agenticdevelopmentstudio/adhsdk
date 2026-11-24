@@ -1,0 +1,10 @@
+- **Role**: Menu items MUST have the `menuitem` role (provided by Base UI MenuPrimitive).
+- **Label requirement**: Menu items MUST have accessible text content or an aria-label.
+- **Keyboard navigation**: see [keyboard-navigation](#requirements/keyboard-navigation).
+- **Escape key**: see [close-on-escape](#requirements/close-on-escape) and [focus-management](#requirements/focus-management).
+- **Focus management**: see [focus-management](#requirements/focus-management) and [focus-on-pointer-open](#requirements/focus-on-pointer-open).
+- **Checkbox state announcement**: see [checkbox-state-announcement](#requirements/checkbox-state-announcement).
+- **Radio state announcement**: see [radio-state-announcement](#requirements/radio-state-announcement).
+- **Disabled state announcement**: see [disabled-state-announcement](#requirements/disabled-state-announcement).
+- **Submenu indication**: see [submenu-indication](#requirements/submenu-indication).
+- **Minimum target size**: see [minimum-target-size](#requirements/minimum-target-size).

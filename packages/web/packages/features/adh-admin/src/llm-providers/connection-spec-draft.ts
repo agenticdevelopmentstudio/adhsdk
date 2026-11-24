@@ -91,23 +91,23 @@ export function draftFromConnectionSpec(
     header: auth?.header ?? "",
     scheme: auth?.scheme ?? "bearer",
     region: auth?.region ?? "",
-    tokenUrl: auth?.tokenUrl ?? "",
-    urlVars: (spec.urlVars ?? []).map((v) => ({
+    tokenUrl: auth?.token_url ?? "",
+    urlVars: (spec.url_vars ?? []).map((v) => ({
       localId: newLocalId("uv"),
       name: v.name,
       label: v.label ?? "",
       example: v.example ?? "",
       secret: v.secret ?? false,
     })),
-    headerVars: (spec.headerVars ?? []).map((v) => ({
+    headerVars: (spec.header_vars ?? []).map((v) => ({
       localId: newLocalId("hv"),
       header: v.header,
       label: v.label ?? "",
       example: v.example ?? "",
       secret: v.secret ?? false,
     })),
-    defaultQuery: kvRowsFromRecord(spec.defaultQuery),
-    extraHeaders: kvRowsFromRecord(spec.extraHeaders),
+    defaultQuery: kvRowsFromRecord(spec.default_query),
+    extraHeaders: kvRowsFromRecord(spec.extra_headers),
   };
 }
 
@@ -137,7 +137,7 @@ export function connectionSpecFromDraft(draft: ConnectionSpecDraft): ProviderCon
             ? { region: draft.region.trim() }
             : {}),
           ...(draft.authType === "oauth2" && draft.tokenUrl.trim()
-            ? { tokenUrl: draft.tokenUrl.trim() }
+            ? { token_url: draft.tokenUrl.trim() }
             : {}),
         };
   const urlVars = draft.urlVars
@@ -168,12 +168,12 @@ export function connectionSpecFromDraft(draft: ConnectionSpecDraft): ProviderCon
   if (!hasContent) return null;
 
   return {
-    specVersion: 1,
+    spec_version: 1,
     ...(auth ? { auth } : {}),
-    ...(urlVars.length > 0 ? { urlVars } : {}),
-    ...(headerVars.length > 0 ? { headerVars } : {}),
-    ...(defaultQuery ? { defaultQuery } : {}),
-    ...(extraHeaders ? { extraHeaders } : {}),
+    ...(urlVars.length > 0 ? { url_vars: urlVars } : {}),
+    ...(headerVars.length > 0 ? { header_vars: headerVars } : {}),
+    ...(defaultQuery ? { default_query: defaultQuery } : {}),
+    ...(extraHeaders ? { extra_headers: extraHeaders } : {}),
   };
 }
 

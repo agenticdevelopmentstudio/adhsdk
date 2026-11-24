@@ -17,16 +17,47 @@ import { useResourceList, workspacesApi } from "@adh-sdk/data";
 import { useEffect as useEffect3, useMemo, useState as useState4 } from "react";
 
 // src/profile/normalize.ts
+function iso(seconds) {
+  return new Date(seconds * 1e3).toISOString();
+}
+function personasFromWire(rows) {
+  return rows.map((p) => ({
+    slug: p.slug,
+    name: p.name,
+    description: p.description,
+    visibility: p.visibility,
+    createdAt: iso(p.created)
+  }));
+}
 function principalFromUserCard(body) {
-  return { ...body, kind: "user" };
+  return {
+    slug: body.slug,
+    displayName: body.display_name,
+    avatarUrl: body.avatar_url,
+    createdAt: iso(body.created),
+    socialLinks: body.social_links,
+    emails: body.emails,
+    phones: body.phones,
+    addresses: body.addresses.map((a) => ({
+      label: a.label,
+      line1: a.line1,
+      line2: a.line2,
+      city: a.city,
+      region: a.region,
+      postalCode: a.postal_code,
+      country: a.country
+    })),
+    personas: personasFromWire(body.personas),
+    kind: "user"
+  };
 }
 function principalFromOrgCard(body) {
   return {
     slug: body.slug,
-    displayName: body.displayName,
-    createdAt: body.createdAt,
+    displayName: body.display_name,
+    createdAt: iso(body.created),
     description: body.description,
-    personas: body.personas,
+    personas: personasFromWire(body.personas),
     avatarUrl: null,
     socialLinks: [],
     emails: [],
@@ -66,11 +97,17 @@ function ProfileNotFound() {
     setSearch({ status: "loading" });
     try {
       const res = await fetch(
-        `/api/public/users/search?q=${encodeURIComponent(trimmed)}`,
+        `/api/v1/users/search?q=${encodeURIComponent(trimmed)}`,
         { signal: controller.signal }
       );
       if (!res.ok) throw new Error(`Search failed (${res.status})`);
-      const hits = await res.json();
+      const page = await res.json();
+      const hits = page.data.map((h) => ({
+        slug: h.slug,
+        displayName: h.display_name,
+        avatarUrl: h.avatar_url,
+        kind: h.kind
+      }));
       setSearch({ status: "success", hits });
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
@@ -223,7 +260,7 @@ function useViewerPrincipal(slug, seed, enabled = true) {
     void (async () => {
       const encoded = encodeURIComponent(slug);
       try {
-        const dto = await authedJson(`/api/users/${encoded}`);
+        const dto = await authedJson(`/api/v1/users?handle=${encoded}`);
         if (live) {
           setWider(principalFromUserCard(dto));
           setPending(false);
@@ -237,7 +274,7 @@ function useViewerPrincipal(slug, seed, enabled = true) {
         }
       }
       try {
-        const dto = await authedJson(`/api/orgs/${encoded}`);
+        const dto = await authedJson(`/api/v1/organizations?slug=${encoded}`);
         if (live) {
           setWider(principalFromOrgCard(dto));
           setPending(false);
@@ -298,7 +335,7 @@ function ProfileFallback({ slug, siteId, section }) {
     void (async () => {
       try {
         const encoded = encodeURIComponent(slug);
-        const users = await fetch(`/api/public/users/${encoded}`);
+        const users = await fetch(`/api/v1/users?handle=${encoded}`);
         if (cancelled) return;
         if (users.ok) {
           const body = await users.json();
@@ -306,7 +343,7 @@ function ProfileFallback({ slug, siteId, section }) {
           return;
         }
         if (users.status !== 404) return setState({ status: "error" });
-        const orgs = await fetch(`/api/public/orgs/${encoded}`);
+        const orgs = await fetch(`/api/v1/organizations?slug=${encoded}`);
         if (cancelled) return;
         if (orgs.ok) {
           const body = await orgs.json();

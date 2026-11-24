@@ -1,0 +1,3 @@
+
+Two immutable value types that billing derivation reads from the host. `BillingAppSpanRow` is one recorded app-activity span reduced to what derivation needs; `BillingIdleInterval` is one recorded stretch with no user input. Per the source's doc comment, the host reads a span row from its own activity table and billing never writes it except to stamp the derivation watermark; the source says nothing about where an idle interval is read from. The types hold data only and carry one derived property, the billing session id, defined through `ActivitySpanSession` ([adhsdk.ingredient.foundation.work-tracking.work-tracking-models](cookbook:aa775836-5679-4a22-9ff3-b2bdcb09cc20)), under which the span's runs are stored.
+

@@ -1,7 +1,7 @@
 
 The browser contributes N rail levels (N = the walked depth + 1) into an
 existing
-[Hierarchical Topic Detail](adhsdk://recipes/hierarchical-topic-detail)
+Hierarchical Topic Detail ([adhsdk.recipe.ui.blocks.hierarchical-topic-detail](cookbook:0bba1f5b-bc8d-4f76-b1c9-329b627f7ee8))
 stack; it draws no chrome of its own:
 
 ```
@@ -22,6 +22,6 @@ stack; it draws no chrome of its own:
 ```
 
 Narrow-mode drill-down, disclosure, and the breadcrumb are entirely HTDV's — see
-[Hierarchical Topic Detail](adhsdk://recipes/hierarchical-topic-detail)'s
+Hierarchical Topic Detail ([adhsdk.recipe.ui.blocks.hierarchical-topic-detail](cookbook:0bba1f5b-bc8d-4f76-b1c9-329b627f7ee8))'s
 own Layout section.
 

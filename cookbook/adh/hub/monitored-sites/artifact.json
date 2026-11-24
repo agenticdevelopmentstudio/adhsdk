@@ -1,19 +1,18 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "a3e87176-5845-43ff-9041-af53437d605d",
     "title": "Monitored Sites",
-    "domain": "adhsdk://cookbook/adh/hub/monitored-sites",
     "type": "ingredient",
-    "version": "1.2.1",
+    "version": "2.0.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-10-04",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "A data client for the Status Sites monitoring domain: generic-CRUD groups, sites, and endpoints over /api/monitoring/*, the 1:M group-to-site-to-endpoint model, owner/workspace scoping, and the field renames each mapper performs.",
+    "summary": "A data client for the Status Sites monitoring domain: generic-CRUD groups, sites, and endpoints over /api/v1/monitoring/*, the 1:M group-to-site-to-endpoint model, owner/workspace scoping, and the field renames each mapper performs.",
     "platforms": [
       "typescript",
       "web"
@@ -42,7 +41,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "9c59880383330fab",
+  "synced": "6a4019ba1c5bd695",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -61,7 +60,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

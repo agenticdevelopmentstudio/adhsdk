@@ -11,8 +11,8 @@ import OSLog
 /// directory watcher, a socket, a spool drain) and what carries the published
 /// events (SSE, XPC, both); this type only ingests.
 ///
-/// `@unchecked Sendable`: the only mutable state is `probedSessions`, guarded by
-/// its lock, and the `ingestOverride` test seam, which is set before use.
+/// `@unchecked Sendable`: the only mutable state is the `ingestOverride` test
+/// seam, which is set before use (the enrichment's probe set guards itself).
 public final class EventIngestor: @unchecked Sendable {
     private let dropDirectory: URL
     private let database: DaemonDatabase
@@ -22,9 +22,6 @@ public final class EventIngestor: @unchecked Sendable {
     /// and the DB-log row for a quarantined file, so that schema lives in one
     /// place (here we only decide *what* to quarantine and move the file).
     private let quarantine: QuarantineService
-    /// Runs when a session stops or ends, after its title and last output are
-    /// refreshed. Nil when the daemon has nothing to do at that moment.
-    private let summarizeOnStop: (@Sendable (String) async -> Void)?
     /// A short process-footprint suffix for the backfill log lines. A closure so
     /// this layer does not depend on how a daemon measures its own memory.
     private let footprintSuffix: @Sendable () -> String
@@ -35,19 +32,15 @@ public final class EventIngestor: @unchecked Sendable {
     /// five minutes behind — which is a property of the daemon, not a choice a
     /// call site should get to make.
     private let transcriptTailer: TranscriptTailer
-    /// Resumes each transcript's title scan where the last Stop left it.
-    private let titleScanner = TranscriptTitleScanner()
+
+    /// What runs for a session after one of its events is ingested (transcript
+    /// tail, start enrichment, stop refresh, project-root healing). Public so the
+    /// pipeline's `ClaudeLiveObserver` runs the very same value.
+    public let enrichment: ClaudeEnrichmentHooks
 
     /// Test seam: when set, replaces the real `ingest` so tests can inject
     /// deterministic success / transient / permanent outcomes. Nil in production.
     public var ingestOverride: ((ParsedEvent) throws -> Void)?
-
-    /// Sessions `healProjectRootIfNeeded` has already looked up, so the probe costs
-    /// one DB read per session per daemon lifetime rather than one per event. Guarded
-    /// by a lock because ingestion reaches this from the drop-directory scan *and*
-    /// from the HTTP/XPC quarantine-retry path.
-    private var probedSessions: Set<String> = []
-    private let probedSessionsLock = NSLock()
 
     /// Sessions enriched per `stampSessionEnrichment` write in `runStartupBackfill`.
     /// Sized to be the loss ceiling for a restart mid-sweep (~a few seconds of
@@ -65,6 +58,8 @@ public final class EventIngestor: @unchecked Sendable {
     ///     so a daemon can put it under its own subsystem.
     ///   - summarizeOnStop: called with the session id after `Stop` / `SessionEnd`.
     ///   - footprintSuffix: appended to the backfill log lines; empty by default.
+    ///   - transcriptPoll: reads one transcript into a provider pipeline; the
+    ///     tailer calls it instead of `JSONLImporter`. Nil keeps the legacy import.
     public init(
         dropDirectory: URL,
         database: DaemonDatabase,
@@ -72,15 +67,19 @@ public final class EventIngestor: @unchecked Sendable {
         quarantine: QuarantineService,
         tailerQueueLabel: String,
         summarizeOnStop: (@Sendable (String) async -> Void)? = nil,
-        footprintSuffix: @escaping @Sendable () -> String = { "" }
+        footprintSuffix: @escaping @Sendable () -> String = { "" },
+        transcriptPoll: (@Sendable (URL) throws -> Void)? = nil
     ) {
         self.dropDirectory = dropDirectory
         self.database = database
         self.sink = sink
         self.quarantine = quarantine
-        self.summarizeOnStop = summarizeOnStop
         self.footprintSuffix = footprintSuffix
-        self.transcriptTailer = TranscriptTailer(database: database, queueLabel: tailerQueueLabel)
+        let transcriptTailer = TranscriptTailer(
+            database: database, queueLabel: tailerQueueLabel, pollFile: transcriptPoll)
+        self.transcriptTailer = transcriptTailer
+        self.enrichment = ClaudeEnrichmentHooks.live(
+            database: database, transcriptTailer: transcriptTailer, summarizeOnStop: summarizeOnStop)
     }
 
     // MARK: - Draining
@@ -279,125 +278,13 @@ public final class EventIngestor: @unchecked Sendable {
     /// SessionStart triggers a full enrichment (branch + title); Stop /
     /// SessionEnd just refresh the title since it can change mid-session.
     ///
-    /// Every event, whatever its type, additionally gets the healing probe below
-    /// and a transcript tail.
+    /// Every event, whatever its type, additionally gets the project-root healing
+    /// probe and a transcript tail. The steps are `ClaudeEnrichmentHooks`, shared
+    /// with the pipeline's `ClaudeLiveObserver`.
     private func scheduleEnrichmentIfNeeded(for event: ParsedEvent, sessionId: String, cwd: String) {
-        let transcriptPath = event.hookData["transcript_path"] as? String
-        let database = self.database
-        let summarizeOnStop = self.summarizeOnStop
-
-        healProjectRootIfNeeded(sessionId: sessionId)
-
-        // A hook firing means the session just wrote to its transcript, and the
-        // payload says which file. That is the whole signal the five-minute sweep
-        // re-walks the tree to reconstruct, so hand it straight to the tailer:
-        // every event type, because every one of them is a line being written,
-        // and the tailer is what decides how often a given file is worth reading.
-        if let transcriptPath {
-            let tailer = self.transcriptTailer
-            Task { await tailer.noteActivity(transcriptPath: transcriptPath, sessionId: sessionId) }
-        }
-
-        switch event.eventType {
-        case "SessionStart":
-            Task.detached {
-                SessionEnricher.enrich(
-                    sessionId: sessionId,
-                    cwd: cwd,
-                    // Force a fresh project_root at session start (cwd is authoritative
-                    // then); it's a single session, so the recompute cost is trivial.
-                    projectRootVersion: 0,
-                    // The hook fired for this session just now, so the file is the
-                    // only source that can be current — the importer may not have
-                    // reached it yet. One session, so the scan cost is trivial.
-                    titleSource: .transcriptFile(path: transcriptPath),
-                    database: database
-                )
-            }
-        case "Stop", "SessionEnd":
-            Task.detached {
-                let path = transcriptPath ?? SessionEnricher.findTranscriptPath(sessionId: sessionId)
-                guard let path else { return }
-                if let title = self.titleScanner.title(path: path), !title.isEmpty {
-                    try? database.updateSessionTranscriptTitle(
-                        sessionId: sessionId, title: title, source: "custom"
-                    )
-                }
-                // Stop fires the instant the agent finishes speaking, which is the
-                // only moment its last reply is knowable: no hook payload carries
-                // the text, and the JSONL importer is five minutes behind.
-                SessionEnricher.refreshLastOutput(
-                    sessionId: sessionId, transcriptPath: path, database: database
-                )
-                await summarizeOnStop?(sessionId)
-            }
-        default:
-            break
-        }
-    }
-
-    /// Gives a session its `project_root` as soon as any event arrives for it, rather
-    /// than only at `SessionStart`.
-    ///
-    /// A session whose `SessionStart` this daemon never saw — it was already running
-    /// when the daemon started, or the hooks were installed mid-session — stays at
-    /// `project_root_version = 0` with no root, and the only thing that ever filled
-    /// one in was the *startup* backfill. So a live session could sit in the Sessions
-    /// window for its whole life labelled with its `cwd`'s last path component and
-    /// grouped alone: two worktrees of one project showed up as two projects, each
-    /// named after the worktree directory rather than the project.
-    ///
-    /// Bounded by `probedSessions`: one DB read per session per daemon lifetime, not
-    /// one per event. A session that comes back `.undetermined` (git wouldn't answer)
-    /// is not retried until the next launch — the same terms as every other enrichment
-    /// retry, and the alternative is re-running `git` for every event of a session
-    /// whose repository is simply unhealthy.
-    ///
-    /// Takes no `cwd`: the directory to repair from is the session's own, and that is
-    /// read back from the row alongside the version.
-    private func healProjectRootIfNeeded(sessionId: String) {
-        probedSessionsLock.lock()
-        let alreadyProbed = !probedSessions.insert(sessionId).inserted
-        probedSessionsLock.unlock()
-        guard !alreadyProbed else { return }
-
-        let database = self.database
-        Task.detached {
-            // No row (or an unreadable DB) means the probe learned nothing, so re-open
-            // it rather than spending the session's one chance on a non-answer.
-            // `try?` flattens the throw and the missing row into one nil, and both
-            // mean the same thing here: nothing was learned.
-            guard let stored = try? database.sessionProjectRootProbe(sessionId: sessionId) else {
-                self.reopenProbe(sessionId: sessionId)
-                return
-            }
-            guard stored.version < SessionEnricher.projectRootAlgoVersion,
-                  !stored.cwd.isEmpty else { return }
-            SessionEnricher.enrich(
-                sessionId: sessionId,
-                // The session's OWN cwd, read back from the row — never the `cwd` of
-                // the hook that triggered this. The session cwd is frozen on purpose;
-                // the hook's is wherever the agent's shell happens to be standing, and
-                // `enrich` derives `git_branch` from what it is handed. Passing the
-                // hook's meant one `cd ../sibling-repo` stamped that repo's branch onto
-                // this session — permanently, since the write is unguarded and this
-                // probe never runs twice.
-                cwd: stored.cwd,
-                projectRootVersion: stored.version,
-                // The importer has this session's lines or it doesn't; either way this
-                // is a repair pass, not a live-title refresh, so it must not burn a
-                // full transcript scan.
-                titleSource: .importedLines,
-                database: database
-            )
-        }
-    }
-
-    /// Lets `healProjectRootIfNeeded` probe `sessionId` again on a later event.
-    private func reopenProbe(sessionId: String) {
-        probedSessionsLock.lock()
-        probedSessions.remove(sessionId)
-        probedSessionsLock.unlock()
+        enrichment.run(
+            eventType: event.eventType, sessionId: sessionId, cwd: cwd,
+            transcriptPath: event.hookData["transcript_path"] as? String)
     }
 
     /// On daemon start, gives every session the Sessions window can show a

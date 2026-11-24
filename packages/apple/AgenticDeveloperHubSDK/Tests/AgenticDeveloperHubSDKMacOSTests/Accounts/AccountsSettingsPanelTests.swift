@@ -156,7 +156,7 @@ struct AccountDetailPanelTests {
         let detail = makeDetail(account)
         #expect(detail.nameLabel.stringValue == "Ada Lovelace")
         #expect(detail.emailLabel.stringValue == "ada@x.y")
-        #expect(detail.avatarView.user?.initials == "AL")
+        #expect(detail.avatarView.content?.initials == "AL")
         #expect(!detail.logoutButton.isHidden)
         #expect(detail.loginButton.isHidden && detail.signupButton.isHidden)
     }
@@ -195,7 +195,7 @@ struct AccountDetailPanelTests {
         account.state = .signedOut
         #expect(!detail.loginButton.isHidden)
         #expect(detail.nameLabel.isHidden)
-        #expect(detail.avatarView.user == nil)
+        #expect(detail.avatarView.content == nil)
     }
 
     @Test("busy disables every button and shows the spinner")

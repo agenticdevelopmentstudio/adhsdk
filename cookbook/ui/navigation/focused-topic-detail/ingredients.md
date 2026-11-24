@@ -1,10 +1,12 @@
 
-| Name | Domain | Role | Required | Configuration |
-|---|---|---|---|---|
-| FocusedTopicDetail block | adhsdk://recipes/topic-detail | The master/detail layout (topic list + detail panel) every route composes | yes | `topics`, `paneOwnedActions` |
-| OptionMenu | adhsdk://recipes/option-menu | The selector popup that switches focus and hosts the New action | yes | radio entities + All + trailing New item |
-| AlertAndDialog | adhsdk://recipes/alert-and-dialog | Step-1 warning alert + step-2 type-to-confirm delete dialog | yes | destructive; `Entity`/`rdid`/`childEntities` params |
-| Disclosure | adhsdk://recipes/disclosure | The collapsible Danger Zone in the entity pane | yes | collapsed default; apt-red accent only when open |
-| DataTable | adhsdk://recipes/data-table | The All view "list" render mode (one row per entity) | yes | name + identifier + key meta columns |
-| ResizableSplit | adhsdk://recipes/resizable-split | Optional split layout within a topic's detail panel | no | as needed per topic |
+| Name | Ingredient | Role | Required | Configuration |
+|------|--------|------|----------|---------------|
+| TopicDetail | [adhsdk.ingredient.ui.blocks.topic-detail](cookbook:8fa7aaae-df62-44ea-b10c-182f3094ed9f) | The rail and pane frame; receives the topics, the selector as `railSlot`, and `panePadding={false}` | Yes | `items`, `selectedId`, `railSlot`, `railSlotActive`, `panePadding` |
+| OptionMenu | [adhsdk.ingredient.ui.components.inputs.option-menu](cookbook:4d0e04ff-39eb-472c-93a0-8070f1b64a6a) | Related selector ingredient; the block's own selector is `PopupMenu`, a radio dropdown | No | Not used by the block's source |
+| AlertAndDialog | [adhsdk.recipe.alert-and-dialog](cookbook:550f00f7-bfb2-415e-9b15-bd5dce015500) | A confirmation a consumer may raise from its pane content | No | Not used by the block's source |
+| Disclosure | [adhsdk.ingredient.ui.components.layout.disclosure](cookbook:c99e2822-f5a9-4e84-8740-9341880bb82a) | A collapsible section a consumer may place in its pane content | No | Not used by the block's source |
+| DataTable | [adhsdk.ingredient.ui.components.data.data-table](cookbook:d04eef56-2dbf-4148-964b-c095f242227f) | A table a consumer may place in its pane content | No | Not used by the block's source |
+| ResizableSplit | [adhsdk.ingredient.ui.components.layout.resizable-split](cookbook:c21473ee-a075-4800-96db-ff3de0888515) | A split a consumer may place in its pane content | No | Not used by the block's source |
+
+`PopupMenu`, `SectionHeader` and `ResourceCard` are sibling blocks in the same package and are not separate ingredients here.
 

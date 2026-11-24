@@ -1,13 +1,12 @@
 ---
 id: ca7205d2-31c0-424a-95a2-a356bed30187
 title: "Live Snapshot"
-domain: adhsdk://cookbook/status/dashboard/state/live-snapshot
 type: ingredient
-version: 1.2.3
+version: 1.2.4
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -18,8 +17,8 @@ platforms:
 tags: []
 depends-on: []
 related:
-  - adhsdk://cookbook/status/dashboard/api
-  - adhsdk://cookbook/status/dashboard/state/board
+  - eb7e9eeb-86f3-4053-827a-ea259833c6ad
+  - 7610ef55-32c9-43b6-8a70-aaa247cc4899
 references: []
 approved-by: ""
 approved-date: ""
@@ -123,7 +122,7 @@ Live Snapshot does not fold notifications into a durable model; the board state 
 - **result-snapshot**: `snapshot` MUST be the store view's last ingested snapshot, or null before any ingestion.
 - **result-offline**: `offline` MUST be true exactly when `liveError` is non-null, `streamConnected` is false, and the poll read is not in flight.
 - **result-disconnected**: `disconnected` MUST be true exactly when `liveError` is non-null and `streamConnected` is false, regardless of whether a read is in flight.
-- **result-blind**: `blind` MUST be true exactly when `snapshot` is non-null and `snapshot.services` is empty.
+- **result-blind**: `blind` MUST equal the ingested snapshot's own `blind` flag (the server's verdict, not derived here), and be false before any snapshot.
 - **result-offline-detail**: `offlineDetail` MUST equal `liveError` when `disconnected` is true and null otherwise.
 - **result-polling**: `polling` MUST be true when a poll read is in flight or `awaitingCheck` is true.
 - **result-next-poll-streaming**: While `streamConnected` is true, `nextPollAt` MUST be `nextCheckAt` when it is non-null, and the client estimate otherwise.
@@ -170,7 +169,7 @@ Vectors 001–004 exercise the same-snapshot check directly. 005–020 assume a 
 | use-live-snapshot-012 | check-not-ran, check-not-ran-refetch | Stream not connected; call the manual check; the response reports `ran: false` | `polling` returns to false once the poll settles; one GET to `/api/live` issued after the POST |
 | use-live-snapshot-013 | fetch-http-error, fetch-failure-sets-error, result-offline, result-disconnected, result-offline-detail | No stream; every GET to `/api/live` returns 503; the poll settles | `offline` true; `disconnected` true; `offlineDetail` is `"live 503"` |
 | use-live-snapshot-014 | fetch-success-clears-error, live-error-sticky | After 013, the next GET to `/api/live` returns 200 with a snapshot | `offlineDetail` becomes null; `disconnected` becomes false; during the in-flight retry `disconnected` stayed true while `offline` was false |
-| use-live-snapshot-015 | result-blind | Ingest a snapshot with `services: []` | `blind` true; with one service `blind` false; before any snapshot `blind` false |
+| use-live-snapshot-015 | result-blind | Ingest a snapshot carrying `blind: true` (the server's verdict, whatever its `services`) | `blind` true; a later snapshot carrying `blind: false` gives `blind` false; before any snapshot `blind` false |
 | use-live-snapshot-016 | check-unrelated-push | Call the manual check (reported as started); deliver a snapshot generated one minute before the call | `snapshot` updated; `polling` stays true |
 | use-live-snapshot-017 | snapshot-frame-malformed | The stream delivers a snapshot notification whose payload is not valid JSON | No error raised; `snapshot` unchanged; no frame subscriber called |
 | use-live-snapshot-018 | ingest-once, frame-subscribe | Subscribe a counter to frame notifications; ingest the same snapshot once from the stream and once from the poll | Counter is 1 |
@@ -255,9 +254,9 @@ Not applicable: Live Snapshot makes no log calls; failures surface only through 
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-web/src/hooks/use-live-snapshot.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-web/src/hooks/use-live-snapshot.ts` | confirmed (1.2.4) |
 
 ## Design Decisions
 
@@ -305,16 +304,16 @@ Not applicable: Live Snapshot makes no log calls; failures surface only through 
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | best-practices |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | best-practices |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | reliability |
-| [error-recovery](agenticdevelopercookbook://compliance/reliability#error-recovery) | passed | reliability |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | reliability |
-| [timeout-handling](agenticdevelopercookbook://compliance/reliability#timeout-handling) | partial | reliability |
-| [resource-efficiency](agenticdevelopercookbook://compliance/performance#resource-efficiency) | passed | performance |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | best-practices |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | reliability |
+| [adc.check.reliability.error-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/694a971d-282d-501b-8861-c4ece3b01edd) | passed | reliability |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | reliability |
+| [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | partial | reliability |
+| [adc.check.performance.resource-efficiency](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d5fe7b8e-1051-5581-b2c5-1adae8fdd5fc) | passed | performance |
 
-**Unit Test Coverage**: The tests cover `isSameSnapshot`, stream open and snapshot ingestion, the schedule frame, the manual-check spinner and its long backstop, the absence of an immediate re-read after a started check, and the `CLOSED` versus `CONNECTING` reconnect paths. Nothing asserts `liveError`, `offline`, `disconnected`, `blind`, overlapping checks, or two-client isolation.
+**Unit Test Coverage**: Every conformance vector (use-live-snapshot-001 to 021) has a test in `use-live-snapshot.test.ts` and `use-live-snapshot.dom.test.tsx`: `isSameSnapshot`, stream open and snapshot ingestion, the schedule frame, the manual-check spinner and its long backstop, the not-ran re-read, `liveError`, `offline`, `disconnected` and `blind`, malformed frames, once-only ingestion, the ref-counted stream, the client estimate and the client-only marker. Overlapping checks and two-client isolation have no vector and no test.
 
 **Separation of Concerns**: Transport sits behind `StatusApiClient`, caching behind React Query, and board derivation in `useBoard`. This module only moves snapshots and connection state.
 
@@ -332,6 +331,7 @@ Not applicable: Live Snapshot makes no log calls; failures surface only through 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.4 | 2026-11-14 | Mike Fullerton | Conformance tests added (use-live-snapshot.test.ts, use-live-snapshot.dom.test.tsx, 21 of 21 vectors); vector 015 and requirement result-blind corrected to match the source (blind is the snapshot's own flag); unit-test-coverage now passed. |
 | 1.2.3 | 2026-10-04 | Mike Fullerton | Inverted prohibitions (none/neither/no X MUST) restated as MUST NOT. |
 | 1.2.2 | 2026-10-04 | Mike Fullerton | One client-only requirement, worded the same across the dashboard state specs, with a test vector; the web module's "use client" directive is noted in Platform Notes. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Restored inverted prohibitions: a 'Neither … MUST' rule now reads 'MUST NOT'. |

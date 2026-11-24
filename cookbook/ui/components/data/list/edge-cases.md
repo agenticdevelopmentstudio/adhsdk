@@ -1,0 +1,5 @@
+
+- **Empty list**: Rendering `<List />` with no children produces an empty bordered container.
+- **Single item**: Rendering a List with one ListItem produces the container with no visible row dividers (dividers appear between rows, not above or below).
+- **Nested flex content**: ListItem uses flex layout; when child content includes flex or grid elements, its direct children are laid out as flex items of the row, spaced by `gap-3`.
+- **className collision**: If a `className` prop contains a Tailwind class that conflicts with a base class (e.g., `px-6` conflicting with the base `px-3`), `cn()` resolves it with `tailwind-merge`: the caller's class wins and the conflicting base class is dropped, rather than emitting both classes for the CSS cascade to resolve. See **classname-merge** and test vector list-007.- **Overflow clipping**: The List container sets `overflow-hidden` to keep the rounded corners, so it clips anything that extends past its edge, such as focus rings, shadows and popovers inside rows. Consumers SHOULD use inset focus styles (for example `ring-inset`) on focusable content in rows.

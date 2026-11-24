@@ -36,7 +36,10 @@ public struct SessionDTO: Codable, Sendable {
     public let lastEventType: String
     /// When `summary` was written (`datetime()` format), empty when never.
     public let summaryAt: String
-    public let eventCount: Int
+    /// Settable so a reader that adds the count afterwards copies every other
+    /// field as it is (`var copy = session; copy.eventCount = n`), never
+    /// rebuilding the DTO and dropping a field it forgot.
+    public var eventCount: Int
     /// Whether a **subagent** of this session was doing something just now.
     ///
     /// `lastEventType` deliberately cannot say — it tracks the *main agent's*
@@ -205,6 +208,12 @@ public struct HealthDTO: Codable, Sendable {
     /// it clears on the next success. Nil while the renderer works. A file
     /// read, never a DB read, so `/health` stays DB-free.
     public let statusLineError: String?
+    /// `"open"` or `"unavailable"`: whether the Claude provider pipeline (its
+    /// spool, raw archive and events.db) is open. While it is unavailable,
+    /// captures wait in the legacy spool and the daemon retries the open with a
+    /// backoff. Nil (omitted) from a daemon that runs no Claude pipeline. A
+    /// lock-guarded read, so `/health` stays DB-free.
+    public let claudePipeline: String?
 
     public init(
         status: String,
@@ -215,9 +224,11 @@ public struct HealthDTO: Codable, Sendable {
         startupDurationMs: Int? = nil,
         memoryFootprintMb: Int? = nil,
         memoryPeakMb: Int? = nil,
-        statusLineError: String? = nil
+        statusLineError: String? = nil,
+        claudePipeline: String? = nil
     ) {
         self.statusLineError = statusLineError
+        self.claudePipeline = claudePipeline
         self.status = status
         self.uptime = uptime
         self.version = version

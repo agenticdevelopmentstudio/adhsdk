@@ -102,7 +102,7 @@ export function BreakdownDetail({
                 </span>
               </div>
               <TimeSeriesChart
-                points={daily.map((d) => ({ x: d.day, directMicros: d.directMicros }))}
+                points={daily.map((d) => ({ x: d.day, directMicros: d.direct_micros }))}
                 series={[{ key: "directMicros", label: "Direct cost" }]}
                 format={(n) => formatMicros(Math.round(n))}
                 height={180}

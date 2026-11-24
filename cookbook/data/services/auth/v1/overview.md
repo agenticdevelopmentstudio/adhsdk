@@ -1,0 +1,5 @@
+
+This module holds the conventions every adh client shares when it talks to the `/v1` API, in the lowest tier that holds an authenticated HTTP client. The `/v1` API is shaped after Stripe's: a collection answers a list envelope paged by an object-id cursor, a DELETE answers a tombstone, `created` and `updated` are unix seconds while every other timestamp stays an ISO string, and `include[]` folds a sub-resource into a read.
+
+The module exports two envelope types (`V1List`, `V1Deleted`), one constant (`V1_PAGE_MAX`), and five functions: `withV1Query`, `listAllV1`, `listV1Page`, `unixToIso` and `isoToUnix`. `listAllV1` is the one place that walks a collection to its end; a caller that needs every row calls it rather than looping `starting_after` itself. Every request goes through `authedJson` from the Authentication Client ([adhsdk.ingredient.data.services.auth.auth-client](cookbook:3ea9329e-5acc-4c43-b5ce-bb8c50570104)) recipe, so bearer-token attachment and the single refresh-and-retry on a 401 are inherited, not reimplemented here.
+

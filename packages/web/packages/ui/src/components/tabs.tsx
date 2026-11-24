@@ -27,7 +27,7 @@ function Tabs({ className, ...props }: TabsPrimitive.Root.Props) {
 const tabListClass = "flex items-end gap-4 border-b border-apt-border"
 const tabItemClass = cn(
   "-mb-px inline-flex items-center gap-1.5 border-b-2 border-transparent px-1 py-2 font-mono text-[0.8rem] tracking-wide text-apt-text-muted transition-colors outline-none",
-  "hover:text-apt-text focus-visible:text-apt-text",
+  "hover:text-apt-text focus-visible:text-apt-text focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-apt-gold/40",
   "data-[active]:border-apt-gold data-[active]:text-apt-text",
   "disabled:pointer-events-none disabled:opacity-50",
 )

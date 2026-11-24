@@ -39,8 +39,8 @@ class PersonaBootstrapTool:
         field_dict.update(
             {
                 "name": name,
-                "displayName": display_name,
-                "readOnly": read_only,
+                "display_name": display_name,
+                "read_only": read_only,
                 "autonomous": autonomous,
             }
         )
@@ -52,9 +52,9 @@ class PersonaBootstrapTool:
         d = dict(src_dict)
         name = d.pop("name")
 
-        display_name = d.pop("displayName")
+        display_name = d.pop("display_name")
 
-        read_only = d.pop("readOnly")
+        read_only = d.pop("read_only")
 
         autonomous = d.pop("autonomous")
 

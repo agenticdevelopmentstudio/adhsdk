@@ -39,7 +39,7 @@ export function toggleModality(
 }
 
 export interface TemplateFormState {
-  providerKind: ProviderTemplate["providerKind"];
+  providerKind: ProviderTemplate["provider_kind"];
   name: string;
   baseUrl: string;
   documentationUrl: string;
@@ -67,9 +67,9 @@ export function syncKeyFields(
   syncKeys: TemplateSyncKeys | undefined,
 ): Pick<TemplateFormState, SyncKeyField> {
   return {
-    syncModelsDev: syncKeys?.modelsDev ?? "",
+    syncModelsDev: syncKeys?.models_dev ?? "",
     syncOpenrouter: syncKeys?.openrouter ?? "",
-    syncArenaVendor: syncKeys?.arenaVendor ?? "",
+    syncArenaVendor: syncKeys?.arena_vendor ?? "",
   };
 }
 
@@ -114,11 +114,11 @@ export function stateFromTemplate(
   syncKeys: TemplateSyncKeys | undefined,
 ): TemplateFormState {
   return {
-    providerKind: template?.providerKind ?? "openai",
+    providerKind: template?.provider_kind ?? "openai",
     name: template?.name ?? "",
-    baseUrl: template?.baseUrl ?? "",
-    documentationUrl: template?.documentationUrl ?? "",
-    statusUrl: template?.statusUrl ?? "",
+    baseUrl: template?.base_url ?? "",
+    documentationUrl: template?.documentation_url ?? "",
+    statusUrl: template?.status_url ?? "",
     // Curated rows only — synced rows are catalog-managed and rendered read-only
     // in the dialog. A PUT with `models` syncs the curated set only (Task 4
     // semantics), so seeding the editor from synced names would fight the sync.
@@ -126,10 +126,10 @@ export function stateFromTemplate(
       .filter((m) => m.source !== "synced")
       .map((m) => m.name),
     modalities: canonicalModalities(template?.modalities ?? []),
-    availableViaNote: template?.availableVia?.note ?? "",
-    availableViaTemplates: (template?.availableVia?.templates ?? []).join(", "),
+    availableViaNote: template?.available_via?.note ?? "",
+    availableViaTemplates: (template?.available_via?.templates ?? []).join(", "),
     ...syncKeyFields(syncKeys),
-    spec: draftFromConnectionSpec(template?.connectionSpec ?? null),
+    spec: draftFromConnectionSpec(template?.connection_spec ?? null),
   };
 }
 
@@ -166,23 +166,23 @@ export function buildTemplateBody(
   const syncKeys: TemplateSyncKeys =
     syncModelsDev || syncOpenrouter || syncArenaVendor
       ? {
-          ...(syncModelsDev ? { modelsDev: syncModelsDev } : {}),
+          ...(syncModelsDev ? { models_dev: syncModelsDev } : {}),
           ...(syncOpenrouter ? { openrouter: syncOpenrouter } : {}),
-          ...(syncArenaVendor ? { arenaVendor: syncArenaVendor } : {}),
+          ...(syncArenaVendor ? { arena_vendor: syncArenaVendor } : {}),
         }
       : null;
   const includeSyncKeys = !editing || syncKeysLoaded;
 
   return {
-    providerKind: form.providerKind,
+    provider_kind: form.providerKind,
     name: form.name.trim(),
-    baseUrl: form.baseUrl.trim(),
-    documentationUrl: form.documentationUrl.trim() || null,
-    statusUrl: form.statusUrl.trim() || null,
-    connectionSpec: connectionSpecFromDraft(form.spec),
+    base_url: form.baseUrl.trim(),
+    documentation_url: form.documentationUrl.trim() || null,
+    status_url: form.statusUrl.trim() || null,
+    connection_spec: connectionSpecFromDraft(form.spec),
     models: form.models.map((m) => m.trim()).filter(Boolean),
     modalities: form.modalities.length ? form.modalities : null,
-    availableVia: form.availableViaNote.trim()
+    available_via: form.availableViaNote.trim()
       ? {
           note: form.availableViaNote.trim(),
           templates: form.availableViaTemplates
@@ -191,6 +191,6 @@ export function buildTemplateBody(
             .filter(Boolean),
         }
       : null,
-    syncKeys: includeSyncKeys ? syncKeys : undefined,
+    sync_keys: includeSyncKeys ? syncKeys : undefined,
   };
 }

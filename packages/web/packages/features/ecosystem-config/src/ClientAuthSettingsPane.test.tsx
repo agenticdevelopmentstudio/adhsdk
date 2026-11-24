@@ -23,6 +23,7 @@ function config(over: Partial<EcosystemClientAuth['settings']> = {}): EcosystemC
       loginEnabled: true,
       passwordEnabled: true,
       allowedProviders: null,
+      loginAllowedEmails: null,
       ...over,
     },
     registration: null,
@@ -100,5 +101,101 @@ describe('ClientAuthSettingsPane', () => {
     save()
     await waitFor(() => expect(clientAuthApi.updateEcosystem).toHaveBeenCalled())
     expect(putBody()).not.toHaveProperty('registration')
+  })
+})
+
+describe('ClientAuthSettingsPane: who can sign in', () => {
+  const ALICE = 'alice@example.com'
+  const BOB = 'bob@example.com'
+  const emailInputs = () => screen.queryAllByPlaceholderText('name@example.com') as HTMLInputElement[]
+  const addPerson = () => fireEvent.click(screen.getByRole('button', { name: 'Add person' }))
+
+  it('starts as everyone, with no list drawn', async () => {
+    await renderPane(config())
+    expect(sw('Only listed people')).not.toHaveAttribute('data-checked')
+    expect(emailInputs()).toHaveLength(0)
+    expect(screen.getByText('Everyone can sign in.')).toBeInTheDocument()
+  })
+
+  it('turned on and left blank, sends an empty list: nobody', async () => {
+    await renderPane(config())
+    fireEvent.click(sw('Only listed people'))
+    expect(emailInputs()).toHaveLength(1)
+    save()
+    await waitFor(() => expect(clientAuthApi.updateEcosystem).toHaveBeenCalled())
+    expect(putBody()?.settings).toEqual({ loginAllowedEmails: [] })
+  })
+
+  it('sends the listed emails trimmed and lowercased, without blanks or duplicates', async () => {
+    await renderPane(config())
+    fireEvent.click(sw('Only listed people'))
+    fireEvent.change(emailInputs()[0]!, { target: { value: `  ${ALICE} ` } })
+    addPerson()
+    addPerson()
+    addPerson()
+    fireEvent.change(emailInputs()[1]!, { target: { value: BOB } })
+    fireEvent.change(emailInputs()[3]!, { target: { value: 'Alice@Example.com' } })
+    save()
+    await waitFor(() => expect(clientAuthApi.updateEcosystem).toHaveBeenCalled())
+    expect(putBody()?.settings).toEqual({ loginAllowedEmails: [ALICE, BOB] })
+  })
+
+  it('shows a saved list, and turning it off sends null: everyone', async () => {
+    await renderPane(config({ loginAllowedEmails: [ALICE] }))
+    expect(emailInputs().map((i) => i.value)).toEqual([ALICE])
+    fireEvent.click(sw('Only listed people'))
+    expect(emailInputs()).toHaveLength(0)
+    save()
+    await waitFor(() => expect(clientAuthApi.updateEcosystem).toHaveBeenCalled())
+    expect(putBody()?.settings).toEqual({ loginAllowedEmails: null })
+  })
+
+  it('ecosystem-config-037: fails the save, keeping the list, when the backend drops it', async () => {
+    const loaded = config()
+    await renderPane(loaded)
+    // A backend without the allow-list strips the unknown field and answers 200.
+    vi.mocked(clientAuthApi.updateEcosystem).mockImplementation(async (_id, update) => {
+      const { loginAllowedEmails: _dropped, ...kept } = update.settings ?? {}
+      return { ...loaded, settings: { ...loaded.settings, ...kept } }
+    })
+    fireEvent.click(sw('Only listed people'))
+    fireEvent.change(emailInputs()[0]!, { target: { value: ALICE } })
+    save()
+    expect(await screen.findByText(/sign-in list was not saved/)).toBeInTheDocument()
+    expect(sw('Only listed people')).toHaveAttribute('data-checked')
+    expect(emailInputs().map((i) => i.value)).toEqual([ALICE])
+  })
+
+  it('a blank row added to a saved list is not an edit', async () => {
+    await renderPane(config({ loginAllowedEmails: [ALICE] }))
+    addPerson()
+    expect(emailInputs()).toHaveLength(2)
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
+  })
+
+  it('ecosystem-config-032: refuses an entry that is not an email address, before the round trip', async () => {
+    await renderPane(config())
+    fireEvent.click(sw('Only listed people'))
+    fireEvent.change(emailInputs()[0]!, { target: { value: 'alice' } })
+    expect(screen.getByText('"alice" is not an email address.')).toBeInTheDocument()
+    save()
+    expect(clientAuthApi.updateEcosystem).not.toHaveBeenCalled()
+  })
+
+  it('ecosystem-config-032: refuses a 501st email, and Save stays blocked', async () => {
+    const many = Array.from({ length: 500 }, (_, i) => `p${i}@example.com`)
+    await renderPane(config({ loginAllowedEmails: many }))
+    addPerson()
+    fireEvent.change(emailInputs()[500]!, { target: { value: 'extra@example.com' } })
+    expect(screen.getByText('At most 500 people can be listed.')).toBeInTheDocument()
+    save()
+    expect(clientAuthApi.updateEcosystem).not.toHaveBeenCalled()
+  })
+
+  it('Cancel puts the saved rows back', async () => {
+    await renderPane(config({ loginAllowedEmails: [ALICE] }))
+    fireEvent.change(emailInputs()[0]!, { target: { value: BOB } })
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+    await waitFor(() => expect(emailInputs().map((i) => i.value)).toEqual([ALICE]))
   })
 })

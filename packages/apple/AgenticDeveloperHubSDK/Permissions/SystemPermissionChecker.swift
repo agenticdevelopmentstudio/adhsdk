@@ -63,6 +63,8 @@ public struct SystemPermissionChecker: PermissionChecking {
             // refreshes every row on every app activation, so a status check
             // that could raise the ACL dialog would raise it over and over.
             return KeychainPermissionLedger.status(service: service)
+        case .fullDiskAccess(let statusFilePath):
+            return Self.fullDiskAccessStatus(statusFilePath: statusFilePath)
         }
     }
 
@@ -83,7 +85,7 @@ public struct SystemPermissionChecker: PermissionChecking {
             return Self.automationStatus(status)
         case .location:
             // `requestAlwaysAuthorization` is the background-capable grant —
-            // olylod observes location while the user is not in the app. It is
+            // temporald observes location while the user is not in the app. It is
             // also fire-and-forget: the decision arrives later through the
             // delegate, which `locationCoordinator` awaits so this returns the
             // user's actual answer rather than the pre-prompt status.
@@ -110,7 +112,24 @@ public struct SystemPermissionChecker: PermissionChecking {
             let status = await Self.keychainReadStatus(service: service)
             KeychainPermissionLedger.record(status, service: service)
             return status
+        case .fullDiskAccess:
+            // Nothing to ask: the grant belongs to the helper, and the only way
+            // to make it is System Settings. Opening that pane is the UI
+            // layer's job (this target is daemon-safe), so a request is just a
+            // fresh read of what the helper last reported.
+            return await status(permission)
         }
+    }
+
+    /// Reads the helper's status file: `true` is granted, `false` is denied,
+    /// and a missing, unreadable or malformed file is undetermined — the
+    /// helper has not reported, which is not the same as being refused.
+    static func fullDiskAccessStatus(statusFilePath: String) -> PermissionStatus {
+        struct Report: Decodable { let granted: Bool }
+        guard let data = FileManager.default.contents(atPath: statusFilePath),
+              let report = try? JSONDecoder().decode(Report.self, from: data)
+        else { return .undetermined }
+        return report.granted ? .granted : .denied
     }
 
     /// Reads the item on a GCD queue, for the same reason the Apple Events
@@ -232,7 +251,7 @@ public struct SystemPermissionChecker: PermissionChecking {
     static func locationStatus(_ status: CLAuthorizationStatus) -> PermissionStatus {
         switch status {
         case .authorizedAlways: return .granted
-        // "While Using the App" is not a grant we can use: olylod reads location
+        // "While Using the App" is not a grant we can use: temporald reads location
         // while the user is in no app at all. Reported as `.denied` rather than
         // `.undetermined` so PermissionPresenter's Settings-pane fallback fires and
         // the user has a route to upgrade it to Always — `requestAlwaysAuthorization()`

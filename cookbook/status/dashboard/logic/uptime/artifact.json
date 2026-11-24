@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "aa2f3a92-8bac-4a0f-8e61-382958ab53ef",
     "title": "Uptime Math",
-    "domain": "adhsdk://cookbook/status/dashboard/logic/uptime",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -20,17 +19,17 @@
     ],
     "tags": [],
     "depends-on": [
-      "adhsdk://cookbook/status/dashboard/logic/health"
+      "4ed891c0-4e4f-4955-8314-d143c45490ec"
     ],
     "related": [
-      "adhsdk://cookbook/status/service/monitor/uptime",
-      "adhsdk://cookbook/status/dashboard/state/uptime"
+      "88dabdf6-14a3-44eb-ab0d-ae18007c683e",
+      "e322fd0c-1552-4bd9-b129-3c809af3a972"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "9543717db08a9092",
+  "synced": "e6dde9bc09441a7c",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -49,7 +48,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

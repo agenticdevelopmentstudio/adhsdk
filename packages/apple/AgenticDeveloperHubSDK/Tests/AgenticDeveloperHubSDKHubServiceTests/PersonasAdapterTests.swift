@@ -25,98 +25,98 @@ final class PersonasAdapterTests: XCTestCase {
     }
 
     private static let personaJSON = #"""
-    {"id":"persona.acme.ada","userId":"u1","ownerKind":"organization","ownerId":"o1","slug":"ada","name":"Ada",
-     "description":null,"visibility":"private","model":null,"serviceId":null,"appId":null,
-     "avatarAttachmentId":null,"modelPrompt":"You are Ada.","voice":null,"character":null,"examples":null,
-     "createdAt":"2026-09-01T00:00:00.000Z","updatedAt":"2026-09-01T00:00:00.000Z"}
+    {"id":"persona.acme.ada","user_id":"u1","owner_kind":"organization","owner_id":"o1","slug":"ada","name":"Ada",
+     "description":null,"visibility":"private","model":null,"service_id":null,"app_id":null,
+     "avatar_attachment_id":null,"model_prompt":"You are Ada.","voice":null,"character":null,"examples":null,
+     "created":1788220800,"updated":1788220800}
     """#
 
     func testListSendsWorkspaceQuery() async throws {
         let (adapter, stub) = makeAdapter()
-        stub.on(.get, "/persona/personas", json: "[\(Self.personaJSON)]")
+        stub.on(.get, "/v1/personas", json: StubClientTransport.list([Self.personaJSON]))
         let rows = try await adapter.list()
         XCTAssertEqual(rows.map(\.id), ["persona.acme.ada"])
-        XCTAssertEqual(stub.lastRequest(.get, "/persona/personas")?.path, "/persona/personas?workspace=acme")
-        XCTAssertEqual(stub.lastRequest(.get, "/persona/personas")?.headerFields[.authorization], "Bearer jwt")
+        XCTAssertEqual(stub.lastRequest(.get, "/v1/personas")?.path, "/v1/personas?limit=100&workspace=acme")
+        XCTAssertEqual(stub.lastRequest(.get, "/v1/personas")?.headerFields[.authorization], "Bearer jwt")
     }
 
     func testGet() async throws {
         let (adapter, stub) = makeAdapter()
-        stub.on(.get, "/persona/personas/persona.acme.ada", json: Self.personaJSON)
+        stub.on(.get, "/v1/personas/persona.acme.ada", json: Self.personaJSON)
         let persona = try await adapter.get(id: "persona.acme.ada")
         XCTAssertEqual(persona.name, "Ada")
         XCTAssertEqual(
-            stub.lastRequest(.get, "/persona/personas/persona.acme.ada")?.path,
-            "/persona/personas/persona.acme.ada?workspace=acme"
+            stub.lastRequest(.get, "/v1/personas/persona.acme.ada")?.path,
+            "/v1/personas/persona.acme.ada?workspace=acme"
         )
     }
 
     func testCreatePostsBody() async throws {
         let (adapter, stub) = makeAdapter()
-        stub.on(.post, "/persona/personas", status: 201, json: Self.personaJSON)
+        stub.on(.post, "/v1/personas", status: 201, json: Self.personaJSON)
         let body = PersonaBody(
             slug: "ada", name: "Ada", description: nil, modelPrompt: "You are Ada.", model: "", visibility: "private"
         )
         _ = try await adapter.create(body)
-        let sent = stub.lastBody(.post, "/persona/personas")
+        let sent = stub.lastBody(.post, "/v1/personas")
         XCTAssertEqual(sent?["slug"] as? String, "ada")
         XCTAssertEqual(sent?["name"] as? String, "Ada")
         XCTAssertEqual(sent?["model"] as? String, "")
         XCTAssertEqual(sent?["visibility"] as? String, "private")
         XCTAssertNil(sent?["description"] ?? nil, "nil optionals are omitted, not sent as null")
-        XCTAssertEqual(stub.lastRequest(.post, "/persona/personas")?.path, "/persona/personas?workspace=acme")
+        XCTAssertEqual(stub.lastRequest(.post, "/v1/personas")?.path, "/v1/personas?workspace=acme")
     }
 
-    func testUpdatePuts() async throws {
+    func testUpdatePosts() async throws {
         let (adapter, stub) = makeAdapter()
-        stub.on(.put, "/persona/personas/persona.acme.ada", json: Self.personaJSON)
+        stub.on(.post, "/v1/personas/persona.acme.ada", json: Self.personaJSON)
         var body = PersonaBody(slug: "ada", name: "Ada L", modelPrompt: "p", visibility: "hub")
         body.cannedChat = .object(["mode": .string("script")])
         _ = try await adapter.update(id: "persona.acme.ada", body)
         XCTAssertEqual(
-            stub.lastRequest(.put, "/persona/personas/persona.acme.ada")?.path,
-            "/persona/personas/persona.acme.ada?workspace=acme"
+            stub.lastRequest(.post, "/v1/personas/persona.acme.ada")?.path,
+            "/v1/personas/persona.acme.ada?workspace=acme"
         )
-        let sent = stub.lastBody(.put, "/persona/personas/persona.acme.ada")
+        let sent = stub.lastBody(.post, "/v1/personas/persona.acme.ada")
         XCTAssertEqual(sent?["name"] as? String, "Ada L")
         XCTAssertEqual((sent?["cannedChat"] as? [String: Any])?["mode"] as? String, "script")
     }
 
     func testDelete() async throws {
         let (adapter, stub) = makeAdapter()
-        stub.on(.delete, "/persona/personas/persona.acme.ada", status: 204, json: "")
+        stub.on(.delete, "/v1/personas/persona.acme.ada", status: 204, json: "")
         try await adapter.delete(id: "persona.acme.ada")
         XCTAssertEqual(
-            stub.lastRequest(.delete, "/persona/personas/persona.acme.ada")?.path,
-            "/persona/personas/persona.acme.ada?workspace=acme"
+            stub.lastRequest(.delete, "/v1/personas/persona.acme.ada")?.path,
+            "/v1/personas/persona.acme.ada?workspace=acme"
         )
     }
 
     func testListServices() async throws {
         let (adapter, stub) = makeAdapter()
-        stub.on(.get, "/persona/services", json: #"""
-        [{"id":"svc1","templateId":null,"providerKind":"openai","name":"OpenAI",
-          "baseUrl":"https://api.openai.com","hasApiKey":true,
-          "connectStatus":"connected","connectError":null,"lastConnectedAt":null,"documentationUrl":null,
-          "statusUrl":null,
-          "models":[{"id":"gpt-x","displayName":"GPT X","contextWindow":128000}],"modelsFetchedAt":null}]
-        """#)
+        stub.on(.get, "/v1/ai_services", json: StubClientTransport.list([#"""
+        {"id":"svc1","template_id":null,"provider_kind":"openai","name":"OpenAI",
+          "base_url":"https://api.openai.com","has_api_key":true,
+          "connect_status":"connected","connect_error":null,"last_connected_at":null,"documentation_url":null,
+          "status_url":null,
+          "models":[{"id":"gpt-x","display_name":"GPT X","context_window":128000}],"models_fetched_at":null}
+        """#]))
         let services = try await adapter.listServices()
         XCTAssertEqual(services.map(\.name), ["OpenAI"])
         XCTAssertEqual(services[0].models.map(\.id), ["gpt-x"])
-        XCTAssertNil(stub.lastRequest(.get, "/persona/services")?.path?.split(separator: "?").dropFirst().first)
+        XCTAssertEqual(stub.lastRequest(.get, "/v1/ai_services")?.path, "/v1/ai_services?limit=100")
     }
 
     func testUnauthorizedMapsToHubError() async {
         let (adapter, stub) = makeAdapter()
-        stub.on(.get, "/persona/personas", status: 401, json: "{}")
-        stub.on(.post, "/auth/refresh", status: 503, json: "")
+        stub.on(.get, "/v1/personas", status: 401, json: "{}")
+        stub.on(.post, "/v1/auth/sessions/refresh", status: 503, json: "")
         do {
             _ = try await adapter.list()
             XCTFail("expected unauthorized error")
         } catch {
             XCTAssertEqual(error as? HubError, .unauthorized)
         }
-        XCTAssertEqual(stub.lastRequest(.get, "/persona/personas")?.path, "/persona/personas?workspace=acme")
+        XCTAssertEqual(stub.lastRequest(.get, "/v1/personas")?.path, "/v1/personas?limit=100&workspace=acme")
     }
 }

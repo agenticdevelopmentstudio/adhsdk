@@ -1,0 +1,5 @@
+
+The type module that defines the one agent-ready digest of the whole fleet. `GET /report` and the MCP tool `get_report` both return a `ReportResponse`, and both accept a `ReportParams` query. The module holds declarations and three constants (`REPORT_SCHEMA`, `SEVERITIES`, `REPORT_SOURCES`). Every judgement in the payload (verdict, severity, order, staleness, completeness) is made on the server by the report rules; a client formats and lays out, and decides nothing. The payload carries a `schema` string, and a change a reader must adapt to is a new `status.report/N`.
+
+A port reproduces these shapes exactly, because the CLI, the MCP clients and any agent parse them. The producers (`buildReport` and `parseReportParams`) are specified by their own recipes; this ingredient is the contract they meet. The parser behavior (defaults, coercion and the order of the checks) is specified by [adhsdk.ingredient.status.service.report.report-gather](cookbook:24b45917-4361-44d8-a3dc-224cc2807aa9), which owns `parseReportParams`; this module keeps only the `ReportParams` shape and its value ranges.
+

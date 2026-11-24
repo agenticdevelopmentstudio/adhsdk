@@ -1,4 +1,4 @@
-// Project work-items API client — the card side of the `/api/project/*` surface.
+// Project work-items API client — the card side of the `/api/v1/work_items` surface.
 //
 // Split out of `projects.ts` (mirroring the teams.ts + team-members.ts split):
 // work items carry their own field-values and dependency sub-resources and are
@@ -11,8 +11,9 @@
 // keeps explicit null (it filters only `=== undefined`), so `compact(patch)`
 // sends `assigneeId: null` through rather than stripping it.
 
-import { authedJson, authedRequest } from "../http";
+import { authedRequest, withV1Query } from "../http";
 import { compact, enc } from "../client-helpers";
+import { v1Json, v1List, v1Write } from "../v1-case";
 import type {
   WorkItemRow,
   WorkItemFieldValueRow,
@@ -28,10 +29,10 @@ import type {
   WorkItemRelationAddBody,
 } from "./wire";
 
-/** Per-project stem (list + create). */
-const PROJECTS = "/api/project/projects";
+/** The collection (list + create); a project, iteration, parent or triage queue is a query on it. */
+const COLLECTION = "/api/v1/work_items";
 /** Single-item stem (get / update / delete + sub-resources). */
-const ITEMS = "/api/project/work-items";
+const ITEMS = COLLECTION;
 
 /* ── Work item ────────────────────────────────────────────────────────── */
 
@@ -128,6 +129,14 @@ export interface WorkItemFieldValue {
   value: unknown;
 }
 
+/** The field rows of a work item's `fields` attachment (bare, or wrapped as `{items}`). */
+function fieldRows(
+  fields: { items: WorkItemFieldValueRow[] } | WorkItemFieldValueRow[] | undefined,
+): WorkItemFieldValueRow[] {
+  if (!fields) return [];
+  return Array.isArray(fields) ? fields : fields.items;
+}
+
 export function toWorkItemFieldValue(r: WorkItemFieldValueRow): WorkItemFieldValue {
   return {
     fieldId: r.fieldId,
@@ -218,17 +227,18 @@ export const projectWorkItemsApi = {
     projectId: string,
     opts?: { includeUntriaged?: boolean },
   ): Promise<WorkItem[]> {
-    const rows = await authedJson<WorkItemRow[]>(
-      `${PROJECTS}/${enc(projectId)}/work-items${
-        opts?.includeUntriaged ? "?includeUntriaged=true" : ""
-      }`,
+    const rows = await v1List<WorkItemRow>(
+      withV1Query(COLLECTION, {
+        project: projectId,
+        includeUntriaged: opts?.includeUntriaged ? "true" : undefined,
+      }),
     );
     return rows.map(toWorkItem); // server orders by rank
   },
 
   async get(id: string): Promise<WorkItem | null> {
     try {
-      return toWorkItem(await authedJson<WorkItemRow>(`${ITEMS}/${enc(id)}`));
+      return toWorkItem(await v1Json<WorkItemRow>(`${ITEMS}/${enc(id)}`));
     } catch {
       // Backend 404s with a thrown error; the UI contract is null-for-missing.
       return null;
@@ -259,7 +269,8 @@ export const projectWorkItemsApi = {
       triage?: boolean;
     },
   ): Promise<WorkItem> {
-    const body: WorkItemCreateBody = {
+    const body: WorkItemCreateBody & { project: string } = {
+      project: projectId,
       title: input.title,
       ...compact({
         description: input.description,
@@ -278,10 +289,7 @@ export const projectWorkItemsApi = {
       }),
     };
     return toWorkItem(
-      await authedJson<WorkItemRow>(
-        `${PROJECTS}/${enc(projectId)}/work-items`,
-        { method: "POST", body: JSON.stringify(body) },
-      ),
+      await v1Json<WorkItemRow>(COLLECTION, v1Write("POST", body)),
     );
   },
 
@@ -313,10 +321,7 @@ export const projectWorkItemsApi = {
     // stripped — which is exactly the PATCH's clear semantics.
     const body: WorkItemPatchBody = compact(patch);
     return toWorkItem(
-      await authedJson<WorkItemRow>(`${ITEMS}/${enc(id)}`, {
-        method: "PATCH",
-        body: JSON.stringify(body),
-      }),
+      await v1Json<WorkItemRow>(`${ITEMS}/${enc(id)}`, v1Write("POST", body)),
     );
   },
 
@@ -332,10 +337,7 @@ export const projectWorkItemsApi = {
   async move(id: string, target: WorkItemMoveTarget): Promise<WorkItem> {
     const body: WorkItemMoveTarget = compact(target);
     return toWorkItem(
-      await authedJson<WorkItemRow>(`${ITEMS}/${enc(id)}/move`, {
-        method: "POST",
-        body: JSON.stringify(body),
-      }),
+      await v1Json<WorkItemRow>(`${ITEMS}/${enc(id)}/move`, v1Write("POST", body)),
     );
   },
 
@@ -344,17 +346,15 @@ export const projectWorkItemsApi = {
   },
 
   async children(id: string): Promise<WorkItem[]> {
-    const rows = await authedJson<WorkItemRow[]>(
-      `${ITEMS}/${enc(id)}/children`,
-    );
+    const rows = await v1List<WorkItemRow>(withV1Query(COLLECTION, { parent: id }));
     return rows.map(toWorkItem); // server orders by rank
   },
 
   async getValues(id: string): Promise<WorkItemFieldValue[]> {
-    const rows = await authedJson<WorkItemFieldValueRow[]>(
-      `${ITEMS}/${enc(id)}/fields`,
+    const item = await v1Json<{ fields: { items: WorkItemFieldValueRow[] } | WorkItemFieldValueRow[] }>(
+      `${ITEMS}/${enc(id)}?include[]=fields`,
     );
-    return rows.map(toWorkItemFieldValue);
+    return fieldRows(item.fields).map(toWorkItemFieldValue);
   },
 
   async setValues(
@@ -364,27 +364,23 @@ export const projectWorkItemsApi = {
     const body: WorkItemFieldValuesPutBody = {
       values: input.values,
     };
-    const rows = await authedJson<WorkItemFieldValueRow[]>(
-      `${ITEMS}/${enc(id)}/fields`,
-      { method: "PUT", body: JSON.stringify(body) },
+    // On /v1 the field values are the `fields` member of the work item's own update.
+    const item = await v1Json<{ fields?: { items: WorkItemFieldValueRow[] } | WorkItemFieldValueRow[] }>(
+      `${ITEMS}/${enc(id)}`,
+      v1Write("POST", { fields: body }),
     );
-    return rows.map(toWorkItemFieldValue);
+    return fieldRows(item.fields).map(toWorkItemFieldValue);
   },
 
   dependencies: {
     async list(id: string): Promise<WorkItemDependency[]> {
-      const rows = await authedJson<WorkItemDependencyRow[]>(
-        `${ITEMS}/${enc(id)}/dependencies`,
-      );
+      const rows = await v1List<WorkItemDependencyRow>(`${ITEMS}/${enc(id)}/dependencies`);
       return rows.map(toWorkItemDependency); // server orders by createdAt
     },
 
     add(id: string, dependsOnId: string): Promise<DependencyEdge> {
       const body: WorkItemDependencyAddBody = { dependsOnId };
-      return authedJson<DependencyEdge>(`${ITEMS}/${enc(id)}/dependencies`, {
-        method: "POST",
-        body: JSON.stringify(body),
-      });
+      return v1Json<DependencyEdge>(`${ITEMS}/${enc(id)}/dependencies`, v1Write("POST", body));
     },
 
     remove(id: string, dependsOnId: string): Promise<void> {
@@ -400,8 +396,8 @@ export const projectWorkItemsApi = {
   // pointing exactly one way; a card's detail pane wants all of it and uses these.
   relations: {
     async list(id: string, kind?: RelationKind): Promise<WorkItemRelation[]> {
-      const rows = await authedJson<WorkItemRelationRow[]>(
-        `${ITEMS}/${enc(id)}/relations${kind ? `?kind=${enc(kind)}` : ""}`,
+      const rows = await v1List<WorkItemRelationRow>(
+        withV1Query(`${ITEMS}/${enc(id)}/relations`, { kind }),
       );
       return rows.map(toWorkItemRelation); // server orders by createdAt
     },
@@ -412,10 +408,7 @@ export const projectWorkItemsApi = {
       kind: RelationKind,
     ): Promise<DependencyEdge> {
       const body: WorkItemRelationAddBody = { relatedId, kind };
-      return authedJson<DependencyEdge>(`${ITEMS}/${enc(id)}/relations`, {
-        method: "POST",
-        body: JSON.stringify(body),
-      });
+      return v1Json<DependencyEdge>(`${ITEMS}/${enc(id)}/relations`, v1Write("POST", body));
     },
 
     // No kind argument: a pair carries one relation, so naming the far card names the link.

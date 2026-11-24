@@ -1,0 +1,1 @@
+None; `RouteTable` has no configuration and reads no environment variable or settings key. Its parameters (`handlers` on `init`, `other` on `merging`, and `method`, `components` and `respond` on `exact`) are defined in the Behavioral Requirements.

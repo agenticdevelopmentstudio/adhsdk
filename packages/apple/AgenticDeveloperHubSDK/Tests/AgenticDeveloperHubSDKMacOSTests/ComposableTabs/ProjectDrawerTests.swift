@@ -106,6 +106,36 @@ final class ProjectDrawerTests: XCTestCase {
             ])
     }
 
+    /// A window's own items go before the flexible space (after the shelf's,
+    /// when it has a shelf), aimed at the target they name.
+    func testExtraToolbarItemsComeBeforeTheFlexibleSpace() throws {
+        final class Receiver: NSObject { @objc func fire() {} }
+        let receiver = Receiver()
+        let first = NSToolbarItem.Identifier("test.toolbar.first")
+        let second = NSToolbarItem.Identifier("test.toolbar.second")
+        let target = WindowToolbarTarget(receiver)
+        let controller = ComposableTabsWindowController(
+            project: makeProject(), showsTabBars: false,
+            extraToolbarItems: [
+                .targetedButton(identifier: first, symbol: "circle", label: "First",
+                                target: target, action: #selector(Receiver.fire)),
+                .targetedButton(identifier: second, symbol: "square", label: "Second",
+                                target: target, action: #selector(Receiver.fire))
+            ])
+        controller.showWindow(nil)
+
+        let identifiers = ProjectWindowTestSupport.buildToolbarItems(controller)
+
+        XCTAssertEqual(
+            identifiers,
+            [
+                first, second, .flexibleSpace,
+                NSToolbarItem.Identifier("project.toolbar.search"),
+                NSToolbarItem.Identifier("project.toolbar.help")
+            ])
+        XCTAssertTrue(try XCTUnwrap(controller.toolbarDelegate.button(for: first)).target === receiver)
+    }
+
     func testTheHelpButtonIsAddressable() throws {
         let controller = makeController(for: makeProject())
         ProjectWindowTestSupport.buildToolbarItems(controller)

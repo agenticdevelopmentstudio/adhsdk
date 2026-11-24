@@ -19,8 +19,8 @@ class Announcement:
         body (str):
         audience (str): See AnnouncementCreate.audience
         status (str): e.g. sending, sent
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
         sent_at (None | str): null until the fan-out finishes
         total_recipients (int):
         sent_count (int):
@@ -32,8 +32,8 @@ class Announcement:
     body: str
     audience: str
     status: str
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     sent_at: None | str
     total_recipients: int
     sent_count: int
@@ -52,9 +52,9 @@ class Announcement:
 
         status = self.status
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         sent_at: None | str
         sent_at = self.sent_at
@@ -68,16 +68,16 @@ class Announcement:
         field_dict.update(
             {
                 "id": id,
-                "createdBy": created_by,
+                "created_by": created_by,
                 "title": title,
                 "body": body,
                 "audience": audience,
                 "status": status,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
-                "sentAt": sent_at,
-                "totalRecipients": total_recipients,
-                "sentCount": sent_count,
+                "created": created,
+                "updated": updated,
+                "sent_at": sent_at,
+                "total_recipients": total_recipients,
+                "sent_count": sent_count,
             }
         )
 
@@ -88,7 +88,7 @@ class Announcement:
         d = dict(src_dict)
         id = d.pop("id")
 
-        created_by = d.pop("createdBy")
+        created_by = d.pop("created_by")
 
         title = d.pop("title")
 
@@ -98,20 +98,20 @@ class Announcement:
 
         status = d.pop("status")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         def _parse_sent_at(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        sent_at = _parse_sent_at(d.pop("sentAt"))
+        sent_at = _parse_sent_at(d.pop("sent_at"))
 
-        total_recipients = d.pop("totalRecipients")
+        total_recipients = d.pop("total_recipients")
 
-        sent_count = d.pop("sentCount")
+        sent_count = d.pop("sent_count")
 
         announcement = cls(
             id=id,
@@ -120,8 +120,8 @@ class Announcement:
             body=body,
             audience=audience,
             status=status,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
             sent_at=sent_at,
             total_recipients=total_recipients,
             sent_count=sent_count,

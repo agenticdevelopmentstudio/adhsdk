@@ -12,14 +12,17 @@
 **Approved**: pending
 
 **Decision**: A null snapshot counts as fresh, not unknown.
-**Rationale**: A null `lastCycleAt` (no probe yet) is fresh, so a healthy monitor is unaffected; the board, not the snapshot, is the thing that must have come back before a colour is claimed.
+**Rationale**: No live read yet is not evidence of trouble, so a healthy monitor is unaffected; the board, not the snapshot, is the thing that must have come back before a colour is claimed.
 **Approved**: pending
 
 **Decision**: `count` is taken from the board even when `pillKey` is `"unknown"`.
 **Rationale**: The board's problem count is independent of the unknown test; callers decide whether to show a count beside an unknown glyph.
 **Approved**: pending
 
-**Decision**: Staleness compares two server timestamps rather than the client clock.
-**Rationale**: Measuring `generatedAt - lastCycleAt` is immune to client clock skew and to client timers being throttled while a tab sleeps. This rationale applies as written to a client that has such a timer-throttling concern (the web platform); a port on a platform without it keeps the two-server-timestamp comparison regardless, since it is also immune to simple client clock skew.
+**Decision**: Snapshot staleness is the server's verdict, not a client-side judgment.
+**Rationale**: The server judges freshness from its own clocks and publishes it as `snapshot.freshness`, so the client is immune to clock skew and throttled timers, and the sign, the banner and every other consumer read one verdict. An earlier version compared two server timestamps on the client with a probe-cadence window; that rule moved to the server and the hook now only reads its answer.
 **Approved**: pending
 
+**Decision**: A snapshot with no freshness verdict reads as stale.
+**Rationale**: No verdict is not "fresh": a backend older than the verdict cannot back a confident status claim, so the sign says unknown rather than a false green.
+**Approved**: pending

@@ -1,0 +1,24 @@
+
+- **render-button-bar**: The component MUST render the standard Button Bar with the New and Delete buttons hidden, leaving Cancel and Save as the only buttons.
+- **wrapper-slot**: The component MUST render a wrapper element carrying `data-slot="document-save-bar"` that holds the bar and the conflict warning.
+- **accept-class-name**: The component MUST apply the `className` prop to the wrapper element.
+- **cancel-enabled-by-dirty**: Cancel MUST be enabled only while the document is dirty and not saving.
+- **save-enabled-by-dirty**: Save MUST be enabled only while the document is dirty and not saving.
+- **cancel-reverts**: Activating Cancel MUST call the document's `revert`.
+- **save-saves**: Activating Save MUST call the document's `save`.
+- **saving-state**: While the document is saving, the Save button MUST read "Saving…" and be disabled, and Cancel MUST be disabled.
+- **gone-notice**: When `gone` is true the component MUST show an error line reading the `gone` message, or `This {noun} no longer exists.` by default.
+- **changed-notice**: When `changedElsewhere` is true and `conflict` is null the component MUST show a line in the orange warning color reading the `changedElsewhere` message, or `This {noun} changed since it was opened.` by default.
+- **changed-notice-hidden-on-conflict**: When `conflict` is set the component MUST NOT show the changed-elsewhere notice, because the conflict warning replaces it.
+- **save-error-notice**: When `saveError` is set the component MUST show an error line reading `Save failed: ` followed by the error text.
+- **notices-leading**: The three notices MUST render in the bar's leading area, in the order gone, changed, save error.
+- **error-lines-alert**: The gone and save-failed lines MUST be exposed with the alert role, through the shared error text.
+- **conflict-warning**: When `conflict` is set the component MUST render a warning alert below the bar (`data-slot="document-save-conflict"`) holding the `conflict` message, or `Someone else saved this {noun}.` by default.
+- **reload-theirs**: The conflict warning MUST offer a "Reload theirs" button that calls the document's `takeTheirs`.
+- **overwrite**: The conflict warning MUST offer an "Overwrite" button that calls the document's `overwrite`.
+- **overwrite-disabled-while-saving**: The "Overwrite" button MUST be disabled while the document is saving.
+- **reload-theirs-always-enabled**: The "Reload theirs" button MUST NOT be disabled by the saving state.
+- **noun-default**: `noun` MUST default to "document".
+- **messages-override**: Each of `messages.gone`, `messages.changedElsewhere` and `messages.conflict` MUST replace the matching default wording when provided, whatever `noun` is.
+- **no-save-result-await**: Save and Overwrite MUST be fired without the component waiting on or handling their returned promise.
+

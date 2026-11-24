@@ -1,0 +1,7 @@
+
+- **React/Web**: Render as `<p>` with `className` attribute; base class `lp-lede`, measure constrained to `max-width: 72ch`. Implementation filters falsy class values before joining with a space; a whitespace-only `className` value is not filtered.
+- **SwiftUI**: Use a `Text` view; apply font, size, and color with `.font()` and `.foregroundStyle()` (not the deprecated `.foregroundColor()`), and constrain width with `.frame(maxWidth:)` where `maxWidth = 72 × the width of "0" in the chosen font` to match `lp-lede` styling. `Text` wraps by default.
+- **Compose**: Use the `Text` composable, passing `color` directly (or a `style = TextStyle(color = ...)`) — Compose has no `.color()` modifier — along with `fontWeight` and `fontSize` parameters, and `Modifier.widthIn(max = ...)` where the max is 72 × the width of "0" in the chosen font, to match `lp-lede` styling. `Text` wraps by default.
+- **AppKit / UIKit**: Use `NSTextField(wrappingLabelWithString:)` (macOS) or `UILabel` with `numberOfLines = 0` (iOS) to match `lp-lede` styling; both wrap by default. Constrain width with a layout constraint of `maxWidth = 72 × the width of "0" in the chosen font`. Configure font, size, and text color properties.
+- **WinUI 3**: Use a `TextBlock` control with the `Text` property for content and `TextWrapping="Wrap"`; constrain width with `MaxWidth = 72 × the width of "0" in the chosen font` (rather than `Margin` padding) to match web styling. Set `FontSize`, `FontFamily`, and `Foreground` (color) properties.
+

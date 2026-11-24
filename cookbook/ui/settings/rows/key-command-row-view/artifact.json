@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "1d2f69b6-1156-4dfa-a390-a240925ba1bd",
     "title": "Key Command Row View",
-    "domain": "adhsdk://cookbook/ui/settings/rows/key-command-row-view",
     "type": "ingredient",
     "version": "1.2.3",
     "status": "review",
@@ -24,13 +23,13 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/ui/controls/key-command-capture-field"
+      "969b7f76-3fff-4a13-9b85-a61df25c70ee"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "f89429b2a9641b14",
+  "synced": "c85009dbd771eab0",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -49,7 +48,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

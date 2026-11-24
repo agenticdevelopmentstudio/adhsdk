@@ -64,7 +64,7 @@ describe("subscribeToProject — the connection", () => {
 
   it("names the board in the URL and listens for one event", () => {
     const stop = subscribeToProject("p 1/2", vi.fn());
-    expect(opened[0]!.url).toBe("/api/project/projects/p%201%2F2/stream");
+    expect(opened[0]!.url).toBe("/api/v1/projects/p%201%2F2/stream");
     expect(opened[0]!.event).toBe("project");
     stop();
   });

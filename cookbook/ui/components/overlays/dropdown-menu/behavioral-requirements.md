@@ -1,0 +1,29 @@
+
+- **render-trigger**: The component MUST render a trigger element (button, link, or other control) that opens the menu.
+- **render-content**: The component MUST render a positioned popup containing menu items.
+- **close-on-item-select**: The component MUST close the menu when a user selects a standard menu item (unless `closeOnClick` is explicitly set to false).
+- **close-on-link-select**: DropdownMenuLinkItem MUST close the menu after the link click handler fires, preserving browser link semantics (middle-click, Cmd+click for new tabs).
+- **close-on-escape**: The component MUST close the menu when the user presses Escape.
+- **close-on-outside-click**: The component MUST close the menu when the user clicks outside the menu and trigger.
+- **support-checkbox-items**: Checkbox items MUST support a `checked` state and MUST render a checkmark icon when checked.
+- **support-radio-items**: Radio items MUST support a single-selected value within a RadioGroup and MUST render a circle indicator when selected.
+- **support-submenus**: SubmenuRoot items MUST open a nested menu positioned relative to the parent menu, and MUST close when the user moves focus away from the submenu.
+- **position-with-offset**: DropdownMenuContent MUST accept `side`, `sideOffset`, `align`, and `alignOffset` props to control menu positioning. Default `sideOffset` is 4px.
+- **support-semantic-classes**: All menu elements MUST apply semantic CSS class names prefixed with `adh-dropdown-menu__` to enable consistent theming.
+- **support-inset-items**: Menu items and labels MUST support an `inset` prop that adds the `adh-dropdown-menu__item--inset` class for visual indentation.
+- **support-accent-items**: Menu items MUST support an `accent` prop that applies the theme's accent styling on hover/focus via the `adh-dropdown-menu__item--accent` class.
+- **close-on-click-default**: CheckboxItem, RadioItem, and LinkItem MUST default `closeOnClick` to `true`, closing the menu when the item is clicked. MenuItem's `closeOnClick` has no explicit default and inherits Base UI's default of `true` (see close-on-item-select).
+- **keep-open-when-close-on-click-false**: When `closeOnClick` is `false` on an item, clicking it MUST NOT close the menu.
+- **keyboard-navigation**: The component MUST support arrow-key navigation of menu items: ArrowDown/ArrowUp move focus between items, Home/End move focus to the first/last item, and ArrowRight/ArrowLeft open/close submenus. Under a right-to-left direction (Base UI's direction setting), ArrowLeft opens and ArrowRight closes submenus.
+- **focus-management**: The component MUST move focus onto the first focusable item when the menu opens from the keyboard, and MUST return focus to the trigger when the menu closes.
+- **focus-on-pointer-open**: When the menu opens from a pointer click on the trigger, the component MUST move focus into the menu popup; Base UI focuses the popup itself on pointer open, and no item is focused until the user navigates or hovers one.
+- **checkbox-state-announcement**: Checkbox items MUST announce their checked state to assistive technology via `aria-checked`.
+- **radio-state-announcement**: Radio items MUST announce their selected state to assistive technology via `aria-checked`.
+- **disabled-state-announcement**: Disabled items MUST announce their disabled state via `aria-disabled`, and a click on a disabled item MUST be ignored. This does not guarantee they are skipped by keyboard navigation; see the **Focus on disabled item** edge case.
+- **submenu-indication**: Submenu triggers MUST indicate that they open a submenu, via the ChevronRight icon and `aria-haspopup="menu"`.
+- **closed-without-trigger**: A menu rendered without a Trigger child MUST remain closed unless opened programmatically through a controlled `open` prop.
+- **ignore-valueless-radio**: A RadioItem in a RadioGroup without a `value` prop MUST NOT participate in group selection: selecting it MUST NOT change the RadioGroup's value, and it MUST NOT render the selected indicator.
+- **scale-text-with-root-font-size**: Item and label text SHOULD be sized in `rem` so it follows the user's root font size (the item class uses `0.9rem`).
+- **meet-text-contrast**: Item and label text SHOULD meet WCAG AA contrast against the menu surface. The source delegates this to the theme tokens, so it is not verified here.
+- **minimum-target-size**: Menu items SHOULD have a minimum touch/click target size of 44×44px (WCAG 2.5.5 Target Size Enhanced; see references). Known gap: source only grows item rows by a fixed fraction on coarse pointers, which does not reach 44px.
+

@@ -20,8 +20,8 @@ class Friendship:
         requester_id (str):
         addressee_id (str):
         status (FriendshipStatus):
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
     """
 
     id: str
@@ -29,8 +29,8 @@ class Friendship:
     requester_id: str
     addressee_id: str
     status: FriendshipStatus
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -44,21 +44,21 @@ class Friendship:
 
         status = self.status.value
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
-                "requesterId": requester_id,
-                "addresseeId": addressee_id,
+                "ecosystem_id": ecosystem_id,
+                "requester_id": requester_id,
+                "addressee_id": addressee_id,
                 "status": status,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
+                "created": created,
+                "updated": updated,
             }
         )
 
@@ -69,17 +69,17 @@ class Friendship:
         d = dict(src_dict)
         id = d.pop("id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        requester_id = d.pop("requesterId")
+        requester_id = d.pop("requester_id")
 
-        addressee_id = d.pop("addresseeId")
+        addressee_id = d.pop("addressee_id")
 
         status = FriendshipStatus(d.pop("status"))
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         friendship = cls(
             id=id,
@@ -87,8 +87,8 @@ class Friendship:
             requester_id=requester_id,
             addressee_id=addressee_id,
             status=status,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
         )
 
         friendship.additional_properties = d

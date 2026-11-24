@@ -32,13 +32,26 @@ final class DaemonSummarizerPluginTests: XCTestCase {
         // WAL artifacts — each test gets a pristine schema.
         database = try TestDaemonDatabase.makeSessionDatabase(path: ":memory:").db
         secretStore = InMemorySecretStore()
+        // The summarizer reads the session's events from the event store, so they
+        // go in through the Claude pipeline, whose own files live in a temp folder.
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("summarizer-\(UUID().uuidString)", isDirectory: true)
+        pipelineDirectory = directory
+        harness = try ClaudePipelineTestHarness(directory: directory, database: database)
         try seedSession()
     }
 
     override func tearDownWithError() throws {
+        harness = nil
         database = nil
         secretStore = nil
+        if let pipelineDirectory {
+            try? FileManager.default.removeItem(at: pipelineDirectory)
+        }
     }
+
+    private var pipelineDirectory: URL?
+    private var harness: ClaudePipelineTestHarness!
 
     /// The shared `selectProviderConfig` (AIPluginTestSupport) bound to this
     /// suite's database/secret store; its `plugin`/`template` defaults match
@@ -332,16 +345,14 @@ final class DaemonSummarizerPluginTests: XCTestCase {
     // MARK: - Helpers
 
     private func seedSession() throws {
-        try database.ingestEvent(
-            eventType: "SessionStart",
-            timestamp: Self.baseTimestamp,
-            hookData: ["session_id": "s", "cwd": "/tmp/proj", "model": "sonnet", "pid": 0, "term_program": "Test"]
-        )
-        try database.ingestEvent(
-            eventType: "PreToolUse",
-            timestamp: Self.nextTimestamp,
-            hookData: ["session_id": "s", "cwd": "/tmp/proj", "tool_name": "Read", "tool_input": [String: Any]()]
-        )
+        try harness.ingest([
+            ClaudePipelineTestHarness.event(
+                "SessionStart", sessionId: "s", timestamp: Self.baseTimestamp, cwd: "/tmp/proj",
+                hookData: ["model": "sonnet", "pid": 0, "term_program": "Test"]),
+            ClaudePipelineTestHarness.event(
+                "PreToolUse", sessionId: "s", timestamp: Self.nextTimestamp, cwd: "/tmp/proj",
+                hookData: ["tool_name": "Read", "tool_input": [String: Any]()])
+        ])
     }
 
     /// A plugin runtime that fails the test if it is ever exercised — used on the

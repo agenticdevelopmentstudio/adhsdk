@@ -44,8 +44,8 @@ class UsageLlmTokens:
             {
                 "input": input_,
                 "output": output,
-                "cacheRead": cache_read,
-                "cacheWrite": cache_write,
+                "cache_read": cache_read,
+                "cache_write": cache_write,
                 "reasoning": reasoning,
             }
         )
@@ -59,9 +59,9 @@ class UsageLlmTokens:
 
         output = d.pop("output")
 
-        cache_read = d.pop("cacheRead")
+        cache_read = d.pop("cache_read")
 
-        cache_write = d.pop("cacheWrite")
+        cache_write = d.pop("cache_write")
 
         reasoning = d.pop("reasoning")
 

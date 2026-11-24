@@ -1,0 +1,9 @@
+The `platforms` of this recipe are swift and macos; the notes for the other targets are porting guidance only.
+
+
+- **SwiftUI**: `SessionStatus.swift` in `Core/Sessions` is a Foundation-only `enum` with a `String` raw value. A SwiftUI view should show a label chosen by the view layer and not the raw value.
+- **Compose**: Port as a Kotlin `enum class SessionStatus(val raw: String)` with a `fromRaw(String): SessionStatus?` function that returns `null` for an unknown string, matching the failable initializer.
+- **React/Web**: Port as a TypeScript string-literal union `"active" | "stale" | "ended"` plus a function `parseSessionStatus(s: string): SessionStatus | undefined` that returns the matching literal and `undefined` for anything else.
+- **AppKit / UIKit**: The same Foundation enum is used unchanged; a table or list cell maps the case to an icon or text. Store and compare the raw string, as the daemon code does.
+- **WinUI 3**: Use a C# `enum SessionStatus { Active, Stale, Ended }`. C# enums carry no string raw value, so serialize with `JsonStringEnumConverter` using a camel-case naming policy in `System.Text.Json` to get the lowercase wire strings, and map the three wire strings explicitly (a `switch` on `"active"`, `"stale"` and `"ended"`, or `[JsonStringEnumMemberName]` in .NET 9 and later), returning no value for anything else. Do not use `Enum.TryParse(..., ignoreCase: false)` on the lowercase wire strings: the members are `Active`, `Stale` and `Ended`, so it rejects every stored value. If you do parse with `Enum.TryParse`, keep the `Enum.IsDefined` guard, since `Enum.TryParse` accepts numeric strings. For a SQLite column use `Microsoft.Data.Sqlite` and convert at the boundary. Expose the value on a view model through `INotifyPropertyChanged` and bind a glyph or text to it with an `x:Bind` function.
+

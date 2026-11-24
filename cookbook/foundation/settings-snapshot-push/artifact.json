@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
-    "id": "402E0AB0-6488-403B-BC43-FBC9145A9A27",
+    "id": "402e0ab0-6488-403b-bc43-fbc9145a9a27",
     "title": "Settings Snapshot Push",
-    "domain": "adhsdk://cookbook/foundation/settings-snapshot-push",
     "type": "ingredient",
     "version": "1.0.1",
     "status": "review",
@@ -27,14 +26,14 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/foundation/settings-storage",
-      "adhsdk://cookbook/foundation/raw-setting"
+      "6363b5ff-f511-4e21-9ba7-6850787dba62",
+      "a8bfcd0b-0759-4801-aaf6-a14d7aa3fe49"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "dc406e645c0f3a17",
+  "synced": "71d59341463d7d0f",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -53,7 +52,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

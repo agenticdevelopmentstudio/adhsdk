@@ -1,7 +1,6 @@
 ---
 id: fcd4bf3d-445d-4f01-99a2-ba6f71ce087b
 title: "System Windows Engine"
-domain: adhsdk://cookbook/system/system-windows/system-windows-engine
 type: ingredient
 version: 1.2.0
 status: review
@@ -21,7 +20,7 @@ tags:
   - accessibility-api
 depends-on: []
 related:
-  - adhsdk://cookbook/system/system-windows/window-explorer-view
+  - 8aee173a-25e4-443e-a9ab-d629b58817e1
 references: []
 approved-by: ""
 approved-date: ""
@@ -329,14 +328,14 @@ Interpolated strings (app names, titles) use the system log's default private re
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/SystemWindows/SystemAccessibilityPermission.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/SystemWindows/SystemWindowAXHelper.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/SystemWindows/SystemWindowControlError.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/SystemWindows/SystemWindowControlling.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/SystemWindows/SystemWindowManager.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/SystemWindows/SystemWindowObserver.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/SystemWindows/SystemAccessibilityPermission.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/SystemWindows/SystemWindowAXHelper.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/SystemWindows/SystemWindowControlError.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/SystemWindows/SystemWindowControlling.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/SystemWindows/SystemWindowManager.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/SystemWindows/SystemWindowObserver.swift` | unverified |
 
 ## Design Decisions
 
@@ -388,15 +387,15 @@ Interpolated strings (app names, titles) use the system log's default private re
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
-| [timeout-handling](agenticdevelopercookbook://compliance/reliability#timeout-handling) | partial | Reliability |
-| [main-thread-freedom](agenticdevelopercookbook://compliance/performance#main-thread-freedom) | partial | Performance |
-| [resource-efficiency](agenticdevelopercookbook://compliance/performance#resource-efficiency) | partial | Performance |
-| [platform-permissions](agenticdevelopercookbook://compliance/platform-compliance#platform-permissions) | passed | Platform Compliance |
-| [no-pii-in-logs](agenticdevelopercookbook://compliance/privacy-and-data#no-pii-in-logs) | passed | Privacy and Data |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
+| [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | partial | Reliability |
+| [adc.check.performance.main-thread-freedom](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/86dd71d6-1ab1-5d59-8c85-b9d469fbae0d) | partial | Performance |
+| [adc.check.performance.resource-efficiency](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d5fe7b8e-1051-5581-b2c5-1adae8fdd5fc) | partial | Performance |
+| [adc.check.platform-compliance.platform-permissions](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/90cb6a83-7544-53ea-8d2c-30851b253122) | passed | Platform Compliance |
+| [adc.check.privacy-and-data.no-pii-in-logs](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/23bca2e1-dc0f-5ff4-beaf-03891ad48e6b) | passed | Privacy and Data |
 
 separation-of-concerns passes because enumeration, AX bridging, observation, errors and permission each live in their own type, and orchestration depends on the `SystemWindowControlling` protocol. unit-test-coverage fails because none of the six files has tests; only a mock of the protocol is exercised by `SystemWindowContextManagerTests.swift`, so the parser, policy, scoring and backfill rules are untested although they are pure enough to test. explicit-error-handling is partial: control operations throw typed errors with raw AX codes, but the unpark result in `focus` and every AX notification registration result are discarded (the open questions on focus-unpark-failure and observer-registration-errors), and a failed window-list query is indistinguishable from an empty one. graceful-degradation passes because listing works without Accessibility and missing trust surfaces as a typed error rather than a crash. timeout-handling is partial because the engine relies on the system's default AX messaging timeout and sets none of its own, though a timed-out write surfaces as `attributeSetFailed`. main-thread-freedom is partial: list operations may run off the main thread, but the observer runs full window listings with AX backfill synchronously on the main thread for every destroy and title event. resource-efficiency is partial: backfill is batched per PID and skipped when titles exist, but every control operation re-lists all windows to resolve one id. platform-permissions passes because the engine needs only Accessibility, never prompts on its own, and exposes a side-effect-free check. no-pii-in-logs passes because titles and app names are interpolated with the unified log's default private redaction.
 

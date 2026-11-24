@@ -1,0 +1,14 @@
+
+- A `from` with no angle brackets is used whole, trimmed and lowercased.
+- Two connections that derive the same address both list; a lookup by that address takes the first in connection order, and a lookup by id is always exact.
+- A message id that matches no live row is not found; the bridge cannot read Gmail directly, so a message the hub has not synced is not reachable.
+- A label change written into the mirror is replaced by the hub's row on the next pull that carries it; until the worker syncs, a pull that carries an older copy of the row puts the old labels back; the Design Decisions record this as deliberate prudent debt.
+- An id stored under the device-id key that is empty is treated as missing and replaced, so a blank value never reaches the hub as a device id.
+- Two apps that share one `UserDefaults` and one key share one device id; an app wanting its own passes a different `deviceIdKey`.
+- Deleting the defaults loses the device id, so the next launch is a new device to the hub and starts a new cursor.
+- A launch whose restore ends signed out finds the mirror the previous launch's identity left on disk (the app quit while signed in); `signedOut()` opens it and purges it, so a different identity signing in next never reads that mail.
+- The app stays signed in past the access token's lifetime: the next pull is refused, the engine pauses for auth and drops its periodic kicks, and the service renews the session and pulls again. While the hub cannot be reached to renew, the status says new mail is not arriving and the service tries again every `authRetryDelay`; a refresh token the hub rejects signs the user out instead.
+- A sign-in that arrives while a sign-out is still purging waits for the purge, then opens the mirror; otherwise the purge would delete the rows the new identity had just pulled.
+- `HubMailLocation.app(_:)` only names the file; a folder that does not exist yet is created when the database first opens, on sign-in or on a sign-out purge.
+- The background sync pulls new mail while the mail browser is open: the browser polls `listAccounts` and reloads when `lastSyncAt` moves, so the hub bridge reports the time of each completed pull rather than nil, which would never move.
+- A message archived here, moved back to the inbox in Gmail on the web, then archived here again before the next pull: the mirror still shows it archived, so the move writes it anyway rather than trusting the mirror, and Gmail archives it.

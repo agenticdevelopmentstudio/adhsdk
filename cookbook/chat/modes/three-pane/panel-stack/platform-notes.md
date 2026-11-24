@@ -1,0 +1,7 @@
+
+- **SwiftUI**: Use `ForEach` over the resolved visible-topics collection (the topics selected by `visibleTopicIndexes`) with `id: \.messageIndex` inside a `VStack` to render the DetailPane equivalent for each visible topic. For the measure/scroll access the ref is meant to provide, use `ScrollViewReader` with `.id(topic.messageIndex)` on each subview, or `GeometryReader` to read the container's frame.
+- **Compose**: Use a `Column` (or `LazyColumn` for large lists) composable that iterates over `visibleTopicIndexes`, conditionally rendering the DetailPane equivalent for each valid index. Use the topic's `messageIndex` as the `key` parameter.
+- **React/Web**: Expose the root `div` through a ref with `forwardRef` (React 19 also allows a plain `ref` prop). Map over `visibleTopicIndexes` and render a DetailPane for each valid index, using `messageIndex` as the React key.
+- **AppKit / UIKit**: Use a vertical `NSStackView` (AppKit) or `UIStackView` (UIKit) as the container (native-controls), diffing its arranged subviews against the visible topics keyed on `messageIndex` so views are added, removed, or reordered without losing the internal state of views that persist across an update.
+- **WinUI 3**: Use an `ItemsRepeater` (or `ItemsControl`) with a vertical `StackLayout`, binding `ItemsSource` to the resolved visible topics (the topics selected by `visibleTopicIndexes`) with a `DataTemplate` rendering the DetailPane equivalent for each item. `StackPanel.Children` cannot be data-bound directly, so avoid it here.
+

@@ -185,7 +185,7 @@ extension ContextStore {
     ///
     /// `decodeDetail` below is the exception, and deliberately: each detail
     /// column it reads non-optionally is declared `NOT NULL` in
-    /// `OlyloSchema`, and its property in the model is non-optional to match.
+    /// `ActivitySchema`, and its property in the model is non-optional to match.
     /// The two lists are checked against each other whenever either changes —
     /// making one column nullable without making its property optional is
     /// what would reintroduce the trap.

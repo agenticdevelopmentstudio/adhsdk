@@ -157,22 +157,15 @@ public final class ProjectShelfViewController: NSViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Choosing from the browser makes the project active, so the shelf
-        // moves to where it now is: the active list, with it highlighted. Its
-        // filter is cleared so nothing typed there earlier can hide it. A
-        // project that is open in another window stays there, so this shelf
-        // is left alone.
+        // Choosing from the browser makes the project active, and the shelf
+        // stays on the browser: the user is browsing, and moving them to the
+        // active list mid-browse took the list out from under the next click.
         browser.onChoose = { [weak self] repo in
-            guard let self else { return }
-            self.onLoadProject?(repo)
-            // Already open in another group's window, it was brought forward
-            // there and this group is unchanged: leave its shelf as it was.
-            guard self.group.contains(repo.id) else { return }
-            self.group.filterText[.activeProjects] = ""
-            self.group.panel = .activeProjects
+            self?.onLoadProject?(repo)
         }
         activeProjects.onChoose = { [weak self] id in self?.onShowActiveProject?(id) }
         activeProjects.onClose = { [weak self] id in self?.onCloseActiveProject?(id) }
+        browser.onCloseProject = { [weak self] id in self?.onCloseActiveProject?(id) }
 
         applyPanel(group.panel)
         applyFilterText(group.filterText)
@@ -181,6 +174,15 @@ public final class ProjectShelfViewController: NSViewController {
             .removeDuplicates()
             .receive(on: RunLoop.main)
             .sink { [weak self] panel in self?.applyPanel(panel) }
+            .store(in: &cancellables)
+        group.$activeRepoIDs
+            .removeDuplicates()
+            .receive(on: RunLoop.main)
+            .sink { [weak self] ids in
+                guard let self, self.group.panel == .activeProjects else { return }
+                self.browser.setOnlyRepoIDs(Set(ids))
+                self.reapplyReveal()
+            }
             .store(in: &cancellables)
         group.$filterText
             .removeDuplicates()
@@ -214,24 +216,39 @@ public final class ProjectShelfViewController: NSViewController {
         // see. Choosing in the browser lands here, on its way to Active
         // Projects.
         let keysInList = focus == .list
-        browser.view.isHidden = panel != .browser
-        activeProjects.view.isHidden = panel != .activeProjects
+        // One list: the active-projects button filters it to the projects
+        // open in this group rather than swapping in a second view.
+        browser.view.isHidden = false
+        activeProjects.view.isHidden = true
+        browser.setOnlyRepoIDs(panel == .activeProjects ? Set(group.activeRepoIDs) : nil)
         searchField.placeholderString = panel.filterPlaceholder
         // `ThemedSearchField` themes the placeholder it was given; a new one
         // needs the palette applied again.
         searchField.applyTheme(view.resolvedThemeScope.palette)
         let text = group.filterText[panel] ?? ""
+        browser.setFilterQuery(text)
         if searchField.stringValue != text { searchField.stringValue = text }
         panelBar.selectedID = panel.rawValue
         if keysInList { focusList() }
+        reapplyReveal()
+    }
+
+    /// The project the window is showing. Every refilter of the list (a panel
+    /// switch, a change to the active set) clears the outline's selection, so
+    /// it is selected again, and scrolled to, after each one.
+    private var revealedRepoID: UUID?
+
+    private func reapplyReveal() {
+        guard let id = revealedRepoID ?? group.selectedRepoID else { return }
+        browser.selectRepo(id: id)
+        activeProjects.highlight(repoID: id)
     }
 
     // MARK: - Filter
 
     private func applyFilterText(_ text: [ProjectShelfPanel: String]) {
         guard isViewLoaded else { return }
-        browser.setFilterQuery(text[.browser] ?? "")
-        activeProjects.setFilterQuery(text[.activeProjects] ?? "")
+        browser.setFilterQuery(text[group.panel] ?? "")
         let current = text[group.panel] ?? ""
         if searchField.stringValue != current { searchField.stringValue = current }
     }
@@ -248,8 +265,7 @@ public final class ProjectShelfViewController: NSViewController {
     /// The panel on screen's handling of a key typed in the filter field.
     private func handleFilterCommand(_ commandSelector: Selector) -> Bool {
         switch group.panel {
-        case .browser: browser.handleFilterCommand(commandSelector)
-        case .activeProjects: activeProjects.handleFilterCommand(commandSelector)
+        case .browser, .activeProjects: browser.handleFilterCommand(commandSelector)
         }
     }
 
@@ -283,8 +299,7 @@ public final class ProjectShelfViewController: NSViewController {
 
     public func focusList() {
         switch group.panel {
-        case .browser: browser.focusList()
-        case .activeProjects: activeProjects.focusList()
+        case .browser, .activeProjects: browser.focusList()
         }
     }
 
@@ -298,8 +313,8 @@ public final class ProjectShelfViewController: NSViewController {
     /// Highlights `repoID` in both panels without choosing it: the window
     /// saying which project it is showing.
     public func reveal(repoID: UUID) {
-        browser.selectRepo(id: repoID)
-        activeProjects.highlight(repoID: repoID)
+        revealedRepoID = repoID
+        reapplyReveal()
     }
 }
 

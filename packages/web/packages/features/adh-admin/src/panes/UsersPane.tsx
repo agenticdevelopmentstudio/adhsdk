@@ -16,7 +16,7 @@ import {
   useRemoveFromEcosystem,
   type UserEcosystem,
 } from "../api/memberships";
-import { authedJson } from "../api/http";
+import { listV1Page, withV1Query } from "../api/http";
 import { Badge } from "@adh-sdk/ui/components/badge";
 import { Button } from "@adh-sdk/ui/components/button";
 import { OptionMenu } from "@adh-sdk/ui/components/option-menu";
@@ -74,7 +74,7 @@ export function UsersPane({ help }: { help?: ReactNode } = {}) {
   /** The backend's refusal (409 `last_operator`) to revoke the last operator on the platform. */
   const [roleError, setRoleError] = useState<string | null>(null);
 
-  const { data: users, truncated, isLoading, error } = useAdminUsers();
+  const { data: users, isLoading, error } = useAdminUsers();
   const { data: hubRdid } = useHubEcosystemRdid();
   const deleteUser = useDeleteUser();
   const grantRole = useGrantRole();
@@ -252,15 +252,21 @@ export function UsersPane({ help }: { help?: ReactNode } = {}) {
   );
 
   const searchEcosystems = async (query: string, signal: AbortSignal): Promise<RdidOption[]> => {
-    const params = new URLSearchParams({ q: query, entityType: "ecosystem", limit: "20" });
-    return authedJson<RdidMapping[]>(`/api/registry/identifiers?${params}`, { signal });
+    // One page is the whole picker: it shows the first 20 matches and the operator narrows with `q`.
+    const url = withV1Query("/api/v1/identifiers", { q: query, entity_type: "ecosystem", limit: 20 });
+    const page = await listV1Page<{ rdid: string; entity_type: string; entity_id: string }>(url, {
+      signal,
+    });
+    return page.data.map(
+      (r): RdidMapping => ({ rdid: r.rdid, entityType: r.entity_type, entityId: r.entity_id }),
+    );
   };
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       <FeatureTitle
         title="Users"
-        api={{ method: "GET", path: "/customer/customers", pathValues: {}, title: "Customers API" }}
+        api={{ method: "GET", path: "/v1/customers", pathValues: {}, title: "Customers API" }}
         help={help}
       />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto px-6 pb-8 pt-2">
@@ -270,18 +276,6 @@ export function UsersPane({ help }: { help?: ReactNode } = {}) {
         loading={isLoading}
         error={error}
         errorTitle="Couldn't load users"
-        // Every filter on this page runs in the BROWSER, over whatever one request returned. Past
-        // the backend's cap that turns a search into a claim the data cannot support: the table
-        // empties and reads as "no such user", when the truth is "not in the part I fetched".
-        truncationNotice={
-          truncated ? (
-            <>
-              Showing the first {users?.length.toLocaleString()} users — there are more. Filters
-              here search only what has been fetched, so{" "}
-              <strong>an empty result does not mean the user does not exist</strong>.
-            </>
-          ) : undefined
-        }
         columnWidthsKey="admin-users"
         // The email, not the name: two people called "Alex" would give a screen reader two
         // identical checkboxes, and the email is unique by construction here.

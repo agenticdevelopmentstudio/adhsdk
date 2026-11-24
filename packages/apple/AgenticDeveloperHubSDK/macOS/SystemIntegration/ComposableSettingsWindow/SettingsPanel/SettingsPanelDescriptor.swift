@@ -16,9 +16,18 @@ extension ComposableSettings {
         @Published public var icon: NSImage?
         @Published public var isDisabled: Bool = false
 
+        /// The topic a panel is one row of (a sidebar topic listing its panels).
         @Published public var section: String?
 
-        public init(title: String, icon: NSImage? = nil, isDisabled: Bool = false, section: String? = nil) {
+        /// The sidebar header a topic sits under, above `section`: a heading groups
+        /// topics, a section groups panels. Nil heads the topic by its section.
+        @Published public var heading: String?
+
+        public init(
+            title: String, icon: NSImage? = nil, isDisabled: Bool = false,
+            section: String? = nil, heading: String? = nil
+        ) {
+            self.heading = heading
             self.title = title
             self.icon = icon
             self.isDisabled = isDisabled

@@ -1,5 +1,5 @@
 
-- **SwiftUI (source platform)**: all six files (`CodableIgnored.swift`,
+- **Swift (source implementation)**: all six files (`CodableIgnored.swift`,
   `KeychainHelper.swift`, `Loggable.swift`, `MathUtils.swift`,
   `SemanticVersion.swift`, `TextFolding.swift`) depend only on `Foundation`,
   `Security`, and `os` (`OSLog`) — none imports `SwiftUI`, so they are
@@ -31,25 +31,29 @@
   package, to preserve this type's short-form leniency and its explicit
   `Number.MAX_SAFE_INTEGER`-scale bound check, since JavaScript numbers do
   not trap on overflow the way `Int` arithmetic does. `TextFolding` maps to
-  `string.normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase()`,
+  `string.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()`,
   with no locale argument, matching this type's `locale: nil`.
 - **AppKit/UIKit**: identical to the SwiftUI note — none of the six files
   imports `AppKit` or `UIKit`, so an AppKit- or UIKit-hosted app consumes
-  the same `AgenticDeveloperHubSDKCore` types unchanged. One platform-specific
+  the same types unchanged. `KeychainHelper` and `Loggable` live in the
+  foundation `AgenticDeveloperHubSDK` framework, which builds for macOS, iOS,
+  watchOS, tvOS and visionOS; `AgenticDeveloperHubSDKCore` re-exports it, so
+  Core call sites still resolve them. On every platform but macOS,
+  `KeychainHelper.entitledAccessGroup` returns nil, because `SecTask` is
+  macOS only, and the caller keeps the per-binary default. One platform-specific
   nuance carries forward regardless of UI framework: `KeychainHelper`'s
-  `kSecUseDataProtectionKeychain` flag (set only when `accessGroup` is
-  non-nil) is required for access-group Keychain sharing on macOS
-  specifically, per the type's own source comment.
-- **WinUI 3**: the reason this recipe exists — none of these six types has
-  a direct Windows App SDK equivalent, so each needs a concrete port.
+  `kSecUseDataProtectionKeychain` flag (set whenever `accessGroup` is
+  non-nil or `usesDataProtectionKeychain` is true) is required for
+  access-group Keychain sharing on macOS specifically.
+- **WinUI 3**: translation guidance for each of the six types.
   `CodableIgnored` maps to `System.Text.Json`'s `[JsonIgnore]` attribute
   directly (the BCL already provides this exact "never encode, always
   null/default on decode" contract — no wrapper type is needed).
   `KeychainHelper` maps to `Windows.Security.Credentials.PasswordVault`
   (`PasswordCredential`), resourced by the same string `service` scopes a
   Keychain query with; Windows has no access-group concept, so the
-  access-group migration path (`accessGroup`, and the migration branch of
-  `get(forKey:)`) has no analog and should be dropped, while the
+  access-group migration path (`accessGroup`, `usesDataProtectionKeychain`, and the
+  login-keychain recovery branch of `get(forKey:)`) has no analog and should be dropped, while the
   `legacyServices` migration path still applies (a `PasswordVault` resource
   rename). `Loggable` maps to `Microsoft.Extensions.Logging`'s
   `ILogger<T>`, resolved per type the same way `makeLogger()` derives a
@@ -60,7 +64,7 @@
   component against `int.MaxValue` explicitly, mirroring
   `SemanticVersion.maximumComponent`. `TextFolding` maps to `string
   .Normalize(NormalizationForm.FormD)` with combining marks stripped by
-  Unicode category, followed by `ToUpperInvariant()`/`ToLowerInvariant()`
+  Unicode category, followed by `ToLowerInvariant()`
   (never the current-culture `ToLower()`) to preserve `locale: nil`'s
   locale independence. `Task`, `HttpClient`, and `Windows.Storage` have no
   role in any of the six ports: every operation here is synchronous, with

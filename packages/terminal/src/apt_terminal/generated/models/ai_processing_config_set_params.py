@@ -45,11 +45,11 @@ class AiProcessingConfigSetParams:
         if temperature is not UNSET:
             field_dict["temperature"] = temperature
         if max_output_tokens is not UNSET:
-            field_dict["maxOutputTokens"] = max_output_tokens
+            field_dict["max_output_tokens"] = max_output_tokens
         if timeout_ms is not UNSET:
-            field_dict["timeoutMs"] = timeout_ms
+            field_dict["timeout_ms"] = timeout_ms
         if output_mode is not UNSET:
-            field_dict["outputMode"] = output_mode
+            field_dict["output_mode"] = output_mode
 
         return field_dict
 
@@ -58,11 +58,11 @@ class AiProcessingConfigSetParams:
         d = dict(src_dict)
         temperature = d.pop("temperature", UNSET)
 
-        max_output_tokens = d.pop("maxOutputTokens", UNSET)
+        max_output_tokens = d.pop("max_output_tokens", UNSET)
 
-        timeout_ms = d.pop("timeoutMs", UNSET)
+        timeout_ms = d.pop("timeout_ms", UNSET)
 
-        _output_mode = d.pop("outputMode", UNSET)
+        _output_mode = d.pop("output_mode", UNSET)
         output_mode: AiProcessingConfigSetParamsOutputMode | Unset
         if isinstance(_output_mode, Unset):
             output_mode = UNSET

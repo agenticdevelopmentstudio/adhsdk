@@ -1,7 +1,6 @@
 ---
 id: 14ca2162-b5ec-48bb-95a0-90577e7c9810
 title: "SQL Sync Store"
-domain: adhsdk://cookbook/data/sync/sql-sync-store
 type: ingredient
 version: 1.2.0
 status: review
@@ -22,10 +21,10 @@ tags:
   - persistence
   - sqlite
 depends-on:
-  - adhsdk://cookbook/data/sync/sync-engine
+  - 355a8f54-aee5-45cd-a28d-12c3b7a3085c
 related:
-  - adhsdk://cookbook/data/sync/sync-engine
-  - adhsdk://cookbook/data/sync/offline-sync-client
+  - 355a8f54-aee5-45cd-a28d-12c3b7a3085c
+  - d3a0b65f-92c0-43c1-b04c-77638eb72044
 references:
   - packages/apple/AgenticDeveloperHubSDK/SyncGRDB/GRDBSyncStore.swift
   - packages/apple/AgenticDeveloperHubSDK/SyncGRDB/SyncMirrorProjection.swift
@@ -40,7 +39,7 @@ approved-date: ""
 ## Overview
 
 This store is a SQLite-backed implementation of the store contract driven by
-the sync engine (see [Sync Engine](adhsdk://cookbook/data/sync/sync-engine)).
+the sync engine (see Sync Engine ([adhsdk.ingredient.data.sync.sync-engine](cookbook:355a8f54-aee5-45cd-a28d-12c3b7a3085c))).
 It sits on a bounded, deadline-guarded write-ahead-logged connection pool and
 keeps four bookkeeping tables plus one mirror table per registered resource:
 
@@ -316,9 +315,9 @@ Not applicable: the sources make no log call; every failure is raised to the cal
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/SyncGRDB/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/SyncGRDB/` | unverified |
 
 ## Design Decisions
 
@@ -394,17 +393,17 @@ Not applicable: the sources make no log call; every failure is raised to the cal
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | partial | Reliability |
-| [state-recovery](agenticdevelopercookbook://compliance/reliability#state-recovery) | passed | Reliability |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | Reliability |
-| [timeout-handling](agenticdevelopercookbook://compliance/reliability#timeout-handling) | passed | Reliability |
-| [health-observability](agenticdevelopercookbook://compliance/reliability#health-observability) | passed | Reliability |
-| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | passed | Security |
-| [encryption-at-rest](agenticdevelopercookbook://compliance/privacy-and-data#encryption-at-rest) | failed | Privacy And Data |
-| [data-retention-policy](agenticdevelopercookbook://compliance/privacy-and-data#data-retention-policy) | partial | Privacy And Data |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | Reliability |
+| [adc.check.reliability.state-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/6e64e2f2-28ad-55d5-a8ed-cee075366674) | passed | Reliability |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
+| [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | passed | Reliability |
+| [adc.check.reliability.health-observability](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d4ece88d-eeff-5e3f-8823-d8c2929a35e0) | passed | Reliability |
+| [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | passed | Security |
+| [adc.check.privacy-and-data.encryption-at-rest](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/2a8a8918-3e9d-5e0f-a154-106b4f34ca17) | failed | Privacy And Data |
+| [adc.check.privacy-and-data.data-retention-policy](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0c9cc813-244a-5dc1-8914-fd4710bb4943) | partial | Privacy And Data |
 
 Storage is behind the `SyncStore` and `SyncMirrorProjection` protocols, and `GRDBSyncStoreTests` plus `SyncMirrorProjectionTests` cover atomicity, coalescing, replay, every purge path and projection routing. Every operation is a single transaction, inflight ops replay after a crash, `prepare` is idempotent, `BoundedDatabase` deadlines bound every call, and `status()` exposes outbox, quarantine and conflict depth. Resource names are allow-listed before they reach SQL, and every value is a bound parameter. Explicit error handling is partial because a completion for an unknown op id is silently ignored and an unparseable `newVersion` is skipped without a signal. Data integrity is partial because a staged upsert replaces the JSON mirror's whole `data` blob while the outbox merges patches, the gap recorded under stage-mirror-patch. Encryption at rest fails because the SQLite file is written unencrypted. Data retention is partial because the conflict audit and tombstones are never pruned, even across an identity change.
 

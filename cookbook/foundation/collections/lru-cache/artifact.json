@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
-    "id": "FA95BD9D-DE48-4B37-8B30-748DC7B09280",
+    "id": "fa95bd9d-de48-4b37-8b30-748dc7b09280",
     "title": "LRU Cache",
-    "domain": "adhsdk://cookbook/foundation/collections/lru-cache",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -26,13 +25,13 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/foundation/collections/expiring-memo"
+      "55878d7d-97f1-420a-a732-680ac39c8ff4"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "75184393da9176c6",
+  "synced": "acdc58a4aff71e02",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -51,7 +50,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

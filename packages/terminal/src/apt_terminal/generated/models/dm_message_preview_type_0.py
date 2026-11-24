@@ -45,10 +45,10 @@ class DmMessagePreviewType0:
         field_dict.update(
             {
                 "id": id,
-                "senderParticipantId": sender_participant_id,
+                "sender_participant_id": sender_participant_id,
                 "body": body,
                 "seq": seq,
-                "dateSent": date_sent,
+                "date_sent": date_sent,
             }
         )
 
@@ -64,13 +64,13 @@ class DmMessagePreviewType0:
                 return data
             return cast(None | str, data)
 
-        sender_participant_id = _parse_sender_participant_id(d.pop("senderParticipantId"))
+        sender_participant_id = _parse_sender_participant_id(d.pop("sender_participant_id"))
 
         body = d.pop("body")
 
         seq = d.pop("seq")
 
-        date_sent = d.pop("dateSent")
+        date_sent = d.pop("date_sent")
 
         dm_message_preview_type_0 = cls(
             id=id,

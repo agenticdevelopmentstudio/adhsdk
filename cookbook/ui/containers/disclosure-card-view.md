@@ -1,13 +1,12 @@
 ---
 id: d5aba939-471d-48cd-9a9c-888ac92adf38
 title: "Disclosure Card View"
-domain: adhsdk://cookbook/ui/containers/disclosure-card-view
 type: ingredient
-version: 1.4.0
+version: 1.4.1
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -21,7 +20,7 @@ tags:
   - collapsible
 depends-on: []
 related:
-  - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2
 references: []
 approved-by: ""
 approved-date: ""
@@ -728,9 +727,9 @@ Not applicable: the source contains no logging call.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Cards/DisclosureCardView.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Cards/DisclosureCardView.swift` | confirmed (1.4.1) |
 
 ## Design Decisions
 
@@ -814,14 +813,14 @@ Not applicable: the source contains no logging call.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | Accessibility |
-| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
-| [native-controls-preference](agenticdevelopercookbook://compliance/platform-compliance#native-controls-preference) | passed | Platform Compliance |
-| [platform-design-language](agenticdevelopercookbook://compliance/platform-compliance#platform-design-language) | passed | Platform Compliance |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
+| [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
+| [adc.check.platform-compliance.native-controls-preference](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d49de883-3811-54ed-b227-c2d807cac551) | passed | Platform Compliance |
+| [adc.check.platform-compliance.platform-design-language](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/cbd07fee-ca18-58a8-bb2f-0f8a6b83ac1c) | passed | Platform Compliance |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 `keyboard-navigable`, `native-controls-preference`, and
 `platform-design-language` rest on what the source visibly does (the native
@@ -833,7 +832,7 @@ contrast ratios; `no-hardcoded-strings` is `failed` because
 `"Show details"`/`"Hide details"` are English literals with no
 localization key (see Localization).
 
-`separation-of-concerns` passes because the card is a pure presentation view: it takes its content, title, summary and palette as inputs, reports a click only through `onToggle`, and leaves fold state to a host-owned `CardFoldMemory`, so no persistence or navigation logic lives in the view (see `does-not-self-mutate-on-toggle`). `unit-test-coverage` is `partial`: `UI/DisclosureCardTests.swift` pins the fold-memory contract, the card's width and height rules (`testAFoldedCardIsExactlyAsWideAsAnOpenOne`, `testACardIsNeverNarrowerThanTheContentItIsHiding`), the title status symbol and its palette tint and spoken label (`testTheSymbolAfterTheNameIsSpokenAndTintedFromTheLivePalette`) and the corner badge's spoken label, but nothing there exercises the surface, outline, titlebar and text palette mapping, the toggle callback, or the disclosure control's labels.
+`separation-of-concerns` passes because the card is a pure presentation view: it takes its content, title, summary and palette as inputs, reports a click only through `onToggle`, and leaves fold state to a host-owned `CardFoldMemory`, so no persistence or navigation logic lives in the view (see `does-not-self-mutate-on-toggle`). `unit-test-coverage` is `partial`: `UI/DisclosureCardTests.swift` has one test per vector (`testDisclosureCard001` … `testDisclosureCard051`) beside its fold-memory and width/height tests, covering the surface, outline, titlebar and text palette mapping, the toggle callback and the disclosure control's labels; only `disclosure-card-051` is skipped, because the `@MainActor` confinement is enforced at build time and has no runtime check to exercise.
 
 ## Change History
 
@@ -846,3 +845,4 @@ localization key (see Localization).
 | 1.2.0 | 2026-09-26 | Mike Fullerton | Documented the title status symbol: `titleTrailingStatus` (a `StatusSymbol` drawn right after the title at its size), `StatusSymbol.placeholder(sizedLike:)` and its silent reserved room, the palette-resolving `color` closure with the `colorName` convenience init, the CoreUI `WholePointLabel` title, the text-size-scaled masthead gap, and the width floor for every card; added requirements, vectors 047–050, configuration rows, edge cases, and two design decisions. |
 | 1.3.0 | 2026-10-01 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/containers/. |
 | 1.4.0 | 2026-10-04 | Mike Fullerton | Resolved the minimum-contrast-ratio NEEDS REVIEW marker as current behavior (no contrast check; theme colors as resolved) with a pending design decision; added separation-of-concerns and unit-test-coverage compliance rows. Corrected the unit-test-coverage rationale to credit the title status symbol and badge tests; added the confines-to-ui-thread requirement and vector. |
+| 1.4.1 | 2026-11-15 | Mike Fullerton | Conformance tests added (DisclosureCardTests.swift; 49 of 49 vectors, 051 skipped); unit-test-coverage now partial. |

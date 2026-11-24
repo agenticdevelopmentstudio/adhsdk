@@ -1,0 +1,64 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "b7e2c4d1-8f3a-4c6e-a1d9-2e5f7b0c3d84",
+    "title": "GitHub CLI",
+    "type": "ingredient",
+    "version": "1.0.1",
+    "status": "draft",
+    "language": "en",
+    "created": "2026-11-16",
+    "modified": "2026-11-16",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Pull requests through the user's own gh: availability, list, a branch's pull request, checkout and create, with a fixed environment, error mapping, budgets and redacted command logging.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "git",
+      "github",
+      "pull-requests",
+      "subprocess",
+      "logging"
+    ],
+    "depends-on": [
+      "5d0f6a3e-2b8c-4e71-9a4d-7c3e1f9b2a60"
+    ],
+    "related": [
+      "779ac6ea-9ef5-4fb0-8ed9-dc6b9d617344"
+    ],
+    "references": [
+      "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitHubCLI.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitPullRequest.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitCommandLog.swift (adhsdk)"
+    ],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "afae67e6e8b57e49",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

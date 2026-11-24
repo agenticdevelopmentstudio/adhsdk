@@ -1,0 +1,9 @@
+
+| Version | Date | Author | Summary |
+|---------|------|--------|---------|
+| 1.2.3 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
+| 1.2.2 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
+| 1.2.1 | 2026-09-22 | Mike Fullerton | Narrowed to the UI Card family; Landing Card has its own recipe |
+| 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename all requirement names to subject-only kebab-case and promote Appearance and the two load-bearing Edge Case MUSTs to named requirements with matching conformance vectors; add per-class-token Appearance vectors and a kicker `null`/`""` vector; link Test Vector requirements to their `#requirements/<name>` fragments; convert Compliance to a check table; move the misplaced cross-repo reference from `references` to `related`; quote the source comments cited in Design Decisions with file:line citations and reformat every decision into the three-line Decision/Rationale/Approved form; drop the vacuous States table and say "ingredient" instead of "recipe" throughout; tighten `children-after-title` to "immediately after" to match its test vector. |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | State the Tailwind utilities, `apt-*` tokens and `lp-card`/`lp-card__kicker` class names as the appearance contract in place of unresolved-value placeholders; answer the sizing, kicker-guard and accessibility-option questions directly from source; fill the Accessibility Options table; add automation, semantics and layout detail to every platform note. One open accessibility question about the family's non-heading title is left for the reviewer. |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from `packages/web/packages/landing/src/blocks/Card.tsx` and `packages/web/packages/ui/src/components/card.tsx`. |

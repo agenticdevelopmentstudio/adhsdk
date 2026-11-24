@@ -14,13 +14,39 @@ function stubFrames() {
   return { raf, caf }
 }
 
+/**
+ * Lay the glyphs of `element` out 10px apart (centres at 10, 20, 30, ...), pin
+ * the clock at 0, and hand back a way to run the frame at any time `t` and read
+ * which glyphs the lens is enlarging.
+ */
+function driveFrames(element: HTMLElement) {
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+    const index = [...(this.parentElement?.children ?? [])].indexOf(this)
+    return new DOMRect(5 + index * 10, 0, 10, 10)
+  })
+  vi.spyOn(performance, 'now').mockReturnValue(0)
+  let step: FrameRequestCallback | null = null
+  vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+    step = callback
+    return 7
+  })
+  vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {})
+  const enlargedAt = (t: number): string[] => {
+    step?.(t)
+    return [...element.querySelectorAll('span')]
+      .filter((span) => span.style.transform !== '' && span.style.transform !== 'scale(1.000)')
+      .map((span) => span.textContent ?? '')
+  }
+  return { enlargedAt }
+}
+
 afterEach(() => {
   vi.restoreAllMocks()
   document.body.innerHTML = ''
 })
 
 describe('createLens', () => {
-  it('splits the text into one span per character', () => {
+  it('text-lens-012: splits the text into one span per character', () => {
     const element = mount('abc')
     createLens([element])
 
@@ -29,14 +55,68 @@ describe('createLens', () => {
     expect([...spans].map((span) => span.textContent)).toEqual(['a', 'b', 'c'])
   })
 
-  it('keeps spaces from collapsing', () => {
+  it('text-lens-013: keeps spaces from collapsing', () => {
     const element = mount('a b')
     createLens([element])
 
     expect(element.querySelectorAll('span')[1]?.textContent).toBe('\u00A0')
   })
 
-  it('leaves an already-split element alone', () => {
+  it('pins no width on a glyph, so a split measured before layout cannot collapse the row', () => {
+    const element = mount('About')
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 0, 0, 0))
+
+    createLens([element])
+
+    expect([...element.querySelectorAll('span')].map((span) => span.style.width)).toEqual(['', '', '', '', ''])
+  })
+
+  it('starts a radius off the text and crosses it in one duration', () => {
+    const element = mount('abc')
+    const { enlargedAt } = driveFrames(element)
+    createLens([element], { radius: 5, duration: 1000 }).start()
+
+    expect(enlargedAt(0)).toEqual([])
+    expect(enlargedAt(500)).toEqual(['b'])
+    expect(enlargedAt(1000)).toEqual([])
+  })
+
+  it('holds off the text at each end for the dwell before it turns back', () => {
+    const element = mount('abc')
+    const { enlargedAt } = driveFrames(element)
+    createLens([element], { radius: 5, duration: 1000, dwell: 1000 }).start()
+
+    expect(enlargedAt(1500)).toEqual([])
+    expect(enlargedAt(2500)).toEqual(['b'])
+    expect(enlargedAt(3500)).toEqual([])
+    expect(enlargedAt(4500)).toEqual(['b'])
+  })
+
+  it('crosses at one speed when linear, where the default eases', () => {
+    const element = mount('abcdefg')
+    const linear = driveFrames(element)
+    createLens([element], { radius: 5, duration: 1000, easing: 'linear' }).start()
+    // Centres 10..70, travel 5..75: a quarter of the way in, the centre is at 22.5.
+    expect(linear.enlargedAt(250)).toEqual(['b'])
+  })
+
+  it('is still near the start a quarter of the way in when eased', () => {
+    const element = mount('abcdefg')
+    const eased = driveFrames(element)
+    createLens([element], { radius: 5, duration: 1000 }).start()
+    // Cubic: 4 * 0.25^3 = 0.0625 of the travel, so the centre is at 9.4.
+    expect(eased.enlargedAt(250)).toEqual(['a'])
+  })
+
+  it('turns back the instant it arrives with no dwell', () => {
+    const element = mount('abc')
+    const { enlargedAt } = driveFrames(element)
+    createLens([element], { radius: 5, duration: 1000 }).start()
+
+    expect(enlargedAt(1500)).toEqual(['b'])
+  })
+
+  it('text-lens-014: leaves an already-split element alone', () => {
     const element = mount('abc')
     createLens([element])
     const first = element.firstChild
@@ -47,7 +127,7 @@ describe('createLens', () => {
     expect(element.firstChild).toBe(first)
   })
 
-  it('schedules no frames when the user prefers reduced motion', () => {
+  it('text-lens-015: schedules no frames when the user prefers reduced motion', () => {
     vi.spyOn(window, 'matchMedia').mockReturnValue({ matches: true } as MediaQueryList)
     const { raf } = stubFrames()
 
@@ -56,7 +136,7 @@ describe('createLens', () => {
     expect(raf).not.toHaveBeenCalled()
   })
 
-  it('sweeps anyway when the caller opts out of that check', () => {
+  it('text-lens-016: sweeps anyway when the caller opts out of that check', () => {
     vi.spyOn(window, 'matchMedia').mockReturnValue({ matches: true } as MediaQueryList)
     const { raf } = stubFrames()
 
@@ -65,7 +145,7 @@ describe('createLens', () => {
     expect(raf).toHaveBeenCalled()
   })
 
-  it('starts once however many times it is started', () => {
+  it('text-lens-017: starts once however many times it is started', () => {
     const { raf } = stubFrames()
     const lens = createLens([mount('abc')])
 
@@ -75,7 +155,7 @@ describe('createLens', () => {
     expect(raf).toHaveBeenCalledTimes(1)
   })
 
-  it('cancels its pending frame and rests the glyphs when destroyed', () => {
+  it('text-lens-018: cancels its pending frame and rests the glyphs when destroyed', () => {
     const { caf } = stubFrames()
     const element = mount('abc')
     const lens = createLens([element])
@@ -90,7 +170,7 @@ describe('createLens', () => {
     expect(glyph.style.transform).toBe('')
   })
 
-  it('stops pausing on hover once destroyed', () => {
+  it('text-lens-019: stops pausing on hover once destroyed', () => {
     const { raf } = stubFrames()
     const element = mount('abc')
     const lens = createLens([element])
@@ -105,13 +185,13 @@ describe('createLens', () => {
     expect(raf).toHaveBeenCalledTimes(1)
   })
 
-  it('refuses one end of the colour ramp without the other', () => {
+  it('text-lens-020: refuses one end of the colour ramp without the other', () => {
     const lens = createLens([mount('abc')], { fromColor: '#8a8a9a' })
 
     expect(() => lens.start()).toThrow(/fromColor and toColor/)
   })
 
-  it('reads both ends of the ramp from custom properties', () => {
+  it('text-lens-021: reads both ends of the ramp from custom properties', () => {
     document.body.style.setProperty('--from', '#8a8a9a')
     document.body.style.setProperty('--to', '#e8a33d')
     stubFrames()
@@ -119,5 +199,66 @@ describe('createLens', () => {
     const lens = createLens([mount('abc')], { fromColor: '--from', toColor: '--to' })
 
     expect(() => lens.start()).not.toThrow()
+  })
+})
+
+describe('createLens sweep arithmetic', () => {
+  // jsdom has no layout: give each glyph a fixed centre via getBoundingClientRect.
+  function mountMeasured(text: string, left: number, width: number): HTMLElement {
+    const element = mount(text)
+    createLens([element]) // split once so the spans exist
+    let i = 0
+    for (const span of element.querySelectorAll('span')) {
+      const l = left + i * width
+      span.getBoundingClientRect = () =>
+        ({ left: l, width, right: l + width, top: 0, bottom: 0, height: 0, x: l, y: 0 }) as DOMRect
+      i += 1
+    }
+    return element
+  }
+
+  // Start a lens with performance.now() === 0, then deliver one frame at `now`.
+  function drive(element: HTMLElement, options: Parameters<typeof createLens>[1], now: number): void {
+    let cb: FrameRequestCallback = () => {}
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((fn) => {
+      cb = fn
+      return 1
+    })
+    vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {})
+    vi.spyOn(performance, 'now').mockReturnValue(0)
+    vi.spyOn(window, 'matchMedia').mockReturnValue({ matches: false } as MediaQueryList)
+    createLens([element], options).start()
+    cb(now)
+  }
+
+  it('text-lens-022: leaves a glyph exactly radius from the centre unscaled and unfiltered', () => {
+    // One glyph, cx = 100, radius 50: leftEdge 50, so at elapsed 0 the distance is exactly 50.
+    const element = mountMeasured('a', 90, 20)
+    const glyph = element.querySelector('span') as HTMLSpanElement
+    drive(element, { radius: 50, duration: 1000 }, 0)
+
+    expect(glyph.style.transform).toBe('scale(1.000)')
+    expect(glyph.style.filter).toBe('')
+  })
+
+  it('text-lens-023: blurs a glyph at the sweep centre by the default 0.35px', () => {
+    // Half-way through leg 0 the eased value is 0.5, so the centre is 100, on the glyph.
+    const element = mountMeasured('a', 90, 20)
+    const glyph = element.querySelector('span') as HTMLSpanElement
+    drive(element, { radius: 50, duration: 1000 }, 500)
+
+    expect(glyph.style.filter).toBe('blur(0.35px)')
+    expect(glyph.style.transform).toBe('scale(1.250)')
+  })
+
+  it('text-lens-024: puts the sweep centre exactly at rightEdge when the return leg begins', () => {
+    // Glyph centres 100 and 150: leftEdge 50, rightEdge 200. At elapsed === duration the
+    // centre is 200: glyph 150 is exactly radius away (scale 1.000), glyph 100 is outside.
+    const element = mountMeasured('ab', 75, 50)
+    const spans = [...element.querySelectorAll('span')] as HTMLSpanElement[]
+    drive(element, { radius: 50, duration: 1000 }, 1000)
+
+    expect(spans[1]!.style.transform).toBe('scale(1.000)')
+    expect(spans[0]!.style.transform).toBe('')
   })
 })

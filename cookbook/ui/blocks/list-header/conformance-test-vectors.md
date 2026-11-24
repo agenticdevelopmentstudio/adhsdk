@@ -1,0 +1,12 @@
+
+| ID | Requirements | Input | Expected |
+|---|---|---|---|
+| T1 | one-row-layout, controlled-filter | `{ title: "Sites", search: { value: "", onChange }, actions: <Button> }` | All three parts render, in the order title → filter → spacer → actions; typing in the field fires `onChange` with the new text |
+| T2 | optional-parts | `{ title: "Sites", actions: <Button> }` (no `search`) | Title and actions render; no search field appears; the flex spacer still pushes actions right |
+| T3 | optional-parts, filter-width-cap | `{ search: { value: "", onChange } }` (no `title`, no `actions`) | Only the search field renders; it remains capped at `max-w-xs` — the absence of `title`/`actions` does not make it grow |
+| T4 | optional-parts, filter-width-cap | `{ title: "Sites", search: { value: "", onChange, grow: true }, actions: <Button> }` | Filter field loses its `max-w-xs` cap and takes all remaining row width up to `actions`; no trailing spacer element renders |
+| T5 | autofocus-remount | (a) render `{ search: { value: "", onChange, autoFocus: true } }`, unmount it, then mount it again; (b) with it mounted, move focus to another element, then re-render with a new `search.value` | (a) after the first mount and again after the remount, `document.activeElement` is the filter input; (b) after the re-render, `document.activeElement` is still the other element — focus was not stolen back |
+| T6 | accessible-names | Render with `ariaLabel="Filter list"` and `search.label="Search"` | Toolbar reports accessible name "Filter list"; input reports "Search" |
+| T7 | title-never-truncates, filter-width-cap | `{ title: "A title long enough to exceed the available row width", search: { value: "", onChange }, actions: <Button> }` | Title renders at full width, never wrapping or truncating (no `truncate`/ellipsis styling); the filter field (`min-w-0 flex-1`, capped at `max-w-xs`; see **filter-width-cap**) shrinks first to make room, then actions |
+| T8 | touch-target-minimum | Render with default classes | Filter input's computed height is `h-9` (36px) and action buttons use the shared `Button` component's default sizing — both meet the 24×24 CSS px web minimum |
+| T9 | state-without-color | focus the filter field, then compare it with an unfocused one | the focused field gains a border change plus a 2px ring (a shape change, not only a hue change); an empty field shows the placeholder while a filled one shows the text |

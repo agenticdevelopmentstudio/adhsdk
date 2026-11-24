@@ -1,0 +1,8 @@
+
+- **SwiftUI**: Framework-agnostic `struct`; same as AppKit.
+- **Source**: `Core/Stenographer/AIInteractionDTO.swift`, importing only `Foundation`. A `public struct` conforming to `Codable`, `Sendable` and `Equatable` with `let` properties, a long explicit public initializer and one computed property, `isFailure`. The AI Log window reads it in `AILogListSource` and `AILogViewController`; the daemon builds it in `AIInteractionStore`.
+- **Compose**: Use a Kotlin `data class` with `val` properties, annotated `@Serializable` for kotlinx.serialization, and a computed `val isFailure get() = outcome != OUTCOME_OK`, with one shared `OUTCOME_OK` constant. All fields are required, so give none a default value, matching the source.
+- **React/Web**: Use a TypeScript `readonly` interface or `type` with the same fourteen keys, decoded from `GET /ai/interactions`. Validate presence of every key if parsing untyped JSON, since the source's decode fails on a missing key, and export `isFailure(dto)` as a function comparing against one shared `OUTCOME_OK` constant.
+- **AppKit / UIKit**: The source description above applies as is: the DTO is UI-framework-agnostic, and the AppKit AI Log view controller consumes it.
+- **WinUI 3**: Use a C# `record` (or `sealed record class`) with `init`-only properties and `System.Text.Json` attributes. Mark each property `[JsonRequired]` to match the source's missing-key failure, set `JsonSerializerDefaults.Web` naming to camelCase to match the wire keys, and add `public bool IsFailure => Outcome != OutcomeOk;` with one shared `OutcomeOk` constant with `[JsonIgnore]`. Bind a `ListView` or `DataGrid` row to the record, using `IsFailure` for a warning-glyph visual state.
+

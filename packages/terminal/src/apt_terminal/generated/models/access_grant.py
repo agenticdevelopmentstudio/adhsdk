@@ -35,8 +35,8 @@ class AccessGrant:
         field_dict.update(
             {
                 "feature": feature,
-                "itemVerbs": item_verbs,
-                "subitemVerbs": subitem_verbs,
+                "item_verbs": item_verbs,
+                "subitem_verbs": subitem_verbs,
             }
         )
 
@@ -47,9 +47,9 @@ class AccessGrant:
         d = dict(src_dict)
         feature = d.pop("feature")
 
-        item_verbs = d.pop("itemVerbs")
+        item_verbs = d.pop("item_verbs")
 
-        subitem_verbs = d.pop("subitemVerbs")
+        subitem_verbs = d.pop("subitem_verbs")
 
         access_grant = cls(
             feature=feature,

@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "4b068644-9e3a-42bf-bce8-4f3068dea7e3",
     "title": "Status Web Deploy Status",
-    "domain": "adhsdk://cookbook/status/dashboard/logic/deploy-status",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -25,14 +24,14 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/status/service/monitor/deploy-status",
-      "adhsdk://cookbook/status/dashboard/logic/board-types"
+      "96009fcc-e32e-4a40-9b3c-8b4f83f1cfec",
+      "15c61cfc-543c-493d-b686-c605b773be83"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "1be6bec14284f609",
+  "synced": "29d928c844e4b1e1",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -51,7 +50,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

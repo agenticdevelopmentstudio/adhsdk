@@ -20,16 +20,27 @@
   field holds a non-nothing value and then decoding the result back MUST
   yield a nothing wrapped value on the decoded copy — the original value
   MUST NOT survive an encode/decode round trip.
-- **encoding-skip-concurrency**: The wrapper MUST NOT claim to be safe to
-  share across concurrent contexts; its wrapped value is mutable, so a
-  caller sharing one instance across concurrency domains MUST supply its
-  own synchronization.
+
+Note (non-normative): the wrapper's wrapped value is mutable and the type
+makes no concurrency-safety promise, so a caller sharing one instance across
+concurrency domains should supply its own synchronization.
 
 ### Secret storage
 
 - **keychain-service-default**: the store's `service` identifier MUST
   default to the app's bundle identifier, or `"com.mikefullerton.agenticdeveloperhubsdk"` when
   none is available, and MUST be reassignable by a caller at any time.
+- **keychain-per-call-service**: `set`, `get`, `read`, `delete` and `exists`
+  MUST each accept an optional `service` argument that defaults to the
+  process-wide `service`; when a caller passes one, the operation MUST use it
+  in place of the process-wide value and MUST NOT change that value.
+- **keychain-data-protection-default**: the store's
+  `usesDataProtectionKeychain` flag MUST default to false.
+- **keychain-entitled-access-group**: `entitledAccessGroup(_:)` MUST return
+  the entry of the running process's keychain-access-groups entitlement that
+  equals the given group or ends in `"." + group`, and MUST return nothing
+  when the process carries no such entry. On every platform other than macOS
+  it MUST return nothing.
 - **keychain-access-group-default**: the store's `accessGroup` MUST default
   to nothing.
 - **keychain-legacy-services-default**: the store's `legacyServices` MUST
@@ -41,16 +52,17 @@
 - **keychain-query-access-group-forces-data-protection**: when a query is
   built with a non-nothing access group, it MUST additionally scope to that
   group (`kSecAttrAccessGroup`) and require data-protection-keychain
-  semantics (`kSecUseDataProtectionKeychain` = true); when the access group
-  is nothing, both keys MUST be absent.
-- **keychain-set-overwrites**: setting a value that hits a duplicate-item
-  status on its first attempt MUST fall back to an update for the same
-  query, so a second `set` call for the same key MUST overwrite the first
-  value rather than fail.
+  semantics (`kSecUseDataProtectionKeychain` = true). When the access group
+  is nothing and `usesDataProtectionKeychain` is true, it MUST require
+  data-protection-keychain semantics without an access group. When the
+  access group is nothing and the flag is false, both keys MUST be absent.
+- **keychain-set-overwrites**: `set` MUST first delete any existing item for
+  the same query and then add the new value, so a second `set` call for the
+  same key MUST overwrite the first value rather than fail.
 - **keychain-set-access-group-accessibility**: when the store's access
-  group is non-nothing at the time `set` runs, the item's accessibility
-  attribute (`kSecAttrAccessible`) MUST be set to after-first-unlock,
-  this-device-only.
+  group is non-nothing or `usesDataProtectionKeychain` is true at the time
+  `set` runs, the item's accessibility attribute (`kSecAttrAccessible`) MUST
+  be set to after-first-unlock, this-device-only.
 - **keychain-set-returns-status**: `set` MUST return true only when the
   underlying add/update call reports success, and MUST return false for
   any other status.
@@ -58,22 +70,29 @@
   `service`/`accessGroup` scope and MUST return the stored string directly
   when that query succeeds.
 - **keychain-get-access-group-migration**: when the primary lookup fails
-  and the store's access group is non-nothing, `get` MUST retry the query
-  with no access group; on success it MUST re-store the recovered value
-  under the current `service`/`accessGroup` scope via `set` before
-  returning it.
+  and the store's access group is non-nothing or `usesDataProtectionKeychain`
+  is true, `get` MUST retry the query against the login keychain with no
+  access group; on success it MUST re-store the recovered value under the
+  current `service`/`accessGroup` scope via `set` before returning it.
 - **keychain-get-legacy-service-migration**: when the access-group retry
   also fails (or does not apply), `get` MUST iterate `legacyServices` in
-  order and, for the first retired service under which the key is found,
-  MUST re-store the recovered value under the current `service` before
-  returning it.
+  order and, for the first retired service under which the key is found
+  (in the current scope or, when the login-keychain fallback applies, in the
+  login keychain), MUST re-store the recovered value under the current
+  `service` before returning it.
 - **keychain-get-exhausted-returns-nothing**: when the primary lookup, the
   access-group retry, and every entry in `legacyServices` all fail to
   locate the key, `get` MUST return nothing.
 - **keychain-legacy-item-not-deleted**: when `get` recovers a value from a
   legacy access-group scope or a retired service, it MUST NOT delete the
   original item under that legacy scope — only a new copy is written under
-  the current scope.
+  the current scope. `delete` is the operation that removes those copies
+  (see `keychain-delete-clears-legacy`).
+- **keychain-read-throws-on-failure**: `read` MUST query the current scope
+  and return the stored string when that succeeds; MUST fall back to `get`'s
+  migration paths when the status is item-not-found; and MUST throw an error
+  carrying the status for any other failure, so a caller can tell a failed
+  lookup from a missing key. `read` MUST log an error before throwing.
 - **keychain-copy-value-single-match**: the lookup helper MUST limit the
   match to a single item (`kSecMatchLimit` = `kSecMatchLimitOne`) and
   request the data back (`kSecReturnData` = true), and MUST decode the
@@ -82,32 +101,40 @@
   MUST log an error when the underlying lookup call returns a status other
   than success and other than item-not-found; it MUST NOT log anything when
   the status is item-not-found.
-- **keychain-delete-idempotent**: `delete` MUST return true when the
-  underlying delete call reports success or item-not-found, and MUST
-  return false for any other status — deleting an already-absent key is
-  therefore never an error.
+- **keychain-delete-idempotent**: `delete` MUST return true when
+  every underlying delete call reports success or item-not-found, and MUST
+  return false when any call reports another status — deleting an
+  already-absent key is therefore never an error.
+- **keychain-delete-clears-legacy**: `delete` MUST remove the item under the
+  current scope, the login-keychain copy when the login-keychain fallback
+  applies, and the copies under every entry of `legacyServices`, so a cleared
+  secret cannot be recovered by a later `get`.
+- **keychain-delete-scoped-to-key**: deleting one key MUST NOT affect the
+  item stored for any other key.
 - **keychain-exists-checks-current-scope**: `exists` MUST return true when
   a query under the current `service`/`accessGroup` scope locates the key.
-- **keychain-exists-checks-legacy-scopes**: when the current-scope check
-  fails, `exists` MUST check `legacyServices` in order and MUST return true
+- **keychain-exists-checks-login-keychain**: when the current-scope check
+  fails and the login-keychain fallback applies, `exists` MUST check the
+  login keychain under the current `service` before it checks any retired
+  service.
+- **keychain-exists-checks-legacy-scopes**: when the earlier checks fail,
+  `exists` MUST check `legacyServices` in order and MUST return true
   if any retired service holds the key.
 - **keychain-exists-does-not-migrate**: unlike `get`, `exists` MUST NOT call
   `set` when it locates a key under a legacy scope — it only reports
   presence, it never re-stores.
-- **keychain-global-state-not-isolated**: `service`, `accessGroup`, and
-  `legacyServices` are shared mutable global state with no concurrency
-  confinement of their own; the store performs no locking around reads or
-  writes of these three values, so a caller that mutates one of them from
-  more than one concurrent context without external synchronization MUST
-  accept the resulting data race as the type's documented behavior, not a
-  defect to report.
-- **keychain-get-error-ambiguity**: `get`'s optional-string return cannot
-  distinguish "no secret was ever stored for this key" from "a lookup
+- **keychain-get-error-ambiguity**: `get`'s optional-string return does
+  not distinguish "no secret was ever stored for this key" from "a lookup
   failed for a reason other than not-found" (for example, an
   interaction-not-allowed status while the device is locked, or a missing
-  entitlement); the lookup helper logs the status in that second case, but
-  `get` still returns nothing either way, so no caller can tell the two
-  outcomes apart from the return value alone.
+  entitlement). The lookup helper logs the status in that second case, but
+  `get` MUST return nothing in both. A caller that needs to tell the two
+  apart MUST use `read` (see `keychain-read-throws-on-failure`).
+
+Note (non-normative): `service`, `accessGroup`, `legacyServices` and
+`usesDataProtectionKeychain` are shared mutable global state that the store
+does not lock. Callers should set them once at startup, before any other
+thread uses the store.
 
 ### Security
 
@@ -143,11 +170,10 @@
   expose the identical logger value.
 - **loggable-factory**: the factory MUST return a structured logger
   constructed from `subsystem` and `category`.
-- **loggable-default-members-isolation**: only the contract's `logger`
-  requirement carries an explicit concurrency-context annotation; the
-  default `subsystem`, `category`, instance `logger`, and factory members
-  carry no isolation annotation of their own and so inherit whatever
-  isolation, if any, applies at each call site.
+
+Note (non-normative): only the contract's `logger` requirement carries an
+explicit concurrency-context annotation; the default `subsystem`,
+`category`, instance `logger`, and factory members carry none of their own.
 
 ### Float clamping
 

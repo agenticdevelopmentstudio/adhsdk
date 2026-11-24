@@ -56,6 +56,14 @@ indefinite hang instead of a command-failed/timed-out outcome the caller
 can act on.
 **Approved**: pending
 
+**Decision**: The execution step sets `LC_MESSAGES=C`, and only that
+locale variable.
+**Rationale**: Callers recognise some refusals by git's text (`not fully
+merged`), which a translated git would change. `LC_MESSAGES` moves only the
+messages; `LC_ALL` or `LC_CTYPE` would also change how git reads and prints
+non-ASCII paths, which must stay the user's.
+**Approved**: pending
+
 **Decision**: The `max(1, ...)` timeout clamp lives only in the
 settings-derived configuration path, not in the plain constructor.
 **Rationale**: (Swift implementation) The settings-derived path

@@ -17,14 +17,14 @@ class UserBlock:
         ecosystem_id (str):
         blocker_id (str):
         blocked_id (str):
-        created_at (str):
+        created (int): Unix timestamp, in seconds.
     """
 
     id: str
     ecosystem_id: str
     blocker_id: str
     blocked_id: str
-    created_at: str
+    created: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -36,17 +36,17 @@ class UserBlock:
 
         blocked_id = self.blocked_id
 
-        created_at = self.created_at
+        created = self.created
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
-                "blockerId": blocker_id,
-                "blockedId": blocked_id,
-                "createdAt": created_at,
+                "ecosystem_id": ecosystem_id,
+                "blocker_id": blocker_id,
+                "blocked_id": blocked_id,
+                "created": created,
             }
         )
 
@@ -57,20 +57,20 @@ class UserBlock:
         d = dict(src_dict)
         id = d.pop("id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        blocker_id = d.pop("blockerId")
+        blocker_id = d.pop("blocker_id")
 
-        blocked_id = d.pop("blockedId")
+        blocked_id = d.pop("blocked_id")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
         user_block = cls(
             id=id,
             ecosystem_id=ecosystem_id,
             blocker_id=blocker_id,
             blocked_id=blocked_id,
-            created_at=created_at,
+            created=created,
         )
 
         user_block.additional_properties = d

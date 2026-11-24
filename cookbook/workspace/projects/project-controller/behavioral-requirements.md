@@ -74,9 +74,11 @@
   or the plan is not unchanged, reconciling MUST signal that tabs are
   about to change, then persist the new tabs, then signal that tabs
   changed, in that order.
-- **default-enabled-edge**: Reconciling MUST use the previously stored
-  enabled edges, or the single top edge when nothing was stored, as the
-  enabled-edges list for any newly built tab record.
+- **default-enabled-edge**: Reconciling MUST build any new tab record on
+  the project's stored Tab Bars choice, or on the app-wide tab positions
+  when the project has no stored choice, and MUST persist the stored
+  choice unchanged — absent stays absent, so a reconcile never writes
+  edges of its own.
 - **new-checkout-tabs-copy-arrangement-or-blueprint**: For every checkout
   being added, reconciling MUST build its tab records from a blueprint that
   reuses the existing tab arrangement (with fresh identifiers) when one can

@@ -626,6 +626,24 @@ extension ComposableSettings {
             notifyNavigationChange()
         }
 
+        /// The accessibility identifier a shown panel's view gets when it set none:
+        /// `settings.panel.<slug of its title>`.
+        public static func panelAccessibilityIdentifier(for panel: any ComposableSettingsPanel) -> String {
+            "settings.panel.\(AccessibilityID.slug(panel.descriptor.title))"
+        }
+
+        /// Selects the first panel whose title, or the slug of its title, is `name`,
+        /// ignoring case. Returns false when no panel matches.
+        @discardableResult
+        public func selectPanel(named name: String) -> Bool {
+            let wanted = name.lowercased()
+            guard let index = panels.firstIndex(where: {
+                $0.descriptor.title.lowercased() == wanted || AccessibilityID.slug($0.descriptor.title) == wanted
+            }) else { return false }
+            selectPanel(at: index)
+            return true
+        }
+
         public func selectPanel(_ panel: any ComposableSettingsPanel) {
             guard let index = panels.firstIndex(where: { $0 === panel }) else { return }
             selectPanel(at: index)
@@ -769,6 +787,18 @@ extension ComposableSettings {
             }
             detailContainer.addChild(panel)
             panel.view.translatesAutoresizingMaskIntoConstraints = false
+            // A panel that names itself keeps its name; every other one is found by
+            // UI tests and scripts as `settings.panel.<slug of its title>`.
+            if panel.view.accessibilityIdentifier().isEmpty {
+                panel.view.setAccessibilityIdentifier(Self.panelAccessibilityIdentifier(for: panel))
+                // A plain view is left out of the accessibility tree, and its
+                // identifier with it; as a group named for the panel it is found.
+                if !panel.view.isAccessibilityElement() {
+                    panel.view.setAccessibilityElement(true)
+                    panel.view.setAccessibilityRole(.group)
+                    panel.view.setAccessibilityLabel(panel.descriptor.title)
+                }
+            }
 
             // Nested splits manage their own layout and self-scrolling panels
             // scroll themselves — both are hosted directly. Every other panel is

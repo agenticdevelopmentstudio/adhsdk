@@ -1,0 +1,3 @@
+
+The wire adapter between the app and the `claude` command-line process run with `claude -p --output-format stream-json`. `ClaudeStreamMessage.decode(_:)` turns one output line into a `ClaudeStreamMessage` (a kind, a subtype, a session id, content blocks, an error flag, a result text, a turn count and a list of error strings). `reportsLostSession` recognises the error result claude emits when `--resume` names a session it does not have. `ClaudeStreamInput.userMessage(_:)` builds the single newline-terminated JSON line the app writes to claude's stdin. Decoding is deliberately lenient: it reads the fields it knows and ignores the rest, and only a line that is not a JSON object is an error.
+

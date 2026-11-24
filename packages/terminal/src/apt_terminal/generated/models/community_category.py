@@ -22,8 +22,8 @@ class CommunityCategory:
         display_order (int):
         is_public (bool):
         is_archived (bool):
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
         description (None | str | Unset):
         color (None | str | Unset):
         discussion_count (int | Unset): Live discussions filed under this category (public-only for anonymous callers).
@@ -38,8 +38,8 @@ class CommunityCategory:
     display_order: int
     is_public: bool
     is_archived: bool
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     description: None | str | Unset = UNSET
     color: None | str | Unset = UNSET
     discussion_count: int | Unset = UNSET
@@ -61,9 +61,9 @@ class CommunityCategory:
 
         is_archived = self.is_archived
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         description: None | str | Unset
         if isinstance(self.description, Unset):
@@ -90,14 +90,14 @@ class CommunityCategory:
         field_dict.update(
             {
                 "id": id,
-                "communityId": community_id,
+                "community_id": community_id,
                 "slug": slug,
                 "name": name,
-                "displayOrder": display_order,
-                "isPublic": is_public,
-                "isArchived": is_archived,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
+                "display_order": display_order,
+                "is_public": is_public,
+                "is_archived": is_archived,
+                "created": created,
+                "updated": updated,
             }
         )
         if description is not UNSET:
@@ -105,9 +105,9 @@ class CommunityCategory:
         if color is not UNSET:
             field_dict["color"] = color
         if discussion_count is not UNSET:
-            field_dict["discussionCount"] = discussion_count
+            field_dict["discussion_count"] = discussion_count
         if last_activity_at is not UNSET:
-            field_dict["lastActivityAt"] = last_activity_at
+            field_dict["last_activity_at"] = last_activity_at
 
         return field_dict
 
@@ -116,21 +116,21 @@ class CommunityCategory:
         d = dict(src_dict)
         id = d.pop("id")
 
-        community_id = d.pop("communityId")
+        community_id = d.pop("community_id")
 
         slug = d.pop("slug")
 
         name = d.pop("name")
 
-        display_order = d.pop("displayOrder")
+        display_order = d.pop("display_order")
 
-        is_public = d.pop("isPublic")
+        is_public = d.pop("is_public")
 
-        is_archived = d.pop("isArchived")
+        is_archived = d.pop("is_archived")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         def _parse_description(data: object) -> None | str | Unset:
             if data is None:
@@ -150,7 +150,7 @@ class CommunityCategory:
 
         color = _parse_color(d.pop("color", UNSET))
 
-        discussion_count = d.pop("discussionCount", UNSET)
+        discussion_count = d.pop("discussion_count", UNSET)
 
         def _parse_last_activity_at(data: object) -> None | str | Unset:
             if data is None:
@@ -159,7 +159,7 @@ class CommunityCategory:
                 return data
             return cast(None | str | Unset, data)
 
-        last_activity_at = _parse_last_activity_at(d.pop("lastActivityAt", UNSET))
+        last_activity_at = _parse_last_activity_at(d.pop("last_activity_at", UNSET))
 
         community_category = cls(
             id=id,
@@ -169,8 +169,8 @@ class CommunityCategory:
             display_order=display_order,
             is_public=is_public,
             is_archived=is_archived,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
             description=description,
             color=color,
             discussion_count=discussion_count,

@@ -1,13 +1,12 @@
 ---
 id: bc43002d-faf6-4ffa-bc12-95f1a07f27e8
 title: "Multi-Choice Filter Button"
-domain: adhsdk://cookbook/ui/controls/multi-choice-filter-button
 type: ingredient
-version: 1.3.0
+version: 1.3.1
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -189,7 +188,7 @@ system control for a hand-built one.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| multi-choice-filter-button-001 | builds-fixed-menu-structure | Construct with `label: "Good for"`, `choices: [a, b]` | Menu has exactly 4 items in order: `label` (no action), "Any", a separator, then items titled `a.title` and `b.title` |
+| multi-choice-filter-button-001 | builds-fixed-menu-structure | Construct with `label: "Good for"`, `choices: [a, b]` | Menu has exactly 4 items in order: the title slot (no action; its title is the summary title `"Good for: Any"`, since the summary is written into it), "Any", a separator, then items titled `a.title` and `b.title` |
 | multi-choice-filter-button-002 | sets-choice-tooltip | Choice `a` has `detail: "Runs code"`; choice `b` has `detail: ""` | `a`'s menu item has tooltip "Runs code"; `b`'s menu item has no tooltip set |
 | multi-choice-filter-button-003 | clears-selection-on-any | `selection == ["a"]`; invoke the "Any" item's action | `selection == []` |
 | multi-choice-filter-button-004 | toggles-choice-on-select | `selection == []`; invoke choice `a`'s item action | `selection == ["a"]` |
@@ -423,9 +422,9 @@ Not applicable: this component's own source contains no logging call.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Controls/MultiChoiceFilterButton.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Controls/MultiChoiceFilterButton.swift` | confirmed (1.3.1) |
 
 ## Design Decisions
 
@@ -491,14 +490,14 @@ stated in Edge Cases. (Applies to the AppKit implementation.)
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [native-controls-preference](agenticdevelopercookbook://compliance/platform-compliance#native-controls-preference) | passed | Platform Compliance |
-| [platform-design-language](agenticdevelopercookbook://compliance/platform-compliance#platform-design-language) | passed | Platform Compliance |
-| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | Accessibility |
-| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
-| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
+| [adc.check.platform-compliance.native-controls-preference](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d49de883-3811-54ed-b227-c2d807cac551) | passed | Platform Compliance |
+| [adc.check.platform-compliance.platform-design-language](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/cbd07fee-ca18-58a8-bb2f-0f8a6b83ac1c) | passed | Platform Compliance |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | passed | Accessibility |
+| [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
+| [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | failed | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 Native-controls-preference and platform-design-language pass because the
 component is a stock pull-down/menu control with no custom drawing.
@@ -514,7 +513,7 @@ String-externalization is failed because the "Any" and "{n} selected"
 strings are hardcoded English literals with no localization key (see
 Localization).
 
-`separation-of-concerns` passes because the control owns only the menu, the title summary and the checkmarks, takes its choices as caller-supplied id/title/detail values and reports changes through `onChange`, leaving the meaning of an id to the caller. `unit-test-coverage` is `failed`: a search of the Apple test targets finds no test file for `MultiChoiceFilterButton`, so vectors 001 through 026 are unpinned by automated tests.
+`separation-of-concerns` passes because the control owns only the menu, the title summary and the checkmarks, takes its choices as caller-supplied id/title/detail values and reports changes through `onChange`, leaving the meaning of an id to the caller. `unit-test-coverage` is `partial`: `MultiChoiceFilterButtonConformanceTests.swift` (Tests/AgenticDeveloperHubSDKMacOSTests/UI/Controls) covers every vector except 016 (compile-time `private(set)`), 023 (a `fatalError` that cannot be caught) and 024 (main-actor isolation enforced at build time), which are skipped as unexercisable by a unit test.
 
 ## Change History
 
@@ -526,3 +525,4 @@ Localization).
 | 1.1.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/controls/. |
 | 1.3.0 | 2026-10-04 | Mike Fullerton | Wrote the archive-rejection, main-thread confinement and autoresizing-translation requirements platform-neutrally with vectors 023-025; resolved the contrast NEEDS REVIEW marker as current behavior (no contrast check) with vector 026 and a pending decision; added separation-of-concerns and unit-test-coverage compliance rows. Renamed the thread-confinement requirement to confines-to-ui-thread with the standard wording. |
+| 1.3.1 | 2026-11-15 | Mike Fullerton | Conformance tests added (MultiChoiceFilterButtonConformanceTests.swift, 23 of 26 vectors); unit-test-coverage now partial (016, 023, 024 skipped). |

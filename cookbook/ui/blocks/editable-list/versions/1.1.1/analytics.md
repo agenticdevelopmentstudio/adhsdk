@@ -1,0 +1,3 @@
+
+This component does not emit analytics itself; instrumentation is the responsibility of a wrapping hook or the parent component, which has access to every state change the controller exposes (search, filter, facet, sort, and selection changes) plus the row-activation and error props. A wrapper instrumenting parity across admin lists might emit events named along the lines of `editable_list.loaded`, `.searched`, `.filtered`, `.sorted`, `.column_resized`, `.selection_changed`, `.row_activated`, and `.error_shown` — but none of these, nor their payload shapes, are part of this component's contract. A `.searched` event's payload should carry a query length (or a hash) rather than the raw search string, which can hold operator-typed PII such as an email address.
+

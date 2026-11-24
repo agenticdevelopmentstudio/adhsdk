@@ -1,13 +1,12 @@
 ---
 id: 7f1b8bef-e78e-4cac-be55-c948fe9062e5
 title: "Project Window Manager"
-domain: adhsdk://cookbook/workspace/projects/project-window-manager
 type: ingredient
-version: 1.1.1
+version: 1.4.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-17
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -21,10 +20,10 @@ tags:
   - window-controller
 depends-on: []
 related:
-  - adhsdk://cookbook/workspace/projects/project-controller
-  - adhsdk://cookbook/ui/layout/composable-tabs/tabs-window
-  - adhsdk://cookbook/workspace/projects/git-repo
-  - adhsdk://cookbook/workspace/projects/project-database
+  - 5bfadad5-c93b-432a-807e-04be57ff16b4
+  - 55a394e6-9934-404b-941d-25bebbf71378
+  - 1463e7a2-e290-4b8c-8643-df9462a758e6
+  - c212ea39-10e7-4146-89dd-36edb3b3455a
 references:
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWindowManager.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectsCoordinator.swift (adhsdk)
@@ -65,6 +64,9 @@ property and method is confined there by that declaration alone.
   project-opening interface — supplying an open-project operation and a
   close-project operation, each keyed by a repository id — and MUST
   publish its state so another component can observe it.
+- **document-windows-have-no-pane-chrome**: A window opened for either
+  Document kind MUST be created without pane chrome; a File Browser
+  window and a project window MUST keep it.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
 - **shared-singleton**: The manager MUST expose one process-wide shared
   instance.
@@ -85,9 +87,43 @@ property and method is confined there by that declaration alone.
 - **front-window-controller-fallback-chain**: The frontmost-window-controller
   lookup MUST return, in order: the window controller of whichever window
   currently has key status; failing that, the first of this manager's
-  window controllers found among the app's currently ordered windows;
-  failing that, the controller for the most recently opened project —
-  returning the first of the three that resolves to a value.
+  window controllers found among the app's visible windows, front to back;
+  failing that, the window each window group shows, the front group first
+  and then the other groups from the most recently made; failing that, the
+  controller for the most recently opened project that belongs to no group
+  — returning the first that resolves to a value.
+- **front-workspace-window-skips-document-windows**: The front-workspace
+  lookup MUST walk the same chain as **front-window-controller-fallback-chain**
+  but pass over every Document window at each step, so a Document window in
+  front yields the next window that can hold any pane, or nothing when
+  there is none. What splits a pane into the front window, or roots
+  extensions at its folder, MUST use this lookup.
+- **is-document-window-by-controller**: Asking whether a window controller
+  is a Document window's MUST answer true only for a controller this
+  manager holds whose project id names an open Document window, of either
+  sort; a controller it does not hold MUST answer false.
+- **standalone-rows-one-row-per-canonical-path**: The standalone window
+  rows helper (shared by File Browser, Document and Git windows) MUST look a
+  window's row up by its path and its kind together, MUST insert a row of
+  that kind the first time a path is asked for, named by the caller or,
+  failing that, by the path's last component (the path itself for the
+  root), and MUST spell every path canonically first, so a symlink and its
+  target, or a path and its resolved form, are one row and one window.
+- **standalone-rows-discard-clears-saved-window-state**: Discarding a
+  standalone row MUST delete the row, whose tabs, layout and pane state go
+  with it by cascade, and MUST clear the saved frame and visibility of the
+  window id derived from the row's id; a failed delete MUST be logged and
+  MUST NOT stop the window state from being cleared.
+- **standalone-rows-forgotten-rows-discarded-at-launch**: Discarding
+  forgotten rows MUST discard every row of the helper's kind whose path is
+  not in that kind's restore list, and MUST run at launch before any window
+  of that kind is open; a failure to list the rows MUST be logged and
+  discard nothing.
+- **standalone-rows-restore-list**: The restore list MUST hold the paths
+  whose windows of the kind reopen at launch, in the order they were first
+  remembered; remembering a path already in it and forgetting one not in it
+  MUST change nothing, and a kind with no restore-list setting MUST report
+  an empty list and ignore both.
 - **open-workspaces-derived**: The open-workspaces list and the
   open-window-controllers list MUST both be computed by mapping the
   open-order list through the open-controllers table, filtering out any
@@ -219,6 +255,15 @@ property and method is confined there by that declaration alone.
   firing, look up the project controller for that repository id and, when
   found, start that controller's checkout refresh as an independent,
   concurrently running unit of work.
+- **shared-tab-configuration-arrangement-only**: When a project's window
+  is shown or becomes key, the manager MUST put on it the tab
+  configuration of the last-active project window (that window's live
+  configuration when it is open, otherwise the arrangement derived from
+  its stored tabs), unless the two are the same project, and the
+  configuration MUST carry only the pane arrangement (shape and sizes).
+  The manager MUST NOT copy one project's enabled edges into another: a
+  project's edges are its own explicit Tab Bars choice, or the app-wide
+  tab positions when it has made none.
 - **close-flag-respects-app-termination**: In the window-close handling,
   when that close observer records open state, writing the window-open
   flag as closed MUST happen only when the app is not in the middle of
@@ -253,7 +298,24 @@ property and method is confined there by that declaration alone.
   all language services can find and wait for it even after this
   project's controller and window have already left every other
   collection.
-
+- **standalone-window-kinds**: The manager MUST treat the File Browser kind
+  and both Document kinds as standalone windows, windows that are not
+  development projects, and MUST answer `isStandaloneWindow` and
+  `isDocumentWindow` for a repository id from its open project's kind.
+- **open-document-window**: Opening a Document window MUST take the
+  repository record, the layout to build it with, whether it activates and
+  a close callback; it MUST bring an already open window for that id
+  forward instead of building a second, and MUST honour quiet presentation
+  when activating.
+- **standalone-existing-window-activates-only-when-asked**: Opening a
+  standalone window that is already open MUST return that window, and MUST
+  show it, order it front and activate the app only when asked to
+  activate; opened without activating it MUST be left where it is.
+- **document-windows-have-no-footer**: A window for a repository of a Document kind MUST be created without the footer bar, as it is created without pane chrome; every other kind keeps both.
+- **standalone-toolbar-items**: Opening a standalone window MUST pass the
+  toolbar items it is given (none by default) to the window it makes, which
+  places them before its flexible space; a window already open keeps the
+  items it was made with.
 ## Appearance
 
 Not applicable — this is a window-lifecycle manager, not a visual component.
@@ -289,8 +351,13 @@ of which this file renders itself.
 | git-client-projects-project-window-manager-010 | close-drops-controller-and-reregisters-survivors | Open a project, then close it by id and check whether its controller reports itself closed with no intervening suspension. | the controller reports open immediately before the close and closed immediately after it, in the same synchronous call — proving the close is marked synchronously from the close handling, not from separately scheduled work — ProjectWindowManagerControllerTests.swift › testClosingMarksTheControllerClosedInTheSameTurn |
 | git-client-projects-project-window-manager-011 | restore-plan-is-pure, restore-forgets-missing-folders, restore-reopens-existing-folders | Not present in the given test suite; synthesized from the source. Compute the restore plan for three repositories a, b, c, where a and b were open at last quit and only a and c still exist on disk. | the reopen set is `{a}` and the forget set is `{b}`; c (never flagged open) appears in neither set — synthesized, no dedicated test in the given suite |
 | git-client-projects-project-window-manager-012 | shutdown-all-language-services-runs-concurrently, shutdown-all-language-services-drains-pending-teardowns | Not present in the given test suite; synthesized from the source together with the pending-teardowns registry's own drain guarantee. Open two projects with distinct counting stand-ins for language services, close one of them (starting its teardown through the pending-teardowns registry), then immediately shut down all language services before that teardown would otherwise finish on its own. | both counting stand-ins report exactly one shutdown call once shutting down all language services returns — the closed project's already-detached teardown is still waited for, not just the still-open project's — synthesized, no dedicated test in the given suite |
+| git-client-projects-project-window-manager-014 | shared-tab-configuration-arrangement-only | Open project A with an explicit left-edge choice and a two-pane split, make it key, then open project B, which has no stored edge choice | B's panes take A's shape and sizes; B's enabled edges are the app-wide tab positions, and B's stored edge choice stays absent. |
 | git-client-projects-project-window-manager-013 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
-
+| git-client-projects-project-window-manager-014 | front-workspace-window-skips-document-windows, is-document-window-by-controller | Open a project window, then open a Document window and make it key. | The front-window lookup returns the Document window's controller; the front-workspace lookup returns the project window's; asking whether each is a Document window answers true and false respectively |
+| git-client-projects-project-window-manager-015 | standalone-rows-one-row-per-canonical-path | Ask the File Browser rows helper for the row at a folder, then again through a symlink to that folder. | Both calls return the same row, and one row of that kind exists for the folder |
+| git-client-projects-project-window-manager-016 | standalone-rows-forgotten-rows-discarded-at-launch, standalone-rows-restore-list | With Document rows at paths a and b and only a remembered, discard forgotten rows. | The row at a remains and the row at b is gone, along with its saved window frame |
+| git-client-projects-project-window-manager-017 | standalone-toolbar-items | Open a `.gitWindow` row's standalone window with six targeted buttons | The window's toolbar lists the six identifiers first, ahead of the flexible space; each button targets the object its target names. |
+| git-client-projects-project-window-manager-018 | standalone-existing-window-activates-only-when-asked | Open a `.gitWindow` row's standalone window without activating, order it out, then open it again without activating | The same controller; the window is still not visible. |
 ## Edge Cases
 
 - **Null and empty input**: The language-services factory and the command
@@ -332,14 +399,14 @@ of which this file renders itself.
   — every operation this file performs is local: the database, the
   filesystem check the restore plan's exists-on-disk predicate performs,
   and git through the project controller (documented in
-  `adhsdk://cookbook/workspace/projects/project-controller`).
+  [adhsdk.ingredient.workspace.projects.project-controller](cookbook:5bfadad5-c93b-432a-807e-04be57ff16b4)).
   None of it reaches a remote host.
 - **Cancellation and timeouts**: Opening a project's own opening work is
   not cancelled by a subsequent close of that project; the in-flight work
   keeps running to completion, and it is the project controller's own
   closed-state guard — not anything in this file — that stops it from
   persisting stale data or reloading a dead window (see
-  `adhsdk://cookbook/workspace/projects/project-controller`'s
+  [adhsdk.ingredient.workspace.projects.project-controller](cookbook:5bfadad5-c93b-432a-807e-04be57ff16b4)'s
   reconcile-aborts-after-a-late-close requirement, and vector -007
   above). Shutting down all language services waits for its group of
   concurrent operations and then for the pending-teardowns registry to
@@ -480,7 +547,7 @@ bundle identifier; category is this component's name.
   thread-affinity of its own — mirror `@MainActor` confinement by only ever
   touching this object from the UI thread (`DispatcherQueue`), the same
   discipline `ProjectController`'s WinUI port already assumes (see
-  `adhsdk://cookbook/workspace/projects/project-controller`). Reproduce
+  [adhsdk.ingredient.workspace.projects.project-controller](cookbook:5bfadad5-c93b-432a-807e-04be57ff16b4)). Reproduce
   `NSWindow.willCloseNotification`'s `queue: nil` synchronous delivery
   (**close-observer-uses-nil-queue**) with `Window.Closed`, handled inline on
   the UI thread rather than through a dispatcher post, so a scan that closes a
@@ -491,7 +558,7 @@ bundle identifier; category is this component's name.
   own async shutdown drains in a loop — rather than firing a bare
   `Task.Run(async () => ...)` that a process exit can orphan. Read and write
   the persisted "window open" flag through the same `System.Data.Sqlite`-backed
-  settings store `adhsdk://cookbook/workspace/projects/project-database`
+  settings store [adhsdk.ingredient.workspace.projects.project-database](cookbook:c212ea39-10e7-4146-89dd-36edb3b3455a)
   describes, using `HttpClient`/`System.Text.Json`/`Task`/`async` and
   `Windows.Storage` only where a networked or file-based collaborator this
   manager delegates to (git, language servers) needs them — this type itself
@@ -500,9 +567,11 @@ bundle identifier; category is this component's name.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWindowManager.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWindowManager.swift` | confirmed (1.3.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWindowManager.swift` | confirmed (1.3.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/StandaloneWindowRows.swift` | confirmed (1.3.0) |
 
 ## Design Decisions
 
@@ -576,13 +645,13 @@ the process then exited inside `SubprocessChannel.terminate()`'s roughly
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
-| [state-recovery](agenticdevelopercookbook://compliance/reliability#state-recovery) | partial | Reliability |
-| [main-thread-freedom](agenticdevelopercookbook://compliance/performance#main-thread-freedom) | passed | Performance |
-| [secure-log-output](agenticdevelopercookbook://compliance/security#secure-log-output) | passed | Security |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
+| [adc.check.reliability.state-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/6e64e2f2-28ad-55d5-a8ed-cee075366674) | partial | Reliability |
+| [adc.check.performance.main-thread-freedom](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/86dd71d6-1ab1-5d59-8c85-b9d469fbae0d) | passed | Performance |
+| [adc.check.security.secure-log-output](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b258657f-bb73-5491-9c70-0d14afdfa6ce) | passed | Security |
 
 Notes: separation-of-concerns passes because `ProjectWindowManager` owns
 exactly window/controller lifecycle bookkeeping — the `controllers`/
@@ -624,6 +693,9 @@ anywhere in this file.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.4.0 | 2026-11-17 | Mike Fullerton | Tab edges are an explicit per-project Tab Bars choice: no stored edges means follow the app-wide tab positions live, an empty enabled_edges value means no choice, and the shared tab configuration carries only the pane arrangement. |
+| 1.3.0 | 2026-11-16 | Mike Fullerton | Standalone windows take toolbar items and pass them to the window they make (vector 017) |
+| 1.2.0 | 2026-11-14 | Mike Fullerton | Document window kinds: titles, kinds and standalone windows; the front-window chain matches the visible-window and window-group lookup; the front-workspace lookup skips Document windows (is-document-window-by-controller); the standalone window rows shared by File Browser and Document windows (vectors 014-016). |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Spec-local UI-thread confinement ids folded into the shared confines-to-ui-thread requirement, with a test vector; scope detail is in Platform Notes. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to workspace/projects/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

@@ -28,7 +28,7 @@
   component itself defines. This mirrors the pattern the Explanation View
   recipe's own `updates-text-via-label-property` requirement documents
   for that view (see
-  `adhsdk://cookbook/ui/settings/layout/explanation-view#exposes-label-property`;
+  exposes-label-property ([adhsdk.ingredient.ui.settings.layout.explanation-view](cookbook:25046f90-559d-4e32-8516-b5dae5f09c43));
   also Design Decisions).
 - **Constructed with no caption and later needing one**: The caption view
   is constructed once at construction time and never reassigned; the

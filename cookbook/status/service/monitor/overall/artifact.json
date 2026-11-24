@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "da69d02d-a3a9-4018-a90a-becee268624a",
     "title": "Monitor Overall Status",
-    "domain": "adhsdk://cookbook/status/service/monitor/overall",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -27,7 +26,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/status/service/monitor/health"
+      "2871e97f-f971-46fe-a4d2-de57ad5c94c5"
     ],
     "references": [
       "packages/web/packages/status-server/src/monitor/overall.ts (adhsdk)",
@@ -39,7 +38,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "6c824a97ae597812",
+  "synced": "122d3ee3decd2344",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -58,7 +57,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

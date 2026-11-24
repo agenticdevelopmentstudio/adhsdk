@@ -1,0 +1,57 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "89df0861-df4c-4839-9da2-bf65910ad5dd",
+    "title": "Private Terminal View",
+    "type": "ingredient",
+    "version": "1.0.0",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-14",
+    "modified": "2026-11-14",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "A terminal view that reveals privacy-word aliases on every byte sent to the shell and conceals real words on every byte the shell prints, before the parser sees them.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "terminal",
+      "privacy"
+    ],
+    "depends-on": [
+      "2cd6ffc0-e9db-425b-99ba-eb826ffff118",
+      "88d2aa75-3a9c-404a-8d3f-7db520d1bec1",
+      "998864ec-d852-4e92-aa2c-3177130ff21d"
+    ],
+    "related": [],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "5caf4bedc1c4a3c9",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

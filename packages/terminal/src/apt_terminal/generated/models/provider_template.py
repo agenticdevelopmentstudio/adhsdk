@@ -32,8 +32,8 @@ class ProviderTemplate:
         available_via (None | TemplateAvailableViaType0): Set ⇒ informational template: no first-party API; connect via
             the named templates.
         modalities (list[ProviderTemplateModalitiesType0Item] | None):
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
         models (list[ProviderTemplateModel]):
     """
 
@@ -46,8 +46,8 @@ class ProviderTemplate:
     connection_spec: None | ProviderConnectionSpecType0
     available_via: None | TemplateAvailableViaType0
     modalities: list[ProviderTemplateModalitiesType0Item] | None
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     models: list[ProviderTemplateModel]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -95,9 +95,9 @@ class ProviderTemplate:
         else:
             modalities = self.modalities
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         models = []
         for models_item_data in self.models:
@@ -109,16 +109,16 @@ class ProviderTemplate:
         field_dict.update(
             {
                 "id": id,
-                "providerKind": provider_kind,
+                "provider_kind": provider_kind,
                 "name": name,
-                "baseUrl": base_url,
-                "documentationUrl": documentation_url,
-                "statusUrl": status_url,
-                "connectionSpec": connection_spec,
-                "availableVia": available_via,
+                "base_url": base_url,
+                "documentation_url": documentation_url,
+                "status_url": status_url,
+                "connection_spec": connection_spec,
+                "available_via": available_via,
                 "modalities": modalities,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
+                "created": created,
+                "updated": updated,
                 "models": models,
             }
         )
@@ -138,25 +138,25 @@ class ProviderTemplate:
         d = dict(src_dict)
         id = d.pop("id")
 
-        provider_kind = ProviderTemplateProviderKind(d.pop("providerKind"))
+        provider_kind = ProviderTemplateProviderKind(d.pop("provider_kind"))
 
         name = d.pop("name")
 
-        base_url = d.pop("baseUrl")
+        base_url = d.pop("base_url")
 
         def _parse_documentation_url(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        documentation_url = _parse_documentation_url(d.pop("documentationUrl"))
+        documentation_url = _parse_documentation_url(d.pop("documentation_url"))
 
         def _parse_status_url(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        status_url = _parse_status_url(d.pop("statusUrl"))
+        status_url = _parse_status_url(d.pop("status_url"))
 
         def _parse_connection_spec(data: object) -> None | ProviderConnectionSpecType0:
             if data is None:
@@ -173,7 +173,7 @@ class ProviderTemplate:
                 pass
             return cast(None | ProviderConnectionSpecType0, data)
 
-        connection_spec = _parse_connection_spec(d.pop("connectionSpec"))
+        connection_spec = _parse_connection_spec(d.pop("connection_spec"))
 
         def _parse_available_via(data: object) -> None | TemplateAvailableViaType0:
             if data is None:
@@ -190,7 +190,7 @@ class ProviderTemplate:
                 pass
             return cast(None | TemplateAvailableViaType0, data)
 
-        available_via = _parse_available_via(d.pop("availableVia"))
+        available_via = _parse_available_via(d.pop("available_via"))
 
         def _parse_modalities(data: object) -> list[ProviderTemplateModalitiesType0Item] | None:
             if data is None:
@@ -214,9 +214,9 @@ class ProviderTemplate:
 
         modalities = _parse_modalities(d.pop("modalities"))
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         models = []
         _models = d.pop("models")
@@ -235,8 +235,8 @@ class ProviderTemplate:
             connection_spec=connection_spec,
             available_via=available_via,
             modalities=modalities,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
             models=models,
         )
 

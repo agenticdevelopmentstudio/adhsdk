@@ -1,0 +1,23 @@
+
+- **main-actor-confined**: The panel and the container contract MUST be confined to the main actor.
+- **container-contract**: A container MUST expose its contained panels, the contained panel currently selected (or none), and an operation that selects a given contained panel.
+- **titled-for-section**: The panel's descriptor title MUST be the section name given to the initializer.
+- **icon-from-initializer**: The panel's descriptor icon MUST be the icon given to the initializer, which MAY be absent.
+- **no-sidebar-title**: The topic list MUST NOT show a header title, because the section's own name is already the selected sidebar row.
+- **no-section-titles**: The topic list MUST NOT show section headers, because every panel in it carries the section's name as its own section.
+- **list-hidden-before-panels**: A newly built panel MUST start with its topic list hidden until `setSectionPanels` decides otherwise.
+- **list-needs-two**: `setSectionPanels` MUST show the topic list only when the section has more than one panel.
+- **single-panel-fills**: With exactly one panel, the list MUST be collapsed and that panel MUST fill the topic.
+- **list-returns**: When a later `setSectionPanels` call brings the count above one, the topic list MUST be shown again.
+- **list-hides-again**: When a later call brings the count back to one, the topic list MUST be hidden again.
+- **rows-keep-order**: The rows MUST keep the order the panels were handed over in.
+- **contained-panels**: `containedPanels` MUST return the section's panels in row order.
+- **selection-survives**: When the previously selected panel is still among the new panels, it MUST stay selected after `setSectionPanels`.
+- **late-panel-selects-first**: When the view is loaded, no panel is selected and the new list is non-empty, `setSectionPanels` MUST select the first panel.
+- **no-select-before-load**: `setSectionPanels` MUST NOT select a panel itself while the view is not loaded; selection then waits for the view to appear.
+- **empty-section**: With no panels, `setSectionPanels` MUST hide the list and MUST NOT select anything.
+- **select-contained**: `selectContainedPanel` MUST select the given panel in the detail area when it is one of the section's panels, and MUST do nothing when it is not.
+- **selected-contained**: `selectedContainedPanel` MUST return the panel selected in the detail area, or none when nothing is selected.
+- **container-seen-through**: The window MUST treat this panel as a container: search harvests every contained panel's title, section, keywords and help whether or not the section's view has loaded (a contained panel's on-screen labels are added only once that panel's own view has loaded), a search pick opens the first contained panel the query matches, and the toolbar title names the selected contained panel.
+- **coder-unavailable**: Decoding from an archive MUST NOT be supported; the coder initializer MUST be unavailable and trap if reached.
+

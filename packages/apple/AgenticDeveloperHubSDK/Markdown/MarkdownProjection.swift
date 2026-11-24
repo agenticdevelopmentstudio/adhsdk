@@ -56,7 +56,7 @@ public struct MarkdownProjection: SyncMirrorProjection {
     /// The columns every mirrored table carries, minus `id` and `sync_version`,
     /// which the store passes separately.
     private static let commonColumns = [
-        "customer_id", "ecosystem_id",
+        "owner_kind", "owner_id", "ecosystem_id",
         "created_at", "updated_at", "deleted_at",
         "sync_stamped_at", "sync_txid"
     ]
@@ -133,7 +133,9 @@ public struct MarkdownProjection: SyncMirrorProjection {
     /// taxonomy tables and the three marker tables declare every column of
     /// their own `NOT NULL` with a default.
     private static let nullableSpecificColumns: [String: Set<String>] = [
-        "content.markdown": ["frontmatter", "latest_version_id", "public_route"]
+        "content.markdown": [
+            "frontmatter", "latest_version_id", "public_route", "author_kind", "author_id"
+        ]
     ]
 
     /// Which of a resource's columns a full-row pull may have to write NULL
@@ -154,7 +156,7 @@ public struct MarkdownProjection: SyncMirrorProjection {
         "content.markdown": [
             "title", "content", "frontmatter", "content_hash", "size_bytes",
             "current_version", "latest_version_id", "is_deleted", "public_route",
-            "visibility", "stage", "owner_kind", "owner_id"
+            "visibility", "stage", "author_kind", "author_id"
         ],
         "content.notes": ["markdown_id"],
         "content.docs": ["markdown_id"],
@@ -182,7 +184,7 @@ public struct MarkdownProjection: SyncMirrorProjection {
     private static let resourceNames: [String] = MarkdownSchema.tables.map { "content.\($0)" }
 
     public static let syncResources: [SyncResource] = resourceNames.map {
-        SyncResource(resource: $0, schemaVersion: 1)
+        SyncResource(resource: $0, schemaVersion: 2)
     }
 
     public let resources = Set(resourceNames)
@@ -228,12 +230,12 @@ public struct MarkdownProjection: SyncMirrorProjection {
     ///
     /// A local `stage(_:)` mutation (every `LocalMutation` `MarkdownTaxonomy`
     /// builds) carries a deliberate subset: the pushable fields only, never
-    /// `customer_id`/`ecosystem_id`/`created_at`/… — those are already on
+    /// `owner_kind`/`owner_id`/`ecosystem_id`/`created_at`/… — those are already on
     /// the row from the direct `INSERT` `MarkdownTaxonomy` ran moments
     /// earlier in the same transaction. Binding every projected column
     /// unconditionally (the shape this method started with) turned that
     /// omission into `column = excluded.column` with `excluded.column`
-    /// NULL — clobbering `customer_id` on every local create and tripping
+    /// NULL — clobbering `owner_id` on every local create and tripping
     /// its `NOT NULL` the moment `MarkdownProjection` actually claimed
     /// `content.categories`/`content.keywords`/… (Task 10/11's tests never
     /// caught it: the Task 10 stub claimed nothing, so `stage(_:)` always
@@ -830,7 +832,7 @@ public struct MarkdownProjection: SyncMirrorProjection {
     /// and which therefore cannot hold arbitrary text.
     ///
     /// `frontmatter` is the only one, and it is not merely read: it is
-    /// *indexed*, by `uq_markdown_adh_source ON markdown(customer_id,
+    /// *indexed*, by `uq_markdown_adh_source ON markdown(author_kind, author_id,
     /// json_extract(frontmatter, '$.adh_source'))`. SQLite evaluates that
     /// expression on every insert and update of the row, and `json_extract`
     /// over text that is not JSON raises `malformed JSON` — from the index,

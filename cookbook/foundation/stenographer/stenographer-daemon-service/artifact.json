@@ -1,0 +1,68 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "96f73261-cf32-42cc-92f3-f8b58542382a",
+    "title": "Stenographer Daemon Service",
+    "type": "ingredient",
+    "version": "1.0.2",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-14",
+    "modified": "2026-11-14",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "The injectable protocol Stenographer windows use to ask the daemon for sessions, oversight, AI logs and preferences; unreachable reads as nil.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "foundation",
+      "stenographer",
+      "protocol",
+      "client"
+    ],
+    "depends-on": [
+      "e8286557-84ee-4f45-b78c-f1d184c51a37",
+      "25b6559b-69c1-450f-85b3-fc026d55f469",
+      "7d2280c6-ae67-4ecc-9aae-dbee574b1eab",
+      "1088e4ae-f6ee-4174-8ba5-a913587af3be",
+      "08d59319-de4b-438a-a144-dcf3912aa2e5",
+      "7a776b77-a7b2-4ed5-a26f-94795434d675",
+      "dc4d1700-f641-4276-8ecd-ec6790a2c894",
+      "b05ceb21-7c1c-4d62-83ba-01a3132df00a",
+      "b6d96b0b-3ca0-48ac-8e94-a25a8ee68e43",
+      "eaa5d7f1-c35d-4fe6-91a0-06b6e48b8ba2"
+    ],
+    "related": [
+      "9c7c78d3-23ca-4ca6-a519-9968b440b8c6"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "ff35f4d7d180eb94",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

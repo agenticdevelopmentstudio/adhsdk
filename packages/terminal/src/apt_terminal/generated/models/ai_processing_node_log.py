@@ -74,13 +74,13 @@ class AiProcessingNodeLog:
         field_dict.update(
             {
                 "id": id,
-                "nodeId": node_id,
-                "occurredAt": occurred_at,
-                "receivedAt": received_at,
+                "node_id": node_id,
+                "occurred_at": occurred_at,
+                "received_at": received_at,
                 "level": level,
                 "event": event,
                 "message": message,
-                "jobId": job_id,
+                "job_id": job_id,
                 "data": data,
             }
         )
@@ -96,11 +96,11 @@ class AiProcessingNodeLog:
         d = dict(src_dict)
         id = d.pop("id")
 
-        node_id = d.pop("nodeId")
+        node_id = d.pop("node_id")
 
-        occurred_at = d.pop("occurredAt")
+        occurred_at = d.pop("occurred_at")
 
-        received_at = d.pop("receivedAt")
+        received_at = d.pop("received_at")
 
         level = AiProcessingLogLevel(d.pop("level"))
 
@@ -113,7 +113,7 @@ class AiProcessingNodeLog:
                 return data
             return cast(None | str, data)
 
-        job_id = _parse_job_id(d.pop("jobId"))
+        job_id = _parse_job_id(d.pop("job_id"))
 
         def _parse_data(data: object) -> AiProcessingNodeLogDataType0 | None:
             if data is None:

@@ -17,16 +17,16 @@ class AccessTag:
         ecosystem_id (str): owning ecosystem
         name (str): unique within the ecosystem
         description (str):
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
     """
 
     id: str
     ecosystem_id: str
     name: str
     description: str
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -38,20 +38,20 @@ class AccessTag:
 
         description = self.description
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
+                "ecosystem_id": ecosystem_id,
                 "name": name,
                 "description": description,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
+                "created": created,
+                "updated": updated,
             }
         )
 
@@ -62,23 +62,23 @@ class AccessTag:
         d = dict(src_dict)
         id = d.pop("id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
         name = d.pop("name")
 
         description = d.pop("description")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         access_tag = cls(
             id=id,
             ecosystem_id=ecosystem_id,
             name=name,
             description=description,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
         )
 
         access_tag.additional_properties = d

@@ -38,7 +38,7 @@ class ChatUpdateRequest:
         if name is not UNSET:
             field_dict["name"] = name
         if photo_storage_key is not UNSET:
-            field_dict["photoStorageKey"] = photo_storage_key
+            field_dict["photo_storage_key"] = photo_storage_key
 
         return field_dict
 
@@ -54,7 +54,7 @@ class ChatUpdateRequest:
                 return data
             return cast(None | str | Unset, data)
 
-        photo_storage_key = _parse_photo_storage_key(d.pop("photoStorageKey", UNSET))
+        photo_storage_key = _parse_photo_storage_key(d.pop("photo_storage_key", UNSET))
 
         chat_update_request = cls(
             name=name,

@@ -67,6 +67,15 @@ interface ListConfig {
   minAgeMs?: number
 }
 
+/** The list as `GET /v1/signup_lists/{public_key}` sends it (snake_case). */
+interface ListConfigWire {
+  name: string
+  description: string | null
+  status: string
+  nonce: string
+  min_age_ms?: number
+}
+
 /**
  * Slack added to the wait so a submission cannot land a millisecond under the floor. `setTimeout`
  * is a lower bound, so this is not correcting for early firing — it covers the rounding between
@@ -190,7 +199,7 @@ export function EmailSignupForm({
    * up again — every retry re-sent the same expired nonce, and the only cure was a page reload.
    */
   const fetchConfig = React.useCallback(async (): Promise<ListConfig> => {
-    const res = await fetch(`${base}/public/signup-lists/${encodeURIComponent(publicKey)}`, {
+    const res = await fetch(`${base}/v1/signup_lists/${encodeURIComponent(publicKey)}`, {
       // A hung request must become a failure the visitor can see and retry, not an eternal
       // `Loading…`. `AbortSignal.timeout` rather than a hand-rolled controller so there is no
       // timer left to clear on the success path.
@@ -199,7 +208,14 @@ export function EmailSignupForm({
     // The status is carried in the message rather than discarded, because it is the only thing
     // that distinguishes a bad key from a dead backend once reportFailure logs it.
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    return (await res.json()) as ListConfig
+    const wire = (await res.json()) as ListConfigWire
+    return {
+      name: wire.name,
+      description: wire.description,
+      status: wire.status,
+      nonce: wire.nonce,
+      minAgeMs: wire.min_age_ms,
+    }
   }, [base, publicKey])
 
   /**
@@ -262,7 +278,7 @@ export function EmailSignupForm({
       // unconditionally, so a visitor who spent longer than the floor filling the form — the
       // common case by far — submits with no delay at all.
       if (remaining > 0) await sleep(remaining + TIMING_FLOOR_BUFFER_MS)
-      const res = await fetch(`${base}/public/signup-lists/${encodeURIComponent(publicKey)}/signups`, {
+      const res = await fetch(`${base}/v1/signup_lists/${encodeURIComponent(publicKey)}/signups`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -274,7 +290,7 @@ export function EmailSignupForm({
           // (publicSignup.ts: non-empty `website` ⇒ uniform 200, nothing written). Sending a
           // constant `""` here would disable that defence completely and silently.
           website: honeypot,
-          sourceUrl: signupSourceUrl(),
+          source_url: signupSourceUrl(),
         }),
       })
       if (!res.ok) throw new Error(String(res.status))

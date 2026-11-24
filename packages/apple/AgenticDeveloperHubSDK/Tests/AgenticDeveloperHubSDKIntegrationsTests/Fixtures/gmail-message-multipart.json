@@ -1,0 +1,66 @@
+{
+ "id": "m1",
+ "threadId": "t1",
+ "labelIds": [
+  "INBOX",
+  "UNREAD"
+ ],
+ "snippet": "Hello",
+ "historyId": "900",
+ "internalDate": "1730800000000",
+ "payload": {
+  "mimeType": "multipart/mixed",
+  "headers": [
+   {
+    "name": "from",
+    "value": "Jane <j@x.com>"
+   },
+   {
+    "name": "TO",
+    "value": "\"Doe, Jane\" <j@x.com>, b@y.com"
+   },
+   {
+    "name": "Subject",
+    "value": "Hi"
+   }
+  ],
+  "parts": [
+   {
+    "mimeType": "multipart/alternative",
+    "parts": [
+     {
+      "partId": "0.0",
+      "mimeType": "text/plain",
+      "headers": [
+       {
+        "name": "Content-Type",
+        "value": "text/plain; charset=\"UTF-8\""
+       }
+      ],
+      "body": {
+       "size": 11,
+       "data": "SGVsbG8gcGxhaW4"
+      }
+     },
+     {
+      "partId": "0.1",
+      "mimeType": "text/html",
+      "body": {
+       "size": 9,
+       "data": "PGI-SGk8L2I-"
+      }
+     }
+    ]
+   },
+   {
+    "partId": "1",
+    "mimeType": "application/pdf",
+    "filename": "a.pdf",
+    "body": {
+     "attachmentId": "att1",
+     "size": 1234
+    }
+   }
+  ]
+ }
+}

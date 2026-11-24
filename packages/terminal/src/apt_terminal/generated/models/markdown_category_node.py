@@ -44,8 +44,8 @@ class MarkdownCategoryNode:
             {
                 "id": id,
                 "name": name,
-                "parentIds": parent_ids,
-                "sortOrder": sort_order,
+                "parent_ids": parent_ids,
+                "sort_order": sort_order,
             }
         )
 
@@ -58,9 +58,9 @@ class MarkdownCategoryNode:
 
         name = d.pop("name")
 
-        parent_ids = cast(list[str], d.pop("parentIds"))
+        parent_ids = cast(list[str], d.pop("parent_ids"))
 
-        sort_order = d.pop("sortOrder")
+        sort_order = d.pop("sort_order")
 
         markdown_category_node = cls(
             id=id,

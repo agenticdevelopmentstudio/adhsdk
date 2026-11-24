@@ -1,13 +1,12 @@
 ---
-id: 5296D0B7-8416-4E76-8F45-47A726F230CF
+id: 5296d0b7-8416-4e76-8f45-47a726f230cf
 title: "Billing Persistence"
-domain: adhsdk://cookbook/foundation/billing/billing-persistence
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-10-04
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -22,10 +21,10 @@ tags:
   - contract
 depends-on: []
 related:
-  - adhsdk://cookbook/foundation/billing/billing-store
-  - adhsdk://cookbook/foundation/billing/billing-rollup
-  - adhsdk://cookbook/foundation/billing/billing-timer
-  - adhsdk://cookbook/foundation/billing/billing-prefs
+  - 4df278a3-4897-4a87-a506-bd3f58db3121
+  - a252605d-12ce-4235-9eb4-2582678f6f49
+  - f2a31fe2-1302-46d9-8cb4-cc6e9a5e8a12
+  - 0175f0bb-f4bd-4f72-94c2-57b087ad9df9
 references: []
 approved-by: ""
 approved-date: ""
@@ -129,9 +128,9 @@ Not applicable: this code makes no log calls.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingPersistence.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingPersistence.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
 
@@ -143,13 +142,14 @@ Not applicable: this code makes no log calls.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
-separation-of-concerns passes: this is the seam that keeps rules in the shared tier and storage in the host. unit-test-coverage fails: the protocol is a declaration, and a search of the Tests directories finds no type that conforms to `BillingPersistence` and no test that exercises a conforming store's guard or transaction semantics; `BillingModelTests` and `FakeBillingClient` stand in for the billing service, not for this storage contract, and the host's own database tests live outside this repository.
+separation-of-concerns passes: this is the seam that keeps rules in the shared tier and storage in the host. unit-test-coverage is partial: `BillingPersistenceConformanceTests` names all nine vectors and skips each one, because the guard, transaction and cursor semantics belong to the host's SQLite store (`DatabaseManager`), which is outside this repository, and a fake would only assert its own code. It tests the value types the contract defines (session row, segment context, stored entry, overwrite guards).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Conformance tests added (BillingPersistenceConformanceTests.swift, 0 of 9 vectors run, all 9 skipped: need the host's SQLite store; value types tested); unit-test-coverage now partial. |
 | 1.0.0 | 2026-10-04 | Mike Fullerton | Initial creation |

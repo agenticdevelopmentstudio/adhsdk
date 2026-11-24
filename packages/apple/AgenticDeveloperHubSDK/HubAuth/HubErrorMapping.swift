@@ -42,8 +42,8 @@ extension HubError {
         }
     }
 
-    /// The backend's error envelopes: `Components.Schemas._Error`'s documented shape
-    /// `{"error": {"message": "…"}}`, or an undocumented route's flatter `{"error": "…"}`
+    /// The backend's error envelopes: the /v1 API's documented `Components.Schemas.StripeError`
+    /// `{"error": {"type": "…", "message": "…"}}`, or an unversioned or undocumented route's flatter `{"error": "…"}`
     /// or `{"message": "…"}` — an undocumented 5xx body is not guaranteed to match the
     /// schema, so the flat and bare-string shapes must keep working alongside the nested one.
     public static func message(fromBody body: Data, fallback: String) -> String {

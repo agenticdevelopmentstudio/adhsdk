@@ -10,7 +10,14 @@ final class FakeBrowserDirectory: BrowserPaneDirectory {
     var beside: [String: String] = [:]      // caller pane id -> browser pane id
     var lastUsed: String?
     var opened: [String?] = []
+    var openedEngines: [BrowserEngineKind] = []
     var openFails = false
+    /// The Agent access a pane this directory opens comes with.
+    var openAccess: BrowserAgentAccess = .full
+    /// Every pane id the tool set asked to reveal, in order.
+    var revealed: [String] = []
+    /// Every pane id the tool set asked to close, in order.
+    var closed: [String] = []
     let pages: [String: OffscreenWebView]
 
     init(pages: [String: OffscreenWebView]) { self.pages = pages }
@@ -19,13 +26,19 @@ final class FakeBrowserDirectory: BrowserPaneDirectory {
     func browserPane(id: String) -> BrowserPaneHandle? { panes.first { $0.id == id } }
     func browserPane(besidePane paneID: String) -> BrowserPaneHandle? { beside[paneID].flatMap(browserPane(id:)) }
     func lastUsedBrowserPane() -> BrowserPaneHandle? { lastUsed.flatMap(browserPane(id:)) }
-    func openBrowserPane(besidePane paneID: String?) throws -> BrowserPaneHandle {
+    func openBrowserPane(besidePane paneID: String?, engine: BrowserEngineKind) throws -> BrowserPaneHandle {
         opened.append(paneID)
+        openedEngines.append(engine)
         if openFails { throw BrowserAutomationError.openRefused }
         let page = OffscreenWebView()
-        let handle = BrowserPaneHandle(id: "new-\(panes.count)", project: "proj", tab: "Tab", automation: BrowserAutomation(webView: page.webView, console: BrowserConsoleLog()))
+        let handle = BrowserPaneHandle(id: "new-\(panes.count)", project: "proj", tab: "Tab", automation: BrowserAutomation(webView: page.webView, console: BrowserConsoleLog()), engine: engine, access: openAccess, hidesImages: false)
         panes.append(handle)
         return handle
+    }
+    func revealBrowserPane(id: String) { revealed.append(id) }
+    func closeBrowserPane(id: String) {
+        closed.append(id)
+        panes.removeAll { $0.id == id }
     }
 }
 
@@ -36,6 +49,10 @@ final class BrowserToolSetTests: XCTestCase {
     private var directory: FakeBrowserDirectory!
     private var tools: BrowserToolSet!
     private var pages: [String: OffscreenWebView] = [:]
+    /// The agent lists the tools read through: an empty store of the test's
+    /// own, since the shared one is nil in tests and a nil store fails closed.
+    private var hiddenItems: BrowserHiddenItemsStore!
+    private var hiddenItemsDirectory: URL!
 
     override func setUp() async throws {
         store = UserSettings(with: InMemorySettingsStorageProvider(), secureSettingsProvider: InMemorySecureSettingsStorageProvider())
@@ -44,9 +61,20 @@ final class BrowserToolSetTests: XCTestCase {
         await pages["B"]!.load(html: "<title>Beta</title><a href=\"/x\">Two</a>")
         directory = FakeBrowserDirectory(pages: pages)
         for (id, page) in pages.sorted(by: { $0.key < $1.key }) {
-            directory.panes.append(BrowserPaneHandle(id: id, project: "proj", tab: "Tab \(id)", automation: BrowserAutomation(webView: page.webView, console: BrowserConsoleLog())))
+            directory.panes.append(BrowserPaneHandle(id: id, project: "proj", tab: "Tab \(id)", automation: BrowserAutomation(webView: page.webView, console: BrowserConsoleLog()), hidesImages: false))
         }
-        tools = BrowserToolSet(directory: directory, settings: store)
+        hiddenItemsDirectory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("BrowserToolSetTests-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: hiddenItemsDirectory, withIntermediateDirectories: true)
+        hiddenItems = try BrowserHiddenItemsStore.open(
+            at: hiddenItemsDirectory.appendingPathComponent(BrowserHiddenItemsStore.fileName))
+        let agentLists = hiddenItems
+        tools = BrowserToolSet(directory: directory, settings: store, hiddenItems: { agentLists })
+    }
+
+    override func tearDown() async throws {
+        if let hiddenItemsDirectory { try? FileManager.default.removeItem(at: hiddenItemsDirectory) }
+        hiddenItems = nil
     }
 
     private func call(_ name: String, _ args: [String: Any] = [:], caller: String? = nil) async -> (content: String, isError: Bool) {
@@ -54,9 +82,9 @@ final class BrowserToolSetTests: XCTestCase {
         return await tools.callTool(name: name, argumentsJSON: data, caller: caller)
     }
 
-    func testAdvertisesTwentyToolsWithObjectSchemas() async {
+    func testAdvertisesTwentyOneToolsWithObjectSchemas() async {
         let defs = await tools.toolDefinitions()
-        XCTAssertEqual(defs.count, 20)
+        XCTAssertEqual(defs.count, 21)
         XCTAssertEqual(Set(defs.map(\.name)), Set(BrowserToolSet.toolNames))
         for def in defs {
             let schema = try! JSONSerialization.jsonObject(with: def.parametersJSONSchema) as! [String: Any]
@@ -73,6 +101,7 @@ final class BrowserToolSetTests: XCTestCase {
         XCTAssertEqual(rows.map { $0["id"] as? String }, ["A", "B"])
         XCTAssertEqual(rows.map { $0["title"] as? String }, ["Alpha", "Beta"])
         XCTAssertEqual(rows.map { $0["is_default"] as? Bool }, [false, true])
+        XCTAssertEqual(rows.map { $0["engine"] as? String }, ["safari", "safari"])
     }
 
     func testDefaultPaneIsBesideCallerThenLastUsedThenFirst() async {
@@ -110,7 +139,26 @@ final class BrowserToolSetTests: XCTestCase {
         let reply = await call("browser_open", ["url": "about:blank"], caller: "term-1")
         XCTAssertFalse(reply.isError, reply.content)
         XCTAssertEqual(directory.opened, ["term-1"])
+        XCTAssertEqual(directory.openedEngines, [.safari])
         XCTAssertTrue(reply.content.contains("new-2"))
+    }
+
+    /// Chrome is one argument away and otherwise the same open: the engine
+    /// is the only difference a model sees, and browser_list reports it.
+    func testOpenTakesTheEngine() async throws {
+        let reply = await call("browser_open", ["url": "about:blank", "engine": "chrome"], caller: "term-1")
+        XCTAssertFalse(reply.isError, reply.content)
+        XCTAssertEqual(directory.openedEngines, [.chrome])
+        let list = await call("browser_list")
+        let rows = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(list.content.utf8)) as? [[String: Any]])
+        XCTAssertEqual(rows.last?["engine"] as? String, "chrome")
+    }
+
+    func testOpenRefusesAnUnknownEngine() async {
+        let reply = await call("browser_open", ["url": "about:blank", "engine": "gecko"])
+        XCTAssertTrue(reply.isError)
+        XCTAssertEqual(reply.content, "browser_open engine must be safari or chrome, not gecko")
+        XCTAssertTrue(directory.opened.isEmpty)
     }
 
     /// The URL is optional: with none given the pane opens on the Home Page
@@ -154,7 +202,7 @@ final class BrowserToolSetTests: XCTestCase {
             page.webView.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { done.resume() }
         }
-        directory.panes = [BrowserPaneHandle(id: "F", project: "p", tab: "t", automation: BrowserAutomation(webView: page.webView, console: BrowserConsoleLog()))]
+        directory.panes = [BrowserPaneHandle(id: "F", project: "p", tab: "t", automation: BrowserAutomation(webView: page.webView, console: BrowserConsoleLog()), hidesImages: false)]
         let reply = await call("browser_snapshot")
         XCTAssertTrue(reply.isError)
         XCTAssertEqual(reply.content, "pane F shows a local file, which models may not drive")
@@ -190,13 +238,59 @@ final class BrowserToolSetTests: XCTestCase {
         await page.navigate(to: URL(string: "https://web.test/")!, html: "<title>Web</title><p>web</p>")
         XCTAssertEqual(page.webView.backForwardList.backItem?.url.isFileURL, true,
                        "nothing to go back to: \(String(describing: page.webView.backForwardList.backItem?.url))")
-        directory.panes = [BrowserPaneHandle(id: "F", project: "p", tab: "t", automation: BrowserAutomation(webView: page.webView, console: BrowserConsoleLog()))]
+        directory.panes = [BrowserPaneHandle(id: "F", project: "p", tab: "t", automation: BrowserAutomation(webView: page.webView, console: BrowserConsoleLog()), hidesImages: false)]
         let back = await call("browser_back")
         XCTAssertTrue(back.isError)
         XCTAssertEqual(back.content, "the pane shows a local file, which models may not drive")
         let text = await call("browser_text")
         XCTAssertTrue(text.isError)
         XCTAssertEqual(text.content, "pane F shows a local file, which models may not drive")
+    }
+
+    /// Calls queued while the pane showed a web page, run after it moved to a
+    /// local file: the console, the wait and the screenshot are refused when
+    /// dequeued, as every other tool is, and nothing of the file comes back.
+    func testCallsQueuedBeforeAMoveToALocalFileAreRefused() async throws {
+        let page = OffscreenWebView()
+        let url = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("local-\(UUID().uuidString).html")
+        defer { try? FileManager.default.removeItem(at: url) }
+        try "<title>Secret</title><p>local</p>".write(to: url, atomically: true, encoding: .utf8)
+        await page.navigate(to: URL(string: "https://web.test/")!, html: "<title>Web</title><p>web</p>")
+        let automation = BrowserAutomation(webView: page.webView, console: BrowserConsoleLog())
+        directory.panes = [BrowserPaneHandle(id: "F", project: "p", tab: "t", automation: automation, hidesImages: false)]
+        let calls: [(String, [String: Any])] = [
+            ("browser_console", [:]), ("browser_wait_for", ["load": true]), ("browser_screenshot", [:])
+        ]
+        for (tool, args) in calls {
+            await page.navigate(to: URL(string: "https://web.test/")!, html: "<title>Web</title><p>web</p>")
+            let held = Task { @MainActor in
+                try await automation.drive {
+                    try await Task.sleep(nanoseconds: 100_000_000)
+                    _ = await page.load(fileURL: url)
+                }
+            }
+            try await Task.sleep(nanoseconds: 30_000_000)
+            let reply = await call(tool, args)
+            _ = try await held.value
+            XCTAssertTrue(reply.isError, "\(tool): \(reply.content)")
+            XCTAssertEqual(reply.content, "the pane shows a local file, which models may not drive", tool)
+            XCTAssertFalse(reply.content.contains("Secret"), tool)
+        }
+    }
+
+    /// `browser_list` names neither the file nor its title for a pane on one.
+    func testListNamesNoLocalFile() async throws {
+        let page = OffscreenWebView()
+        let url = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("local-\(UUID().uuidString).html")
+        defer { try? FileManager.default.removeItem(at: url) }
+        try "<title>Secret</title><p>local</p>".write(to: url, atomically: true, encoding: .utf8)
+        _ = await page.load(fileURL: url)
+        directory.panes = [BrowserPaneHandle(id: "F", project: "p", tab: "t", automation: BrowserAutomation(webView: page.webView, console: BrowserConsoleLog()), hidesImages: false)]
+        let list = await call("browser_list")
+        XCTAssertFalse(list.isError)
+        XCTAssertFalse(list.content.contains(url.lastPathComponent), list.content)
+        XCTAssertFalse(list.content.contains("Secret"), list.content)
+        XCTAssertTrue(list.content.contains(BrowserToolSet.localFileName), list.content)
     }
 
     func testAutomationOffLeavesOnlyList() async {
@@ -295,11 +389,163 @@ final class BrowserToolSetTests: XCTestCase {
         XCTAssertEqual(reply.content, "browser_evaluate is turned off in Settings")
     }
 
+    func testConsoleSaysWhenCaptureIsOff() async {
+        directory.panes[0].automation.isConsoleCaptureOn = false
+        let reply = await call("browser_console", ["pane_id": "A"])
+        XCTAssertFalse(reply.isError, reply.content)
+        XCTAssertEqual(reply.content, "Console capture is off for this pane.")
+        let other = await call("browser_console", ["pane_id": "B"])
+        XCTAssertEqual(other.content, "no console messages")
+    }
+
     func testScreenshotReturnsAnImageDataURL() async {
         pages["A"]!.orderInOffscreen()
         let reply = await call("browser_screenshot", ["pane_id": "A"])
         XCTAssertFalse(reply.isError, reply.content)
         XCTAssertTrue(reply.content.hasPrefix("data:image/png;base64,"))
+    }
+
+    // MARK: Agent access
+
+    /// The handle for page `id` with the given access and pause state.
+    private func handle(_ id: String, access: BrowserAgentAccess = .full, pausedForAgent: Bool = false) -> BrowserPaneHandle {
+        BrowserPaneHandle(id: id, project: "proj", tab: "Tab \(id)", automation: directory.panes.first { $0.id == id }!.automation, access: access, isPausedForAgent: pausedForAgent, hidesImages: false)
+    }
+
+    func testHiddenPaneIsNotListed() async {
+        directory.panes = FakeBrowserDirectory.visible([handle("A"), handle("B", access: .hidden)])
+        let list = await call("browser_list")
+        let rows = try! JSONSerialization.jsonObject(with: Data(list.content.utf8)) as! [[String: Any]]
+        XCTAssertEqual(rows.map { $0["id"] as? String }, ["A"])
+        let byID = await call("browser_snapshot", ["pane_id": "B"])
+        XCTAssertTrue(byID.isError)
+        XCTAssertEqual(byID.content, "pane B was closed; call browser_list")
+        let byDefault = await call("browser_snapshot")
+        XCTAssertTrue(byDefault.content.contains("One"), byDefault.content)
+    }
+
+    func testReadOnlyPaneRefusesClick() async {
+        directory.panes = [handle("A", access: .readOnly), handle("B")]
+        let snap = await call("browser_snapshot", ["pane_id": "A"])
+        XCTAssertFalse(snap.isError, snap.content)
+        for (tool, args) in [
+            ("browser_click", ["ref": "e1", "generation": 1] as [String: Any]),
+            ("browser_navigate", ["url": "https://example.test/"]),
+            ("browser_press_key", ["key": "Enter"]),
+            ("browser_scroll", [:])
+        ] {
+            let reply = await call(tool, args.merging(["pane_id": "A"]) { $1 })
+            XCTAssertTrue(reply.isError, tool)
+            XCTAssertEqual(reply.content, "This browser pane is read only for the agent (Settings > Privacy > Agent access).", tool)
+        }
+        store.set(true, for: UserSettings.browserAutomationEvaluate)
+        let evaluate = await call("browser_evaluate", ["pane_id": "A", "expression": "1+1"])
+        XCTAssertEqual(evaluate.content, "This browser pane is read only for the agent (Settings > Privacy > Agent access).")
+        let other = await call("browser_click", ["pane_id": "B", "ref": "e1", "generation": 99])
+        XCTAssertNotEqual(other.content, "This browser pane is read only for the agent (Settings > Privacy > Agent access).")
+    }
+
+    func testReadOnlyPaneAllowsSnapshot() async {
+        directory.panes = [handle("A", access: .readOnly), handle("B")]
+        let snap = await call("browser_snapshot", ["pane_id": "A"])
+        XCTAssertFalse(snap.isError, snap.content)
+        XCTAssertTrue(snap.content.contains("One"), snap.content)
+        let find = await call("browser_find", ["pane_id": "A", "text": "one"])
+        XCTAssertFalse(find.isError, find.content)
+        let text = await call("browser_text", ["pane_id": "A"])
+        XCTAssertFalse(text.isError, text.content)
+        let console = await call("browser_console", ["pane_id": "A"])
+        XCTAssertFalse(console.isError, console.content)
+        let wait = await call("browser_wait_for", ["pane_id": "A", "text": "One", "timeout": 1])
+        XCTAssertFalse(wait.isError, wait.content)
+    }
+
+    func testPausedForAgentRefusesSnapshot() async {
+        directory.panes = [handle("A", pausedForAgent: true), handle("B")]
+        for tool in ["browser_snapshot", "browser_text", "browser_back"] {
+            let reply = await call(tool, ["pane_id": "A"])
+            XCTAssertTrue(reply.isError, tool)
+            XCTAssertEqual(reply.content, "This browser pane's events are paused, and its settings pause the agent too.", tool)
+        }
+        let list = await call("browser_list")
+        XCTAssertFalse(list.isError, list.content)
+    }
+
+    /// The handle is read again once the call is dequeued: a pane made read
+    /// only while the call waited refuses it. The click is seen waiting at
+    /// the gate before access changes, so it passed the check before the
+    /// queue, and the refusal can only come from the check after it.
+    func testAccessChangedWhileQueuedRefusesTheQueuedCall() async throws {
+        let automation = directory.panes[0].automation
+        let (release, releaser) = AsyncStream.makeStream(of: Void.self)
+        let held = Task { @MainActor in
+            try await automation.drive {
+                for await _ in release { break }
+            }
+        }
+        try await waitUntil("the holder has the gate") { automation.isActionInFlight }
+        let click = Task { await self.call("browser_click", ["pane_id": "A", "ref": "e1", "generation": 1]) }
+        try await waitUntil("the click is queued") { automation.queuedCallCount == 1 }
+        directory.panes[0] = handle("A", access: .readOnly)
+        releaser.yield()
+        releaser.finish()
+        _ = try await held.value
+        let reply = await click.value
+        XCTAssertTrue(reply.isError)
+        XCTAssertEqual(reply.content, "This browser pane is read only for the agent (Settings > Privacy > Agent access).")
+        XCTAssertEqual(directory.revealed, ["A"], "revealed once, when the click passed the check before the queue")
+    }
+
+    /// Yields the main actor until `condition` holds; fails after a bounded
+    /// number of turns rather than hanging.
+    private func waitUntil(_ what: String, _ condition: () -> Bool) async throws {
+        for _ in 0..<10_000 {
+            if condition() { return }
+            await Task.yield()
+        }
+        XCTFail("never: \(what)")
+        throw CancellationError()
+    }
+
+    /// A refused call reveals nothing: neither the read-only pane named by
+    /// id, nor the paused one reached as the default, nor the one beside the
+    /// caller. A call that passes reveals its pane.
+    func testRefusedCallRevealsNothing() async {
+        directory.panes = [handle("A", access: .readOnly), handle("B", pausedForAgent: true)]
+        directory.beside["term-1"] = "A"
+        directory.lastUsed = "B"
+        let byID = await call("browser_click", ["pane_id": "A", "ref": "e1", "generation": 1])
+        XCTAssertTrue(byID.isError)
+        let beside = await call("browser_press_key", ["key": "Enter"], caller: "term-1")
+        XCTAssertTrue(beside.isError)
+        let lastUsed = await call("browser_snapshot")
+        XCTAssertTrue(lastUsed.isError)
+        XCTAssertEqual(directory.revealed, [])
+        let allowed = await call("browser_snapshot", ["pane_id": "A"])
+        XCTAssertFalse(allowed.isError, allowed.content)
+        XCTAssertEqual(directory.revealed, ["A"])
+    }
+
+    /// An open whose new pane refuses the agent closes that pane again and
+    /// says only that the open was refused, whatever the reason.
+    func testRefusedOpenLeavesNoPane() async {
+        for access in [BrowserAgentAccess.hidden, .readOnly] {
+            directory.openAccess = access
+            let before = directory.panes.map(\.id)
+            let reply = await call("browser_open", ["url": "https://example.test/"], caller: "term-1")
+            XCTAssertTrue(reply.isError, "\(access)")
+            XCTAssertEqual(reply.content, "could not open a Browser pane beside that pane", "\(access)")
+            XCTAssertEqual(directory.panes.map(\.id), before, "\(access)")
+            XCTAssertEqual(directory.revealed, [], "\(access)")
+        }
+        XCTAssertEqual(directory.closed.count, 2)
+    }
+
+    func testListPanesReportsAccess() async {
+        directory.panes = [handle("A", access: .readOnly), handle("B")]
+        let reply = await call("browser_list")
+        let rows = try! JSONSerialization.jsonObject(with: Data(reply.content.utf8)) as! [[String: Any]]
+        XCTAssertEqual(rows.map { $0["access"] as? String }, ["read only", "full"])
     }
 
     func testFindAndTextAndWait() async {
@@ -312,6 +558,206 @@ final class BrowserToolSetTests: XCTestCase {
         let timeout = await call("browser_wait_for", ["pane_id": "B", "text": "never", "timeout": 0.2])
         XCTAssertTrue(timeout.isError)
         XCTAssertEqual(timeout.content, "timed out waiting for text \"never\"")
+    }
+
+    // MARK: Agent Privacy
+
+    /// Page B ("Beta", a "Two" link) is shown to models as "Gamma" and "Zwei".
+    private let privateWords = TextSubstitutionFilter(pairs: [
+        .init(alias: "Gamma", real: "Beta"), .init(alias: "Zwei", real: "Two")
+    ])
+
+    private func privateHandle(_ id: String, _ privacy: BrowserAgentPrivacy) -> BrowserPaneHandle {
+        BrowserPaneHandle(id: id, project: "proj", tab: "Tab \(id)", automation: directory.panes.first { $0.id == id }!.automation, agentPrivacy: privacy, hidesImages: false)
+    }
+
+    func testAgentPrivacyConcealsWhatAModelReads() async {
+        directory.panes = [handle("A"), privateHandle("B", .enabled(privateWords))]
+        let snap = await call("browser_snapshot", ["pane_id": "B"])
+        XCTAssertFalse(snap.isError, snap.content)
+        XCTAssertTrue(snap.content.contains("Zwei") && snap.content.contains("Gamma"), snap.content)
+        XCTAssertFalse(snap.content.contains("Two") || snap.content.contains("Beta"), snap.content)
+        let text = await call("browser_text", ["pane_id": "B"])
+        XCTAssertEqual(text.content.trimmingCharacters(in: .whitespacesAndNewlines), "Zwei")
+        let other = await call("browser_text", ["pane_id": "A"])
+        XCTAssertEqual(other.content.trimmingCharacters(in: .whitespacesAndNewlines), "One")
+    }
+
+    func testAgentPrivacyRevealsWhatAModelSends() async {
+        directory.panes = [handle("A"), privateHandle("B", .enabled(privateWords))]
+        let find = await call("browser_find", ["pane_id": "B", "text": "zwei"])
+        XCTAssertFalse(find.isError, find.content)
+        XCTAssertTrue(find.content.contains("e1") && find.content.contains("Zwei"), find.content)
+        XCTAssertFalse(find.content.contains("Two"), find.content)
+        let wait = await call("browser_wait_for", ["pane_id": "B", "text": "Zwei", "timeout": 1])
+        XCTAssertFalse(wait.isError, wait.content)
+    }
+
+    func testAgentPrivacyConcealsErrors() async {
+        directory.panes = [handle("A"), privateHandle("B", .enabled(privateWords))]
+        let reply = await call("browser_wait_for", ["pane_id": "B", "text": "never Zwei", "timeout": 0.2])
+        XCTAssertTrue(reply.isError)
+        XCTAssertEqual(reply.content, "timed out waiting for text \"never Zwei\"")
+    }
+
+    /// A word scoped to the site a call started on still conceals its reply
+    /// after the page moved to a site the word does not cover: the waited-for
+    /// fragment was revealed with it, and the timeout repeats that fragment.
+    func testACallThatLeavesItsWordsSiteIsConcealedWithThemStill() async {
+        directory.panes = [handle("A"), privateHandle("B", .enabled(privateWords))]
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(50))
+            self.directory.panes = [self.handle("A"), self.privateHandle("B", .enabled(.identity))]
+        }
+        let reply = await call("browser_wait_for", ["pane_id": "B", "url": "zwei.test/thanks", "timeout": 0.3])
+        XCTAssertTrue(reply.isError)
+        XCTAssertEqual(reply.content, "timed out waiting for url containing \"Zwei.test/thanks\"")
+    }
+
+    func testCombinedPrivacyHoldsTheWordsOfBothSites() {
+        let first = BrowserAgentPrivacy.enabled(TextSubstitutionFilter(parsing: "Initech = Acme"))
+        let second = BrowserAgentPrivacy.enabled(TextSubstitutionFilter(parsing: "Zwei = Two"))
+        XCTAssertEqual(first.combined(with: second).concealing("Acme Two"), "Initech Zwei")
+        XCTAssertEqual(first.combined(with: .off), first)
+        XCTAssertEqual(BrowserAgentPrivacy.off.combined(with: second), second)
+        XCTAssertEqual(first.combined(with: .unavailable), .unavailable)
+        XCTAssertEqual(first.combined(with: .enabled(TextSubstitutionFilter(parsing: "Acmeco = Ed"))), .conflicting,
+                       "two sets of words that conflict together close the pane")
+    }
+
+    func testAgentPrivacyRefusesWhatCannotBeConcealed() async {
+        store.set(true, for: UserSettings.browserAutomationEvaluate)
+        directory.panes = [handle("A"), privateHandle("B", .enabled(privateWords))]
+        for (name, args) in [
+            ("browser_screenshot", [:]), ("browser_click_at", ["x": 1, "y": 1]),
+            ("browser_evaluate", ["expression": "document.title"])
+        ] as [(String, [String: Any])] {
+            var withPane = args
+            withPane["pane_id"] = "B"
+            let reply = await call(name, withPane)
+            XCTAssertTrue(reply.isError, name)
+            XCTAssertEqual(reply.content, BrowserAgentPrivacy.refusal(for: name))
+        }
+        XCTAssertEqual(directory.revealed, [])
+        let open = await call("browser_evaluate", ["pane_id": "A", "expression": "document.title"])
+        XCTAssertFalse(open.isError, open.content)
+    }
+
+    func testUnreadableWordsCloseThePane() async {
+        directory.panes = [handle("A"), privateHandle("B", .unavailable)]
+        let reply = await call("browser_snapshot", ["pane_id": "B"])
+        XCTAssertTrue(reply.isError)
+        XCTAssertEqual(reply.content, BrowserAgentPrivacy.unavailableRefusal)
+        XCTAssertEqual(directory.revealed, [])
+    }
+
+    func testWordsWhoseStandInsHoldRealWordsCloseThePane() async {
+        XCTAssertEqual(BrowserAgentPrivacy.checking(privateWords), .enabled(privateWords))
+        for words in ["Alice = Bob; Bob = Alice", "Fred = Ed", "a = b; b = c", "Mikey = Mike"] {
+            XCTAssertEqual(BrowserAgentPrivacy.checking(TextSubstitutionFilter(parsing: words)), .conflicting, words)
+        }
+        directory.panes = [handle("A"), privateHandle("B", .conflicting)]
+        let reply = await call("browser_text", ["pane_id": "B"])
+        XCTAssertTrue(reply.isError)
+        XCTAssertEqual(reply.content, BrowserAgentPrivacy.conflictingRefusal)
+    }
+
+    func testListConcealsAPrivatePane() async {
+        directory.panes = [handle("A"), privateHandle("B", .enabled(privateWords))]
+        var reply = await call("browser_list")
+        var rows = try! JSONSerialization.jsonObject(with: Data(reply.content.utf8)) as! [[String: Any]]
+        XCTAssertEqual(rows.map { $0["title"] as? String }, ["Alpha", "Gamma"])
+        XCTAssertEqual(rows.map { $0["agent_privacy"] as? Bool }, [false, true])
+        directory.panes = [handle("A"), BrowserPaneHandle(
+            id: "B", project: "beta-portal", tab: "Beta Q3",
+            automation: directory.panes[1].automation, agentPrivacy: .enabled(privateWords), hidesImages: false)]
+        reply = await call("browser_list")
+        rows = try! JSONSerialization.jsonObject(with: Data(reply.content.utf8)) as! [[String: Any]]
+        XCTAssertEqual(rows.last?["project"] as? String, "gamma-portal", "the project name is concealed")
+        XCTAssertEqual(rows.last?["tab"] as? String, "Gamma Q3", "the tab name is concealed")
+        directory.panes = [handle("A"), privateHandle("B", .unavailable)]
+        reply = await call("browser_list")
+        rows = try! JSONSerialization.jsonObject(with: Data(reply.content.utf8)) as! [[String: Any]]
+        XCTAssertEqual(rows.map { $0["title"] as? String }, ["Alpha", "(concealed)"])
+        XCTAssertEqual(rows.map { $0["url"] as? String }.last, "(concealed)")
+    }
+
+    func testAgentPrivacyRevealsOnlyWhatGoesIntoThePage() {
+        let privacy = BrowserAgentPrivacy.enabled(privateWords)
+        let typed = BrowserToolSet.Arguments(tool: "browser_type", values: ["text": "zwei", "url": "https://gamma.test"])
+            .revealing(privacy)
+        XCTAssertEqual(typed.values["text"] as? String, "Two", "a real word is revealed as the pair gives it")
+        XCTAssertEqual(typed.values["url"] as? String, "https://Beta.test")
+        let found = BrowserToolSet.Arguments(tool: "browser_find", values: ["text": "Zwei", "scope": "Gamma"])
+            .revealing(privacy)
+        XCTAssertEqual(found.values["text"] as? String, "Zwei", "a lookup is tried as shown first")
+        XCTAssertEqual(found.values["scope"] as? String, "Gamma")
+        XCTAssertEqual(try found.candidates("text"), ["Zwei", "Two"])
+        let plain = BrowserToolSet.Arguments(tool: "browser_find", values: ["text": "One"]).revealing(privacy)
+        XCTAssertEqual(try plain.candidates("text"), ["One"])
+    }
+
+    func testAMixedCaseRealWordIsRevealedAsWritten() {
+        let privacy = BrowserAgentPrivacy.enabled(TextSubstitutionFilter(pairs: [
+            .init(alias: "Acme", real: "OpenAI"), .init(alias: "Bob", real: "Mike Fullerton")
+        ]))
+        XCTAssertEqual(privacy.revealing("Acme and Bob"), "OpenAI and Mike Fullerton")
+        XCTAssertEqual(privacy.revealing("https://github.com/Acme/repo"), "https://github.com/OpenAI/repo")
+    }
+
+    func testAnEncodedRealWordIsConcealed() {
+        let privacy = BrowserAgentPrivacy.enabled(TextSubstitutionFilter(parsing: "Alex = Mike Fullerton; Zed = Zoë"))
+        XCTAssertEqual(privacy.concealing("navigated to https://www.google.com/search?q=Mike+Fullerton"),
+                       "navigated to https://www.google.com/search?q=Alex")
+        XCTAssertEqual(privacy.concealing("https://x.test/Mike%20Fullerton/zo%c3%ab"), "https://x.test/Alex/zed")
+    }
+
+    func testAnAliasInsideAHostIsNotRevealed() {
+        let privacy = BrowserAgentPrivacy.enabled(TextSubstitutionFilter(parsing: "Sam = Mike; Robin = Mike"))
+        let args = BrowserToolSet.Arguments(tool: "browser_navigate", values: ["url": "https://www.samsung.com/robinhood"])
+            .revealing(privacy)
+        XCTAssertEqual(args.values["url"] as? String, "https://www.samsung.com/robinhood")
+    }
+
+    func testPageWordFilterScriptCarriesThePairsLongestFirst() throws {
+        XCTAssertNil(BrowserPageWordFilter.script(for: .identity))
+        let script = try XCTUnwrap(BrowserPageWordFilter.script(for: TextSubstitutionFilter(pairs: [
+            .init(alias: "Zwei", real: "Two"), .init(alias: "Gamma", real: "Beta Max")
+        ])))
+        XCTAssertTrue(script.hasPrefix(BrowserPageWordFilter.marker))
+        XCTAssertFalse(script.contains("__ADK_PAGE_WORD_PAIRS__"))
+        XCTAssertTrue(script.contains(#"[["Beta Max","Gamma"],["Two","Zwei"]]"#), script)
+    }
+
+    func testAgentPrivacyFollowsTheGlobalSwitchUnlessThePaneOverridesIt() {
+        let layered = LayeredSettingsStore(overrides: InMemorySettingsStorageProvider(), fallback: store)
+        XCTAssertFalse(BrowserSettings.isAgentPrivacyOn(in: layered), "off by default")
+        store.set(true, for: UserSettings.browserAgentPrivacy)
+        XCTAssertTrue(BrowserSettings.isAgentPrivacyOn(in: layered), "the global switch turns it on")
+        XCTAssertTrue(BrowserSettings.isAgentPrivacyOn(in: store))
+        layered.set(false, for: UserSettings.browserAgentPrivacy)
+        XCTAssertFalse(BrowserSettings.isAgentPrivacyOn(in: layered), "the pane's override wins")
+        XCTAssertFalse(BrowserSettings.isAgentPrivacyOn(in: nil))
+    }
+
+    func testAPageUsesTheWordsWhoseSitesMatchIt() {
+        let words = [
+            PrivacyWord(alias: "G", real: "Global"),
+            PrivacyWord(alias: "O", real: "Off", isEnabled: false),
+            PrivacyWord(alias: "A", real: "SiteA", sites: ["a.com/*"]),
+            PrivacyWord(alias: "B", real: "SiteB", sites: ["b.com/*"]),
+            PrivacyWord(alias: "C", real: "GlobalAndC", sites: ["c.com", "*"])
+        ]
+        let page = URL(string: "https://a.com/page")
+        XCTAssertEqual(words.filter(for: page).pairs.map(\.real).sorted(), ["Global", "GlobalAndC", "SiteA"])
+        XCTAssertEqual(words.filter(for: nil).pairs.map(\.real).sorted(), ["Global", "GlobalAndC"],
+                       "no address: the enabled * words alone")
+    }
+
+    func testWordsSavedBeforeTheFlagsDecodeAsEnabledEverywhere() throws {
+        let old = Data(#"[{"alias":"Alex","real":"Mike"}]"#.utf8)
+        let words = try JSONDecoder().decode([PrivacyWord].self, from: old)
+        XCTAssertEqual(words, [PrivacyWord(alias: "Alex", real: "Mike", isEnabled: true, sites: ["*"])])
     }
 }
 // swiftlint:enable line_length force_try force_cast

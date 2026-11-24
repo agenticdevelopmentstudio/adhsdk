@@ -178,7 +178,9 @@ public protocol BillingPersistence {
 
     func billingHistoryStart(sessionId: String, sessionStartedAt: String) throws -> String?
     /// The session's activity instants as epoch seconds, read after the
-    /// `afterId` cursor, and the cursor to resume from.
+    /// `afterId` cursor, and the cursor to resume from. A returned cursor below
+    /// `afterId` means the store was replaced and the seconds are the whole
+    /// history again.
     func billingActivitySeconds(sessionId: String, afterId: Int64) throws -> (seconds: [Int], lastId: Int64)
     func markBillingDerived(sessionId: String, at value: String) throws
     @discardableResult

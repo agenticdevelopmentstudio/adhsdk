@@ -1,6 +1,6 @@
 // Wire types for the invitations domain — package-local mirrors of the OpenAPI-generated
 // response shapes the hub previously imported as `SuccessBody` from `@adh-sdk/adh-api-types`
-// (for /public/invitations/*, /auth/invitations/accept, /auth/register). These carry full
+// (for /v1/invitations/*, /v1/invitation_requests/verify, /v1/auth/registrations). These carry full
 // backend-schema fidelity (not just the fields today's call sites touch) so the toolkit
 // stays decoupled from the hub's generated types without narrowing what a caller can rely on.
 
@@ -37,4 +37,39 @@ export interface RegisterWithInviteResultRow {
   user: UserRow;
   emailVerificationRequired: boolean;
   emailInUse?: boolean;
+}
+
+/* ── /v1 wire shapes (snake_case); invitations.ts maps them onto the camelCase rows above ── */
+
+export interface InvitePreviewWire {
+  state: InvitePreviewRow["state"];
+  ecosystem_name?: string | null;
+  masked_destination?: string | null;
+}
+
+export interface VerifyResultWire {
+  ok: boolean;
+  ecosystem_name: string;
+}
+
+export interface AcceptResultWire {
+  status: AcceptResultRow["status"];
+  ecosystem_name?: string;
+}
+
+/** `POST /v1/auth/registrations` 201 body. */
+export interface RegisterWithInviteResultWire {
+  token: string;
+  refresh_token: string;
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    avatar_url: string;
+    slug: string | null;
+    public_profile_enabled: boolean;
+    capabilities: string[];
+  };
+  email_verification_required: boolean;
+  email_in_use?: boolean;
 }

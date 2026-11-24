@@ -3,14 +3,18 @@
   `slug`/`identifier`, `description`, `region`, primary domain, timestamps,
   and the caller's own `canManage` flag. None of these fields are personal
   data about an end user; they describe a product/ecosystem record, not a
-  person.
+  person. Two fields do refer to people: the auth settings' `loginAllowedEmails`, the
+  email addresses an owner lists as allowed to sign in, which are contact details; and the
+  provisioner principal id on a provisioned feature row, an opaque id. The emails are
+  carried only as the owner typed them (trimmed and lowercased) between the hub and the
+  backend, and nothing here stores them beyond the in-memory query cache.
 - **Storage**: One reference implementation holds no cache of its own —
   every call is a live round-trip to whatever data source the host
   supplies. The other holds results in a shared in-memory query-client
   cache, keyed as documented under each hook/query above; nothing in this
   component writes to durable browser/device storage.
 - **Transmission**: All calls travel through the injected data source or
-  the shared Bearer-token client (see `auth-client`); this component itself
+  the shared Bearer-token client (see [adhsdk.ingredient.data.services.auth.auth-client](cookbook:3ea9329e-5acc-4c43-b5ce-bb8c50570104)); this component itself
   attaches no credentials and reads no cookies.
 - **Retention**: One reference implementation retains nothing between
   calls. The other's cache entries persist per their cache key until

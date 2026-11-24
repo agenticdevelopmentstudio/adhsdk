@@ -1,13 +1,20 @@
 import Combine
 import Foundation
+import LocalAuthentication
 
 /// The privacy words while the app is running: read from the keychain when a
 /// private terminal first needs them, held in memory and nowhere else.
 ///
 /// One per app, shared by every private terminal, so an edit applies to all
 /// of them at once. Reading the words to run a terminal never prompts;
-/// *seeing* them does. Showing a terminal, opening the editor and saving each
-/// go through ``authenticate(reason:)``.
+/// *seeing* them does. Showing a terminal and opening the editor each go
+/// through ``authenticate(reason:)``; the editor saves with ``save(_:)``,
+/// which does not ask again — the editor was opened by whoever proved they
+/// may see the words.
+///
+/// Private terminals read ``filter``: the enabled words whose sites are `*`.
+/// A web browser pane reads ``filter(for:)`` with its page's address: the
+/// enabled words whose sites match it (``PrivacyWord``).
 ///
 /// Every app that shares the keychain item keeps its own vault, so a save
 /// announces itself with a distributed notification and every other vault
@@ -19,10 +26,29 @@ public final class PrivacyWordsVault: ObservableObject {
 
     public let store: PrivacyWordStore
 
-    /// The words as a filter, or nil while they have not been read.
+    /// Every stored word, enabled or not, whatever its sites, or nil while
+    /// they have not been read. What the editor shows and what a browser pane
+    /// watches.
+    @Published public private(set) var words: [PrivacyWord]?
+
+    /// The enabled global words as a filter — what applies everywhere, and
+    /// what a private terminal conceals with — or nil while the words have not
+    /// been read. Set together with ``words``.
     @Published public private(set) var filter: TextSubstitutionFilter?
 
-    public var isLoaded: Bool { filter != nil }
+    public var isLoaded: Bool { words != nil }
+
+    /// The enabled words whose sites match `url`, or nil while the words have
+    /// not been read. `nil` for `url` gives ``filter``.
+    public func filter(for url: URL?) -> TextSubstitutionFilter? {
+        words?.filter(for: url)
+    }
+
+    /// Every enabled word whatever its sites, or nil while the words have not
+    /// been read (``PrivacyWord`` array's `everySiteFilter`).
+    public var everySiteFilter: TextSubstitutionFilter? {
+        words?.everySiteFilter
+    }
 
     /// The upgrade in progress, so private terminals starting together share
     /// one prompt rather than stacking one each.
@@ -59,7 +85,7 @@ public final class PrivacyWordsVault: ObservableObject {
     public func load() throws -> Bool {
         if isLoaded { return true }
         do {
-            filter = TextSubstitutionFilter(pairs: try store.load())
+            apply(try store.load())
             return true
         } catch PrivacyWordStore.StoreError.needsAuthentication {
             return false
@@ -71,18 +97,28 @@ public final class PrivacyWordsVault: ObservableObject {
     /// remembered — and makes sure the words are in memory. Words still under
     /// the old guard are read with that authentication and saved again
     /// without it, so they never need it to be read again.
+    ///
+    /// The prompt is announced (``SystemAuthenticationPrompt``) for as long
+    /// as it is up, so an app-modal window steps aside for it instead of
+    /// leaving it behind, unanswerable — whichever caller asked.
     public func authenticate(reason: String) async throws {
-        let context = try await PrivacyWordStore.authenticate(reason: reason)
+        let context = try await promptForOwner(reason: reason)
         do {
             // Read again even when already in memory: whoever authenticates
             // is about to see or replace the words, and another app may have
             // saved since.
-            filter = TextSubstitutionFilter(pairs: try store.load())
+            apply(try store.load())
         } catch PrivacyWordStore.StoreError.needsAuthentication {
-            let pairs = try store.load(context: context)
-            try persist(pairs)
-            filter = TextSubstitutionFilter(pairs: pairs)
+            let words = try store.load(context: context)
+            try persist(words)
+            apply(words)
         }
+    }
+
+    private func promptForOwner(reason: String) async throws -> LAContext {
+        SystemAuthenticationPrompt.begin()
+        defer { SystemAuthenticationPrompt.end() }
+        return try await PrivacyWordStore.authenticate(reason: reason)
     }
 
     /// Makes sure the words are in memory, for running a terminal. Silent,
@@ -101,17 +137,23 @@ public final class PrivacyWordsVault: ObservableObject {
         try await task.value
     }
 
-    /// Authenticates the user, then stores `pairs` in the keychain and applies
-    /// them.
-    public func save(_ pairs: [TextSubstitutionFilter.Pair], reason: String) async throws {
-        try await authenticate(reason: reason)
-        let filter = TextSubstitutionFilter(pairs: pairs)
-        try persist(filter.pairs)
-        self.filter = filter
+    /// Stores `words` in the keychain and applies them, dropping any with an
+    /// empty side (which ``TextSubstitutionFilter`` would ignore anyway).
+    /// Does not authenticate: the caller is the editor, which
+    /// ``authenticate(reason:)`` opened.
+    public func save(_ words: [PrivacyWord]) throws {
+        let kept = words.filter { !$0.alias.isEmpty && !$0.real.isEmpty }
+        try persist(kept)
+        apply(kept)
     }
 
-    private func persist(_ pairs: [TextSubstitutionFilter.Pair]) throws {
-        try store.save(pairs)
+    private func apply(_ words: [PrivacyWord]) {
+        self.words = words
+        self.filter = words.filter(for: nil)
+    }
+
+    private func persist(_ words: [PrivacyWord]) throws {
+        try store.save(words)
         DistributedNotificationCenter.default().postNotificationName(
             Self.changedNotification(for: store), object: Self.processTag, userInfo: nil, deliverImmediately: true)
     }
@@ -119,7 +161,7 @@ public final class PrivacyWordsVault: ObservableObject {
     /// Another app saved the words. Only words already in memory are read
     /// again — a vault that never needed them has nothing to bring up to date.
     private func reloadIfLoaded() {
-        guard isLoaded, let pairs = try? store.load() else { return }
-        filter = TextSubstitutionFilter(pairs: pairs)
+        guard isLoaded, let words = try? store.load() else { return }
+        apply(words)
     }
 }

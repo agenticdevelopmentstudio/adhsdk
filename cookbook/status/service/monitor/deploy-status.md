@@ -1,13 +1,12 @@
 ---
 id: 96009fcc-e32e-4a40-9b3c-8b4f83f1cfec
 title: "Monitor Deploy Status"
-domain: adhsdk://cookbook/status/service/monitor/deploy-status
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-09-27
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -22,10 +21,10 @@ tags:
   - pure-function
   - server
 depends-on:
-  - agenticdevelopercookbook://principles/idempotency
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/39c2d053-006f-42c9-9db4-d991c1688024
 related:
-  - adhsdk://cookbook/status/service/board
-  - adhsdk://cookbook/status/service/storage/libsql
+  - 7984f592-a12d-49da-806c-ff39d9557998
+  - 6bf27f64-59d0-4b2a-8715-92dba2856814
 references:
   - packages/web/packages/status-server/src/monitor/deploy-status.ts (adhsdk)
   - packages/web/packages/status-server/test/deploy-status.test.ts (adhsdk)
@@ -157,8 +156,8 @@ Not applicable — this is a status/deploy-phase vocabulary and SQL-fragment mod
 | status-server-monitor-deploy-status-028 | is-in-flight-definition, is-in-flight-null-safe | The in-flight check given (`building`, `none`); given (`built`, `deployed`); given (an absent build phase, `deployed`) | `true`; `false`; `false` |
 | status-server-monitor-deploy-status-029 | in-flight-sql-shape, in-flight-sql-default-prefix | The in-flight SQL-fragment builder with no argument | Exactly `"(build_phase IN ('building', 'queued') OR deploy_phase = 'deploying')"`, traced directly to the function body (no test asserts the literal string; see Compliance) |
 | status-server-monitor-deploy-status-030 | collapse-build-sql | The build-phase collapse builder given the terminal value `canceled` | Exactly `"CASE WHEN build_phase IN ('building', 'queued') THEN 'canceled' ELSE build_phase END"`, traced directly to the function body |
-| status-server-monitor-deploy-status-031 | is-in-flight-definition | The in-flight check as computed by each of the two independently maintained implementations, for every (build phase, deploy phase) pair over the full cross-product | All pairs equal |
-| status-server-monitor-deploy-status-032 | combined-status-evaluation-order | The combining function as computed by each of the two independently maintained implementations, for every (build phase, deploy phase) pair over the full cross-product | All pairs equal |
+| status-server-monitor-deploy-status-031 | is-in-flight-definition | The in-flight check, for every (build phase, deploy phase) pair over the full cross-product (including an absent build phase) | Each result equals `build phase is building or queued, or deploy phase is deploying` |
+| status-server-monitor-deploy-status-032 | combined-status-evaluation-order | The combining function, for every (build phase, deploy phase) pair over the full cross-product (including an absent build phase) | Each result equals the first matching rule of the documented evaluation order (`failed`, `canceled`, `unknown`, `deployed`, `deploying`, `built`, `queued`, else `building`) |
 
 ## Edge Cases
 
@@ -220,9 +219,9 @@ Not applicable: this module contains no logging call of any kind — every expor
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/monitor/deploy-status.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/monitor/deploy-status.ts` | confirmed (1.1.1) |
 
 ## Design Decisions
 
@@ -249,17 +248,18 @@ Not applicable: this module contains no logging call of any kind — every expor
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | Reliability |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | passed | Reliability |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | Reliability |
 
-`unit-test-coverage` is `partial`: `deploy-status.test.ts` gives `vercelPhases`, `railwayPhases`, `crunchyPhases`, and `combinedStatus` thorough branch coverage with meaningful assertions, `reconcile-stuck-deploys.test.ts` separately unit-tests `isInFlight`, and `deploy-status-parity.test.ts` exhaustively cross-checks `isInFlight` and `combinedStatus` against the hand-mirrored web copy — but none of the five SQL-fragment builders (`inFlightSql`, `columnOverwritableSql`, `webhookKeepsStoredSql`, `collapseInFlightBuildSql`, `collapseInFlightDeploySql`) has a test that asserts its generated SQL string directly; they are exercised only indirectly, at runtime, through the storage-layer files that call them (`libsql/schema.ts`, `libsql/stores/board-store.ts`, `libsql/stores/deploy-store.ts`). `separation-of-concerns` passes: this file's only responsibility is the deploy-status vocabulary, its provider-specific normalization, and the SQL predicates derived from that same vocabulary; it performs no I/O, no persistence, and no presentation of its own, leaving those to files external to it. `idempotent-operations` passes: `webhookKeepsStoredSql` is precisely the mechanism that makes a redelivered (retried) webhook event produce the same stored result regardless of delivery order, per its own doc comment describing out-of-order webhook redelivery as the ordinary case this guard exists to handle. `data-integrity` passes: this file's SQL-fragment builders exist specifically to keep every SQL caller across the storage layer from drifting apart on what "in flight" or "overwritable" means, deriving every fragment from the single `IN_FLIGHT_BUILD_PHASES`/`IN_FLIGHT_DEPLOY_PHASE` source of truth rather than letting each caller redefine it; the actual read/write and durability guarantees are owned by the storage-layer files that execute these fragments, external to this one.
+`unit-test-coverage` passes: `deploy-status.test.ts` carries one test per conformance vector (001-032), covering `vercelPhases`, `railwayPhases`, `crunchyPhases`, `combinedStatus` and `isInFlight` (the last two exhaustively over the full phase cross-product) and asserting the exact SQL strings of `inFlightSql` and `collapseInFlightBuildSql`; `deploy-status-parity.test.ts` separately pins that the web mirror's vocabulary unions agree with this module's. `separation-of-concerns` passes: this file's only responsibility is the deploy-status vocabulary, its provider-specific normalization, and the SQL predicates derived from that same vocabulary; it performs no I/O, no persistence, and no presentation of its own, leaving those to files external to it. `idempotent-operations` passes: `webhookKeepsStoredSql` is precisely the mechanism that makes a redelivered (retried) webhook event produce the same stored result regardless of delivery order, per its own doc comment describing out-of-order webhook redelivery as the ordinary case this guard exists to handle. `data-integrity` passes: this file's SQL-fragment builders exist specifically to keep every SQL caller across the storage layer from drifting apart on what "in flight" or "overwritable" means, deriving every fragment from the single `IN_FLIGHT_BUILD_PHASES`/`IN_FLIGHT_DEPLOY_PHASE` source of truth rather than letting each caller redefine it; the actual read/write and durability guarantees are owned by the storage-layer files that execute these fragments, external to this one.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-11-14 | Mike Fullerton | Conformance tests added (deploy-status.test.ts, 32 of 32 vectors; vectors 031-032 reworded because the web copy holds only types, so they now check the single implementation over the full cross-product); unit-test-coverage now passed. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to status/service/monitor/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.0.0 | 2026-09-24 | Mike Fullerton | Initial creation |

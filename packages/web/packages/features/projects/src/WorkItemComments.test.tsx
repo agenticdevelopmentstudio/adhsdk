@@ -67,7 +67,7 @@ function comment(over: Partial<ProjectComment> & Pick<ProjectComment, "id">): Pr
 
 function reaction(over: Partial<Reaction> & Pick<Reaction, "id" | "targetId">): Reaction {
   return {
-    customerId: "cust-2",
+    authorId: "cust-2",
     targetKind: "project.comments",
     emoji: "👍",
     createdAt: "2026-08-01T00:00:00Z",
@@ -227,8 +227,8 @@ describe("WorkItemComments", () => {
     // would not say whose reaction to withdraw.
     list.mockResolvedValue([comment({ id: "c1" })]);
     listReactions.mockResolvedValue([
-      reaction({ id: "r1", targetId: "c1", customerId: VIEWER }),
-      reaction({ id: "r2", targetId: "c1", customerId: "cust-2" }),
+      reaction({ id: "r1", targetId: "c1", authorId: VIEWER }),
+      reaction({ id: "r2", targetId: "c1", authorId: "cust-2" }),
     ]);
     render(<WorkItemComments workItemId="unreacting" />);
 
@@ -243,7 +243,7 @@ describe("WorkItemComments", () => {
   it("adds a reaction the viewer has not made, naming the comment as the subject", async () => {
     list.mockResolvedValue([comment({ id: "c1" })]);
     listReactions.mockResolvedValue([
-      reaction({ id: "r2", targetId: "c1", customerId: "cust-2" }),
+      reaction({ id: "r2", targetId: "c1", authorId: "cust-2" }),
     ]);
     render(<WorkItemComments workItemId="reacting" />);
 

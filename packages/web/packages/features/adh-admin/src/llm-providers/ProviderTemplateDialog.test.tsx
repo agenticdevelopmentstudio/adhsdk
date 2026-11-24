@@ -31,16 +31,16 @@ function saveButton() {
 
 const TEMPLATE: ProviderTemplate = {
   id: "tpl_1",
-  providerKind: "openai",
+  provider_kind: "openai",
   name: "OpenAI",
-  baseUrl: "https://api.openai.com/v1",
-  documentationUrl: null,
-  statusUrl: null,
-  connectionSpec: null,
-  availableVia: null,
+  base_url: "https://api.openai.com/v1",
+  documentation_url: null,
+  status_url: null,
+  connection_spec: null,
+  available_via: null,
   modalities: ["chat", "image"],
-  createdAt: "2026-07-01T00:00:00Z",
-  updatedAt: "2026-07-01T00:00:00Z",
+  created: 1782864000,
+  updated: 1782864000,
   models: [],
 };
 

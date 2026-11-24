@@ -119,16 +119,68 @@ public enum ConversationExtractor {
     /// and "malformed" collapse to the same answer deliberately: a feed that
     /// silently skips a line it can't read is right, and one that surfaces
     /// `{"type":…` at the human is not.
-    public static func extract(rawJSON: String) -> [Line] {
+    ///
+    /// - Parameters:
+    ///   - includeSidechains: keep a sub-agent's sidechain. The merged feed and a
+    ///     plain read of one session leave it out; a reader asking one session for
+    ///     its work output wants it.
+    ///   - includeScripted: keep a script-driven (``isSDKDriven(_:)``) entry. The
+    ///     merged feed leaves it out, since nobody typed it; a read of one session
+    ///     keeps it, because for a headless `claude -p` that *is* the conversation.
+    public static func extract(
+        rawJSON: String, includeSidechains: Bool = false, includeScripted: Bool = false
+    ) -> [Line] {
         guard let data = rawJSON.data(using: .utf8),
               let entry = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
         else { return [] }
+        return extract(entry: entry, includeSidechains: includeSidechains, includeScripted: includeScripted)
+    }
 
+    /// Extracts every showable line from one event-store message: its `role`,
+    /// flattened `text` and `attrs` JSON (``ClaudeTranscriptNormalizer`` keeps
+    /// the content blocks in `attrs.blocks`, the reply's `stop_reason`, the
+    /// session's `entrypoint`, the harness's `is_meta` / `turn_origin` /
+    /// `is_compact_summary` marks, and `queued_prompt` for a prompt typed
+    /// mid-turn).
+    ///
+    /// The transcript entry is put back together from those and judged by the
+    /// same rules as ``extract(rawJSON:)``, so the two paths cannot disagree
+    /// about a line. Content is the blocks when the line had an array, the
+    /// text when it had a string. Sidechain messages are chosen by the read
+    /// (the feed's leaves them out), not here; unparseable `attrs` read as none.
+    /// `includeScripted` is ``extract(rawJSON:includeSidechains:includeScripted:)``'s.
+    public static func extract(
+        role: String, text: String, attrsJSON: String, includeScripted: Bool = false
+    ) -> [Line] {
+        let attrs = (try? JSONSerialization.jsonObject(with: Data(attrsJSON.utf8)) as? [String: Any]) ?? [:]
+        let content: Any = attrs["blocks"] as? [Any] ?? text
+        var entry: [String: Any] = [:]
+        if let isMeta = attrs["is_meta"] as? Bool { entry["isMeta"] = isMeta }
+        if let entrypoint = attrs["entrypoint"] as? String { entry["entrypoint"] = entrypoint }
+        if let turnOrigin = attrs["turn_origin"] as? String { entry["turnOrigin"] = turnOrigin }
+        if let compact = attrs["is_compact_summary"] as? Bool { entry["isCompactSummary"] = compact }
+        if attrs["queued_prompt"] as? Bool == true {
+            entry["type"] = "attachment"
+            entry["attachment"] = [
+                "type": "queued_command", "commandMode": "prompt", "prompt": content
+            ] as [String: Any]
+            return extract(entry: entry, includeScripted: includeScripted)
+        }
+        var message: [String: Any] = ["role": role, "content": content]
+        if let stopReason = attrs["stop_reason"] as? String { message["stop_reason"] = stopReason }
+        entry["type"] = role
+        entry["message"] = message
+        return extract(entry: entry, includeScripted: includeScripted)
+    }
+
+    private static func extract(
+        entry: [String: Any], includeSidechains: Bool = false, includeScripted: Bool = false
+    ) -> [Line] {
         // Sub-agent traffic is a different conversation, and meta entries are
         // the harness talking to itself.
-        if entry["isSidechain"] as? Bool == true { return [] }
+        if !includeSidechains, entry["isSidechain"] as? Bool == true { return [] }
         if entry["isMeta"] as? Bool == true { return [] }
-        if isSDKDriven(entry) { return [] }
+        if !includeScripted, isSDKDriven(entry) { return [] }
 
         // The harness says what it wrote, where it says so. `turnOrigin` and
         // `isCompactSummary` are the entry's own account of not being typed by

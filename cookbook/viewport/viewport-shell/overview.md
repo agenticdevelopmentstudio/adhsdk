@@ -1,0 +1,2 @@
+
+ViewportShell is a top-level page shell component that sizes itself to the visible viewport height and mounts the keyboard-inset hook to track and respond to virtual keyboard visibility. It provides a vertical flex container for slotting child components and can optionally allow overflow to hang beyond its boundaries. Locking the page against scroll is done by the package's `base.css`, which consumers import once at the app root.

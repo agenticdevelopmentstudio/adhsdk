@@ -1,0 +1,29 @@
+
+- **value-type**: The component MUST be a public `struct` named `TextSubstitutionFilter` conforming to `Sendable` and `Equatable`, with a public `let pairs: [Pair]`.
+- **pair-shape**: `Pair` MUST be a public struct conforming to `Sendable`, `Equatable`, `Hashable` and `Codable`, with `let alias: String` (what the user writes and reads) and `let real: String` (what the program is given and prints), created by `init(alias:real:)`.
+- **init-drops-empty**: `init(pairs:)` MUST drop every pair whose `alias` or `real` is empty and keep the rest in their given order, because an empty pattern matches everywhere and an empty replacement silently deletes text.
+- **init-keeps-duplicates**: `init(pairs:)` MUST NOT deduplicate or trim; two pairs with the same alias, or an alias with surrounding whitespace, are kept as given.
+- **identity**: `TextSubstitutionFilter.identity` MUST be a filter with no pairs, and both substitution directions MUST return text unchanged through it.
+- **parse-entries**: `init(parsing:)` MUST split the text into entries at every `;` and at every newline character, discarding empty entries.
+- **parse-pair**: Each entry MUST be split at its first `=`; the alias is the text before it and the real text is the text after it (which may itself contain `=`), each trimmed of spaces and tabs (`.whitespaces`).
+- **parse-forgiving**: An entry with no `=`, or with an empty alias or real side after trimming, MUST be skipped rather than refused, because half an entry is the normal state of one being typed by hand.
+- **serialized**: `serialized` MUST be the pairs rendered as `alias = real` joined by `; `, in order, the text form `init(parsing:)` reads back.
+- **round-trip**: `TextSubstitutionFilter(parsing: filter.serialized)` MUST equal `filter` for pairs whose sides carry no leading or trailing whitespace, no `;`, no newline, and (for the alias) no `=`.
+- **revealing**: `revealing(_:matchingCase:wholeWords:)` MUST replace each alias found in the text with its pair's `real` text, and `matchingCase` and `wholeWords` MUST both default to false.
+- **concealing**: `concealing(_:matchingCase:)` MUST replace each real text found in the text with its pair's `alias`, with `matchingCase` defaulting to false, and MUST NOT apply whole-word matching.
+- **case-insensitive**: Pattern matching in both directions MUST be case-insensitive.
+- **replacement-as-given**: Without `matchingCase`, the replacement MUST be written exactly as stored in the pair, whatever the case of the matched text.
+- **single-pass**: Text MUST be scanned once from left to right, so a replacement is never rewritten by a later pair: with pairs `a = b; b = c`, revealing `a b` yields `b c`.
+- **longest-wins**: At each position the longest pattern, measured in `Character`s, MUST win, so `mike fullerton` is replaced whole before a shorter `mike` pair can split it.
+- **tie-order**: Among patterns of equal length that match the same text (duplicate or case-variant aliases), the first one in declaration order MUST be used (the ordering by length MUST be stable).
+- **literal-patterns**: Each alias or real text MUST be matched literally: regular-expression metacharacters in a pattern carry no meaning.
+- **whole-words**: With `wholeWords: true`, `revealing` MUST replace an alias only where no Unicode letter or number (`\p{L}`, `\p{N}`) touches either end of the match, so "robin" is left alone in `robinhood.com` and `robin2`, and replaced in `/Robin/` and `robin` after `?`.
+- **whole-words-underscore**: The whole-word test counts only letters and numbers, so an underscore or punctuation next to an alias does not block replacement.
+- **early-exit**: `revealing` and `concealing` MUST return the text unchanged when there are no pairs or the text is empty.
+- **casing-rule**: `casing(_:like:)` MUST return the replacement in all capitals when the match has letters and is all upper case; in all lower case when the match has letters and is all lower case; with a capital first letter and the rest lower case when the match is a capital followed by lower case; and otherwise (mixed case, or no letters) the replacement as given.
+- **casing-single-letter**: `casing` MUST treat a one-letter upper-case match as all capitals, and a one-letter lower-case match as all lower case.
+- **matching-case**: With `matchingCase: true`, each replacement MUST be passed through `casing(_:like:)` with the text it replaces, whatever case the pair was written in.
+- **unmatched-text-kept**: Every stretch of text that no pattern matches MUST be copied through unchanged, including text with accents, emoji or other multi-unit characters.
+- **no-state**: Substitution MUST NOT mutate the filter that callers can observe: the same filter and the same input MUST give the same output on every call. An implementation MAY cache compiled patterns internally.
+- **foundation-only**: The component MUST depend only on Foundation.
+

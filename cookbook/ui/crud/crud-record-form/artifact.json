@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "3dc693ab-28e4-4624-9b2d-8dc81f81e037",
     "title": "CRUD Record Form",
-    "domain": "adhsdk://cookbook/ui/crud/crud-record-form",
     "type": "recipe",
     "version": "1.4.2",
     "status": "review",
@@ -25,17 +24,17 @@
       "validation"
     ],
     "ingredients": [
-      "adhsdk://recipes/field"
+      "0c199036-81c3-47c3-9e79-e4b8187ca69a"
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/ui/crud/crud-table"
+      "ec64b22b-8a25-431d-8866-b7a01acd91fe"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "6744ce228608003a",
+  "synced": "c5e5262813d927a2",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -46,7 +45,6 @@
     {"part": "integration-test-vectors", "heading": "Integration Test Vectors"},
     {"part": "edge-cases", "heading": "Edge Cases"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

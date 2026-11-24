@@ -1,0 +1,3 @@
+
+The Rich Content component renders a sequence of content items — hyperlinks and images — supplied as structured data. It is designed for displaying formatted responses from language models or other structured content sources where links and embedded media come from untrusted origins. The component applies protocol filtering to all hyperlinks to block script-executing schemes (such as `javascript:` or `data:`) that an attacker-controlled or prompt-injected link could carry, and hides each image until it finishes loading (or fails) so an incomplete image is never shown mid-load (see **hide-until-loaded**, which also covers why hiding is not a fetch control).
+

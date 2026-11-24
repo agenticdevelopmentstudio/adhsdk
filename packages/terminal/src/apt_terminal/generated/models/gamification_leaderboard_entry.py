@@ -56,10 +56,10 @@ class GamificationLeaderboardEntry:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "subjectType": subject_type,
-                "subjectId": subject_id,
-                "avatarUrl": avatar_url,
-                "totalPoints": total_points,
+                "subject_type": subject_type,
+                "subject_id": subject_id,
+                "avatar_url": avatar_url,
+                "total_points": total_points,
             }
         )
         if name is not UNSET:
@@ -72,13 +72,13 @@ class GamificationLeaderboardEntry:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        subject_type = d.pop("subjectType")
+        subject_type = d.pop("subject_type")
 
-        subject_id = d.pop("subjectId")
+        subject_id = d.pop("subject_id")
 
-        avatar_url = d.pop("avatarUrl")
+        avatar_url = d.pop("avatar_url")
 
-        total_points = d.pop("totalPoints")
+        total_points = d.pop("total_points")
 
         def _parse_name(data: object) -> None | str | Unset:
             if data is None:

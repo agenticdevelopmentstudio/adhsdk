@@ -1,0 +1,7 @@
+
+- **Role**: The search input has `role="combobox"`; the item list container has `role="listbox"`; each group is a `role="group"` container; each item is a `<button>` element with `role="option"` (the explicit ARIA role overrides the button's implicit semantics for assistive tech).
+- **Label requirements**: The `ariaLabel` prop MUST be provided; it labels the dialog (`DialogTitle`, visually hidden via `sr-only`), the combobox input (`aria-label`), and the listbox (`aria-label`). Each group's visible heading (rendered by `SectionLabel`) is marked `aria-hidden`, so sighted users see it but assistive tech does not; the group's accessible name instead comes from `aria-label={group.label}` on the `role="group"` container. Item labels are the button's text content.
+- **Keyboard support**: All keyboard interactions (ArrowUp, ArrowDown, Home, End, Enter, Escape) are fully supported.
+- **Announce state changes**: The combobox's `aria-activedescendant` tracks the currently highlighted option's id (unset when there is no current item); `aria-expanded="true"` is present on the input whenever the dialog is open (the input only renders while open); `aria-controls` connects the input to the listbox; `aria-autocomplete="list"` signals the combobox pattern.
+- **Minimum tap target**: Items are buttons with padding `py-1.5 px-2` (approximately 24px tall × full width). This meets WCAG 2.5.8 Target Size (Minimum) at 24×24 CSS pixels, but not the 44×44pt HIG/Android touch-target size.
+

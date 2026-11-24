@@ -1,0 +1,23 @@
+
+- **svg-root**: Component MUST render an SVG element with class name `pc-connector-svg`.
+- **aria-hidden**: Component MUST set `aria-hidden="true"` on the SVG element.
+- **container-reference**: Component MUST accept a reference to the container element and use it as the coordinate origin for all connector calculations.
+- **connector-pairs**: Component MUST accept an array of connector pairs, each with `from` and `to` string identifiers.
+- **element-resolution**: Component MUST resolve each connector pair's `from` and `to` identifiers to elements using a registry (id &rarr; element lookup) supplied as an implicit dependency rather than a prop; see [adhsdk.ingredient.chat.modes.three-pane.connectors.connector-registry](cookbook:e5b8e26f-2869-4a09-8d8e-0bb68ece805d).
+- **line-endpoints**: For each resolvable pair, the component MUST draw a line from the center of the source element to the center of the target element.
+- **center-coordinates**: The component MUST calculate the center of each element's bounding rectangle and transform coordinates relative to the container element's position (see **container-reference**).
+- **unresolved-pair-omission**: If either element in a pair cannot be resolved from the registry, that connection MUST be omitted from the rendered output.
+- **endpoint-circles**: Component MUST render a circle at each line endpoint (source and target).
+- **source-color**: The stroke color of each connector line, and the fill color of its endpoint circles, MUST be derived from the source element's computed CSS `color` property.
+- **stroke-width**: Each connector line MUST render with a 1 pixel stroke width.
+- **connector-opacity**: Each connector line's stroke and each endpoint circle's fill MUST render at 0.4 opacity.
+- **resize-observer-updates**: Component MUST recompute connector positions whenever any tracked element is resized, detected via ResizeObserver.
+- **window-resize-updates**: Component MUST recompute connector positions whenever the window resizes.
+- **scroll-updates**: Component MUST recompute connector positions when the window or any ancestor element scrolls, including scroll during the capture phase.
+- **recompute-on-input-change**: Whenever the `pairs` input or the registry snapshot changes, the component MUST recompute connector geometry and re-establish position tracking for the current tracked set. The tracked set is the container element plus every element currently resolvable via the registry snapshot's identifiers.
+- **raf-batching**: Component MUST batch position recomputation requests using `requestAnimationFrame` to avoid redundant calculations during rapid layout changes.
+- **raf-cancellation**: If a scheduled animation frame is still pending when the component unmounts, the component MUST cancel it.
+- **teardown**: Component MUST disconnect the ResizeObserver and remove its resize and scroll event listeners when unmounting.
+- **empty-pairs**: When `pairs` is an empty array, the component MUST render an empty SVG (no lines or circles).
+- **null-container-ref**: When the container reference is not available (`null`), the component MUST abort computation and render an empty SVG.
+

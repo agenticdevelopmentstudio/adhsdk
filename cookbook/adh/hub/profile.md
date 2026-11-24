@@ -1,13 +1,12 @@
 ---
 id: 70f5dcb1-9d00-445b-a691-0dc1e7dd7a67
 title: "Profile"
-domain: adhsdk://cookbook/adh/hub/profile
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -223,41 +222,40 @@ Not applicable — this is a data client for a principal's profile domain, not a
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| hub-domain-profile-001 | social-links-list-request-shape | The social-links list operation, called with no options | Request URL is `/api/content/social-links` with no query — `profile.test.ts` › "lists personal social links with no query when no workspace" |
-| hub-domain-profile-002 | social-links-list-request-shape, workspace-query-percent-encoded | The social-links list operation, called with `{ workspace: "acme" }` | Request URL is `/api/content/social-links?workspace=acme` — `profile.test.ts` › "lists org social links with ?workspace= when a slug is given" |
-| hub-domain-profile-003 | addresses-list-request-shape, workspace-query-percent-encoded | The addresses list operation, called with `{ workspace: "a/b" }` | Request URL is `/api/content/addresses?workspace=a%2Fb` — `profile.test.ts` › "encodes the workspace slug" |
-| hub-domain-profile-004 | workspace-query-omitted-when-absent | The addresses list operation, called with no options | Request URL is `/api/content/addresses` with no `?workspace=` segment — derived directly from the workspace-query-building branch; no dedicated test beyond vector 001's equivalent on social links |
-| hub-domain-profile-005 | social-links-create-request-shape, every-write-call-serializes-verbatim | The social-links create operation, called with `{ platform: "github", url: "https://x", handle: "" }` and `{ workspace: "acme" }` | `POST /api/content/social-links?workspace=acme` with body `{"platform":"github","url":"https://x","handle":""}` JSON-serialized verbatim; resolves to the parsed social-link record — `profile.test.ts` › "posts a create with the workspace query" |
-| hub-domain-profile-006 | social-links-update-request-shape | The social-links update operation, called with id `"id1"`, `{ platform: "github", url: "https://x", handle: "" }`, and `{ workspace: "acme" }` | `PUT /api/content/social-links/id1?workspace=acme` with that body verbatim — `profile.test.ts` › "puts an update with id + workspace query" |
-| hub-domain-profile-007 | social-links-delete-request-shape | The social-links delete operation, called with id `"id1"` and `{ workspace: "acme" }` | Sends `DELETE /api/content/social-links/id1?workspace=acme` via the no-body-parsing call; resolves with no value — `profile.test.ts` › "deletes with id + workspace query via authedRequest" |
-| hub-domain-profile-008 | addresses-create-request-shape | The addresses create operation, called with `{ label: "Home", line1: "1 Main St", line2: "", city: "Springfield", region: "IL", postalCode: "62701", country: "US" }` and `{ workspace: "acme" }` | `POST /api/content/addresses?workspace=acme` with that body verbatim — no dedicated test; derived directly from source, mirroring vector 005 |
-| hub-domain-profile-009 | addresses-update-request-shape | The addresses update operation, called with id `"addr1"`, the same address input, and `{ workspace: "acme" }` | `PUT /api/content/addresses/addr1?workspace=acme` with that body verbatim — no dedicated test; mirrors vector 006 |
-| hub-domain-profile-010 | addresses-delete-request-shape | The addresses delete operation, called with id `"addr1"` and `{ workspace: "acme" }` | Sends `DELETE /api/content/addresses/addr1?workspace=acme` via the no-body-parsing call; resolves with no value — no dedicated test; mirrors vector 007 |
-| hub-domain-profile-011 | list-key-namespaced-by-owner | The social-links cache-key builder, called with no workspace and separately with `"acme"` | Resolve to `["profile","social-links","self"]` and `["profile","social-links","org","acme"]` respectively — neither array is a prefix of the other — no dedicated test; derived directly from source |
-| hub-domain-profile-012 | list-key-namespaced-by-owner | The usage-summary cache-key builder, called with `"acme"` | Resolves to `["usage","summary","org","acme"]` — no dedicated test; same contract as vector 011 |
-| hub-domain-profile-013 | list-key-roots-not-exported, privacy-key-not-namespaced | Inspect the module's exported bindings | The un-namespaced root keys behind the social-links, addresses, and usage-summary cache-key builders are absent from the export list; the privacy cache key is present and equals `["account","privacy"]` — confirmed by reading the `export` statements, no test needed |
-| hub-domain-profile-014 | privacy-grants-list-unwraps-envelope | The privacy-grants list operation, against a stub response `{ items: [{ targetTable: "addresses", targetId: "a1", audienceMask: 1 }] }` | Resolves to the bare array `[{ targetTable: "addresses", targetId: "a1", audienceMask: 1 }]` — no dedicated test; derived directly from source |
-| hub-domain-profile-015 | privacy-grants-caller-scoped-only | Inspect the privacy-grants list and set operations' signatures | Neither accepts a `workspace` parameter — confirmed by the function signatures, no test needed |
-| hub-domain-profile-016 | privacy-grant-set-request-shape | The privacy-grant set operation, called with `"addresses"`, `"a1"`, and `"public"` | `PUT /api/account/privacy` with body `{ targetTable: "addresses", targetId: "a1", audienceMask: 1 }` — no dedicated test; derived from the fixed audience-mask map |
-| hub-domain-profile-017 | privacy-level-resolution-default | Resolving a privacy level given an empty grant list, `"addresses"`, `"a1"` | Returns `"only-me"` — no dedicated test; derived directly from source |
-| hub-domain-profile-018 | privacy-level-resolution-match | Resolving a privacy level given two grants for the same target, the first with `audienceMask: 2` and the second with `audienceMask: 1` | Returns `"hub"` (the first match), not `"public"` — no dedicated test; derived from first-match array-lookup semantics |
-| hub-domain-profile-019 | privacy-level-resolution-public-precedence | Resolving a privacy level given one grant with `audienceMask: 3` | Returns `"public"` — both bits set, public wins per the function's own doc comment — no dedicated test; derived directly from source |
-| hub-domain-profile-020 | privacy-level-resolution-hub | Resolving a privacy level given one grant with `audienceMask: 2` | Returns `"hub"` — no dedicated test; derived directly from source |
-| hub-domain-profile-021 | privacy-level-resolution-unmatched-bits | Resolving a privacy level given one grant with `audienceMask: 4` | Returns `"only-me"` — a matched grant whose mask sets neither bit 0 nor bit 1 falls through both checks — no dedicated test; derived directly from source |
-| hub-domain-profile-022 | usage-summary-request-shape | The usage-summary operation, called with `{ workspace: "acme" }`, against a stub response `{ rows: [] }` | `GET /api/usage/summary?workspace=acme`; resolves to `[]` — no dedicated test; derived directly from source |
-| hub-domain-profile-023 | usage-summary-request-shape, workspace-query-omitted-when-absent | The usage-summary operation, called with no options | `GET /api/usage/summary` with no `?workspace=` segment — no dedicated test; mirrors vector 004 |
-| hub-domain-profile-024 | usage-summary-subject-list-server-derived | Inspect the usage-summary operation's parameter type | The only accepted option is an optional workspace slug; no per-principal filter can be requested by the caller — confirmed by the function signature, no test needed |
+| hub-domain-profile-001 | social-links-list-request-shape | The social-links list operation, called with no options | Request path is `/api/v1/content/social_links` with no `workspace` query (the paging helper adds its own `limit`) — `conformance-vectors.test.ts`, `profile.test.ts` › "lists personal social links with no workspace param" |
+| hub-domain-profile-002 | social-links-list-request-shape, workspace-query-percent-encoded | The social-links list operation, called with `{ workspace: "acme" }` | Request path is `/api/v1/content/social_links` with query `workspace=acme` — `conformance-vectors.test.ts`, `profile.test.ts` › "lists org social links with ?workspace= when a slug is given" |
+| hub-domain-profile-003 | addresses-list-request-shape, workspace-query-percent-encoded | The addresses list operation, called with `{ workspace: "a/b" }` | Request path is `/api/v1/content/addresses` with the query `workspace=a%2Fb` — `conformance-vectors.test.ts`, `profile.test.ts` › "encodes the workspace slug" |
+| hub-domain-profile-004 | workspace-query-omitted-when-absent | The addresses list operation, called with no options | Request path is `/api/v1/content/addresses` with no `workspace` query — `conformance-vectors.test.ts` |
+| hub-domain-profile-005 | social-links-create-request-shape, every-write-call-serializes-verbatim | The social-links create operation, called with `{ platform: "github", url: "https://x", handle: "" }` and `{ workspace: "acme" }` | `POST /api/v1/content/social_links?workspace=acme` with body `{"platform":"github","url":"https://x","handle":""}` JSON-serialized verbatim (`sort_order` is omitted when `sortOrder` is not given); resolves to the mapped social-link record — `conformance-vectors.test.ts`, `profile.test.ts` › "posts a create with the workspace query and a snake_case body" |
+| hub-domain-profile-006 | social-links-update-request-shape | The social-links update operation, called with id `"id1"`, `{ platform: "github", url: "https://x", handle: "" }`, and `{ workspace: "acme" }` | `POST /api/v1/content/social_links/id1?workspace=acme` with that body verbatim (updates use POST, not PUT) — `conformance-vectors.test.ts`, `profile.test.ts` › "updates with POST on the item path + workspace query" |
+| hub-domain-profile-007 | social-links-delete-request-shape | The social-links delete operation, called with id `"id1"` and `{ workspace: "acme" }` | Sends `DELETE /api/v1/content/social_links/id1?workspace=acme` via the no-body-parsing call; resolves with no value — `conformance-vectors.test.ts`, `profile.test.ts` › "deletes with id + workspace query" |
+| hub-domain-profile-008 | addresses-create-request-shape | The addresses create operation, called with `{ label: "Home", line1: "1 Main St", line2: "", city: "Springfield", region: "IL", postalCode: "62701", country: "US" }` and `{ workspace: "acme" }` | `POST /api/v1/content/addresses?workspace=acme` with the snake_case body (`postal_code`, not `postalCode`) — `conformance-vectors.test.ts` |
+| hub-domain-profile-009 | addresses-update-request-shape | The addresses update operation, called with id `"addr1"`, the same address input, and `{ workspace: "acme" }` | `POST /api/v1/content/addresses/addr1?workspace=acme` with that snake_case body — `conformance-vectors.test.ts` |
+| hub-domain-profile-010 | addresses-delete-request-shape | The addresses delete operation, called with id `"addr1"` and `{ workspace: "acme" }` | Sends `DELETE /api/v1/content/addresses/addr1?workspace=acme` via the no-body-parsing call; resolves with no value — `conformance-vectors.test.ts` |
+| hub-domain-profile-011 | list-key-namespaced-by-owner | The social-links cache-key builder, called with no workspace and separately with `"acme"` | Resolve to `["profile","social-links","self"]` and `["profile","social-links","org","acme"]` respectively — neither array is a prefix of the other — `conformance-vectors.test.ts` |
+| hub-domain-profile-012 | list-key-namespaced-by-owner | The usage-summary cache-key builder, called with `"acme"` | Resolves to `["usage","summary","org","acme"]` — `conformance-vectors.test.ts`; same contract as vector 011 |
+| hub-domain-profile-013 | list-key-roots-not-exported, privacy-key-not-namespaced | Inspect the module's exported bindings | The un-namespaced root keys behind the social-links, addresses, and usage-summary cache-key builders are absent from the export list; the privacy cache key is present and equals `["account","privacy"]` — `conformance-vectors.test.ts` |
+| hub-domain-profile-014 | privacy-grants-list-unwraps-envelope | The privacy-grants list operation, against a stub response `{ privacy: { items: [{ target_table: "addresses", target_id: "a1", audience_mask: 1 }] } }` (read as `GET /api/v1/account?include[]=privacy`) | Resolves to the bare camelCase array `[{ targetTable: "addresses", targetId: "a1", audienceMask: 1 }]` — `conformance-vectors.test.ts` |
+| hub-domain-profile-015 | privacy-grants-caller-scoped-only | Inspect the privacy-grants list and set operations' signatures | Neither accepts a `workspace` parameter — `conformance-vectors.test.ts` (arity, and a passed workspace never reaches the URL) |
+| hub-domain-profile-016 | privacy-grant-set-request-shape | The privacy-grant set operation, called with `"addresses"`, `"a1"`, and `"public"` | `POST /api/v1/account` with body `{ privacy: { target_table: "addresses", target_id: "a1", audience_mask: 1 } }`; when the response carries no `privacy` echo, resolves to the request's own grant (`{ targetTable: "addresses", targetId: "a1", audienceMask: 1 }`) — `conformance-vectors.test.ts` |
+| hub-domain-profile-017 | privacy-level-resolution-default | Resolving a privacy level given an empty grant list, `"addresses"`, `"a1"` | Returns `"only-me"` — `conformance-vectors.test.ts` |
+| hub-domain-profile-018 | privacy-level-resolution-match | Resolving a privacy level given two grants for the same target, the first with `audienceMask: 2` and the second with `audienceMask: 1` | Returns `"hub"` (the first match), not `"public"` — `conformance-vectors.test.ts` |
+| hub-domain-profile-019 | privacy-level-resolution-public-precedence | Resolving a privacy level given one grant with `audienceMask: 3` | Returns `"public"` — both bits set, public wins per the function's own doc comment — `conformance-vectors.test.ts` |
+| hub-domain-profile-020 | privacy-level-resolution-hub | Resolving a privacy level given one grant with `audienceMask: 2` | Returns `"hub"` — `conformance-vectors.test.ts` |
+| hub-domain-profile-021 | privacy-level-resolution-unmatched-bits | Resolving a privacy level given one grant with `audienceMask: 4` | Returns `"only-me"` — a matched grant whose mask sets neither bit 0 nor bit 1 falls through both checks — `conformance-vectors.test.ts` |
+| hub-domain-profile-022 | usage-summary-request-shape | The usage-summary operation, called with `{ workspace: "acme" }`, against a stub list response `{ object: "list", data: [], has_more: false }` | `GET /api/v1/usage/summary?workspace=acme`; resolves to `[]` — `conformance-vectors.test.ts`, `profile.test.ts` › "lists /v1/usage/summary with workspace and maps the snake_case row" |
+| hub-domain-profile-023 | usage-summary-request-shape, workspace-query-omitted-when-absent | The usage-summary operation, called with no options | `GET /api/v1/usage/summary` with no `workspace` query — `conformance-vectors.test.ts` |
+| hub-domain-profile-024 | usage-summary-subject-list-server-derived | Inspect the usage-summary operation's parameter type | The only accepted option is an optional workspace slug; no per-principal filter can be requested by the caller — `conformance-vectors.test.ts` (an extra option never reaches the URL) |
 | hub-domain-profile-025 | owner-scoped-row-shape, write-shapes-exclude-server-managed-fields | A social-link record value missing the `syncTxid` field; a social-link create/update input that also sets `id` | Both are rejected as ill-shaped by the type system — confirmed by the interface declarations; a companion wire-conformance test pins the `id`-on-write-input case directly with a type-level expectation of failure |
 | hub-domain-profile-026 | social-link-sort-order-is-render-order | Read a social-link record's `sortOrder` field's doc comment | States it is "the order the PUBLIC user card renders these in" and that the list route sorts by it — confirmed directly from the source comment |
-| hub-domain-profile-027 | privacy-target-table-widened | Passing a target-table value the client has never declared (e.g. a table the backend adds after this client was written) | Accepted without client-side rejection — the target-table type is unconstrained by design, pinned as a permanent equality against the backend's generated type by a companion wire-conformance test |
+| hub-domain-profile-027 | privacy-target-table-widened | Passing a target-table value the client has never declared (e.g. a table the backend adds after this client was written) | Accepted without client-side rejection — the target-table type is unconstrained by design, pinned as a permanent equality against the backend's generated type by a companion wire-conformance test; `conformance-vectors.test.ts` checks the runtime half (the value is sent as given) |
 | hub-domain-profile-028 | usage-limits-enforced-flag | Read a usage-limits record's `enforced` field's doc comment | States "When false the limits are RECORDED against but never refused (observe-then-enforce)" — confirmed directly from the source comment |
 | hub-domain-profile-029 | usage-row-kind-application-admin-only | Read the usage-row kind field's doc comment | States `application` rows are platform-admin-only, since an application belongs to no workspace — confirmed directly from the source comment |
 | hub-domain-profile-030 | module-holds-no-mutable-state, no-runtime-response-validation | Read every operation this domain exports | None declares or closes over a mutable module-level variable beyond the fixed constants; the social-links list, addresses list, privacy-grants list, and usage-summary operations each return the shared request client's result directly with no shape check — confirmed by reading the function bodies, no test needed |
 | hub-domain-profile-031 | auth-delegated-to-shared-client | Inspect the module's imports | The shared authenticated request client's two calls are imported from the domain's shared HTTP helper; no other network primitive appears anywhere in this domain's source — confirmed by reading the `import` statements, no test needed |
-| hub-domain-profile-032 | violation-handling-inherited | Any call in this domain whose backend response is a non-2xx status | The call rejects with whatever error the shared authenticated request client throws, with no local error-interception logic in this domain — confirmed by reading the function bodies, no test needed |
+| hub-domain-profile-032 | violation-handling-inherited | Any call in this domain whose backend response is a non-2xx status | The call rejects with whatever error the shared authenticated request client throws, with no local error-interception logic in this domain — `conformance-vectors.test.ts` |
 | hub-domain-profile-033 | audience-visibility-enforced-server-side | Read the privacy-grant set operation's implementation | Contains no conditional branching on caller identity or current audience before sending the write — confirmed by reading the function body, no test needed |
 | hub-domain-profile-034 | no-client-side-storage-of-sensitive-fields | Search this domain's source for any client-side storage call | Zero matches across this domain's source — confirmed by direct search, no test needed |
-
 ## Edge Cases
 
 - **Null and empty input — the workspace option**: MUST take the same no-query branch whether the
@@ -389,9 +387,9 @@ Not applicable: this domain contains no logging call of any kind.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/data/src/profile/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/data/src/profile/` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -434,23 +432,23 @@ principal, when the `ownerKind`/`ownerId` pair is the actual owner.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [secure-storage](agenticdevelopercookbook://compliance/security#secure-storage) | passed | Security |
-| [error-response-handling](agenticdevelopercookbook://compliance/access-patterns#error-response-handling) | failed | Access Patterns |
-| [pagination-support](agenticdevelopercookbook://compliance/access-patterns#pagination-support) | failed | Access Patterns |
-| [data-minimization](agenticdevelopercookbook://compliance/privacy-and-data#data-minimization) | passed | Privacy and Data |
-| [no-pii-in-logs](agenticdevelopercookbook://compliance/privacy-and-data#no-pii-in-logs) | passed | Privacy and Data |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.security.secure-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bb5dfc9b-c5b0-54fa-882f-007ae7dad0e9) | passed | Security |
+| [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | failed | Access Patterns |
+| [adc.check.access-patterns.pagination-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/e29ce31a-67cb-5690-b2ca-b1065ccdaf1a) | failed | Access Patterns |
+| [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | Privacy and Data |
+| [adc.check.privacy-and-data.no-pii-in-logs](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/23bca2e1-dc0f-5ff4-beaf-03891ad48e6b) | passed | Privacy and Data |
 
 `separation-of-concerns` passes: `profile.ts`/`usage.ts`/`wire.ts` contain zero UI or presentation
 code — all three files are, per `index.ts`'s own comment, the public surface of a data domain
 consumed by a separate presentation layer (the Settings > Profile editor and the public UserCard).
-`unit-test-coverage` is `partial`: `profile.test.ts` exercises `listSocialLinks`, `listAddresses`
-(list and encoding only), `createSocialLink`, `updateSocialLink`, and `deleteSocialLink` with six
-assertions, but `createAddress`, `updateAddress`, `deleteAddress`, `getPrivacyGrants`,
-`setPrivacyGrant`, `resolvePrivacyLevel`, and every export in `usage.ts` have no dedicated test
-anywhere in this checkout. `explicit-error-handling` passes: nothing in these three files swallows
+`unit-test-coverage` is `partial`: `profile.test.ts` and `conformance-vectors.test.ts` together
+cover every runtime operation in `profile.ts` and `usage.ts` (26 of the 34 vectors pass). Eight
+vectors are skipped because they assert a doc comment, a type-level constraint, or the absence of
+something across the source, which a runtime assertion cannot exercise: 025, 026, 028, 029, 030,
+031, 033, and 034. `explicit-error-handling` passes: nothing in these three files swallows
 an error — every failure either propagates from `authedJson`/`authedRequest` unmodified or is a
 compile-time-only constraint (the wire types); per `violation-handling-inherited`, no `try`/`catch`
 anywhere in `profile.ts`/`usage.ts` intercepts a rejection. `secure-storage` passes: this module
@@ -472,6 +470,7 @@ leak through logging here.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (conformance-vectors.test.ts, 26 of 34 vectors); unit-test-coverage now partial. |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Design Decisions keep the Decision / Rationale / Approved triple; each decision's platform line is folded into its rationale. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to adh/hub/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

@@ -2,11 +2,12 @@
 // URL, method and body, and the query keys all sit under the `processing-admin` prefix.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { authedJson, authedRequest } = vi.hoisted(() => ({
+const { authedJson, authedRequest, listAllV1 } = vi.hoisted(() => ({
   authedJson: vi.fn(),
   authedRequest: vi.fn(),
+  listAllV1: vi.fn(),
 }));
-vi.mock("../http", () => ({ authedJson, authedRequest }));
+vi.mock("../http", () => ({ authedJson, authedRequest, listAllV1 }));
 
 import {
   PROCESSING_ADMIN_KEY,
@@ -28,54 +29,56 @@ import {
   updateConfigSet,
 } from "../processing";
 
-const BASE = "/api/processing/admin";
+const BASE = "/api/v1/processing";
 
 beforeEach(() => {
   authedJson.mockReset();
   authedRequest.mockReset();
+  listAllV1.mockReset();
+  listAllV1.mockResolvedValue([]);
   authedJson.mockResolvedValue({});
 });
 
 describe("config sets", () => {
-  it("lists", async () => {
+  it("lists, walking the /v1 list envelope", async () => {
     await listConfigSets();
-    expect(authedJson).toHaveBeenCalledWith(`${BASE}/config-sets`);
+    expect(listAllV1).toHaveBeenCalledWith(`${BASE}/config_sets`);
   });
 
   it("creates with a POST body", async () => {
-    await createConfigSet({ name: "n", model: "m", serviceId: null });
-    expect(authedJson).toHaveBeenCalledWith(`${BASE}/config-sets`, {
+    await createConfigSet({ name: "n", model: "m", service_id: null });
+    expect(authedJson).toHaveBeenCalledWith(`${BASE}/config_sets`, {
       method: "POST",
-      body: JSON.stringify({ name: "n", model: "m", serviceId: null }),
+      body: JSON.stringify({ name: "n", model: "m", service_id: null }),
     });
   });
 
-  it("updates with a PUT body", async () => {
+  it("updates with a POST body", async () => {
     await updateConfigSet("abc", { name: "n", model: "m" });
-    expect(authedJson).toHaveBeenCalledWith(`${BASE}/config-sets/abc`, {
-      method: "PUT",
+    expect(authedJson).toHaveBeenCalledWith(`${BASE}/config_sets/abc`, {
+      method: "POST",
       body: JSON.stringify({ name: "n", model: "m" }),
     });
   });
 
   it("deletes", async () => {
-    // 204 No Content: authedJson would throw on the empty body, so deletes go through authedRequest.
+    // A DELETE answers a tombstone the caller ignores, so deletes go through authedRequest.
     await deleteConfigSet("abc");
-    expect(authedRequest).toHaveBeenCalledWith(`${BASE}/config-sets/abc`, { method: "DELETE" });
+    expect(authedRequest).toHaveBeenCalledWith(`${BASE}/config_sets/abc`, { method: "DELETE" });
   });
 
   it("makes a set the default, and clears the default", async () => {
     await setDefaultConfigSet("abc");
-    expect(authedJson).toHaveBeenCalledWith(`${BASE}/config-sets/abc/default`, { method: "POST" });
+    expect(authedJson).toHaveBeenCalledWith(`${BASE}/config_sets/abc/make_default`, { method: "POST" });
     await clearDefaultConfigSet();
-    expect(authedRequest).toHaveBeenCalledWith(`${BASE}/config-sets/default`, { method: "DELETE" });
+    expect(authedRequest).toHaveBeenCalledWith(`${BASE}/config_sets/default`, { method: "DELETE" });
   });
 });
 
 describe("nodes", () => {
   it("lists, gets and deletes", async () => {
     await listNodes();
-    expect(authedJson).toHaveBeenCalledWith(`${BASE}/nodes`);
+    expect(listAllV1).toHaveBeenCalledWith(`${BASE}/nodes`);
     await getNode("n 1");
     expect(authedJson).toHaveBeenCalledWith(`${BASE}/nodes/n%201`);
     await deleteNode("n 1");
@@ -96,10 +99,10 @@ describe("settings", () => {
   it("reads and writes the retention", async () => {
     await getProcessingSettings();
     expect(authedJson).toHaveBeenCalledWith(`${BASE}/settings`);
-    await putProcessingSettings({ logRetentionDays: 30 });
+    await putProcessingSettings({ log_retention_days: 30 });
     expect(authedJson).toHaveBeenCalledWith(`${BASE}/settings`, {
-      method: "PUT",
-      body: JSON.stringify({ logRetentionDays: 30 }),
+      method: "POST",
+      body: JSON.stringify({ log_retention_days: 30 }),
     });
   });
 });
@@ -120,20 +123,20 @@ describe("query keys", () => {
 describe("worker tokens", () => {
   it("lists", async () => {
     await listWorkerTokens();
-    expect(authedJson).toHaveBeenCalledWith(`${BASE}/worker-tokens`);
+    expect(listAllV1).toHaveBeenCalledWith(`${BASE}/worker_tokens`);
   });
 
   it("creates with a POST body", async () => {
     await createWorkerToken({ name: "railway-staging" });
-    expect(authedJson).toHaveBeenCalledWith(`${BASE}/worker-tokens`, {
+    expect(authedJson).toHaveBeenCalledWith(`${BASE}/worker_tokens`, {
       method: "POST",
       body: JSON.stringify({ name: "railway-staging" }),
     });
   });
 
-  it("revokes through authedRequest (204), encoding the id", async () => {
+  it("revokes through authedRequest, encoding the id", async () => {
     await revokeWorkerToken("a/b");
-    expect(authedRequest).toHaveBeenCalledWith(`${BASE}/worker-tokens/a%2Fb`, { method: "DELETE" });
+    expect(authedRequest).toHaveBeenCalledWith(`${BASE}/worker_tokens/a%2Fb`, { method: "DELETE" });
     expect(authedJson).not.toHaveBeenCalled();
   });
 

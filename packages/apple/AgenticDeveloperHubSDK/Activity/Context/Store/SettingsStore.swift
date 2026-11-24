@@ -5,7 +5,7 @@ import GRDB
 
 /// Key/value settings shared between the app and the daemon.
 ///
-/// SQLite rather than `UserDefaults`: `olylod` and `Olylo.app` are separate
+/// SQLite rather than `UserDefaults`: `temporald` and `Temporal.app` are separate
 /// processes with separate defaults domains, and the settings must be the same
 /// settings — the opt-in the user ticks in the app is the opt-in the daemon
 /// obeys.
@@ -14,9 +14,9 @@ public final class SettingsStore: Sendable {
     public init(database: BoundedDatabase) { self.db = database }
 
     /// Brings the whole database up to date; the settings table is version 3
-    /// of ``OlyloSchema``'s single registry.
+    /// of ``ActivitySchema``'s single registry.
     public func runMigrations() throws {
-        try OlyloSchema.migrate(db)
+        try ActivitySchema.migrate(db)
     }
 
     // MARK: - Raw access

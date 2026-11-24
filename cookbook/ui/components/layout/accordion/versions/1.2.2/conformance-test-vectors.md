@@ -1,0 +1,15 @@
+
+| ID | Requirements | Input | Expected |
+|----|-------------|-------|----------|
+| accordion-001 | export-four-components | `import { Accordion, AccordionItem, AccordionTrigger, AccordionPanel } from "..."` | All four components are named exports; no errors on import |
+| accordion-002 | render-chevron-icon | Render `<AccordionTrigger>Section Title</AccordionTrigger>` | A `ChevronDown` icon element renders after the "Section Title" text node, inside the trigger |
+| accordion-003 | rotate-chevron-on-open | Query trigger via `getByRole("button")`, click to open, then click again to close | On open: trigger's `aria-expanded` is `"true"` and the chevron's `getComputedStyle(...).rotate` is `"180deg"` (its computed `transform` stays `"none"`); on close: `aria-expanded` is `"false"` and the chevron's computed `rotate` is `"none"` |
+| accordion-004 | apply-item-border | Render `<AccordionItem>...</AccordionItem>`; read `getComputedStyle(item).borderBottomWidth` and `.borderBottomColor` | `borderBottomWidth` is non-zero and `borderBottomColor` resolves to the `apt-border` token's color value |
+| accordion-005 | wrap-panel-with-padding | Render `<AccordionPanel>Content</AccordionPanel>`; query the panel's content wrapper and read `getComputedStyle(...).paddingBottom` | `paddingBottom` resolves to 12px |
+| accordion-006 | delegate-expand-collapse-to-primitive | Query trigger via `getByRole("button")` and panel via `getByRole("region")` | Trigger exposes `aria-expanded` and `aria-controls` referencing the panel's `id`; panel exposes a matching `id` — wiring supplied by the primitive rather than hand-set by the wrapper |
+| accordion-007 | set-data-slot-attributes | Inspect rendered HTML elements | Root has `data-slot="accordion"`; items have `data-slot="accordion-item"`; triggers have `data-slot="accordion-trigger"`; panels have `data-slot="accordion-panel"` |
+| accordion-008 | forward-props-to-primitive | Pass `disabled` and `value` props to `AccordionItem` | Rendered element carries the `disabled` state (e.g., `aria-disabled="true"` or `data-disabled`) and responds to the `value` used by the primitive for open/close targeting |
+| accordion-009 | support-style-override | Render `<AccordionTrigger className="my-custom-class">Label</AccordionTrigger>`; query via `getByRole("button")` | `element.classList.contains("my-custom-class")` is `true` |
+| accordion-010 | default-single-open | Render two `AccordionItem`s in a default `Accordion` (no `multiple` prop); open trigger 1, then open trigger 2 | Trigger 1's `aria-expanded` returns to `"false"` once trigger 2 opens; the two triggers never both report `aria-expanded="true"` at the same time |
+| accordion-011 | animate-transitions | Open a panel | Computed `transition-property` of the trigger includes its color properties, of the chevron includes `transform`, and of the panel includes `all`; the chevron's computed `rotate` is `180deg` while the panel is open, and the panel itself shows no observable size or opacity change. |
+

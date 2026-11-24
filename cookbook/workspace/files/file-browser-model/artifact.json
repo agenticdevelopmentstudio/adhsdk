@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "fa6a7094-40c2-4302-8cf3-742a072f5bb3",
     "title": "File System File Browser",
-    "domain": "adhsdk://cookbook/workspace/files/file-browser-model",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -25,8 +24,8 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/workspace/files/file-browser-view",
-      "adhsdk://cookbook/workspace/files/file-tree-view"
+      "ab6d7655-9476-4318-8c36-f431686e2d23",
+      "b307116d-3ab8-422a-b031-885710e11e70"
     ],
     "references": [
       "https://developer.apple.com/documentation/combine/observableobject",
@@ -36,7 +35,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "c8360c234c0236ec",
+  "synced": "4367352242ca11cc",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -55,7 +54,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

@@ -7,7 +7,7 @@ export interface AuthRuntimeConfig {
 
 let config: AuthRuntimeConfig = {
   storageKey: 'auth_tokens',
-  refreshPath: '/api/auth/refresh',
+  refreshPath: '/api/v1/auth/sessions/refresh',
 }
 
 export function configureAuth(partial: Partial<AuthRuntimeConfig>): void {

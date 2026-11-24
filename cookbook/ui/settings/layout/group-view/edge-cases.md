@@ -53,4 +53,4 @@
   widths ever differ (MUST-level consequence of source; this component
   never stores or deactivates a previously created width constraint — see
   Design Decisions).
-
+- A row whose editor sits inside a scroll view: the scroll bars are controls to the platform but not to a UI driver, so they are passed over and the editor itself takes the row's identifier.

@@ -1,5 +1,7 @@
 import AgenticDeveloperHubSDKCore
+import AgenticDeveloperHubSDKCoreUI
 import AppKit
+import os
 
 /// Owns one checkout: its status provider, its current branch, the commands
 /// that act on it and the tab panes that describe it. Vended by
@@ -11,7 +13,14 @@ public final class BranchController: TabPaneDataSource, TabPaneDelegate {
     public private(set) var currentBranch: String?
 
     private let gitClient: GitClient
+    /// The app's registry, held weakly: asked, on every read of `commands`,
+    /// whether the Git window's open-for-path command is there to offer.
+    private weak var commandRegistry: CommandRegistry?
     private let panes = NSHashTable<TabPaneViewController>.weakObjects()
+    private var statusObservation: GitStatusObservation?
+    private var sessionObserver: NSObjectProtocol?
+    /// `nil` until the first status arrives, and when git could not answer.
+    private var isClean: Bool?
 
     /// The provider is handed in, not built here (`dependency-injection`). A
     /// checkout's panes are built before this controller exists — the window
@@ -21,11 +30,45 @@ public final class BranchController: TabPaneDataSource, TabPaneDelegate {
     /// badges, one answering `Refresh Status`. The project owns the per-
     /// directory cache both sides ask; see
     /// `ProjectWorkspace.gitStatusProvider(forDirectory:)`.
-    public init(checkout: ProjectCheckout, gitClient: GitClient, statusProvider: GitStatusProvider) {
+    public init(
+        checkout: ProjectCheckout,
+        gitClient: GitClient,
+        statusProvider: GitStatusProvider,
+        commandRegistry: CommandRegistry? = nil
+    ) {
         self.checkout = checkout
         self.gitClient = gitClient
+        self.commandRegistry = commandRegistry
         self.statusProvider = statusProvider
         self.currentBranch = checkout.branch
+        statusObservation = statusProvider.observe { [weak self] result in
+            guard let self else { return }
+            if case .status(let status) = result {
+                self.isClean = status.files.isEmpty
+            } else {
+                self.isClean = nil
+            }
+            self.reloadPanes()
+        }
+        statusProvider.refresh()
+        // The session monitor also announces its summaries switch flipping,
+        // the one setting a card reads. Never `UserDefaults.didChangeNotification`:
+        // every defaults write anywhere (a shelf width, a window frame) then
+        // reloaded every card of every open project on the main thread, which
+        // is most of what made switching projects spin.
+        sessionObserver = NotificationCenter.default.addObserver(
+            forName: ProjectSessionMonitor.didChangeNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.reloadPanes() }
+        }
+    }
+
+    private func reloadPanes() {
+        for pane in panes.allObjects { pane.reload() }
+    }
+
+    private var session: SessionWatcher.SessionWatcherSession? {
+        ProjectSessionMonitor.shared.session(forDirectory: checkout.directory)
     }
 
     // MARK: Panes
@@ -52,6 +95,7 @@ public final class BranchController: TabPaneDataSource, TabPaneDelegate {
         let pane = TabPaneViewController(edge: edge, tabID: tabID)
         pane.dataSource = self
         pane.delegate = self
+        pane.showsCloseButton = false
         panes.add(pane)
         pane.reload()
         return pane
@@ -112,7 +156,7 @@ public final class BranchController: TabPaneDataSource, TabPaneDelegate {
         let suffix = checkout.identifier
         let directory = checkout.directory
         let category = "Branch — \(displayName)"
-        return [
+        var commands = [
             AppCommand(
                 id: "branch.action.refreshStatus.\(suffix)",
                 title: "Refresh Status",
@@ -143,6 +187,23 @@ public final class BranchController: TabPaneDataSource, TabPaneDelegate {
                 NSPasteboard.general.setString(directory.path, forType: .string)
             }
         ]
+        // Offered only while the Git window can take it, so a host without
+        // that feature shows no row that would do nothing.
+        let openForPath = GitWindowFeature.CommandID.openForPath
+        if let registry = commandRegistry, registry.command(id: openForPath) != nil {
+            commands.append(AppCommand(
+                id: "branch.action.openGitWindow.\(suffix)",
+                title: "Open in Git Window",
+                category: category
+            ) { [weak registry] in
+                do {
+                    try registry?.execute(id: openForPath, arguments: [directory.path])
+                } catch {
+                    Self.logger.error("Open in Git Window failed: \(String(describing: error), privacy: .public)")
+                }
+            })
+        }
+        return commands
     }
 
     // MARK: TabPaneDataSource
@@ -150,13 +211,39 @@ public final class BranchController: TabPaneDataSource, TabPaneDelegate {
     /// Placeholders until an agent is attached to the tab: the design names
     /// "Claude", no model, and an idle moon. Real values arrive with the
     /// document-model work that follows the vsc-plugins branch.
-    public func tabPaneAgentName(_ pane: TabPaneViewController) -> String { "Claude" }
+    /// `<branch> (<session name>)`, the parentheses only for a named session.
+    public func tabPaneAgentName(_ pane: TabPaneViewController) -> String {
+        guard let name = session?.sessionName, !name.isEmpty else { return displayName }
+        return "\(displayName) (\(name))"
+    }
     public func tabPaneModelName(_ pane: TabPaneViewController) -> String? { nil }
-    public func tabPaneStatusSymbols(_ pane: TabPaneViewController) -> [TabPaneStatusSymbol] { [.idle] }
+    /// The checkout's state: clean, modified, or not yet known.
+    public func tabPaneStatusSymbols(_ pane: TabPaneViewController) -> [TabPaneStatusSymbol] {
+        switch isClean {
+        case true?: [TabPaneStatusSymbol(symbolName: "checkmark.circle", accessibilityLabel: "Clean")]
+        case false?: [TabPaneStatusSymbol(symbolName: "pencil.circle", accessibilityLabel: "Modified")]
+        case nil: [TabPaneStatusSymbol(symbolName: "circle.dashed", accessibilityLabel: "Status Unknown")]
+        }
+    }
+    public func tabPaneActivitySymbol(_ pane: TabPaneViewController) -> TabPaneStatusSymbol? {
+        guard let session else { return nil }
+        switch session.activity {
+        case .working: return TabPaneStatusSymbol(symbolName: "bolt.fill", accessibilityLabel: "Working")
+        case .waiting:
+            return TabPaneStatusSymbol(symbolName: "exclamationmark.bubble.fill", accessibilityLabel: "Waiting")
+        case .idle: return .idle
+        }
+    }
+    public func tabPaneShowsDetails(_ pane: TabPaneViewController) -> Bool { false }
     public func tabPaneSessionName(_ pane: TabPaneViewController) -> String { displayName }
     public func tabPaneWorkingDirectory(_ pane: TabPaneViewController) -> URL { checkout.directory }
     public func tabPaneBranch(_ pane: TabPaneViewController) -> String? { currentBranch }
-    public func tabPaneSummary(_ pane: TabPaneViewController) -> String? { nil }
+    /// The session's AI summary, or an empty placeholder until it has one —
+    /// only while summaries are on and there is a session to summarize.
+    public func tabPaneSummary(_ pane: TabPaneViewController) -> String? {
+        guard let session, ProjectSessionMonitor.shared.summariesEnabled() else { return nil }
+        return session.summary
+    }
 
     // MARK: TabPaneDelegate
 
@@ -192,4 +279,8 @@ public final class BranchController: TabPaneDataSource, TabPaneDelegate {
         }
         return menu
     }
+}
+
+extension BranchController: Loggable {
+    public static nonisolated let logger = makeLogger()
 }

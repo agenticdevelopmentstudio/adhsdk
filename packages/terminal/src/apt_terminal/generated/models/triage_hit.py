@@ -31,7 +31,7 @@ class TriageHit:
             for this row. Carried per row for the same reason projectName is: the queue spans boards, so the client has no
             single project to read it off. The board's item NOUN is deliberately absent: a queue mixing recipes and stories
             has no single word for what it holds.
-        created_at (str): when it arrived; the queue is ordered by this, oldest first
+        created (int): Unix timestamp, in seconds.
         item_number (int | Unset):
         created_by (None | str | Unset):
     """
@@ -45,7 +45,7 @@ class TriageHit:
     status_id: str
     priority: int
     priority_scale: TriageHitPriorityScale
-    created_at: str
+    created: int
     item_number: int | Unset = UNSET
     created_by: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -69,7 +69,7 @@ class TriageHit:
 
         priority_scale = self.priority_scale.value
 
-        created_at = self.created_at
+        created = self.created
 
         item_number = self.item_number
 
@@ -84,21 +84,21 @@ class TriageHit:
         field_dict.update(
             {
                 "id": id,
-                "projectId": project_id,
-                "projectName": project_name,
-                "itemKey": item_key,
+                "project_id": project_id,
+                "project_name": project_name,
+                "item_key": item_key,
                 "title": title,
                 "description": description,
-                "statusId": status_id,
+                "status_id": status_id,
                 "priority": priority,
-                "priorityScale": priority_scale,
-                "createdAt": created_at,
+                "priority_scale": priority_scale,
+                "created": created,
             }
         )
         if item_number is not UNSET:
-            field_dict["itemNumber"] = item_number
+            field_dict["item_number"] = item_number
         if created_by is not UNSET:
-            field_dict["createdBy"] = created_by
+            field_dict["created_by"] = created_by
 
         return field_dict
 
@@ -107,25 +107,25 @@ class TriageHit:
         d = dict(src_dict)
         id = d.pop("id")
 
-        project_id = d.pop("projectId")
+        project_id = d.pop("project_id")
 
-        project_name = d.pop("projectName")
+        project_name = d.pop("project_name")
 
-        item_key = d.pop("itemKey")
+        item_key = d.pop("item_key")
 
         title = d.pop("title")
 
         description = d.pop("description")
 
-        status_id = d.pop("statusId")
+        status_id = d.pop("status_id")
 
         priority = d.pop("priority")
 
-        priority_scale = TriageHitPriorityScale(d.pop("priorityScale"))
+        priority_scale = TriageHitPriorityScale(d.pop("priority_scale"))
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        item_number = d.pop("itemNumber", UNSET)
+        item_number = d.pop("item_number", UNSET)
 
         def _parse_created_by(data: object) -> None | str | Unset:
             if data is None:
@@ -134,7 +134,7 @@ class TriageHit:
                 return data
             return cast(None | str | Unset, data)
 
-        created_by = _parse_created_by(d.pop("createdBy", UNSET))
+        created_by = _parse_created_by(d.pop("created_by", UNSET))
 
         triage_hit = cls(
             id=id,
@@ -146,7 +146,7 @@ class TriageHit:
             status_id=status_id,
             priority=priority,
             priority_scale=priority_scale,
-            created_at=created_at,
+            created=created,
             item_number=item_number,
             created_by=created_by,
         )

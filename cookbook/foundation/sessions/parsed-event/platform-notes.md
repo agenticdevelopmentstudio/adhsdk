@@ -1,0 +1,7 @@
+
+- **SwiftUI**: Not used; the type has no view layer.
+- **Compose**: Port as a Kotlin `data class` with `Map<String, Any?>` for the payload and `String?` for the oauth email; make the maps read-only copies (`toMap()`) to enforce the never-mutated invariant the source only states. A `data class` synthesizes structural `equals`, `hashCode` and `toString`, which the source deliberately does not have; use a plain `class` with `val` properties, or override those three so they do not compare or print the payload.
+- **React/Web**: Port as a readonly TypeScript interface with `Readonly<Record<string, unknown>>`, `oauthAccountEmail?: string`; keep `undefined` distinct from `""`.
+- **AppKit / UIKit**: Use the Swift struct as is; it is Foundation-only and has no view layer, so macOS and iOS share it. Keep `@unchecked Sendable`, since `[String: Any]` is not `Sendable`, and do not add `Equatable` conformance.
+- **WinUI 3**: Use a C# `sealed record ParsedEvent` with `init` properties, `IReadOnlyDictionary<string, object?>` for `HookData` and `Context` (wrap with `ReadOnlyDictionary` over a copy so the never-mutated invariant is enforced by the type, which the source only promises), and `string?` for `OauthAccountEmail` with nullable reference types enabled so nil and empty stay distinct. A record's synthesized equality compares dictionaries by reference, unlike the source which has no equality at all. Hand it to other tasks as is; an immutable record needs no lock.
+

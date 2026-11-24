@@ -38,9 +38,9 @@ class UsageRatePatch:
 
         field_dict.update({})
         if micros_per_unit is not UNSET:
-            field_dict["microsPerUnit"] = micros_per_unit
+            field_dict["micros_per_unit"] = micros_per_unit
         if effective_from is not UNSET:
-            field_dict["effectiveFrom"] = effective_from
+            field_dict["effective_from"] = effective_from
         if note is not UNSET:
             field_dict["note"] = note
 
@@ -49,9 +49,9 @@ class UsageRatePatch:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        micros_per_unit = d.pop("microsPerUnit", UNSET)
+        micros_per_unit = d.pop("micros_per_unit", UNSET)
 
-        _effective_from = d.pop("effectiveFrom", UNSET)
+        _effective_from = d.pop("effective_from", UNSET)
         effective_from: datetime.date | Unset
         if isinstance(_effective_from, Unset):
             effective_from = UNSET

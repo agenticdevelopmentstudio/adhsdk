@@ -1,36 +1,11 @@
 
 | Check | Status | Category |
-|---|---|---|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [semantic-markup](agenticdevelopercookbook://compliance/accessibility#semantic-markup) | passed | Accessibility |
-| [focus-management](agenticdevelopercookbook://compliance/accessibility#focus-management) | passed | Accessibility |
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | Accessibility |
-| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | partial | Accessibility |
-| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
-| [touch-target-size](agenticdevelopercookbook://compliance/accessibility#touch-target-size) | partial | Accessibility |
-| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | partial | Security |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
-| [safe-defaults](agenticdevelopercookbook://compliance/user-safety#safe-defaults) | passed | User Safety |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [test-pyramid](agenticdevelopercookbook://compliance/best-practices#test-pyramid) | partial | Best Practices |
-| [platform-theming](agenticdevelopercookbook://compliance/platform-compliance#platform-theming) | passed | Platform Compliance |
-| [deep-linking-support](agenticdevelopercookbook://compliance/platform-compliance#deep-linking-support) | passed | Platform Compliance |
+|-------|--------|----------|
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
+| [adc.check.platform-compliance.platform-theming](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d2b685fd-b481-5d38-bd70-403bd202b5c6) | passed | Platform Compliance |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | partial | Accessibility |
 
-The passed rows rest on `DeleteEntitySection`'s `@base-ui/react/dialog`
-primitive (focus trap, Escape-to-close), its `Label htmlFor` wiring, its
-`apt-*`-only token usage, and the URL-driven `{basePath}/{id}/{topic}`
-routing; the partial accessibility rows reflect that the All view's filter,
-toggle, and its `role="radiogroup"`/`aria-label` are not yet built and no
-computed contrast or hit-size values are given; `no-hardcoded-strings` is
-failed because every string in `delete-entity-section.tsx` is a plain JSX
-literal with no localization call; `test-pyramid` is partial because the
-recipe defines integration-level vectors (a Playwright e2e suite) but no
-unit-test strategy.
-
-Process: the repo's pre-commit gate (`check_ui.py`, typecheck, lint,
-`/code-review`) runs before every commit on this surface; it is a workflow
-step, not a compliance check.
-
-Separation-of-concerns is passed: `focused-topic-detail.tsx` composes only existing blocks (`PopupMenu`, `TopicDetail`, `SectionHeader`, `ResourceCard`) and leaves the focused pane's content to the consumer, and the destructive flow lives in the separate `DeleteEntitySection` block. Unit-test-coverage is partial: `deleteEntitySection.test.tsx` and the `topicDetail*.test.tsx` files in `packages/web/packages/ui/src/__tests__` cover the delete flow and the topic-detail block it composes, but no test file imports the focused-topic-detail block itself, so the popup/All-view/card-toggle composition is untested.
+`separation-of-concerns` passes because the block only arranges existing blocks and holds no state. `unit-test-coverage` passes because `packages/web/packages/ui/src/__tests__/focusedTopicDetail.test.tsx` covers all 11 integration test vectors (ftd-001 to ftd-011). `no-hardcoded-strings` fails because the defaults "All items" and "Nothing here yet." are plain literals. `platform-theming` passes because colours come from `apt-*` tokens. `keyboard-navigable` is partial: the cards are keyboard-operable through `ResourceCard`, but the block itself defines no key handling.
 

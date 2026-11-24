@@ -1,0 +1,14 @@
+
+- **render-card**: Component MUST render a Card element containing an icon, optional headline, and optional descriptive content.
+- **render-icon**: Component MUST render a pointer/click glyph inside a circular container.
+- **use-test-hook**: Component MUST set `data-htd-select-hint` attribute on the root container for test targeting. The `htd` prefix is the shared test-hook namespace for the whole HierarchicalTopicDetail component family (`topic-detail`, `hierarchical-topic-detail`, `hierarchical-menu-detail`); TopicSelectHint is that family's shared "nothing selected" placeholder, so it carries the same prefix rather than a bespoke one.
+- **accept-custom-title**: Component MUST render the `title` prop as the headline verbatim when it is not `null`/`undefined` (`title=""` renders an empty headline), taking precedence over computed headlines and over `selectable` — an explicit `title` still renders even when `selectable` is false.
+- **compute-headline-from-noun**: Component MUST generate the headline as "Select [article] [noun]" when `noun` is truthy (a non-empty string), `title` is `null`/`undefined`, and `selectable` is true, where `article` is `"an"` when `noun`'s first character matches `/^[aeiou]/i` (case-insensitive) and `"a"` otherwise. This is a naive first-letter rule, not true English pronunciation, so it picks the wrong article for words like "hour" and "user" — see Edge Cases.
+- **compute-headline-from-list-title**: Component MUST generate the headline as "Select an item from [listTitle]" when `listTitle` is truthy (a non-empty string), `noun` is falsy, `title` is `null`/`undefined`, and `selectable` is true.
+- **use-fallback-headline**: Component MUST generate the headline as "Select an item from the list" when `title` is `null`/`undefined`, `noun` and `listTitle` are both falsy (absent or an empty string), and `selectable` is true.
+- **append-edit-suffix**: Component MUST append " to view or edit it here." to the computed headline when `selectable` is true and `children` is `null`/`undefined` (any other value, including `""` and `0`, counts as provided). This applies to every computed headline (noun-derived, listTitle-derived, and the fully generic default) equally.
+- **hide-headline-when-not-selectable**: Component MUST NOT render the computed headline when `selectable` is false and no `title` is provided; an explicit `title` still renders regardless of `selectable`.
+- **render-children**: Component MUST render the `children` prop as descriptive content when `children` is not `null`/`undefined`; `children=""` renders an empty description container.
+- **hide-children-when-not-provided**: Component MUST NOT render a content section when `children` is `null`/`undefined`.
+- **center-content**: Component MUST center the card horizontally and vertically within its container.
+

@@ -1,19 +1,23 @@
 # The library cookbook — how it is organized, and why
 
 `cookbook/` holds one behavioral spec per component, window, service or model
-this repo implements (443 specs at 2026-10-04). Each spec is addressed as
-`adhsdk://cookbook/<group>/.../<name>` and lists the code that implements it
-in its **Reference Implementations** table. The legacy root `recipes/` keeps
-its own `adhsdk://recipes/<name>` domains.
+this repo implements (699 specs since the cookr format 2 upgrade, which moved
+the 256 legacy root `recipes/` specs in). Each spec is identified by its UUID
+`id`; its readable rdid (`adhsdk.ingredient.<group>.<name>`) and path live in
+`cookbook/index.json`, and links are written `[<rdid>](cookbook:<uuid>)`. Each
+spec lists the code that implements it in its **Reference Implementations**
+table.
 
 Every spec is a **source folder** (`<name>/artifact.json` plus one `.md` per
 section) with `<name>.md` compiled from it beside it. Edit `<name>.md`, then
 run `cookr convert --update <path>` to fold the edit into the folder. A spec
 that names a host or model as a literal value the code handles (a `claude`
 CLI call, a `.claude/` directory, a model id in a test vector) records why in
-`names_hosts` in its `artifact.json`. `cookbook/cookbook.json`
-is the manifest: it declares the concept groups and maps each code root
-(`code.roots`) onto the group its specs belong in.
+`names_hosts` in its `artifact.json`. `cookbook/cookbook.json` is the
+manifest (format 2, rdid `adhsdk`, library structure). The code roots live
+in `.cookr.json` at the repo root: each entry in `roots` names a code
+`path`, its `platform` and `kind`, and the concept `group` its specs belong
+in; `ignore` lists the paths cookr skips.
 
 ## The rules
 
@@ -24,7 +28,7 @@ is the manifest: it declares the concept groups and maps each code root
    |-------|------------|
    | `foundation` | formats, git, networking, processes |
    | `data` | services, storage, sync |
-   | `ui` | containers, controls, crud, layout, navigation, settings, theme, windows |
+   | `ui` | blocks, components (actions, data, display, inputs, layout, overlays), containers, controls, crud, layout, navigation, settings, theme, windows |
    | `system` | permissions, system-windows |
    | `ai` | agent-sessions, chat, mcp, models, plugins, providers |
    | `workspace` | documents, extensions, files, language, logs, notes, projects, terminal |
@@ -32,6 +36,9 @@ is the manifest: it declares the concept groups and maps each code root
    | `adh` | hub, sites |
 
    A spec's place is decided by what it *is*, not by where its code lives.
+   `ui/components` holds the web component library's specs, sub-grouped by
+   component family so no group lists more than cookr's 50-entry skill-route
+   cap.
 2. **No loose specs at the root, and no platform directories.** The project is
    platform-agnostic, so there is no `macos/` or `web/` group: the AI chat
    window is `ai/chat/...`, whichever platform implements it.

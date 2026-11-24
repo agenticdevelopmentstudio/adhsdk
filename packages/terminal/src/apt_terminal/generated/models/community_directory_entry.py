@@ -76,36 +76,36 @@ class CommunityDirectoryEntry:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "customerId": customer_id,
+                "customer_id": customer_id,
                 "role": role,
-                "joinedAt": joined_at,
-                "postCount": post_count,
-                "activeCategoryIds": active_category_ids,
+                "joined_at": joined_at,
+                "post_count": post_count,
+                "active_category_ids": active_category_ids,
             }
         )
         if bio is not UNSET:
             field_dict["bio"] = bio
         if display_name is not UNSET:
-            field_dict["displayName"] = display_name
+            field_dict["display_name"] = display_name
         if slug is not UNSET:
             field_dict["slug"] = slug
         if avatar_url is not UNSET:
-            field_dict["avatarUrl"] = avatar_url
+            field_dict["avatar_url"] = avatar_url
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        customer_id = d.pop("customerId")
+        customer_id = d.pop("customer_id")
 
         role = d.pop("role")
 
-        joined_at = d.pop("joinedAt")
+        joined_at = d.pop("joined_at")
 
-        post_count = d.pop("postCount")
+        post_count = d.pop("post_count")
 
-        active_category_ids = cast(list[str], d.pop("activeCategoryIds"))
+        active_category_ids = cast(list[str], d.pop("active_category_ids"))
 
         def _parse_bio(data: object) -> None | str | Unset:
             if data is None:
@@ -123,7 +123,7 @@ class CommunityDirectoryEntry:
                 return data
             return cast(None | str | Unset, data)
 
-        display_name = _parse_display_name(d.pop("displayName", UNSET))
+        display_name = _parse_display_name(d.pop("display_name", UNSET))
 
         def _parse_slug(data: object) -> None | str | Unset:
             if data is None:
@@ -141,7 +141,7 @@ class CommunityDirectoryEntry:
                 return data
             return cast(None | str | Unset, data)
 
-        avatar_url = _parse_avatar_url(d.pop("avatarUrl", UNSET))
+        avatar_url = _parse_avatar_url(d.pop("avatar_url", UNSET))
 
         community_directory_entry = cls(
             customer_id=customer_id,

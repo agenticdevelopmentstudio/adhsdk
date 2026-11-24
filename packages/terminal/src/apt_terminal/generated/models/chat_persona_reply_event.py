@@ -47,9 +47,9 @@ class ChatPersonaReplyEvent:
         field_dict.update(self.additional_properties)
         field_dict.update({})
         if participant_id is not UNSET:
-            field_dict["participantId"] = participant_id
+            field_dict["participant_id"] = participant_id
         if persona_id is not UNSET:
-            field_dict["personaId"] = persona_id
+            field_dict["persona_id"] = persona_id
         if message is not UNSET:
             field_dict["message"] = message
 
@@ -60,9 +60,9 @@ class ChatPersonaReplyEvent:
         from ..models.dm_message import DmMessage
 
         d = dict(src_dict)
-        participant_id = d.pop("participantId", UNSET)
+        participant_id = d.pop("participant_id", UNSET)
 
-        persona_id = d.pop("personaId", UNSET)
+        persona_id = d.pop("persona_id", UNSET)
 
         _message = d.pop("message", UNSET)
         message: DmMessage | Unset

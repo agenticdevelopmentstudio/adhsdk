@@ -1,0 +1,24 @@
+
+- **init-mode**: The reader MUST be created with `init(streaming:)`, and that flag MUST fix its mode for its lifetime: `true` for a server-sent-event body, `false` for a single JSON body.
+- **output-fields**: The reader MUST expose six read-only optional properties: `model` and `stopReason` (text) and `inputTokens`, `outputTokens`, `cacheReadTokens`, `cacheCreationTokens` (integers). Each MUST be nil until a value is read.
+- **never-throws**: No operation MAY throw; malformed, truncated or non-UTF-8 input MUST leave the fields untouched rather than raise an error.
+- **passive**: The reader MUST NOT alter or return the bytes it is given; `consume` and `finish` return nothing.
+- **chunking-independence**: Splitting the same body at any byte boundary MUST yield the same field values as feeding it whole, provided no single line reaches the 4 MiB cap (a longer line is parsed when fed whole in one chunk, but discarded when the cap trips between chunks).
+- **sse-line-framing**: In streaming mode the reader MUST accumulate chunks and process each complete line ending in a line feed (byte 0x0A), removing a single trailing carriage return (0x0D) before processing, so both LF and CRLF framing work.
+- **sse-data-lines-only**: In streaming mode a line MUST be processed only if it decodes as UTF-8 and starts with `data:`; every other line (`event:` lines, comments, blank lines, invalid bytes) MUST be ignored.
+- **sse-data-prefix**: The reader MUST strip the `data:` prefix and one optional single leading space before parsing the remainder as JSON.
+- **sse-payload-object**: A `data:` payload MUST be used only if it parses as a JSON object; any other payload (broken JSON, an array, a scalar) MUST be ignored.
+- **sse-message-start**: For an event whose `type` is `message_start` the reader MUST set `model` from `message.model` when it is text, and apply `message.usage`.
+- **sse-message-delta**: For an event whose `type` is `message_delta` the reader MUST set `stopReason` from `delta.stop_reason` when it is text, and apply the event's top-level `usage`.
+- **sse-other-events-ignored**: Events of any other `type`, or with no `type`, MUST NOT change any field.
+- **usage-keys**: Applying a usage object MUST set `inputTokens` from `input_tokens`, `outputTokens` from `output_tokens`, `cacheReadTokens` from `cache_read_input_tokens` and `cacheCreationTokens` from `cache_creation_input_tokens`, each only when that key holds an integer.
+- **usage-last-write-wins**: A later usage value MUST overwrite an earlier one for the same key, and a usage object that omits a key MUST leave that field's earlier value; this is how the `message_delta` output count (42 in the tests) replaces the `message_start` count (1).
+- **sse-final-line-flush**: On `finish` in streaming mode, any buffered bytes with no trailing newline MUST be processed as one last line.
+- **sse-unterminated-line-cap**: In streaming mode, if the buffer still holds more than 4 MiB (4 × 1024 × 1024 bytes) after all complete lines are processed, the reader MUST discard the buffer.
+- **json-buffering**: In non-streaming mode the reader MUST append chunks to a buffer and parse nothing until `finish`.
+- **json-parse-at-finish**: On `finish` in non-streaming mode the reader MUST parse the buffer as a JSON object and set `model` from `model`, `stopReason` from `stop_reason`, and apply `usage`; a buffer that is not a JSON object MUST leave every field nil.
+- **json-size-limit**: In non-streaming mode, if buffering a chunk would make the buffer exceed `jsonLimit` (4 MiB, 4 × 1024 × 1024 bytes; a body of exactly 4 MiB is still buffered), the reader MUST stop buffering, discard what it has, and leave every field nil even if the rest of the body is valid.
+- **finish-clears-buffer**: After `finish` in non-streaming mode the buffer MUST be emptied.
+- **single-threaded**: The reader is a non-`Sendable` class documented as "Not thread-safe; one per response", so each reader MUST be confined to one thread or task at a time, and a response MUST NOT share a reader with another.
+- **no-reset**: The reader MUST NOT offer a reset; reuse for a second response is not supported, and a second response's values would overwrite the first's per the last-write-wins rule.
+

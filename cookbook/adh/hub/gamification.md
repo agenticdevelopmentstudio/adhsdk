@@ -1,13 +1,12 @@
 ---
 id: cef42b4b-e10e-4816-b1f8-0156699bec21
 title: "Gamification"
-domain: adhsdk://cookbook/adh/hub/gamification
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-09-27
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -24,7 +23,7 @@ tags:
   - event-types
 depends-on: []
 related:
-  - adhsdk://cookbook/adh/hub/ecosystems/ecosystem-config
+  - 87ca0139-6cd0-46dd-a9fb-40ad3406f175
 references:
   - packages/web/packages/data/src/gamification/gamification.ts (adhsdk)
   - packages/web/packages/data/src/gamification/wire.ts (adhsdk)
@@ -227,30 +226,29 @@ Not applicable — this is a data client, not a visual component.
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
 | gamification-001 | wire-types-own-transcription | Read this component's own import list for its wire types | Every wire type comes from this component's own transcription; none is imported from a generated, product-specific vocabulary package |
-| gamification-002 | path-segment-encoding, api-proxy-path-prefix | Build the realm-config route for ecosystem id `"eco/1"`, and the item badge route for ecosystem id `"eco 1"` and badge id `"b#1"` | `"/api/gamification/realms/eco%2F1/config"`; `"/api/gamification/realms/eco%201/badges/b%231"` |
+| gamification-002 | path-segment-encoding, api-proxy-path-prefix | Read the realm config for ecosystem id `"eco/1"`, and update the badge with id `"b#1"` for ecosystem id `"eco 1"` | A read to `"/api/v1/gamification/config"` with query field `ecosystem` equal to `"eco/1"`; a write to `"/api/v1/gamification/badges/b%231"` with body field `ecosystem` equal to `"eco 1"` |
 | gamification-003 | stateless-module, no-response-caching | Read the same realm's configuration twice in a row, with the underlying request mocked to answer a different value each time | Two separate requests fire; the second resolved value differs from the first |
 | gamification-004 | error-propagation-unmodified | The underlying request is mocked to fail with a conflict ("already exists") while creating an event type | The operation fails with that same error, unmodified |
-| gamification-005 | realm-config-read | Read ecosystem `"org.acme.shop"`'s configuration, with the underlying request mocked to resolve a configuration record (mode `"none"`, skin `"plain"`, no surface overrides, no season, timezone `"UTC"`) | A read to the realm-config route for that ecosystem; resolves with that same record |
-| gamification-006 | realm-config-partial-update-optionality, realm-config-update-always-returns-config | Update ecosystem `"eco-1"`'s configuration with only a timezone of `"America/New_York"` | A write to the realm-config route with a body containing only the timezone field; the resolved result's configuration field is present |
+| gamification-005 | realm-config-read | Read ecosystem `"org.acme.shop"`'s configuration, with the underlying request mocked to resolve a configuration record (mode `"none"`, skin `"plain"`, no surface overrides, no season, timezone `"UTC"`) | A read to the realm-config route with query field `ecosystem` equal to `"org.acme.shop"`; resolves with that record in domain (camelCase) shape |
+| gamification-006 | realm-config-partial-update-optionality, realm-config-update-always-returns-config | Update ecosystem `"eco-1"`'s configuration with only a timezone of `"America/New_York"` | A write to the realm-config route with a body containing only the timezone field plus the `ecosystem` field; the resolved result's configuration field is present |
 | gamification-007 | realm-config-mode-ordered-axis | Compare a configuration whose mode is `"game"` against one whose mode is `"gamification"` | Both report gaming is on; only the first reports the game-specific surface is on |
 | gamification-008 | realm-config-surfaces-default-on | A configuration whose only surface override is `leaderboard: false` | An absent surface key (e.g. `badges`) reads as enabled; only `leaderboard` reads as off |
-| gamification-009 | realm-config-seasons-nullable-window | Update `"eco-1"`'s configuration with a seasons value of `null`, then again with a seasons value of `{ anchor: "2026-01-01", lengthDays: 30 }` | The first write's body carries a null seasons value; the second carries that season-window object |
+| gamification-009 | realm-config-seasons-nullable-window | Update `"eco-1"`'s configuration with a seasons value of `null`, then again with a seasons value of `{ anchor: "2026-01-01", lengthDays: 30 }` | The first write's body carries a null seasons value; the second carries the season-window object in wire shape (`length_days`) |
 | gamification-010 | realm-config-replay-on-enable | Update `"eco-1"`'s configuration to mode `"gamification"`, with the underlying request mocked to resolve a configuration plus a replay summary (1 subject, 2 badges, 50 points) | The resolved result's replay field equals that summary |
 | gamification-011 | catalog-effective-merge, catalog-default-rows-read-only | Read ecosystem `"eco-1"`'s effective catalog, with the underlying request mocked to resolve badge/level rows tagged `"default"` and `"realm"` | The resolved catalog preserves each row's source tag unchanged |
-| gamification-012 | badge-create, badge-input-required-field-set | Create a badge for `"eco-1"` with name `"Streaker"`, description `"7-day streak"`, icon `"fire"`, statKey `"streak_days"`, comparator `">="`, threshold `7`, badgeLine `"streak"`, tier `"bronze"`, pointValue `50`, hidden `false` | A create request to the badges route with a body containing exactly those ten fields |
-| gamification-013 | badge-input-omits-read-only-fields | Inspect the badge create/update input's field set | No `active`, `subjectType`, or `ecosystemId` field, though the read record declares all three |
+| gamification-012 | badge-create, badge-input-required-field-set | Create a badge for `"eco-1"` with name `"Streaker"`, description `"7-day streak"`, icon `"fire"`, statKey `"streak_days"`, comparator `">="`, threshold `7`, badgeLine `"streak"`, tier `"bronze"`, pointValue `50`, hidden `false` | A create request to the badges route with a body containing exactly those ten fields (in wire shape) plus the `ecosystem` field |
+| gamification-013 | badge-input-omits-read-only-fields | Create a badge with an input that also carries `active`, `subjectType` and `ecosystemId` | The body carries no `active`, `subject_type`, or `ecosystem_id` field, though the read record declares all three |
 | gamification-014 | badge-tier-line-override-key | The documented override contract for creating a realm badge | A realm badge overrides the same (badgeLine, tier) default |
 | gamification-015 | badge-update-excludes-defaults, badge-delete-clears-holdings-first | The documented behavior for updating and for deleting a realm badge | Updating answers not-found for a platform default; deleting clears its holdings first and likewise answers not-found for a default |
-| gamification-016 | levels-replace-wholesale | Replace `"eco-1"`'s level ladder with two rungs: `{ name: "Novice", minPoints: 0 }`, `{ name: "Pro", minPoints: 500 }` | A write to the levels route with a body of exactly `{ rungs: [those two entries] }` |
-| gamification-017 | levels-ladder-shape-enforced-serverside | The documented shape constraint on the rungs a level-replacement sends | Rungs must start at 0 and be strictly increasing; no runtime check of the array happens client-side |
+| gamification-016 | levels-replace-wholesale | Replace `"eco-1"`'s level ladder with two rungs: `{ name: "Novice", minPoints: 0 }`, `{ name: "Pro", minPoints: 500 }` | A write to the levels route with a body of `{ rungs, ecosystem }`, the rungs in wire shape (`min_points`) |
+| gamification-017 | levels-ladder-shape-enforced-serverside | Replace a level ladder whose rungs are not increasing | The request is still sent as given; no runtime check of the array happens client-side |
 | gamification-018 | levels-update-replay-hint | The underlying request is mocked to resolve a level list plus the hint string `"trigger a replay to backfill"` for a level replacement | The resolved result's hint field equals that string |
-| gamification-019 | replay-scoping-via-body | Trigger a replay for `"eco-1"` | A create request to the fixed replay route (no `"eco-1"` in the route) with a body of exactly `{ ecosystemId: "eco-1" }` |
-| gamification-020 | replay-result-single-subject-fields | The underlying request is mocked to resolve `{ subjects: 1, badges: 3, xpGained: 120 }` for a replay | The resolved replay result carries all three fields |
-| gamification-021 | event-types-list-name-ordered | List `"eco-1"`'s event types, with the underlying request mocked to resolve a name-ordered list | Resolves with that same list, in the same order; no sort is performed client-side |
-| gamification-022 | event-type-create, event-type-input-length-precondition | Create an event type for `"eco-1"` with name `"level_up"`, statKey `"levels_gained"` | A create request to the event-types route with that body; no client-side length/presence check performed |
-| gamification-023 | event-type-update | Update event type `"et-1"` for `"eco-1"` with name `"level_up_v2"`, statKey `"levels_gained"` | A write to that item's event-type route with that body |
-| gamification-024 | event-type-delete | Delete event type `"et-1"` for `"eco-1"` | A delete request to that item's event-type route, resolving `{ deleted: "et-1" }` |
-
+| gamification-019 | replay-scoping-via-body | Trigger a replay for `"eco-1"` | A create request to the fixed replay route (no `"eco-1"` in the route) with a body of exactly `{ ecosystem_id: "eco-1" }` |
+| gamification-020 | replay-result-single-subject-fields | The underlying request is mocked to resolve `{ subjects: 1, badges: 3, xp_gained: 120 }` for a replay | The resolved replay result carries `subjects`, `badges` and `xpGained` |
+| gamification-021 | event-types-list-name-ordered | List `"eco-1"`'s event types, with the underlying request mocked to resolve a name-ordered list | Resolves with the same rows, in the same order; no sort is performed client-side |
+| gamification-022 | event-type-create, event-type-input-length-precondition | Create an event type for `"eco-1"` with name `"level_up"`, statKey `"levels_gained"` | A create request to the event-types route with that body (plus `ecosystem`); no client-side length/presence check performed |
+| gamification-023 | event-type-update | Update event type `"et-1"` for `"eco-1"` with name `"level_up_v2"`, statKey `"levels_gained"` | A write to that item's event-type route with that body (plus `ecosystem`) |
+| gamification-024 | event-type-delete | Delete event type `"et-1"` for `"eco-1"` | A delete request to that item's event-type route with query field `ecosystem`, resolving `{ deleted: "et-1" }` |
 ## Edge Cases
 
 - **Empty ecosystem-id string**: URL-encoding an empty string yields an
@@ -463,9 +461,9 @@ Not applicable: this component calls no logger or other logging API.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/data/src/gamification/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/data/src/gamification/` | confirmed (1.1.1) |
 
 ## Design Decisions
 
@@ -486,7 +484,7 @@ documented 400/404/409 response into a friendlier, entity-named message
 (`error-propagation-unmodified`).
 **Rationale**: the source does not explain why. This is a notable
 divergence from the sibling component
-[Ecosystems](adhsdk://cookbook/adh/hub/ecosystems/ecosystems),
+[adhsdk.ingredient.adh.hub.ecosystems.ecosystems](cookbook:201572ee-2e0f-4839-94f5-252f8044c4bf),
 whose `ecosystems.ts` and `identifiers.ts` call `rethrowConflict` to
 turn a backend 409 into a friendly, entity-named message before it
 reaches a caller. This recipe records the observed divergence rather
@@ -497,21 +495,23 @@ than inventing a motive the source does not state.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | partial | Security |
-| [error-response-handling](agenticdevelopercookbook://compliance/access-patterns#error-response-handling) | partial | Access Patterns |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | partial | Security |
+| [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | partial | Access Patterns |
 
 `separation-of-concerns` passes: `gamification.ts`/`wire.ts` contain no
 UI-rendering import and no business logic beyond building a path,
 choosing an HTTP verb, and shaping a body — a clean, single-purpose
 data-access layer consumed by a separate features package.
-`unit-test-coverage` fails: no test file exists anywhere in the
-repository adjacent to `gamification.ts` or `wire.ts` (confirmed by
-search), unlike this package's sibling `hub-domain-ecosystem-config`
-client, whose Apple counterpart has a dedicated test file even though its
-web clients are likewise untested. `explicit-error-handling` passes:
+`unit-test-coverage` is partial: `__tests__/gamification.test.ts`
+covers 20 of the 24 conformance vectors with passing tests. Vectors
+`gamification-007` and `gamification-008` (mode ordering and
+surfaces-default-on are read by consumers, not this module),
+`gamification-014` and `gamification-015` (server-side override and
+default-protection behavior) are skipped because this module has nothing
+to exercise for them. `explicit-error-handling` passes:
 every method lets `authedJson`'s rejection propagate untouched — there is
 no `catch` anywhere in either file to silently swallow, so nothing is
 ever discarded. `input-sanitization` is partial: `enc()`
@@ -533,6 +533,7 @@ the raw `AuthHttpError` itself to act on a specific status.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-11-14 | Mike Fullerton | Conformance tests added (gamification.test.ts, 20 of 24 vectors); unit-test-coverage now partial. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to adh/hub/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.0.0 | 2026-09-24 | Mike Fullerton | Initial creation |

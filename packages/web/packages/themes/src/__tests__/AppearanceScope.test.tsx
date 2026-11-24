@@ -9,7 +9,7 @@ import { APPEARANCE_DEFAULTS } from '../appearance'
 import { AppearanceScope, adoptAppearance } from '../appearance-store'
 
 describe('<AppearanceScope/>', () => {
-  it('paints <html> while mounted and takes the prefs off when it unmounts', () => {
+  it('AS-007: paints <html> while mounted and takes the prefs off when it unmounts', () => {
     const html = document.documentElement
     const view = render(<AppearanceScope />)
     adoptAppearance({ ...APPEARANCE_DEFAULTS, colorMode: 'dark', contrast: 'high' })

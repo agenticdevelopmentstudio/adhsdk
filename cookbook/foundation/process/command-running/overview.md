@@ -1,0 +1,5 @@
+
+Command Running is the seam launch jobs use to run an external command (`launchctl`, `pkgutil` and similar) and learn two things: the exit status and the text the command wrote. It has two parts. The `CommandRunning` protocol is the contract a caller depends on, so tests can substitute a recorder. `ProcessCommandRunner` is the real implementation: it starts a child process off the cooperative thread pool, reads both of the child's output streams while it runs, and gives up on a child that does not finish within a backstop time.
+
+The protocol has two operations. `run` reports one merged text (stdout followed by stderr, not interleaved). `capture` keeps stdout and stderr apart and can replace the child's environment. A double that implements only `run` still gets a working `capture` from a protocol default. The name is `CommandRunning` because `CommandRunner` is the synchronous process runner that `ProcessCommandRunner` wraps (see [adhsdk.ingredient.foundation.processes.command-runner](cookbook:705082e9-8fad-4c20-95a3-4cf843cc6b97)).
+

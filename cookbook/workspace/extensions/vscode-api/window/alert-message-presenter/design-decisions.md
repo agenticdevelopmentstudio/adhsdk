@@ -20,7 +20,7 @@
 **Approved**: pending
 
 **Decision**: `closeAffordanceIndices`'s last-wins tie-break in the cancel slot is applied here, not re-derived here.
-**Rationale**: the rule itself — the *last* flagged item's index wins the single cancel slot — is documented in full, with its upstream justification, in [ExtensionMessagePresenting](adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-message-presenting)'s Design Decisions; **button-plan-cancel-slot** in this recipe applies that same rule to this conformer's concrete AppKit button layout rather than restating the rationale.
+**Rationale**: the rule itself — the *last* flagged item's index wins the single cancel slot — is documented in full, with its upstream justification, in ExtensionMessagePresenting ([adhsdk.ingredient.workspace.extensions.vscode-api.window.extension-message-presenting](cookbook:0aa82a1f-42ed-4585-9f65-bb20aa110712))'s Design Decisions; **button-plan-cancel-slot** in this recipe applies that same rule to this conformer's concrete AppKit button layout rather than restating the rationale.
 **Approved**: pending
 
 **Decision**: `presentedResponse(for:)` bridges `beginSheetModal(for:completionHandler:)` into `async` with `withCheckedContinuation`, unlike every other `beginSheetModal` site in this tier.

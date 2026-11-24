@@ -1,0 +1,81 @@
+
+- **render-two-panes**: The component MUST render a left topic-list rail beside a right detail pane holding `children`.
+- **fill-container**: The component MUST fill its container's height and width (grid with `min-h-0 min-w-0 flex-1`), so a caller supplies an explicit height or a `flex-1` parent.
+- **mark-selected**: The row whose `id` equals `selectedId` MUST be marked active: gold text, a gold 2px left bar in the default `bar` selection style, and `aria-current="true"`.
+- **report-selection**: Clicking a non-disabled row MUST call `onSelect` with the row's `id`, including a re-click on the already-selected row when the list is not `covered` (see `skip-covered-reselect`), because the component has no deselect signal of its own.
+- **skip-covered-reselect**: In covered style a click on the already-selected row MUST do nothing: no `onSelect` and no link flash.
+- **skip-disabled**: A `disabled` row MUST be a native disabled button, dimmed (`text-apt-text-dim`, default cursor), and MUST NOT call `onSelect`.
+- **render-label**: Each row MUST render its `label` as the primary text, truncated with an ellipsis when it overflows.
+- **render-label-suffix**: A row with `labelSuffix` MUST render it on the same line as the label, at the same size and weight, and it MUST truncate last: the suffix does not shrink while the label and, with `inlineSublabel`, the sublabel truncate first. Without `inlineSublabel` a row with a `labelSuffix` MUST NOT render its `sublabel` at all, because the suffix row replaces the stacked layout.
+- **render-stacked-sublabel**: A row with `sublabel`, no `inlineSublabel` and no `labelSuffix` MUST render the sublabel as a dim, smaller second line.
+- **render-inline-sublabel**: A row with `inlineSublabel` and a `sublabel` MUST render the sublabel on the label's line, dim, with the label growing and truncating first and the sublabel shrinking and truncating after it.
+- **render-preview**: A row whose trimmed `preview` is non-empty and whose resolved line count is above 0 MUST render the preview as a dim, smaller block under the label (and under the sublabel), clamped to that many lines, preserving the source's line breaks.
+- **clamp-preview**: `previewLines` MUST be truncated to an integer and clamped to 0-4, defaulting to 1 when omitted, so every input resolves to one of the four clamp classes. A value of 0 MUST render no preview, which lets a host keep passing `preview` and switch it off with the number alone.
+- **align-icon-to-preview**: A row that renders a preview MUST align its icon to the top of the row; a row without one MUST centre the icon vertically.
+- **render-icon**: Each row MUST render a 16px leading icon; when `icon` is omitted or falsy (including `false` from a conditional), a neutral ring MUST fill in (a link row gets the link glyph instead), so the icon-only strip never shows a blank slot.
+- **hide-row-icons**: When `hideItemIcons` is true the expanded list MUST drop the leading icon from every row; the collapsed and covered strips MUST ignore the flag.
+- **hide-label-when-icon-only**: In the collapsed and covered strips the row MUST hide its label, sublabel, preview, suffix and trailing accessory, and MUST carry the label as its `aria-label`.
+- **tooltip-when-collapsed**: In the collapsed strip each row MUST show its `label` in a right-side tooltip on hover and keyboard focus.
+- **render-empty-label**: With no rows the list MUST show `emptyLabel` in a paragraph inside a single list item (`TopicDetail` defaults it to "Nothing here yet."; `TopicRail` requires it).
+- **support-rail-slot**: When `railSlot` is provided it MUST render as a leading list item above the topics with a minimum height of `2.15rem`; when absent it MUST reserve no space. A function form MUST receive the rail's collapsed state. When `railSlotActive` is true the gold selection bar MUST move onto the slot.
+- **render-divider-after**: A row with `dividerAfter` MUST be followed by a separator list item (`role="separator"`, `aria-label` set to `dividerLabel`) in the expanded list and in both icon strips; the inset MUST be `mx-2` when collapsed and `mx-3` otherwise.
+- **render-divider-label**: With `dividerAfter` and `dividerLabel`, the expanded list MUST render the label as an uppercase caption under the separator; the icon-only strips MUST NOT render the caption.
+- **render-spacer-after**: A row with `spacerAfter` MUST be followed by a flexible spacer that pushes every following row to the list's bottom edge, in the expanded list and in both icon strips.
+- **render-trailing**: A row with `trailing` content MUST render it pinned right in the expanded list and MUST NOT render it in the icon strips.
+- **render-row-disclosure**: With `rowDisclosure` true, every enabled, non-link row in the expanded list MUST end in a 14px right chevron; disabled rows, link rows and the icon strips MUST NOT show it.
+- **support-link-row**: A row with `onLink` MUST, when chosen through `TopicDetail`, run the link and MUST NOT call `onSelect`; the row MUST NOT become `selectedId`.
+- **flash-link-row**: A chosen link row MUST be marked active in place of the list's real selection for `LINK_FLASH_MS` (1000ms), then release; a new choice MUST restart the timer.
+- **render-link-glyph**: A link row without an `icon` MUST show a link glyph instead of the neutral ring, and MUST NOT show a disclosure chevron.
+- **render-blocked-marker**: A row with `blocked` MUST show an amber dot on its icon in the expanded list and both strips, MUST set `data-blocked="true"` on the row button, and MUST add the words "needs attention" to the row's accessible name.
+- **render-blocked-without-icon**: When `hideItemIcons` removes the icon, a blocked row in the expanded list MUST still show a standalone amber dot.
+- **support-delete-action**: A row with `onDelete` MUST render a trash button in the expanded list, revealed on row hover and on keyboard focus; the strips MUST NOT render it. Activating it MUST open a destructive confirmation dialog without selecting the row.
+- **run-delete-on-confirm**: Confirming the dialog MUST run `onDelete`, show a busy state and block dismissal until it settles, then close the dialog.
+- **keep-dialog-on-delete-failure**: When `onDelete` throws or rejects, the dialog MUST stay open with the busy state cleared; the component does not surface the error itself.
+- **support-delete-label**: `deleteLabel` MUST name the trash button ("Delete {name}") and the dialog title ("Delete {name}?"); both default to `label`.
+- **support-delete-confirm**: `deleteConfirm` MUST be the dialog body, defaulting to "This action can't be undone."
+- **delete-on-disabled-row**: A disabled row with `onDelete` MUST still render an enabled trash button.
+- **keep-delete-title-through-close**: The dialog MUST keep the last delete target's title through its close animation.
+- **support-batch-mode**: With `checkable` true, every row in the expanded list MUST show a checkbox named by the row's label, and ticking it MUST NOT select the row; the icon strips MUST ignore `checkable`.
+- **report-batch-toggle**: The checkbox MUST reflect `checkedIds` membership and MUST call `onToggleChecked` with the row's `id`; the component MUST NOT hold the tick set.
+- **disable-batch-check**: The checkbox MUST be disabled when the row is `disabled` or `checkDisabled`; `checkDisabled` alone MUST leave the row selectable.
+- **support-prefetch**: With `onPrefetch`, the rail MUST call it with a row's `id` once the pointer or keyboard focus has rested on that row for 100ms, with one timer for the whole list; it MUST NOT arm on the selected row and MUST cancel on pointer or focus leave and on unmount.
+- **support-hover-bar**: With `hoverBar` false, an unselected row MUST NOT show a hover left bar.
+- **support-marker-selection**: With `selectionStyle="marker"` the selected row MUST draw no gold border; in a root list (`isRoot`) that is not collapsed, it MUST draw a full-height gold bar flush with the row's left edge.
+- **support-covered-style**: With `covered`, the rows MUST render as a left-aligned icon-only strip.
+- **support-covered-shadow**: With `coveredShadow`, the rail MUST cast a left drop shadow from the `--color-shadow` token.
+- **collapse-rail**: The rail MUST offer a desktop collapse toggle, hidden below `md`, that switches it between full width and a `COLLAPSED_RAIL` (48px) strip; the toggle MAY be omitted only with `showToggle` false; in an untitled rail a `leftControl` or `backSlot` strip takes its place, and a `leftControl` strip carries no toggle.
+- **support-controlled-collapse**: With `collapsed` provided the collapse state MUST be driven by it and `onCollapsedChange` MUST be called on each change; otherwise it MUST self-manage from `defaultCollapsed` (default false), still calling `onCollapsedChange`.
+- **support-drag-resize**: With `onResize` the rail MUST render a vertical separator handle on its trailing edge, hidden below `md`, reporting the pointer's offset from the rail's left edge. In `TopicDetail`, a width below `railWidth / 3` MUST collapse the rail; from that threshold up to `railWidth` it MUST track the pointer; past `railWidth` it MUST clamp to `railWidth`.
+- **transition-collapse**: From `md` up, width changes MUST animate over `200ms * var(--apt-anim-scale, 1)` and the animation MUST be suppressed while dragging.
+- **respond-mobile**: Below `md` the grid MUST be a single column with the rail above the pane; the collapse toggle and the drag handle MUST be hidden and the `--rail-w` width MUST have no effect.
+- **support-pane-padding**: With `panePadding` true (default) the pane MUST add `gap-6 px-6 py-4`; false MUST make content edge to edge.
+- **support-titled-header**: With `title` and not collapsed, the rail MUST render a header whose title is left-justified onto the row-label column, with a 16px control slot (the `leftControl` or `backSlot`) on the icon column, the collapse toggle (when `showToggle`) and the close button right-justified, and a divider beneath.
+- **support-untitled-header**: Without a `title` (or when collapsed) the rail MUST render a bare control strip, choosing in priority order `leftControl`, then `backSlot`, then the toggle and `+`, then the busy spinner alone, else nothing.
+- **support-list-toolbar**: Every titled, un-collapsed rail MUST render a toolbar (`role="toolbar"`, named "{title} tools", or "List tools" for a non-string title) under the header, ordered filter button, `+`, a flexible spacer, then `titleActions`; the toolbar MUST NOT render when the rail is untitled or collapsed.
+- **support-create-affordance**: With `onNew` the rail MUST render a `+` button named by `newLabel` (default "New"), in the toolbar of a titled rail and in the control strip of an untitled one; `newActive` MUST tint it gold.
+- **support-close-button**: With `onClose` the rail MUST render an X button named by `closeLabel` (default "Close") in the titled header or in the control strip beside a `leftControl`; the other untitled strips (`backSlot`, toggle and `+`, busy alone) MUST NOT render it.
+- **support-header-slot**: With `headerSlot` the rail MUST render it as a full-width bordered strip between the toolbar and the rows, hidden while collapsed.
+- **support-footer**: With `footer` the rail MUST pin it below the list with a top border and 8px padding.
+- **show-busy-indicator**: With `busy` the rail MUST show a spinner right after the title (titled), or in the control strip of every untitled shape, including collapsed and including below `md`; the title spinner is excluded from the fit measurement.
+- **announce-busy**: The rail MUST always mount a polite status region that reads "Loading" while `busy` and is empty otherwise.
+- **label-landmark**: The rail MUST be an `aside` named `railLabel`, defaulting to "Topic list".
+- **support-dense-bottom**: With `denseBottom` the list MUST use `pb-2` rather than `pb-8`.
+- **filter-every-titled-rail**: The filter MUST open a panel exactly over the toolbar, as wide as the rail, with a focused search field that has a clear button and uses `search.placeholder` (default "Filter") as placeholder and accessible name.
+- **open-filter-on-mount**: With `search.autoOpen` the panel MUST be open and focused on mount.
+- **suggest-matches**: While the query is non-blank and `search.live` is false, the panel MUST list the matching, enabled rows (label or sublabel, case-folded, in list order) as a listbox of options under the field, with the first highlighted, and MUST keep every rail row in the list (hidden visually, not unmounted, while suggestions show).
+- **underline-match**: Each suggestion MUST underline the first case-folded occurrence of the query in its label, mapping positions back to the original label even when case-folding changes its length.
+- **navigate-suggestions**: Arrow Down and Arrow Up MUST move the highlight through the suggestions, wrapping at both ends, without moving the caret; typing MUST reset the highlight; the pointer MUST take the highlight only when it moves.
+- **choose-suggestion**: Enter or a click on a suggestion MUST select that row as a click on it would, dismiss the filter and clear the query; it MUST NOT call `onSelect` for the row already selected (a link row always calls it), and MUST scroll the chosen row into view once the list shows it selected (never for a link row).
+- **ignore-ime-enter**: Enter while an IME composition is active MUST NOT choose a suggestion.
+- **dismiss-filter**: Escape MUST close the panel, return focus to the filter button and select nothing, and MUST stop the event so a dialog around the rail stays open; the clear button MUST do the same; moving focus out of the panel MUST dismiss it, except when `search.live` is true.
+- **say-no-match**: When the filter is not `live`, a query is typed, nothing matches and the host rows are not pending, the panel MUST say "Nothing matches" with the query; Enter MUST then leave the field open.
+- **support-live-filter**: With `search.live` the rail MUST narrow its own rows on every keystroke (the selected row always surviving) instead of suggesting, leave Enter and focus to the host, and keep the query after the panel closes by Escape or by focus leaving (the clear button still clears it).
+- **support-controlled-query**: With `search.query` the host owns filtering; the rail MUST report every keystroke through `onQueryChange`, MUST offer its `items` as suggestions (the selected row only if it matches), and MUST keep the query when focus merely leaves the field.
+- **wait-for-pending-rows**: With a controlled query and `search.pending`, the panel MUST offer nothing and show "Searching…".
+- **tint-active-filter**: The filter button MUST be gold while a non-blank query narrows the list with the panel closed.
+- **expose-combobox**: The field MUST be a combobox over the suggestion listbox, naming the highlighted option as the active descendant, when not `live`.
+- **fit-width**: With `onFit` the rail MUST report, before paint and again after fonts load, the width its rows, header and toolbar want (ceil, plus the aside's own borders and padding), clamped to `railPx(MIN_FIT_RAIL)`..`railPx(MAX_FIT_RAIL)`.
+- **skip-fit-when-unmeasurable**: The rail MUST NOT report while collapsed, while a query narrows its rows, or when the measured width is 0.
+- **refit-on-tool-resize**: The rail MUST re-measure when the host's tool actions change width.
+- **pass-through-fields**: `description` and `leadsTo` MUST be accepted on a row and MUST NOT change anything rendered by this file.
+

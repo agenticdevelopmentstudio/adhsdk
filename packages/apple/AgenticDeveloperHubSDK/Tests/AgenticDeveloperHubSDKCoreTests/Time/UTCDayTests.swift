@@ -30,4 +30,20 @@ final class UTCDayTests: XCTestCase {
     func testDayAfterReturnsInputOnGarbage() {
         XCTAssertEqual(UTCDay.dayAfter("not-a-date"), "not-a-date")
     }
+
+    func testUtcDay007_stringIgnoresHostTimeZone() throws {
+        let original = NSTimeZone.default
+        defer { NSTimeZone.default = original }
+        NSTimeZone.default = try XCTUnwrap(TimeZone(identifier: "Pacific/Auckland"))
+        // 22:13Z is already 11:13 on the 15th in Auckland (UTC+13); the UTC day is still the 14th.
+        XCTAssertEqual(UTCDay.string(from: Date(timeIntervalSince1970: 1_700_000_000)), "2023-11-14")
+    }
+
+    func testUtcDay008_dayAfterEmptyIsUnchanged() {
+        XCTAssertEqual(UTCDay.dayAfter(""), "")
+    }
+
+    func testUtcDay009_dayAfterOutOfRangeIsUnchanged() {
+        XCTAssertEqual(UTCDay.dayAfter("2026-13-01"), "2026-13-01")
+    }
 }

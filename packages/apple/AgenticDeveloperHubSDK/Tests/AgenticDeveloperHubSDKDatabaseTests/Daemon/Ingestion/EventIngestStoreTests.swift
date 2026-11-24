@@ -5,7 +5,8 @@ import Foundation
 
 /// `ingestEvent` and its readers, through the `DaemonDatabase` methods: the
 /// session row an event creates, the activity rule, the import dedup and the
-/// newest-first recent read.
+/// newest-first recent read (which reads the event store, so its events go in
+/// through the Claude pipeline).
 final class EventIngestStoreTests: XCTestCase {
 
     private var store: DaemonDatabase!
@@ -38,11 +39,11 @@ final class EventIngestStoreTests: XCTestCase {
         XCTAssertEqual(session.status, "active")
         XCTAssertEqual(session.cwd, "/tmp/myapp")
         XCTAssertEqual(try eventLogCount(sessionId: "s1"), 1)
-        let events = try store.fetchEvents(sessionId: "s1")
-        XCTAssertEqual(
-            events.first?.detail,
-            computeDetail(eventType: "SessionStart", hookData: hookData)
-        )
+        var detail: String?
+        try store.query(
+            "SELECT detail FROM event_log WHERE session_id = ?", params: ["s1"]
+        ) { detail = store.string($0, 0) }
+        XCTAssertEqual(detail, computeDetail(eventType: "SessionStart", hookData: hookData))
     }
 
     func testAnAmbientEventDoesNotMoveLastActivity() throws {
@@ -74,11 +75,12 @@ final class EventIngestStoreTests: XCTestCase {
     }
 
     func testFetchRecentEventsReturnsTheNewestFirst() throws {
+        let pipeline = URL(fileURLWithPath: path).deletingLastPathComponent().appendingPathComponent("pipeline")
+        let harness = try ClaudePipelineTestHarness(directory: pipeline, database: store)
         for (stamp, tool) in [("2026-06-01T12:00:00Z", "Read"), ("2026-06-01T12:05:00Z", "Edit")] {
-            try store.ingestEvent(
-                eventType: "PreToolUse", timestamp: stamp,
-                hookData: ["session_id": "recent", "cwd": "/tmp", "tool_name": tool]
-            )
+            try harness.ingest(ClaudePipelineTestHarness.event(
+                "PreToolUse", sessionId: "recent", timestamp: stamp, cwd: "/tmp",
+                hookData: ["tool_name": tool]))
         }
 
         let newest = try store.fetchRecentEvents(sessionId: "recent", limit: 1)

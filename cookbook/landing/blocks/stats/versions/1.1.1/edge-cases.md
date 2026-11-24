@@ -1,0 +1,7 @@
+
+- **Empty entries array**: If `entries` is an empty array, the component MUST render an empty `dl` with class `lp-stats` and no child divs (stats-008).
+- **Single entry**: If `entries` contains only one item, the component MUST render that entry in a single wrapper div. At viewport widths ≥34rem the three-column grid places it in the first column, leaving the remaining two columns of that row empty.
+- **Null or undefined ReactNode content**: If `term` or `detail` is `null` or `undefined`, the component MUST render the corresponding `dt` or `dd` as an empty element (stats-009). The component does not skip or substitute placeholder content for a null/undefined entry: `entries` is rendered positionally and unconditionally, so silently dropping an item would break the one-to-one correspondence between the `entries` array and the rendered list. Callers that want to omit a statistic MUST filter it out of `entries` before passing it to the component, rather than passing `null`/`undefined` `term`/`detail`.
+- **Large content in term or detail**: If the `term` or `detail` contains very long text or large inline components, layout may wrap or overflow according to CSS rules; the component itself places no constraint on content size.
+- **React Fragments or multiple children**: If the caller passes a React Fragment or array as the `term` or `detail`, the Fragment/array is rendered as-is within the `dt` or `dd`. React handles this transparently.
+

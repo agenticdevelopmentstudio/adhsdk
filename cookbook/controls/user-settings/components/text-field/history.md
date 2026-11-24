@@ -1,0 +1,7 @@
+
+| Version | Date | Author | Summary |
+|---------|------|--------|---------|
+| 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web source. |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case, corrected the `useId` and autofill-token design-decision claims, cited WCAG SC 2.5.5 instead of the document alone, replaced the "Not applicable" Compliance section with a real check table, reformatted Design Decisions into Decision/Rationale/Approved triplets, fixed frontmatter dates, added related sibling-recipe links, corrected and split the CSS-class test vectors, fixed the `text-field-009` requirement citation and the single-onChange claim in `text-field-002`, added test vectors for explicit `id`, `autoComplete="off"`, `SecureTextField` masking alone, and label/hint ordering, narrowed `bind-value` to remove its overlap with `call-on-change`, documented `SecureTextField`'s accepted configuration, corrected the Appearance section with real stylesheet values, and fixed the SwiftUI/Compose/AppKit-UIKit/WinUI 3 platform notes including password-manager-save prevention for every platform. |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Corrected the textarea class list and falsy label/hint edge cases, named the autofill helper path, dropped the unenforced AAA claim and the non-applicable sanitization/abuse rows, and added seven vectors. |

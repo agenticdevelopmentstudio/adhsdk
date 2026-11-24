@@ -54,7 +54,7 @@ class ReservedIdentifierPage:
             {
                 "items": items,
                 "page": page,
-                "pageSize": page_size,
+                "page_size": page_size,
                 "total": total,
                 "truncated": truncated,
             }
@@ -76,7 +76,7 @@ class ReservedIdentifierPage:
 
         page = d.pop("page")
 
-        page_size = d.pop("pageSize")
+        page_size = d.pop("page_size")
 
         total = d.pop("total")
 

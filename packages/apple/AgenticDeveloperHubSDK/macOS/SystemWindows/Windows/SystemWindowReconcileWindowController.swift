@@ -38,6 +38,7 @@ public final class SystemWindowReconcileWindowController: SingleWindowController
             behavior: .persistsFrame
         )
         self.windowTitle = "Reconcile Windows"
+        self.windowTitleSymbolName = "macwindow.badge.plus"
         self.windowStyleMask = [.titled, .closable, .miniaturizable, .resizable]
         // Single source of truth for the minimum size: track the spec.
         self.minSize = self.windowSpec?.minSize

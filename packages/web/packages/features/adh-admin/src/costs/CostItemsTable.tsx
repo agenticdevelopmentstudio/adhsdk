@@ -58,16 +58,16 @@ export function CostCell({ item }: { item: InsightItem }) {
   if (item.source === "customer_key") {
     return <span className="text-apt-text-dim" title={SOURCE_TITLE.customer_key}>—</span>;
   }
-  if (item.costMicros === null) {
+  if (item.cost_micros === null) {
     return <span className="text-apt-orange">Unpriced</span>;
   }
-  const floor = item.unpricedLines > 0;
+  const floor = item.unpriced_lines > 0;
   return (
     <span
       className="tabular-nums"
-      title={floor ? `${item.unpricedLines} line(s) have no price, so this is a floor` : undefined}
+      title={floor ? `${item.unpriced_lines} line(s) have no price, so this is a floor` : undefined}
     >
-      {formatMicrosFloor(item.costMicros, floor)}
+      {formatMicrosFloor(item.cost_micros, floor)}
     </span>
   );
 }
@@ -136,7 +136,7 @@ export function CostItemsTable({
         width: "8rem",
         align: "end",
         // The number, so a sort is numeric; null (unpriced) sorts last in both directions.
-        value: (item) => (item.source === "customer_key" ? null : item.costMicros),
+        value: (item) => (item.source === "customer_key" ? null : item.cost_micros),
         render: (item) => <CostCell item={item} />,
       },
     ],

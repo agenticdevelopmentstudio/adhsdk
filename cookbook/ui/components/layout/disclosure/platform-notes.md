@@ -1,0 +1,7 @@
+
+- **SwiftUI**: `DisclosureGroup` already supplies its own chevron and an `isExpanded:` binding for controlled mode — use it directly, or build an equivalent with `@State` for toggle state and `.rotationEffect(.degrees(isOpen ? 90 : 0))` for the chevron.
+- **Compose**: `var expanded by remember { mutableStateOf(false) }` for toggle state, a chevron `Icon` with `Modifier.rotate(if (expanded) 90f else 0f)`, and `if (expanded) { content() }` so the body unmounts when collapsed.
+- **React/Web**: `packages/web/packages/ui/src/components/disclosure.tsx`. Uses lucide `ChevronRight` icon for the toggle chevron. Marked `"use client"` for Next.js server components. Respects Tailwind theme tokens (`apt-*` family). Header truncates rather than wrapping; verify responsive behavior via Playwright at 375 / 768 / 1440.
+- **AppKit / UIKit**: AppKit — an `NSButton` with `bezelStyle = .disclosure`, adding or removing the content view on toggle. UIKit — a `UIButton` toggling by adding or removing the content view as an arranged subview of a `UIStackView`.
+- **WinUI 3**: the stock `Expander` puts its chevron on the trailing edge and flips it 180°, keeps collapsed content in the visual tree, and its `Expanding`/`Collapsing` events don't carry controlled-mode intent — following it as-is breaks **rotate-chevron** and **mount-children-only-when-open**. Either re-template `Expander` (leading chevron, `RotateTransform` at 90°, content set to `null` when collapsed) or build a custom `ToggleButton` + `ContentPresenter` pair that sets `Content` to `null` on collapse.
+

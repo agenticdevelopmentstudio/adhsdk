@@ -30,8 +30,8 @@ class ShiprOrgDefaults:
                 `.shipr` declares no shards.
             env_branches (ShiprOrgDefaultsEnvBranches | Unset): The ladder a new mirror starts with. Empty means the built-
                 in default (every environment, named after itself), not a repository that deploys nowhere.
-            created_at (str | Unset):
-            updated_at (str | Unset):
+            created (int | Unset): Unix timestamp, in seconds.
+            updated (int | Unset): Unix timestamp, in seconds.
     """
 
     id: str | Unset = UNSET
@@ -39,8 +39,8 @@ class ShiprOrgDefaults:
     deployment_owner: None | str | Unset = UNSET
     name_suffix: str | Unset = UNSET
     env_branches: ShiprOrgDefaultsEnvBranches | Unset = UNSET
-    created_at: str | Unset = UNSET
-    updated_at: str | Unset = UNSET
+    created: int | Unset = UNSET
+    updated: int | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -60,9 +60,9 @@ class ShiprOrgDefaults:
         if not isinstance(self.env_branches, Unset):
             env_branches = self.env_branches.to_dict()
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -72,15 +72,15 @@ class ShiprOrgDefaults:
         if org is not UNSET:
             field_dict["org"] = org
         if deployment_owner is not UNSET:
-            field_dict["deploymentOwner"] = deployment_owner
+            field_dict["deployment_owner"] = deployment_owner
         if name_suffix is not UNSET:
-            field_dict["nameSuffix"] = name_suffix
+            field_dict["name_suffix"] = name_suffix
         if env_branches is not UNSET:
-            field_dict["envBranches"] = env_branches
-        if created_at is not UNSET:
-            field_dict["createdAt"] = created_at
-        if updated_at is not UNSET:
-            field_dict["updatedAt"] = updated_at
+            field_dict["env_branches"] = env_branches
+        if created is not UNSET:
+            field_dict["created"] = created
+        if updated is not UNSET:
+            field_dict["updated"] = updated
 
         return field_dict
 
@@ -102,20 +102,20 @@ class ShiprOrgDefaults:
                 return data
             return cast(None | str | Unset, data)
 
-        deployment_owner = _parse_deployment_owner(d.pop("deploymentOwner", UNSET))
+        deployment_owner = _parse_deployment_owner(d.pop("deployment_owner", UNSET))
 
-        name_suffix = d.pop("nameSuffix", UNSET)
+        name_suffix = d.pop("name_suffix", UNSET)
 
-        _env_branches = d.pop("envBranches", UNSET)
+        _env_branches = d.pop("env_branches", UNSET)
         env_branches: ShiprOrgDefaultsEnvBranches | Unset
         if isinstance(_env_branches, Unset):
             env_branches = UNSET
         else:
             env_branches = ShiprOrgDefaultsEnvBranches.from_dict(_env_branches)
 
-        created_at = d.pop("createdAt", UNSET)
+        created = d.pop("created", UNSET)
 
-        updated_at = d.pop("updatedAt", UNSET)
+        updated = d.pop("updated", UNSET)
 
         shipr_org_defaults = cls(
             id=id,
@@ -123,8 +123,8 @@ class ShiprOrgDefaults:
             deployment_owner=deployment_owner,
             name_suffix=name_suffix,
             env_branches=env_branches,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
         )
 
         shipr_org_defaults.additional_properties = d

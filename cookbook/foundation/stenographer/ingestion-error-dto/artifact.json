@@ -1,0 +1,58 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "95ea4062-09e5-4342-a376-413cb7deb7d1",
+    "title": "Ingestion Error DTOs",
+    "type": "ingredient",
+    "version": "1.0.2",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-14",
+    "modified": "2026-11-14",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "The quarantined hook-event file, its persistent error-log row with resolved history, and the live progress of a Retry All batch, as the daemon surfaces them.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "stenographer",
+      "foundation",
+      "dto",
+      "wire"
+    ],
+    "depends-on": [],
+    "related": [
+      "96f73261-cf32-42cc-92f3-f8b58542382a",
+      "e8286557-84ee-4f45-b78c-f1d184c51a37"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "c4b6e68faffd4686",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

@@ -1,0 +1,2 @@
+- **Styling contract**: All visual styling comes from CSS rules on the four classes `aws-group`, `aws-group__title`, `aws-group__hint` and `aws-group__body`; the component sets no inline styles. The title renders as `<h3>` and the hint as `<p>`.
+- **Min/Max size**: No constraints defined in component

@@ -18,23 +18,26 @@ class AiProcessingWebhookEndpoint:
     Attributes:
         id (UUID):
         ecosystem_id (str): Ecosystem that owns this endpoint
-        customer_id (str): User who registered the endpoint
+        owner_kind (str): Kind of principal that owns the endpoint: 'customer', 'organization', 'application', 'persona'
+            or 'ecosystem'.
+        owner_id (str): Id of the owning principal.
         url (str): HTTPS-only delivery target URL
         event_types (list[str]): Subscribed event types (e.g. job.succeeded, job.failed)
         active (bool): Whether the endpoint receives deliveries
-        created_at (str): ISO 8601 timestamp
-        updated_at (str): ISO 8601 timestamp of last modification
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
         description (None | str | Unset): Human-readable label
     """
 
     id: UUID
     ecosystem_id: str
-    customer_id: str
+    owner_kind: str
+    owner_id: str
     url: str
     event_types: list[str]
     active: bool
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     description: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -43,7 +46,9 @@ class AiProcessingWebhookEndpoint:
 
         ecosystem_id = self.ecosystem_id
 
-        customer_id = self.customer_id
+        owner_kind = self.owner_kind
+
+        owner_id = self.owner_id
 
         url = self.url
 
@@ -51,9 +56,9 @@ class AiProcessingWebhookEndpoint:
 
         active = self.active
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         description: None | str | Unset
         if isinstance(self.description, Unset):
@@ -66,13 +71,14 @@ class AiProcessingWebhookEndpoint:
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
-                "customerId": customer_id,
+                "ecosystem_id": ecosystem_id,
+                "owner_kind": owner_kind,
+                "owner_id": owner_id,
                 "url": url,
-                "eventTypes": event_types,
+                "event_types": event_types,
                 "active": active,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
+                "created": created,
+                "updated": updated,
             }
         )
         if description is not UNSET:
@@ -85,19 +91,21 @@ class AiProcessingWebhookEndpoint:
         d = dict(src_dict)
         id = UUID(d.pop("id"))
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        customer_id = d.pop("customerId")
+        owner_kind = d.pop("owner_kind")
+
+        owner_id = d.pop("owner_id")
 
         url = d.pop("url")
 
-        event_types = cast(list[str], d.pop("eventTypes"))
+        event_types = cast(list[str], d.pop("event_types"))
 
         active = d.pop("active")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         def _parse_description(data: object) -> None | str | Unset:
             if data is None:
@@ -111,12 +119,13 @@ class AiProcessingWebhookEndpoint:
         ai_processing_webhook_endpoint = cls(
             id=id,
             ecosystem_id=ecosystem_id,
-            customer_id=customer_id,
+            owner_kind=owner_kind,
+            owner_id=owner_id,
             url=url,
             event_types=event_types,
             active=active,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
             description=description,
         )
 

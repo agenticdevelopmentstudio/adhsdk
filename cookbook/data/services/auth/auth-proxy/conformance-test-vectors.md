@@ -2,7 +2,7 @@
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
 | auth-client-server-001 | backend-url-explicit-override | Backend-URL resolution given `{ API_BACKEND_URL: 'https://custom.example', NODE_ENV: 'production' }` | Returns `'https://custom.example'` |
-| auth-client-server-002 | backend-url-empty-override-ignored | Backend-URL resolution given `{ API_BACKEND_URL: '', NODE_ENV: 'production' }` | Returns `'https://api.agenticdeveloperhub.com'` (empty string is falsy) — derived directly from the truthiness check; no dedicated test exists |
+| auth-client-server-002 | backend-url-empty-override-ignored | Backend-URL resolution given `{ API_BACKEND_URL: '', NODE_ENV: 'production' }` | Returns `'https://api.agenticdeveloperhub.com'` (empty string is falsy) |
 | auth-client-server-003 | backend-url-production-default | Backend-URL resolution given `{ NODE_ENV: 'production' }` | Returns `'https://api.agenticdeveloperhub.com'` |
 | auth-client-server-004 | backend-url-development-default | Backend-URL resolution given `{ NODE_ENV: 'development' }` | Returns `'http://localhost:3000'` |
 | auth-client-server-005 | backend-url-development-default | Backend-URL resolution given `{}` | Returns `'http://localhost:3000'` |

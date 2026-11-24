@@ -35,7 +35,7 @@ class ChatCreateResult:
         field_dict.update(
             {
                 "chat": chat,
-                "skippedPersonaIds": skipped_persona_ids,
+                "skipped_persona_ids": skipped_persona_ids,
             }
         )
 
@@ -48,7 +48,7 @@ class ChatCreateResult:
         d = dict(src_dict)
         chat = Chat.from_dict(d.pop("chat"))
 
-        skipped_persona_ids = cast(list[str], d.pop("skippedPersonaIds"))
+        skipped_persona_ids = cast(list[str], d.pop("skipped_persona_ids"))
 
         chat_create_result = cls(
             chat=chat,

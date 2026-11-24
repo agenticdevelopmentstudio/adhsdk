@@ -1,13 +1,12 @@
 ---
 id: 19839612-1fd1-44c5-8659-674c264240be
 title: "Security Client"
-domain: adhsdk://cookbook/adh/hub/security/security-client
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -23,8 +22,8 @@ tags:
   - buckets
 depends-on: []
 related:
-  - adhsdk://cookbook/adh/hub/security/authentication-client
-  - adhsdk://cookbook/adh/hub/access
+  - 65fbb2b1-ca41-499f-ac03-7ecc0e206dcc
+  - 39a7192e-7e1e-4e93-b615-312a5ddf69b0
 references:
   - packages/web/packages/data/src/security/tokens.ts (adhsdk)
   - packages/web/packages/data/src/security/bucket-access.ts (adhsdk)
@@ -203,24 +202,24 @@ visual component.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| hub-domain-security-001 | token-list-request-shape | Listing tokens | `GET /api/auth/tokens`; resolves to the parsed token list verbatim — no dedicated test in this checkout; derived directly from source |
+| hub-domain-security-001 | token-list-request-shape | Listing tokens | `GET /api/v1/api_keys` (plus `limit=100` paging); resolves to the `/v1` list rows mapped to camelCase (`created` unix seconds becomes an ISO `createdAt`) — no dedicated test in this checkout; derived directly from source |
 | hub-domain-security-002 | token-scopes-unwraps-envelope | Fetching the scope catalogue against a stub returning `{ prefixes: ["/content/markdown"] }` | Resolves to `["/content/markdown"]`, not the envelope — no dedicated test; derived directly from source |
-| hub-domain-security-003 | token-mint-request-shape | Minting a token with `{ name: "ci", scope: ["/content/markdown:read"] }` | `POST /api/auth/tokens` with that object JSON-serialized verbatim; resolves to the created-token response — no dedicated test; derived directly from source |
-| hub-domain-security-004 | token-created-secret-returned-once | Response body `{ id: "t1", name: "ci", prefix: "abcd", createdAt: "...", expiresAt: null, lastUsedAt: null, token: "secret-raw-value" }` from minting | The resolved response's `token` field equals `"secret-raw-value"`, unmodified — no dedicated test; derived directly from the wire shape and the pass-through return |
-| hub-domain-security-005 | token-revoke-request-shape | Revoking token id `"tok 1"` | `DELETE /api/auth/tokens/tok%201` (percent-encoded); resolves to `undefined` — no dedicated test; derived directly from source |
-| hub-domain-security-006 | access-list-all-groups-cross-bucket | Listing all groups against a stub returning `{ accessGroups: [{ id: "g1", bucketId: "b1", ... }] }` | Resolves to `[{ id: "g1", bucketId: "b1", ... }]`, unwrapped — no dedicated test; derived directly from source |
-| hub-domain-security-007 | access-group-detail-request-shape | Fetching group `"g1"`'s detail | `GET /api/bucket/access-groups/g1`; resolves to the group detail verbatim, including `members`/`grants` — no dedicated test; derived directly from source |
-| hub-domain-security-008 | access-group-create-scoped-to-bucket | Creating a group in bucket `"b1"` with name `"  Editors  "` | `POST /api/bucket/buckets/b1/access-groups` with body `{ name: "Editors" }` (no `description` key) — no dedicated test; derived directly from source |
+| hub-domain-security-003 | token-mint-request-shape | Minting a token with `{ name: "ci", scope: ["/content/markdown:read"] }` | `POST /api/v1/api_keys` with body `{name, scope}` (an `expiresAt` would be sent as `expires_at`); resolves to the created-token response — no dedicated test; derived directly from source |
+| hub-domain-security-004 | token-created-secret-returned-once | Response body `{ id: "t1", name: "ci", prefix: "abcd", created: 1767225600, expires_at: null, last_used_at: null, token: "secret-raw-value" }` from minting | The resolved response's `token` field equals `"secret-raw-value"`, unmodified — no dedicated test; derived directly from the wire shape and the pass-through return |
+| hub-domain-security-005 | token-revoke-request-shape | Revoking token id `"tok 1"` | `DELETE /api/v1/api_keys/tok%201` (percent-encoded); resolves to `undefined` — no dedicated test; derived directly from source |
+| hub-domain-security-006 | access-list-all-groups-cross-bucket | Listing all groups against a stub returning a `/v1` list envelope `{ data: [{ id: "g1", bucket_id: "b1", ... }] }` | Resolves to `[{ id: "g1", bucketId: "b1", ... }]`, unwrapped and camelCased — no dedicated test; derived directly from source |
+| hub-domain-security-007 | access-group-detail-request-shape | Fetching group `"g1"`'s detail | `GET /api/v1/bucket_access_groups/g1`; resolves to the camelCased group detail, including `members`/`grants` — no dedicated test; derived directly from source |
+| hub-domain-security-008 | access-group-create-scoped-to-bucket | Creating a group in bucket `"b1"` with name `"  Editors  "` | `POST /api/v1/bucket_access_groups` with body `{ name: "Editors", bucket: "b1" }` (no `description` key) — no dedicated test; derived directly from source |
 | hub-domain-security-009 | access-group-create-conflict-friendly | Creating a group named `"Editors"` in bucket `"b1"` against a stub whose error message is `"Access group with that name already exists"` | Rejects with a plain error whose message is exactly `An access list named "Editors" already exists.` — no dedicated test; derived directly from the conflict-translation pattern and the create action's own catch |
-| hub-domain-security-010 | access-group-update-request-shape | Updating group `"g1"` with `{ description: "new" }` | `PATCH /api/bucket/access-groups/g1` with body `{ description: "new" }` only (`name` omitted since it wasn't supplied) — no dedicated test; derived directly from source |
+| hub-domain-security-010 | access-group-update-request-shape | Updating group `"g1"` with `{ description: "new" }` | `POST /api/v1/bucket_access_groups/g1` with body `{ description: "new" }` only (`name` omitted since it wasn't supplied) — no dedicated test; derived directly from source |
 | hub-domain-security-011 | access-group-update-conflict-friendly | Updating group `"g1"` with `{}` against a stub error message matching the "already exists" pattern | Rejects with message `An access list named "" already exists.` (no name was supplied, so the trimmed value is `""`) — no dedicated test; derived directly from source |
 | hub-domain-security-012 | access-group-delete-request-shape | Deleting group `"everyone-group-id"` against a stub returning HTTP `409` with body `{ error: "cannot delete the everyone group" }` | Rejects with an error carrying `status: 409` and that exact backend message, unmodified — no dedicated test; derived directly from the absence of error translation on this path |
-| hub-domain-security-013 | access-member-add-request-shape | Adding member `{ memberType: "persona", memberId: "p1" }` to group `"g1"` | `POST /api/bucket/access-groups/g1/members` with body `{ memberType: "persona", memberId: "p1" }` — no dedicated test; derived directly from source |
+| hub-domain-security-013 | access-member-add-request-shape | Adding member `{ memberType: "persona", memberId: "p1" }` to group `"g1"` | `POST /api/v1/bucket_access_groups/g1/members` with body `{ member_type: "persona", member_id: "p1" }` — no dedicated test; derived directly from source |
 | hub-domain-security-014 | access-member-add-conflict-friendly | Adding member `{ memberType: "user", memberId: "u1" }` against a stub error message matching the "already exists" pattern | Rejects with message exactly `That member is already in this access list.` — no dedicated test; derived directly from source |
-| hub-domain-security-015 | access-member-remove-request-shape | Removing member row `"row-42"` from group `"g1"` | `DELETE /api/bucket/access-groups/g1/members/row-42`; resolves to `undefined` — no dedicated test; derived directly from source |
-| hub-domain-security-016 | access-grant-upsert-request-shape | Upserting grant `{ targetType: "bucket_type", targetId: "bt1", crud: "C,R" }` for group `"g1"` | `PUT /api/bucket/access-groups/g1/grants` with body `{ targetType: "bucket_type", targetId: "bt1", crud: "C,R" }`; resolves to the parsed grant — no dedicated test; derived directly from source |
+| hub-domain-security-015 | access-member-remove-request-shape | Removing member row `"row-42"` from group `"g1"` | `DELETE /api/v1/bucket_access_groups/g1/members/row-42`; resolves to `undefined` — no dedicated test; derived directly from source |
+| hub-domain-security-016 | access-grant-upsert-request-shape | Upserting grant `{ targetType: "bucket_type", targetId: "bt1", crud: "C,R" }` for group `"g1"` | `POST /api/v1/bucket_access_groups/g1/grants` with body `{ target_type: "bucket_type", target_id: "bt1", crud: "C,R" }`; resolves to the camelCased grant — no dedicated test; derived directly from source |
 | hub-domain-security-017 | access-grant-upsert-request-shape | Same call against a stub returning HTTP `404` (e.g. `targetId` does not exist) | Rejects with an error carrying `status: 404`, propagated unchanged — no dedicated test; derived directly from the absence of error translation on this path |
-| hub-domain-security-018 | access-grant-delete-request-shape | Deleting grant `"grant-1"` from group `"g1"` | `DELETE /api/bucket/access-groups/g1/grants/grant-1`; resolves to `undefined` — no dedicated test; derived directly from source |
+| hub-domain-security-018 | access-grant-delete-request-shape | Deleting grant `"grant-1"` from group `"g1"` | `DELETE /api/v1/bucket_access_groups/g1/grants/grant-1`; resolves to `undefined` — no dedicated test; derived directly from source |
 | hub-domain-security-019 | access-crud-string-passthrough | Upserting grant `{ targetType: "row", targetId: "r1", crud: "" }` for group `"g1"` | The request body's `crud` is the empty string, sent unchanged — no dedicated test; derived directly from source |
 | hub-domain-security-020 | every-bucket-access-call-url-encodes-identifiers | Fetching group detail for id `"a b/c"` | The request URL contains the percent-encoded form of `"a b/c"` in place of the raw id — no dedicated test; derived directly from the shared percent-encoding helper's definition |
 | hub-domain-security-021 | token-revoke-request-shape | Revoking token `"a/b"` compared against deleting group `"a/b"` | Both requests carry the identical percent-encoded segment `a%2Fb`, even though the two call sites reach percent-encoding through different code paths (see Design Decisions) — the two are behaviorally identical despite that naming divergence |
@@ -396,9 +395,9 @@ Not applicable: no logging or other diagnostic call of any kind appears in this 
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/data/src/security/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/data/src/security/` | confirmed (1.2.1) |
 
 ## Design Decisions
 
@@ -433,21 +432,19 @@ backend-schema fidelity (every field the backend's OpenAPI schema declares), not
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [server-side-authorization](agenticdevelopercookbook://compliance/security#server-side-authorization) | passed | Security |
-| [token-lifecycle](agenticdevelopercookbook://compliance/security#token-lifecycle) | partial | Security |
-| [error-response-handling](agenticdevelopercookbook://compliance/access-patterns#error-response-handling) | partial | Access Patterns |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | partial | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.security.server-side-authorization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/90e085e3-5112-5c02-9c10-4a2e324eeca1) | passed | Security |
+| [adc.check.security.token-lifecycle](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/61edfc73-f26a-5cfa-8c09-d1011eb8b7cd) | partial | Security |
+| [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | partial | Access Patterns |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | partial | Reliability |
 
 `separation-of-concerns` passes: `tokens.ts`, `bucket-access.ts`, and `wire.ts` contain zero UI or
 presentation code — both the module's own comments and `index.ts` describe it as the public surface
-of a data domain, consumed by a separate presentation layer. `unit-test-coverage` fails: this checkout
-has no `__tests__` directory, and no test file of any kind, under
-`packages/web/packages/data/src/security/` — none of `tokensApi`'s four methods or
-`bucketAccessApi`'s eight methods has a dedicated unit test, unlike the sibling `access.ts`, which has
-at least one tested method. `explicit-error-handling` passes: nothing in either file swallows an
+of a data domain, consumed by a separate presentation layer. `unit-test-coverage` passes: `security/__tests__/security.test.ts`
+covers all 24 conformance vectors, exercising every one of `tokensApi`'s methods and
+`bucketAccessApi`'s methods against a stubbed `fetch`. `explicit-error-handling` passes: nothing in either file swallows an
 error — every failure either throws `AuthHttpError` (via the shared `authedFetch`) or, at the three
 `rethrowConflict` sites, a plain translated `Error`; nothing is caught and discarded.
 `server-side-authorization` passes: neither client performs a client-side permission check of any
@@ -473,6 +470,7 @@ credential with no way for the caller to detect or reconcile it from this module
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.1 | 2026-11-14 | Mike Fullerton | Conformance tests added (security.test.ts, 24 of 24 vectors); unit-test-coverage now passed. Vector text corrected to the real /api/v1 routes and mappings. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Restate negative requirements as MUST NOT prohibitions. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to adh/hub/security/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

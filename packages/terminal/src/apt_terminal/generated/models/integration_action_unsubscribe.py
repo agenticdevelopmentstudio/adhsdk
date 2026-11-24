@@ -32,7 +32,7 @@ class IntegrationActionUnsubscribe:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "audienceId": audience_id,
+                "audience_id": audience_id,
                 "email": email,
             }
         )
@@ -42,7 +42,7 @@ class IntegrationActionUnsubscribe:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        audience_id = d.pop("audienceId")
+        audience_id = d.pop("audience_id")
 
         email = d.pop("email")
 

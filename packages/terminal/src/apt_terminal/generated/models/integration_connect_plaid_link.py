@@ -45,10 +45,10 @@ class IntegrationConnectPlaidLink:
         field_dict.update(
             {
                 "type": type_,
-                "providerId": provider_id,
-                "serviceType": service_type,
-                "ecosystemId": ecosystem_id,
-                "publicToken": public_token,
+                "provider_id": provider_id,
+                "service_type": service_type,
+                "ecosystem_id": ecosystem_id,
+                "public_token": public_token,
             }
         )
 
@@ -59,13 +59,13 @@ class IntegrationConnectPlaidLink:
         d = dict(src_dict)
         type_ = IntegrationConnectPlaidLinkType(d.pop("type"))
 
-        provider_id = d.pop("providerId")
+        provider_id = d.pop("provider_id")
 
-        service_type = d.pop("serviceType")
+        service_type = d.pop("service_type")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        public_token = d.pop("publicToken")
+        public_token = d.pop("public_token")
 
         integration_connect_plaid_link = cls(
             type_=type_,

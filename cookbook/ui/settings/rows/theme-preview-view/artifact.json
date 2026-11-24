@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "15e66a2e-9ee1-4f5f-aeb0-c804078b4f78",
     "title": "Theme Preview View",
-    "domain": "adhsdk://cookbook/ui/settings/rows/theme-preview-view",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -24,17 +23,17 @@
       "preview"
     ],
     "depends-on": [
-      "adhsdk://cookbook/ui/settings/rows/swatch-grid-view"
+      "f4740433-221c-4c89-b888-ee8da7aa4b3c"
     ],
     "related": [
-      "adhsdk://cookbook/ui/controls/badge",
-      "agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages"
+      "2cfe57f0-cdd4-4723-a6e0-2ce4f136ce7f",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "98234f72af095d3d",
+  "synced": "833b1d473bac4631",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -53,7 +52,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

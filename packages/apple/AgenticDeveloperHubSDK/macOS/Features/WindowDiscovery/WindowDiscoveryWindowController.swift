@@ -27,6 +27,7 @@ public final class WindowDiscoveryWindowController: WindowController<WindowConte
             persistsFrame: true
         )
         self.windowTitle = "Window Discovery"
+        self.windowTitleSymbolName = "macwindow.on.rectangle"
         self.minSize = NSSize(width: 300, height: 200)
     }
 

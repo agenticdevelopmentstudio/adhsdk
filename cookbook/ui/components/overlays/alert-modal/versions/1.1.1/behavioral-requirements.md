@@ -1,0 +1,39 @@
+
+- **render-title**: The component MUST render the `title` prop inside the dialog's `DialogTitle`.
+- **render-description-when-provided**: The component MUST render `description` inside a `DialogDescription` when `description` is not `null`/`undefined`.
+- **omit-description-when-absent**: The component MUST NOT render a `DialogDescription` element when `description` is `null` or `undefined`.
+- **show-tone-icon-by-default**: The component MUST render the tone icon leading the title when `showIcon` is `true`, which is the default.
+- **hide-tone-icon-when-disabled**: The component MUST omit the tone icon when `showIcon` is `false`.
+- **mark-tone-icon-decorative**: The component MUST render the tone icon with `aria-hidden`.
+- **map-tone-to-icon-and-color**: The component MUST render the `Info` icon with `text-apt-blue` for `tone="info"`, the `CheckCircle2` icon with `text-apt-green` for `tone="success"`, and the `TriangleAlert` icon with `text-apt-red` for `tone="error"`.
+- **force-error-tone-when-destructive**: The component MUST use the `"error"` tone's icon and color whenever `destructive` is `true`, regardless of the value of the `tone` prop.
+- **render-alert-mode-when-no-cancel-label**: The component MUST render a single, full-width confirm button in the footer (alert mode) whenever `cancelLabel` is `null` or `undefined`.
+- **render-confirm-mode-when-cancel-label-set**: The component MUST render `DialogActions`, with both a cancel and a confirm button, whenever `cancelLabel` is not `null`/`undefined`.
+- **invoke-onconfirm-on-confirm-click**: Activating the confirm button MUST call `onConfirm` exactly once.
+- **invoke-oncancel-on-cancel-click**: In confirm mode, activating the cancel button MUST call `onCancel` exactly once.
+- **tolerate-missing-oncancel**: In confirm mode, when `onCancel` is not provided, any action that would otherwise invoke it (cancel-button activation, a dismissed Escape, or pointer dismissal) MUST be a no-op — no error is thrown.
+- **default-confirm-label-ok**: The component MUST default the confirm button's label to `"OK"` when `confirmLabel` is not provided.
+- **default-busy-label-working**: The component MUST label the alert-mode busy spinner with `aria-label="Working…"`.
+- **style-confirm-destructive-in-alert-mode**: In alert mode, the component MUST render the confirm button with the `"destructive"` variant when `destructive` is `true`.
+- **apply-confirm-variant-in-alert-mode**: In alert mode, when `destructive` is `false`, the component MUST render the confirm button with `confirmVariant` if provided, and with the `"default"` variant otherwise.
+- **show-busy-spinner-in-alert-mode**: In alert mode, when `busy` is `true`, the component MUST replace the confirm button with a spinner element exposing `role="status"` and `aria-label="Working…"`.
+- **forward-busy-to-dialog-actions**: In confirm mode, the component MUST forward the `busy` prop to `DialogActions`.
+- **forward-destructive-to-dialog-actions**: In confirm mode, the component MUST forward the `destructive` prop to `DialogActions`.
+- **set-initial-focus-by-destructiveness**: In confirm mode, the component MUST set `DialogActions`' `initialFocus` to `"cancel"` when `destructive` is `true`, and to `"confirm"` otherwise.
+- **hide-close-affordance-when-busy-or-non-dismissible**: The component MUST hide `DialogContent`'s `×` close affordance (`showClose`) whenever `busy` is `true` or `dismissible` is `false`.
+- **default-dismissible-true**: The component MUST treat the dialog as dismissible by default (`dismissible` defaults to `true`).
+- **block-dismissal-when-busy**: The component MUST block every dismissal path that can reach `handleOpenChange` (Escape, ✕, programmatic close) while `busy` is `true`; backdrop/outside clicks are already unreachable regardless of `busy` (see Edge Cases).
+- **block-dismissal-when-non-dismissible**: The component MUST block every dismissal path while `dismissible` is `false`.
+- **route-escape-to-cancel-in-confirm-mode**: When keyboard shortcuts are enabled and the dialog is not blocked from closing, an Escape-driven close (Base UI close reason `"escape-key"`) MUST call `onCancel` in confirm mode.
+- **route-escape-to-confirm-in-alert-mode**: When keyboard shortcuts are enabled and the dialog is not blocked from closing, an Escape-driven close MUST call `onConfirm` in alert mode.
+- **block-escape-when-keyboard-disabled**: The component MUST NOT call `onConfirm` or `onCancel` for an Escape-driven close when `keyboard` is `"none"` or `destructive` is `true`.
+- **route-close-button-regardless-of-keyboard-policy**: A non-Escape close reason that reaches `handleOpenChange` (in practice only the ✕ affordance's `close-press`, or a programmatic close — backdrop/outside clicks never reach it at all, since the underlying `Dialog` hard-disables pointer dismissal and `AlertModal` never overrides that; see Edge Cases) MUST call `onCancel` in confirm mode or `onConfirm` in alert mode whenever the dialog is not busy and is dismissible, regardless of the `keyboard` policy's value.
+- **invoke-confirm-on-enter-under-default-keyboard**: Under `keyboard="default"` (and `destructive` `false`), pressing `Enter` MUST call `onConfirm` exactly once and MUST call `preventDefault` on the triggering event.
+- **ignore-all-keys-when-keyboard-none**: When `keyboard` is `"none"`, the window keydown listener MUST NOT invoke `onConfirm` or `onCancel` for any key.
+- **force-keyboard-none-when-destructive**: The component MUST treat keyboard shortcuts as disabled whenever `destructive` is `true`, regardless of the value of the `keyboard` prop.
+- **honor-explicit-keyboard-map**: When `keyboard` is an explicit key→action map and `destructive` is `false`, pressing a key present in the map MUST invoke the mapped action (`"confirm"` → `onConfirm`, `"cancel"` → `onCancel`).
+- **ignore-unmapped-keys-in-explicit-map**: When `keyboard` is an explicit key→action map, pressing a key absent from the map MUST NOT invoke `onConfirm` or `onCancel`.
+- **scope-keydown-listener-to-open-and-not-busy**: The window `keydown` listener MUST be attached only while `open` is `true` and `busy` is `false`, and MUST be removed otherwise.
+- **forward-open-state-to-dialog**: The component MUST forward the `open` prop to the underlying `Dialog` root.
+- **forward-content-class-name**: The component MUST forward `contentClassName` to `DialogContent`'s `className`.
+

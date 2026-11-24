@@ -1,0 +1,21 @@
+
+- **Validation returns a sentence** (MUST): The sentence stays as the problem line and the dialog stays open; the next OK clears it before validating again.
+- **OK pressed twice quickly with `onOK` set** (MUST): The second press does nothing, because OK is disabled and the guard refuses it; Return is refused with it.
+- **Owner's save fails** (MUST): The owner calls `showProblem` and sets `okEnabled` true; the dialog does not do this itself. The dialog never times out a pending save; an owner that never answers leaves OK disabled.
+- **finish called more than once** (MUST): The first call wins; later calls do nothing, including a late `finish(true)` after Cancel.
+- **finish before the modal session starts** (MUST): The queued session checks the finished flag and does not start; the window is ordered out.
+- **finish from a save that comes from no event** (MUST): A stop-modal request alone takes effect only when the loop next handles an event, so an application-defined event is posted to end the session at once.
+- **present on a finished dialog** (MUST): Does nothing.
+- **show or beginSheet on a finished dialog or one already a sheet** (MUST): Does nothing. `present()` does not check for a sheet parent.
+- **Showing again with `show()`** (SHOULD): The window is brought forward again; the dialog does not build a second window.
+- **Sheet owner begins the next sheet inside onFinish** (MUST): Allowed, because the sheet has ended before `onFinish` runs.
+- **Escape while a save is in flight** (MUST): Cancel is never disabled, so Escape still cancels and finishes with false.
+- **One topic** (MUST): The list is hidden; the toolbar title is the dialog title alone.
+- **No topics** (MUST): The list is hidden (one or fewer) and `prepare` selects nothing.
+- **Empty or nil problem** (MUST): Nil hides the line; an empty string shows an empty visible line, as `showProblem` hides only for nil.
+- **Long problem sentence** (MUST): Wraps to at most 2 lines and keeps 20 points clear of Cancel; beyond 2 lines it is truncated by the label.
+- **Owner lets go after present** (MUST): The dialog keeps itself alive until it finishes.
+- **Concurrent access** (MUST): The type is confined to the main actor; calls are serialized on the main thread.
+- **Network or offline state**: Not applicable: the dialog does no network work itself; an owner's save runs in `onOK`.
+- **Decoding or restoring**: Not applicable: the dialog is built only in code.
+

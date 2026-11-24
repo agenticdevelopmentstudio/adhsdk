@@ -1,0 +1,13 @@
+
+- **Width/Height**: 24px (6 units with `h-6` / `w-6` in Tailwind), full length on the opposite axis (full width for horizontal, full height for vertical).
+- **Visual line**: 3px thick (3px tall when horizontal, 3px wide when vertical), full length of the grab area, `apt-border` color, centered in the 24px grab area.
+- **Line hover state**: `apt-border-strong` color on hover.
+- **Line focus state**: `apt-border-strong` color on focus.
+- **Focus ring**: 2px solid ring, color `apt-gold/40`, visible only on keyboard focus (`:focus-visible`).
+- **Step button size**: 24px × 24px, positioned absolutely within the grab area.
+- **Step button colors**: `text-apt-text-muted` (default), `text-apt-text` on hover.
+- **Step button icons**: Unicode arrow glyphs (▲/▼ for horizontal, ◀/▶ for vertical).
+- **Corner radius**: 4px (`rounded-sm`) on the separator; 4px on step buttons.
+- **Cursor**: `cursor-row-resize` for horizontal, `cursor-col-resize` for vertical.
+- **Background**: Transparent (no explicit background color set).
+- **Structure**: The root row/column (receives `className`, the 24px size and `relative flex shrink-0`) contains two children. The first is the `role="separator"` element (receives all ARIA attributes, `tabIndex`, the pointer and key handlers, `touch-none`, `select-none`, the cursor class and the focus ring), which in turn contains the decorative visual line. The second is a sibling button group, absolutely positioned and `pointer-events-none`, holding the two step buttons (`pointer-events-auto`); the buttons are not inside the separator.

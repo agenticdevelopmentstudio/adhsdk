@@ -1,0 +1,7 @@
+
+| Version | Date | Author | Summary |
+|---------|------|--------|---------|
+| 1.2.1 | 2026-09-25 | Mike Fullerton | Filled missing 1.0.0 history date; Compliance best-practices rows added (prior fixer did the VID work). |
+| 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: corrected the Overview's visibility-ownership claim; downgraded the literal-strings and semantic-markup gaps to documented SHOULDs instead of frozen MUSTs; resolved the display:none/visibility:hidden contradiction between Design Decisions and Accessibility; added a Topic/TopicLink/TopicImage type reference; added a no-topic connector-anchor requirement plus edge case; renamed every requirement to subject-only kebab-case and moved no-analytics/no-logging into Behavioral Requirements; reformatted Design Decisions to Decision/Rationale/Approved; added references and depends-on/related links; rewrote Appearance platform-neutrally and relocated the `pc-*` classes to the React/Web note; replaced the deprecated Compose `ClickableText` recommendation; added missing test vectors for topic-prop, ref-forwarding, and connector-anchor; dropped contradictory trailing "Not applicable" lines from Accessibility Options and Privacy; and rebuilt Compliance against real catalog checks |
+| 1.1.0 | 2026-09-22 | — | Replace hedged gap markers in Accessibility, Localization, Analytics and Logging with statements traced to the source; add focus, mounting, literal-string, no-analytics and no-logging requirements plus their test vectors |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

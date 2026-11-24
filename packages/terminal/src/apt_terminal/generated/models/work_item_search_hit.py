@@ -21,7 +21,7 @@ class WorkItemSearchHit:
             boards crosses prefixes too.
         title (str):
         status_id (str):
-        updated_at (str):
+        updated (int): Unix timestamp, in seconds.
         snippet (str): a plain-text excerpt of the DESCRIPTION (ts_headline, no markup). Empty-ish for a title-only or
             key hit, where the title is already the answer.
         rank (float): ts_rank over title (weight A) and description (weight B).
@@ -33,7 +33,7 @@ class WorkItemSearchHit:
     item_key: str
     title: str
     status_id: str
-    updated_at: str
+    updated: int
     snippet: str
     rank: float
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -51,7 +51,7 @@ class WorkItemSearchHit:
 
         status_id = self.status_id
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         snippet = self.snippet
 
@@ -62,12 +62,12 @@ class WorkItemSearchHit:
         field_dict.update(
             {
                 "id": id,
-                "projectId": project_id,
-                "projectName": project_name,
-                "itemKey": item_key,
+                "project_id": project_id,
+                "project_name": project_name,
+                "item_key": item_key,
                 "title": title,
-                "statusId": status_id,
-                "updatedAt": updated_at,
+                "status_id": status_id,
+                "updated": updated,
                 "snippet": snippet,
                 "rank": rank,
             }
@@ -80,17 +80,17 @@ class WorkItemSearchHit:
         d = dict(src_dict)
         id = d.pop("id")
 
-        project_id = d.pop("projectId")
+        project_id = d.pop("project_id")
 
-        project_name = d.pop("projectName")
+        project_name = d.pop("project_name")
 
-        item_key = d.pop("itemKey")
+        item_key = d.pop("item_key")
 
         title = d.pop("title")
 
-        status_id = d.pop("statusId")
+        status_id = d.pop("status_id")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         snippet = d.pop("snippet")
 
@@ -103,7 +103,7 @@ class WorkItemSearchHit:
             item_key=item_key,
             title=title,
             status_id=status_id,
-            updated_at=updated_at,
+            updated=updated,
             snippet=snippet,
             rank=rank,
         )

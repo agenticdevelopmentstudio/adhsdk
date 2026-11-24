@@ -1,21 +1,23 @@
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | partial | Security |
-| [error-response-handling](agenticdevelopercookbook://compliance/access-patterns#error-response-handling) | partial | Access Patterns |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | partial | Security |
+| [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | partial | Access Patterns |
 
 `separation-of-concerns` passes: `gamification.ts`/`wire.ts` contain no
 UI-rendering import and no business logic beyond building a path,
 choosing an HTTP verb, and shaping a body — a clean, single-purpose
 data-access layer consumed by a separate features package.
-`unit-test-coverage` fails: no test file exists anywhere in the
-repository adjacent to `gamification.ts` or `wire.ts` (confirmed by
-search), unlike this package's sibling `hub-domain-ecosystem-config`
-client, whose Apple counterpart has a dedicated test file even though its
-web clients are likewise untested. `explicit-error-handling` passes:
+`unit-test-coverage` is partial: `__tests__/gamification.test.ts`
+covers 20 of the 24 conformance vectors with passing tests. Vectors
+`gamification-007` and `gamification-008` (mode ordering and
+surfaces-default-on are read by consumers, not this module),
+`gamification-014` and `gamification-015` (server-side override and
+default-protection behavior) are skipped because this module has nothing
+to exercise for them. `explicit-error-handling` passes:
 every method lets `authedJson`'s rejection propagate untouched — there is
 no `catch` anywhere in either file to silently swallow, so nothing is
 ever discarded. `input-sanitization` is partial: `enc()`

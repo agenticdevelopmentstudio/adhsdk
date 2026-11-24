@@ -31,6 +31,7 @@ import {
   useWorkerTokens,
   type WorkerToken,
 } from "../api/processing";
+import { unixToIso } from "../api/http";
 
 /** The env var a node reads its token from (websites/ai-node and the Swift daemon alike). */
 export const WORKER_TOKEN_ENV = "AI_NODE_API_TOKEN";
@@ -93,18 +94,20 @@ export function WorkerTokens() {
         header: "Created",
         width: "9rem",
         searchable: false,
-        value: (t) => t.createdAt,
-        render: (t) => <span title={t.createdAt}>{formatRelativeTime(t.createdAt)}</span>,
+        value: (t) => unixToIso(t.created),
+        render: (t) => (
+          <span title={unixToIso(t.created)}>{formatRelativeTime(unixToIso(t.created))}</span>
+        ),
       },
       {
         key: "lastUsedAt",
         header: "Last used",
         width: "9rem",
         searchable: false,
-        value: (t) => t.lastUsedAt ?? "",
+        value: (t) => t.last_used_at ?? "",
         render: (t) =>
-          t.lastUsedAt ? (
-            <span title={t.lastUsedAt}>{formatRelativeTime(t.lastUsedAt)}</span>
+          t.last_used_at ? (
+            <span title={t.last_used_at}>{formatRelativeTime(t.last_used_at)}</span>
           ) : (
             <span className="text-apt-text-muted">Never</span>
           ),

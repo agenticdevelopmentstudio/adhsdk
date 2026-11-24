@@ -46,9 +46,9 @@ class PersonaBootstrapAuth:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "tokenClass": token_class,
+                "token_class": token_class,
                 "subject": subject,
-                "expiresAt": expires_at,
+                "expires_at": expires_at,
                 "scope": scope,
             }
         )
@@ -60,7 +60,7 @@ class PersonaBootstrapAuth:
         from ..models.persona_bootstrap_subject import PersonaBootstrapSubject
 
         d = dict(src_dict)
-        token_class = PersonaBootstrapAuthTokenClass(d.pop("tokenClass"))
+        token_class = PersonaBootstrapAuthTokenClass(d.pop("token_class"))
 
         subject = PersonaBootstrapSubject.from_dict(d.pop("subject"))
 
@@ -69,7 +69,7 @@ class PersonaBootstrapAuth:
                 return data
             return cast(None | str, data)
 
-        expires_at = _parse_expires_at(d.pop("expiresAt"))
+        expires_at = _parse_expires_at(d.pop("expires_at"))
 
         scope = cast(list[str], d.pop("scope"))
 

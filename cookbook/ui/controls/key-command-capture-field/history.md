@@ -6,3 +6,4 @@
 | 1.1.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/controls/. |
 | 1.3.0 | 2026-10-04 | Mike Fullerton | Wrote the main-thread confinement and archive-rejection requirements platform-neutrally with vectors kccf-032 and kccf-033; resolved the minimum-contrast-ratio NEEDS REVIEW marker as current behavior (no contrast check) with vector kccf-034 and a pending decision; added separation-of-concerns and unit-test-coverage compliance rows. Renamed the thread-confinement requirement to confines-to-ui-thread with the standard wording. Corrected the unit-test-coverage rationale to credit the direct Tab and Return tests. |
+| 1.3.1 | 2026-11-15 | Mike Fullerton | Conformance tests added (KeyCommandCaptureFieldConformanceTests.swift, 29 of 32 vectors); unit-test-coverage now partial. |

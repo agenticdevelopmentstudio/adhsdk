@@ -52,3 +52,45 @@ describe('notifyWorkspacesChanged', () => {
     expect(heard).toHaveBeenCalledTimes(1)
   })
 })
+
+// Conformance vectors for resource-data (cookbook/data/services/resource-data).
+describe('workspaces conformance', () => {
+  it('resource-data-078 the workspace-list cache key is ["workspaces"]', () => {
+    expect(WORKSPACES_QUERY_KEY).toEqual(['workspaces'])
+  })
+
+  it('resource-data-079 announcing invalidates the list entry and the resource-list "workspaces" entry only', () => {
+    const invalidate = vi.spyOn(getToolkitQueryClient(), 'invalidateQueries').mockResolvedValue()
+    notifyWorkspacesChanged()
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: WORKSPACES_QUERY_KEY })
+    const predicate = invalidate.mock.calls
+      .map(([arg]) => arg as { predicate?: (q: { queryKey: unknown[] }) => boolean })
+      .find((arg) => typeof arg?.predicate === 'function')!.predicate!
+    expect(predicate({ queryKey: ['resource-list', null, 'workspaces'] })).toBe(true)
+    expect(predicate({ queryKey: ['resource-list', null, 'organizations'] })).toBe(false)
+  })
+
+  it('resource-data-080 announcing swallows a failing invalidation', async () => {
+    vi.spyOn(getToolkitQueryClient(), 'invalidateQueries').mockRejectedValue(new Error('offline'))
+    // Vitest fails the run on an unhandled rejection, so surviving the tick is the assertion.
+    expect(() => notifyWorkspacesChanged()).not.toThrow()
+    await new Promise((r) => setTimeout(r, 10))
+  })
+
+  it('resource-data-081 announcing calls a subscribed listener exactly once', () => {
+    const heard = vi.fn()
+    const stop = onWorkspacesChanged(heard)
+    notifyWorkspacesChanged()
+    stop()
+    expect(heard).toHaveBeenCalledTimes(1)
+  })
+
+  it('resource-data-082 an unsubscribed listener is not called again', () => {
+    const heard = vi.fn()
+    const stop = onWorkspacesChanged(heard)
+    notifyWorkspacesChanged()
+    stop()
+    notifyWorkspacesChanged()
+    expect(heard).toHaveBeenCalledTimes(1)
+  })
+})

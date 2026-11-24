@@ -26,6 +26,15 @@ public final class ApplicationsAdapter: ApplicationsDataSource {
 
     private struct GrantsEnvelope: Codable { var grants: [SchemaGrantWire] }
 
+    /// The application with its `schema_grants` sub-resource (`?include[]=schema_grants`).
+    private struct WithGrants: Decodable { var schemaGrants: GrantsEnvelope? }
+
+    /// A POST whose only key names the `schema_grants` include updates that sub-resource alone.
+    private struct GrantsUpdate: Encodable {
+        var schemaGrants: GrantsEnvelope
+        enum CodingKeys: String, CodingKey { case schemaGrants = "schema_grants" }
+    }
+
     private static func domain(_ wire: SchemaGrantWire) -> SchemaGrant {
         var tables: [String: TableGrant] = [:]
         for table in wire.tables {
@@ -52,61 +61,65 @@ public final class ApplicationsAdapter: ApplicationsDataSource {
     }
 
     public func list(ecosystemID: String) async throws -> [Application] {
-        try await api.get("/ecosystem/applications", query: workspace.query, as: [Application].self)
+        try await api.list("/v1/applications", query: workspace.query, as: Application.self)
             .filter { $0.ecosystemId == ecosystemID }
     }
 
     public func get(id: String) async throws -> Application {
-        try await api.get("/ecosystem/applications/\(id)", query: workspace.query, as: Application.self)
+        try await api.get("/v1/applications/\(id)", query: workspace.query, as: Application.self)
     }
 
     public func create(_ input: ApplicationCreate) async throws -> Application {
-        try await api.send(.post, "/ecosystem/applications", query: workspace.query, body: input, as: Application.self)
+        try await api.send(.post, "/v1/applications", query: workspace.query, body: input, as: Application.self)
     }
 
     public func update(id: String, _ input: ApplicationUpdate) async throws -> Application {
         try await api.send(
-            .put, "/ecosystem/applications/\(id)", query: workspace.query, body: input, as: Application.self
+            .post, "/v1/applications/\(id)", query: workspace.query, body: input, as: Application.self
         )
     }
 
     public func delete(id: String) async throws {
-        try await api.send(.delete, "/ecosystem/applications/\(id)", query: workspace.query)
+        try await api.send(.delete, "/v1/applications/\(id)", query: workspace.query)
     }
 
     public func renameIdentifier(_ identifier: String, to next: String) async throws {
-        try await api.send(.patch, "/registry/identifiers/\(identifier)", query: [:], body: RenameBody(rdid: next))
+        try await api.send(.post, "/v1/identifiers/\(identifier)", query: [:], body: RenameBody(rdid: next))
     }
 
     public func schemaGrants(applicationID: String) async throws -> [SchemaGrant] {
-        try await api.get(
-            "/ecosystem/applications/\(applicationID)/schema-grants", query: workspace.query, as: GrantsEnvelope.self
-        ).grants.map(Self.domain)
+        var query = workspace.query
+        query["include[]"] = "schema_grants"
+        let application = try await api.get("/v1/applications/\(applicationID)", query: query, as: WithGrants.self)
+        guard let envelope = application.schemaGrants else {
+            throw HubError.unexpected("GET /v1/applications/\(applicationID) did not include schema_grants")
+        }
+        return envelope.grants.map(Self.domain)
     }
 
     public func setSchemaGrants(applicationID: String, _ grants: [SchemaGrant]) async throws {
         try await api.send(
-            .put, "/ecosystem/applications/\(applicationID)/schema-grants",
-            query: workspace.query, body: GrantsEnvelope(grants: grants.map(Self.wire))
+            .post, "/v1/applications/\(applicationID)",
+            query: workspace.query, body: GrantsUpdate(schemaGrants: GrantsEnvelope(grants: grants.map(Self.wire)))
         )
     }
 
     public func tokens(applicationID: String) async throws -> [ApplicationToken] {
-        try await api.get(
-            "/ecosystem/applications/\(applicationID)/tokens", query: workspace.query, as: [ApplicationToken].self
+        try await api.list(
+            "/v1/applications/\(applicationID)/tokens", query: workspace.query, as: ApplicationToken.self
         )
     }
 
     public func createToken(applicationID: String, name: String) async throws -> ApplicationTokenCreated {
         try await api.send(
-            .post, "/ecosystem/applications/\(applicationID)/tokens",
+            .post, "/v1/applications/\(applicationID)/tokens",
             query: workspace.query, body: TokenCreateBody(name: name), as: ApplicationTokenCreated.self
         )
     }
 
     public func revokeToken(applicationID: String, tokenID: String) async throws {
         try await api.send(
-            .delete, "/ecosystem/applications/\(applicationID)/tokens/\(tokenID)", query: workspace.query
+            .delete, "/v1/applications/\(applicationID)/tokens/\(tokenID)", query: workspace.query
         )
     }
 }

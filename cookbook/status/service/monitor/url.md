@@ -1,13 +1,12 @@
 ---
 id: 1918570c-bf2e-4cd5-99a4-2df3d7038428
 title: "Status Server Monitor URL"
-domain: adhsdk://cookbook/status/service/monitor/url
 type: ingredient
-version: 1.0.3
+version: 1.0.4
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -257,9 +256,9 @@ this file.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/monitor/url.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/monitor/url.ts` | confirmed (1.0.4) |
 
 ## Design Decisions
 
@@ -294,11 +293,12 @@ this file.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
 
-`unit-test-coverage` is `failed`: the given source tree contains no test file that imports
+`unit-test-coverage` is `passed`: `test/url.test.ts` covers all eleven conformance vectors
+with passing assertions. Before it, the source tree contained no test file that imports
 or exercises `hostOf` or `projectPageUrl` — `status-server/test/peer-base-url.test.ts` is the
 only URL-related test file in that directory, and it covers a different module; every
 behavior in this recipe is derived from reading `url.ts` directly and from tracing its three
@@ -317,6 +317,7 @@ object is discarded, but the fallback it triggers is a deliberate, documented pa
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.4 | 2026-11-14 | Mike Fullerton | Conformance tests added (url.test.ts, 11 of 11 vectors); unit-test-coverage now passed. |
 | 1.0.3 | 2026-10-04 | Mike Fullerton | Inverted prohibitions (none/neither/no X MUST) restated as MUST NOT. |
 | 1.0.2 | 2026-09-27 | Mike Fullerton | Moved into the concept grouping. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

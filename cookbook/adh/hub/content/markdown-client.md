@@ -1,13 +1,12 @@
 ---
 id: b1fa768d-a088-4507-92f6-6296f93bee2c
 title: "Hub Domain Markdown Client"
-domain: adhsdk://cookbook/adh/hub/content/markdown-client
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -24,8 +23,8 @@ tags:
   - web
 depends-on: []
 related:
-  - adhsdk://cookbook/adh/hub/content/docs-client
-  - adhsdk://cookbook/adh/hub/buckets
+  - 48ddd102-b78c-4198-b71d-25801082a5b2
+  - 18ea2506-0cbc-4c6a-880b-e94abcdc55b2
 references:
   - packages/web/packages/data/src/markdown/markdown.ts (adhsdk)
   - packages/web/packages/data/src/markdown/schemas.ts (adhsdk)
@@ -313,28 +312,26 @@ Not applicable — this is a web data-access package for markdown research docum
 Not applicable — this is a web data-access package for markdown research documents, schema definitions, and taxonomy, not a visual component.
 
 ## Conformance Test Vectors
-
 | ID | Input | Expected Output / Effect | Source |
 |----|-------|---------------------------|--------|
-| HDM-001 | `withTags({id: "d1", title: "Doc"})` (no `tags` field) | `{id: "d1", title: "Doc", tags: []}` | markdown.test.ts, "defaults a missing tags field to []" |
-| HDM-002 | `withTags({id: "d1", tags: null})` | `.tags` resolves to `[]` | markdown.test.ts, "defaults a null tags field to []" |
-| HDM-003 | `withTags({id: "d1", tags: ["a", "b"]})` | returns the exact same object reference, unmodified | markdown.test.ts, "passes a real array through unchanged" |
-| HDM-004 | `categoryNodes({items: ["Meetings"], nodes: [{id: "c1", name: "Meetings", parentIds: [], sortOrder: 0}]})` | returns the exact same `nodes` array reference | markdown.test.ts, "passes real nodes through unchanged" |
-| HDM-005 | `categoryNodes({items: [], nodes: []})` | `[]` (does not rebuild from empty `items`) | markdown.test.ts, "prefers nodes even when they are EMPTY" |
-| HDM-006 | `categoryNodes({items: ["Admin", "Meetings", "Reading"]})` (no `nodes`) | `[{id: "Admin", name: "Admin", parentIds: [], sortOrder: 0}, {id: "Meetings", ...sortOrder: 1}, {id: "Reading", ...sortOrder: 2}]` | markdown.test.ts, "rebuilds an older backend's flat names as roots" |
-| HDM-007 | `categoryNodes({})` (neither field present) | `[]`, does not throw | markdown.test.ts, "yields [] when NEITHER field is an array" |
-| HDM-008 | `tagNodes({items: ["alpha", "beta"]})` (no `nodes`) | `[{id: "alpha", label: "alpha"}, {id: "beta", label: "beta"}]` | markdown.test.ts, "rebuilds an older backend's flat labels" |
-| HDM-009 | `markdownApi.routeAvailable("doc 1", "a/b", {workspace: "acme"})` | issues `GET /api/content/markdown/doc%201/route-available/a%2Fb?workspace=acme` | markdown.test.ts, "asks the author-scoped endpoint with both segments encoded" |
-| HDM-010 | backend resolves `routeAvailable` with `{available: false, reason: "reserved"}` | `markdownApi.routeAvailable` resolves with that object unchanged | markdown.test.ts, "returns the backend's verdict unchanged" |
-| HDM-011 | `markdownApi.publish(id, route)` where the POST throws a conflict (`isConflict`) | throws `Error('The route "<route>" is already used by one of your papers.')`, discarding the original error | markdown.ts, `publish`'s catch block (no dedicated test exercises this branch) |
-| HDM-012 | `markdownApi.createCategory({name})` where the POST throws a conflict | throws `Error('A category named "<name>" already exists somewhere else.')` | markdown.ts, `createCategory`'s catch block (no dedicated test) |
-| HDM-013 | `schemasApi.create({tables: [{name: "Contacts"}, {name: "contacts"}], ...}, ecosystemId)` | throws `Error('Duplicate table name "contacts" in this bucket.')` before any network request is issued | schemas.ts, `assertUniqueTableNames` (no test file exists for schemas.ts) |
-| HDM-014 | `schemasApi.create` succeeds on the parent bucket but the second table's POST throws | calls `rollbackSchema` (deletes the first created table, then the bucket, via `Promise.allSettled`), then rethrows the table-creation error unchanged | schemas.ts, `create`'s catch block (no test file) |
-| HDM-015 | `schemasApi.get(id)` where the underlying GET throws any error (404, 500, or a network failure) | resolves `null` in every case, with no way to distinguish which occurred | schemas.ts, `get`'s bare `catch { return null }` — see the schemas-get-swallows-errors requirement |
-| HDM-016 | `schemasApi.list(ecosystemId)` with buckets belonging to several ecosystems | resolves only the buckets whose `ecosystemId` matches, sorted alphabetically by name | schemas.ts, `list` (`scopeByOwner` + `sortByText`, no test file) |
-| HDM-017 | `taxonomyApi.removeCategoryParent(childId, parentId)` called when no edge with that `parentId` exists for `childId` | resolves with zero DELETE calls issued | taxonomy.ts, `removeCategoryParent`'s own doc comment (no test file exists for taxonomy.ts) |
-| HDM-018 | `markdownApi.list({}, {noted: false, doc: false})` | request query string omits both `noted` and `doc` entirely (not sent as `false`) | markdown.ts, `listQuery` |
-
+| HDM-001 | `withTags({id: "d1", title: "Doc"})` (no `tags` field) | `{id: "d1", title: "Doc", tags: []}` | markdown.test.ts, "HDM-001 defaults a missing tags field to []" |
+| HDM-002 | `withTags({id: "d1", tags: null})` | `.tags` resolves to `[]` | markdown.test.ts, "HDM-002 defaults a null tags field to []" |
+| HDM-003 | `withTags({id: "d1", tags: ["a", "b"]})` | returns the exact same object reference, unmodified | markdown.test.ts, "HDM-003 passes a real array through unchanged" |
+| HDM-004 | `categoryNodes({items: ["Meetings"], nodes: [{id: "c1", name: "Meetings", parentIds: [], sortOrder: 0}]})` | returns the exact same `nodes` array reference | markdown.test.ts, "HDM-004 passes real nodes through unchanged" |
+| HDM-005 | `categoryNodes({items: [], nodes: []})` | `[]` (does not rebuild from empty `items`) | markdown.test.ts, "HDM-005 prefers nodes even when they are EMPTY" |
+| HDM-006 | `categoryNodes({items: ["Admin", "Meetings", "Reading"]})` (no `nodes`) | `[{id: "Admin", name: "Admin", parentIds: [], sortOrder: 0}, {id: "Meetings", ...sortOrder: 1}, {id: "Reading", ...sortOrder: 2}]` | markdown.test.ts, "HDM-006 rebuilds an older backend's flat names as roots" |
+| HDM-007 | `categoryNodes({})` (neither field present) | `[]`, does not throw | markdown.test.ts, "HDM-007 yields [] when NEITHER field is an array" |
+| HDM-008 | `tagNodes({items: ["alpha", "beta"]})` (no `nodes`) | `[{id: "alpha", label: "alpha"}, {id: "beta", label: "beta"}]` | markdown.test.ts, "HDM-008 rebuilds an older backend's flat labels" |
+| HDM-009 | `markdownApi.routeAvailable("doc 1", "a/b", {workspace: "acme"})` | calls `authedJson("/api/v1/papers?route=a%2Fb&excluding=doc+1&workspace=acme")` (route and excluding are encoded query values) | markdown.test.ts, "HDM-009 asks the author-scoped endpoint with both segments encoded" |
+| HDM-010 | backend resolves `routeAvailable` with `{available: false, reason: "reserved"}` | `markdownApi.routeAvailable` resolves with that object unchanged | markdown.test.ts, "HDM-010 returns the backend's verdict unchanged" |
+| HDM-011 | `markdownApi.publish(id, route)` where the POST throws a 409 | throws `Error("The route “<route>” is already used by one of your papers.")` (curly quotes), discarding the original error; any other error is rethrown unchanged | markdown.test.ts, "HDM-011 publish maps a 409 ..." and "HDM-011 publish rethrows a non-conflict error unchanged" |
+| HDM-012 | `markdownApi.createCategory({name})` where the POST throws a 409 | throws `Error("A category named “<name>” already exists somewhere else.")` (curly quotes) | markdown.test.ts, "HDM-012 createCategory maps a 409 ..." |
+| HDM-013 | `schemasApi.create({tables: [{name: "Contacts"}, {name: "contacts"}], ...}, ecosystemId)` | throws `Error('Duplicate table name "contacts" in this bucket.')` before any network request is issued | schemas.test.ts, "HDM-013 create rejects a duplicate table name ..." |
+| HDM-014 | `schemasApi.create` succeeds on the parent bucket but the second table's POST throws | deletes the first created table, then the bucket (via `Promise.allSettled`), then rethrows the table-creation error unchanged | schemas.test.ts, "HDM-014 a failed second table rolls back ..." |
+| HDM-015 | `schemasApi.get(id)` where the underlying GET throws any error (404, 500, or a network failure) | resolves `null` in every case, with no way to distinguish which occurred | schemas.test.ts, "HDM-015 get resolves null for a 404, a 500 and a network failure alike" |
+| HDM-016 | `schemasApi.list(ecosystemId)` with buckets belonging to several ecosystems | resolves only the buckets whose `ecosystemId` matches, sorted alphabetically by name | schemas.test.ts, "HDM-016 list keeps only the ecosystem's buckets ..." |
+| HDM-017 | `taxonomyApi.removeCategoryParent(childId, parentId)` called when no live edge with that `parentId` exists for `childId` | resolves with zero DELETE calls issued; when one exists, exactly that edge is deleted | taxonomy.test.ts, "HDM-017 resolves with zero DELETE calls ..." and "HDM-017 deletes exactly the live matching edge ..." |
+| HDM-018 | `markdownApi.list({}, {noted: false, doc: false})` | request query string omits both `noted` and `doc` entirely (not sent as `false`) | markdown.test.ts, "HDM-018 omits `noted` and `doc` entirely when they are false" |
 ## Edge Cases
 
 - **empty-filters-and-opts**: `markdownApi.list()` called with no arguments
@@ -499,9 +496,9 @@ question on schemas-get-swallows-errors.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/data/src/markdown/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/data/src/markdown/` | confirmed (1.1.1) |
 
 ## Design Decisions
 
@@ -591,16 +588,16 @@ scope column at all.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | best-practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | best-practices |
-| [error-recovery](agenticdevelopercookbook://compliance/reliability#error-recovery) | partial | reliability |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | partial | reliability |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | partial | reliability |
-| [error-response-handling](agenticdevelopercookbook://compliance/access-patterns#error-response-handling) | partial | access-patterns |
-| [pagination-support](agenticdevelopercookbook://compliance/access-patterns#pagination-support) | failed | access-patterns |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | internationalization |
-| [data-minimization](agenticdevelopercookbook://compliance/privacy-and-data#data-minimization) | passed | privacy-and-data |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | best-practices |
+| [adc.check.reliability.error-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/694a971d-282d-501b-8861-c4ece3b01edd) | partial | reliability |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | reliability |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | partial | reliability |
+| [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | partial | access-patterns |
+| [adc.check.access-patterns.pagination-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/e29ce31a-67cb-5690-b2ca-b1065ccdaf1a) | failed | access-patterns |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | internationalization |
+| [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | privacy-and-data |
 
 **separation-of-concerns**: passed. Each of the three domains — research
 documents, legacy bucket/schema definitions, and taxonomy writes — is its
@@ -610,10 +607,11 @@ point, `markdownApi.createCategory` posting to the markdown surface instead
 of the generic taxonomy door, is deliberate and documented in taxonomy.ts's
 own header comment.
 
-**unit-test-coverage**: partial. markdown.test.ts covers the three pure
-fallback helpers (`withTags`, `categoryNodes`, `tagNodes`) and two cases of
-`markdownApi.routeAvailable`, but none of `markdownApi`'s other eleven
-operations, and schemas.ts and taxonomy.ts have no test file at all.
+**unit-test-coverage**: passed. All 18 conformance vectors (HDM-001 to
+HDM-018) have a test whose title leads with the vector id: markdown.test.ts
+(fallback helpers, `routeAvailable`, conflict mapping, the `list` query),
+schemas.test.ts (duplicate table names, rollback, `get` swallowing errors,
+`list` scoping) and taxonomy.test.ts (`removeCategoryParent`).
 
 **explicit-error-handling**: partial. `markdownApi.publish` and
 `.createCategory` each catch a 409 and rethrow a friendly message, and
@@ -672,6 +670,7 @@ logging call reads any of it.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-11-14 | Mike Fullerton | Conformance tests added across markdown.test.ts, schemas.test.ts and new taxonomy.test.ts (18 of 18 vectors); vector text corrected for HDM-009/011/012 to match v1 routes and curly quotes; unit-test-coverage now passed. |
 | 1.1.0 | 2026-10-04 | Mike Fullerton | Resolve open-question markers against the code; restate unimplemented behavior as current behavior with pending Decisions. |
 | 1.0.2 | 2026-09-27 | Mike Fullerton | Moved into the concept grouping. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

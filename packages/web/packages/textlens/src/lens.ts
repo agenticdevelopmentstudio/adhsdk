@@ -6,6 +6,19 @@ export interface LensOptions {
   radius?: number
   /** Milliseconds for one pass across the text. The return trip takes the same. */
   duration?: number
+  /**
+   * Milliseconds the lens holds still at each end, fully off the text, before
+   * it turns back. `0` (the default) turns it round the instant it arrives.
+   */
+  dwell?: number
+  /**
+   * How the lens moves along a pass. `'cubic'` (the default) eases in and out,
+   * slowing at each end — which happens off the text, so a lens that eases
+   * spends the first and last stretch of every pass crawling where nothing
+   * shows. `'linear'` crosses at one speed, so off the text it is gone at once
+   * and the only pause is the `dwell`.
+   */
+  easing?: 'cubic' | 'linear'
   /** Extra scale at the centre of the lens — `0.25` means 125%. */
   scale?: number
   /** Blur in pixels at the centre of the lens. `0` disables it. */
@@ -45,8 +58,14 @@ const DEFAULT_BLUR = 0.35
 const SPLIT_FLAG = 'textlensSplit'
 
 /**
- * Replace each element's text with one inline-block span per character, frozen
- * at its measured width so the line does not reflow when a glyph is scaled.
+ * Replace each element's text with one inline-block span per character.
+ *
+ * No span is given a width. The sweep only transforms and filters a glyph, and
+ * neither moves layout, so each span's natural width is already the frozen one.
+ * Measuring here and writing it back was worse than useless: the split runs in
+ * a mount effect, and a row with no layout at that instant (a cold load, a
+ * hidden tab) measured every glyph at 0px and pinned them there, stacking each
+ * label's letters into one smudge.
  *
  * This is destructive and deliberately one-way: the split is left in place when
  * the lens is destroyed. Re-splitting on every start would re-measure every
@@ -70,10 +89,7 @@ function splitIntoChars(elements: readonly HTMLElement[]): void {
       spans.push(span)
     }
 
-    // Measure only after every span is in the document, so one layout serves all.
     for (const span of spans) {
-      span.style.width = `${span.getBoundingClientRect().width.toFixed(1)}px`
-      span.style.textAlign = 'center'
       span.style.willChange = 'transform, color, filter'
     }
 
@@ -130,6 +146,8 @@ function resolveRamp(
 export function createLens(elements: readonly HTMLElement[], options: LensOptions = {}): Lens {
   const radius = options.radius ?? DEFAULT_RADIUS
   const duration = options.duration ?? DEFAULT_DURATION
+  const dwell = options.dwell ?? 0
+  const easing = options.easing ?? 'cubic'
   const scaleDepth = options.scale ?? DEFAULT_SCALE
   const blurDepth = options.blur ?? DEFAULT_BLUR
   const respectReducedMotion = options.respectReducedMotion ?? true
@@ -223,15 +241,20 @@ export function createLens(elements: readonly HTMLElement[], options: LensOption
         return
       }
 
+      // Each leg is one pass of `duration` followed by a hold of `dwell` at the
+      // far end, where progress stays pinned at 1.
       const elapsed = now - startedAt
-      const leg = Math.floor(elapsed / duration)
-      const progress = (elapsed % duration) / duration
+      const legLength = duration + dwell
+      const leg = Math.floor(elapsed / legLength)
+      const progress = Math.min((elapsed % legLength) / duration, 1)
 
       // Cubic ease in/out, so the lens slows at each end rather than bouncing.
       const eased =
-        progress < 0.5
-          ? 4 * progress * progress * progress
-          : 1 - Math.pow(-2 * progress + 2, 3) / 2
+        easing === 'linear'
+          ? progress
+          : progress < 0.5
+            ? 4 * progress * progress * progress
+            : 1 - Math.pow(-2 * progress + 2, 3) / 2
 
       // Even legs travel left to right, odd legs come back.
       apply(leg % 2 === 0 ? leftEdge + eased * span : rightEdge - eased * span)

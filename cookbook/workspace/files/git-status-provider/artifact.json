@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "9a4aa2a8-c01b-4cec-b789-6c89c100d8d3",
     "title": "Git Status Provider",
-    "domain": "adhsdk://cookbook/workspace/files/git-status-provider",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -26,8 +25,8 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/workspace/files/file-browser-view",
-      "adhsdk://cookbook/workspace/files/file-tree-view"
+      "ab6d7655-9476-4318-8c36-f431686e2d23",
+      "b307116d-3ab8-422a-b031-885710e11e70"
     ],
     "references": [
       "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/Git/GitFileStatus+Color.swift (adhsdk)",
@@ -41,7 +40,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "ab2a78c64a541c28",
+  "synced": "beb715a56d38fd00",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -60,7 +59,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

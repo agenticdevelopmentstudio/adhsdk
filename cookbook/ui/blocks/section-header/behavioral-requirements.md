@@ -1,0 +1,18 @@
+
+"Empty," for the `eyebrow`, `help`, and `actions` props below, means any JavaScript falsy value — `undefined`, `null`, `false`, or the empty string `""` — since each slot is guarded by a truthy check (`{prop && ...}`) in the source. This definition is also used by the Configuration table below.
+
+- **render-title**: Unless the title is hoisted (see pane-title-hoisted), the component MUST render the `title` prop content as an h2 heading.
+- **pane-title-opt-in**: The `paneTitle` prop MUST default to false; a header without it MUST draw its own title in place even inside a detail stack, because a pane can head several sections with this one component.
+- **pane-title-hoisted**: When `paneTitle` is true and the enclosing detail stack accepts the title, the component MUST hand `title` to the stack's detail strip through `useDetailTitle` (see [adhsdk.ingredient.ui.blocks.detail-title](cookbook:fd3575ab-c4a4-480d-84ff-317a282bc359)) and MUST NOT draw the h2 in the pane.
+- **hoisted-keeps-chrome**: While the title is hoisted, the component MUST still render `eyebrow`, `actions` and `help` in their usual places.
+- **hoisted-bare-collapse**: While the title is hoisted and `eyebrow`, `help` and `actions` are all empty, the component MUST render only the hand-off and no wrapper element, so nothing of it remains in the pane.
+- **last-pane-title-wins**: When two or more `paneTitle` headers register in one stack, the one that registered last MUST hold the strip, and each earlier one MUST draw its h2 in place (the registration rule is **pane-hoisted-rule** in [adhsdk.ingredient.ui.blocks.detail-title](cookbook:fd3575ab-c4a4-480d-84ff-317a282bc359)).
+- **title-fallback-inline**: When `paneTitle` is true but no stack accepts the title (no enclosing stack or slot, the title suppressed for a hidden pane, the server render, or another header registered later), the component MUST draw the h2 inline as it would without `paneTitle`.
+- **support-eyebrow**: The component MUST render the `eyebrow` prop when it is provided and non-empty; when `eyebrow` is empty, the eyebrow slot MUST NOT be rendered.
+- **support-help**: The component MUST render a help trigger button when the `help` prop is provided and non-empty; when `help` is empty, the help trigger button MUST NOT be rendered.
+- **support-actions**: The component MUST render the `actions` prop content when it is provided and non-empty; when `actions` is empty, the actions slot MUST NOT be rendered.
+- **apply-custom-class**: The component MUST apply the `className` prop to the root container if provided, except in the hoisted-bare-collapse case (see **hoisted-bare-collapse**), where there is no root container and `className` is silently dropped.
+- **display-help-popover**: When the help trigger button is activated — by click, or by keyboard Enter or Space while focused — the component MUST display a popover containing the `help` prop content, positioned below and aligned to the end (right edge). See the **escape-closes** and **return-focus-on-close** requirements of the popover ingredient ([adhsdk.ingredient.popover](cookbook:c61a220c-b63e-4dcd-a12b-715de20f7b5d)) for how the popover closes and returns focus, and the **aria-expanded** requirement of the popover ingredient ([adhsdk.ingredient.popover](cookbook:c61a220c-b63e-4dcd-a12b-715de20f7b5d)) for its open/closed toggle state.
+- **label-help-trigger**: The help trigger button MUST have an accessible label "About this section" via the `aria-label` attribute.
+- **maintain-layout-order**: Left section (title area) MUST be positioned before right section (actions and help) in visual and DOM order.
+

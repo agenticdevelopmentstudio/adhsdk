@@ -68,8 +68,8 @@ async function responseFailure(res: Response): Promise<Failure> {
  * visitor on nothing. The chat API underneath is live, and the recipient is notified.
  *
  * The request goes to the site's own `/api/*` path, which every site rewrites to the backend
- * in its `next.config.ts`. `/api` is the frontend's prefix; the backend mount is
- * `/registry/contact` with no prefix at all.
+ * in its `next.config.ts`. `/api` is the frontend's prefix; the backend route is
+ * `/v1/registry_entries/{entrySlug}/contact`, the registry riding as the `registry` input.
  */
 export function ContactComposer({
   registrySlug, entrySlug, displayName, signInHref, fetcher,
@@ -107,11 +107,14 @@ export function ContactComposer({
   const send = async () => {
     setState({ kind: 'sending' });
     try {
-      const res = await fetcher(`/api/registry/contact/${registrySlug}/${entrySlug}`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ body }),
-      });
+      const res = await fetcher(
+        `/api/v1/registry_entries/${encodeURIComponent(entrySlug)}/contact?registry=${encodeURIComponent(registrySlug)}`,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ body }),
+        },
+      );
       // A Fetcher may fail EITHER way — see its docblock in client.ts. A bare `fetch`
       // returns the non-ok Response; `authedFetch` throws after its refresh-and-retry.
       if (!res.ok) return fail(await responseFailure(res));

@@ -5,8 +5,13 @@ Wraps `openapi-python-client` (httpx + pydantic v2). Driven by the consolidated
 orchestrator (tools/codegen/generate.py), which passes --spec; runnable
 standalone with an explicit --spec path.
 
+The input is the Stripe-style /v1 spec — `src/adh/openapi.v1.json` in adhbackend,
+served live at https://api.agenticdeveloperhub.com/v1/openapi.json — not the legacy
+unversioned `openapi.json`. The CLI's hand-written layer (resources.py, auth.py,
+public.py) names /v1 operations only.
+
 Usage:
-  python3 scripts/generate.py --spec /abs/path/to/openapi.json
+  python3 scripts/generate.py --spec /abs/path/to/openapi.v1.json
 """
 from __future__ import annotations
 

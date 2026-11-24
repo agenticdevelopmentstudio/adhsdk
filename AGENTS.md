@@ -90,9 +90,9 @@ use.
   [`docs/planning/planning.md`](docs/planning/planning.md)
 - Repo conventions, build commands, ground rules →
   [`.claude/CLAUDE.md`](.claude/CLAUDE.md)
-- Cookbook recipes referenced by the project → [`recipes/`](recipes/)
-- The cookbook spec corpus that came with `adhsdk` →
-  [`cookbook/`](cookbook/)
+- The cookbook spec corpus (cookr format 2; the legacy `recipes/` specs now
+  live here too) → [`cookbook/`](cookbook/), indexed by
+  [`cookbook/index.json`](cookbook/index.json)
 - Repo layout pattern (this design) → [`docs/project/repo-pattern.md`](docs/project/repo-pattern.md)
 - Consumer flow (git submodule path, web and Apple) →
   [`docs/web/consuming-as-submodule.md`](docs/web/consuming-as-submodule.md)

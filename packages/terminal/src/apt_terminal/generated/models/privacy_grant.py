@@ -36,9 +36,9 @@ class PrivacyGrant:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "targetTable": target_table,
-                "targetId": target_id,
-                "audienceMask": audience_mask,
+                "target_table": target_table,
+                "target_id": target_id,
+                "audience_mask": audience_mask,
             }
         )
 
@@ -47,11 +47,11 @@ class PrivacyGrant:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        target_table = PrivacyGrantTargetTable(d.pop("targetTable"))
+        target_table = PrivacyGrantTargetTable(d.pop("target_table"))
 
-        target_id = d.pop("targetId")
+        target_id = d.pop("target_id")
 
-        audience_mask = d.pop("audienceMask")
+        audience_mask = d.pop("audience_mask")
 
         privacy_grant = cls(
             target_table=target_table,

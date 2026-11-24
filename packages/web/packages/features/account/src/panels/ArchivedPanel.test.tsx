@@ -13,7 +13,18 @@ import type { ArchivedWorkspace } from "../api/archived-workspaces";
 const { authedJson } = vi.hoisted(() => ({ authedJson: vi.fn() }));
 vi.mock("@adh-sdk/auth/client", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@adh-sdk/auth/client")>()),
-  authedJson,
+  // The panel reads the /v1 collection through `listAllV1`; `authedJson` below stands for it and
+  // hands back the domain rows, which are re-keyed to the snake_case wire shape here.
+  listAllV1: async (...args: unknown[]) =>
+    ((await authedJson(...args)) as ArchivedWorkspace[]).map((w) => ({
+      id: w.id,
+      slug: w.slug,
+      name: w.name,
+      type: w.type,
+      archived_at: w.archivedAt,
+      handle_available: w.handleAvailable,
+      can_restore: w.canRestore,
+    })),
 }));
 
 const { restore } = vi.hoisted(() => ({ restore: vi.fn() }));

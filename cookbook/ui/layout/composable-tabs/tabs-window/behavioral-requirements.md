@@ -12,6 +12,11 @@
 - **window-title**: The window title MUST be the project's display name.
 - **unified-toolbar**: The window MUST install a unified toolbar containing,
   in order, a flexible space, a search field, and a help button.
+- **extra-toolbar-items**: The items the window is made with
+  (`extraToolbarItems`, none by default) MUST come after the shelf's items
+  and before the flexible space, in the order given; each `.targetedButton`
+  among them MUST send its action to the object its `WindowToolbarTarget`
+  names (held weakly), not to the window.
 - **tab-group-creation**: Creating a project tab MUST create one member tab
   on every currently enabled edge, all sharing one title and one working
   directory, and MUST select the first member created.
@@ -33,8 +38,10 @@
   sizes — never the same node ids — to every other tab in the project.
 - **structural-change-persistence**: A split, pane close, tab
   add/remove/reorder/select, or edge toggle MUST synchronously persist every
-  tab's current layout tree, the active tab id, and the enabled-edge set to
-  the project. A divider-thickness change is the one exception to that
+  tab's current layout tree, the active tab id, and — only once the user
+  has made an explicit edge choice (see **edge-choice-explicit-only**) —
+  the enabled-edge set to the project; before that, the write carries no
+  edges. A divider-thickness change is the one exception to that
   synchronous path: the tabbed content debounces it 300ms before the
   resulting layout change reaches this persist, and that pending write is
   flushed explicitly when the window closes (see **divider-flush-on-close**).
@@ -107,5 +114,53 @@
   every named edge before disabling any edge that is not named, so that
   reassigning the enabled-edge set never fails the last-enabled-edge
   refusal on an intermediate step.
+- **title-sits-in-the-toolbar**: The window MUST show its title as a
+  toolbar item, after the shelf toggle when there is a shelf and first
+  when there is none, with the window's icon, on the same line as the
+  toolbar's other items, and MUST hide the system-drawn title; the
+  window's own title string MUST still be set, for the Window menu,
+  Mission Control and accessibility.
+- **title-follows-the-focused-document**: In a window of a Document kind,
+  while the owner has supplied a focused-document URL the title MUST be
+  that file's name and the title breadcrumb's file MUST be that URL; the
+  title MUST return to the project's display name when the URL is
+  cleared.
+- **pane-chrome-is-optional**: A window created without pane chrome MUST
+  show no pane header (title, window controls, gear) above its panes;
+  with it, the default, every pane keeps its header.
+- **edges-follow-global-until-chosen**: A project with no stored edge
+  choice MUST open on the app-wide tab positions and MUST follow that
+  setting live — applying each change with every enable before any
+  disable, topping up newly enabled edges, and persisting the tabs without
+  edges — until the user makes an explicit edge choice. A project with a
+  stored choice MUST open on it and MUST NOT follow the setting.
+- **edge-choice-explicit-only**: Only a user edge toggle (project settings'
+  Tab Bars or the scripting edge setters) that actually changes an edge
+  MUST count as an explicit edge choice; from then on the window persists
+  its enabled-edge set and stops following the app-wide setting. Opening,
+  following the global, topping up, and adopting another window's
+  configuration MUST NOT make or persist a choice.
+- **use-global-tab-positions**: Using the global tab positions (project
+  settings' Use Global Setting) MUST drop the project's explicit edge
+  choice: it MUST persist the tabs with an empty edge list, which stores no
+  choice, and then follow the app-wide tab positions live, as a project
+  that never chose does. It MUST do nothing while the window is reloading
+  its tabs or closing.
+- **shared-configuration-arrangement-only**: The configuration the window
+  reports for another project window to adopt, and the configuration it
+  adopts, MUST carry only the pane arrangement (shape and sizes), never
+  the enabled edges.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
-
+- **title-document-kinds**: For a repository of a Document kind, while the
+  owner has supplied no focused-document URL (see
+  **title-follows-the-focused-document**, which takes precedence), the
+  window title MUST be the project's display name (the file's name for a
+  single-file Document window, the row's name for the Document tabs
+  window), never the directory-derived `"Files: <directory>"` title, and it
+  MUST be set once per root directory like every other title.
+- **title-breadcrumb-document-file**: While the owner has supplied no
+  focused-document URL (see **title-follows-the-focused-document**), the
+  title breadcrumb's file URL MUST be the repository's path for a
+  single-file Document window, which is the file itself, and the root
+  directory for every other kind.
+- **footer-is-optional**: The window MUST be creatable without its footer bar, in which case the footer is hidden and the content runs to the window's bottom edge; the footer MUST be shown by default.

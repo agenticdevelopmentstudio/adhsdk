@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
-    "id": "BC417768-9933-49B1-B0BA-4BF537167805",
+    "id": "bc417768-9933-49b1-b0ba-4bf537167805",
     "title": "Billing Derivation",
-    "domain": "adhsdk://cookbook/foundation/billing/billing-derivation",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -25,15 +24,15 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/foundation/billing/billing-activity-cache",
-      "adhsdk://cookbook/foundation/billing/billing-rollup",
-      "adhsdk://cookbook/foundation/billing/billing-store"
+      "37dfdd98-266a-4253-8f0a-42987017844a",
+      "a252605d-12ce-4235-9eb4-2582678f6f49",
+      "4df278a3-4897-4a87-a506-bd3f58db3121"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "ba3569f09cded596",
+  "synced": "05fe499cfc48b4a9",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -52,7 +51,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

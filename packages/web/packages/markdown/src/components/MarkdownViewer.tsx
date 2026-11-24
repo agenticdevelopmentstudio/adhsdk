@@ -55,7 +55,7 @@ function readPersistedThemeId(): string | undefined {
 export interface MarkdownViewerProps {
   /**
    * The `id` of a row in the backend `content.markdown` table. The viewer fetches
-   * it via GET /api/content/markdown/:id (through the host app's API forwarding).
+   * it via GET /api/v1/papers/:id (through the host app's API forwarding).
    */
   id: string | undefined
   /**

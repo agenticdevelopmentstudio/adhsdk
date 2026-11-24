@@ -1,6 +1,15 @@
 import { FIELD_VISIBILITIES } from '@adh-sdk/registry-types';
 import type { FieldType, FieldVisibility } from '@adh-sdk/registry-types';
 import type { PublicEntry } from '@adh-sdk/registry-profile';
+import {
+  entryBodyToWire, entryFromWire, fieldDefBodyToWire, fieldDefFromWire, profilePageFromWire,
+  registryBodyToWire, registryFromWire, REGISTRY_WIRE_PAGE_MAX, sectionBodyToWire,
+  sectionFromWire, serviceBodyToWire, serviceFromWire,
+} from './registry-wire';
+import type {
+  RegistryWireEntry, RegistryWireFieldDef, RegistryWireList, RegistryWireProfilePage,
+  RegistryWireRegistry, RegistryWireSection, RegistryWireService,
+} from './registry-wire';
 
 /**
  * Runtime tuples, not just types, so an `<option>` list can be built by mapping over the
@@ -234,28 +243,27 @@ async function ok(res: Response): Promise<void> {
 }
 
 /**
- * Guarantee `RegistryRow.tags` is an array, at the one boundary that can.
+ * The /v1 API: `/api/v1/registries` for the registries and their sections and field defs,
+ * `/api/v1/registry_entries` for the entries and their services. The `/api` prefix in front
+ * of it is the **frontend's** — every hub site rewrites `/api/:path*` to
+ * `${BACKEND_URL}/:path*` in its `next.config.ts`.
  *
- * `tags` joined the row on 2026-08-25, so a backend deploy older than this frontend answers
- * without it — and `RegistryDetailsPanel` hands the value straight to `TagSetField`, which
- * has an array's methods called on it. `json`'s `as T` is an assertion, not a check, so the
- * required type is exactly the thing that hides the absence.
- *
- * Same shape and the same reason as `@adh-sdk/data`'s `withTags` (markdown.ts):
- * normalize once here and every consumer stays free of `?? []`.
+ * Entries are not nested under their registry in /v1: the registry travels as the `registry`
+ * input (a query param, or a body field on a create), because an entry's own id is global.
+ * The wire is snake_case with `created` in unix seconds; `./registry-wire` maps it to and
+ * from the stable domain types in this file.
  */
-function withRegistryTags<T extends { tags: string[] }>(row: T): T {
-  const tags = (row as { tags?: unknown }).tags;
-  return Array.isArray(tags) ? row : { ...row, tags: [] };
-}
+const BASE = '/api/v1/registries';
+const ENTRIES = '/api/v1/registry_entries';
 
-/**
- * The backend mounts the registry routers at `/registry/registries` (`app.ts`, backend
- * plan Tasks 3 and 4). The `/api` prefix in front of it is the **frontend's** — every hub
- * site rewrites `/api/:path*` to `${BACKEND_URL}/:path*` in its `next.config.ts`
- * (hub's is at `next.config.ts:40-44`). No backend mount carries `/api`.
- */
-const BASE = '/api/registry/registries';
+/** `url` with `params` appended, skipping undefined values. Values are percent-encoded. */
+function withQuery(url: string, params: Record<string, string | number | undefined>): string {
+  const parts = Object.entries(params)
+    .filter((e): e is [string, string | number] => e[1] !== undefined)
+    .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`);
+  if (parts.length === 0) return url;
+  return `${url}${url.includes('?') ? '&' : '?'}${parts.join('&')}`;
+}
 
 export function createRegistryClient(fetcher: Fetcher) {
   const send = async <T>(path: string, method: string, body?: unknown) =>
@@ -267,52 +275,95 @@ export function createRegistryClient(fetcher: Fetcher) {
     );
   const del = async (path: string) => ok(await fetcher(path, { method: 'DELETE' }));
 
+  /**
+   * Every row of a /v1 collection: `limit=100` pages, `starting_after` advanced to the last
+   * row's id while `has_more`. Walked through the injected `fetcher` — `@adh-sdk/auth`'s
+   * `listAllV1` does the same through its own authed fetch, which this package does not
+   * depend on (see `registry-wire.ts`).
+   */
+  const listAll = async <T extends { id: string }>(path: string): Promise<T[]> => {
+    const rows: T[] = [];
+    let after: string | undefined;
+    for (;;) {
+      const page = await send<RegistryWireList<T>>(
+        withQuery(path, { limit: REGISTRY_WIRE_PAGE_MAX, starting_after: after }),
+        'GET',
+      );
+      const data = Array.isArray(page?.data) ? page.data : [];
+      rows.push(...data);
+      if (!page?.has_more || data.length === 0) return rows;
+      after = data[data.length - 1]!.id;
+    }
+  };
+
   // Every id/slug below is server-generated or `SLUG_RE`-constrained, so encoding is a
   // belt-and-braces measure rather than a fix for a reachable bug today — but the
   // signatures are plain `string`, so nothing here enforces that constraint locally.
   const seg = encodeURIComponent;
+  const reg = (registryId: string) => ({ registry: registryId });
 
   return {
-    // Every path a `RegistryRow` reaches a caller by goes through `withRegistryTags` —
-    // including the writes, which answer with the stored row and are therefore the same
-    // skew as the reads.
-    listRegistries: async () => {
-      const res = await send<{ items: RegistryRow[] }>(BASE, 'GET');
-      return { ...res, items: res.items.map(withRegistryTags) };
-    },
+    listRegistries: async () => ({
+      items: (await listAll<RegistryWireRegistry>(BASE)).map(registryFromWire),
+    }),
     getRegistry: async (id: string) =>
-      withRegistryTags(await send<RegistryRow>(`${BASE}/${seg(id)}`, 'GET')),
+      registryFromWire(await send<RegistryWireRegistry>(`${BASE}/${seg(id)}`, 'GET')),
     createRegistry: async (body: Partial<RegistryRow>) =>
-      withRegistryTags(await send<RegistryRow>(BASE, 'POST', body)),
+      registryFromWire(await send<RegistryWireRegistry>(BASE, 'POST', registryBodyToWire(body))),
     updateRegistry: async (id: string, body: Partial<RegistryRow>) =>
-      withRegistryTags(await send<RegistryRow>(`${BASE}/${seg(id)}`, 'PATCH', body)),
+      registryFromWire(
+        await send<RegistryWireRegistry>(`${BASE}/${seg(id)}`, 'POST', registryBodyToWire(body)),
+      ),
     // SOFT delete server-side: the row is tombstoned, which is also what frees its slug for
     // reuse. Irreversible from any client surface all the same — nothing here un-deletes —
     // so a host wiring this up owns the confirmation.
     deleteRegistry: (id: string) => del(`${BASE}/${seg(id)}`),
 
-    listSections: (registryId: string) =>
-      send<{ items: SectionRow[] }>(`${BASE}/${seg(registryId)}/sections`, 'GET'),
-    createSection: (registryId: string, body: Partial<SectionRow>) =>
-      send<SectionRow>(`${BASE}/${seg(registryId)}/sections`, 'POST', body),
-    updateSection: (registryId: string, id: string, body: Partial<SectionRow>) =>
-      send<SectionRow>(`${BASE}/${seg(registryId)}/sections/${seg(id)}`, 'PATCH', body),
+    listSections: async (registryId: string) => ({
+      items: (await listAll<RegistryWireSection>(`${BASE}/${seg(registryId)}/sections`)).map(
+        sectionFromWire,
+      ),
+    }),
+    createSection: async (registryId: string, body: Partial<SectionRow>) =>
+      sectionFromWire(
+        await send<RegistryWireSection>(
+          `${BASE}/${seg(registryId)}/sections`, 'POST', sectionBodyToWire(body),
+        ),
+      ),
+    updateSection: async (registryId: string, id: string, body: Partial<SectionRow>) =>
+      sectionFromWire(
+        await send<RegistryWireSection>(
+          `${BASE}/${seg(registryId)}/sections/${seg(id)}`, 'POST', sectionBodyToWire(body),
+        ),
+      ),
     deleteSection: (registryId: string, id: string) =>
       del(`${BASE}/${seg(registryId)}/sections/${seg(id)}`),
 
-    listFieldDefs: (registryId: string) =>
-      send<{ items: FieldDefRow[] }>(`${BASE}/${seg(registryId)}/field-defs`, 'GET'),
-    createFieldDef: (registryId: string, body: Partial<FieldDefRow>) =>
-      send<FieldDefRow>(`${BASE}/${seg(registryId)}/field-defs`, 'POST', body),
+    listFieldDefs: async (registryId: string) => ({
+      items: (await listAll<RegistryWireFieldDef>(`${BASE}/${seg(registryId)}/field_defs`)).map(
+        fieldDefFromWire,
+      ),
+    }),
+    createFieldDef: async (registryId: string, body: Partial<FieldDefRow>) =>
+      fieldDefFromWire(
+        await send<RegistryWireFieldDef>(
+          `${BASE}/${seg(registryId)}/field_defs`, 'POST', fieldDefBodyToWire(body),
+        ),
+      ),
     // `key`, `type` and `sectionId` are absent from the update surface on purpose: all
     // three are immutable server-side, and a type change is a 400 rather than a silent
     // no-op — so sending one turns an ordinary label edit into a failed save.
-    updateFieldDef: (
+    updateFieldDef: async (
       registryId: string, id: string,
       body: Partial<Omit<FieldDefRow, 'id' | 'key' | 'type' | 'sectionId'>>,
-    ) => send<FieldDefRow>(`${BASE}/${seg(registryId)}/field-defs/${seg(id)}`, 'PATCH', body),
+    ) =>
+      fieldDefFromWire(
+        await send<RegistryWireFieldDef>(
+          `${BASE}/${seg(registryId)}/field_defs/${seg(id)}`, 'POST', fieldDefBodyToWire(body),
+        ),
+      ),
     deleteFieldDef: (registryId: string, id: string) =>
-      del(`${BASE}/${seg(registryId)}/field-defs/${seg(id)}`),
+      del(`${BASE}/${seg(registryId)}/field_defs/${seg(id)}`),
 
     /**
      * The registry OWNER's review queue, newest first.
@@ -326,28 +377,39 @@ export function createRegistryClient(fetcher: Fetcher) {
      * which is the one wrong answer an owner would act on.
      *
      * Approval is not a route of its own — it is `updateEntry(registryId, id, { status:
-     * 'published' })` sent by the owner, whose PATCH is not re-gated to `pending` the way a
+     * 'published' })` sent by the owner, whose update is not re-gated to `pending` the way a
      * registrant's is. A second endpoint would have been a second copy of that policy.
      */
-    listEntries: (registryId: string, status?: EntryStatus) =>
-      send<{ items: EntryRow[] }>(
-        `${BASE}/${seg(registryId)}/entries${status === undefined ? '' : `?status=${seg(status)}`}`,
-        'GET',
-      ),
+    listEntries: async (registryId: string, status?: EntryStatus) => ({
+      items: (
+        await listAll<RegistryWireEntry>(withQuery(ENTRIES, { ...reg(registryId), status }))
+      ).map(entryFromWire),
+    }),
 
     /**
-     * The caller's own entry, created as a draft if they have none. POST because it
-     * creates one — the read-only `GET .../entries/mine` 404s instead, so it can never be
-     * the call that plants a row in a registry someone merely opened. Idempotent: repeat
-     * calls resolve to the same row (`uq_entries_registry_owner`), which is what makes a
-     * single unconditional call at editor mount correct.
+     * The caller's own entry, created as a draft if they have none. A POST because it
+     * creates one — `owner: 'me'` on a read would 404 instead, so it can never be the call
+     * that plants a row in a registry someone merely opened. Idempotent: repeat calls
+     * resolve to the same row (`uq_entries_registry_owner`), which is what makes a single
+     * unconditional call at editor mount correct.
      */
-    myEntry: (registryId: string) =>
-      send<EntryRow>(`${BASE}/${seg(registryId)}/entries/mine`, 'POST', {}),
-    createEntry: (registryId: string, body: EntryWrite) =>
-      send<EntryRow>(`${BASE}/${seg(registryId)}/entries`, 'POST', body),
-    updateEntry: (registryId: string, id: string, body: EntryWrite) =>
-      send<EntryRow>(`${BASE}/${seg(registryId)}/entries/${seg(id)}`, 'PATCH', body),
+    myEntry: async (registryId: string) =>
+      entryFromWire(
+        await send<RegistryWireEntry>(ENTRIES, 'POST', { ...reg(registryId), owner: 'me' }),
+      ),
+    createEntry: async (registryId: string, body: EntryWrite) =>
+      entryFromWire(
+        await send<RegistryWireEntry>(ENTRIES, 'POST', {
+          ...reg(registryId),
+          ...entryBodyToWire(body),
+        }),
+      ),
+    updateEntry: async (registryId: string, id: string, body: EntryWrite) =>
+      entryFromWire(
+        await send<RegistryWireEntry>(
+          withQuery(`${ENTRIES}/${seg(id)}`, reg(registryId)), 'POST', entryBodyToWire(body),
+        ),
+      ),
 
     /**
      * Take a registrant out of the registry — SOFT server-side, which is also what frees
@@ -359,16 +421,35 @@ export function createRegistryClient(fetcher: Fetcher) {
      * host owns the confirmation, exactly as `deleteRegistry` says above.
      */
     deleteEntry: (registryId: string, id: string) =>
-      del(`${BASE}/${seg(registryId)}/entries/${seg(id)}`),
+      del(withQuery(`${ENTRIES}/${seg(id)}`, reg(registryId))),
 
-    listServices: (registryId: string, entryId: string) =>
-      send<{ items: ServiceRow[] }>(`${BASE}/${seg(registryId)}/entries/${seg(entryId)}/services`, 'GET'),
-    createService: (registryId: string, entryId: string, body: Partial<ServiceRow>) =>
-      send<ServiceRow>(`${BASE}/${seg(registryId)}/entries/${seg(entryId)}/services`, 'POST', body),
-    updateService: (registryId: string, entryId: string, id: string, body: Partial<ServiceRow>) =>
-      send<ServiceRow>(`${BASE}/${seg(registryId)}/entries/${seg(entryId)}/services/${seg(id)}`, 'PATCH', body),
+    listServices: async (registryId: string, entryId: string) => ({
+      items: (
+        await listAll<RegistryWireService>(
+          withQuery(`${ENTRIES}/${seg(entryId)}/services`, reg(registryId)),
+        )
+      ).map(serviceFromWire),
+    }),
+    createService: async (registryId: string, entryId: string, body: Partial<ServiceRow>) =>
+      serviceFromWire(
+        await send<RegistryWireService>(
+          withQuery(`${ENTRIES}/${seg(entryId)}/services`, reg(registryId)),
+          'POST',
+          serviceBodyToWire(body),
+        ),
+      ),
+    updateService: async (
+      registryId: string, entryId: string, id: string, body: Partial<ServiceRow>,
+    ) =>
+      serviceFromWire(
+        await send<RegistryWireService>(
+          withQuery(`${ENTRIES}/${seg(entryId)}/services/${seg(id)}`, reg(registryId)),
+          'POST',
+          serviceBodyToWire(body),
+        ),
+      ),
     deleteService: (registryId: string, entryId: string, id: string) =>
-      del(`${BASE}/${seg(registryId)}/entries/${seg(entryId)}/services/${seg(id)}`),
+      del(withQuery(`${ENTRIES}/${seg(entryId)}/services/${seg(id)}`, reg(registryId))),
   };
 }
 
@@ -393,15 +474,15 @@ export interface EntryProfilePage {
 /**
  * The signed-in view of one public entry.
  *
- * The route is `GET /registries/:registrySlug/entries/:entrySlug` — the anonymous path
- * minus its `/public` prefix, mounted at the top level behind `jwtAuth`, exactly as
- * `/users/:slug` relates to `/public/users/:slug`. Naming that relationship in ONE place is
+ * The route is `GET /v1/registry_entries/{entrySlug}?registry={registrySlug}` — the
+ * signed-in twin of the anonymous public read, which /v1 serves from the same path by the
+ * caller's credentials. Naming that relationship in ONE place is
  * why this lives here rather than in each site's own `publicApi.ts`: it is the single fact
  * a site could get wrong in a way nothing would catch, since a wrong URL 404s and the page
  * silently keeps showing the anonymous body it already had.
  *
- * Not a method on `RegistryClient`: everything there hangs off `/api/registry/registries`
- * (the owner-and-registrant surface), and this is a public read on a different mount. It
+ * Not a method on `RegistryClient`: everything there is the owner-and-registrant surface,
+ * and this is a read of someone else's published entry. It
  * takes the `Fetcher` directly for the same reason — a satellite site has no registry
  * client, only `authedFetch`.
  *
@@ -415,8 +496,11 @@ export async function fetchEntryProfileAsMember(
   registrySlug: string,
   entrySlug: string,
 ): Promise<EntryProfilePage> {
-  const seg = encodeURIComponent;
-  return json<EntryProfilePage>(
-    await fetcher(`/api/registries/${seg(registrySlug)}/entries/${seg(entrySlug)}`),
+  return profilePageFromWire(
+    await json<RegistryWireProfilePage>(
+      await fetcher(
+        withQuery(`${ENTRIES}/${encodeURIComponent(entrySlug)}`, { registry: registrySlug }),
+      ),
+    ),
   );
 }

@@ -1,12 +1,12 @@
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | passed | Security |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | partial | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | passed | Security |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | Reliability |
 
 Parsing (`VSCodeThemeImporter`), the key grammar (`SyntaxRoleOverrides.swift`) and persistence (`UserSettingsThemeStorage`) are separate files with no UI code, and the only AppKit dependency is confined to the macOS `ThemeManager()` initialiser (separation-of-concerns: passed). `SyntaxRoleOverridesTests`, `VSCodeThemeImporterTests`, `LegacyThemePersistenceTests` and `ExternalThemeChangeObservationTests` assert every error case, the key grammar, the tie-breaks, include resolution, containment and legacy-key compatibility (unit-test-coverage: passed). Every document-level failure is thrown with a typed case, but unreadable optional colours and unusable `tokenColors` entries are dropped with no signal to the caller by design, invalid JSON surfaces as an untyped `JSONSerialization` error, and `VSCodeThemeParseError` carries no localized description (explicit-error-handling: partial). Extension-controlled include paths are containment-checked on the symlink-resolved path and bounded to 8 hops, and every value is type-checked before use (input-sanitization: passed). A theme missing optional colours, role keys or syntax rules still imports and derives the rest (graceful-degradation: passed). The importer validates the palette before anything is stored, but `UserSettingsThemeStorage` reads and writes `[ColorTheme]` without its own validation and leaves detection of corrupt stored JSON to the settings provider (data-integrity: partial).
 

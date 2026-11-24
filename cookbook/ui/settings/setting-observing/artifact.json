@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
-    "id": "64C9047D-53A2-4912-8817-2F35372E505F",
+    "id": "64c9047d-53a2-4912-8817-2f35372e505f",
     "title": "Setting Observing",
-    "domain": "adhsdk://cookbook/ui/settings/setting-observing",
     "type": "ingredient",
     "version": "1.0.1",
     "status": "review",
@@ -25,13 +24,13 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/ui/settings/views/value-row-view"
+      "d0aa6237-e5d7-4cf8-a1cb-621033575421"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "e9cb5b2838553fbb",
+  "synced": "c0e6dc2045e40255",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -50,7 +49,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

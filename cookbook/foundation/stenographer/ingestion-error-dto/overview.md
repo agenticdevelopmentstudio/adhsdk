@@ -1,0 +1,3 @@
+
+Three shapes describe hook events the daemon could not ingest. `IngestionErrorDTO` is one quarantined hook-event file still on disk, surfaced to the app over XPC and to the CLI over HTTP. `IngestionErrorLogDTO` is one row of the persistent ingestion-error log (DB table `ingestion_errors`), surfaced at `GET /ingestion/errors/log`; it includes resolved history. `RetryProgressDTO` is the live progress of a Retry All batch, which the daemon runs asynchronously and the UI polls until `running` is false. The quarantine, the retry budget, the table and the batch are the daemon's (`QuarantineService` and `DaemonDatabase`), outside this file; this code is the wire shape.
+

@@ -1,0 +1,16 @@
+{
+ "id": "m4",
+ "threadId": "tm4",
+ "payload": {
+  "mimeType": "text/plain",
+  "headers": [
+   {
+    "name": "Content-Type",
+    "value": "text/plain; charset=windows-1252"
+   }
+  ],
+  "body": {
+   "data": "gA"
+  }
+ }
+}

@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
-    "id": "CC43F118-215C-4794-BB67-6D97BAB9DFE4",
+    "id": "cc43f118-215c-4794-bb67-6d97bab9dfe4",
     "title": "UTF-8 Search",
-    "domain": "adhsdk://cookbook/foundation/utf8-search",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -26,13 +25,13 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/foundation/core-utilities"
+      "cf3a3dc9-6fed-47ba-a699-71ff806dcedd"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "0e93664bf2006484",
+  "synced": "8c38fb7522bac837",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -51,7 +50,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

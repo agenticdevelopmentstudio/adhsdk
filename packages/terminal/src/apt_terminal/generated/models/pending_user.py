@@ -32,8 +32,8 @@ class PendingUser:
         last_source (None | str):
         last_note (None | str):
         accepted_customer_id (None | str):
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
         contact_id (None | str | Unset):
     """
 
@@ -52,8 +52,8 @@ class PendingUser:
     last_source: None | str
     last_note: None | str
     accepted_customer_id: None | str
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     contact_id: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -95,9 +95,9 @@ class PendingUser:
         accepted_customer_id: None | str
         accepted_customer_id = self.accepted_customer_id
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         contact_id: None | str | Unset
         if isinstance(self.contact_id, Unset):
@@ -110,26 +110,26 @@ class PendingUser:
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
-                "userNumber": user_number,
+                "ecosystem_id": ecosystem_id,
+                "user_number": user_number,
                 "name": name,
                 "email": email,
                 "phone": phone,
                 "status": status,
-                "requestCount": request_count,
-                "invitedCount": invited_count,
-                "lastRequestAt": last_request_at,
-                "lastInviteSentAt": last_invite_sent_at,
-                "firstRequestedAt": first_requested_at,
-                "lastSource": last_source,
-                "lastNote": last_note,
-                "acceptedCustomerId": accepted_customer_id,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
+                "request_count": request_count,
+                "invited_count": invited_count,
+                "last_request_at": last_request_at,
+                "last_invite_sent_at": last_invite_sent_at,
+                "first_requested_at": first_requested_at,
+                "last_source": last_source,
+                "last_note": last_note,
+                "accepted_customer_id": accepted_customer_id,
+                "created": created,
+                "updated": updated,
             }
         )
         if contact_id is not UNSET:
-            field_dict["contactId"] = contact_id
+            field_dict["contact_id"] = contact_id
 
         return field_dict
 
@@ -138,9 +138,9 @@ class PendingUser:
         d = dict(src_dict)
         id = d.pop("id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        user_number = d.pop("userNumber")
+        user_number = d.pop("user_number")
 
         name = d.pop("name")
 
@@ -160,50 +160,50 @@ class PendingUser:
 
         status = PendingUserStatus(d.pop("status"))
 
-        request_count = d.pop("requestCount")
+        request_count = d.pop("request_count")
 
-        invited_count = d.pop("invitedCount")
+        invited_count = d.pop("invited_count")
 
         def _parse_last_request_at(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        last_request_at = _parse_last_request_at(d.pop("lastRequestAt"))
+        last_request_at = _parse_last_request_at(d.pop("last_request_at"))
 
         def _parse_last_invite_sent_at(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        last_invite_sent_at = _parse_last_invite_sent_at(d.pop("lastInviteSentAt"))
+        last_invite_sent_at = _parse_last_invite_sent_at(d.pop("last_invite_sent_at"))
 
-        first_requested_at = d.pop("firstRequestedAt")
+        first_requested_at = d.pop("first_requested_at")
 
         def _parse_last_source(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        last_source = _parse_last_source(d.pop("lastSource"))
+        last_source = _parse_last_source(d.pop("last_source"))
 
         def _parse_last_note(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        last_note = _parse_last_note(d.pop("lastNote"))
+        last_note = _parse_last_note(d.pop("last_note"))
 
         def _parse_accepted_customer_id(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        accepted_customer_id = _parse_accepted_customer_id(d.pop("acceptedCustomerId"))
+        accepted_customer_id = _parse_accepted_customer_id(d.pop("accepted_customer_id"))
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         def _parse_contact_id(data: object) -> None | str | Unset:
             if data is None:
@@ -212,7 +212,7 @@ class PendingUser:
                 return data
             return cast(None | str | Unset, data)
 
-        contact_id = _parse_contact_id(d.pop("contactId", UNSET))
+        contact_id = _parse_contact_id(d.pop("contact_id", UNSET))
 
         pending_user = cls(
             id=id,
@@ -230,8 +230,8 @@ class PendingUser:
             last_source=last_source,
             last_note=last_note,
             accepted_customer_id=accepted_customer_id,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
             contact_id=contact_id,
         )
 

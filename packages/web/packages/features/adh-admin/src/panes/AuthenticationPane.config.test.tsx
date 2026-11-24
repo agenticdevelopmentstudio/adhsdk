@@ -33,17 +33,17 @@ vi.mock("../api/auth-config", () => {
 
 import { AuthenticationPane } from "./AuthenticationPane";
 
-const CORE = { subjectField: "sub", emailField: "email", nameField: "name", avatarField: "picture" };
+const CORE = { subject_field: "sub", email_field: "email", name_field: "name", avatar_field: "picture" };
 const JWT_MAPPING = {
   ...CORE,
-  responseMode: "form_post",
-  clientSecretJwt: { teamId: "", keyId: "", audience: "https://appleid.apple.com" },
+  response_mode: "form_post",
+  client_secret_jwt: { team_id: "", key_id: "", audience: "https://appleid.apple.com" },
 };
-const appleTemplate = { slug: "apple", name: "Apple", authType: "oauth2_code", identityMapping: JWT_MAPPING };
-const githubTemplate = { slug: "github", name: "GitHub", authType: "oauth2_code", identityMapping: CORE };
+const appleTemplate = { slug: "apple", name: "Apple", auth_type: "oauth2_code", identity_mapping: JWT_MAPPING };
+const githubTemplate = { slug: "github", name: "GitHub", auth_type: "oauth2_code", identity_mapping: CORE };
 
-function client(slug: string, originsManaged: boolean, origins: string[]) {
-  return { id: slug, slug, name: slug, allowedReturnOrigins: origins, originsManaged, isInternal: false };
+function client(slug: string, origins_managed: boolean, origins: string[]) {
+  return { id: slug, slug, name: slug, allowed_return_origins: origins, origins_managed, is_internal: false };
 }
 
 function renderPane() {
@@ -118,13 +118,13 @@ describe("a provider whose client secret is a minted JWT", () => {
 
     await waitFor(() => expect(createProvider).toHaveBeenCalledTimes(1));
     expect(createProvider).toHaveBeenCalledWith({
-      templateSlug: "apple",
+      template_slug: "apple",
       slug: "apple",
-      clientId: "com.example.web",
-      clientSecret: "-----BEGIN PRIVATE KEY-----",
-      identityMapping: {
+      client_id: "com.example.web",
+      client_secret: "-----BEGIN PRIVATE KEY-----",
+      identity_mapping: {
         ...JWT_MAPPING,
-        clientSecretJwt: { teamId: "TEAM123", keyId: "KEY456", audience: "https://appleid.apple.com" },
+        client_secret_jwt: { team_id: "TEAM123", key_id: "KEY456", audience: "https://appleid.apple.com" },
       },
     });
   });
@@ -132,10 +132,10 @@ describe("a provider whose client secret is a minted JWT", () => {
   it("sends only the mapping when a key changes on an existing provider", async () => {
     const mapping = {
       ...JWT_MAPPING,
-      clientSecretJwt: { teamId: "TEAM123", keyId: "OLD", audience: "https://appleid.apple.com" },
+      client_secret_jwt: { team_id: "TEAM123", key_id: "OLD", audience: "https://appleid.apple.com" },
     };
     state.providers = [
-      { id: "1", slug: "apple", name: "Apple", authType: "oauth2_code", clientId: "com.example.web", scopes: [], identityMapping: mapping },
+      { id: "1", slug: "apple", name: "Apple", auth_type: "oauth2_code", client_id: "com.example.web", scopes: [], identity_mapping: mapping },
     ];
     renderPane();
     await openCard("Apple");
@@ -145,7 +145,7 @@ describe("a provider whose client secret is a minted JWT", () => {
     await waitFor(() => expect(updateProvider).toHaveBeenCalledTimes(1));
     expect(updateProvider).toHaveBeenCalledWith({
       slug: "apple",
-      identityMapping: { ...mapping, clientSecretJwt: { ...mapping.clientSecretJwt, keyId: "NEW" } },
+      identity_mapping: { ...mapping, client_secret_jwt: { ...mapping.client_secret_jwt, key_id: "NEW" } },
     });
   });
 
@@ -161,10 +161,10 @@ describe("a provider whose client secret is a minted JWT", () => {
 
     await waitFor(() => expect(createProvider).toHaveBeenCalledTimes(1));
     expect(createProvider).toHaveBeenCalledWith({
-      templateSlug: "github",
+      template_slug: "github",
       slug: "github",
-      clientId: "abc",
-      clientSecret: "shh",
+      client_id: "abc",
+      client_secret: "shh",
     });
   });
 });

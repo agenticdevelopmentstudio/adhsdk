@@ -1,0 +1,36 @@
+
+- **host-registration-state**: `useDetailTitleHost` MUST return a stable `registrar` (with `register` and `unregister`), a `target` (the slot element and the active id), a `published` flag and a `slotRef` callback ref for the slot element.
+- **register-idempotent**: Registering an id that is already registered MUST leave the registered ids unchanged.
+- **unregister-idempotent**: Unregistering an id that is not registered MUST leave the registered ids unchanged.
+- **register-appends**: Registering a new id MUST append it after all existing ids.
+- **last-registered-wins**: The active id MUST be the most recently registered id still registered, and MUST be undefined when no id is registered.
+- **published-flag**: `published` MUST be true while at least one id is registered, and false otherwise.
+- **registrar-stable**: The `registrar` object MUST keep the same identity across renders, so a publisher's registration effect depends only on a stable value.
+- **target-follows-slot-and-winner**: `target` MUST change identity only when the slot element or the active id changes.
+- **provider-two-contexts**: `DetailTitleProvider` MUST expose the registrar and the target to descendants through two separate contexts, so a slot or winner change does not re-run publishers' registration effects.
+- **suppress-withdraws-titles**: While `when` is true, `DetailTitleSuppressed` MUST give its descendants no registrar, which unregisters every title registered below it.
+- **suppress-restores-titles**: When `when` returns to false, `DetailTitleSuppressed` MUST give its descendants the enclosing registrar again, so they register again.
+- **suppress-never-remounts**: `DetailTitleSuppressed` MUST render its provider whatever `when` is, so toggling `when` never re-parents or remounts its children.
+- **selected-label-live**: `useSelectedTopicLabel` MUST return the label of the selected row of the deepest selected level while that row is among the level's items.
+- **selected-label-held**: When the selected row drops out of its level's items while it stays selected, `useSelectedTopicLabel` MUST return the label last seen for that exact depth and id.
+- **selected-label-id-fallback**: When the selected row has never been seen among the level's items, `useSelectedTopicLabel` MUST return the selected id itself.
+- **selected-label-none**: `useSelectedTopicLabel` MUST return undefined when no level has an unbroken selection from the root.
+- **selected-label-keyed-on-depth**: `useSelectedTopicLabel` MUST key the held label on depth and id together, so the same id at a different depth is a different topic.
+- **selected-label-no-blank-paint**: `useSelectedTopicLabel` MUST update the held label during render, not in an effect, so the strip never paints blank before the label is corrected.
+- **strip-titled-rule**: `detailStripTitle` MUST report `titled` as true when a title is published or when `fallback` is neither undefined, null nor false.
+- **strip-heading-role**: While `titled` is true, the strip's title cell MUST carry `role="heading"` and `aria-level="2"`.
+- **strip-no-empty-heading**: While `titled` is false, the strip's title cell MUST carry no role and no aria-level.
+- **strip-slot-element**: The strip's title cell MUST contain a slot element with `display: contents` that receives `slotRef`, so portalled nodes never share a parent with nodes React renders in the cell.
+- **strip-fallback-when-unpublished**: The strip MUST draw `fallback` only while no title is published.
+- **strip-published-wins**: While a title is published, the strip MUST NOT draw `fallback`.
+- **strip-optout**: A `fallback` of null or false MUST mean the host opts out of a default title; with nothing published the strip is not titled.
+- **strip-marker-attribute**: The strip's title cell MUST carry the `data-htd-detail-title` attribute.
+- **pane-has-title**: `useDetailTitle` MUST treat a title of null, undefined or false as no title, and any other value as a title.
+- **pane-registers-on-has**: `useDetailTitle` MUST register the pane's id while it has a title and a registrar exists, and unregister it when the title goes away or the pane unmounts.
+- **pane-registration-not-keyed-on-title**: `useDetailTitle` MUST NOT re-run its registration when only the title node's identity changes.
+- **pane-hoisted-rule**: `useDetailTitle` MUST report `hoisted` true only when the pane has a title, a registrar exists, the slot element exists and the pane's id is the active id.
+- **pane-portal-when-hoisted**: When `hoisted`, `useDetailTitle` MUST return a portal rendering the title into the slot; otherwise `portal` MUST be null.
+- **pane-inline-when-not-hoisted**: A pane MUST draw its title inline when `hoisted` is false: outside any stack, while another pane holds the strip, while suppressed, and during server rendering.
+- **pane-server-inline**: Server rendering MUST keep the inline title, because the slot is a DOM element that does not exist on the server.
+- **registration-layout-effect**: `useDetailTitle` MUST register in a layout effect, so the title moves into the strip before the first client paint.
+

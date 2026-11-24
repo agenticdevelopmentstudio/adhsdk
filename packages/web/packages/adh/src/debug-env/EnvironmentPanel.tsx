@@ -33,7 +33,7 @@ export function EnvironmentPanel() {
 
   useEffect(() => {
     fetchEntries('/api/public/debug-env').then(setSite).catch(() => setSite('unavailable'))
-    fetchEntries('/api/system/debug-env').then(setBackend).catch(() => setBackend('unavailable'))
+    fetchEntries('/api/v1/system/debug_env').then(setBackend).catch(() => setBackend('unavailable'))
   }, [])
 
   const client = collectEnvVars(Object.keys(CLIENT_ENV), (name) => CLIENT_ENV[name])

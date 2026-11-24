@@ -18,16 +18,22 @@ public final class PluginChatConfigProvider: ChatConfigProvider {
     }
 
     private var resolved: AIProviderResolver.Resolved? {
-        let configurations = UserSettings.aiProviderConfigurations.value
+        Self.defaultConfiguration(in: UserSettings.aiProviderConfigurations.value, manager: pluginManager)
+            .flatMap { AIProviderResolver.resolve($0, manager: pluginManager) }
+    }
+
+    /// The configuration a chat opens on when none is named: the one selected in
+    /// Settings if it resolves, else the first that does. Nil when none resolves.
+    public static func defaultConfiguration(in configurations: [AIProviderConfiguration],
+                                            manager: AIPluginManager) -> AIProviderConfiguration? {
+        let resolves = { (config: AIProviderConfiguration) in
+            AIProviderResolver.resolve(config, manager: manager) != nil
+        }
         if let uuid = UUID(uuidString: UserSettings.selectedAIProviderConfigurationId.value),
-           let chosen = configurations.first(where: { $0.id == uuid }),
-           let resolved = AIProviderResolver.resolve(chosen, manager: pluginManager) {
-            return resolved
+           let chosen = configurations.first(where: { $0.id == uuid }), resolves(chosen) {
+            return chosen
         }
-        for configuration in configurations {
-            if let resolved = AIProviderResolver.resolve(configuration, manager: pluginManager) { return resolved }
-        }
-        return nil
+        return configurations.first(where: resolves)
     }
 
     public var selectedPluginIdentifier: String { resolved?.pluginIdentifier ?? "" }

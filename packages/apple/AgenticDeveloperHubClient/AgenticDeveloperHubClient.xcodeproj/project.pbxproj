@@ -118,9 +118,11 @@
 		5CF768DB94D2B1AED4B062A7 /* RawJSONTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RawJSONTests.swift; sourceTree = "<group>"; };
 		5DA8E2CE77483E50E39F6883 /* push-request.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "push-request.json"; sourceTree = "<group>"; };
 		5FDCE7BCAC5C5E997DADBBD1 /* CredentialStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CredentialStore.swift; sourceTree = "<group>"; };
+		639A5D82C7CA740D9EB2C047 /* swift-openapi-runtime */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "swift-openapi-runtime"; path = "/Users/mfullerton/Library/Developer/SharedPackages/swift-openapi-runtime"; sourceTree = "<absolute>"; };
 		64ABF066F038C0DA77BF676B /* pull-response.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "pull-response.json"; sourceTree = "<group>"; };
 		68B4BB49F63126531E42280E /* Types.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Types.swift; sourceTree = "<group>"; };
 		68FE29807BB376745D790A28 /* AgenticDeveloperHubClient.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = AgenticDeveloperHubClient.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		6981ACECF258AA5982CA5114 /* swift-http-types */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "swift-http-types"; path = "/Users/mfullerton/Library/Developer/SharedPackages/swift-http-types"; sourceTree = "<absolute>"; };
 		6B49F9EAE13469AA4A5DAFC4 /* DaemonTransportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DaemonTransportTests.swift; sourceTree = "<group>"; };
 		7020A566136D8672403CA5EF /* AuthenticationMiddleware.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationMiddleware.swift; sourceTree = "<group>"; };
 		74F68CB079A5FF4CDD58344E /* push-response.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "push-response.json"; sourceTree = "<group>"; };
@@ -128,6 +130,7 @@
 		81A44D0FC69A1B7A9ACE6010 /* HubKeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HubKeychainHelper.swift; sourceTree = "<group>"; };
 		8FC78F42F09920BAD4AAAED6 /* HubSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HubSession.swift; sourceTree = "<group>"; };
 		92DC8ED107F6030B64840FB3 /* SessionRefreshMiddlewareTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionRefreshMiddlewareTests.swift; sourceTree = "<group>"; };
+		9FCA03B4C86407EB0041179E /* swift-openapi-urlsession */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "swift-openapi-urlsession"; path = "/Users/mfullerton/Library/Developer/SharedPackages/swift-openapi-urlsession"; sourceTree = "<absolute>"; };
 		A7B92ECC0CD4043B00429DFB /* MockDaemonServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockDaemonServer.swift; sourceTree = "<group>"; };
 		B6A250C8D68ACB736BD73725 /* TestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestSupport.swift; sourceTree = "<group>"; };
 		B7273CAC95ABBDD2A659E2C6 /* EmbeddedDaemon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbeddedDaemon.swift; sourceTree = "<group>"; };
@@ -216,6 +219,7 @@
 			isa = PBXGroup;
 			children = (
 				957D9BC97D8DF983E2195EEA /* AuthSources */,
+				64348F19209C2010AB0C2613 /* Packages */,
 				29236305D00129B0B8DB77F2 /* Sources */,
 				61359404EF2CD93A214A5AAC /* Tests */,
 				B2C184E14E20D029BD08AC4E /* Products */,
@@ -259,6 +263,16 @@
 				56A828AF6C3058AA838B805D /* AgenticDeveloperHubClientTests */,
 			);
 			path = Tests;
+			sourceTree = "<group>";
+		};
+		64348F19209C2010AB0C2613 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				6981ACECF258AA5982CA5114 /* swift-http-types */,
+				639A5D82C7CA740D9EB2C047 /* swift-openapi-runtime */,
+				9FCA03B4C86407EB0041179E /* swift-openapi-urlsession */,
+			);
+			name = Packages;
 			sourceTree = "<group>";
 		};
 		957D9BC97D8DF983E2195EEA /* AuthSources */ = {
@@ -408,9 +422,9 @@
 			mainGroup = 45B9E0FD7E82C35FD28C155D;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				909642F82C6019F1DE113D85 /* XCRemoteSwiftPackageReference "swift-http-types" */,
-				93743CAEFC755CE614137340 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */,
-				57979F1161FDC2C9F43E1CF6 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */,
+				3C741C24F8170C2E470A0C91 /* XCLocalSwiftPackageReference "$(HOME)/Library/Developer/SharedPackages/swift-http-types" */,
+				1B66403DBF2297E40E738E1F /* XCLocalSwiftPackageReference "$(HOME)/Library/Developer/SharedPackages/swift-openapi-runtime" */,
+				764C8BBAE65C4C1B4F3C29AE /* XCLocalSwiftPackageReference "$(HOME)/Library/Developer/SharedPackages/swift-openapi-urlsession" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = B2C184E14E20D029BD08AC4E /* Products */;
@@ -647,7 +661,7 @@
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_STRICT_CONCURRENCY = complete;
-				SWIFT_VERSION = 6.0;
+				SWIFT_VERSION = 6.4;
 			};
 			name = Release;
 		};
@@ -751,7 +765,7 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_STRICT_CONCURRENCY = complete;
-				SWIFT_VERSION = 6.0;
+				SWIFT_VERSION = 6.4;
 			};
 			name = Debug;
 		};
@@ -838,80 +852,56 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCRemoteSwiftPackageReference section */
-		57979F1161FDC2C9F43E1CF6 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/apple/swift-openapi-urlsession";
-			requirement = {
-				kind = versionRange;
-				maximumVersion = 2.0.0;
-				minimumVersion = 1.3.0;
-			};
+/* Begin XCLocalSwiftPackageReference section */
+		1B66403DBF2297E40E738E1F /* XCLocalSwiftPackageReference "$(HOME)/Library/Developer/SharedPackages/swift-openapi-runtime" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "$(HOME)/Library/Developer/SharedPackages/swift-openapi-runtime";
 		};
-		909642F82C6019F1DE113D85 /* XCRemoteSwiftPackageReference "swift-http-types" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/apple/swift-http-types";
-			requirement = {
-				kind = versionRange;
-				maximumVersion = 2.0.0;
-				minimumVersion = 1.0.0;
-			};
+		3C741C24F8170C2E470A0C91 /* XCLocalSwiftPackageReference "$(HOME)/Library/Developer/SharedPackages/swift-http-types" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "$(HOME)/Library/Developer/SharedPackages/swift-http-types";
 		};
-		93743CAEFC755CE614137340 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/apple/swift-openapi-runtime";
-			requirement = {
-				kind = versionRange;
-				maximumVersion = 2.0.0;
-				minimumVersion = 1.12.0;
-			};
+		764C8BBAE65C4C1B4F3C29AE /* XCLocalSwiftPackageReference "$(HOME)/Library/Developer/SharedPackages/swift-openapi-urlsession" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "$(HOME)/Library/Developer/SharedPackages/swift-openapi-urlsession";
 		};
-/* End XCRemoteSwiftPackageReference section */
+/* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		1BFF328AC51A09EA38AC7036 /* OpenAPIRuntime */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 93743CAEFC755CE614137340 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */;
 			productName = OpenAPIRuntime;
 		};
 		28F218F9F38DB212E9CADCE6 /* HTTPTypes */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 909642F82C6019F1DE113D85 /* XCRemoteSwiftPackageReference "swift-http-types" */;
 			productName = HTTPTypes;
 		};
 		6B34AE4EFC70F55E7AA61DCE /* OpenAPIRuntime */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 93743CAEFC755CE614137340 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */;
 			productName = OpenAPIRuntime;
 		};
 		7B3358DC8E394C3B55DA9911 /* OpenAPIURLSession */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 57979F1161FDC2C9F43E1CF6 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */;
 			productName = OpenAPIURLSession;
 		};
 		BC899A776C1A43EC7316C209 /* HTTPTypes */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 909642F82C6019F1DE113D85 /* XCRemoteSwiftPackageReference "swift-http-types" */;
 			productName = HTTPTypes;
 		};
 		BEFD4345DA24D78AC488F6D2 /* OpenAPIRuntime */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 93743CAEFC755CE614137340 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */;
 			productName = OpenAPIRuntime;
 		};
 		D6A9B5CD3F6D3822511F7FA6 /* HTTPTypes */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 909642F82C6019F1DE113D85 /* XCRemoteSwiftPackageReference "swift-http-types" */;
 			productName = HTTPTypes;
 		};
 		E85DFAD01853BD21171E803F /* OpenAPIURLSession */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 57979F1161FDC2C9F43E1CF6 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */;
 			productName = OpenAPIURLSession;
 		};
 		F99B02FE30E4784D77B598CC /* OpenAPIURLSession */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 57979F1161FDC2C9F43E1CF6 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */;
 			productName = OpenAPIURLSession;
 		};
 /* End XCSwiftPackageProductDependency section */

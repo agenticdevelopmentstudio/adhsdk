@@ -49,7 +49,7 @@ class UsageInsightBreakdown:
             {
                 "by": by,
                 "total": total,
-                "fixedMicros": fixed_micros,
+                "fixed_micros": fixed_micros,
                 "rows": rows,
             }
         )
@@ -65,7 +65,7 @@ class UsageInsightBreakdown:
 
         total = d.pop("total")
 
-        fixed_micros = d.pop("fixedMicros")
+        fixed_micros = d.pop("fixed_micros")
 
         rows = []
         _rows = d.pop("rows")

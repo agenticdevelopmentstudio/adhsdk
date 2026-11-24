@@ -4,12 +4,15 @@
 // DOM is shared across worlds; `window` and element expandos are not.
 // Installed once per document (version-checked); every call returns plain JSON.
 (function () {
-  if (window.__adkitchen && window.__adkitchen.version === 1) { return; }
+  // Bumping the version re-installs over an older copy: its refs go stale (as after any
+  // walk) and its MutationObserver stays behind, unused. Both are harmless. Keep it equal
+  // to BrowserSnapshotRuntime.version.
+  if (window.__adkitchen && window.__adkitchen.version === 5) { return; }
 
   const refs = new Map();            // ref -> WeakRef<Element>
   window.__adkitchenRefs = refs;
   // A random six-digit base chosen once per document, advanced by one per
-  // snapshot: short enough for a model to copy back without a slip, and
+  // walk: short enough for a model to copy back without a slip, and
   // unlikely to repeat another document's (ref, generation) numbers.
   let generation = 100000 + Math.floor(Math.random() * 900000);
   let nextRef = 1;
@@ -20,7 +23,6 @@
         { childList: true, subtree: true, attributes: true, characterData: true });
   } catch (e) { /* leave the counter at 0 rather than fail the install */ }
 
-  const NAME_LIMIT = 100, VALUE_LIMIT = 50;
   const LANDMARKS = { header: 'banner', nav: 'navigation', main: 'main', footer: 'contentinfo',
     aside: 'complementary', form: 'form', section: 'region', article: 'article' };
   const TAGS = { a: 'link', button: 'button', select: 'combobox', textarea: 'textbox', option: 'option',
@@ -37,13 +39,7 @@
     'radiogroup','region','row','rowgroup','rowheader','scrollbar','search','searchbox','separator','slider',
     'spinbutton','status','switch','tab','table','tablist','tabpanel','textbox','timer','toolbar','tooltip',
     'tree','treegrid','treeitem','presentation','none']);
-  const NAME_FROM_CONTENT = new Set(['button','link','heading','cell','columnheader','rowheader','option',
-    'tab','menuitem','menuitemcheckbox','menuitemradio','treeitem','tooltip','gridcell','switch']);
-  const INTERACTIVE = new Set(['button','link','textbox','searchbox','checkbox','radio','combobox','listbox',
-    'option','slider','spinbutton','switch','tab','menuitem','menuitemcheckbox','menuitemradio','treeitem']);
-
   const collapse = (s) => (s || '').replace(/\s+/g, ' ').trim();
-  const cut = (s, n) => (s.length > n ? s.slice(0, n) + '…' : s);
 
   function roleOf(el) {
     const explicit = collapse(el.getAttribute('role') || '').split(' ')[0];
@@ -62,16 +58,6 @@
     return null;
   }
 
-  // A link's destination as a string. `el.href` is one on an HTML anchor but
-  // an SVGAnimatedString on an SVG one, and an object in the payload makes the
-  // Swift decoder refuse the whole snapshot; the attribute, resolved against
-  // the document, is a string for both.
-  function linkURL(el) {
-    const href = el.getAttribute('href');
-    if (!href) { return null; }
-    try { return new URL(href, document.baseURI).href; } catch (e) { return href; }
-  }
-
   function isHiddenUncached(el) {
     const tag = el.tagName.toLowerCase();
     if (tag === 'script' || tag === 'style' || tag === 'noscript' || tag === 'template' || tag === 'head') { return true; }
@@ -87,226 +73,54 @@
     return false;
   }
 
-  function labelText(el) {
-    const ids = el.getAttribute('aria-labelledby');
-    if (ids) {
-      const parts = ids.split(/\s+/).map((id) => document.getElementById(id)).filter(Boolean)
-        .map((n) => collapse(n.textContent));
-      if (parts.join(' ').trim()) { return parts.join(' ').trim(); }
-    }
-    const label = el.getAttribute('aria-label');
-    if (label && collapse(label)) { return collapse(label); }
-    if (el.labels && el.labels.length) {
-      const own = Array.from(el.labels).map((l) => {
-        const clone = l.cloneNode(true);
-        clone.querySelectorAll('input,select,textarea,button').forEach((c) => c.remove());
-        return collapse(clone.textContent);
-      }).filter(Boolean).join(' ');
-      if (own) { return own; }
-    }
-    for (const attr of ['alt', 'title', 'placeholder']) {
-      const v = el.getAttribute(attr);
-      if (v && collapse(v)) { return collapse(v); }
-    }
-    return '';
-  }
-
-  function nameOf(el, role) {
-    const fromAttributes = labelText(el);
-    if (fromAttributes) { return { name: cut(fromAttributes, NAME_LIMIT), fromContent: false }; }
-    if (role && NAME_FROM_CONTENT.has(role)) {
-      const text = collapse(el.textContent);
-      if (text) { return { name: cut(text, NAME_LIMIT), fromContent: true }; }
-    }
-    return { name: '', fromContent: false };
-  }
-
-  function isInteractive(el, role) {
-    if (role && INTERACTIVE.has(role)) { return true; }
-    const tag = el.tagName.toLowerCase();
-    if (['input', 'select', 'textarea', 'button'].includes(tag)) { return true; }
-    if (tag === 'a' && el.hasAttribute('href')) { return true; }
-    if (el.isContentEditable) { return true; }
-    if (el.hasAttribute('onclick')) { return true; }
-    const tabindex = el.getAttribute('tabindex');
-    return tabindex !== null && Number(tabindex) >= 0;
-  }
-
-  function statesOf(el, role) {
-    const states = [];
-    const aria = (n) => el.getAttribute(n);
-    if (el.checked === true || aria('aria-checked') === 'true') { states.push('checked'); }
-    if (el.disabled === true || aria('aria-disabled') === 'true') { states.push('disabled'); }
-    if (aria('aria-expanded') === 'true' || (el.tagName.toLowerCase() === 'details' && el.open)) { states.push('expanded'); }
-    if (el.selected === true || aria('aria-selected') === 'true') { states.push('selected'); }
-    if (aria('aria-pressed') === 'true') { states.push('pressed'); }
-    if (el.required === true || aria('aria-required') === 'true') { states.push('required'); }
-    return states;
-  }
-
-  function valueOf(el, role) {
-    const tag = el.tagName.toLowerCase();
-    if (tag === 'input') {
-      const type = (el.getAttribute('type') || 'text').toLowerCase();
-      if (['password', 'checkbox', 'radio', 'button', 'submit', 'reset', 'image', 'file'].includes(type)) { return null; }
-      return el.value ? cut(collapse(el.value), VALUE_LIMIT) : null;
-    }
-    if (tag === 'select' || tag === 'textarea') { return el.value ? cut(collapse(el.value), VALUE_LIMIT) : null; }
-    if (role === 'slider' || role === 'spinbutton') {
-      const v = el.getAttribute('aria-valuenow');
-      return v ? cut(v, VALUE_LIMIT) : null;
-    }
-    return null;
-  }
-
+  // An element that already holds a live ref in this table keeps it, so a
+  // walk that keeps the refs (`beginWalk(true)`) hands out the same refs the
+  // agent's last snapshot did.
   function assignRef(el) {
+    const prior = el.__adkitchenRef;
+    if (prior) {
+      const held = refs.get(prior);
+      if (held && held.deref() === el) { return prior; }
+    }
     const ref = 'e' + (nextRef++);
     refs.set(ref, new WeakRef(el));
     el.__adkitchenRef = ref;
     return ref;
   }
 
-  // Per-snapshot memos: each element's hidden state, role and "has a non-generic
-  // descendant" answer are computed once, so deep div soup stays linear.
-  const hiddenMemo = new Map(), roleMemo = new Map(), descendantMemo = new Map();
-
-  function isHidden(el) {
-    if (!hiddenMemo.has(el)) { hiddenMemo.set(el, isHiddenUncached(el)); }
-    return hiddenMemo.get(el);
-  }
-
-  function roleMemoized(el) {
-    if (!roleMemo.has(el)) { roleMemo.set(el, roleOf(el)); }
-    return roleMemo.get(el);
-  }
-
-  function hasNonGenericDescendant(el) {
-    if (descendantMemo.has(el)) { return descendantMemo.get(el); }
-    let found = false;
-    for (const child of el.children) {
-      if (isHidden(child)) { continue; }
-      const childRole = roleMemoized(child);
-      if ((childRole !== null && childRole !== 'presentation') || isInteractive(child, null)
-          || hasNonGenericDescendant(child)) { found = true; break; }
-    }
-    descendantMemo.set(el, found);
-    return found;
-  }
-
-  // Returns an array of nodes (an element may collapse into its children).
-  function build(el, depthLeft, opts) {
-    if (isHidden(el)) { return []; }
-    const tag = el.tagName.toLowerCase();
-    let role = roleMemoized(el);
-    if (role === 'presentation') { role = null; }
-    const interactive = isInteractive(el, role);
-    const generic = role === null && !interactive;
-
-    if (generic) {
-      if (!hasNonGenericDescendant(el)) {
-        const text = collapse(el.textContent);
-        return (text && !opts.interactiveOnly) ? [{ role: 'text', text: cut(text, NAME_LIMIT) }] : [];
-      }
-      return childrenOf(el, depthLeft, opts);
-    }
-
-    const node = { role: role || 'generic', states: statesOf(el, role), children: [] };
-    const { name, fromContent } = nameOf(el, role);
-    if (name) { node.name = name; }
-    node.ref = assignRef(el);
-    if (role === 'heading') {
-      const m = /^h([1-6])$/.exec(tag);
-      // aria-level is only a level when it is a whole number from 1 up; "1.5",
-      // "x" and "" would otherwise reach the Swift decoder as NaN or a fraction.
-      const aria = Number(el.getAttribute('aria-level'));
-      node.level = m ? Number(m[1]) : (Number.isInteger(aria) && aria >= 1 ? aria : 2);
-    }
-    if (role === 'link') {
-      const url = linkURL(el);
-      if (url) { node.url = url; }
-    }
-    const value = valueOf(el, role);
-    if (value !== null) { node.value = value; }
-
-    if (tag === 'iframe') {
-      let doc = null;
-      try { doc = el.contentDocument; } catch (e) { doc = null; }
-      if (doc && doc.body && depthLeft !== 0) { node.children = childrenOf(doc.body, depthLeft, opts); }
-      return [node];
-    }
-    if (!fromContent && depthLeft !== 0) { node.children = childrenOf(el, depthLeft, opts); }
-    if (opts.interactiveOnly && !interactive && node.children.length === 0) { return []; }
-    return [node];
-  }
-
-  function childrenOf(el, depthLeft, opts) {
-    const out = [];
-    const next = depthLeft === null ? null : depthLeft - 1;
-    if (next === -1) { return out; }
-    for (const child of el.childNodes) {
-      if (child.nodeType === Node.TEXT_NODE) {
-        const text = collapse(child.textContent);
-        if (text && !opts.interactiveOnly) { out.push({ role: 'text', text: cut(text, NAME_LIMIT) }); }
-      } else if (child.nodeType === Node.ELEMENT_NODE) {
-        out.push(...build(child, next, opts));
-      }
-    }
-    return out;
-  }
-
+  // A scope is a ref from the table, never a CSS selector: a selector would
+  // let a caller probe the page past the agent's view (an excluded element's
+  // attributes, character by character) by telling a match from none.
   function resolveScope(scope) {
-    if (!scope) { return null; }
+    if (typeof scope !== 'string' || !scope) { return null; }
     const held = refs.get(scope);
-    if (held) { return held.deref() || null; }
-    try { return document.querySelector(scope); } catch (e) { return null; }
+    if (!held) { return null; }
+    const el = held.deref();
+    return (el && el.isConnected && !isWithheld(el)) ? el : null;
   }
 
-  function snapshot(opts) {
-    opts = opts || {};
-    const scopeEl = resolveScope(opts.scope);   // resolved before refs reset
+  // The elements the last agent walk withheld (its agent list and hidden
+  // rules), set by the walker. A ref handed out before an element joined the
+  // agent list resolves to nothing once a walk has seen it excluded.
+  let withheld = new WeakSet();
+  function setWithheld(elements) {
+    withheld = new WeakSet();
+    for (const el of elements || []) { withheld.add(el); }
+  }
+  function isWithheld(el) {
+    for (let at = el; at; at = at.parentElement) {
+      if (withheld.has(at)) { return true; }
+    }
+    return false;
+  }
+
+  // Every ref stale at once: the agent list changed, so a ref the agent
+  // holds may now name an element it may no longer be shown.
+  function invalidate() {
     generation += 1;
     refs.clear();
-    hiddenMemo.clear(); roleMemo.clear(); descendantMemo.clear();
     nextRef = 1;
-    const depth = (typeof opts.depth === 'number' && opts.depth > 0) ? opts.depth : null;
-    const options = { interactiveOnly: !!opts.interactiveOnly };
-    let root;
-    if (scopeEl) {
-      const built = build(scopeEl, depth, options);
-      root = built.length === 1 && built[0].role !== 'text' ? built[0]
-        : { role: 'document', name: document.title || '', states: [], children: built };
-    } else {
-      root = { role: 'document', states: [], children: document.body ? childrenOf(document.body, depth, options) : [] };
-      if (document.title) { root.name = cut(collapse(document.title), NAME_LIMIT); }
-    }
-    return { url: location.href, title: document.title || '', generation: generation, root: root };
-  }
-
-  // Elements visible in the last snapshot whose name or text contains `text` (case-insensitive).
-  // Before any snapshot there are no refs to search, and "no element matches" would be a false
-  // negative about a page that has one, so the first find takes the snapshot it needs.
-  function find(text) {
-    if (refs.size === 0) { snapshot({}); }
-    const needle = collapse(text).toLowerCase();
-    const out = [];
-    for (const [ref, held] of refs) {
-      const el = held.deref();
-      if (!el || !el.isConnected) { continue; }
-      const role = roleOf(el) || 'generic';
-      const { name } = nameOf(el, role);
-      // Own accessible name plus own direct text nodes only: containers must not
-      // match on their descendants' text.
-      const own = Array.from(el.childNodes).filter((n) => n.nodeType === Node.TEXT_NODE)
-        .map((n) => n.textContent).join(' ');
-      const hay = (name + ' ' + collapse(own)).toLowerCase();
-      if (needle && hay.includes(needle)) { out.push({ ref: ref, role: role, name: name }); }
-    }
-    return out;
-  }
-
-  function text(scope) {
-    const el = resolveScope(scope) || document.querySelector('main') || document.body;
-    return el ? el.innerText : '';
+    return true;
   }
 
   function resolve(ref, gen) {
@@ -314,7 +128,7 @@
     const held = refs.get(ref);
     if (!held) { return { error: 'unknown' }; }
     const el = held.deref();
-    if (!el || !el.isConnected) { return { error: 'stale' }; }
+    if (!el || !el.isConnected || isWithheld(el)) { return { error: 'stale' }; }
     return { el: el };
   }
 
@@ -354,7 +168,7 @@
       el.scrollIntoView({ block: 'center', inline: 'center' });
       if (el.tagName.toLowerCase() === 'option') {
         const select = el.closest('select');
-        if (select) { select.value = el.value; select.dispatchEvent(new Event('input', { bubbles: true })); select.dispatchEvent(new Event('change', { bubbles: true })); }
+        if (select) { select.value = el.value; el.selected = true; select.dispatchEvent(new Event('input', { bubbles: true })); select.dispatchEvent(new Event('change', { bubbles: true })); }
         return true;
       }
       if (el.tagName.toLowerCase() === 'a' && el.getAttribute('target') === '_blank') { el.removeAttribute('target'); }
@@ -490,13 +304,19 @@
     });
   }
 
+  // An option the agent list withholds is no option at all: choosing it by a
+  // guessed label must fail exactly as a label that names nothing, or the
+  // answer would confirm it exists. Setting the value selects the first
+  // option holding it, which may be a withheld one sharing it, so the match
+  // is selected by itself after the setter.
   function select(ref, gen, value) {
     return withElement(ref, gen, (el) => {
       const wanted = String(value);
-      const options = Array.from(el.options || []);
+      const options = Array.from(el.options || []).filter((o) => !isWithheld(o));
       const match = options.find((o) => o.value === wanted) || options.find((o) => collapse(o.textContent) === wanted);
       if (!match) { throw new Error('no option "' + wanted + '"'); }
       setNativeValue(el, match.value);
+      if (!match.selected) { match.selected = true; }
       el.dispatchEvent(new Event('input', { bubbles: true }));
       el.dispatchEvent(new Event('change', { bubbles: true }));
       return true;
@@ -533,9 +353,11 @@
     return { ok: true };
   }
 
-  function rect(ref, gen) {
+  // `scroll` false measures the element where it is: a read-only caller
+  // must not move the page.
+  function rect(ref, gen, scroll) {
     return withElement(ref, gen, (el) => {
-      el.scrollIntoView({ block: 'center', inline: 'center' });
+      if (scroll !== false) { el.scrollIntoView({ block: 'center', inline: 'center' }); }
       const r = el.getBoundingClientRect();
       return { x: r.left, y: r.top, width: r.width, height: r.height };
     });
@@ -547,30 +369,32 @@
     return !isHiddenUncached(r.el);   // never the snapshot memo: the page may have changed since
   }
 
-  function hasText(needle) {
-    return (document.body ? document.body.innerText : '').includes(needle);
-  }
-
-  function landmarkSnapshot(ref, depth) {
-    const held = refs.get(ref);
-    const el = held ? held.deref() : null;
-    if (!el || !el.isConnected) { return null; }
-    hiddenMemo.clear(); roleMemo.clear(); descendantMemo.clear();
-    const built = build(el, depth, { interactiveOnly: false });
-    return built.length ? built[0] : null;
+  // The agent walker's hold on this table (AgentPage/AgentPageWalker.js),
+  // the one thing that hands out refs: a snapshot walk advances the
+  // generation and restarts the refs, and registers every element ref it
+  // emits through `assignRef`, so click, type, fill, select and hover resolve
+  // exactly the refs the agent page showed, and an element the agent's list
+  // hides never has one. A walk that only reads
+  // (text, find, wait_for, the focused element) passes `keep`: the table and
+  // the generation stay as the last snapshot left them, so the agent's refs
+  // stay valid, and elements new since then get fresh refs after the rest.
+  function beginWalk(keep) {
+    if (keep === true && refs.size > 0) { return generation; }
+    generation += 1;
+    refs.clear();
+    nextRef = 1;
+    return generation;
   }
 
   window.__adkitchen = {
-    version: 1,
-    snapshot: snapshot,
-    find: find,
-    text: text,
+    version: 5,
     mutations: () => mutationCount,
     focusedLandmark: focusedLandmark,
     resolve: resolve,
     generation: () => generation,
     click: click, type: type, fill: fill, select: select, hover: hover, pressKey: pressKey,
-    scroll: scroll, rect: rect, isVisible: isVisible, hasText: hasText,
-    landmarkSnapshot: landmarkSnapshot,
+    scroll: scroll, rect: rect, isVisible: isVisible,
+    beginWalk: beginWalk, assignRef: assignRef, resolveScope: resolveScope,
+    setWithheld: setWithheld, invalidate: invalidate,
   };
 })();

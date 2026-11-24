@@ -34,13 +34,13 @@
 | contexts-031 | assign-batch | Assign windows to snapshots in a batch, with an empty list | Returns 0; no windows enumerated |
 | contexts-032 | mark-app-dormant | Live snapshot with `app == "Xcode"`; mark app "xcode"'s windows dormant | Returns 0; snapshot still live |
 | contexts-033 | rematch-app | Dormant Xcode snapshot; live Xcode window scoring 80 against it; re-match dormant windows for app "XCODE" | Returns 1; snapshot's `windowID` is the window's ID |
-| contexts-034 | new-window-autoassign | Dormant snapshot; new window scoring 79 | Checking the new window for auto-assignment returns no value; snapshot stays dormant |
+| contexts-034 | new-window-autoassign | Dormant snapshot; new window scoring 70 (a 60-point substring match plus the 10-point same-display bonus) | Checking the new window for auto-assignment returns no value; snapshot stays dormant |
 | contexts-035 | custom-rule-autoassign | Rule `autoAssign: true`, app "Safari", target "docs"; context named "Docs"; new Safari window whose title the rule matches | Returns the "Docs" context ID; the context gains a snapshot for the window |
 | contexts-036 | rules-write-first | Custom heuristic store whose save throws; add custom heuristic rule `r` | Throws; `customHeuristicRules` unchanged |
 | contexts-037 | model-add-frontmost | Model with no active context; add the frontmost window | Returns `false`; `lastError == "No active context. Switch to a context first."` |
 | contexts-038 | model-cycle | Contexts [A, B, C], active C; switch to the next context | Active becomes A |
 | contexts-039 | model-hidden-apps | `hiddenApps` is `["Zed"]`; add hidden app "Arc"; add hidden app "Arc" again | `hiddenApps == ["Arc", "Zed"]` |
-| contexts-040 | model-unmatched-items | One dormant snapshot; live unassigned windows scoring 30, 0, 90 | One item; candidates scored `[90, 30]` |
+| contexts-040 | model-unmatched-items | One dormant snapshot; live unassigned windows scoring 60, 0, 90 | One item; candidates scored `[90, 60]` |
 | contexts-041 | persist-error-wrap, memory-ahead-of-disk | Make `<root>/contexts` read-only; rename context A to "X" | Throws `persistenceFailed`; `contexts` shows A named "X" |
 | contexts-042 | model-test-environment | Construct the model with `isTestEnvironment: true` | `notificationsEnabled == false`; `observationEnabled == false`; loading state on an empty store leaves `contexts` empty |
 

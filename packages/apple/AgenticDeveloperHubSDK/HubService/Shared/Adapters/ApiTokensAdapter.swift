@@ -2,7 +2,7 @@ import AgenticDeveloperHubSDKHub
 import Foundation
 import HTTPTypes
 
-/// `/auth/tokens` — the caller's personal API tokens.
+/// `/v1/api_keys` — the caller's personal API tokens.
 @MainActor
 public final class ApiTokensAdapter: ApiTokensDataSource {
     private struct ScopeCatalogue: Decodable { let prefixes: [String] }
@@ -16,18 +16,18 @@ public final class ApiTokensAdapter: ApiTokensDataSource {
     }
 
     public func list() async throws -> [ApiToken] {
-        try await api.get("/auth/tokens", query: workspace.query, as: [ApiToken].self)
+        try await api.list("/v1/api_keys", query: workspace.query, as: ApiToken.self)
     }
 
     public func scopes() async throws -> [String] {
-        try await api.get("/auth/tokens/scopes", query: workspace.query, as: ScopeCatalogue.self).prefixes
+        try await api.get("/v1/api_keys/scopes", query: workspace.query, as: ScopeCatalogue.self).prefixes
     }
 
     public func create(_ body: ApiTokenCreate) async throws -> ApiTokenCreated {
-        try await api.send(.post, "/auth/tokens", query: workspace.query, body: body, as: ApiTokenCreated.self)
+        try await api.send(.post, "/v1/api_keys", query: workspace.query, body: body, as: ApiTokenCreated.self)
     }
 
     public func revoke(id: String) async throws {
-        try await api.send(.delete, "/auth/tokens/\(id)", query: workspace.query)
+        try await api.send(.delete, "/v1/api_keys/\(id)", query: workspace.query)
     }
 }

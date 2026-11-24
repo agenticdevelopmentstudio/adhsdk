@@ -1,13 +1,12 @@
 ---
-id: C1CAA827-F7F1-4E69-B4C6-ADBFEF22E636
+id: c1caa827-f7f1-4e69-b4c6-adbfef22e636
 title: "Billing User Settings"
-domain: adhsdk://cookbook/foundation/billing/billing-user-settings
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-10-04
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -21,8 +20,8 @@ tags:
   - settings
 depends-on: []
 related:
-  - adhsdk://cookbook/foundation/billing/billing-prefs
-  - adhsdk://cookbook/foundation/billing/billing-dt-os
+  - 0175f0bb-f4bd-4f72-94c2-57b087ad9df9
+  - ed610aa4-2717-4242-a8b9-c4616377dbd9
 references: []
 approved-by: ""
 approved-date: ""
@@ -121,9 +120,9 @@ Not applicable: this code makes no log calls.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingUserSettings.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingUserSettings.swift` | confirmed (1.0.2) |
 
 ## Design Decisions
 
@@ -135,14 +134,15 @@ Not applicable: this code makes no log calls.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
-separation-of-concerns passes: the holder only binds keys to defaults; the key set, defaults and storage are injected or shared. unit-test-coverage is partial: `BillingSettingsPanelTests`, `ClientsWindowControllerTests` and `ProjectsWindowControllerTests` in `AgenticDeveloperHubSDKMacOSTests` build and use the holder, but no test asserts the defaults or key mapping directly.
+separation-of-concerns passes: the holder only binds keys to defaults; the key set, defaults and storage are injected or shared. unit-test-coverage is partial: `BillingUserSettingsConformanceTests` in `AgenticDeveloperHubSDKCoreTests` covers vectors 001 to 007 against an in-memory settings store. Vector 008 is skipped: the holder is `@MainActor`, so off-thread use is rejected by the compiler and cannot be exercised by a running test.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (BillingUserSettingsConformanceTests.swift, 7 of 8 vectors); unit-test-coverage now partial (008 skipped: compile-time main-actor confinement). |
 | 1.0.1 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
 | 1.0.0 | 2026-10-04 | Mike Fullerton | Initial creation |

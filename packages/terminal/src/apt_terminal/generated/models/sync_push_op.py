@@ -56,14 +56,14 @@ class SyncPushOp:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "opId": op_id,
+                "op_id": op_id,
                 "resource": resource,
-                "rowId": row_id,
+                "row_id": row_id,
                 "type": type_,
             }
         )
         if base_version is not UNSET:
-            field_dict["baseVersion"] = base_version
+            field_dict["base_version"] = base_version
         if data is not UNSET:
             field_dict["data"] = data
 
@@ -74,15 +74,15 @@ class SyncPushOp:
         from ..models.sync_push_op_data import SyncPushOpData
 
         d = dict(src_dict)
-        op_id = UUID(d.pop("opId"))
+        op_id = UUID(d.pop("op_id"))
 
         resource = d.pop("resource")
 
-        row_id = UUID(d.pop("rowId"))
+        row_id = UUID(d.pop("row_id"))
 
         type_ = SyncPushOpType(d.pop("type"))
 
-        base_version = d.pop("baseVersion", UNSET)
+        base_version = d.pop("base_version", UNSET)
 
         _data = d.pop("data", UNSET)
         data: SyncPushOpData | Unset

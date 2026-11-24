@@ -1,0 +1,3 @@
+
+`AccountRegistry` is the list of accounts an app offers, kept in display order. An accounts UI renders one entry per account in `accounts` and observes the registry through a single `onChange` closure. Each entry is an `Account` (Account ([adhsdk.ingredient.auth.accounts.account](cookbook:9cf9784d-48c9-4b29-b553-c72ffdfce7b9))): a reference-type protocol (`AnyObject`) with a stable `id`. The registry is a plain `@MainActor` class in the Foundation-only SDK tier. It does no I/O and never calls an account's own methods. `add` and `remove` let a caller change the list of accounts without any change to `Account`.
+

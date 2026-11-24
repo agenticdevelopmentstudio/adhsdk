@@ -16,6 +16,18 @@ public enum BoundedDatabaseError: Error, Sendable, Equatable {
     case deadlineExceeded(lane: String, elapsedMs: Double)
 }
 
+extension BoundedDatabaseError: LocalizedError {
+    /// Which lane ran out and after how long. Without it Foundation reports
+    /// the bare "BoundedDatabaseError error 0", which says nothing about what
+    /// went wrong in a log or a stored trim report.
+    public var errorDescription: String? {
+        switch self {
+        case let .deadlineExceeded(lane, elapsedMs):
+            "\(lane) exceeded its deadline after \(Int(elapsedMs.rounded())) ms"
+        }
+    }
+}
+
 /// A point-in-time snapshot of the pool's per-lane counters, for observability.
 public struct BoundedDatabaseStats: Sendable, Equatable {
     public struct Lane: Sendable, Equatable {
@@ -115,12 +127,14 @@ public final class BoundedDatabase: @unchecked Sendable {
     }
 
     /// Runs `body` on the writer connection inside a transaction, ejected if it
-    /// exceeds `deadline`. Reentrant: a nested write/read runs inline on the current
-    /// connection and is bounded by the ENCLOSING op's deadline — a nested call's own
-    /// `deadline:` argument is ignored (there is one armed deadline per thread).
+    /// exceeds `deadline`. Reentrant: a nested write/read on THIS database runs inline
+    /// on the current connection and is bounded by the ENCLOSING op's deadline — a
+    /// nested call's own `deadline:` argument is ignored. A nested op on a DIFFERENT
+    /// `BoundedDatabase` is not reentrant: it takes that database's own connection
+    /// under its own deadline, and the enclosing op's state is restored when it ends.
     @discardableResult
     public func write<T>(deadline: Duration? = nil, _ body: (Database) throws -> T) throws -> T {
-        if let database = Self.currentDB { return try Self.translatingInterrupt(lane: "write") { try body(database) } }
+        if let database = currentDB { return try Self.translatingInterrupt(lane: "write") { try body(database) } }
         return try run(access: .write, deadline: deadline ?? writeDeadline, body)
     }
 
@@ -130,7 +144,7 @@ public final class BoundedDatabase: @unchecked Sendable {
     /// ignored — see ``write(deadline:_:)``).
     @discardableResult
     public func read<T>(deadline: Duration? = nil, _ body: (Database) throws -> T) throws -> T {
-        if let database = Self.currentDB { return try Self.translatingInterrupt(lane: "read") { try body(database) } }
+        if let database = currentDB { return try Self.translatingInterrupt(lane: "read") { try body(database) } }
         return try run(access: .read, deadline: deadline ?? readDeadline, body)
     }
 
@@ -140,7 +154,7 @@ public final class BoundedDatabase: @unchecked Sendable {
     /// op's deadline (see ``write(deadline:_:)``).
     @discardableResult
     public func writeWithoutTransaction<T>(deadline: Duration? = nil, _ body: (Database) throws -> T) throws -> T {
-        if let database = Self.currentDB { return try Self.translatingInterrupt(lane: "write") { try body(database) } }
+        if let database = currentDB { return try Self.translatingInterrupt(lane: "write") { try body(database) } }
         return try run(access: .writeNoTransaction, deadline: deadline ?? writeDeadline, body)
     }
 
@@ -149,7 +163,7 @@ public final class BoundedDatabase: @unchecked Sendable {
     /// a consumer map/wrap errors only at the OUTERMOST boundary: a reentrant inner
     /// call should rethrow the `BoundedDatabaseError` untouched so the enclosing
     /// `run` still records the eviction, and only the top-level caller translates it.
-    public var isReentrant: Bool { Self.currentDB != nil }
+    public var isReentrant: Bool { currentDB != nil }
 
     /// Maps a raw `SQLITE_INTERRUPT` (what the progress handler raises when the
     /// deadline passes) to a typed ``BoundedDatabaseError/deadlineExceeded``, so an
@@ -171,7 +185,11 @@ public final class BoundedDatabase: @unchecked Sendable {
             Double(DispatchTime.now().uptimeNanoseconds &- start.uptimeNanoseconds) / 1e9
         }
         func op(_ database: Database) throws -> T {
-            Self.currentDB = database
+            // An op on another instance may already be running on this thread (this
+            // one is nested inside it): save its marker and deadline, restore both.
+            let outerMarker = Self.currentMarker
+            let outerDeadline = Self.armedDeadline
+            Self.currentMarker = ReentrancyMarker(owner: ObjectIdentifier(self), database: database)
             Self.armDeadline(deadline)
             defer {
                 // Disarm BEFORE any cleanup so the cleanup itself can't be ejected.
@@ -183,7 +201,10 @@ public final class BoundedDatabase: @unchecked Sendable {
                 if access == .writeNoTransaction, database.isInsideTransaction {
                     try? database.execute(sql: "ROLLBACK")
                 }
-                Self.currentDB = nil
+                Self.currentMarker = outerMarker
+                if let outerDeadline {
+                    Thread.current.threadDictionary[deadlineKey] = outerDeadline
+                }
             }
             do {
                 return try body(database)
@@ -243,9 +264,24 @@ public final class BoundedDatabase: @unchecked Sendable {
     private static func disarmDeadline() {
         Thread.current.threadDictionary.removeObject(forKey: deadlineKey)
     }
+    private static var armedDeadline: NSNumber? {
+        Thread.current.threadDictionary[deadlineKey] as? NSNumber
+    }
 
-    private static var currentDB: Database? {
-        get { Thread.current.threadDictionary[currentDBKey] as? Database }
+    /// The connection of the op running on this thread, and the database it
+    /// belongs to. Thread-local and shared by every instance, so it carries its
+    /// owner: only that instance may reenter on the connection.
+    private final class ReentrancyMarker {
+        let owner: ObjectIdentifier
+        let database: Database
+        init(owner: ObjectIdentifier, database: Database) {
+            self.owner = owner
+            self.database = database
+        }
+    }
+
+    private static var currentMarker: ReentrancyMarker? {
+        get { Thread.current.threadDictionary[currentDBKey] as? ReentrancyMarker }
         set {
             if let newValue {
                 Thread.current.threadDictionary[currentDBKey] = newValue
@@ -253,6 +289,12 @@ public final class BoundedDatabase: @unchecked Sendable {
                 Thread.current.threadDictionary.removeObject(forKey: currentDBKey)
             }
         }
+    }
+
+    /// This database's connection, when the calling thread is inside an op on it.
+    private var currentDB: Database? {
+        guard let marker = Self.currentMarker, marker.owner == ObjectIdentifier(self) else { return nil }
+        return marker.database
     }
 
     // MARK: - Private: metrics

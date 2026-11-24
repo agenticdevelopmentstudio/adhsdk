@@ -20,8 +20,8 @@ class GamePlayer:
         game_id (str):
         visibility (GamePlayerVisibility):
         first_played_at (str):
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
         character_name (None | str | Unset):
         character_avatar_url (None | str | Unset):
         last_played_at (None | str | Unset):
@@ -31,8 +31,8 @@ class GamePlayer:
     game_id: str
     visibility: GamePlayerVisibility
     first_played_at: str
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     character_name: None | str | Unset = UNSET
     character_avatar_url: None | str | Unset = UNSET
     last_played_at: None | str | Unset = UNSET
@@ -47,9 +47,9 @@ class GamePlayer:
 
         first_played_at = self.first_played_at
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         character_name: None | str | Unset
         if isinstance(self.character_name, Unset):
@@ -74,19 +74,19 @@ class GamePlayer:
         field_dict.update(
             {
                 "id": id,
-                "gameId": game_id,
+                "game_id": game_id,
                 "visibility": visibility,
-                "firstPlayedAt": first_played_at,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
+                "first_played_at": first_played_at,
+                "created": created,
+                "updated": updated,
             }
         )
         if character_name is not UNSET:
-            field_dict["characterName"] = character_name
+            field_dict["character_name"] = character_name
         if character_avatar_url is not UNSET:
-            field_dict["characterAvatarUrl"] = character_avatar_url
+            field_dict["character_avatar_url"] = character_avatar_url
         if last_played_at is not UNSET:
-            field_dict["lastPlayedAt"] = last_played_at
+            field_dict["last_played_at"] = last_played_at
 
         return field_dict
 
@@ -95,15 +95,15 @@ class GamePlayer:
         d = dict(src_dict)
         id = d.pop("id")
 
-        game_id = d.pop("gameId")
+        game_id = d.pop("game_id")
 
         visibility = GamePlayerVisibility(d.pop("visibility"))
 
-        first_played_at = d.pop("firstPlayedAt")
+        first_played_at = d.pop("first_played_at")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         def _parse_character_name(data: object) -> None | str | Unset:
             if data is None:
@@ -112,7 +112,7 @@ class GamePlayer:
                 return data
             return cast(None | str | Unset, data)
 
-        character_name = _parse_character_name(d.pop("characterName", UNSET))
+        character_name = _parse_character_name(d.pop("character_name", UNSET))
 
         def _parse_character_avatar_url(data: object) -> None | str | Unset:
             if data is None:
@@ -121,7 +121,7 @@ class GamePlayer:
                 return data
             return cast(None | str | Unset, data)
 
-        character_avatar_url = _parse_character_avatar_url(d.pop("characterAvatarUrl", UNSET))
+        character_avatar_url = _parse_character_avatar_url(d.pop("character_avatar_url", UNSET))
 
         def _parse_last_played_at(data: object) -> None | str | Unset:
             if data is None:
@@ -130,15 +130,15 @@ class GamePlayer:
                 return data
             return cast(None | str | Unset, data)
 
-        last_played_at = _parse_last_played_at(d.pop("lastPlayedAt", UNSET))
+        last_played_at = _parse_last_played_at(d.pop("last_played_at", UNSET))
 
         game_player = cls(
             id=id,
             game_id=game_id,
             visibility=visibility,
             first_played_at=first_played_at,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
             character_name=character_name,
             character_avatar_url=character_avatar_url,
             last_played_at=last_played_at,

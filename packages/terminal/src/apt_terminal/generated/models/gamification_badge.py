@@ -64,13 +64,13 @@ class GamificationBadge:
                 "name": name,
                 "description": description,
                 "icon": icon,
-                "criteriaType": criteria_type,
-                "criteriaThreshold": criteria_threshold,
-                "pointValue": point_value,
+                "criteria_type": criteria_type,
+                "criteria_threshold": criteria_threshold,
+                "point_value": point_value,
             }
         )
         if subject_type is not UNSET:
-            field_dict["subjectType"] = subject_type
+            field_dict["subject_type"] = subject_type
 
         return field_dict
 
@@ -85,11 +85,11 @@ class GamificationBadge:
 
         icon = d.pop("icon")
 
-        criteria_type = d.pop("criteriaType")
+        criteria_type = d.pop("criteria_type")
 
-        criteria_threshold = d.pop("criteriaThreshold")
+        criteria_threshold = d.pop("criteria_threshold")
 
-        point_value = d.pop("pointValue")
+        point_value = d.pop("point_value")
 
         def _parse_subject_type(data: object) -> None | str | Unset:
             if data is None:
@@ -98,7 +98,7 @@ class GamificationBadge:
                 return data
             return cast(None | str | Unset, data)
 
-        subject_type = _parse_subject_type(d.pop("subjectType", UNSET))
+        subject_type = _parse_subject_type(d.pop("subject_type", UNSET))
 
         gamification_badge = cls(
             id=id,

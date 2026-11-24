@@ -35,9 +35,9 @@ class PresenceView:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "userId": user_id,
+                "user_id": user_id,
                 "online": online,
-                "lastSeenAt": last_seen_at,
+                "last_seen_at": last_seen_at,
             }
         )
 
@@ -46,7 +46,7 @@ class PresenceView:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        user_id = d.pop("userId")
+        user_id = d.pop("user_id")
 
         online = d.pop("online")
 
@@ -55,7 +55,7 @@ class PresenceView:
                 return data
             return cast(None | str, data)
 
-        last_seen_at = _parse_last_seen_at(d.pop("lastSeenAt"))
+        last_seen_at = _parse_last_seen_at(d.pop("last_seen_at"))
 
         presence_view = cls(
             user_id=user_id,

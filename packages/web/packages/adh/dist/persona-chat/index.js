@@ -1,5 +1,5 @@
 // src/persona-chat/index.ts
-var CONVERSATIONS = "/api/chat/conversations";
+var CONVERSATIONS = "/api/v1/chats";
 function parseData(data) {
   try {
     return JSON.parse(data);
@@ -52,7 +52,9 @@ var PersonaChatBackend = class {
     const convo = await this.opts.authedJson(CONVERSATIONS, {
       method: "POST",
       body: JSON.stringify({
-        personaSlug: this.opts.personaSlug,
+        // `type` is the /v1 discriminator: a persona conversation, not a direct message.
+        type: "persona",
+        persona_slug: this.opts.personaSlug,
         // The backend resolves model as persona.model || conversation.model;
         // pass the persona's configured model so an unset persona.model still works.
         model: this.opts.model ?? void 0

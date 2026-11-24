@@ -37,7 +37,7 @@ class AiProcessingConfigSetServiceType0:
             {
                 "id": id,
                 "name": name,
-                "providerKind": provider_kind,
+                "provider_kind": provider_kind,
             }
         )
 
@@ -50,7 +50,7 @@ class AiProcessingConfigSetServiceType0:
 
         name = d.pop("name")
 
-        provider_kind = d.pop("providerKind")
+        provider_kind = d.pop("provider_kind")
 
         ai_processing_config_set_service_type_0 = cls(
             id=id,

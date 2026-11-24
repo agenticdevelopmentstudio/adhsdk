@@ -22,7 +22,7 @@ class InvitationRequest:
         phone (None | str):
         source (None | str):
         note (None | str):
-        created_at (str):
+        created (int): Unix timestamp, in seconds.
         user_number (int | None):
     """
 
@@ -34,7 +34,7 @@ class InvitationRequest:
     phone: None | str
     source: None | str
     note: None | str
-    created_at: str
+    created: int
     user_number: int | None
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -59,7 +59,7 @@ class InvitationRequest:
         note: None | str
         note = self.note
 
-        created_at = self.created_at
+        created = self.created
 
         user_number: int | None
         user_number = self.user_number
@@ -69,15 +69,15 @@ class InvitationRequest:
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
-                "pendingUserId": pending_user_id,
+                "ecosystem_id": ecosystem_id,
+                "pending_user_id": pending_user_id,
                 "name": name,
                 "email": email,
                 "phone": phone,
                 "source": source,
                 "note": note,
-                "createdAt": created_at,
-                "userNumber": user_number,
+                "created": created,
+                "user_number": user_number,
             }
         )
 
@@ -88,9 +88,9 @@ class InvitationRequest:
         d = dict(src_dict)
         id = d.pop("id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        pending_user_id = d.pop("pendingUserId")
+        pending_user_id = d.pop("pending_user_id")
 
         name = d.pop("name")
 
@@ -122,14 +122,14 @@ class InvitationRequest:
 
         note = _parse_note(d.pop("note"))
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
         def _parse_user_number(data: object) -> int | None:
             if data is None:
                 return data
             return cast(int | None, data)
 
-        user_number = _parse_user_number(d.pop("userNumber"))
+        user_number = _parse_user_number(d.pop("user_number"))
 
         invitation_request = cls(
             id=id,
@@ -140,7 +140,7 @@ class InvitationRequest:
             phone=phone,
             source=source,
             note=note,
-            created_at=created_at,
+            created=created,
             user_number=user_number,
         )
 

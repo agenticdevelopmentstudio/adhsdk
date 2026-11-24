@@ -1,0 +1,26 @@
+
+- **service-protocol**: `WorkTrackingService` MUST be `Sendable` and declare `setPreferences(_:)` and `status()` and `recheckPermissions()` (each `async`, each returning `WorkTrackingStatus?`) and `spans(since:limit:)` (`async`, returning `[ActivitySpanDTO]?`).
+- **transport-protocol**: `WorkTrackingXPCTransport` MUST be `Sendable` and declare `callData(timeout:retries:_:)` returning `Data` and `callDecodingArray(_:timeout:retries:_:)` returning `[T]`, both `async throws`, where `timeout` is a double optional (`TimeInterval??`). The client passes `.none` (written `nil`) for `status()` and `spans(since:limit:)` and a concrete number of seconds for the other two calls; it never passes `.some(nil)`. The transport contract MUST define what `.none` means (the source leaves it to the transport) and what `.some(nil)` means if it accepts it.
+- **client-generic**: `WorkTrackingXPCClient` MUST be generic over a `WorkTrackingXPCTransport`, MUST hold it as the public `transport`, and MUST depend on no daemon framework.
+- **reply-decoder**: `makeReplyDecoder()` MUST return a `JSONDecoder` with `convertFromSnakeCase` keys and `iso8601` dates, and the client MUST use it for every reply.
+- **status-call**: `status()` MUST invoke `workTrackingStatus` with `timeout: nil` and `retries: 0` and return the decoded `WorkTrackingStatus`.
+- **status-empty-nil**: A status reply of empty `Data` MUST yield nil.
+- **status-unreadable-nil**: A status reply that does not decode as `WorkTrackingStatus` MUST yield nil.
+- **status-throw-nil**: A transport that throws MUST yield nil from `status()`, `recheckPermissions()` and `setPreferences(_:)`.
+- **recheck-call**: `recheckPermissions()` MUST invoke `workTrackingRecheckPermissions` with `timeout` of `recheckTimeout` and `retries: 0`.
+- **recheck-timeout**: `recheckTimeout` MUST be 15 seconds, longer than the roughly ten-second stall of a missing Accessibility grant, so the daemon's "denied" is not dropped and shown as "Unknown".
+- **set-preferences-body**: `setPreferences(_:)` MUST encode the preferences with `convertToSnakeCase` keys and send them through `workTrackingSetPreferences`.
+- **set-preferences-timeout**: `setPreferences(_:)` MUST wait `setPreferencesTimeout`, which MUST equal `recheckTimeout` (15 seconds), because a turn-on is answered only after the daemon's live Accessibility check; a shorter wait would time out on a change the daemon applied.
+- **set-preferences-no-retry**: `setPreferences(_:)` MUST pass `retries: 0`.
+- **set-preferences-encode-failure**: If the preferences cannot be encoded, `setPreferences(_:)` MUST return nil without calling the transport.
+- **set-preferences-reply**: `setPreferences(_:)` MUST return the status the daemon replies, decoded as in `status()`, with nil for empty or unreadable data.
+- **spans-call**: `spans(since:limit:)` MUST invoke `workTrackingSpans(since:limit:)` with the caller's arguments, `timeout: nil` and `retries: 0`, decoding each element as `WorkTrackingListRow` of `ActivitySpanDTO`.
+- **spans-order**: `spans(since:limit:)` MUST return spans in the order sent, which the protocol declares newest first; it MUST NOT re-sort.
+- **spans-failure-nil**: If any element is the read-failed row (the object with `work_tracking_read_failed` true), `spans` MUST return nil, never an empty or partial list.
+- **spans-throw-nil**: A transport throw, or an element that decodes as neither a span nor the failure row, MUST yield nil.
+- **spans-empty**: An empty reply array MUST return an empty array, meaning no activity.
+- **list-row-sentinel**: `WorkTrackingListRow` MUST decode to `readFailed` when the element has a boolean `workTrackingReadFailed` key (the snake-case sentinel arriving camel-cased) equal to true, and to `value` by decoding the element as the row type otherwise.
+- **no-retries**: Every call MUST pass `retries: 0`; the client never retries.
+- **stateless**: The client MUST hold no state beyond the transport and MUST NOT cache replies.
+- **no-failure-reason**: The client MUST NOT report why a call failed; unreachable, refused and unreadable all answer nil.
+

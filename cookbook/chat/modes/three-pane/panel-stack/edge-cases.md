@@ -1,0 +1,4 @@
+
+- **Missing topic at an index**: Any index in `visibleTopicIndexes` whose topic is missing from `topics` renders nothing (see **skip-missing-topics**). This covers an empty `topics` array, out-of-bounds indexes, and negative or non-integer indexes, none of which resolve to a topic.
+- **Empty visibleTopicIndexes array**: When `visibleTopicIndexes` is empty, component MUST render only the div container with no child DetailPane components.
+- **Duplicate indexes**: Distinct indexes in `visibleTopicIndexes` are a precondition the caller MUST meet. The component does not dedupe: if the same index appears more than once, each appearance renders a DetailPane keyed on the same `messageIndex`, React logs a duplicate-key warning, and which instance keeps its identity across a reorder is left to React's reconciliation.

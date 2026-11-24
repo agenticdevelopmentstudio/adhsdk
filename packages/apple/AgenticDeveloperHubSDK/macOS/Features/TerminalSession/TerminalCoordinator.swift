@@ -1,6 +1,7 @@
 import AppKit
 import OSLog
 import AgenticDeveloperHubSDKCore
+import AgenticDeveloperHubSDKCoreUI
 
 /// Owns the terminal-window subsystem: the live array of
 /// `TerminalSessionWindowController` instances, the lifecycle delegate that
@@ -50,15 +51,12 @@ public final class TerminalCoordinator: AppFeature, TerminalSessionWindowLifecyc
         ))
 
         self.menuContributions = [
+            // ⌘T is File ▸ New Tab's, and a new session in the key terminal
+            // window is that window's New (⌘N, through `newItemProviders`).
             MenuContribution(
-                slot: .file, title: "New Terminal Window",
+                slot: .fileNew, title: "New Terminal",
                 commandID: CommandID.newWindow, registry: registry,
-                order: 0, key: "t"
-            ),
-            MenuContribution(
-                slot: .file, title: "New Terminal Session",
-                commandID: CommandID.newSession, registry: registry,
-                order: 10
+                order: 30
             ),
             MenuContribution(
                 slot: .view, title: "Toggle Sidebar",
@@ -80,7 +78,7 @@ public final class TerminalCoordinator: AppFeature, TerminalSessionWindowLifecyc
                 // type check against the key window's controller rather than
                 // an identity check against a captured controller.
                 claimsKeyWindow: {
-                    NSApp.keyWindow?.windowController is TerminalSessionWindowController
+                    NSApp.keyWindow?.commandOwner.windowController is TerminalSessionWindowController
                 },
                 title: { "New Terminal Session" },
                 action: { [weak self] in

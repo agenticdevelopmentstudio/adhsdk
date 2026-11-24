@@ -227,7 +227,7 @@ children):
 2. **Apple apps:**
    - stenographer, monitr, whippet, `adh/agenticdeveloperhubapp`,
      `adh/ai-processing-node`, `ads/displayr`
-   - `temporal/{olyloapp,roosterapp,whatsnowapp}`
+   - `temporal/{temporalapp,roosterapp,whatsnowapp}`
    - `tools/{secrets,dev.local}`, `fishlampdesign/zorkapp`
    - agenticdeveloperhubapp also calls
      `external/adhsdk/tools/apple/embed_transitive_frameworks.py`.

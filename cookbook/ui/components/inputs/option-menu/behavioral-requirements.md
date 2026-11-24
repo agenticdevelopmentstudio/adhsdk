@@ -1,0 +1,28 @@
+
+- **trigger-opens-on-activation**: When the trigger is focused, Enter / Space / ArrowDown MUST open the surface.
+- **open-initializes-selection**: On open, the highlighted selection MUST initialize to the committed item if any, else to the first item (see **other-input-focused-on-open** for where keyboard focus lands when `allowOther`, which is independent of this highlight).
+- **arrow-nav-clamps**: When open, ArrowDown / ArrowUp MUST move the selection down/up, clamped at the ends (no wrap).
+- **enter-commits-list-item**: When a list item is selected, Enter MUST commit it via `onChange` with `isOther:false`, then close and return focus to the trigger.
+- **pointer-click-commits**: A pointer click on a row MUST commit that row immediately and close.
+- **escape-closes-without-commit**: Esc MUST close the surface without firing `onChange`.
+- **click-outside-closes-without-commit**: A pointer press outside the surface MUST close it without firing `onChange`, inherited from the `Popover` primitive's default outside-press behavior.
+- **tab-unsupported**: The surface MUST NOT trap focus and defines no Tab handling; Tab is left to native browser focus order rather than a menu-style focus trap.
+- **home-end-unsupported**: Home and End MUST NOT change the selection; they are not handled.
+- **typeahead-unsupported**: Character keys MUST NOT perform typeahead selection, per the Overview's rationale for not building on menu roles.
+- **focus-returns-on-close**: On any close, focus MUST return to the trigger.
+- **selection-not-commit**: Changing the roving selection MUST NOT fire `onChange`; only a commit (Enter, OK, or row click) fires it.
+- **check-marks-committed-value**: While open, the check (✓) MUST mark the committed value.
+- **resolves-committed-value**: The committed value MUST resolve as follows: an item whose `value` matches wins; else, when `allowOther` and `value` is non-null, Other wins and its input prefills with `value`; else nothing is committed. When the committed value is Other, opening MUST highlight Other and mark it active.
+- **other-input-focused-on-open**: When `allowOther`, the Other input MUST receive focus immediately on open (caret ready to type), regardless of which row **open-initializes-selection** highlights — keyboard focus and the roving highlight are independent and need not point at the same row.
+- **typing-moves-check-to-other**: Typing in the Other input MUST set the selection to Other and move the check to Other live, before commit.
+- **ok-enabled-when-nonempty**: The OK button MUST be enabled iff the Other input is non-empty after trim.
+- **keys-act-on-selection**: Enter, ArrowDown and ArrowUp act on the roving selection, not on which element holds keyboard focus. While the Other input is focused but the selection is a list item (for example on open with `allowOther`, or after the pointer moved the highlight), Enter MUST commit that list item with `isOther:false` and ArrowDown MUST move the selection down from it; typing in the input first sets the selection to Other (see **typing-moves-check-to-other**), after which Enter commits the Other text. ArrowUp from the focused Other input always follows **arrowup-from-other-moves-to-list**.
+- **arrowup-from-other-moves-to-list**: ArrowUp from the Other input MUST move the selection to the last list item above Other and blur the input.
+- **arrowdown-from-last-item-to-other**: ArrowDown from the last list item MUST return the selection to Other and re-focus the input.
+- **enter-commits-other-when-nonempty**: When Other is the active selection and its input is non-empty, Enter MUST commit the trimmed text via `onChange` with `isOther:true`, then close.
+- **enter-noop-when-other-empty**: When Other is active but the input is empty, Enter MUST be a no-op (matching the disabled OK).
+- **other-row-label-inert**: A pointer click on the Other row's label text MUST NOT commit or change the selection; only the input and OK button act on Other.
+- **ok-equals-enter-for-other**: Clicking OK MUST be equivalent to Enter while Other is active with non-empty input.
+- **no-items-no-op-navigation**: With an empty `items` list and `allowOther` false, the surface has no rows and arrow keys and Enter MUST be no-ops. With an empty `items` list and `allowOther` true, Other is the only row; ArrowUp from the Other input does nothing, since there is no list item above it.
+- **disabled-blocks-interaction**: When `disabled`, the trigger MUST NOT open the surface; the disabled trigger is skipped by both pointer and keyboard (a disabled `<button>` receives neither).
+

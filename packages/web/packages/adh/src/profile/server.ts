@@ -13,8 +13,8 @@ import type { ProfilePrincipal } from './types'
  * Returns null for BOTH "no such principal" and "not visible to this request". The backend does
  * not distinguish them and neither does this.
  *
- * ALWAYS ANONYMOUS. It calls `/public/...` and carries no viewer identity, because a server
- * component in this fleet has no way to hold one: the access token lives in localStorage and the
+ * ALWAYS ANONYMOUS. It calls `/v1/users` and `/v1/organizations` with no Authorization
+ * header, so it carries no viewer identity, because a server component in this fleet has no way to hold one: the access token lives in localStorage and the
  * only auth cookie is an opaque HttpOnly refresh cookie. That is a feature here rather than a
  * limitation — it is what keeps this response cacheable and safe to share, and it is why a `hub`
  * profile reads as null at this layer. `useViewerPrincipal` is the other half; the signed-in body
@@ -34,7 +34,7 @@ import type { ProfilePrincipal } from './types'
  * deliberately absent from the `./profile` barrel so a client component cannot reach it through
  * the normal import.
  *
- * The org branch NORMALIZES: `/public/orgs/:slug` answers a narrower shape than a user card
+ * The org branch NORMALIZES: `/v1/organizations?slug=` answers a narrower shape than a user card
  * (no avatarUrl, none of the four granted collections) plus one field a user card lacks
  * (description). Filling those in is `principalFromOrgCard`'s job — the backend response is
  * deliberately narrow and is not this task's to widen. The normalizer lives in ./normalize
@@ -44,7 +44,7 @@ export async function fetchPublicPrincipal(slug: string): Promise<ProfilePrincip
   // Trim then strip a trailing slash (`@adh-sdk/next-env`'s `resolveBackendUrl` does the
   // same with `.replace(/\/+$/, '')`; this package does not depend on that package — its fallback
   // to `http://localhost:3000` is wrong here — so the one line is copied rather than the
-  // dependency). Without it, `API_BACKEND_URL=https://x/` doubles the slash before `public/...`.
+  // dependency). Without it, `API_BACKEND_URL=https://x/` doubles the slash before `v1/...`.
   const backend = process.env.API_BACKEND_URL?.trim().replace(/\/+$/, '')
   if (!backend) {
     throw new Error(
@@ -53,13 +53,13 @@ export async function fetchPublicPrincipal(slug: string): Promise<ProfilePrincip
     )
   }
   const encoded = encodeURIComponent(slug)
-  const users = await fetch(`${backend}/public/users/${encoded}`, { next: { revalidate: 30 } })
+  const users = await fetch(`${backend}/v1/users?handle=${encoded}`, { next: { revalidate: 30 } })
   if (users.ok) {
     return principalFromUserCard((await users.json()) as UserCardBody)
   }
   if (users.status !== 404) throw new Error(`Failed to fetch profile: ${users.status}`)
 
-  const orgs = await fetch(`${backend}/public/orgs/${encoded}`, { next: { revalidate: 30 } })
+  const orgs = await fetch(`${backend}/v1/organizations?slug=${encoded}`, { next: { revalidate: 30 } })
   if (orgs.ok) {
     return principalFromOrgCard((await orgs.json()) as OrgCardBody)
   }

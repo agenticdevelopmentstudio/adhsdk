@@ -2,7 +2,7 @@
 - **Decision**: Re-apply the slider's minimum and maximum (in addition to the
   label text and the slider's value) inside the external-change handler,
   not just at initialization — unlike the sibling captioned slider row
-  (adhsdk://cookbook/ui/settings/rows/captioned-slider-view),
+  ([adhsdk.ingredient.ui.settings.rows.captioned-slider-view](cookbook:64825f85-8b4d-4406-befc-aa08ce55cc8b)),
   whose sync leaves the slider's range untouched after construction.
   **Rationale**: Lets a caller mutate the view model's range after the row is
   built and have the slider reflect the new bounds without recreating the

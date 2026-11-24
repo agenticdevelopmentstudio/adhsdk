@@ -70,7 +70,7 @@ struct AutomationMappingTests {
         // by raw value, so rawValue 4 — its documented raw value — exercises
         // the identical arm. "While Using the App" reading as granted would let
         // a location trigger start even though the OS will not serve it once
-        // olylod's daemon is running with no app in the foreground — this is
+        // temporald's daemon is running with no app in the foreground — this is
         // the arm most worth pinning.
         let authorizedWhenInUse = CLAuthorizationStatus(rawValue: 4)!
         #expect(SystemPermissionChecker.locationStatus(authorizedWhenInUse) == .denied)
@@ -97,5 +97,27 @@ struct AutomationMappingTests {
 
         _ = await checker.request(.automation(targetBundleID: "com.googlecode.iterm2"))
         #expect(recorder.lastPromptIfNeeded == true)
+    }
+}
+
+@Suite("Full Disk Access status file")
+struct FullDiskAccessStatusTests {
+    private func status(writing contents: String?) async throws -> PermissionStatus {
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("fda-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let file = dir.appendingPathComponent("notifyd-access.json")
+        if let contents { try contents.write(to: file, atomically: true, encoding: .utf8) }
+        return await SystemPermissionChecker().status(.fullDiskAccess(statusFilePath: file.path))
+    }
+
+    @Test("testFullDiskAccessStatusFromFile: granted, denied, missing, garbage")
+    func testFullDiskAccessStatusFromFile() async throws {
+        #expect(try await status(writing: #"{"granted":true,"checkedAt":"2026-11-07T10:00:00Z"}"#) == .granted)
+        #expect(try await status(writing: #"{"granted":false,"checkedAt":"2026-11-07T10:00:00Z"}"#) == .denied)
+        #expect(try await status(writing: nil) == .undetermined)
+        #expect(try await status(writing: "not json") == .undetermined)
+        #expect(try await status(writing: #"{"granted":"yes"}"#) == .undetermined)
     }
 }

@@ -61,7 +61,7 @@ function clearPendingLink(): void {
  *    connect. Once the visitor is authenticated — however they signed in — this
  *    confirms with them and starts the link round-trip (`beginLinkProvider`).
  *  - RETURN: the AS bounces back a `#link_code`, which this POSTs to
- *    /auth/link-provider (CSRF-guarded by the round-tripped nonce) and reports.
+ *    /v1/account/login_methods (CSRF-guarded by the round-tripped nonce) and reports.
  *
  *  The forward leg used to live in LoginCard, keyed off that card's own successful
  *  password login. That made it unreachable for every OTHER way of arriving signed

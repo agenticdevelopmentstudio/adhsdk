@@ -32,7 +32,7 @@ class ShiprRun:
         summary (None | ShiprRunSummaryType0 | Unset):
         started_at (None | str | Unset):
         finished_at (None | str | Unset):
-        created_at (str | Unset):
+        created (int | Unset): Unix timestamp, in seconds.
     """
 
     id: str | Unset = UNSET
@@ -44,7 +44,7 @@ class ShiprRun:
     summary: None | ShiprRunSummaryType0 | Unset = UNSET
     started_at: None | str | Unset = UNSET
     finished_at: None | str | Unset = UNSET
-    created_at: str | Unset = UNSET
+    created: int | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -94,7 +94,7 @@ class ShiprRun:
         else:
             finished_at = self.finished_at
 
-        created_at = self.created_at
+        created = self.created
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -104,9 +104,9 @@ class ShiprRun:
         if operation is not UNSET:
             field_dict["operation"] = operation
         if scope_kind is not UNSET:
-            field_dict["scopeKind"] = scope_kind
+            field_dict["scope_kind"] = scope_kind
         if scope_id is not UNSET:
-            field_dict["scopeId"] = scope_id
+            field_dict["scope_id"] = scope_id
         if environments is not UNSET:
             field_dict["environments"] = environments
         if state is not UNSET:
@@ -114,11 +114,11 @@ class ShiprRun:
         if summary is not UNSET:
             field_dict["summary"] = summary
         if started_at is not UNSET:
-            field_dict["startedAt"] = started_at
+            field_dict["started_at"] = started_at
         if finished_at is not UNSET:
-            field_dict["finishedAt"] = finished_at
-        if created_at is not UNSET:
-            field_dict["createdAt"] = created_at
+            field_dict["finished_at"] = finished_at
+        if created is not UNSET:
+            field_dict["created"] = created
 
         return field_dict
 
@@ -136,7 +136,7 @@ class ShiprRun:
         else:
             operation = ShiprRunOperation(_operation)
 
-        _scope_kind = d.pop("scopeKind", UNSET)
+        _scope_kind = d.pop("scope_kind", UNSET)
         scope_kind: ShiprRunScopeKind | Unset
         if isinstance(_scope_kind, Unset):
             scope_kind = UNSET
@@ -150,7 +150,7 @@ class ShiprRun:
                 return data
             return cast(None | str | Unset, data)
 
-        scope_id = _parse_scope_id(d.pop("scopeId", UNSET))
+        scope_id = _parse_scope_id(d.pop("scope_id", UNSET))
 
         environments = cast(list[str], d.pop("environments", UNSET))
 
@@ -185,7 +185,7 @@ class ShiprRun:
                 return data
             return cast(None | str | Unset, data)
 
-        started_at = _parse_started_at(d.pop("startedAt", UNSET))
+        started_at = _parse_started_at(d.pop("started_at", UNSET))
 
         def _parse_finished_at(data: object) -> None | str | Unset:
             if data is None:
@@ -194,9 +194,9 @@ class ShiprRun:
                 return data
             return cast(None | str | Unset, data)
 
-        finished_at = _parse_finished_at(d.pop("finishedAt", UNSET))
+        finished_at = _parse_finished_at(d.pop("finished_at", UNSET))
 
-        created_at = d.pop("createdAt", UNSET)
+        created = d.pop("created", UNSET)
 
         shipr_run = cls(
             id=id,
@@ -208,7 +208,7 @@ class ShiprRun:
             summary=summary,
             started_at=started_at,
             finished_at=finished_at,
-            created_at=created_at,
+            created=created,
         )
 
         shipr_run.additional_properties = d

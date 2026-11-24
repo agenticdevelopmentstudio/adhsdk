@@ -278,7 +278,7 @@ describe("SchemasPane — the bucket layout", () => {
     // A verified SCOPE, not a plain filter: as a filter, a non-admin's product bucket read empty
     // and every create was refused (Mike, 2026-09-25).
     expect(screen.getByTestId("rows")).toHaveTextContent(
-      'content/contacts undefined eco-uuid {"ecosystemId":"eco-uuid"}',
+      'content/contacts undefined eco-uuid {"ecosystem_id":"eco-uuid"}',
     );
   });
 

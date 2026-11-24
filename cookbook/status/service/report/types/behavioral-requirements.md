@@ -1,0 +1,26 @@
+
+- **schema-constant**: `ReportResponse.schema` MUST be the literal string `status.report/1`, exported as `REPORT_SCHEMA`.
+- **schema-versioning**: A change a reader must adapt to MUST be published as a new schema string `status.report/N` and MUST NOT change `status.report/1` in place.
+- **severity-set**: `Severity` MUST be exactly `critical`, `major` or `minor`, in that order, exported as `SEVERITIES`.
+- **verdict-set**: `ReportVerdict` MUST be exactly one of `healthy`, `attention`, `degraded`, `down` or `unknown`.
+- **verdict-mapping**: The verdict MUST come from the worst finding: `critical` gives `down`, `major` gives `degraded`, `minor` gives `attention`. With no findings it MUST be `healthy` when `complete` is true and `unknown` when it is false.
+- **source-set**: `REPORT_SOURCES` MUST list `monitor`, `deploys`, `integrations`, `errors`, `runtimeErrors`, `analytics`, `uptime`, in that order, and `coverage` and `sections` MUST each carry exactly one key per source.
+- **coverage-entry**: Each `SourceCoverage` MUST carry `ok`, and MAY carry `error` (why the source was not read, when `ok` is false), `notes` (the source was read but partial), `unconfigured` (providers with no credentials) and `updatedAt` (when the data behind the source was fetched, or null).
+- **complete-rule**: `complete` MUST be true only when every source has `ok` true and no notes. Any note on any source MUST clear it. An `unconfigured` entry MUST NOT clear it, because it is a standing fact about the deployment, not a gap.
+- **null-section-invariant**: A section in `sections` MUST be null exactly when its source could not be read, that is when `coverage[source].ok` is false.
+- **finding-shape**: Each `Finding` MUST carry `severity`, `source` (such as `monitor:vercel`, `provider:railway`, `glitchtip`, `vercel-runtime`, `posthog`) and `title`. `Finding.source` is a label for where the finding came from, not a `REPORT_SOURCES` id: it is sometimes equal to one (`uptime`, `report`) and sometimes not (`monitor:vercel`, `glitchtip`), and a reader MUST NOT look it up in `coverage` or `sections`. It MAY carry `detail`, `since`, `link` (a provider page or live URL) and `issueKey` (the key `adh-status issues show` accepts, present only for a finding that is an open board issue).
+- **finding-order**: `findings` MUST be sorted by severity (critical first), then by `source`, then by `title`.
+- **counts-total**: `counts` MUST hold one number per severity, equal to the number of findings of that severity.
+- **first-line-fields**: `FailingDeploy.commit` and `FailingDeploy.error` MUST hold only the first line of the commit message and of the provider's failure text.
+- **log-fields**: `FailingDeploy.logTail`, `logLines` and `logError` MUST appear only when the request asked for `logs=1`. `logError` MUST say why there is no tail. When a tail is present it MUST hold at most 40 lines (`LOG_TAIL_LINES`), the last lines of the log.
+- **monitor-section**: `MonitorReportSection` MUST carry `overall` (`healthy`, `degraded` or `down`), `checkedAt`, `lastCycleAt` (null when no cycle has completed), `stale` (the scheduler's own stale rule), `services`, `byStatus`, `openIssues` and `unprobed` (names of services with no probe yet).
+- **deploys-section**: `DeploysReportSection.failing` MUST list the deploys the board holds as failed, newest build first, and MUST carry the `providers` map of `{ configured, ok }` per `ProviderKey`.
+- **runtime-errors-section**: `RuntimeErrorsReportSection.window` MUST be the literal `24h`. `complete` MUST be false when the Vercel read was cut short. `total` counts groups seen in the window, which `groups` may cap below. `groups` MUST be ordered worst level first, then most frequent.
+- **errors-section-order**: `ErrorsReportSection.active` MUST be fatal first then by event count, and `sites` MUST be most errors plus failures first. `summary` MUST be null when the issue list has never been read.
+- **analytics-section**: `AnalyticsReportSection.range` MUST echo the requested `AnalyticsRange`. PostHog `sites` and Vercel `projects` MUST be most pageviews first, and each provider `totals` MUST be null when that provider could not be read.
+- **uptime-section**: `UptimeReportSection` MUST carry `days` (the window), `floor` (the percent below which a service is a finding) and per-service `uptimePercent`, which is null when the service has no figure.
+- **params-ranges**: `ReportParams.range` MUST be one of `24h`, `7d`, `30d`; `days` MUST be an integer 1 to 365; `wait` MUST be an integer 0 to 60 seconds; `logs` MUST be a boolean in the parsed `ReportParams`.
+- **params-logs-forms**: On the wire (a query string) `logs` MUST be `0` or `1`. An in-process caller, such as the MCP tool, MAY pass the boolean `true` or `false` or the number `0` or `1` as well; the strings `true` and `false` MUST be rejected.
+- **params-defaults**: When a param is absent, null or empty, it MUST take `range` `24h`, `days` 7, `wait` 20, `logs` false.
+- **params-rejection**: A param outside its range, a non-integer `days` or `wait`, or a `logs` that is not `0` or `1` MUST be rejected with HTTP 400 and a message of the form `<name> must be an integer <min>-<max>`, `range must be one of 24h, 7d, 30d` or `logs must be 0 or 1`. The response body MUST be `{ "error": { "message": <that message> } }`.
+

@@ -15,25 +15,27 @@ beforeEach(() => {
 });
 
 describe("setEcosystemFlag", () => {
-  it("PUTs when the flag row already exists, and does not POST", async () => {
+  it("updates the flag in place when its row already exists, and does not create", async () => {
     authedJson.mockResolvedValueOnce({});
     await setEcosystemFlag("eco_1", "billing", true);
     expect(authedJson).toHaveBeenCalledTimes(1);
-    expect(authedJson.mock.calls[0][0]).toBe("/api/ecosystem/feature-flags/eco_1/billing");
-    expect(authedJson.mock.calls[0][1]).toMatchObject({ method: "PUT" });
+    expect(authedJson.mock.calls[0][0]).toBe("/api/v1/feature_flags/billing");
+    expect(authedJson.mock.calls[0][1]).toMatchObject({ method: "POST" });
+    expect(JSON.parse(authedJson.mock.calls[0][1].body)).toEqual({ ecosystem: "eco_1", enabled: true });
   });
 
   // The ordinary state of a fresh ecosystem is NO row at all — which is exactly the state the
   // operator is trying to leave, so a 404 here must create rather than fail.
-  it("falls back to POST on the PUT's 404, carrying the key in the body", async () => {
+  it("falls back to create on the update's 404, carrying the key in the body", async () => {
     authedJson
       .mockRejectedValueOnce(Object.assign(new Error("not found"), { status: 404 }))
       .mockResolvedValueOnce({});
     await setEcosystemFlag("eco_1", "billing", true, "Sell offers through Stripe.");
     expect(authedJson).toHaveBeenCalledTimes(2);
-    expect(authedJson.mock.calls[1][0]).toBe("/api/ecosystem/feature-flags/eco_1");
+    expect(authedJson.mock.calls[1][0]).toBe("/api/v1/feature_flags");
     expect(authedJson.mock.calls[1][1]).toMatchObject({ method: "POST" });
     expect(JSON.parse(authedJson.mock.calls[1][1].body)).toEqual({
+      ecosystem: "eco_1",
       key: "billing",
       enabled: true,
       description: "Sell offers through Stripe.",

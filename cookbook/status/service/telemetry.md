@@ -1,13 +1,12 @@
 ---
 id: a7c2b9e1-5d4f-4a2c-9e6f-8b3a1c5d7e2f
 title: "Status Server Telemetry"
-domain: adhsdk://cookbook/status/service/telemetry
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-09-27
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -144,12 +143,12 @@ Subsystem: (no fixed subsystem; uses `console.error()`)
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/telemetry/collect.ts` |
-| web | `packages/web/packages/status-server/src/telemetry/ports.ts` |
-| web | `packages/web/packages/status-server/src/telemetry/server.ts` |
-| web | `packages/web/packages/status-server/src/telemetry/types.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/telemetry/collect.ts` | confirmed (1.0.3) |
+| web | `packages/web/packages/status-server/src/telemetry/ports.ts` | confirmed (1.0.3) |
+| web | `packages/web/packages/status-server/src/telemetry/server.ts` | confirmed (1.0.3) |
+| web | `packages/web/packages/status-server/src/telemetry/types.ts` | confirmed (1.0.3) |
 
 ## Design Decisions
 
@@ -195,17 +194,17 @@ Subsystem: (no fixed subsystem; uses `console.error()`)
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | best-practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 
 **Separation of Concerns**: The `collect()` abstraction decouples fetching (provider API calls) from persistence (storage strategies). Each of `Fetcher`, `Store`, and `collectTelemetry`'s orchestration concerns is isolated behind an interface. Concrete adapters (GlitchTip fetcher, SQLite store, PostHog fetcher) are wired only at the composition root (`server.ts`), allowing tests and deployments to swap implementations without changing the core logic.
 
-**Unit Test Coverage**: No test in the status-server package imports `collect`, `collectTelemetry`, `buildErrorsFetcher`, `buildAnalyticsFetcher` or `emptySnapshot`. Adjacent tests cover the GlitchTip fetcher, the errors store, and the HTTP telemetry routes, but the ok:false no-persist rule, `complete` defaulting, the configuration guards, fail-soft handling and the GlitchTip observation are untested at this layer.
-
+**Unit Test Coverage**: `test/telemetry-collect.test.ts` in the status-server package covers all ten conformance vectors (`telemetry-001` to `telemetry-010`): `collect`'s ok:false no-persist rule and `complete` defaulting, `collectTelemetry`'s concurrency, configuration guards, fail-soft handling and the GlitchTip observation, and `emptySnapshot`. The provider fetchers are mocked at the module boundary, so no test touches the network.
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (telemetry-collect.test.ts, 10 of 10 vectors); unit-test-coverage now passed. |
 | 1.0.2 | 2026-09-27 | Mike Fullerton | Moved into the concept grouping. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.0.0 | 2026-09-24 | Mike Fullerton | Initial creation |

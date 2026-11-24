@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "ac044c52-64bb-4e4f-b0d8-56dd88ab7d47",
     "title": "Snapshot Staleness",
-    "domain": "adhsdk://cookbook/status/dashboard/logic/snapshot-staleness",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -21,15 +20,15 @@
     "tags": [],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/status/dashboard/logic/board-staleness",
-      "adhsdk://cookbook/status/dashboard/state/portfolio-indicator",
-      "adhsdk://cookbook/status/dashboard/state/live-snapshot"
+      "01f6f7b6-4bc5-4f35-a46a-1e80fe470097",
+      "43d93a67-c469-40d1-8465-076cd782e1b2",
+      "ca7205d2-31c0-424a-95a2-a356bed30187"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "46de7fd82aa2e004",
+  "synced": "0aba5ec9a0b33f78",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -48,7 +47,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

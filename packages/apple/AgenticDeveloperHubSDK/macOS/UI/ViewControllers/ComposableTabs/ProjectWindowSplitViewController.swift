@@ -105,7 +105,7 @@ final class ProjectWindowSplitViewController: NSSplitViewController {
             // is one.
             let width = shelfHost.view.widthAnchor.constraint(
                 equalToConstant: CGFloat(UserSettings.projectShelfWidth.value))
-            width.priority = .defaultLow
+            width.priority = Self.restingWidthPriority
             width.isActive = true
             shelfWidth = width
 
@@ -163,6 +163,45 @@ final class ProjectWindowSplitViewController: NSSplitViewController {
     // MARK: - Shelf
 
     var hasShelf: Bool { shelfItem != nil }
+
+    /// The dimming and spinner over the project area while another project
+    /// loads to take its place. The shelf stays live.
+    private var busyOverlay: NSView?
+
+    /// Dims the project area (everything but the shelf) and spins over it, or
+    /// takes that away.
+    func setContentBusy(_ busy: Bool) {
+        guard busy != (busyOverlay != nil),
+              let contentView = splitViewItems.last?.viewController.view else { return }
+        guard busy else {
+            busyOverlay?.removeFromSuperview()
+            busyOverlay = nil
+            return
+        }
+        let overlay = ThemedBackgroundView(role: .windowBackground)
+        overlay.alphaValue = 0.6
+        overlay.translatesAutoresizingMaskIntoConstraints = false
+        overlay.setAccessibilityIdentifier("project-window.loading")
+        let spinner = NSProgressIndicator()
+        spinner.style = .spinning
+        spinner.controlSize = .regular
+        // Spins off the main thread, so it keeps turning while the new
+        // project's window is built.
+        spinner.usesThreadedAnimation = true
+        spinner.translatesAutoresizingMaskIntoConstraints = false
+        overlay.addSubview(spinner)
+        contentView.addSubview(overlay, positioned: .above, relativeTo: nil)
+        NSLayoutConstraint.activate([
+            overlay.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            overlay.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            overlay.topAnchor.constraint(equalTo: contentView.topAnchor),
+            overlay.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+            spinner.centerXAnchor.constraint(equalTo: overlay.centerXAnchor),
+            spinner.centerYAnchor.constraint(equalTo: overlay.centerYAnchor)
+        ])
+        spinner.startAnimation(nil)
+        busyOverlay = overlay
+    }
 
     /// Where the shelf is, or — mid-slide — where it is going. A hide only
     /// collapses the item once it lands, so the item alone would answer a
@@ -303,6 +342,11 @@ final class ProjectWindowSplitViewController: NSSplitViewController {
     /// Above every holding priority and the reader's drag, below required so
     /// the content's minimum width still wins.
     private static let slidingWidthPriority = NSLayoutConstraint.Priority(999)
+    /// The shelf's width at rest: above the split's holding priorities and the
+    /// panes' hugging, so panes filling in after the window is shown cannot
+    /// squeeze the Project Browser narrower, and below a divider drag (490),
+    /// so the reader's own drag still wins.
+    private static let restingWidthPriority = NSLayoutConstraint.Priority(480)
     private var shelfSlide: ShelfSlide?
 
     /// The width the shelf opens to: the one the reader last gave it, within
@@ -343,7 +387,7 @@ final class ProjectWindowSplitViewController: NSSplitViewController {
         item.minimumThickness = Self.shelfMinimumWidth
         // Back to the width the shelf opens at, at the priority a drag beats.
         shelfWidth?.constant = Self.openShelfWidth
-        shelfWidth?.priority = .defaultLow
+        shelfWidth?.priority = Self.restingWidthPriority
         releaseWindowWidth()
         splitView.layoutSubtreeIfNeeded()
         content.view.endAnimatedResize()
@@ -431,6 +475,12 @@ final class ProjectWindowSplitViewController: NSSplitViewController {
 
     /// Writes down the shelf's width whenever the reader drags the divider.
     private func rememberShelfWidth() {
+        // Only the reader's own drag: the divider moving while the split keeps
+        // its width, in a window on screen. Every other pass — a window being
+        // built off screen, a swap handing its frame over, the panes settling
+        // — gave the shelf whatever room was left, and writing that down made
+        // clicking a project resize the Project Browser.
+        guard isShelfMoving, !holdsSharesFromBeforeSlide, view.window?.isVisible == true else { return }
         guard !isAnimatingShelf, let item = shelfItem, !item.isCollapsed else { return }
         let width = item.viewController.view.frame.width
         // Zero while the window is still being put together, before the

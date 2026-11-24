@@ -17,7 +17,7 @@ XcodeGen .xcodeproj). This script:
      the full client's `Client` never collides with it where both are visible.
 
 Pass --spec <path> to generate from a freshly-dumped local spec (the parent
-orchestrator uses this). The spec is copied into ROOT/openapi.json first,
+orchestrator uses this). The spec is copied into ROOT/openapi.v1.json first,
 refreshing the committed snapshot.
 
 Refresh the spec snapshot from the live backend:
@@ -37,14 +37,14 @@ from pathlib import Path
 
 GENERATOR_REPO = "https://github.com/apple/swift-openapi-generator"
 GENERATOR_VERSION = "1.12.2"
-# The machine-readable spec is served by the Scalar docs site, not the API host
-# (the API host returns 404 for /openapi.json). The runtime API itself lives at
-# https://api.agenticdeveloperhub.com — see DaemonContract.backendURL.
-SPEC_URL = "https://apidocs.agenticdeveloperhub.com/openapi.json"
+# The client is generated from the Stripe-style /v1 API, whose spec the backend's
+# gateway serves at GET /v1/openapi.json on the API host
+# (https://api.agenticdeveloperhub.com — see DaemonContract.backendURL).
+SPEC_URL = "https://api.agenticdeveloperhub.com/v1/openapi.json"
 
 ROOT = Path(__file__).resolve().parent.parent
 TOOLING = ROOT / ".tooling" / "swift-openapi-generator"
-SPEC = ROOT / "openapi.json"
+SPEC = ROOT / "openapi.v1.json"
 # The auth target's generated `Client`, renamed so it cannot shadow or collide
 # with the full client's `Client` in a module that sees both.
 AUTH_CLIENT_NAME = "HubAuthClient"
@@ -94,11 +94,11 @@ def parse_args(argv=None):
     parser.add_argument(
         "--spec",
         help="path to an OpenAPI spec to generate from; refreshes the committed "
-             "openapi.json snapshot. Omit to use the existing snapshot.",
+             "openapi.v1.json snapshot. Omit to use the existing snapshot.",
     )
     parser.add_argument(
         "--refresh-spec", action="store_true",
-        help="re-download openapi.json from the live backend before generating",
+        help="re-download openapi.v1.json from the live backend before generating",
     )
     return parser.parse_args(argv)
 

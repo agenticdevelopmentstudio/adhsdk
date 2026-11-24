@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "ad8ad3fe-e3ba-4c1c-a601-62b1a2c1a3b2",
     "title": "Peer URL",
-    "domain": "adhsdk://cookbook/status/dashboard/logic/peer-url",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -24,10 +23,10 @@
       "validation"
     ],
     "depends-on": [
-      "agenticdevelopercookbook://guidelines/implementing/security/input-validation"
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/4ca8a3d5-cdcc-4f74-a2ec-3a198608b419"
     ],
     "related": [
-      "adhsdk://cookbook/status/service/peers"
+      "b1622d2b-587f-4207-89ed-2130f8309f8c"
     ],
     "references": [
       "https://url.spec.whatwg.org/"
@@ -35,7 +34,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "3901ca9b659fb20b",
+  "synced": "a5e1a003470ac7c0",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -54,7 +53,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

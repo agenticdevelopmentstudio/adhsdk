@@ -1,0 +1,7 @@
+
+| Version | Date | Author | Summary |
+|---|---|---|---|
+| 1.2.1 | 2026-09-25 | Mike Fullerton | search.grow shares free space 50/50 with trailing spacer; filter-width-cap/T4/config fixed. |
+| 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: reword autofocus-remount and touch-target as named, behavior-stated requirements; add filter-width-cap requirement; fix T3/T4 test vectors and add T7/T8; specify long-title truncation behavior; correct Platform Notes (native search controls, and the Compose/WinUI/AppKit/SwiftUI-specific errors); reformat Design Decisions to Decision/Rationale/Approved; rewrite Compliance as a table; correct Localization to acknowledge the user-visible defaults; strengthen Reduce Motion guidance; add depends-on for ButtonBar and Input; correct the 1.1.0 row's author. |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Expand to full ingredient template (AI-assisted); correct domain to agenticdevelopercookbook; add all five Platform Notes bullets; complete Accessibility, Edge Cases, Conformance Test Vectors; mark not-applicable sections (Deep Linking, Localization, Feature Flags, Analytics, Privacy, Logging); add autofocus-remount requirement; add Configuration section with full prop definitions; set status to review. |
+| 1.0.0 | 2026-07-10 | Mike Fullerton | Initial ingredient — extracted from ListWithDetailsPane's inline toolbar; HierarchicalTopicDetail `headerSlot` integration. |

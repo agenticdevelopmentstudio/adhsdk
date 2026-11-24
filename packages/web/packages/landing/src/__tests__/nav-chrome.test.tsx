@@ -282,3 +282,307 @@ describe('NavChrome', () => {
     expect(document.activeElement).not.toBe(burger)
   })
 })
+
+describe('NavChrome conformance vectors', () => {
+  const FRAG = [{ href: '#section1', label: 'Section' }]
+  const isOpen = (c: HTMLElement): boolean =>
+    c.querySelector('.lp-drawer')!.className.includes('lp-drawer--open')
+  // jsdom implements no scrolling, so scrollIntoView is absent and is stubbed on each target.
+  const addTarget = (id: string): HTMLElement => {
+    const target = document.createElement('section')
+    target.id = id
+    target.scrollIntoView = () => {}
+    document.body.append(target)
+    return target
+  }
+
+  it('nav-001: the bar div lp-bar contains the lp-burger button', () => {
+    const { container } = render(<NavChrome links={LINKS} />)
+    const bar = container.querySelector('div.lp-bar')!
+    expect(bar.querySelector('button.lp-burger')).not.toBeNull()
+  })
+
+  it('nav-002: the burger is aria-expanded=false while closed', () => {
+    const { getByLabelText } = render(<NavChrome links={LINKS} />)
+    expect(getByLabelText('Open menu').getAttribute('aria-expanded')).toBe('false')
+  })
+
+  it('nav-003: clicking the burger sets aria-expanded=true', () => {
+    const { getByLabelText } = render(<NavChrome links={LINKS} />)
+    const burger = getByLabelText('Open menu')
+    fireEvent.click(burger)
+    expect(burger.getAttribute('aria-expanded')).toBe('true')
+  })
+
+  it('nav-004: clicking the burger adds lp-drawer--open', () => {
+    const { container, getByLabelText } = render(<NavChrome links={LINKS} />)
+    expect(isOpen(container)).toBe(false)
+    fireEvent.click(getByLabelText('Open menu'))
+    expect(isOpen(container)).toBe(true)
+  })
+
+  it('nav-005: clicking the burger again leaves the drawer open', () => {
+    const { container, getByLabelText } = render(<NavChrome links={LINKS} />)
+    const burger = getByLabelText('Open menu')
+    fireEvent.click(burger)
+    fireEvent.click(burger)
+    expect(isOpen(container)).toBe(true)
+    expect(burger.getAttribute('aria-expanded')).toBe('true')
+  })
+
+  it('nav-006: clicking the scrim closes the drawer and drops lp-scrim--show', () => {
+    const { container, getByLabelText } = render(<NavChrome links={LINKS} />)
+    fireEvent.click(getByLabelText('Open menu'))
+    expect(container.querySelector('.lp-scrim')!.className).toContain('lp-scrim--show')
+    fireEvent.click(container.querySelector('.lp-scrim')!)
+    expect(isOpen(container)).toBe(false)
+    expect(container.querySelector('.lp-scrim')!.className).not.toContain('lp-scrim--show')
+  })
+
+  it('nav-007: the brand renders in div.lp-brand inside the bar', () => {
+    const { container } = render(<NavChrome brand={<b>Mark</b>} links={LINKS} />)
+    expect(container.querySelector('.lp-bar > .lp-brand')!.textContent).toBe('Mark')
+  })
+
+  it('nav-008: no lp-brand when brand is undefined', () => {
+    const { container } = render(<NavChrome links={LINKS} />)
+    expect(container.querySelector('.lp-brand')).toBeNull()
+  })
+
+  it('nav-009: a same-page fragment link closes the drawer', () => {
+    const target = addTarget('one')
+    const { container, getByLabelText, getByText } = render(<NavChrome links={LINKS} />)
+    fireEvent.click(getByLabelText('Open menu'))
+    fireEvent.click(getByText('One'))
+    expect(isOpen(container)).toBe(false)
+    target.remove()
+  })
+
+  it('nav-010: an off-page link closes the drawer', () => {
+    const { container, getByLabelText, getByText } = render(
+      <NavChrome links={[{ href: 'https://example.com/x', label: 'Docs' }]} />
+    )
+    fireEvent.click(getByLabelText('Open menu'))
+    fireEvent.click(getByText('Docs'))
+    expect(isOpen(container)).toBe(false)
+  })
+
+  it('nav-011: a fragment link with a target is default-prevented and the target is located by id', () => {
+    const target = addTarget('section1')
+    const { getByText } = render(<NavChrome links={FRAG} />)
+    // fireEvent returns false when the event was default-prevented.
+    expect(fireEvent.click(getByText('Section'))).toBe(false)
+    expect(document.activeElement).toBe(target)
+    target.remove()
+  })
+
+  it('nav-012: the target gets focus and tabindex=-1', () => {
+    const target = addTarget('section1')
+    const { getByText } = render(<NavChrome links={FRAG} />)
+    fireEvent.click(getByText('Section'))
+    expect(document.activeElement).toBe(target)
+    expect(target.getAttribute('tabindex')).toBe('-1')
+    target.remove()
+  })
+
+  it('nav-013: a percent-encoded fragment resolves to the decoded id', () => {
+    const target = addTarget('section one')
+    const { getByText } = render(
+      <NavChrome links={[{ href: '#section%20one', label: 'Spaced' }]} />
+    )
+    fireEvent.click(getByText('Spaced'))
+    expect(document.activeElement).toBe(target)
+    target.remove()
+  })
+
+  it('nav-014: a malformed percent escape does not throw and falls back to the raw id', () => {
+    const target = addTarget('%XX')
+    const { getByText } = render(<NavChrome links={[{ href: '#%XX', label: 'Bad' }]} />)
+    expect(() => fireEvent.click(getByText('Bad'))).not.toThrow()
+    expect(document.activeElement).toBe(target)
+    target.remove()
+  })
+
+  it('nav-015: Tab from the last focusable wraps to the first', () => {
+    const { getByLabelText, getByText } = render(<NavChrome links={LINKS} footer={<a href="/f">Foot</a>} />)
+    fireEvent.click(getByLabelText('Open menu'))
+    getByText('Foot').focus()
+    fireEvent.keyDown(document, { key: 'Tab' })
+    expect(document.activeElement).toBe(getByLabelText('Close menu'))
+  })
+
+  it('nav-016: Shift+Tab from the first focusable wraps to the last', () => {
+    const { getByLabelText, getByText } = render(<NavChrome links={LINKS} footer={<a href="/f">Foot</a>} />)
+    fireEvent.click(getByLabelText('Open menu'))
+    getByLabelText('Close menu').focus()
+    fireEvent.keyDown(document, { key: 'Tab', shiftKey: true })
+    expect(document.activeElement).toBe(getByText('Foot'))
+  })
+
+  it('nav-017: Tab with focus on body pulls focus to the first focusable in the drawer', () => {
+    const { getByLabelText } = render(<NavChrome links={LINKS} />)
+    fireEvent.click(getByLabelText('Open menu'))
+    ;(document.activeElement as HTMLElement).blur()
+    expect(document.activeElement).toBe(document.body)
+    fireEvent.keyDown(document, { key: 'Tab' })
+    expect(document.activeElement).toBe(getByLabelText('Close menu'))
+  })
+
+  it('nav-018: Escape closes the drawer', () => {
+    const { container, getByLabelText } = render(<NavChrome links={LINKS} />)
+    fireEvent.click(getByLabelText('Open menu'))
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(isOpen(container)).toBe(false)
+  })
+
+  it('nav-019: opening moves focus to the close button', () => {
+    const { getByLabelText } = render(<NavChrome links={LINKS} />)
+    fireEvent.click(getByLabelText('Open menu'))
+    expect(document.activeElement).toBe(getByLabelText('Close menu'))
+  })
+
+  it('nav-020: the close button closes the drawer and returns focus to the burger', () => {
+    const { container, getByLabelText } = render(<NavChrome links={LINKS} />)
+    const burger = getByLabelText('Open menu')
+    fireEvent.click(burger)
+    fireEvent.click(getByLabelText('Close menu'))
+    expect(isOpen(container)).toBe(false)
+    expect(document.activeElement).toBe(burger)
+  })
+
+  it('nav-021: initial render moves focus nowhere', () => {
+    render(<NavChrome brand="M" links={LINKS} />)
+    expect(document.activeElement).toBe(document.body)
+  })
+
+  it('nav-022: a closed drawer has inert', () => {
+    const { container } = render(<NavChrome links={LINKS} />)
+    expect(container.querySelector('.lp-drawer')!.hasAttribute('inert')).toBe(true)
+  })
+
+  it('nav-023: an open drawer has no inert', () => {
+    const { container, getByLabelText } = render(<NavChrome links={LINKS} />)
+    fireEvent.click(getByLabelText('Open menu'))
+    expect(container.querySelector('.lp-drawer')!.hasAttribute('inert')).toBe(false)
+  })
+
+  it('nav-024: the footer renders in div.lp-foot inside the drawer', () => {
+    const { container } = render(<NavChrome links={LINKS} footer={<span>Byline</span>} />)
+    expect(container.querySelector('.lp-drawer > .lp-foot')!.textContent).toBe('Byline')
+  })
+
+  it('nav-025: no lp-foot when footer is undefined', () => {
+    const { container } = render(<NavChrome links={LINKS} />)
+    expect(container.querySelector('.lp-foot')).toBeNull()
+  })
+
+  it('nav-026: navLabel sets aria-label on the nav', () => {
+    const { container } = render(<NavChrome links={LINKS} navLabel="Main Navigation" />)
+    expect(container.querySelector('nav')!.getAttribute('aria-label')).toBe('Main Navigation')
+  })
+
+  it('nav-027: a focusable added while open is part of the Tab trap', () => {
+    const { container, getByLabelText } = render(<NavChrome links={LINKS} />)
+    fireEvent.click(getByLabelText('Open menu'))
+    const added = document.createElement('button')
+    container.querySelector('nav')!.append(added)
+    added.focus()
+    // `added` is now the last control, so Tab from it wraps to the first.
+    fireEvent.keyDown(document, { key: 'Tab' })
+    expect(document.activeElement).toBe(getByLabelText('Close menu'))
+    // And Shift+Tab from the first now lands on the new last control.
+    fireEvent.keyDown(document, { key: 'Tab', shiftKey: true })
+    expect(document.activeElement).toBe(added)
+  })
+
+  it('nav-028: empty links and no footer: Tab does not throw', () => {
+    const { getByLabelText } = render(<NavChrome links={[]} />)
+    fireEvent.click(getByLabelText('Open menu'))
+    expect(() => fireEvent.keyDown(document, { key: 'Tab' })).not.toThrow()
+    expect(() => fireEvent.keyDown(document, { key: 'Tab', shiftKey: true })).not.toThrow()
+  })
+
+  it('nav-029: an off-page link closes the drawer and its default navigation is not prevented', () => {
+    const { container, getByLabelText, getByText } = render(
+      <NavChrome links={[{ href: '/other-page', label: 'Other' }]} />
+    )
+    fireEvent.click(getByLabelText('Open menu'))
+    expect(fireEvent.click(getByText('Other'))).toBe(true)
+    expect(isOpen(container)).toBe(false)
+  })
+
+  it('nav-030: the scrim is aria-hidden=true', () => {
+    const { container } = render(<NavChrome links={LINKS} />)
+    expect(container.querySelector('.lp-scrim')!.getAttribute('aria-hidden')).toBe('true')
+  })
+
+  it('nav-031: focus stays on the fragment target and is not returned to the burger', () => {
+    const target = addTarget('section1')
+    const { getByLabelText, getByText } = render(<NavChrome links={FRAG} />)
+    fireEvent.click(getByLabelText('Open menu'))
+    fireEvent.click(getByText('Section'))
+    expect(document.activeElement).toBe(target)
+    expect(document.activeElement).not.toBe(getByLabelText('Open menu'))
+    target.remove()
+  })
+
+  it('nav-032: the drawer holds an anchor with the link text and href', () => {
+    const { container } = render(<NavChrome links={[{ href: '#a', label: 'A' }]} />)
+    const a = container.querySelector('.lp-drawer a')!
+    expect(a.textContent).toBe('A')
+    expect(a.getAttribute('href')).toBe('#a')
+  })
+
+  it('nav-033: Escape closes the drawer and returns focus to the burger', () => {
+    const { container, getByLabelText } = render(<NavChrome links={LINKS} />)
+    const burger = getByLabelText('Open menu')
+    fireEvent.click(burger)
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(isOpen(container)).toBe(false)
+    expect(document.activeElement).toBe(burger)
+  })
+
+  it('nav-034: an open drawer holds a button labelled Close menu', () => {
+    const { container, getByLabelText } = render(<NavChrome links={LINKS} />)
+    fireEvent.click(getByLabelText('Open menu'))
+    const close = container.querySelector('.lp-drawer button')!
+    expect(close.getAttribute('aria-label')).toBe('Close menu')
+  })
+
+  it('nav-035: the burger and close buttons are type=button', () => {
+    const { getByLabelText } = render(<NavChrome links={LINKS} />)
+    expect(getByLabelText('Open menu').getAttribute('type')).toBe('button')
+    expect(getByLabelText('Close menu', { selector: 'button' }).getAttribute('type')).toBe('button')
+  })
+
+  it('nav-036: default labels are Open menu, Close menu and Site', () => {
+    const { container } = render(<NavChrome links={LINKS} />)
+    expect(container.querySelector('.lp-bar .lp-burger')!.getAttribute('aria-label')).toBe('Open menu')
+    expect(container.querySelector('.lp-drawer-close')!.getAttribute('aria-label')).toBe('Close menu')
+    expect(container.querySelector('nav')!.getAttribute('aria-label')).toBe('Site')
+  })
+
+  it('nav-037: openLabel and closeLabel override the defaults', () => {
+    const { container } = render(<NavChrome links={LINKS} openLabel="Menu" closeLabel="Dismiss" />)
+    expect(container.querySelector('.lp-bar .lp-burger')!.getAttribute('aria-label')).toBe('Menu')
+    expect(container.querySelector('.lp-drawer-close')!.getAttribute('aria-label')).toBe('Dismiss')
+  })
+
+  it('nav-038: a previously focused element keeps focus after render', () => {
+    const other = document.createElement('input')
+    document.body.append(other)
+    other.focus()
+    render(<NavChrome brand="M" links={LINKS} />)
+    expect(document.activeElement).toBe(other)
+    other.remove()
+  })
+
+  it('nav-039: a fragment with no target is not default-prevented and the drawer closes', () => {
+    const { container, getByLabelText, getByText } = render(
+      <NavChrome links={[{ href: '#missing-section', label: 'Missing' }]} />
+    )
+    fireEvent.click(getByLabelText('Open menu'))
+    expect(fireEvent.click(getByText('Missing'))).toBe(true)
+    expect(isOpen(container)).toBe(false)
+  })
+})

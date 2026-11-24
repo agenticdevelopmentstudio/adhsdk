@@ -68,15 +68,10 @@ The subprocess transport
 - **subprocess-send-requires-connected-state**: Sending MUST throw a "not connected" transport error when the state is not connected — sending before connecting or after disconnecting MUST fail with that specific error, matching the stock stdio transport's contract byte for byte — and otherwise MUST forward the framed data to the channel.
 - **subprocess-receive-returns-stable-stream**: Receiving events MUST return the same underlying stream instance on every call, not a new stream per call.
 
-The host MCP server
+The in-process host MCP server is specified in the [adhsdk.ingredient.ai.mcp.host-mcp-server](cookbook:dac3e46e-2eeb-4ebd-b88d-4e4999870db7) recipe.
 
-- **host-server-runs-on-main-thread**: The host MCP server MUST run on the main thread of execution.
-- **host-server-wires-in-memory-pair**: Constructing the host MCP server MUST create a connected in-memory transport pair, expose the client side publicly, and retain the server side privately.
-- **host-server-declares-no-list-changed**: The underlying MCP server MUST declare that it does not support the tools-list-changed capability — this server MUST NOT claim it will emit `tools/list_changed`.
-- **host-server-start-and-stop**: Starting MUST register the tool handlers and then start the underlying MCP server against its own transport; stopping MUST stop that server.
-- **host-server-lists-two-tools**: Listing tools MUST return exactly two tools, `host_app_info` and `host_open_chat_window`, each declaring an object input schema with no properties.
-- **host-app-info-tool-body**: Calling `host_app_info` MUST return non-error text containing the app's name, its version, and its plugin names joined by `", "`, or the literal `(none)` when there are no plugin names.
-- **host-open-chat-window-tool-effect**: Calling `host_open_chat_window` MUST invoke the callback supplied when the host MCP server was constructed and MUST return the fixed non-error text "Opened a new chat window."
-- **host-server-unknown-tool-is-not-an-error-throw**: Calling any tool name other than the two declared tools MUST return a result with an error flag set and text "Unknown tool: <name>" — it MUST NOT throw.
-- **host-server-ignores-tool-arguments**: The tool handlers MUST NOT read the call's arguments — both declared input schemas have no properties and no handler inspects the arguments given, so any arguments a caller supplies are accepted and ignored.
+The HTTP endpoint
 
+- **http-endpoint-stop-grace-default**: Stopping the HTTP endpoint MUST take a grace, the time a response already being written is given to finish, and that grace MUST default to 1 second.
+- **http-endpoint-stop-waits-only-for-in-flight-work**: Stopping MUST close the listening socket, wait for the requests already being handled to finish, but no longer than the grace, then stop the HTTP server with a write margin, cancel the endpoint's own run task and stop the host MCP server, in that order. The write margin, the time a response that has just been returned is given to reach the client, MUST be the smaller of 0.1 seconds and what remains of the grace when every request finished in time, and 0 when the grace ran out first. A stop with nothing in flight MUST therefore finish at once, so the grace is an upper bound, never a fixed wait; a caller that must not wait at all (an app that is quitting) passes a grace of 0.
+- **http-endpoint-stop-is-idempotent**: Stopping an endpoint that is idle or already stopping MUST do nothing; stopping one that is still starting MUST make that start tear everything down and throw its stopped-while-starting error.

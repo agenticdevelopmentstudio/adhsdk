@@ -1,7 +1,6 @@
 ---
 id: 355a8f54-aee5-45cd-a28d-12c3b7a3085c
 title: "Sync Engine"
-domain: adhsdk://cookbook/data/sync/sync-engine
 type: ingredient
 version: 1.2.0
 status: review
@@ -22,7 +21,7 @@ tags:
   - engine
 depends-on: []
 related:
-  - adhsdk://cookbook/data/sync/offline-sync-client
+  - d3a0b65f-92c0-43c1-b04c-77638eb72044
 references:
   - packages/apple/AgenticDeveloperHubSDK/Sync/SyncEngine.swift
   - packages/apple/AgenticDeveloperHubSDK/Sync/SyncEvents.swift
@@ -55,7 +54,7 @@ push op, a push request, a push result, a push response), a schema-flexible
 JSON payload type, a UUIDv7 id generator, and a generated resource catalog.
 The product-specific enrollment and backend rules the engine serves are
 specified in
-[Offline Sync Client](adhsdk://cookbook/data/sync/offline-sync-client).
+Offline Sync Client ([adhsdk.ingredient.data.sync.offline-sync-client](cookbook:d3a0b65f-92c0-43c1-b04c-77638eb72044)).
 
 Use it when a host (an app or a daemon) keeps a local mirror of server rows,
 lets the user edit offline, and needs those edits pushed later without ever
@@ -317,15 +316,15 @@ Not applicable: the sources make no log call; every outcome is reported as an ev
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Sync/ADHSyncCatalog.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Sync/JSONValue.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Sync/SyncEngine.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Sync/SyncEvents.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Sync/SyncID.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Sync/SyncProtocols.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Sync/SyncWire.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Sync/ADHSyncCatalog.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Sync/JSONValue.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Sync/SyncEngine.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Sync/SyncEvents.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Sync/SyncID.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Sync/SyncProtocols.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Sync/SyncWire.swift` | unverified |
 
 ## Design Decisions
 
@@ -405,19 +404,19 @@ Not applicable: the sources make no log call; every outcome is reported as an ev
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [error-recovery](agenticdevelopercookbook://compliance/reliability#error-recovery) | passed | Reliability |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | Reliability |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | partial | Reliability |
-| [health-observability](agenticdevelopercookbook://compliance/reliability#health-observability) | passed | Reliability |
-| [timeout-handling](agenticdevelopercookbook://compliance/reliability#timeout-handling) | failed | Reliability |
-| [offline-behavior](agenticdevelopercookbook://compliance/access-patterns#offline-behavior) | passed | Access Patterns |
-| [retry-with-backoff](agenticdevelopercookbook://compliance/access-patterns#retry-with-backoff) | partial | Access Patterns |
-| [pagination-support](agenticdevelopercookbook://compliance/access-patterns#pagination-support) | passed | Access Patterns |
-| [error-response-handling](agenticdevelopercookbook://compliance/access-patterns#error-response-handling) | passed | Access Patterns |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.reliability.error-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/694a971d-282d-501b-8861-c4ece3b01edd) | passed | Reliability |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | Reliability |
+| [adc.check.reliability.health-observability](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d4ece88d-eeff-5e3f-8823-d8c2929a35e0) | passed | Reliability |
+| [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | failed | Reliability |
+| [adc.check.access-patterns.offline-behavior](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/df7f401a-39be-5c60-bab4-85dd95bd1ab1) | passed | Access Patterns |
+| [adc.check.access-patterns.retry-with-backoff](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bcb17bfe-d2d6-53f3-b2af-06b7eea3da61) | partial | Access Patterns |
+| [adc.check.access-patterns.pagination-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/e29ce31a-67cb-5690-b2ca-b1065ccdaf1a) | passed | Access Patterns |
+| [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | passed | Access Patterns |
 
 The engine depends only on the `SyncStore`, `SyncTransport` and `SyncTriggerSource` protocols, and `SyncEngineTests` exercises every cycle path against in-memory fakes, including the pure `reconcilePlan`. Outbox ops are never dropped: every failure keeps them and backs off, 410 replays them under their original opIds, and unresolvable ones are quarantined. Explicit error handling and data integrity are partial because `adoptedVersion` accepts sign-prefixed versions the documented format forbids, and because `stop()` does not stop a cycle already in flight from re-arming a retry. Retry with backoff is partial because the exponential delay carries no jitter. Timeout handling fails because the engine sets no timeout of its own and relies entirely on the injected transport.
 

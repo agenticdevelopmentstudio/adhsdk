@@ -1,0 +1,5 @@
+
+Color Mode is the legacy, Provider-based color-mode context of the customer-facing toolkit. `ColorModeProvider` holds the user's choice (`auto`, `light` or `dark`), resolves `auto` against the operating system's `prefers-color-scheme` setting, persists the choice in `localStorage`, and writes the result onto the document root. `useColorMode` gives descendants the choice, the resolved mode, a setter and a cycle operation.
+
+The source's header comment states that the ADH chrome and sites use a newer, Provider-free appearance system instead (`appearance.ts` ([adhsdk.ingredient.themes.appearance](cookbook:0f721fc3-0e8f-4a1b-b895-1b1bad370bd0)) and `appearance-store.tsx` ([adhsdk.ingredient.themes.appearance-store](cookbook:112f2150-3fcd-416c-bd25-b40f729b8ef2)), storage key `adh:appearance`, attribute `data-color-mode`), that the two are intentionally separate, and that they must not both be mounted on one document. This ingredient covers only the legacy context. Its main consumer is `AppearanceModeToggle` ([adhsdk.ingredient.controls.appearance-mode-toggle](cookbook:46e077a8-1171-4564-9781-7997ff76813a)).
+

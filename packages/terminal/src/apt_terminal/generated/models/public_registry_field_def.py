@@ -41,7 +41,7 @@ class PublicRegistryFieldDef:
                 "key": key,
                 "label": label,
                 "type": type_,
-                "sortOrder": sort_order,
+                "sort_order": sort_order,
             }
         )
 
@@ -56,7 +56,7 @@ class PublicRegistryFieldDef:
 
         type_ = d.pop("type")
 
-        sort_order = d.pop("sortOrder")
+        sort_order = d.pop("sort_order")
 
         public_registry_field_def = cls(
             key=key,

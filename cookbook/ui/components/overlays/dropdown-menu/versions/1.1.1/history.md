@@ -1,0 +1,6 @@
+
+| Version | Date | Author | Summary |
+|---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added missing keyboard-navigation/focus-management/checkbox-state-announcement/disabled-state-announcement/submenu-indication requirements; fixed dropdown-022 and Focus-on-disabled-item edge case (Base UI does not skip disabled items). Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and merged the three closeOnClick-default requirements into one; fixed the SwiftUI and WinUI 3 platform notes; replaced stale line-number and unsourced touch-target citations with symbol names and WCAG/Base UI references; described accent styling via the theme's accent token instead of a fixed color; resolved the two undefined edge cases; converted Design Decisions to the Decision/Rationale/Approved format and added two new decisions; filled in tags, related, and Compliance; added test vectors for accessibility and submenu-close coverage; fixed the ambiguous closeOnClick default and moved platform-specific paths out of Configuration and Platform Notes. |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

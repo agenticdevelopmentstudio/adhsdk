@@ -46,9 +46,9 @@ class SearchDocumentResult:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "blockId": block_id,
-                "documentId": document_id,
-                "blockType": block_type,
+                "block_id": block_id,
+                "document_id": document_id,
+                "block_type": block_type,
                 "position": position,
                 "snippet": snippet,
                 "rank": rank,
@@ -60,11 +60,11 @@ class SearchDocumentResult:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        block_id = d.pop("blockId")
+        block_id = d.pop("block_id")
 
-        document_id = d.pop("documentId")
+        document_id = d.pop("document_id")
 
-        block_type = d.pop("blockType")
+        block_type = d.pop("block_type")
 
         position = d.pop("position")
 

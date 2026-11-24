@@ -1,0 +1,3 @@
+
+A display component for a single chat message. Renders an avatar slot, the sender's name (accessibility only), message text as markdown, timestamp, delivery status, and optionally rich content, tool-call indicators, and a caller-controlled detail indicator. On Web, the bubble can also be clickable, show a selected state, and expose a connector anchor for three-pane mode. The bubble's appearance (fill, border, text color) is determined by semantic theme roles: user vs. persona. Supports streaming (composing) and failed delivery states. On platforms with theme support, repaints live on theme change.
+

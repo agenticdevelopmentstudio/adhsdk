@@ -1,0 +1,26 @@
+
+- **snapshot-fields**: A `TerminalScreenSnapshot` MUST carry `lines` (array of String, oldest first), `firstRow` (Int, the row number of `lines[0]`), `cursorRow` (Int) and `isAlternateScreen` (Bool), and MUST be `Sendable` and `Equatable`.
+- **snapshot-row-numbering**: A row number MUST count from the first line the terminal ever had, trimmed or not, so it names the same line before and after the oldest lines scroll away; `firstRow` is how many lines have been trimmed off the top.
+- **tracker-type**: `TerminalOutputTracker` MUST be a `public struct` that is `Sendable`, with mutating `noteSent(_:)` and `newOutput(in:)`.
+- **init-empty**: `init()` MUST start with no position, so the first `newOutput` call reads from the cursor's row of the snapshot it is given.
+- **init-from-top**: `init(fromTopOf:)` MUST start at the snapshot's `firstRow`, so the first read returns everything the snapshot still holds, startup text included.
+- **init-starting-at**: `init(startingAt:)` MUST start at the snapshot's cursor row and remember that row's text as already shown, so history from before the chat connected is not replayed as a reply.
+- **init-starting-at-range**: `init(startingAt:)` MUST remember no shown text when the cursor row is not among the snapshot's lines.
+- **new-output-nil-alternate**: `newOutput(in:)` MUST return nil, and change nothing, when the snapshot is on the alternate screen, because its rows are a canvas that vanishes when the program exits and not a record of output.
+- **new-output-nil-empty**: `newOutput(in:)` MUST return nil, and change nothing, when the snapshot has no lines.
+- **cursor-clamped**: `newOutput` MUST clamp the cursor row into the range of rows the snapshot holds, and MUST use the clamped row, not the raw `cursorRow`, for the read range and for **state-advance**.
+- **read-range**: `newOutput` MUST read every row from the last row read up to and including the cursor's row.
+- **cursor-row-shown**: `newOutput` MUST include the cursor's own row, an unfinished prompt included, and remember it as shown.
+- **shown-prefix-stripped**: When the first row to read starts with the text already shown for it, `newOutput` MUST drop that text from the row, so a prompt shown at the end of one reply does not appear again at the start of the next.
+- **resume-lost-trimmed**: When the row to resume from has been trimmed off the top of the snapshot, `newOutput` MUST start again at the cursor's row and forget the shown text.
+- **resume-lost-cursor-back**: When the cursor is above the row to resume from, as after a clear or a reset, `newOutput` MUST start again at the cursor's row and forget the shown text.
+- **echo-record**: `noteSent(_:)` MUST record the text sent with leading and trailing Unicode whitespace and newline characters removed (Swift's `.whitespacesAndNewlines` set), and when what remains is empty MUST record nothing and clear any echo already pending.
+- **echo-latest-wins**: A new `noteSent` MUST replace an echo not yet seen.
+- **echo-removal**: When an echo is pending and the first row read (after any shown prefix is removed) is not blank, `newOutput` MUST drop that row when its text, with leading and trailing space and tab characters (Swift's `.whitespaces` set, which excludes newlines) removed, ends with the echo, compared ignoring case. The same `.whitespaces` trim decides whether the first row is blank.
+- **echo-first-row-only**: `newOutput` MUST NOT treat any row other than the first row read as the echo, and MUST NOT skip a blank first row to reach a later one; everything after the first row is the command's output.
+- **echo-cleared**: The pending echo MUST be cleared once a non-blank first row has been tested, whether or not it matched, and MUST stay pending across a read whose first row is blank or that returns nil early (alternate screen or no lines).
+- **output-trim**: The returned text MUST have trailing characters for which `Character.isWhitespace` is true (spaces, tabs and any other Unicode whitespace) removed from each row and blank rows removed from the start and end, and MUST keep blank rows between non-blank rows.
+- **output-join**: Rows MUST be joined with a newline.
+- **output-nil-when-blank**: `newOutput` MUST return nil when no non-blank text is left.
+- **state-advance**: After every read that does not return early (alternate screen or no lines), including one that returns nil because no non-blank text is left, `newOutput` MUST set the next row to read to the (clamped) cursor's row and the shown text to that row's full text.
+

@@ -49,7 +49,7 @@
   layout (`Ctrl+Alt+P` for Open Project, mirroring the macOS
   `[.command, .option]` combination). Back `database` with the same
   SQLite file through `Microsoft.Data.Sqlite` (see
-  `adhsdk://cookbook/workspace/projects/project-database`'s WinUI
+  [adhsdk.ingredient.workspace.projects.project-database](cookbook:c212ea39-10e7-4146-89dd-36edb3b3455a)'s WinUI
   bullet for the schema/migration port) and call its `Checkpoint()`
   equivalent from `Stop()`, logging any exception there explicitly to
   close **stop-checkpoint-failure-unsignaled** rather than reproducing the

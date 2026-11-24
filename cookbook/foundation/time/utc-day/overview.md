@@ -1,0 +1,3 @@
+
+UTC calendar-day helpers for code that stores UTC ISO-8601 timestamps and buckets days by their 10-character prefix (`substr(timestamp, 1, 10)`). Day strings produced in Swift must use the same fixed UTC calendar; otherwise the host's locale or time zone could shift a boundary. The civil-date arithmetic belongs to [adhsdk.ingredient.foundation.time.utc-timestamp](cookbook:59f7893e-58fe-4f11-abd9-f80c1e05c002); this type is its UTC-pinned spelling. It is a caseless `enum` with two static functions, `string(from:)` and `dayAfter(_:)`, and no stored state beyond a private constant UTC time zone.
+

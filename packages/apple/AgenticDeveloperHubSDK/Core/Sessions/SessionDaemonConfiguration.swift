@@ -29,6 +29,8 @@ public struct SessionDaemonConfiguration: Sendable {
     public var retentionCheckInterval: TimeInterval
     /// The file the signed-in Claude account is read from; nil means `~/.claude.json`.
     public var claudeJSONPath: String?
+    /// Claude Code's transcript root, which the transcript source sweeps and tails.
+    public var claudeProjectsDirectory: URL
     /// Folders scanned for `.aiplugin` bundles in addition to the default
     /// `~/.agenticplugins` and the bundle's `PlugIns`: where this daemon's host app
     /// installs AI plugins. Empty means only the defaults.
@@ -37,6 +39,11 @@ public struct SessionDaemonConfiguration: Sendable {
     /// states its own: one that must not double LLM spend over sessions another
     /// daemon already summarizes passes false. There is deliberately no default.
     public var summariesDefaultEnabled: Bool
+    /// Whether this daemon owns the Claude Code hook registration. False for a
+    /// passive copy running beside the installed one (a development instance):
+    /// it never installs, removes or rewrites hooks in `settings.json`, and
+    /// tracking and status-line writes are refused.
+    public var managesHooks: Bool
 
     public init(
         label: String,
@@ -54,8 +61,10 @@ public struct SessionDaemonConfiguration: Sendable {
         livenessCheckInterval: TimeInterval = 10,
         retentionCheckInterval: TimeInterval = 86400,
         claudeJSONPath: String? = nil,
+        claudeProjectsDirectory: URL? = nil,
         pluginSearchPaths: [URL] = [],
-        summariesDefaultEnabled: Bool
+        summariesDefaultEnabled: Bool,
+        managesHooks: Bool = true
     ) {
         self.label = label
         self.subsystem = subsystem ?? label
@@ -72,8 +81,11 @@ public struct SessionDaemonConfiguration: Sendable {
         self.livenessCheckInterval = livenessCheckInterval
         self.retentionCheckInterval = retentionCheckInterval
         self.claudeJSONPath = claudeJSONPath
+        self.claudeProjectsDirectory = claudeProjectsDirectory
+            ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".claude/projects")
         self.pluginSearchPaths = pluginSearchPaths
         self.summariesDefaultEnabled = summariesDefaultEnabled
+        self.managesHooks = managesHooks
     }
 
     /// A configuration rooted under `root` (a fresh temporary directory by
@@ -100,6 +112,7 @@ public struct SessionDaemonConfiguration: Sendable {
             ),
             livenessCheckInterval: 1,
             claudeJSONPath: base.appendingPathComponent("claude.json").path,
+            claudeProjectsDirectory: base.appendingPathComponent("projects"),
             summariesDefaultEnabled: false
         )
     }

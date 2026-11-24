@@ -1,0 +1,161 @@
+import Foundation
+import Testing
+@testable import AgenticDeveloperHubSDKCore
+@testable import AgenticDeveloperHubSDKLanguage
+@testable import AgenticDeveloperHubSDKMacOS
+
+@Suite("GitSyntaxColoring")
+@MainActor
+struct GitSyntaxColoringTests {
+
+    // MARK: - lines(for:path:)
+
+    @Test("a known language is coloured line by line")
+    func colorsKnownLanguage() async throws {
+        let coloring = try GitTextMateFixture.coloring()
+        let lines = try #require(await coloring.lines(for: Data("let x = 1".utf8), path: "a.swift"))
+        #expect(lines.count == 1)
+        #expect(lines.first?.runs.first?.range == NSRange(location: 0, length: 3))
+    }
+
+    @Test("an unknown language gives nil")
+    func unknownLanguage() async throws {
+        let coloring = try GitTextMateFixture.coloring()
+        #expect(await coloring.lines(for: Data("let x = 1".utf8), path: "a.unknownext") == nil)
+    }
+
+    @Test("nil data gives nil")
+    func nilData() async throws {
+        let coloring = try GitTextMateFixture.coloring()
+        #expect(await coloring.lines(for: nil, path: "a.swift") == nil)
+    }
+
+    @Test("data over the byte limit gives nil")
+    func overByteLimit() async throws {
+        let coloring = try GitTextMateFixture.coloring()
+        let data = Data(repeating: UInt8(ascii: "a"), count: SyntaxHighlighter.maximumBytes + 1)
+        #expect(await coloring.lines(for: data, path: "a.swift") == nil)
+    }
+
+    @Test("a line over the length limit gives nil")
+    func overLineLimit() async throws {
+        let coloring = try GitTextMateFixture.coloring()
+        let data = Data(String(repeating: "a", count: SyntaxHighlighter.maximumLineLength + 1).utf8)
+        #expect(await coloring.lines(for: data, path: "a.swift") == nil)
+    }
+
+    @Test("content is decoded line by line as the diff text is, UTF-8 else Latin-1, and still coloured")
+    func latin1() async throws {
+        let coloring = try GitTextMateFixture.coloring()
+        let data = try #require("let é = 1".data(using: .isoLatin1))
+        #expect(String(data: data, encoding: .utf8) == nil)
+        #expect(GitSyntaxColoring.decode(data) == "let é = 1")
+        // One Latin-1 line leaves a UTF-8 line beside it decoded as UTF-8, so its
+        // multi-byte characters keep the columns the diff text gives them.
+        var mixed = Data("let ü = 1\n".utf8)
+        mixed.append(data)
+        #expect(GitSyntaxColoring.decode(mixed) == "let ü = 1\nlet é = 1")
+        let lines = try #require(await coloring.lines(for: data, path: "a.swift"))
+        #expect(lines.count == 1)
+        #expect(!(lines.first?.runs.isEmpty ?? true))
+    }
+
+    @Test("a lone carriage return stays inside its line, as in the diff, so later lines keep their colours")
+    func loneCarriageReturn() async throws {
+        // The diff splits on newlines only; the highlighter also breaks at a lone CR.
+        #expect(GitSyntaxColoring.decode(Data("let a = 1\rx\nlet b = 2\r\n".utf8)) == "let a = 1 x\nlet b = 2\r\n")
+        let coloring = try GitTextMateFixture.coloring()
+        let lines = try #require(await coloring.lines(for: Data("let a = 1\rx\nlet b = 2".utf8), path: "a.swift"))
+        #expect(lines.count == 2)
+        #expect(lines.last?.runs.first?.range == NSRange(location: 0, length: 3))
+    }
+
+    // MARK: - Revisions
+
+    @Test("each diff target reads its old and new sides from the right revisions")
+    func revisions() {
+        typealias Rev = GitSyntaxColoring.Revision
+        #expect(GitSyntaxColoring.revisions(for: .unstaged(paths: [])) == (old: Rev.at(":0"), new: Rev.workingFile))
+        #expect(GitSyntaxColoring.revisions(for: .staged(paths: [])) == (old: Rev.at("HEAD"), new: Rev.at(":0")))
+        #expect(GitSyntaxColoring.revisions(for: .untracked(path: "a")) == (old: Rev.absent, new: Rev.workingFile))
+        #expect(GitSyntaxColoring.revisions(for: .commit("c1", paths: [])) == (old: Rev.at("c1^1"), new: Rev.at("c1")))
+        #expect(GitSyntaxColoring.revisions(for: .range(from: "a1", to: "b2", paths: []))
+                == (old: Rev.at("a1"), new: Rev.at("b2")))
+    }
+
+    @Test("a conflicted diff's old side is read from the revision the diff itself used")
+    func conflictedRevisionsFollowTheDiff() {
+        typealias Rev = GitSyntaxColoring.Revision
+        let target = GitDiffTarget.conflicted(path: "a")
+        var file = GitFileDiff(oldPath: "a", newPath: "a", change: .modified, isBinary: false, hunks: [])
+        #expect(GitSyntaxColoring.revisions(for: target) == (old: Rev.at(":1"), new: Rev.workingFile))
+        file.oldRevision = ":1"
+        #expect(GitSyntaxColoring.revisions(for: target, diff: file) == (old: Rev.at(":1"), new: Rev.workingFile))
+        file.oldRevision = "HEAD"
+        #expect(GitSyntaxColoring.revisions(for: target, diff: file) == (old: Rev.at("HEAD"), new: Rev.workingFile))
+        file.oldRevision = nil
+        #expect(GitSyntaxColoring.revisions(for: target, diff: file) == (old: Rev.absent, new: Rev.workingFile))
+    }
+
+    @Test("a rename reads the old path at the parent and the new path at the commit")
+    func sidesOfRename() async throws {
+        let coloring = try GitTextMateFixture.coloring()
+        let source = GitViewsFakeContentSource()
+        source.files = ["old.swift@c1^1": Data("let a = 1".utf8), "new.swift@c1": Data("let b = 2\nlet c = 3".utf8)]
+        let diff = GitFileDiff(oldPath: "old.swift", newPath: "new.swift", change: .renamed(similarity: 90),
+                               isBinary: false, hunks: [])
+        let sides = await coloring.sides(of: diff, target: .commit("c1", paths: []), source: source)
+
+        #expect(source.contentsRequests == ["old.swift@c1^1", "new.swift@c1"])
+        #expect(sides.old?.count == 1)
+        #expect(sides.new?.count == 2)
+    }
+
+    @Test("an added file reads only its new side, and a working file reads with no revision")
+    func sidesOfAddedAndWorking() async throws {
+        let coloring = try GitTextMateFixture.coloring()
+        let source = GitViewsFakeContentSource()
+        let added = GitFileDiff(oldPath: nil, newPath: "a.swift", change: .added, isBinary: false, hunks: [])
+        _ = await coloring.sides(of: added, target: .commit("c1", paths: []), source: source)
+        #expect(source.contentsRequests == ["a.swift@c1"])
+
+        let modified = GitFileDiff(oldPath: "a.swift", newPath: "a.swift", change: .modified, isBinary: false,
+                                   hunks: [])
+        _ = await coloring.sides(of: modified, target: .unstaged(paths: []), source: source)
+        #expect(source.contentsRequests == ["a.swift@c1", "a.swift@:0", "a.swift@"])
+    }
+
+    @Test("each side is read capped at the highlighter's byte limit")
+    func sidesReadCapped() async throws {
+        let coloring = try GitTextMateFixture.coloring()
+        let source = GitViewsFakeContentSource()
+        let diff = GitFileDiff(oldPath: "a.swift", newPath: "a.swift", change: .modified, isBinary: false, hunks: [])
+        _ = await coloring.sides(of: diff, target: .commit("c1", paths: []), source: source)
+        #expect(source.contentsLimits == [SyntaxHighlighter.maximumBytes, SyntaxHighlighter.maximumBytes])
+    }
+
+    @Test("a path with no known language is never read")
+    func unknownLanguageNotRead() async throws {
+        let coloring = try GitTextMateFixture.coloring()
+        let source = GitViewsFakeContentSource()
+        source.files = ["a.unknownext@c1": Data("x".utf8)]
+        let diff = GitFileDiff(oldPath: "a.unknownext", newPath: "a.unknownext", change: .modified,
+                               isBinary: false, hunks: [])
+        let sides = await coloring.sides(of: diff, target: .commit("c1", paths: []), source: source)
+        #expect(source.contentsRequests.isEmpty)
+        #expect(sides.old == nil)
+        #expect(sides.new == nil)
+    }
+
+    @Test("a side whose contents fail is nil, the other still coloured")
+    func sidesWithFailure() async throws {
+        let coloring = try GitTextMateFixture.coloring()
+        let source = GitViewsFakeContentSource()
+        source.failing = ["contents:a.swift@c1^1"]
+        source.files = ["a.swift@c1": Data("let a = 1".utf8)]
+        let diff = GitFileDiff(oldPath: "a.swift", newPath: "a.swift", change: .modified, isBinary: false, hunks: [])
+        let sides = await coloring.sides(of: diff, target: .commit("c1", paths: []), source: source)
+        #expect(sides.old == nil)
+        #expect(sides.new?.count == 1)
+    }
+}

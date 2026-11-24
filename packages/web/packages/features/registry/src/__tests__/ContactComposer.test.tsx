@@ -39,8 +39,9 @@ describe('ContactComposer', () => {
 
     expect(await screen.findByText(/message sent/i)).toBeInTheDocument();
     const [path, init] = fetcher.mock.calls[0]!;
-    // `/registry/contact` is the backend mount; `/api` is the site's own rewrite prefix.
-    expect(path).toBe('/api/registry/contact/coaches/mike');
+    // `/v1/registry_entries/{slug}/contact` is the backend route; `/api` is the site's own
+    // rewrite prefix. The registry rides as the `registry` input.
+    expect(path).toBe('/api/v1/registry_entries/mike/contact?registry=coaches');
     expect(init.method).toBe('POST');
     expect(JSON.parse(init.body)).toEqual({ body: 'Are you taking clients?' });
   });

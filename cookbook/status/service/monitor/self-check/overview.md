@@ -1,0 +1,3 @@
+
+`selfCheckView` turns the list of `IntegrationCheck` results into the one verdict the dashboard's self-check bar and the KPI pill render. The server publishes it on `GET /integrations` as `selfCheck`, so the bar and the pill each show a verdict instead of filtering the checks with their own copy of the rule (the source notes the rule moved here from status-web's `computeSelfCheck`). It returns a `SelfCheckView`, or `null` when there is nothing to show. It is a total, synchronous, side-effect-free function over its argument. Its caller is `runIntegrationsCheck` in `integrations.ts`, which passes the already-stabilised checks (see [adhsdk.ingredient.status.service.monitor.self-check-stability](cookbook:4e32bf7a-b87a-44f6-aa16-f57a533e3b77)).
+

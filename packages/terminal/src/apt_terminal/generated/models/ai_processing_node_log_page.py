@@ -39,7 +39,7 @@ class AiProcessingNodeLogPage:
         field_dict.update(
             {
                 "entries": entries,
-                "nextBefore": next_before,
+                "next_before": next_before,
             }
         )
 
@@ -62,7 +62,7 @@ class AiProcessingNodeLogPage:
                 return data
             return cast(int | None, data)
 
-        next_before = _parse_next_before(d.pop("nextBefore"))
+        next_before = _parse_next_before(d.pop("next_before"))
 
         ai_processing_node_log_page = cls(
             entries=entries,

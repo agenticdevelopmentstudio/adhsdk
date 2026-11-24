@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "0a729d47-fc2d-427c-b474-26072dc8b336",
     "title": "Plugin Manager",
-    "domain": "adhsdk://cookbook/ai/plugins/plugin-manager",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -27,13 +26,13 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/ai/chat/chat-context"
+      "613d7a36-d0cd-4415-97be-d983b3d6c644"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "df41317c12cec8c3",
+  "synced": "261a97fe782bc296",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -52,7 +51,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

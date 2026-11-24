@@ -8,5 +8,5 @@ This module is the status dashboard's view-side logic over raw deploy records. I
 - the endpoint-deploys, latest-terminal-for-endpoint and failures-for-endpoint operations: correlate an endpoint to its deploys by the EXPLICIT (platform, project) wired on the endpoint in config, with "No host guessing." The detail panel and the status matrix call them.
 - the deploy-target-key and platform-canonicalization operations: re-exported unchanged from a shared canon module. The source comment says they are "Re-exported (never restated) so the two sides can't key the same deploy differently" — the backend keys deploys with the same function.
 
-The stale-in-flight test is a helper shared with the row model. The [Board Staleness](adhsdk://cookbook/status/dashboard/logic/board-staleness) recipe shares its fail-closed clock rule.
+The stale-in-flight test is a helper shared with the row model. The Board Staleness ([adhsdk.ingredient.status.dashboard.logic.board-staleness](cookbook:01f6f7b6-4bc5-4f35-a46a-1e80fe470097)) recipe shares its fail-closed clock rule.
 

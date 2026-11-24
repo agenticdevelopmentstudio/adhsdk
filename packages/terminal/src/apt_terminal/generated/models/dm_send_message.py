@@ -36,7 +36,7 @@ class DmSendMessage:
             }
         )
         if client_message_id is not UNSET:
-            field_dict["clientMessageId"] = client_message_id
+            field_dict["client_message_id"] = client_message_id
 
         return field_dict
 
@@ -45,7 +45,7 @@ class DmSendMessage:
         d = dict(src_dict)
         body = d.pop("body")
 
-        client_message_id = d.pop("clientMessageId", UNSET)
+        client_message_id = d.pop("client_message_id", UNSET)
 
         dm_send_message = cls(
             body=body,

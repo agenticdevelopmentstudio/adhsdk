@@ -1,15 +1,14 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "990362d5-9c3a-4263-828f-a174b2dd2134",
     "title": "Monitor Endpoint Kinds",
-    "domain": "adhsdk://cookbook/status/service/monitor/endpoint-kinds",
     "type": "ingredient",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-09-27",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -34,7 +33,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "0470018ed0462ef3",
+  "synced": "6ab8b1a6a9dc335f",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -53,7 +52,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

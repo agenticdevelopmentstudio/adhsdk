@@ -1,19 +1,18 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "8648272e-2da3-46fc-b9e8-5148dacdbcff",
     "title": "Status Server Fetchers",
-    "domain": "adhsdk://cookbook/status/service/telemetry/fetchers",
     "type": "ingredient",
-    "version": "1.1.0",
+    "version": "2.0.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-10-04",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "Two Fetcher-port adapters (GlitchTip issues, PostHog HogQL analytics) feeding the status server's telemetry streams — env-gated no-op, one bounded fetch attempt, and DTO mapping.",
+    "summary": "Two Fetcher-port adapters feeding the status server's telemetry streams — a cursor-paged GlitchTip issues walk and a single-query PostHog HogQL poll, env-gated, never retried, with a process-wide one-query-at-a-time HogQL lease.",
     "platforms": [
       "typescript",
       "web"
@@ -30,12 +29,13 @@
     "references": [
       "packages/web/packages/status-server/src/telemetry/fetchers/glitchtip.ts (adhsdk)",
       "packages/web/packages/status-server/src/telemetry/fetchers/posthog.ts (adhsdk)",
-      "packages/web/packages/status-server/test/telemetry-glitchtip-fetcher.test.ts (adhsdk)"
+      "packages/web/packages/status-server/test/telemetry-glitchtip-fetcher.test.ts (adhsdk)",
+      "packages/web/packages/status-server/test/telemetry-posthog-fetcher.test.ts (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "383da07e1e897f01",
+  "synced": "73b135b34898d3f1",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -54,7 +54,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

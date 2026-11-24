@@ -53,11 +53,11 @@ class UsageFixedCostPatch:
         if label is not UNSET:
             field_dict["label"] = label
         if monthly_micros is not UNSET:
-            field_dict["monthlyMicros"] = monthly_micros
+            field_dict["monthly_micros"] = monthly_micros
         if effective_from is not UNSET:
-            field_dict["effectiveFrom"] = effective_from
+            field_dict["effective_from"] = effective_from
         if effective_to is not UNSET:
-            field_dict["effectiveTo"] = effective_to
+            field_dict["effective_to"] = effective_to
         if note is not UNSET:
             field_dict["note"] = note
 
@@ -68,9 +68,9 @@ class UsageFixedCostPatch:
         d = dict(src_dict)
         label = d.pop("label", UNSET)
 
-        monthly_micros = d.pop("monthlyMicros", UNSET)
+        monthly_micros = d.pop("monthly_micros", UNSET)
 
-        _effective_from = d.pop("effectiveFrom", UNSET)
+        _effective_from = d.pop("effective_from", UNSET)
         effective_from: datetime.date | Unset
         if isinstance(_effective_from, Unset):
             effective_from = UNSET
@@ -92,7 +92,7 @@ class UsageFixedCostPatch:
                 pass
             return cast(datetime.date | None | Unset, data)
 
-        effective_to = _parse_effective_to(d.pop("effectiveTo", UNSET))
+        effective_to = _parse_effective_to(d.pop("effective_to", UNSET))
 
         note = d.pop("note", UNSET)
 

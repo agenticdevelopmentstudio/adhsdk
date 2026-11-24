@@ -27,8 +27,8 @@ function mockFlagTable(rows: FlagRow[]) {
   vi.stubGlobal(
     'fetch',
     vi.fn(async (url: string) => {
-      if (String(url).includes('/api/system/feature-flags')) {
-        return { ok: true, json: async () => rows } as unknown as Response
+      if (String(url).includes('/api/v1/feature_flags')) {
+        return { ok: true, json: async () => ({ object: 'list', data: rows, has_more: false, url: '/v1/feature_flags' }) } as unknown as Response
       }
       throw new Error(`unexpected fetch: ${url}`)
     }),

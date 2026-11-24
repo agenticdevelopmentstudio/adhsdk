@@ -21,4 +21,9 @@
   container; no touch-target constant is set anywhere in this component.
   Hit sizing for the search field and split divider is standard platform
   sizing, not a value this component chooses.
+- **Identifiers**: Each hosted panel without an identifier of its own is
+  exposed as `settings.panel.<slug of its title>`
+  (**panel-accessibility-identifier**), so UI tests and scripts find the
+  panel on screen; scripts select one by title or slug
+  (**selects-panel-by-name**).
 

@@ -1,0 +1,3 @@
+
+A responsive grid container that arranges card items in a flexible column layout. By default, cards flow through a shared `auto-fit` track. The caller opts a set of cards into an explicit column count only when the shared track would otherwise leave a lone item stranded on its own row: `pair` for a four-item set (which the shared track would otherwise lay out as 3 + 1) and `trio` for a nine-item set (which it would otherwise lay out as 4 + 4 + 1). The component never counts its own children — the caller chooses `pair`/`trio` based on how many children it is passing. The component renders a single `<div>` container that accepts children and optional styling.
+

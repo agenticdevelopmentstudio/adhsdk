@@ -1,0 +1,5 @@
+
+The Markdown Document Pane is a whole detail pane for one markdown document. It stacks two things: the platform's Cancel/Save bar, flush against the top and sides of the pane, and below it a padded body holding the document's Source / Preview view. The document comes from a `useVersionedDocument` hook (it carries the text, an `edit` function and the save, conflict and revert state). The pane owns the layout so that a host renders it as the pane's content with no padding of its own and cannot wrap the bar in padding by mistake.
+
+The pane also exports `MarkdownDocumentPaneBody`, the padded body on its own, for a host that shows something else in the pane's place (loading, not found, an error) and wants it to line up with the loaded pane. The Cancel/Save bar is the Document Save Bar ([adhsdk.ingredient.ui.blocks.document-save-bar](cookbook:c54698ea-490c-41e2-ad8f-762f257839ca)) block; the editing view is the `MarkdownDocumentEditor` component, to which every prop the pane does not consume is forwarded.
+

@@ -16,8 +16,9 @@ extension SubprocessChannel {
         }
     }
 
-    /// Launches `configuration`, closes its input, drains standard output until the
-    /// child exits, and returns everything it produced. Throws
+    /// Launches `configuration`, writes `standardInput` to it (when given) and closes its
+    /// input, drains standard output until the child exits, and returns everything it
+    /// produced. Throws
     /// `WallClockBudgetExceeded` if the child outlives `budget` seconds, in which
     /// case the child is terminated before the error propagates.
     ///
@@ -34,7 +35,17 @@ extension SubprocessChannel {
     /// that: the capture is discarded and the verb fails on output that was
     /// never malformed. The run therefore decodes as
     /// `.unframed`, whose bytes pass straight through.
-    public static func run(_ configuration: Configuration, budget: TimeInterval) async throws -> RunResult {
+    ///
+    /// **Standard input is written while standard output is read**, from a task of its own,
+    /// and closed when it has all been written. Writing all of it first would deadlock a
+    /// child that answers as it reads once both pipe buffers fill. A child that exits
+    /// without reading it is not an error here: the write fails, and its exit status is
+    /// the answer.
+    public static func run(
+        _ configuration: Configuration,
+        standardInput: Data? = nil,
+        budget: TimeInterval
+    ) async throws -> RunResult {
         var configuration = configuration
         configuration.framing = .unframed
         let channel = SubprocessChannel(configuration: configuration)
@@ -42,7 +53,17 @@ extension SubprocessChannel {
         do {
             return try await withWallClockBudget(budget) {
                 try await channel.launch()
-                await channel.closeInput()
+                let writer: Task<Void, Never>?
+                if let standardInput, !standardInput.isEmpty {
+                    writer = Task {
+                        try? await channel.sendRaw(standardInput)
+                        await channel.closeInput()
+                    }
+                } else {
+                    writer = nil
+                    await channel.closeInput()
+                }
+                defer { writer?.cancel() }
                 // `.unframed` hands each chunk over exactly as it was read, so
                 // concatenating them reproduces the child's raw stdout
                 // byte-for-byte. Inserting any separator between them would
@@ -66,6 +87,7 @@ extension SubprocessChannel {
                 // one-shot run, so it propagates through the `catch` below,
                 // which terminates the child first.
                 let status = try await channel.waitUntilExit()
+                await writer?.value
                 let standardError = await channel.standardErrorText()
                 return RunResult(
                     standardOutput: output,

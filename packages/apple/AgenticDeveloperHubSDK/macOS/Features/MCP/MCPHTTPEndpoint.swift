@@ -1,5 +1,6 @@
 // macOS/Features/MCP/MCPHTTPEndpoint.swift
 import Foundation
+import AgenticDeveloperHubSDKCore
 import FlyingFox
 import FlyingSocks
 import MCP
@@ -46,6 +47,7 @@ public actor MCPHTTPEndpoint {
     private let requestTimeout: TimeInterval
     private let log: Logger
     private let inFlight = InFlightRequests()
+    private let handlers = ActiveHandlers()
     private var phase = Phase.idle
     private var stopRequested = false
     private var http: HTTPServer?
@@ -103,9 +105,24 @@ public actor MCPHTTPEndpoint {
         return bound
     }
 
+    /// The longest `stop()` waits for requests still being handled.
+    public static let defaultStopGrace: TimeInterval = 1
+
+    /// How long a stop that waited on a handler leaves the response it just
+    /// returned to be written, inside the grace.
+    static let writeMargin: TimeInterval = 0.1
+
     /// Stops listening. Called while `start()` is binding, it records the
     /// request and `start()` tears down what it built and throws.
-    public func stop() async {
+    ///
+    /// `grace` is an upper bound, not a delay: the stop waits only for
+    /// requests still being handled, and when it waited on one, a short
+    /// `writeMargin` for the response it returned to be written. With nothing
+    /// in flight it closes at once. (FlyingFox's own `stop(timeout:)` cannot
+    /// be the wait: the server's run task never ends by itself, so it always
+    /// sleeps out the whole timeout.) An app that is quitting passes `0`;
+    /// nothing it could still send has a reader worth a second of the quit.
+    public func stop(grace: TimeInterval = MCPHTTPEndpoint.defaultStopGrace) async {
         switch phase {
         case .starting:
             stopRequested = true
@@ -119,7 +136,7 @@ public actor MCPHTTPEndpoint {
         // await, so a `start()` arriving meanwhile can neither see the closing
         // port nor bind a second server.
         phase = .stopping
-        await tearDown()
+        await tearDown(grace: grace)
         phase = .idle
     }
 
@@ -127,14 +144,17 @@ public actor MCPHTTPEndpoint {
         if stopRequested { throw StartError.stoppedWhileStarting }
     }
 
-    private func tearDown() async {
+    private func tearDown(grace: TimeInterval = MCPHTTPEndpoint.defaultStopGrace) async {
         let closingHTTP = http
         let closingTask = runTask
         http = nil
         runTask = nil
         transport = nil
         port = nil
-        await closingHTTP?.stop(timeout: 1)
+        let deadline = Date().addingTimeInterval(grace)
+        let waited = closingHTTP != nil ? await handlers.waitUntilIdle(before: deadline) : false
+        let margin = waited ? min(Self.writeMargin, max(0, deadline.timeIntervalSinceNow)) : 0
+        await closingHTTP?.stop(timeout: margin)
         closingTask?.cancel()
         await server.stop()
     }
@@ -147,7 +167,8 @@ public actor MCPHTTPEndpoint {
         let token = self.token
         let log = self.log
         let inFlight = self.inFlight
-        await http.appendRoute(HTTPRoute("POST \(Self.path)")) { request in
+        let handlers = self.handlers
+        await http.appendRoute(HTTPRoute("POST \(Self.path)")) { request in try await handlers.counting {
             guard Self.isAuthorized(request.headers[.authorization], token: token) else {
                 log.info("automation: POST \(Self.path, privacy: .public) 401")
                 var response = FlyingFox.HTTPResponse(statusCode: .unauthorized)
@@ -194,7 +215,7 @@ public actor MCPHTTPEndpoint {
             if let key, let unique = rewrite.uniqueID { await inFlight.end(key, uniqueID: unique) }
             log.info("automation: POST \(Self.path, privacy: .public) \(answer.statusCode, privacy: .public)")
             return await Self.flyingFoxResponse(from: answer, restoring: rewrite)
-        }
+        } }
         // Anything else: the wrong path is 404, the right path with the
         // wrong method is 405.
         await http.appendRoute(HTTPRoute("*")) { request in
@@ -330,6 +351,29 @@ public actor MCPHTTPEndpoint {
         }
 
         func uniqueID(for key: String) -> String? { uniqueIDs[key] }
+    }
+
+    /// How many POST handlers are running, so a stop waits for them and no
+    /// longer.
+    actor ActiveHandlers {
+        private var count = 0
+
+        /// Runs `body` counted as one handler.
+        func counting<T: Sendable>(_ body: @Sendable () async throws -> T) async rethrows -> T {
+            count += 1
+            defer { count -= 1 }
+            return try await body()
+        }
+
+        /// Waits until no handler is running or `deadline` passes; whether
+        /// any was running when the wait began.
+        func waitUntilIdle(before deadline: Date) async -> Bool {
+            let busy = count > 0
+            while count > 0, Date() < deadline {
+                try? await Task.sleep(for: .milliseconds(10))
+            }
+            return busy
+        }
     }
 
     static func inFlightKey(caller: String?, originalIDJSON: Data) -> String {

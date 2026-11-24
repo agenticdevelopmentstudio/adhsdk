@@ -64,6 +64,31 @@ public final class ProjectsCoordinator: AppFeature {
     private weak var opener: ProjectOpening?
     private var progressWindow: ProjectScanProgressWindow?
     private var settingObservers: [AnyObject] = []
+
+    /// Each project's last known branches and worktrees, kept current by
+    /// `startWatchingRepoState()`, so a project window can be shown from them
+    /// before git has answered.
+    public private(set) lazy var repoState = RepoStateRefresher(store: database)
+    private var repoStateWatcher: RepoStateWatcher?
+
+    /// Starts watching every listed project's `.git` directory and sweeps
+    /// them all once. Called by the app, never by init: a coordinator built in
+    /// a test should not start FSEvents streams and git processes.
+    public func startWatchingRepoState() {
+        guard repoStateWatcher == nil else { return }
+        let watcher = RepoStateWatcher(refresher: repoState)
+        repoStateWatcher = watcher
+        watcher.watch(watchedRepos)
+    }
+
+    /// Projects only, most recently opened first, so the sweep warms the
+    /// likeliest switches soonest.
+    private var watchedRepos: [RepoStateWatcher.Repo] {
+        listedRepos
+            .filter { $0.kind == .project }
+            .sorted { ($0.lastOpened ?? .distantPast) > ($1.lastOpened ?? .distantPast) }
+            .map { (id: $0.id, directory: $0.url) }
+    }
     /// A settings change that landed while a scan was running. The running
     /// scan walked the old settings, so it is followed by one more.
     private var rescanPending = false
@@ -119,7 +144,7 @@ public final class ProjectsCoordinator: AppFeature {
 
         registry.register(AppCommand(
             id: CommandID.newProjectWindow,
-            title: "New Project Window",
+            title: "New Coding Project Window",
             category: "Projects",
             run: { [weak self] in self?.openNewWindow() }
         ))
@@ -136,22 +161,31 @@ public final class ProjectsCoordinator: AppFeature {
             run: { [weak self] in self?.scan() }
         ))
 
+        // The Projects menu puts Add Project Panel ▸ between orders below 100
+        // and the rest (see the host's menu builder).
         self.menuContributions = [
             MenuContribution(
-                slot: .file,
+                slot: .projects,
+                title: "New Coding Project Window",
+                commandID: CommandID.newProjectWindow,
+                registry: registry,
+                order: 0
+            ),
+            MenuContribution(
+                slot: .projects,
                 title: "Open Project…",
                 commandID: CommandID.openProject,
                 registry: registry,
-                order: 0,
+                order: 10,
                 key: "p",
                 modifiers: [.command, .option]
             ),
             MenuContribution(
-                slot: .file,
+                slot: .projects,
                 title: "Scan for Projects",
                 commandID: CommandID.scanForProjects,
                 registry: registry,
-                order: 10,
+                order: 100,
                 isHidden: { [weak self] in self?.isScanning ?? false }
             )
         ]
@@ -247,12 +281,18 @@ public final class ProjectsCoordinator: AppFeature {
     /// Stamps `repo` as just opened, which is what the browser sorts by,
     /// without opening anything — for a caller that opens the window itself.
     public func recordOpened(_ repo: GitRepo) {
-        do {
-            try database.markOpened(id: repo.id)
-        } catch {
-            Self.logger.error("Could not record open time: \(error)")
+        // Off the click: the window is what was asked for, the stamp only
+        // reorders the next sweep. Done on the next main-queue turn so the
+        // window shows first.
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            do {
+                try self.database.markOpened(id: repo.id)
+            } catch {
+                Self.logger.error("Could not record open time: \(error)")
+            }
+            self.reload()
         }
-        reload()
     }
 
     /// Shows the picker the host handed in. A host that wired none has a
@@ -281,6 +321,7 @@ public final class ProjectsCoordinator: AppFeature {
     private func reload() {
         repos = (try? database.allRepos()) ?? repos
         listedRepos = Self.listed(repos, by: currentScanner)
+        repoStateWatcher?.watch(watchedRepos)
         NotificationCenter.default.post(name: Self.didChangeNotification, object: self)
     }
 

@@ -54,15 +54,15 @@ class IntegrationConnectAppPassword:
         field_dict.update(
             {
                 "type": type_,
-                "providerId": provider_id,
-                "serviceType": service_type,
-                "ecosystemId": ecosystem_id,
+                "provider_id": provider_id,
+                "service_type": service_type,
+                "ecosystem_id": ecosystem_id,
                 "identifier": identifier,
                 "password": password,
             }
         )
         if instance_url is not UNSET:
-            field_dict["instanceUrl"] = instance_url
+            field_dict["instance_url"] = instance_url
 
         return field_dict
 
@@ -71,17 +71,17 @@ class IntegrationConnectAppPassword:
         d = dict(src_dict)
         type_ = IntegrationConnectAppPasswordType(d.pop("type"))
 
-        provider_id = d.pop("providerId")
+        provider_id = d.pop("provider_id")
 
-        service_type = d.pop("serviceType")
+        service_type = d.pop("service_type")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
         identifier = d.pop("identifier")
 
         password = d.pop("password")
 
-        instance_url = d.pop("instanceUrl", UNSET)
+        instance_url = d.pop("instance_url", UNSET)
 
         integration_connect_app_password = cls(
             type_=type_,

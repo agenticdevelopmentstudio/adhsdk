@@ -10,7 +10,7 @@ import struct Foundation.Data
 import struct Foundation.Date
 #endif
 import HTTPTypes
-/// Generated from the Drizzle schema. CRUD routes are derived per table (/<schema>/<resource>); the non-CRUD surface (auth, oauth, chat, registry, customer, storage, search, messaging, notifications, and more) is hand-written in src/openapi/paths/* and kept in sync with the routes by a drift guard.
+/// The adh API, versioned and shaped after Stripe: plural snake_case nouns under `/v1`, updates by POST, `object` on every resource, one list envelope with cursor paging, `expand[]` and `include[]`, typed errors, and `Idempotency-Key` on writes.
 public struct HubAuthClient: APIProtocol {
     /// The underlying HTTP client.
     private let client: UniversalClient
@@ -38,972 +38,21 @@ public struct HubAuthClient: APIProtocol {
     private var converter: Converter {
         client.converter
     }
-    /// Sign in (may require a second factor)
-    ///
-    /// - Remark: HTTP `POST /auth/login`.
-    /// - Remark: Generated from `#/paths//auth/login/post`.
-    public func postAuthLogin(_ input: Operations.PostAuthLogin.Input) async throws -> Operations.PostAuthLogin.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.PostAuthLogin.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/auth/login",
-                    parameters: []
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .post
-                )
-                suppressMutabilityWarning(&request)
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                let body: OpenAPIRuntime.HTTPBody?
-                switch input.body {
-                case .none:
-                    body = nil
-                case let .json(value):
-                    body = try converter.setOptionalRequestBodyAsJSON(
-                        value,
-                        headerFields: &request.headerFields,
-                        contentType: "application/json; charset=utf-8"
-                    )
-                }
-                return (request, body)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.PostAuthLogin.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.AuthResult.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                case 202:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.PostAuthLogin.Output.Accepted.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.MfaChallenge.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .accepted(.init(body: body))
-                case 401:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.PostAuthLogin.Output.Unauthorized.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas._Error.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .unauthorized(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// Send the SMS login code to the verified primary phone
-    ///
-    /// - Remark: HTTP `POST /auth/login/mfa/sms/send`.
-    /// - Remark: Generated from `#/paths//auth/login/mfa/sms/send/post`.
-    public func postAuthLoginMfaSmsSend(_ input: Operations.PostAuthLoginMfaSmsSend.Input) async throws -> Operations.PostAuthLoginMfaSmsSend.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.PostAuthLoginMfaSmsSend.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/auth/login/mfa/sms/send",
-                    parameters: []
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .post
-                )
-                suppressMutabilityWarning(&request)
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                let body: OpenAPIRuntime.HTTPBody?
-                switch input.body {
-                case .none:
-                    body = nil
-                case let .json(value):
-                    body = try converter.setOptionalRequestBodyAsJSON(
-                        value,
-                        headerFields: &request.headerFields,
-                        contentType: "application/json; charset=utf-8"
-                    )
-                }
-                return (request, body)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 202:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.PostAuthLoginMfaSmsSend.Output.Accepted.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Operations.PostAuthLoginMfaSmsSend.Output.Accepted.Body.JsonPayload.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .accepted(.init(body: body))
-                case 400:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.PostAuthLoginMfaSmsSend.Output.BadRequest.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas._Error.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .badRequest(.init(body: body))
-                case 401:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.PostAuthLoginMfaSmsSend.Output.Unauthorized.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas._Error.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .unauthorized(.init(body: body))
-                case 409:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.PostAuthLoginMfaSmsSend.Output.Conflict.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas._Error.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .conflict(.init(body: body))
-                case 422:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.PostAuthLoginMfaSmsSend.Output.UnprocessableContent.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas._Error.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .unprocessableContent(.init(body: body))
-                case 429:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.PostAuthLoginMfaSmsSend.Output.TooManyRequests.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas._Error.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .tooManyRequests(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// Complete login by satisfying the second factor → aal=2 session
-    ///
-    /// - Remark: HTTP `POST /auth/login/mfa`.
-    /// - Remark: Generated from `#/paths//auth/login/mfa/post`.
-    public func postAuthLoginMfa(_ input: Operations.PostAuthLoginMfa.Input) async throws -> Operations.PostAuthLoginMfa.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.PostAuthLoginMfa.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/auth/login/mfa",
-                    parameters: []
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .post
-                )
-                suppressMutabilityWarning(&request)
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                let body: OpenAPIRuntime.HTTPBody?
-                switch input.body {
-                case .none:
-                    body = nil
-                case let .json(value):
-                    body = try converter.setOptionalRequestBodyAsJSON(
-                        value,
-                        headerFields: &request.headerFields,
-                        contentType: "application/json; charset=utf-8"
-                    )
-                }
-                return (request, body)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.PostAuthLoginMfa.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.AuthResult.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                case 400:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.PostAuthLoginMfa.Output.BadRequest.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas._Error.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .badRequest(.init(body: body))
-                case 401:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.PostAuthLoginMfa.Output.Unauthorized.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas._Error.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .unauthorized(.init(body: body))
-                case 409:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.PostAuthLoginMfa.Output.Conflict.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas._Error.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .conflict(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// WebAuthn 2nd-factor: assertion options bound to the pending challenge
-    ///
-    /// - Remark: HTTP `POST /auth/login/mfa/webauthn/options`.
-    /// - Remark: Generated from `#/paths//auth/login/mfa/webauthn/options/post`.
-    public func postAuthLoginMfaWebauthnOptions(_ input: Operations.PostAuthLoginMfaWebauthnOptions.Input) async throws -> Operations.PostAuthLoginMfaWebauthnOptions.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.PostAuthLoginMfaWebauthnOptions.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/auth/login/mfa/webauthn/options",
-                    parameters: []
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .post
-                )
-                suppressMutabilityWarning(&request)
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                let body: OpenAPIRuntime.HTTPBody?
-                switch input.body {
-                case .none:
-                    body = nil
-                case let .json(value):
-                    body = try converter.setOptionalRequestBodyAsJSON(
-                        value,
-                        headerFields: &request.headerFields,
-                        contentType: "application/json; charset=utf-8"
-                    )
-                }
-                return (request, body)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.PostAuthLoginMfaWebauthnOptions.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Operations.PostAuthLoginMfaWebauthnOptions.Output.Ok.Body.JsonPayload.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                case 400:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.PostAuthLoginMfaWebauthnOptions.Output.BadRequest.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas._Error.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .badRequest(.init(body: body))
-                case 401:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.PostAuthLoginMfaWebauthnOptions.Output.Unauthorized.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas._Error.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .unauthorized(.init(body: body))
-                case 422:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.PostAuthLoginMfaWebauthnOptions.Output.UnprocessableContent.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas._Error.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .unprocessableContent(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// WebAuthn 2nd-factor: verify the assertion → aal=2 session
-    ///
-    /// - Remark: HTTP `POST /auth/login/mfa/webauthn`.
-    /// - Remark: Generated from `#/paths//auth/login/mfa/webauthn/post`.
-    public func postAuthLoginMfaWebauthn(_ input: Operations.PostAuthLoginMfaWebauthn.Input) async throws -> Operations.PostAuthLoginMfaWebauthn.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.PostAuthLoginMfaWebauthn.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/auth/login/mfa/webauthn",
-                    parameters: []
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .post
-                )
-                suppressMutabilityWarning(&request)
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                let body: OpenAPIRuntime.HTTPBody?
-                switch input.body {
-                case .none:
-                    body = nil
-                case let .json(value):
-                    body = try converter.setOptionalRequestBodyAsJSON(
-                        value,
-                        headerFields: &request.headerFields,
-                        contentType: "application/json; charset=utf-8"
-                    )
-                }
-                return (request, body)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.PostAuthLoginMfaWebauthn.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.AuthResult.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                case 401:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.PostAuthLoginMfaWebauthn.Output.Unauthorized.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas._Error.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .unauthorized(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// Passwordless passkey: assertion options for an account
-    ///
-    /// - Remark: HTTP `POST /auth/login/webauthn/options`.
-    /// - Remark: Generated from `#/paths//auth/login/webauthn/options/post`.
-    public func postAuthLoginWebauthnOptions(_ input: Operations.PostAuthLoginWebauthnOptions.Input) async throws -> Operations.PostAuthLoginWebauthnOptions.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.PostAuthLoginWebauthnOptions.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/auth/login/webauthn/options",
-                    parameters: []
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .post
-                )
-                suppressMutabilityWarning(&request)
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                let body: OpenAPIRuntime.HTTPBody?
-                switch input.body {
-                case .none:
-                    body = nil
-                case let .json(value):
-                    body = try converter.setOptionalRequestBodyAsJSON(
-                        value,
-                        headerFields: &request.headerFields,
-                        contentType: "application/json; charset=utf-8"
-                    )
-                }
-                return (request, body)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.PostAuthLoginWebauthnOptions.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Operations.PostAuthLoginWebauthnOptions.Output.Ok.Body.JsonPayload.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                case 401:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.PostAuthLoginWebauthnOptions.Output.Unauthorized.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas._Error.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .unauthorized(.init(body: body))
-                case 422:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.PostAuthLoginWebauthnOptions.Output.UnprocessableContent.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas._Error.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .unprocessableContent(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// Passwordless passkey: verify the assertion → aal=2 session
-    ///
-    /// - Remark: HTTP `POST /auth/login/webauthn`.
-    /// - Remark: Generated from `#/paths//auth/login/webauthn/post`.
-    public func postAuthLoginWebauthn(_ input: Operations.PostAuthLoginWebauthn.Input) async throws -> Operations.PostAuthLoginWebauthn.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.PostAuthLoginWebauthn.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/auth/login/webauthn",
-                    parameters: []
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .post
-                )
-                suppressMutabilityWarning(&request)
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                let body: OpenAPIRuntime.HTTPBody?
-                switch input.body {
-                case .none:
-                    body = nil
-                case let .json(value):
-                    body = try converter.setOptionalRequestBodyAsJSON(
-                        value,
-                        headerFields: &request.headerFields,
-                        contentType: "application/json; charset=utf-8"
-                    )
-                }
-                return (request, body)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.PostAuthLoginWebauthn.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.AuthResult.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                case 401:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.PostAuthLoginWebauthn.Output.Unauthorized.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas._Error.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .unauthorized(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// Rotate refresh token → new JWT
-    ///
-    /// - Remark: HTTP `POST /auth/refresh`.
-    /// - Remark: Generated from `#/paths//auth/refresh/post`.
-    public func postAuthRefresh(_ input: Operations.PostAuthRefresh.Input) async throws -> Operations.PostAuthRefresh.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.PostAuthRefresh.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/auth/refresh",
-                    parameters: []
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .post
-                )
-                suppressMutabilityWarning(&request)
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                return (request, nil)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.PostAuthRefresh.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.RefreshResult.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                case 401:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.PostAuthRefresh.Output.Unauthorized.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas._Error.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .unauthorized(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
     /// Current user
     ///
     /// A platform token answers the hub user (User). An end-customer token (client-auth) answers its customer record in the customer realm instead — the CustomerMe schema, linked from the 200 response's `x-customer-realm`. For a customer token, a customer row that is gone (or an ecosystem that is deleted, archived or has login disabled) is 401, never 404; 404 is the platform user-not-found case only.
     ///
-    /// - Remark: HTTP `GET /auth/me`.
-    /// - Remark: Generated from `#/paths//auth/me/get`.
-    public func getAuthMe(_ input: Operations.GetAuthMe.Input) async throws -> Operations.GetAuthMe.Output {
+    /// Replaces GET /auth/me, GET /account/privacy (include privacy), GET /me/appearance (include appearance), GET /me/communication-settings (include communication_settings), GET /me/workspace-prefs (include workspace_prefs).
+    ///
+    /// - Remark: HTTP `GET /v1/account`.
+    /// - Remark: Generated from `#/paths//v1/account/get(getV1Account)`.
+    public func getV1Account(_ input: Operations.GetV1Account.Input) async throws -> Operations.GetV1Account.Output {
         try await client.send(
             input: input,
-            forOperation: Operations.GetAuthMe.id,
+            forOperation: Operations.GetV1Account.id,
             serializer: { input in
                 let path = try converter.renderedPath(
-                    template: "/auth/me",
+                    template: "/v1/account",
                     parameters: []
                 )
                 var request: HTTPTypes.HTTPRequest = .init(
@@ -1011,6 +60,20 @@ public struct HubAuthClient: APIProtocol {
                     method: .get
                 )
                 suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "expand[]",
+                    value: input.query.expand_lbrack__rbrack_
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "include[]",
+                    value: input.query.include_lbrack__rbrack_
+                )
                 converter.setAcceptHeader(
                     in: &request.headerFields,
                     contentTypes: input.headers.accept
@@ -1021,7 +84,7 @@ public struct HubAuthClient: APIProtocol {
                 switch response.status.code {
                 case 200:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.GetAuthMe.Output.Ok.Body
+                    let body: Operations.GetV1Account.Output.Ok.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -1031,7 +94,7 @@ public struct HubAuthClient: APIProtocol {
                     switch chosenContentType {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.User.self,
+                            Operations.GetV1Account.Output.Ok.Body.JsonPayload.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)
@@ -1041,9 +104,9 @@ public struct HubAuthClient: APIProtocol {
                         preconditionFailure("bestContentType chose an invalid content type.")
                     }
                     return .ok(.init(body: body))
-                case 401:
+                case 400:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.GetAuthMe.Output.Unauthorized.Body
+                    let body: Operations.GetV1Account.Output.BadRequest.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -1053,7 +116,29 @@ public struct HubAuthClient: APIProtocol {
                     switch chosenContentType {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas._Error.self,
+                            Components.Schemas.StripeError.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .badRequest(.init(body: body))
+                case 401:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.GetV1Account.Output.Unauthorized.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.StripeError.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)
@@ -1065,7 +150,7 @@ public struct HubAuthClient: APIProtocol {
                     return .unauthorized(.init(body: body))
                 case 404:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.GetAuthMe.Output.NotFound.Body
+                    let body: Operations.GetV1Account.Output.NotFound.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -1075,7 +160,7 @@ public struct HubAuthClient: APIProtocol {
                     switch chosenContentType {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas._Error.self,
+                            Components.Schemas.StripeError.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)
@@ -1099,20 +184,22 @@ public struct HubAuthClient: APIProtocol {
     }
     /// Update the caller's own profile (name, slug, avatar, public-profile toggle)
     ///
-    /// - Remark: HTTP `PATCH /auth/me`.
-    /// - Remark: Generated from `#/paths//auth/me/patch`.
-    public func patchAuthMe(_ input: Operations.PatchAuthMe.Input) async throws -> Operations.PatchAuthMe.Output {
+    /// Replaces PATCH /auth/me, PUT /account/privacy (include privacy), PUT /me/appearance (include appearance), PUT /me/communication-settings (include communication_settings), PUT /me/workspace-prefs (include workspace_prefs).
+    ///
+    /// - Remark: HTTP `POST /v1/account`.
+    /// - Remark: Generated from `#/paths//v1/account/post(postV1Account)`.
+    public func postV1Account(_ input: Operations.PostV1Account.Input) async throws -> Operations.PostV1Account.Output {
         try await client.send(
             input: input,
-            forOperation: Operations.PatchAuthMe.id,
+            forOperation: Operations.PostV1Account.id,
             serializer: { input in
                 let path = try converter.renderedPath(
-                    template: "/auth/me",
+                    template: "/v1/account",
                     parameters: []
                 )
                 var request: HTTPTypes.HTTPRequest = .init(
                     soar_path: path,
-                    method: .patch
+                    method: .post
                 )
                 suppressMutabilityWarning(&request)
                 converter.setAcceptHeader(
@@ -1121,10 +208,8 @@ public struct HubAuthClient: APIProtocol {
                 )
                 let body: OpenAPIRuntime.HTTPBody?
                 switch input.body {
-                case .none:
-                    body = nil
                 case let .json(value):
-                    body = try converter.setOptionalRequestBodyAsJSON(
+                    body = try converter.setRequiredRequestBodyAsJSON(
                         value,
                         headerFields: &request.headerFields,
                         contentType: "application/json; charset=utf-8"
@@ -1136,7 +221,7 @@ public struct HubAuthClient: APIProtocol {
                 switch response.status.code {
                 case 200:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.PatchAuthMe.Output.Ok.Body
+                    let body: Operations.PostV1Account.Output.Ok.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -1146,7 +231,7 @@ public struct HubAuthClient: APIProtocol {
                     switch chosenContentType {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.User.self,
+                            Operations.PostV1Account.Output.Ok.Body.JsonPayload.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)
@@ -1158,7 +243,7 @@ public struct HubAuthClient: APIProtocol {
                     return .ok(.init(body: body))
                 case 400:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.PatchAuthMe.Output.BadRequest.Body
+                    let body: Operations.PostV1Account.Output.BadRequest.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -1168,7 +253,7 @@ public struct HubAuthClient: APIProtocol {
                     switch chosenContentType {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas._Error.self,
+                            Components.Schemas.StripeError.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)
@@ -1180,7 +265,7 @@ public struct HubAuthClient: APIProtocol {
                     return .badRequest(.init(body: body))
                 case 401:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.PatchAuthMe.Output.Unauthorized.Body
+                    let body: Operations.PostV1Account.Output.Unauthorized.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -1190,7 +275,7 @@ public struct HubAuthClient: APIProtocol {
                     switch chosenContentType {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas._Error.self,
+                            Components.Schemas.StripeError.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)
@@ -1202,7 +287,7 @@ public struct HubAuthClient: APIProtocol {
                     return .unauthorized(.init(body: body))
                 case 404:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.PatchAuthMe.Output.NotFound.Body
+                    let body: Operations.PostV1Account.Output.NotFound.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -1212,7 +297,7 @@ public struct HubAuthClient: APIProtocol {
                     switch chosenContentType {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas._Error.self,
+                            Components.Schemas.StripeError.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)
@@ -1224,7 +309,7 @@ public struct HubAuthClient: APIProtocol {
                     return .notFound(.init(body: body))
                 case 409:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.PatchAuthMe.Output.Conflict.Body
+                    let body: Operations.PostV1Account.Output.Conflict.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -1234,7 +319,7 @@ public struct HubAuthClient: APIProtocol {
                     switch chosenContentType {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas._Error.self,
+                            Components.Schemas.StripeError.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)
@@ -1258,15 +343,17 @@ public struct HubAuthClient: APIProtocol {
     }
     /// List the caller’s API tokens (metadata only; raw values never returned)
     ///
-    /// - Remark: HTTP `GET /auth/tokens`.
-    /// - Remark: Generated from `#/paths//auth/tokens/get`.
-    public func getAuthTokens(_ input: Operations.GetAuthTokens.Input) async throws -> Operations.GetAuthTokens.Output {
+    /// Replaces GET /auth/tokens, GET /tokens.
+    ///
+    /// - Remark: HTTP `GET /v1/api_keys`.
+    /// - Remark: Generated from `#/paths//v1/api_keys/get(getV1ApiKeys)`.
+    public func getV1ApiKeys(_ input: Operations.GetV1ApiKeys.Input) async throws -> Operations.GetV1ApiKeys.Output {
         try await client.send(
             input: input,
-            forOperation: Operations.GetAuthTokens.id,
+            forOperation: Operations.GetV1ApiKeys.id,
             serializer: { input in
                 let path = try converter.renderedPath(
-                    template: "/auth/tokens",
+                    template: "/v1/api_keys",
                     parameters: []
                 )
                 var request: HTTPTypes.HTTPRequest = .init(
@@ -1274,6 +361,34 @@ public struct HubAuthClient: APIProtocol {
                     method: .get
                 )
                 suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit",
+                    value: input.query.limit
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "starting_after",
+                    value: input.query.startingAfter
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "ending_before",
+                    value: input.query.endingBefore
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "expand[]",
+                    value: input.query.expand_lbrack__rbrack_
+                )
                 converter.setAcceptHeader(
                     in: &request.headerFields,
                     contentTypes: input.headers.accept
@@ -1284,7 +399,7 @@ public struct HubAuthClient: APIProtocol {
                 switch response.status.code {
                 case 200:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.GetAuthTokens.Output.Ok.Body
+                    let body: Operations.GetV1ApiKeys.Output.Ok.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -1294,7 +409,7 @@ public struct HubAuthClient: APIProtocol {
                     switch chosenContentType {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
-                            [Components.Schemas.ApiToken].self,
+                            Operations.GetV1ApiKeys.Output.Ok.Body.JsonPayload.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)
@@ -1306,7 +421,7 @@ public struct HubAuthClient: APIProtocol {
                     return .ok(.init(body: body))
                 case 401:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.GetAuthTokens.Output.Unauthorized.Body
+                    let body: Operations.GetV1ApiKeys.Output.Unauthorized.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -1316,7 +431,7 @@ public struct HubAuthClient: APIProtocol {
                     switch chosenContentType {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas._Error.self,
+                            Components.Schemas.StripeError.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)
@@ -1326,6 +441,50 @@ public struct HubAuthClient: APIProtocol {
                         preconditionFailure("bestContentType chose an invalid content type.")
                     }
                     return .unauthorized(.init(body: body))
+                case 403:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.GetV1ApiKeys.Output.Forbidden.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.StripeError.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .forbidden(.init(body: body))
+                case 404:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.GetV1ApiKeys.Output.NotFound.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.StripeError.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .notFound(.init(body: body))
                 default:
                     return .undocumented(
                         statusCode: response.status.code,
@@ -1340,15 +499,17 @@ public struct HubAuthClient: APIProtocol {
     }
     /// Mint an API token (raw value shown once)
     ///
-    /// - Remark: HTTP `POST /auth/tokens`.
-    /// - Remark: Generated from `#/paths//auth/tokens/post`.
-    public func postAuthTokens(_ input: Operations.PostAuthTokens.Input) async throws -> Operations.PostAuthTokens.Output {
+    /// Replaces POST /auth/tokens, POST /tokens.
+    ///
+    /// - Remark: HTTP `POST /v1/api_keys`.
+    /// - Remark: Generated from `#/paths//v1/api_keys/post(postV1ApiKeys)`.
+    public func postV1ApiKeys(_ input: Operations.PostV1ApiKeys.Input) async throws -> Operations.PostV1ApiKeys.Output {
         try await client.send(
             input: input,
-            forOperation: Operations.PostAuthTokens.id,
+            forOperation: Operations.PostV1ApiKeys.id,
             serializer: { input in
                 let path = try converter.renderedPath(
-                    template: "/auth/tokens",
+                    template: "/v1/api_keys",
                     parameters: []
                 )
                 var request: HTTPTypes.HTTPRequest = .init(
@@ -1362,10 +523,8 @@ public struct HubAuthClient: APIProtocol {
                 )
                 let body: OpenAPIRuntime.HTTPBody?
                 switch input.body {
-                case .none:
-                    body = nil
                 case let .json(value):
-                    body = try converter.setOptionalRequestBodyAsJSON(
+                    body = try converter.setRequiredRequestBodyAsJSON(
                         value,
                         headerFields: &request.headerFields,
                         contentType: "application/json; charset=utf-8"
@@ -1377,7 +536,7 @@ public struct HubAuthClient: APIProtocol {
                 switch response.status.code {
                 case 201:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.PostAuthTokens.Output.Created.Body
+                    let body: Operations.PostV1ApiKeys.Output.Created.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -1387,7 +546,7 @@ public struct HubAuthClient: APIProtocol {
                     switch chosenContentType {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.ApiTokenCreated.self,
+                            Operations.PostV1ApiKeys.Output.Created.Body.JsonPayload.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)
@@ -1399,7 +558,7 @@ public struct HubAuthClient: APIProtocol {
                     return .created(.init(body: body))
                 case 400:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.PostAuthTokens.Output.BadRequest.Body
+                    let body: Operations.PostV1ApiKeys.Output.BadRequest.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -1409,7 +568,7 @@ public struct HubAuthClient: APIProtocol {
                     switch chosenContentType {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas._Error.self,
+                            Components.Schemas.StripeError.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)
@@ -1421,7 +580,7 @@ public struct HubAuthClient: APIProtocol {
                     return .badRequest(.init(body: body))
                 case 401:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.PostAuthTokens.Output.Unauthorized.Body
+                    let body: Operations.PostV1ApiKeys.Output.Unauthorized.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -1431,7 +590,431 @@ public struct HubAuthClient: APIProtocol {
                     switch chosenContentType {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas._Error.self,
+                            Components.Schemas.StripeError.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .unauthorized(.init(body: body))
+                case 403:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PostV1ApiKeys.Output.Forbidden.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.StripeError.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .forbidden(.init(body: body))
+                case 404:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PostV1ApiKeys.Output.NotFound.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.StripeError.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .notFound(.init(body: body))
+                case 409:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PostV1ApiKeys.Output.Conflict.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.StripeError.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .conflict(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// WebAuthn 2nd-factor: assertion options bound to the pending challenge
+    ///
+    /// Replaces POST /auth/login/mfa/webauthn/options, POST /auth/login/webauthn/options.
+    ///
+    /// - Remark: HTTP `POST /v1/auth/passkey_challenges`.
+    /// - Remark: Generated from `#/paths//v1/auth/passkey_challenges/post(postV1AuthPasskeyChallenges)`.
+    public func postV1AuthPasskeyChallenges(_ input: Operations.PostV1AuthPasskeyChallenges.Input) async throws -> Operations.PostV1AuthPasskeyChallenges.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.PostV1AuthPasskeyChallenges.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/auth/passkey_challenges",
+                    parameters: []
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .post
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                let body: OpenAPIRuntime.HTTPBody?
+                switch input.body {
+                case let .json(value):
+                    body = try converter.setRequiredRequestBodyAsJSON(
+                        value,
+                        headerFields: &request.headerFields,
+                        contentType: "application/json; charset=utf-8"
+                    )
+                }
+                return (request, body)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PostV1AuthPasskeyChallenges.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Operations.PostV1AuthPasskeyChallenges.Output.Ok.Body.JsonPayload.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                case 400:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PostV1AuthPasskeyChallenges.Output.BadRequest.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.StripeError.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .badRequest(.init(body: body))
+                case 401:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PostV1AuthPasskeyChallenges.Output.Unauthorized.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.StripeError.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .unauthorized(.init(body: body))
+                case 422:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PostV1AuthPasskeyChallenges.Output.UnprocessableContent.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.StripeError.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .unprocessableContent(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// Sign in (may require a second factor)
+    ///
+    /// Replaces POST /auth/login, POST /auth/login/mfa, POST /auth/login/mfa/webauthn, POST /auth/login/webauthn.
+    ///
+    /// - Remark: HTTP `POST /v1/auth/sessions`.
+    /// - Remark: Generated from `#/paths//v1/auth/sessions/post(postV1AuthSessions)`.
+    public func postV1AuthSessions(_ input: Operations.PostV1AuthSessions.Input) async throws -> Operations.PostV1AuthSessions.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.PostV1AuthSessions.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/auth/sessions",
+                    parameters: []
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .post
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                let body: OpenAPIRuntime.HTTPBody?
+                switch input.body {
+                case let .json(value):
+                    body = try converter.setRequiredRequestBodyAsJSON(
+                        value,
+                        headerFields: &request.headerFields,
+                        contentType: "application/json; charset=utf-8"
+                    )
+                }
+                return (request, body)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PostV1AuthSessions.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Operations.PostV1AuthSessions.Output.Ok.Body.JsonPayload.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                case 400:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PostV1AuthSessions.Output.BadRequest.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.StripeError.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .badRequest(.init(body: body))
+                case 401:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PostV1AuthSessions.Output.Unauthorized.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.StripeError.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .unauthorized(.init(body: body))
+                case 409:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PostV1AuthSessions.Output.Conflict.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.StripeError.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .conflict(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// Rotate refresh token → new JWT
+    ///
+    /// Replaces POST /auth/refresh.
+    ///
+    /// - Remark: HTTP `POST /v1/auth/sessions/refresh`.
+    /// - Remark: Generated from `#/paths//v1/auth/sessions/refresh/post(postV1AuthSessionsRefresh)`.
+    public func postV1AuthSessionsRefresh(_ input: Operations.PostV1AuthSessionsRefresh.Input) async throws -> Operations.PostV1AuthSessionsRefresh.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.PostV1AuthSessionsRefresh.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/auth/sessions/refresh",
+                    parameters: []
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .post
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PostV1AuthSessionsRefresh.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Operations.PostV1AuthSessionsRefresh.Output.Ok.Body.JsonPayload.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                case 401:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PostV1AuthSessionsRefresh.Output.Unauthorized.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.StripeError.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)
@@ -1453,17 +1036,81 @@ public struct HubAuthClient: APIProtocol {
             }
         )
     }
-    /// Trade a single-use exchange code → token + refreshToken + user
+    /// Sign out (revoke refresh token)
     ///
-    /// - Remark: HTTP `POST /oauth/signin/exchange`.
-    /// - Remark: Generated from `#/paths//oauth/signin/exchange/post`.
-    public func postOauthSigninExchange(_ input: Operations.PostOauthSigninExchange.Input) async throws -> Operations.PostOauthSigninExchange.Output {
+    /// Replaces POST /auth/revoke.
+    ///
+    /// - Remark: HTTP `POST /v1/auth/sessions/revoke`.
+    /// - Remark: Generated from `#/paths//v1/auth/sessions/revoke/post(postV1AuthSessionsRevoke)`.
+    public func postV1AuthSessionsRevoke(_ input: Operations.PostV1AuthSessionsRevoke.Input) async throws -> Operations.PostV1AuthSessionsRevoke.Output {
         try await client.send(
             input: input,
-            forOperation: Operations.PostOauthSigninExchange.id,
+            forOperation: Operations.PostV1AuthSessionsRevoke.id,
             serializer: { input in
                 let path = try converter.renderedPath(
-                    template: "/oauth/signin/exchange",
+                    template: "/v1/auth/sessions/revoke",
+                    parameters: []
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .post
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PostV1AuthSessionsRevoke.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Operations.PostV1AuthSessionsRevoke.Output.Ok.Body.JsonPayload.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// Send the SMS login code to the verified primary phone
+    ///
+    /// Replaces POST /auth/login/mfa/sms/send.
+    ///
+    /// - Remark: HTTP `POST /v1/auth/sms_codes`.
+    /// - Remark: Generated from `#/paths//v1/auth/sms_codes/post(postV1AuthSmsCodes)`.
+    public func postV1AuthSmsCodes(_ input: Operations.PostV1AuthSmsCodes.Input) async throws -> Operations.PostV1AuthSmsCodes.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.PostV1AuthSmsCodes.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/auth/sms_codes",
                     parameters: []
                 )
                 var request: HTTPTypes.HTTPRequest = .init(
@@ -1477,10 +1124,8 @@ public struct HubAuthClient: APIProtocol {
                 )
                 let body: OpenAPIRuntime.HTTPBody?
                 switch input.body {
-                case .none:
-                    body = nil
                 case let .json(value):
-                    body = try converter.setOptionalRequestBodyAsJSON(
+                    body = try converter.setRequiredRequestBodyAsJSON(
                         value,
                         headerFields: &request.headerFields,
                         contentType: "application/json; charset=utf-8"
@@ -1490,9 +1135,9 @@ public struct HubAuthClient: APIProtocol {
             },
             deserializer: { response, responseBody in
                 switch response.status.code {
-                case 200:
+                case 202:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.PostOauthSigninExchange.Output.Ok.Body
+                    let body: Operations.PostV1AuthSmsCodes.Output.Accepted.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -1502,7 +1147,7 @@ public struct HubAuthClient: APIProtocol {
                     switch chosenContentType {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.AuthResult.self,
+                            Operations.PostV1AuthSmsCodes.Output.Accepted.Body.JsonPayload.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)
@@ -1511,10 +1156,10 @@ public struct HubAuthClient: APIProtocol {
                     default:
                         preconditionFailure("bestContentType chose an invalid content type.")
                     }
-                    return .ok(.init(body: body))
+                    return .accepted(.init(body: body))
                 case 400:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.PostOauthSigninExchange.Output.BadRequest.Body
+                    let body: Operations.PostV1AuthSmsCodes.Output.BadRequest.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -1524,7 +1169,7 @@ public struct HubAuthClient: APIProtocol {
                     switch chosenContentType {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas._Error.self,
+                            Components.Schemas.StripeError.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)
@@ -1536,7 +1181,7 @@ public struct HubAuthClient: APIProtocol {
                     return .badRequest(.init(body: body))
                 case 401:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.PostOauthSigninExchange.Output.Unauthorized.Body
+                    let body: Operations.PostV1AuthSmsCodes.Output.Unauthorized.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -1546,7 +1191,7 @@ public struct HubAuthClient: APIProtocol {
                     switch chosenContentType {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas._Error.self,
+                            Components.Schemas.StripeError.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)
@@ -1556,6 +1201,72 @@ public struct HubAuthClient: APIProtocol {
                         preconditionFailure("bestContentType chose an invalid content type.")
                     }
                     return .unauthorized(.init(body: body))
+                case 409:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PostV1AuthSmsCodes.Output.Conflict.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.StripeError.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .conflict(.init(body: body))
+                case 422:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PostV1AuthSmsCodes.Output.UnprocessableContent.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.StripeError.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .unprocessableContent(.init(body: body))
+                case 429:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PostV1AuthSmsCodes.Output.TooManyRequests.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.StripeError.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .tooManyRequests(.init(body: body))
                 default:
                     return .undocumented(
                         statusCode: response.status.code,

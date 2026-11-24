@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
-    "id": "E846A572-E09A-4123-A6BF-4766A8460154",
+    "id": "e846a572-e09a-4123-a6bf-4766a8460154",
     "title": "Increment Rounding",
-    "domain": "adhsdk://cookbook/foundation/money/increment-rounding",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -26,13 +25,13 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/foundation/money"
+      "7233995d-9b7e-4760-ac44-ab4b668b5cc1"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "2f4a7df716b4b14c",
+  "synced": "b4633eb1bb2327ae",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -51,7 +50,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

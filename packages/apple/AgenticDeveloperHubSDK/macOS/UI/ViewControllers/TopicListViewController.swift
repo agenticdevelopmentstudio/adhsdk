@@ -7,6 +7,15 @@ public protocol TopicListItemProtocol: Sendable {
     var title: String { get }
     var icon: NSImage? { get }
     var isDisabled: Bool { get }
+    /// Short trailing text after the title (a count, an ahead/behind pair); nil shows none.
+    var badge: String? { get }
+    /// Draw the title in the bold variant of the body font (the current branch, the open document).
+    var isEmphasized: Bool { get }
+}
+
+extension TopicListItemProtocol {
+    public var badge: String? { nil }
+    public var isEmphasized: Bool { false }
 }
 
 /// One row in a `TopicListViewController`.
@@ -16,12 +25,19 @@ public struct TopicListItem: TopicListItemProtocol {
     public let icon: NSImage?
     /// Render the row in a muted style (e.g. for "coming soon" placeholders).
     public let isDisabled: Bool
+    public let badge: String?
+    public let isEmphasized: Bool
 
-    public init(id: String, title: String, icon: NSImage? = nil, isDisabled: Bool = false) {
+    public init(
+        id: String, title: String, icon: NSImage? = nil, isDisabled: Bool = false,
+        badge: String? = nil, isEmphasized: Bool = false
+    ) {
         self.id = id
         self.title = title
         self.icon = icon
         self.isDisabled = isDisabled
+        self.badge = badge
+        self.isEmphasized = isEmphasized
     }
 }
 
@@ -29,10 +45,13 @@ public struct TopicListItem: TopicListItemProtocol {
 public struct TopicListSection: Sendable {
     public let title: String?
     public let items: [any TopicListItemProtocol]
+    /// The header row's accessibility identifier; nil leaves the header without one.
+    public let accessibilityIdentifier: String?
 
-    public init(title: String?, items: [TopicListItem]) {
+    public init(title: String?, items: [TopicListItem], accessibilityIdentifier: String? = nil) {
         self.title = title
         self.items = items
+        self.accessibilityIdentifier = accessibilityIdentifier
     }
 }
 
@@ -47,6 +66,34 @@ open class TopicListViewController: NSViewController {
 
     /// Fired when the user changes the selection. Nil when nothing is selected.
     public var onSelect: (((any TopicListItemProtocol)?) -> Void)?
+
+    /// The context menu for a right-clicked item row; nil, or a nil menu, shows none.
+    public var itemMenuProvider: (((any TopicListItemProtocol)) -> NSMenu?)?
+
+    /// The context menu for a right-clicked section header row, given the section's
+    /// title; nil, or a nil menu, shows none.
+    public var headerMenuProvider: ((String) -> NSMenu?)?
+
+    /// Called with a double-clicked item row's item. A header row calls nothing.
+    public var onDoubleClick: (((any TopicListItemProtocol)) -> Void)?
+
+    /// The pasteboard type an item row is dragged as; its string is what
+    /// `dragPayloadProvider` returned for the item.
+    public static let itemPasteboardType = NSPasteboard.PasteboardType("com.agenticdeveloperhub.topic-list.item")
+
+    /// The string an item row is dragged with; nil (or an unset provider) makes the row
+    /// not draggable. Header rows are never draggable.
+    public var dragPayloadProvider: (((any TopicListItemProtocol)) -> String?)?
+
+    /// Whether a dragged payload may be dropped on the item row `target`; unset, nothing
+    /// can be dropped. Only a drop onto an item row is ever offered, never between rows.
+    public var dropValidator: ((_ payload: String, _ target: any TopicListItemProtocol) -> Bool)?
+
+    /// Called with a payload dropped on an item row `dropValidator` accepted.
+    public var onDrop: ((_ payload: String, _ target: any TopicListItemProtocol) -> Void)?
+
+    /// The outline's menu, refilled from the providers each time it opens.
+    private let rowMenu = NSMenu()
 
     /// Nesting depth of "suppress the selection callback" scopes. While > 0, the
     /// outline's selection-changed delegate is a no-op, so programmatic selection
@@ -120,6 +167,12 @@ open class TopicListViewController: NSViewController {
         outlineView.columnAutoresizingStyle = .uniformColumnAutoresizingStyle
         outlineView.dataSource = self
         outlineView.delegate = self
+        outlineView.target = self
+        outlineView.doubleAction = #selector(outlineDoubleClicked(_:))
+        outlineView.registerForDraggedTypes([Self.itemPasteboardType])
+        outlineView.setDraggingSourceOperationMask([.generic, .copy], forLocal: true)
+        rowMenu.delegate = self
+        outlineView.menu = rowMenu
         // `setItems`/`setSections` can run before the view ever loads — a
         // caller populating the list from its own `init()`, before the owning
         // window is ever shown, is the common case for a window whose sidebar
@@ -366,8 +419,7 @@ open class TopicListViewController: NSViewController {
                     + ceil(title.renderedWidth(usingFont: CellMetrics.headerFont)))
             }
             for item in section.items {
-                widest = max(widest, CellMetrics.itemChromeWidth
-                    + ceil(item.title.renderedWidth(usingFont: CellMetrics.itemFont)))
+                widest = max(widest, Self.itemWidth(item))
             }
         }
         var width = widest + Self.outlineChromePadding
@@ -384,6 +436,17 @@ open class TopicListViewController: NSViewController {
         return width
     }
 
+    /// An item row's content width: chrome, its title in the font it is drawn
+    /// in, and its badge with the gap before it.
+    private static func itemWidth(_ item: any TopicListItemProtocol) -> CGFloat {
+        let font = item.isEmphasized ? CellMetrics.emphasizedItemFont : CellMetrics.itemFont
+        var width = CellMetrics.itemChromeWidth + ceil(item.title.renderedWidth(usingFont: font))
+        if let badge = item.badge, !badge.isEmpty {
+            width += CellMetrics.badgeGap + ceil(badge.renderedWidth(usingFont: CellMetrics.badgeFont))
+        }
+        return width
+    }
+
     /// The one source of truth for the row layout, shared by `preferredWidth`
     /// (which measures it) and `makeItemCell`/`makeHeaderCell` (which build it),
     /// so the two can never drift and silently re-clip labels.
@@ -395,6 +458,9 @@ open class TopicListViewController: NSViewController {
         static var itemFont: NSFont { ThemePaletteObserver.currentPalette.font(.body) }
         static var headerFont: NSFont { ThemePaletteObserver.currentPalette.font(.caption) }
         static var titleFont: NSFont { ThemePaletteObserver.currentPalette.font(.button) }
+        static var emphasizedItemFont: NSFont { NSFontManager.shared.convert(itemFont, toHaveTrait: .boldFontMask) }
+        static var badgeFont: NSFont { ThemePaletteObserver.currentPalette.font(.caption) }
+        static let badgeGap: CGFloat = 6
         static let titleLeadingInset: CGFloat = 14
         static let headerTrailingInset: CGFloat = 14
         static let headerAccessorySpacing: CGFloat = 8
@@ -445,6 +511,14 @@ open class TopicListViewController: NSViewController {
         selectRow(forId: id)
     }
 
+    /// Leaves no row selected, without firing `onSelect`; a selection held for
+    /// the view's load is dropped too.
+    open func deselectAll() {
+        pendingSelectionID = nil
+        guard isViewLoaded else { return }
+        suppressingSelectionCallbacks { outlineView.deselectAll(nil) }
+    }
+
     /// `selectItem(withId:)` without the loaded-view check — `loadView` needs
     /// it before `isViewLoaded` turns true.
     private func selectRow(forId id: String) {
@@ -461,11 +535,69 @@ open class TopicListViewController: NSViewController {
         }
     }
 
+    // MARK: - Context menu + double-click
+
+    /// The menu for `row`: `itemMenuProvider`'s for an item row, `headerMenuProvider`'s
+    /// for a section header row, nil for a row outside the list.
+    func contextMenu(forRow row: Int) -> NSMenu? {
+        guard rootNodes.indices.contains(row) else { return nil }
+        switch rootNodes[row].kind {
+        case .header(let title): return headerMenuProvider?(title)
+        case .item(let item): return itemMenuProvider?(item)
+        }
+    }
+
+    /// Calls `onDoubleClick` with `row`'s item; nothing for a header row or a row
+    /// outside the list.
+    func doubleClick(row: Int) {
+        guard rootNodes.indices.contains(row), case .item(let item) = rootNodes[row].kind else { return }
+        onDoubleClick?(item)
+    }
+
+    // MARK: - Drag and drop
+
+    /// The pasteboard writer for `row`'s item: its drag payload under
+    /// `itemPasteboardType`; nil for a header row, a row outside the list, or an item
+    /// the provider gives no payload.
+    func pasteboardWriter(forRow row: Int) -> NSPasteboardItem? {
+        guard rootNodes.indices.contains(row), case .item(let item) = rootNodes[row].kind,
+              let payload = dragPayloadProvider?(item) else { return nil }
+        let pasteboardItem = NSPasteboardItem()
+        pasteboardItem.setString(payload, forType: Self.itemPasteboardType)
+        return pasteboardItem
+    }
+
+    /// Whether `pasteboard`'s payload may be dropped on `row`: an item row
+    /// `dropValidator` accepts it for.
+    func canDrop(pasteboard: NSPasteboard, onRow row: Int) -> Bool {
+        dropTarget(pasteboard: pasteboard, row: row) != nil
+    }
+
+    /// Delivers `pasteboard`'s payload to `onDrop` for `row`; false, delivering
+    /// nothing, when the drop is not one `canDrop` allows.
+    @discardableResult
+    func drop(pasteboard: NSPasteboard, onRow row: Int) -> Bool {
+        guard let (payload, item) = dropTarget(pasteboard: pasteboard, row: row) else { return false }
+        onDrop?(payload, item)
+        return true
+    }
+
+    private func dropTarget(pasteboard: NSPasteboard, row: Int) -> (String, any TopicListItemProtocol)? {
+        guard rootNodes.indices.contains(row), case .item(let item) = rootNodes[row].kind,
+              let payload = pasteboard.string(forType: Self.itemPasteboardType),
+              let dropValidator, dropValidator(payload, item) else { return nil }
+        return (payload, item)
+    }
+
+    @objc private func outlineDoubleClicked(_ sender: Any?) {
+        doubleClick(row: outlineView.clickedRow)
+    }
+
     private static func buildRootNodes(from sections: [TopicListSection]) -> [TopicListNode] {
         var nodes: [TopicListNode] = []
         for section in sections {
             if let title = section.title, !title.isEmpty {
-                nodes.append(.header(title))
+                nodes.append(.header(title, accessibilityIdentifier: section.accessibilityIdentifier))
             }
             for item in section.items {
                 nodes.append(.item(item))
@@ -551,20 +683,52 @@ private final class TopicListItemLabel: NSTextField {
     }
 }
 
+/// An item row's cell: the standard image and label, plus a trailing badge.
+private final class TopicListItemCell: NSTableCellView {
+    let badgeLabel = NSTextField(labelWithString: "")
+    /// Title trailing ≤ badge leading − gap. Active only while the badge shows,
+    /// so a row without one lays out exactly as `preferredWidth` measures it.
+    var titleToBadge: NSLayoutConstraint?
+
+    func setBadge(_ badge: String?) {
+        let text = badge ?? ""
+        badgeLabel.stringValue = text
+        badgeLabel.isHidden = text.isEmpty
+        titleToBadge?.isActive = !text.isEmpty
+    }
+}
+
 private final class TopicListNode: NSObject {
     enum Kind {
         case header(String)
         case item(TopicListItemProtocol)
     }
     let kind: Kind
+    /// A header's accessibility identifier, from its section.
+    var headerAccessibilityID: String?
     init(kind: Kind) { self.kind = kind }
 
-    static func header(_ title: String) -> TopicListNode { .init(kind: .header(title)) }
+    static func header(_ title: String, accessibilityIdentifier: String? = nil) -> TopicListNode {
+        let node = TopicListNode(kind: .header(title))
+        node.headerAccessibilityID = accessibilityIdentifier
+        return node
+    }
     static func item(_ item: TopicListItemProtocol) -> TopicListNode { .init(kind: .item(item)) }
 }
 
 extension TopicListViewController {
     fileprivate var rootNodes: [TopicListNode] { rootNodesCache }
+}
+
+// MARK: - NSMenuDelegate
+
+extension TopicListViewController: NSMenuDelegate {
+    /// Moves the clicked row's menu items into the outline's menu as it opens; with no
+    /// menu for the click it opens empty, which AppKit does not show.
+    public func menuNeedsUpdate(_ menu: NSMenu) {
+        guard menu === rowMenu else { return }
+        menu.replaceItems(withItemsOf: contextMenu(forRow: outlineView.clickedRow))
+    }
 }
 
 // MARK: - NSOutlineViewDataSource
@@ -581,6 +745,26 @@ extension TopicListViewController: NSOutlineViewDataSource {
 
     public func outlineView(_ outlineView: NSOutlineView, isItemExpandable item: Any) -> Bool {
         false
+    }
+
+    public func outlineView(_ outlineView: NSOutlineView, pasteboardWriterForItem item: Any) -> NSPasteboardWriting? {
+        pasteboardWriter(forRow: outlineView.row(forItem: item))
+    }
+
+    public func outlineView(
+        _ outlineView: NSOutlineView, validateDrop info: NSDraggingInfo, proposedItem item: Any?,
+        proposedChildIndex index: Int
+    ) -> NSDragOperation {
+        guard let item, index == NSOutlineViewDropOnItemIndex,
+              canDrop(pasteboard: info.draggingPasteboard, onRow: outlineView.row(forItem: item)) else { return [] }
+        return .generic
+    }
+
+    public func outlineView(
+        _ outlineView: NSOutlineView, acceptDrop info: NSDraggingInfo, item: Any?, childIndex index: Int
+    ) -> Bool {
+        guard let item, index == NSOutlineViewDropOnItemIndex else { return false }
+        return drop(pasteboard: info.draggingPasteboard, onRow: outlineView.row(forItem: item))
     }
 }
 
@@ -613,6 +797,8 @@ extension TopicListViewController: NSOutlineViewDelegate {
             let cell = outlineView.makeView(withIdentifier: id, owner: nil) as? NSTableCellView
                 ?? Self.makeHeaderCell(identifier: id)
             cell.textField?.stringValue = title
+            // Set on every use, cleared when absent: header cells are pooled.
+            cell.textField?.setAccessibilityIdentifier(node.headerAccessibilityID)
             cell.textField?.font = CellMetrics.headerFont
             cell.textField?.textColor = palette.secondaryTextColor
             return cell
@@ -638,11 +824,19 @@ extension TopicListViewController: NSOutlineViewDelegate {
             // Set here and not in `makeItemCell`, alongside the title it is
             // derived from: cells are pooled, so an identifier baked in at
             // creation names whichever row the cell was first used for, forever.
-            cell.textField?.accessibilityID("topic-list.item.\(AccessibilityID.slug(item.title))")
+            let labelID = "topic-list.item.\(AccessibilityID.slug(item.title))"
+            cell.textField?.accessibilityID(labelID)
             cell.textField?.stringValue = item.title
             // Cells are pooled, so the font is reapplied here alongside the color
             // rather than at creation — a font baked in stays stale after a swap.
-            cell.textField?.font = CellMetrics.itemFont
+            cell.textField?.font = item.isEmphasized ? CellMetrics.emphasizedItemFont : CellMetrics.itemFont
+            if let itemCell = cell as? TopicListItemCell {
+                let badgeLabel = itemCell.badgeLabel
+                itemCell.setBadge(item.badge)
+                badgeLabel.font = CellMetrics.badgeFont
+                badgeLabel.textColor = palette.secondaryTextColor
+                badgeLabel.accessibilityID(labelID + ".badge")
+            }
             cell.textField?.textColor = item.isDisabled ? palette.tertiaryTextColor : palette.primaryTextColor
             cell.textField?.alphaValue = 1.0
             cell.imageView?.image = item.icon
@@ -690,7 +884,7 @@ extension TopicListViewController: NSOutlineViewDelegate {
     }
 
     private static func makeItemCell(identifier: NSUserInterfaceItemIdentifier) -> NSTableCellView {
-        let cell = NSTableCellView()
+        let cell = TopicListItemCell()
         cell.identifier = identifier
 
         let imageView = NSImageView()
@@ -703,8 +897,16 @@ extension TopicListViewController: NSOutlineViewDelegate {
         textField.lineBreakMode = .byTruncatingTail
         textField.translatesAutoresizingMaskIntoConstraints = false
 
+        // The badge keeps its full width and the title truncates first.
+        let badgeLabel = cell.badgeLabel
+        badgeLabel.translatesAutoresizingMaskIntoConstraints = false
+        badgeLabel.isHidden = true
+        badgeLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+        badgeLabel.setContentHuggingPriority(.required, for: .horizontal)
+
         cell.addSubview(imageView)
         cell.addSubview(textField)
+        cell.addSubview(badgeLabel)
         cell.imageView = imageView
         cell.textField = textField
 
@@ -719,8 +921,15 @@ extension TopicListViewController: NSOutlineViewDelegate {
                 equalTo: imageView.trailingAnchor, constant: CellMetrics.iconToTextGap),
             textField.trailingAnchor.constraint(
                 lessThanOrEqualTo: cell.trailingAnchor, constant: -CellMetrics.textTrailingInset),
-            textField.centerYAnchor.constraint(equalTo: cell.centerYAnchor)
+            textField.centerYAnchor.constraint(equalTo: cell.centerYAnchor),
+
+            badgeLabel.trailingAnchor.constraint(
+                equalTo: cell.trailingAnchor, constant: -CellMetrics.textTrailingInset),
+            badgeLabel.firstBaselineAnchor.constraint(equalTo: textField.firstBaselineAnchor)
         ])
+        // Activated by `setBadge` only while a badge shows.
+        cell.titleToBadge = textField.trailingAnchor.constraint(
+            lessThanOrEqualTo: badgeLabel.leadingAnchor, constant: -CellMetrics.badgeGap)
 
         return cell
     }

@@ -35,7 +35,7 @@ class DmCreateResult:
         field_dict.update(
             {
                 "id": id,
-                "otherUserId": other_user_id,
+                "other_user_id": other_user_id,
                 "created": created,
             }
         )
@@ -47,7 +47,7 @@ class DmCreateResult:
         d = dict(src_dict)
         id = d.pop("id")
 
-        other_user_id = d.pop("otherUserId")
+        other_user_id = d.pop("other_user_id")
 
         created = d.pop("created")
 

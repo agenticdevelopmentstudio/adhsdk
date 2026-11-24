@@ -26,7 +26,7 @@ public enum SessionChange: String, Sendable, CaseIterable, Codable {
 /// the rows already in the database stay readable and keep meaning what they
 /// meant: one periodic reading of the input statistics, taken whether or not
 /// anything had happened. Rows written before the `change` column existed
-/// migrate to it (see ``OlyloSchema``), so a legacy row is not silently
+/// migrate to it (see ``ActivitySchema``), so a legacy row is not silently
 /// reinterpreted as a transition it never witnessed.
 public enum InputChange: String, Sendable, CaseIterable, Codable {
     case active, inactive, sample

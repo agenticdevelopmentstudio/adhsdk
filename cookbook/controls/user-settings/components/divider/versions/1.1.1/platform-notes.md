@@ -1,0 +1,7 @@
+
+- **React/Web**: Render as `<hr className={cls} />` where `cls` combines `{{app_prefix}}-divider` with any additional classes via `[base, className].filter(Boolean).join(' ')`; the border, height, and margin come from the `{{app_prefix}}-divider` CSS class. Files: `packages/web/packages/controls/src/user-settings/components/Divider.tsx`.
+- **SwiftUI**: Render using the native `Divider()` view, which draws a 1pt separator line in the system separator color and adapts automatically to Dark Mode and Increase Contrast. Use `.frame(height:)` only when a non-default thickness is required.
+- **Compose**: Render using the Material 3 `HorizontalDivider()` composable (the older `Divider()` composable is deprecated in Material 3), which draws a horizontal separator line using the current `Material` color scheme's divider/outline color. Apply padding or modifier chains for custom spacing.
+- **AppKit / UIKit**: On AppKit, render an `NSBox` with `boxType = .separator`, which draws the native hairline separator in the system separator color. On UIKit, render a hairline `UIView` with `backgroundColor = .separator`, sized to 1pt height via a `heightAnchor` constraint and constrained to span the container horizontally.
+- **WinUI 3**: Render a `Rectangle` (or `Border`) with `Height="1"` and `Fill="{ThemeResource DividerStrokeColorDefaultBrush}"`, stretched to span the content width via `HorizontalAlignment="Stretch"` (or `Grid.ColumnSpan` when placed in a multi-column `Grid`); apply vertical spacing via the element's `Margin`.
+

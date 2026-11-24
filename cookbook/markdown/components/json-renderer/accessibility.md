@@ -1,0 +1,8 @@
+
+- **semantic-markup**: Content is shown as a code block (`pre` containing `code`) on both paths, and the invalid note is a paragraph, so assistive technology reads the structure natively.
+- **loading-announcement**: Below the limit, the "Rendering…" state is announced politely (`aria-live="polite"`, `aria-busy="true"`) and a pipeline failure is announced as an alert (`role="alert"`); both come from `MarkdownRenderer`.
+- **no-own-controls**: The component adds no interactive control, so it defines no label, target-size or focus requirement of its own.
+- **keyboard-scroll-highlighted**: Below the limit, the code block is the `pre` that the shiki highlighter emits, which carries `tabindex="0"` by default; the sanitisation schema in the Markdown pipeline allows the raw `tabindex` property shiki emits on `pre`, so a keyboard reader can focus the block and scroll a long unwrapped line sideways.
+- **keyboard-scroll**: NEEDS REVIEW: Not implemented in source. Above the limit the plain `pre.shiki` is written by this component with no `tabindex`, so a long unwrapped line scrolls sideways but the block cannot take keyboard focus, and neither path gives the block an accessible name. Evidence that would settle it: a keyboard test of the oversized path in a browser, and a decision on whether the plain `pre` should be focusable.
+- **contrast**: NEEDS REVIEW: Not implemented in source. The colours come from shiki's dual themes and the `--mdv-text-muted` variable; the source cannot say whether the note and token colours reach 4.5:1 in every reading theme. Evidence that would settle it: a contrast measurement of each reading palette.
+

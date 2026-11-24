@@ -2,6 +2,17 @@ import Testing
 import Foundation
 @testable import AgenticDeveloperHubSDK
 
+/// A `ThemeStorage` that counts writes, so a test can tell "not written" from
+/// "written with the same value".
+@MainActor
+private final class CountingThemeStorage: ThemeStorage {
+    var themeWrites = 0
+    var activeWrites = 0
+    var customThemes: [ColorTheme] = [] { didSet { themeWrites += 1 } }
+    var activeThemeID: String? { didSet { activeWrites += 1 } }
+    var onExternalChange: (() -> Void)?
+}
+
 @MainActor
 @Suite("ThemeStore")
 struct ThemeStoreTests {
@@ -47,6 +58,14 @@ struct ThemeStoreTests {
         let builtIn = try #require(store.allThemes.first { $0.isBuiltIn })
         store.delete(id: builtIn.id)
         #expect(store.allThemes.contains { $0.id == builtIn.id })
+    }
+
+    @Test("deleting the active built-in theme leaves it active")
+    func deletingActiveBuiltInKeepsIt() throws {
+        let builtIn = try #require(store.allThemes.first { $0.isBuiltIn })
+        storage.activeThemeID = builtIn.id
+        store.delete(id: builtIn.id)
+        #expect(storage.activeThemeID == builtIn.id)
     }
 
     // MARK: - Catalog
@@ -281,4 +300,182 @@ struct ThemeStoreTests {
         #expect(first.name == "Base Copy")
         #expect(second.name == "Base Copy 2")
     }
+
+    // MARK: - Source-derived conformance vectors
+
+    private func writeTemp(_ data: Data, named name: String = "theme.json") throws -> URL {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let url = dir.appendingPathComponent(name)
+        try data.write(to: url)
+        return url
+    }
+
+    private func removeTemp(_ url: URL) {
+        try? FileManager.default.removeItem(at: url.deletingLastPathComponent())
+    }
+
+    private func scaledJSON(sizeScale: Int) -> Data {
+        let ansi = Array(repeating: "\"#000000ff\"", count: 16).joined(separator: ",")
+        let json = "{\"id\":\"x\",\"name\":\"Scaled\",\"appearance\":\"dark\",\"isBuiltIn\":false,"
+            + "\"foreground\":\"#ffffffff\",\"background\":\"#000000ff\",\"cursor\":\"#ffffffff\","
+            + "\"selection\":\"#111111ff\",\"ansi\":[\(ansi)],"
+            + "\"typography\":{\"sizeScale\":\(sizeScale),\"styles\":{}}}"
+        return Data(json.utf8)
+    }
+
+    @Test("theme-store-007 / theme-storage-010: deleting the active custom theme clears activeThemeID")
+    func v007DeleteClearsActiveID() {
+        let custom = store.add(sampleTheme(name: "Active"))
+        storage.activeThemeID = custom.id
+        store.delete(id: custom.id)
+        #expect(storage.activeThemeID == nil)
+        #expect(store.theme(withID: custom.id) == nil)
+        #expect(!storage.customThemes.contains { $0.id == custom.id })
+    }
+
+    @Test("theme-store-009: deleting an unknown id writes nothing")
+    func v009DeleteUnknownWritesNothing() {
+        let counting = CountingThemeStorage()
+        counting.activeThemeID = BuiltInThemes.dracula.id
+        counting.themeWrites = 0
+        counting.activeWrites = 0
+        let counted = ThemeStore(storage: counting)
+
+        counted.delete(id: "no-such-theme")
+
+        #expect(counting.themeWrites == 0)
+        #expect(counting.activeWrites == 0)
+        #expect(counting.activeThemeID == BuiltInThemes.dracula.id)
+    }
+
+    @Test("theme-store-018: importTheme sniffs JSON past leading whitespace; an empty file takes the iTerm path")
+    func v018ImportThemeWhitespaceAndEmpty() throws {
+        let json = try store.exportJSON(sampleTheme(name: "Padded"))
+        let padded = Data("  \t\n\r\n".utf8) + json
+        let paddedURL = try writeTemp(padded)
+        defer { removeTemp(paddedURL) }
+        let imported = try store.importTheme(contentsOf: paddedURL)
+        #expect(imported.name == "Padded")
+        #expect(imported.isImported)
+
+        let emptyURL = try writeTemp(Data(), named: "Empty.itermcolors")
+        defer { removeTemp(emptyURL) }
+        let before = store.customThemes
+        #expect(throws: (any Error).self) { try store.importTheme(contentsOf: emptyURL) }
+        #expect(store.customThemes == before)
+    }
+
+    @Test("theme-store-019: importTheme on a missing file throws the read error and stores nothing")
+    func v019ImportThemeMissingFile() {
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("\(UUID().uuidString)/missing.json")
+        do {
+            _ = try store.importTheme(contentsOf: url)
+            Issue.record("importTheme should have thrown for a missing file")
+        } catch {
+            #expect((error as NSError).domain == NSCocoaErrorDomain)
+        }
+        #expect(store.customThemes.isEmpty)
+    }
+
+    @Test("theme-store-025: importJSON of non-JSON bytes throws DecodingError and stores nothing")
+    func v025ImportJSONNotJSON() {
+        #expect(throws: DecodingError.self) { try store.importJSON(data: Data("not json".utf8)) }
+        #expect(store.customThemes.isEmpty)
+    }
+
+    @Test("theme-store-026: importJSON clamps sizeScale into 0.5...4")
+    func v026ImportJSONClampsScale() throws {
+        let low = try store.importJSON(data: scaledJSON(sizeScale: 0))
+        let high = try store.importJSON(data: scaledJSON(sizeScale: 9))
+        #expect(low.typography.sizeScale == 0.5)
+        #expect(high.typography.sizeScale == 4)
+        #expect(store.theme(withID: low.id)?.typography.sizeScale == 0.5)
+        #expect(store.theme(withID: high.id)?.typography.sizeScale == 4)
+    }
+
+    @Test("theme-store-027: a short palette is reported before equal foreground and background")
+    func v027ImportJSONCheckOrder() {
+        let data = themeJSON(name: "Both", ansiCount: 3, foreground: "#000000ff", background: "#000000ff")
+        do {
+            _ = try store.importJSON(data: data)
+            Issue.record("importJSON should have thrown")
+        } catch let error as ThemeImportError {
+            guard case .invalidPalette(let count) = error else {
+                Issue.record("expected invalidPalette, got \(error)")
+                return
+            }
+            #expect(count == 3)
+        } catch {
+            Issue.record("unexpected error \(error)")
+        }
+        #expect(store.customThemes.isEmpty)
+    }
+
+    @Test("theme-store-028: importJSON(contentsOf:) stores a locked import; a missing file throws")
+    func v028ImportJSONURL() throws {
+        let data = themeJSON(name: "FromFile", ansiCount: 16, foreground: "#ffffffff", background: "#000000ff")
+        let url = try writeTemp(data)
+        defer { removeTemp(url) }
+
+        let imported = try store.importJSON(contentsOf: url)
+        #expect(imported.name == "FromFile")
+        #expect(imported.isLocked)
+        #expect(store.theme(withID: imported.id) != nil)
+
+        let missing = url.deletingLastPathComponent().appendingPathComponent("missing.json")
+        #expect(throws: (any Error).self) { try store.importJSON(contentsOf: missing) }
+        #expect(store.customThemes.count == 1)
+    }
+
+    @Test("theme-store-029: exportJSON is pretty-printed with sorted keys and decodes back equal")
+    func v029ExportJSONFormat() throws {
+        let theme = sampleTheme(name: "Exported")
+        let data = try store.exportJSON(theme)
+        let text = try #require(String(data: data, encoding: .utf8))
+
+        #expect(text.contains("\n  \""))
+        let keys = ["\"ansi\"", "\"appearance\"", "\"background\"", "\"cursor\"", "\"foreground\""]
+        let positions = try keys.map { try #require(text.range(of: $0)?.lowerBound) }
+        #expect(positions == positions.sorted())
+
+        #expect(try JSONDecoder().decode(ColorTheme.self, from: data) == theme)
+    }
+
+    @Test("theme-store-030: add does not validate; a built-in's id is shadowed by the built-in on lookup")
+    func v030AddUnvalidated() {
+        let ordinary = store.add(sampleTheme(name: "Ordinary"))
+        var clashing = sampleTheme(name: "Clashing")
+        clashing.id = BuiltInThemes.dracula.id
+        store.add(clashing)
+
+        #expect(store.theme(withID: BuiltInThemes.dracula.id) == BuiltInThemes.dracula)
+        #expect(store.customThemes == [ordinary, clashing])
+    }
+
+    @Test("theme-store-031: an imported iTerm name is not uniquified against existing themes")
+    func v031ImportITermNameNotUniquified() throws {
+        store.add(sampleTheme(name: "Imported"))
+        var dict: [String: Any] = [
+            "Foreground Color": ["Red Component": 1.0, "Green Component": 1.0, "Blue Component": 1.0],
+            "Background Color": ["Red Component": 0.0, "Green Component": 0.0, "Blue Component": 0.0]
+        ]
+        for index in 0..<16 {
+            dict["Ansi \(index) Color"] = ["Red Component": 0.0, "Green Component": 0.0, "Blue Component": 0.0]
+        }
+        let plist = try PropertyListSerialization.data(fromPropertyList: dict, format: .xml, options: 0)
+        let url = try writeTemp(plist, named: "Imported.itermcolors")
+        defer { removeTemp(url) }
+
+        let imported = try store.importITermColors(contentsOf: url)
+        #expect(imported.name == "Imported")
+        #expect(store.customThemes.map(\.name) == ["Imported", "Imported"])
+    }
+
+    @Test(
+        "theme-store-032: structural guarantees (init(storage:), @MainActor, no suspension)",
+        .disabled("compile-time and inspection-only vector; there is no runtime behaviour to assert")
+    )
+    func v032StructuralGuarantees() {}
 }

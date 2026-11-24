@@ -31,14 +31,17 @@ class ApiError(AptError):
 
 
 def _message_from_body(body: object, fallback: str) -> str:
+    """The message of a /v1 error envelope: `{"error": {type, code, message, param}}`.
+
+    `param` names the request field the server refused, so it is appended when present —
+    it is what tells a `--set` user which of their values to fix.
+    """
     if isinstance(body, dict):
         err = body.get("error")
         if isinstance(err, dict) and err.get("message") not in (None, ""):
-            return str(err["message"])
-        for key in ("title", "message"):
-            v = body.get(key)
-            if v not in (None, ""):
-                return str(v)
+            message = str(err["message"])
+            param = err.get("param")
+            return f"{message} (param: {param})" if param not in (None, "") else message
     return fallback
 
 

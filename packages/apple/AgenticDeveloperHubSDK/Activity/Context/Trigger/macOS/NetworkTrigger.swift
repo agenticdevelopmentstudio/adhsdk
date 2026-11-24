@@ -53,7 +53,7 @@ public final class SystemNetworkPathSource: NetworkPathSource {
                 MainActor.assumeIsolated { self?.onPath?(snapshot) }
             }
         }
-        m.start(queue: DispatchQueue(label: "app.olylo.network-path"))
+        m.start(queue: DispatchQueue(label: "com.fishlamp.temporal.network-path"))
         monitor = m
     }
 

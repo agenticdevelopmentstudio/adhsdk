@@ -1,0 +1,22 @@
+
+| Check | Status | Category |
+|-------|--------|----------|
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | passed | Accessibility |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
+| [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | passed | Accessibility |
+| [adc.check.accessibility.dynamic-type-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f3dbcab7-ac3d-5043-9379-0da07ceaa32b) | partial | Accessibility |
+| [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
+| [adc.check.accessibility.touch-target-size](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5b4e41dc-8362-5dad-aa80-f1b5500ed1f2) | partial | Accessibility |
+| [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | passed | Security |
+| [adc.check.security.content-security-policy](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/342ea2ea-fb37-5746-9ccd-e81d3d593996) | passed | Security |
+| [adc.check.security.secure-transport](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0a75f61f-9508-506e-b92e-0f5b29a91c95) | partial | Security |
+| [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | Privacy & Data |
+| [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | passed | Internationalization |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | passed | Internationalization |
+| [adc.check.platform-compliance.platform-design-language](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/cbd07fee-ca18-58a8-bb2f-0f8a6b83ac1c) | passed | Platform Compliance |
+| [adc.check.platform-compliance.platform-theming](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d2b685fd-b481-5d38-bd70-403bd202b5c6) | passed | Platform Compliance |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+
+`screen-reader-support`/`keyboard-navigable`/`semantic-markup` rest on the `aria-live`/`aria-busy`/`role="alert"` markup and the native `<select>` theme switcher shown in `MarkdownViewer.tsx`; `dynamic-type-support`, `contrast-ratio`, and `touch-target-size` are `partial` because the requirement is stated but not measured or enforced in the given source; `input-sanitization` and `content-security-policy` rest on the `rehype-sanitize` allowlist and the bootstrap script's `nonce` support in `process-markdown.ts`/`MarkdownViewer.tsx`; `secure-transport` is `partial` because the fetcher calls a relative API path with no TLS enforcement visible from this source; `data-minimization` rests on the Privacy section above; the internationalization checks rest on the Localization key table above; and the platform-compliance checks rest on the APT design tokens and the theme registry/palette system. `separation-of-concerns` is passed on both platform sources: the web `MarkdownViewer.tsx` delegates fetching to `useMarkdownDocument`, rendering to `MarkdownRenderer`, and theme data to `themes/registry`+`palettes`, keeping only fetch-state/theme-persistence wiring and chrome layout in the component itself; the Apple `MarkdownViewerController.swift` delegates markdown rendering to `MarkdownDocumentRenderer` and text display to `MarkdownTextPane`, keeping only palette/content wiring in the controller. `unit-test-coverage` is partial across the two platform entries: no test in this repo imports or renders the web `MarkdownViewer.tsx` (`MarkdownViewerControllerTests.swift` is a name-matched false positive — it tests the unrelated Apple controller), while `MarkdownViewerControllerTests.swift` does genuinely exercise `MarkdownViewerController.swift`, asserting rendered text, non-editability, and re-render-on-content-change through a loaded viewer.
+

@@ -145,7 +145,7 @@ describe('AuthProvider inbound SSO (in place)', () => {
           // The stray code is not a real exchange code → fails.
           return { ok: false, status: 400, json: async () => ({ error: 'bad code' }) } as Response
         }
-        if (url.includes('/api/auth/me')) {
+        if (url.includes('/api/v1/account')) {
           return {
             ok: true,
             status: 200,

@@ -1,0 +1,57 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "00f63479-58b8-47e3-9ac7-7f1b944a5007",
+    "title": "Permission Toggles",
+    "type": "ingredient",
+    "version": "1.1.3",
+    "status": "review",
+    "language": "en",
+    "created": "2026-09-22",
+    "modified": "2026-11-14",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Four-button toggle group for CRUD permissions, respecting parent capability ceilings.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "permissions",
+      "crud",
+      "toggle-group"
+    ],
+    "depends-on": [],
+    "related": [],
+    "references": [
+      "https://developer.apple.com/design/human-interface-guidelines/accessibility",
+      "https://m3.material.io/foundations/accessible-design/accessibility-basics"
+    ],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "ea1c52c8193b1632",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

@@ -49,7 +49,7 @@ class PersonaBootstrapPersona:
                 "slug": slug,
                 "name": name,
                 "description": description,
-                "avatarUrl": avatar_url,
+                "avatar_url": avatar_url,
             }
         )
 
@@ -76,7 +76,7 @@ class PersonaBootstrapPersona:
                 return data
             return cast(None | str, data)
 
-        avatar_url = _parse_avatar_url(d.pop("avatarUrl"))
+        avatar_url = _parse_avatar_url(d.pop("avatar_url"))
 
         persona_bootstrap_persona = cls(
             id=id,

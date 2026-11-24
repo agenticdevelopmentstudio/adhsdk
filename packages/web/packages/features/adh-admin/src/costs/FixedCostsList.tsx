@@ -33,7 +33,7 @@ import { todayUtc } from "./days";
 
 /** A row that has started has already priced days, so the backend refuses to re-price it. */
 export const hasStarted = (cost: FixedCost, today: string = todayUtc()): boolean =>
-  cost.effectiveFrom < today;
+  cost.effective_from < today;
 
 type Draft = {
   provider: string;
@@ -56,9 +56,9 @@ const blankDraft = (): Draft => ({
 const draftOf = (cost: FixedCost): Draft => ({
   provider: cost.provider,
   label: cost.label,
-  dollars: microsToDollars(cost.monthlyMicros),
-  from: cost.effectiveFrom,
-  to: cost.effectiveTo ?? "",
+  dollars: microsToDollars(cost.monthly_micros),
+  from: cost.effective_from,
+  to: cost.effective_to ?? "",
   note: cost.note,
 });
 
@@ -103,10 +103,10 @@ export function FixedCostDialog({
     const out: UpdateFixedCostBody = {};
     if (form.label.trim() !== initial.label) out.label = form.label.trim();
     if (form.note !== initial.note) out.note = form.note;
-    if (form.to !== initial.to) out.effectiveTo = form.to === "" ? null : form.to;
+    if (form.to !== initial.to) out.effective_to = form.to === "" ? null : form.to;
     if (!locked) {
-      if (form.dollars !== initial.dollars && amount.ok) out.monthlyMicros = amount.value;
-      if (form.from !== initial.from) out.effectiveFrom = form.from;
+      if (form.dollars !== initial.dollars && amount.ok) out.monthly_micros = amount.value;
+      if (form.from !== initial.from) out.effective_from = form.from;
     }
     return out;
   };
@@ -123,9 +123,9 @@ export function FixedCostDialog({
         await createCost.mutateAsync({
           provider: form.provider.trim(),
           label: form.label.trim(),
-          monthlyMicros: (amount as { value: number }).value,
-          effectiveFrom: form.from,
-          ...(form.to !== "" ? { effectiveTo: form.to } : {}),
+          monthly_micros: (amount as { value: number }).value,
+          effective_from: form.from,
+          ...(form.to !== "" ? { effective_to: form.to } : {}),
           ...(form.note !== "" ? { note: form.note } : {}),
         });
       }
@@ -144,7 +144,7 @@ export function FixedCostDialog({
           <DialogTitle>{cost ? "Edit fixed cost" : "New fixed cost"}</DialogTitle>
           <DialogDescription>
             {locked
-              ? `${cost.provider} — ${formatMicros(cost.monthlyMicros)} a month from ${cost.effectiveFrom}. It has started, so only its label, end date and note can change; to change the amount, end it and add a new one.`
+              ? `${cost.provider} — ${formatMicros(cost.monthly_micros)} a month from ${cost.effective_from}. It has started, so only its label, end date and note can change; to change the amount, end it and add a new one.`
               : "A monthly amount, prorated by day over the days it is in effect."}
           </DialogDescription>
         </DialogHeader>
@@ -256,23 +256,23 @@ export function FixedCostsList() {
         header: "Monthly",
         width: "8rem",
         align: "end",
-        value: (c) => c.monthlyMicros,
-        render: (c) => <span className="tabular-nums text-sm">{formatMicros(c.monthlyMicros)}</span>,
+        value: (c) => c.monthly_micros,
+        render: (c) => <span className="tabular-nums text-sm">{formatMicros(c.monthly_micros)}</span>,
       },
       {
         key: "from",
         header: "From",
         width: "7rem",
-        value: (c) => c.effectiveFrom,
-        render: (c) => <span className="tabular-nums text-sm text-apt-text-muted">{c.effectiveFrom}</span>,
+        value: (c) => c.effective_from,
+        render: (c) => <span className="tabular-nums text-sm text-apt-text-muted">{c.effective_from}</span>,
       },
       {
         key: "to",
         header: "To",
         width: "7rem",
-        value: (c) => c.effectiveTo,
+        value: (c) => c.effective_to,
         render: (c) => (
-          <span className="tabular-nums text-sm text-apt-text-muted">{c.effectiveTo ?? "ongoing"}</span>
+          <span className="tabular-nums text-sm text-apt-text-muted">{c.effective_to ?? "ongoing"}</span>
         ),
       },
       {
@@ -299,7 +299,7 @@ export function FixedCostsList() {
   // one starting today counts as not begun. One that is running and open-ended is ended: its last
   // charged day is today.
   const notBegun = selected !== null && !hasStarted(selected, today);
-  const canEnd = selected !== null && !notBegun && selected.effectiveTo === null;
+  const canEnd = selected !== null && !notBegun && selected.effective_to === null;
   // The action's failure belongs to the row it was about: choosing another row clears it.
   const [showEndingError, setShowEndingError] = useState(false);
   const selectedId = selected?.id ?? null;
@@ -310,7 +310,7 @@ export function FixedCostsList() {
   };
   const endCost = (cost: FixedCost) =>
     act(async () => {
-      await updateCost.mutateAsync({ id: cost.id, changes: { effectiveTo: today } });
+      await updateCost.mutateAsync({ id: cost.id, changes: { effective_to: today } });
       list.clearSelection();
     });
   const removeCost = (cost: FixedCost) =>

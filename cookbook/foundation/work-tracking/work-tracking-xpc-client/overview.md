@@ -1,0 +1,3 @@
+
+Defines `WorkTrackingService`, "everything an app can ask of work tracking", and `WorkTrackingXPCClient`, its implementation over XPC to a daemon that exports `WorkTrackingXPCProtocol`. Per the service doc comment, reads and writes answer nil "when the daemon was unreachable, refused, or its reply couldn't be read". The client is generic over `WorkTrackingXPCTransport`, a two-method protocol shaped like DaemonKit's `XPCClient`, so any transport, including a test double, stands in and this tier links no daemon framework. Bodies are encoded snake case; replies are decoded snake case with ISO-8601 dates by one shared decoder. Two calls wait 15 seconds because the daemon's live Accessibility check can stall about ten seconds.
+

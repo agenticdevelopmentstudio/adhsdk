@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "d766c910-c7ec-4163-94a6-599cf103e85a",
     "title": "System Memory Monitor",
-    "domain": "adhsdk://cookbook/ai/models/local/system-memory-monitor",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -26,8 +25,8 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/ai/models/local/local-inference-guard",
-      "adhsdk://cookbook/ai/models/local/model-fit-policy"
+      "8d827e9d-3638-4eaf-b04b-223b29b53389",
+      "5069f11f-e0c6-40c3-92ca-6152b8df3bc2"
     ],
     "references": [
       "packages/apple/AgenticDeveloperHubSDK/AIPluginKit/SystemMemoryMonitor.swift (adhsdk)",
@@ -38,7 +37,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "c1b98d477ddb3721",
+  "synced": "62b8a44ece388415",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -57,7 +56,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

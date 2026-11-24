@@ -34,9 +34,9 @@ class GamificationPreference:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "subjectType": subject_type,
-                "subjectId": subject_id,
-                "optedOut": opted_out,
+                "subject_type": subject_type,
+                "subject_id": subject_id,
+                "opted_out": opted_out,
             }
         )
 
@@ -45,11 +45,11 @@ class GamificationPreference:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        subject_type = d.pop("subjectType")
+        subject_type = d.pop("subject_type")
 
-        subject_id = d.pop("subjectId")
+        subject_id = d.pop("subject_id")
 
-        opted_out = d.pop("optedOut")
+        opted_out = d.pop("opted_out")
 
         gamification_preference = cls(
             subject_type=subject_type,

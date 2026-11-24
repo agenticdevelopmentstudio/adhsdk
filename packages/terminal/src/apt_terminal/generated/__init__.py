@@ -1,4 +1,4 @@
-"""A client library for accessing ADH Backend"""
+"""A client library for accessing adh API v1"""
 
 from .client import AuthenticatedClient, Client
 

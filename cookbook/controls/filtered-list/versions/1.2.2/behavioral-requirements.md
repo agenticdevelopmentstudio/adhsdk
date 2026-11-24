@@ -1,0 +1,34 @@
+
+- **render-input-field**: Component MUST render a text input field with an optional placeholder that defaults to "Filter…".
+- **filter-items**: Component MUST filter the visible items to those matching the query text entered by the user. By default (no `match` override), a match is a case-insensitive substring match: the query and each of `getTitle(item)`, `getSubtitle(item)`, `getDetails(item)`, and any `getSearchableExtras(item)` values are lower-cased, and the item matches if the lower-cased query is a substring of any field. Lower-casing uses the platform's default (locale-sensitive) case folding; consumers needing exact behavior in a specific locale should supply a custom `match` function rather than an invariant-culture comparison. Consumers MAY replace this default entirely via the `match` prop, which receives the item and the already-lower-cased, trimmed query. Filtering logic is implemented in the `useFilteredList` hook.
+- **arrow-down-navigation**: When the user presses ArrowDown and visible items exist, component MUST move the highlight to the next item in the visible list, to the first item if no item is currently highlighted, or leave the highlight on the last item if the last item is already highlighted (the highlight does not wrap).
+- **arrow-up-navigation**: When the user presses ArrowUp and visible items exist, component MUST move the highlight to the previous item, or clear the highlight if the first item is highlighted.
+- **enter-selection**: When the user presses Enter and an item is highlighted, component MUST call the onSelect callback with the highlighted item and prevent the default form submission via the input's own keydown handling. When no item is highlighted, pressing Enter MUST NOT call onSelect; the form's onSubmit handler independently prevents the browser's default submission regardless of highlight state (see **prevent-form-submission**).
+- **escape-clears-highlight**: When the user presses Escape and an item is highlighted, component MUST clear the highlight by setting highlightedIndex to -1 and prevent the default action.
+- **reset-highlight-on-input-change**: When the user types in the input field, component MUST reset the highlighted item index to -1.
+- **clamp-highlight-when-visible-shrinks**: When the visible items list shrinks and the currently highlighted index exceeds the new length, component MUST adjust the highlight to the last item in the visible list, or to -1 if the list is now empty.
+- **render-item-list**: Component MUST render all visible items as `<li>` elements within a `<ul>` list with role="listbox".
+- **item-role-option**: Each rendered `<li>` item MUST have role="option", identifying it as a listbox option.
+- **render-item-title**: When renderItem is not provided, each item MUST render its title via the getTitle callback in a `fl-title` element.
+- **render-item-subtitle**: When renderItem is not provided and getSubtitle is provided and returns a value for an item, component MUST render the subtitle in a `fl-subtitle` element.
+- **render-item-details**: When renderItem is not provided and getDetails is provided and returns a value for an item, component MUST render the details in a `fl-details` element.
+- **custom-item-render**: If renderItem is provided, component MUST call it as `renderItem(item)` — a single-argument callback receiving the visible item and returning a ReactNode — instead of rendering title/subtitle/details directly.
+- **clickable-items-when-onselect-provided**: When onSelect is provided, each visible item MUST be rendered as a button that calls onSelect when clicked.
+- **mouse-hover-highlight**: When the user moves the mouse over an item, component MUST highlight that item.
+- **scroll-active-item-into-view**: When the highlight changes to a new item, component MUST call scrollIntoView with `{ block: 'nearest' }` on the corresponding list item element.
+- **input-shows-highlighted-title**: When an item is highlighted, the input field MUST display the title of that item instead of the query text.
+- **combobox-aria-expanded**: The input field MUST have aria-expanded set to true when visible items exist, false otherwise.
+- **combobox-aria-activedescendant**: The input field MUST have aria-activedescendant set to the ID of the currently highlighted item, or undefined if no item is highlighted.
+- **unique-item-ids**: Each list item MUST have a unique ID constructed as `{listId}-{getId(item)}`.
+- **option-aria-selected**: Each item MUST have aria-selected="true" when highlighted, "false" otherwise.
+- **onhighlight-callback**: When the highlighted item changes, component MUST call the onHighlightChange callback with the new highlighted item or null if no item is highlighted.
+- **empty-state-when-no-items**: When total (the unfiltered item count, i.e. items.length) is 0, component MUST display "No items." instead of the list. This message is not affected by emptyContent.
+- **default-no-matches-message**: When filtering leaves zero visible items while total > 0, component MUST render the literal text `No matches for "{query}".` as the list's only item.
+- **custom-empty-content**: If emptyContent is provided and total > 0 but visible.length is 0 after filtering, component MUST render emptyContent instead of the default no-matches message. emptyContent has no effect when total === 0.
+- **render-footer**: If footer is provided, component MUST render it as the last list item.
+- **wrap-input-in-form**: Component MUST wrap the input field in a `<form role="search">` element to prevent Safari autofill misclassification.
+- **prevent-form-submission**: The form MUST prevent default submission on submit event, regardless of whether an item is highlighted.
+- **autofill-prevention**: Component MUST apply noAutofillProps to the input to disable browser autofill.
+- **autofocus-on-mount**: Component MUST focus the input on mount when autoFocus is true.
+- **arrow-keys-noop-when-no-items**: Component MUST NOT prevent the default behavior for arrow keys if no visible items exist.
+

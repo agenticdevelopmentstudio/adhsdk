@@ -1,4 +1,4 @@
-// Project programs API client — the roll-up side of the `/api/project/*` surface.
+// Project programs API client — the roll-up side of the `/api/v1/*` surface.
 //
 // Its own file and its own route stem, for the reason `iterations.ts` has one: a program does
 // not belong to a project. It sits ABOVE several boards and belongs to the WORKSPACE, which is
@@ -11,8 +11,9 @@
 // returning them would report projects the caller may not be allowed to read. `projects()` is
 // the opposite — it READS content, so it is reach-filtered.
 
-import { authedJson } from "../http";
-import { compact, enc, workspaceQuery } from "../client-helpers";
+import { authedRequest, withV1Query } from "../http";
+import { compact, enc } from "../client-helpers";
+import { v1Json, v1List, v1Write } from "../v1-case";
 import { toProject, type Project } from "./projects";
 import type {
   ProgramRow,
@@ -21,7 +22,11 @@ import type {
   ProjectRow,
 } from "./wire";
 
-const BASE = "/api/project/programs";
+const BASE = "/api/v1/programs";
+
+/** `url` with the optional `?workspace=` pin. */
+const scoped = (url: string, opts?: { workspace?: string }): string =>
+  withV1Query(url, { workspace: opts?.workspace || undefined });
 
 /* ── Program ──────────────────────────────────────────────────────────── */
 
@@ -67,13 +72,13 @@ export const projectProgramsApi = {
    *  list to that workspace's owning principal, exactly as `projectsApi.list` does; without it
    *  the caller sees every program their reach admits. */
   async list(opts?: { workspace?: string }): Promise<Program[]> {
-    const rows = await authedJson<ProgramRow[]>(`${BASE}${workspaceQuery(opts)}`);
+    const rows = await v1List<ProgramRow>(scoped(BASE, opts));
     return rows.map(toProgram);
   },
 
   async get(id: string): Promise<Program | null> {
     try {
-      return toProgram(await authedJson<ProgramRow>(`${BASE}/${enc(id)}`));
+      return toProgram(await v1Json<ProgramRow>(`${BASE}/${enc(id)}`));
     } catch {
       // Backend 404s with a thrown error; the UI contract is null-for-missing.
       return null;
@@ -103,10 +108,7 @@ export const projectProgramsApi = {
       }),
     };
     return toProgram(
-      await authedJson<ProgramRow>(`${BASE}${workspaceQuery(opts)}`, {
-        method: "POST",
-        body: JSON.stringify(body),
-      }),
+      await v1Json<ProgramRow>(scoped(BASE, opts), v1Write("POST", body)),
     );
   },
 
@@ -116,23 +118,21 @@ export const projectProgramsApi = {
   async update(id: string, patch: ProgramPatchBody): Promise<Program> {
     const body: ProgramPatchBody = compact(patch);
     return toProgram(
-      await authedJson<ProgramRow>(`${BASE}/${enc(id)}`, {
-        method: "PATCH",
-        body: JSON.stringify(body),
-      }),
+      await v1Json<ProgramRow>(`${BASE}/${enc(id)}`, v1Write("POST", body)),
     );
   },
 
   /**
-   * Delete a program, UN-ASSIGNING every board in it — the count of those boards is what comes
-   * back. It never refuses, for the same reason deleting an iteration doesn't: "in no program"
+   * Delete a program, UN-ASSIGNING every board in it. The legacy route counted those boards;
+   * /v1 answers a delete with a tombstone, so the count is no longer reported. It never refuses, for the same reason deleting an iteration doesn't: "in no program"
    * is an ordinary state a project is allowed to be in, so the sweep always has a defined
    * outcome. Refetch the affected boards to see the result.
    */
-  async remove(id: string): Promise<{ unassigned: number }> {
-    return authedJson<{ unassigned: number }>(`${BASE}/${enc(id)}`, {
-      method: "DELETE",
-    });
+  async remove(id: string): Promise<{ unassigned?: number }> {
+    // /v1 answers a delete with a tombstone; the legacy count of un-assigned boards is not
+    // carried, so `unassigned` is absent rather than a guessed 0.
+    await authedRequest(`${BASE}/${enc(id)}`, { method: "DELETE" });
+    return {};
   },
 
   /**
@@ -145,7 +145,7 @@ export const projectProgramsApi = {
    * caller cannot open does not appear here just because they can see the program.
    */
   async projects(id: string): Promise<Project[]> {
-    const rows = await authedJson<ProjectRow[]>(`${BASE}/${enc(id)}/projects`);
+    const rows = await v1List<ProjectRow>(withV1Query("/api/v1/projects", { program: id }));
     return rows.map(toProject);
   },
 };

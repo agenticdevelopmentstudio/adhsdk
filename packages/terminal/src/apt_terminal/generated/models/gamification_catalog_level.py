@@ -37,7 +37,7 @@ class GamificationCatalogLevel:
         field_dict.update(
             {
                 "name": name,
-                "minPoints": min_points,
+                "min_points": min_points,
                 "source": source,
             }
         )
@@ -49,7 +49,7 @@ class GamificationCatalogLevel:
         d = dict(src_dict)
         name = d.pop("name")
 
-        min_points = d.pop("minPoints")
+        min_points = d.pop("min_points")
 
         source = GamificationCatalogLevelSource(d.pop("source"))
 

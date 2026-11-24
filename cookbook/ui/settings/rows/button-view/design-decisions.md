@@ -12,7 +12,7 @@
 **Approved**: pending
 
 **Decision**: This recipe calls the component's container a "row" throughout, even though the source's own comments use both "row" (in the `Placement` doc comment: "where the button sits in the row it is given") and "card" (in the `.fill` and `.leading` case comments: "stretched across the whole card"; "the row is as wide as the card").
-**Rationale**: The two words refer to the same concept in this file; "row" is kept as the single term for consistency with how a settings-row view's container is described elsewhere in the cookbook — `adhsdk://cookbook/ui/settings/layout/header-view` and `adhsdk://cookbook/ui/settings/layout/horizontal-stack-view` both describe the settings-row-view contract as "the marker protocol every settings-row view in this system adopts" — and the source's own inconsistency is recorded here rather than silently smoothed over.
+**Rationale**: The two words refer to the same concept in this file; "row" is kept as the single term for consistency with how a settings-row view's container is described elsewhere in the cookbook — [adhsdk.ingredient.ui.settings.layout.header-view](cookbook:d908b337-53ba-4a29-8288-4601b12a4bb7) and [adhsdk.ingredient.ui.settings.layout.horizontal-stack-view](cookbook:5e9843b1-cc8d-4048-97e7-21991bf5830c) both describe the settings-row-view contract as "the marker protocol every settings-row view in this system adopts" — and the source's own inconsistency is recorded here rather than silently smoothed over.
 **Approved**: pending
 
 **Decision**: (AppKit) This recipe describes `Self.pinToEdges(button, of: self)` (used in **fills-view-in-fill-placement**) as pinning all four edges of the button to the corresponding edges of the component.

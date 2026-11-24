@@ -17,14 +17,14 @@ class Follow:
         ecosystem_id (str):
         follower_id (str):
         followee_id (str):
-        created_at (str):
+        created (int): Unix timestamp, in seconds.
     """
 
     id: str
     ecosystem_id: str
     follower_id: str
     followee_id: str
-    created_at: str
+    created: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -36,17 +36,17 @@ class Follow:
 
         followee_id = self.followee_id
 
-        created_at = self.created_at
+        created = self.created
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
-                "followerId": follower_id,
-                "followeeId": followee_id,
-                "createdAt": created_at,
+                "ecosystem_id": ecosystem_id,
+                "follower_id": follower_id,
+                "followee_id": followee_id,
+                "created": created,
             }
         )
 
@@ -57,20 +57,20 @@ class Follow:
         d = dict(src_dict)
         id = d.pop("id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        follower_id = d.pop("followerId")
+        follower_id = d.pop("follower_id")
 
-        followee_id = d.pop("followeeId")
+        followee_id = d.pop("followee_id")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
         follow = cls(
             id=id,
             ecosystem_id=ecosystem_id,
             follower_id=follower_id,
             followee_id=followee_id,
-            created_at=created_at,
+            created=created,
         )
 
         follow.additional_properties = d

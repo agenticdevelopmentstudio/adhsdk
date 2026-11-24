@@ -38,20 +38,20 @@ class ClientAuthRegistrationInput:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "redirectUris": redirect_uris,
+                "redirect_uris": redirect_uris,
             }
         )
         if allowed_return_origins is not UNSET:
-            field_dict["allowedReturnOrigins"] = allowed_return_origins
+            field_dict["allowed_return_origins"] = allowed_return_origins
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        redirect_uris = cast(list[str], d.pop("redirectUris"))
+        redirect_uris = cast(list[str], d.pop("redirect_uris"))
 
-        allowed_return_origins = cast(list[str], d.pop("allowedReturnOrigins", UNSET))
+        allowed_return_origins = cast(list[str], d.pop("allowed_return_origins", UNSET))
 
         client_auth_registration_input = cls(
             redirect_uris=redirect_uris,

@@ -1,0 +1,74 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "7e0508b5-cf96-42da-9902-51fbe31b432f",
+    "title": "Hub Domain: Invitations",
+    "type": "ingredient",
+    "version": "1.1.1",
+    "status": "review",
+    "language": "en",
+    "created": "2026-09-24",
+    "modified": "2026-10-04",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "The Hub's Invitations domain: three admin-facing topic providers (requests, pending users, sent invites) sharing one admin-notes sub-rail, plus the web client a recipient uses to preview, verify, accept, and register from an invite.",
+    "platforms": [
+      "swift",
+      "macos",
+      "ios",
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "hub",
+      "invitations",
+      "data-source",
+      "forms",
+      "crud",
+      "notes"
+    ],
+    "depends-on": [],
+    "related": [
+      "faa2c3f3-1ff7-45fb-b6da-efed3cc1d451",
+      "201572ee-2e0f-4839-94f5-252f8044c4bf",
+      "f81157d7-766f-42c9-a98a-44df19698bea",
+      "65fbb2b1-ca41-499f-ac03-7ecc0e206dcc"
+    ],
+    "references": [
+      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Invitations/AdminNotesRail.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Invitations/InvitationsModels.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Invitations/InvitesTopic.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Invitations/PendingUsersTopic.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Invitations/RequestsTopic.swift (adhsdk)",
+      "packages/web/packages/data/src/invitations/invitations.ts (adhsdk)",
+      "packages/web/packages/data/src/invitations/wire.ts (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKHubTests/InvitationsTopicsTests.swift (adhsdk)"
+    ],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "487ab0535c294f68",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

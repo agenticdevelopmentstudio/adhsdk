@@ -129,15 +129,30 @@ function applyThemeCss(css) {
 }
 
 // src/themes/themes-client.ts
-var API = "/api";
-async function readJson(res) {
-  if (!res.ok) throw new Error(`themes API ${res.status}`);
-  return await res.json();
+import { AuthHttpError, authedJson, authedRequest, listAllV1, unixToIso } from "@adh-sdk/auth/client";
+var API = "/api/v1/themes";
+function fromWire(w) {
+  return {
+    key: w.key,
+    label: w.label,
+    basedOn: w.based_on,
+    data: w.data,
+    createdAt: unixToIso(w.created),
+    updatedAt: unixToIso(w.updated)
+  };
 }
 async function listThemes() {
-  const res = await fetch(`${API}/public/themes`, { cache: "no-store" });
-  if (res.status === 404) return [];
-  return readJson(res);
+  try {
+    const rows = await listAllV1(
+      API,
+      { cache: "no-store" },
+      { cursorOf: (row) => row.key }
+    );
+    return rows.map(fromWire);
+  } catch (err) {
+    if (err instanceof AuthHttpError && err.status === 404) return [];
+    throw err;
+  }
 }
 
 // src/themes/DbThemeApplier.tsx

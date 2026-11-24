@@ -43,10 +43,10 @@ class AccessEffective:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "itemVerbs": item_verbs,
-                "subitemVerbs": subitem_verbs,
+                "item_verbs": item_verbs,
+                "subitem_verbs": subitem_verbs,
                 "restricted": restricted,
-                "decidedBy": decided_by,
+                "decided_by": decided_by,
             }
         )
 
@@ -57,13 +57,13 @@ class AccessEffective:
         from ..models.access_effective_decided_by import AccessEffectiveDecidedBy
 
         d = dict(src_dict)
-        item_verbs = d.pop("itemVerbs")
+        item_verbs = d.pop("item_verbs")
 
-        subitem_verbs = d.pop("subitemVerbs")
+        subitem_verbs = d.pop("subitem_verbs")
 
         restricted = d.pop("restricted")
 
-        decided_by = AccessEffectiveDecidedBy.from_dict(d.pop("decidedBy"))
+        decided_by = AccessEffectiveDecidedBy.from_dict(d.pop("decided_by"))
 
         access_effective = cls(
             item_verbs=item_verbs,

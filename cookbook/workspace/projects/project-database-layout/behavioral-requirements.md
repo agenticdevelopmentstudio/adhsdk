@@ -2,8 +2,9 @@
 ### Reading tabs
 
 - **load-tabs-empty-default**: Loading tabs MUST return `(tabs: [],
-  activeTabID: nil, enabledEdges: [top])` for a repository id with no
-  `project_tabs` or `project_state` rows.
+  activeTabID: nil, enabledEdges: nil)` for a repository id with no
+  `project_tabs` or `project_state` rows — no stored Tab Bars choice,
+  never the top edge alone.
 - **load-tabs-order**: MUST return tabs ordered ascending by the
   `project_tabs.position` column, via `ORDER BY position` in the query.
 - **load-tabs-malformed-row-dropped**: MUST silently exclude a
@@ -32,8 +33,8 @@
   exactly two ordered children by position.
 - **load-tabs-active-tab-default**: MUST read `active_tab_id` and
   `enabled_edges` from the single `project_state` row for the repository
-  id, or fall back to (no active tab, the top edge alone) when no such row
-  exists.
+  id, or fall back to (no active tab, no stored edge choice) when no such
+  row exists.
 - **load-tabs-active-tab-consistency**: Loading tabs reads
   `project_tabs`/`layout_nodes` and `project_state` as two separate,
   non-transactional statements, and never re-validates the returned
@@ -43,10 +44,12 @@
   instance can run between the two reads; a commit through a different
   connection to the same file between them can make the returned
   active-tab id name no tab in the result.
-- **load-tabs-enabled-edges-fallback**: MUST discard a stored
+- **load-tabs-enabled-edges-fallback**: MUST read a stored
   `enabled_edges` value that is empty, or that parses to zero valid edge
-  entries, and keep the default (the top edge alone) rather than return an
-  empty list.
+  entries, as no stored edge choice (absent) rather than as an empty list.
+  The column is `NOT NULL`, so the empty string is how "no choice" is
+  stored; an absent choice tells the caller to follow the app-wide tab
+  positions.
 
 ### Writing tabs
 
@@ -58,8 +61,16 @@
   IMMEDIATE TRANSACTION` / `COMMIT`, and MUST roll back and rethrow the
   original error unchanged if any step fails, leaving the previously
   persisted arrangement intact.
-- **save-tabs-default-enabled-edges**: The enabled edges MUST default to
-  the top edge alone when the caller omits them.
+- **save-tabs-default-enabled-edges**: The enabled edges are the
+  user's explicit Tab Bars choice and MUST default to absent when the
+  caller omits them. An absent value MUST write no edges of its own: the
+  write MUST read the stored `enabled_edges` value before deleting the
+  `project_state` row and write it back unchanged, or write the empty
+  string (no choice) when no row existed, so seeding or saving a layout
+  never turns the app-wide default into a per-project choice.
+- **save-tabs-empty-edges-clear**: An empty enabled-edges list MUST write the
+  empty string, clearing any stored choice, so the project follows the
+  app-wide tab positions again.
 - **save-tabs-tab-position**: MUST persist each tab's
   `project_tabs.position` as its index in the given tab list, in that
   order.
@@ -72,9 +83,9 @@
   than persist a reference to a tab that was not saved.
 - **save-tabs-state-row-always-written**: MUST always insert exactly one
   `project_state` row for the repository id, even when the validated
-  active tab is absent, so the enabled edges still persist.
-- **save-tabs-enabled-edges-canonical-order**: MUST persist the enabled
-  edges as a comma-joined string in a fixed canonical order (top, right,
+  active tab is absent, so a stored edge choice still persists.
+- **save-tabs-enabled-edges-canonical-order**: When the caller supplies
+  enabled edges, MUST persist them as a comma-joined string in a fixed canonical order (top, right,
   bottom, left), filtered to only the edges present in the caller's
   argument — not in the argument's own order.
 - **save-tabs-pane-state-orphan-sweep**: MUST delete every `pane_state`

@@ -299,7 +299,7 @@ export function ApplicationsPane({
       api={
         form.selectedId
           ? {
-              path: "/ecosystem/applications/{id}",
+              path: "/v1/applications/{id}",
               pathValues: { id: form.selectedId },
               title: "Application API",
             }

@@ -91,21 +91,21 @@ class GameSession:
         field_dict.update(
             {
                 "id": id,
-                "gameId": game_id,
+                "game_id": game_id,
                 "kind": kind,
                 "status": status,
-                "actorType": actor_type,
-                "startedAt": started_at,
+                "actor_type": actor_type,
+                "started_at": started_at,
             }
         )
         if chat_id is not UNSET:
-            field_dict["chatId"] = chat_id
+            field_dict["chat_id"] = chat_id
         if subject_artifact_id is not UNSET:
-            field_dict["subjectArtifactId"] = subject_artifact_id
+            field_dict["subject_artifact_id"] = subject_artifact_id
         if payload is not UNSET:
             field_dict["payload"] = payload
         if ended_at is not UNSET:
-            field_dict["endedAt"] = ended_at
+            field_dict["ended_at"] = ended_at
 
         return field_dict
 
@@ -116,15 +116,15 @@ class GameSession:
         d = dict(src_dict)
         id = d.pop("id")
 
-        game_id = d.pop("gameId")
+        game_id = d.pop("game_id")
 
         kind = d.pop("kind")
 
         status = GameSessionStatus(d.pop("status"))
 
-        actor_type = GameSessionActorType(d.pop("actorType"))
+        actor_type = GameSessionActorType(d.pop("actor_type"))
 
-        started_at = d.pop("startedAt")
+        started_at = d.pop("started_at")
 
         def _parse_chat_id(data: object) -> None | str | Unset:
             if data is None:
@@ -133,7 +133,7 @@ class GameSession:
                 return data
             return cast(None | str | Unset, data)
 
-        chat_id = _parse_chat_id(d.pop("chatId", UNSET))
+        chat_id = _parse_chat_id(d.pop("chat_id", UNSET))
 
         def _parse_subject_artifact_id(data: object) -> None | str | Unset:
             if data is None:
@@ -142,7 +142,7 @@ class GameSession:
                 return data
             return cast(None | str | Unset, data)
 
-        subject_artifact_id = _parse_subject_artifact_id(d.pop("subjectArtifactId", UNSET))
+        subject_artifact_id = _parse_subject_artifact_id(d.pop("subject_artifact_id", UNSET))
 
         def _parse_payload(data: object) -> GameSessionPayloadType0 | None | Unset:
             if data is None:
@@ -168,7 +168,7 @@ class GameSession:
                 return data
             return cast(None | str | Unset, data)
 
-        ended_at = _parse_ended_at(d.pop("endedAt", UNSET))
+        ended_at = _parse_ended_at(d.pop("ended_at", UNSET))
 
         game_session = cls(
             id=id,

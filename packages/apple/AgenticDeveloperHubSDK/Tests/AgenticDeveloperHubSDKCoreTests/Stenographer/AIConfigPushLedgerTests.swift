@@ -69,4 +69,47 @@ final class AIConfigPushLedgerTests: XCTestCase {
         let sync = try JSONDecoder().decode(AIProviderConfigSync.self, from: body)
         XCTAssertNil(sync.removedConfigIds)
     }
+
+    private func sync(_ configs: [UUID], removed: [UUID]?) -> AIProviderConfigSync {
+        AIProviderConfigSync(
+            enabled: true, selectedConfigId: nil, configs: configs.map(config), removedConfigIds: removed)
+    }
+
+    func testV7_malformedStoredIdsAreSkipped() {
+        let valid = UUID()
+        defaults.set(["not-a-uuid", valid.uuidString], forKey: "k")
+        let ledger = AIConfigPushLedger(key: "k", defaults: defaults)
+        XCTAssertEqual(ledger.lastPushed(), [valid])
+    }
+
+    func testV8_removedIdsComeBackInAscendingUUIDStringOrder() {
+        let ledger = AIConfigPushLedger(key: "k", defaults: defaults)
+        let ids = [UUID(), UUID(), UUID()]
+        ledger.recordLanded(sync(ids, removed: []))
+        let expected = ids.sorted { $0.uuidString < $1.uuidString }
+        XCTAssertEqual(ledger.removed(configured: []), expected)
+    }
+
+    func testV9_aNilRemovalListKeepsTheExistingIdsBesideTheNewOne() {
+        let ledger = AIConfigPushLedger(key: "k", defaults: defaults)
+        let other = UUID(), fresh = UUID()
+        ledger.recordLanded(sync([other], removed: []))
+        ledger.recordLanded(sync([fresh], removed: nil))
+        XCTAssertEqual(ledger.lastPushed(), [other, fresh])
+    }
+
+    func testV10_theStoredEntryIsASortedArrayOfUUIDStrings() {
+        let ledger = AIConfigPushLedger(key: "k", defaults: defaults)
+        let first = UUID(), second = UUID()
+        ledger.recordLanded(sync([first, second], removed: []))
+        let raw = defaults.stringArray(forKey: "k")
+        XCTAssertEqual(raw, [first.uuidString, second.uuidString].sorted())
+    }
+
+    func testV11_aConfigThatIsAlsoListedAsRemovedStaysInTheLedger() {
+        let ledger = AIConfigPushLedger(key: "k", defaults: defaults)
+        let first = UUID()
+        ledger.recordLanded(sync([first], removed: [first]))
+        XCTAssertEqual(ledger.lastPushed(), [first])
+    }
 }

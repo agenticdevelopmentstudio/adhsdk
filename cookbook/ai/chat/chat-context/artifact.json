@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "613d7a36-d0cd-4415-97be-d983b3d6c644",
     "title": "Chat Context",
-    "domain": "adhsdk://cookbook/ai/chat/chat-context",
     "type": "ingredient",
     "version": "1.1.2",
     "status": "review",
@@ -29,7 +28,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "77da5ec070820ebf",
+  "synced": "ad86d950db7543c7",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -48,7 +47,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

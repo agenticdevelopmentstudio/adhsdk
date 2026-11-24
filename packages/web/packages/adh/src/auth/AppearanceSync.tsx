@@ -3,12 +3,12 @@
 import { useEffect, useRef } from 'react'
 import { useAuth } from '@adh-sdk/auth'
 import { authedJson } from '@adh-sdk/auth/client'
+import { adoptAppearance, normalizeAppearance, resetAppearance } from '@adh-sdk/themes'
 import {
-  adoptAppearance,
-  normalizeAppearance,
-  resetAppearance,
-  type AppearancePrefs,
-} from '@adh-sdk/themes'
+  APPEARANCE_INCLUDE_URL,
+  appearanceFromWire,
+  type AccountAppearanceBody,
+} from './appearanceWire'
 // Package path, not relative: see wired-provider.tsx's telemetry import comment — this
 // package bundles with tsup `bundle: true, splitting: false`, and `src/auth/index.ts` is
 // its own tsup entry, so a relative '../telemetry/report-error' would inline a private,
@@ -22,7 +22,7 @@ import { captureException } from '@adh-sdk/adh/telemetry/report-error'
  * which is the one component they all mount and the only place `useAuth()` is guaranteed to
  * resolve). The rule it enforces is the whole feature:
  *
- *   signed in  → the colour mode + a11y prefs saved against the USER (GET /api/me/appearance)
+ *   signed in  → the colour mode + a11y prefs saved against the USER (GET /api/v1/account?include[]=appearance)
  *   signed out → no prefs to speak of, so follow the OPERATING SYSTEM (colour mode 'auto')
  *
  * It has to be a server round-trip rather than a cookie or localStorage: the ~45 brand sites live
@@ -59,8 +59,9 @@ export function AppearanceSync(): null {
     }
 
     let live = true
-    authedJson<{ prefs: Partial<AppearancePrefs> }>('/api/me/appearance')
-      .then(({ prefs }) => {
+    authedJson<AccountAppearanceBody>(APPEARANCE_INCLUDE_URL)
+      .then((account) => {
+        const prefs = appearanceFromWire(account.appearance?.prefs)
         // `normalizeAppearance` merges onto the defaults and drops anything it doesn't recognize,
         // so a user who has never saved (the `{}` a fresh account gets back) lands on 'auto' — the
         // OS setting — and a row written by a newer client can't poison this one.
@@ -69,7 +70,7 @@ export function AppearanceSync(): null {
       .catch((err) => {
         // The prefs are cosmetic: if they can't be fetched, leave the document as the pre-paint
         // script painted it rather than yanking the user's theme out from under them. Reported, not
-        // swallowed — a persistently failing /me/appearance is a real (if quiet) regression.
+        // swallowed — a persistently failing appearance include is a real (if quiet) regression.
         if (!live) return
         themedFor.current = undefined // let a later render retry
         captureException(err)

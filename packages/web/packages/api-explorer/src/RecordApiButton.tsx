@@ -18,7 +18,7 @@ export function RecordApiButton({
 }: {
   /** HTTP verb to focus. Defaults to the item read (GET). */
   method?: string
-  /** Backend-native path (no `/api` prefix), e.g. `/team/teams/{id}`. */
+  /** Backend-native path (no `/api` prefix), e.g. `/v1/teams/{id}`. */
   path: string
   /** Values for the path placeholders; the button hides while any is missing. */
   pathValues: Record<string, string | null | undefined>

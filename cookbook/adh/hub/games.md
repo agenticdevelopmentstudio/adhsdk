@@ -1,13 +1,12 @@
 ---
 id: 5d44b127-7701-4d3f-8d34-fe50084e52b7
 title: "Hub Domain: Games"
-domain: adhsdk://cookbook/adh/hub/games
 type: ingredient
-version: 1.0.3
+version: 1.0.4
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -22,9 +21,9 @@ tags:
   - jsonb
   - web
 depends-on:
-  - adhsdk://cookbook/data/services/auth/auth-client
+  - 3ea9329e-5acc-4c43-b5ce-bb8c50570104
 related:
-  - adhsdk://cookbook/adh/hub/ecosystems/ecosystems
+  - 201572ee-2e0f-4839-94f5-252f8044c4bf
 references:
   - packages/web/packages/data/src/games/games.ts (adhsdk)
   - packages/web/packages/data/src/games/index.ts (adhsdk)
@@ -319,28 +318,28 @@ Not applicable — this is domain logic, not a visual component.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| hub-domain-games-001 | games-list-scoped-by-ecosystem-query | `gamesApi.list("ecosystem.acme")` | Request URL `/api/game/games?ecosystemId=ecosystem.acme` ("filters the catalog by ecosystem in the QUERY", `games.test.ts`) |
-| hub-domain-games-002 | games-list-scoped-by-ecosystem-query | `gamesApi.list()` (no argument) | Request URL `/api/game/games` with no query string ("asks for the whole catalog when no ecosystem is named", `games.test.ts`) |
-| hub-domain-games-003 | games-for-ecosystem-single-result | `gamesApi.forEcosystem("ecosystem.acme")` where the list response has one matching row | Resolves to that `Game`; request URL `/api/game/games?ecosystemId=ecosystem.acme` ("resolves the one game of an ecosystem", `games.test.ts`) |
+| hub-domain-games-001 | games-list-scoped-by-ecosystem-query | `gamesApi.list("ecosystem.acme")` | Request URL `/api/v1/games?ecosystemId=ecosystem.acme&limit=100` ("filters the catalog by ecosystem in the QUERY", `games.test.ts`) |
+| hub-domain-games-002 | games-list-scoped-by-ecosystem-query | `gamesApi.list()` (no argument) | Request URL `/api/v1/games?limit=100` (no `ecosystemId`) ("asks for the whole catalog when no ecosystem is named", `games.test.ts`) |
+| hub-domain-games-003 | games-for-ecosystem-single-result | `gamesApi.forEcosystem("ecosystem.acme")` where the list response has one matching row | Resolves to that `Game`; request URL `/api/v1/games?ecosystemId=ecosystem.acme&limit=100` ("resolves the one game of an ecosystem", `games.test.ts`) |
 | hub-domain-games-004 | games-for-ecosystem-single-result | `gamesApi.forEcosystem("ecosystem.acme")` where the list response is `[]` | Resolves to `null` ("answers null for an ecosystem with no game", `games.test.ts`) |
-| hub-domain-games-005 | games-create-ecosystem-in-body | `gamesApi.create(gameInput, "ecosystem.acme")` | Request URL has no `ecosystemId=` query param; request body's `ecosystemId` field equals `"ecosystem.acme"` ("stamps a created game into its ecosystem through the BODY, not the query", `games.test.ts`) |
-| hub-domain-games-006 | games-update-omits-ecosystem | `gamesApi.update("8f2b1c40-...", gameInput)` | Request URL `/api/game/games/8f2b1c40-...`; request body has no `ecosystemId` property ("does not resend the ecosystem on update", `games.test.ts`) |
-| hub-domain-games-007 | id-percent-encoded-in-path | `gamesApi.delete("a b")` | Request URL `/api/game/games/a%20b` ("percent-encodes the id in the path", `games.test.ts`) |
-| hub-domain-games-008 | child-list-scoped-by-game-query | `gameDefinitionsApi.list("8f2b1c40-...")`, `gameEffectsApi.list("8f2b1c40-...")`, `gameMappingsApi.list("8f2b1c40-...")` | Request URLs `/api/game/definitions?gameId=8f2b1c40-...`, `/api/game/effects?gameId=8f2b1c40-...`, `/api/game/mappings?gameId=8f2b1c40-...` respectively ("filters each child collection by game in the QUERY", `games.test.ts`) |
-| hub-domain-games-009 | child-create-parent-in-body | `gameDefinitionsApi.create("8f2b1c40-...", definitionInput)` | Request URL `/api/game/definitions`; request body's `gameId` field equals `"8f2b1c40-..."` ("parents a created definition through the BODY, not the query", `games.test.ts`) |
-| hub-domain-games-010 | child-create-parent-in-body | `gameEffectsApi.create("8f2b1c40-...", effectInput)` | Request URL `/api/game/effects`; request body's `gameId` field equals `"8f2b1c40-..."` ("parents a created effect through the BODY, not the query", `games.test.ts`) |
-| hub-domain-games-011 | child-create-parent-in-body | `gameMappingsApi.create("8f2b1c40-...", mappingInput)` | Request URL `/api/game/mappings`; request body's `gameId` field equals `"8f2b1c40-..."` ("parents a created mapping through the BODY, not the query", `games.test.ts`) |
-| hub-domain-games-012 | game-definition-input-excludes-author | `gameDefinitionsApi.create("8f2b1c40-...", definitionInput)` | Request body has no `authorCustomerId` property ("never sends a definition's author, which the route owns", `games.test.ts`) |
+| hub-domain-games-005 | games-create-ecosystem-in-body | `gamesApi.create(gameInput, "ecosystem.acme")` | Request URL contains no `ecosystem`; request body's `ecosystem_id` field equals `"ecosystem.acme"` ("stamps a created game into its ecosystem through the BODY, not the query", `games.test.ts`) |
+| hub-domain-games-006 | games-update-omits-ecosystem | `gamesApi.update("8f2b1c40-...", gameInput)` | Request URL `/api/v1/games/8f2b1c40-...`; request body has no `ecosystem_id` property ("does not resend the ecosystem on update", `games.test.ts`) |
+| hub-domain-games-007 | id-percent-encoded-in-path | `gamesApi.delete("a b")` | Request URL `/api/v1/games/a%20b` ("percent-encodes the id in the path", `games.test.ts`) |
+| hub-domain-games-008 | child-list-scoped-by-game-query | `gameDefinitionsApi.list("8f2b1c40-...")`, `gameEffectsApi.list("8f2b1c40-...")`, `gameMappingsApi.list("8f2b1c40-...")` | Request URLs `/api/v1/game/definitions?gameId=8f2b1c40-...&limit=100`, `/api/v1/game/effects?gameId=8f2b1c40-...&limit=100`, `/api/v1/game/mappings?gameId=8f2b1c40-...&limit=100` respectively ("filters each child collection by game in the QUERY", `games.test.ts`) |
+| hub-domain-games-009 | child-create-parent-in-body | `gameDefinitionsApi.create("8f2b1c40-...", definitionInput)` | Request URL `/api/v1/game/definitions`; request body's `game_id` field equals `"8f2b1c40-..."` ("parents a created definition through the BODY, not the query", `games.test.ts`) |
+| hub-domain-games-010 | child-create-parent-in-body | `gameEffectsApi.create("8f2b1c40-...", effectInput)` | Request URL `/api/v1/game/effects`; request body's `game_id` field equals `"8f2b1c40-..."` ("parents a created effect through the BODY, not the query", `games.test.ts`) |
+| hub-domain-games-011 | child-create-parent-in-body | `gameMappingsApi.create("8f2b1c40-...", mappingInput)` | Request URL `/api/v1/game/mappings`; request body's `game_id` field equals `"8f2b1c40-..."` ("parents a created mapping through the BODY, not the query", `games.test.ts`) |
+| hub-domain-games-012 | game-definition-input-excludes-author | `gameDefinitionsApi.create("8f2b1c40-...", definitionInput)` | Request body has no `author_customer_id` property ("never sends a definition's author, which the route owns", `games.test.ts`) |
 | hub-domain-games-013 | games-create-conflict-mapping | `gamesApi.create(gameInput, "ecosystem.acme")` where the POST responds `409` with a body message containing `"already exists"` | Rejects with `Error("A game with slug \"cavern\" already exists.")` ("names the entity, not the constraint, when a slug is taken", `games.test.ts`) |
 | hub-domain-games-014 | nullable-text-read | `gameFromWire({ ...gameRow, description: null })` | `.description === ""`; every other field (e.g. `.slug`, `.eventRetentionDays`) unchanged from the wire row ("reads a null description as an empty field", `games.test.ts`) |
 | hub-domain-games-015 | nullable-text-read | `gameFromWire(gameRow)` where `gameRow.description === "Cold."` | `.description === "Cold."` ("keeps a description that is actually there", `games.test.ts`) |
 | hub-domain-games-016 | nullable-text-write | `gameToWire({ ...gameInput, description: "" })` and `gameToWire({ ...gameInput, description: "   " })`; same two cases through `definitionToWire` | `.description === null` in all four cases ("writes an empty box as an empty COLUMN, not an empty string in one", `games.test.ts`) |
 | hub-domain-games-017 | nullable-text-read | `definitionFromWire({ ...definitionRow, description: null })` | `.description === ""`; `.authorCustomerId === ""` unchanged ("applies the same reading rule to a definition", `games.test.ts`) |
-| hub-domain-games-018 | jsonb-read-as-indented-text | `gameFromWire({ ...gameRow, engineConfig: { seed: 7 } })` | `.engineConfig === '{\n  "seed": 7\n}'`, typed `string` ("reads a config OBJECT as the JSON text the operator edits", `games.test.ts`) |
-| hub-domain-games-019 | jsonb-write-as-parsed-value | `gameToWire({ ...gameInput, engineConfig: '{"seed":7}' })` | `.engineConfig` deep-equals `{ seed: 7 }`, not the original string ("parses the operator's text into a JSON VALUE on the way out", `games.test.ts`) |
-| hub-domain-games-020 | jsonb-empty-value-differs-by-column | `gameFromWire(gameRow)` where `engineConfig === {}`; `gameToWire({ ...gameInput, engineConfig: "" })` and with `"   "` | Read: `.engineConfig === ""`. Write: `.engineConfig` deep-equals `{}` (never `null`) in both whitespace cases ("crosses an empty engine config as the empty OBJECT, both ways", `games.test.ts`) |
-| hub-domain-games-021 | jsonb-read-null-as-empty-text | `gameFromWire({ ...gameRow, engineConfig: null })` | `.engineConfig === ""` ("reads a null engine config as an empty field, whatever the type says", `games.test.ts`) |
-| hub-domain-games-022 | jsonb-empty-value-differs-by-column | `definitionFromWire(definitionRow)` where `data === null`; `definitionToWire({ ...definitionInput, data: "" })` | Read: `.data === ""`. Write: `.data === null` (never `{}`) ("crosses an empty definition payload as NULL, both ways", `games.test.ts`) |
+| hub-domain-games-018 | jsonb-read-as-indented-text | `gameFromWire({ ...gameRow, engine_config: { seed: 7 } })` | `.engineConfig === '{\n  "seed": 7\n}'`, typed `string` ("reads a config OBJECT as the JSON text the operator edits", `games.test.ts`) |
+| hub-domain-games-019 | jsonb-write-as-parsed-value | `gameToWire({ ...gameInput, engineConfig: '{"seed":7}' })` | `.engine_config` deep-equals `{ seed: 7 }`, not the original string ("parses the operator's text into a JSON VALUE on the way out", `games.test.ts`) |
+| hub-domain-games-020 | jsonb-empty-value-differs-by-column | `gameFromWire(gameRow)` where `engine_config` is `{}`; `gameToWire({ ...gameInput, engineConfig: "" })` and with `"   "` | Read: `.engineConfig === ""`. Write: `.engine_config` deep-equals `{}` (never `null`) in both whitespace cases ("crosses an empty engine config as the empty OBJECT, both ways", `games.test.ts`) |
+| hub-domain-games-021 | jsonb-read-null-as-empty-text | `gameFromWire({ ...gameRow, engine_config: null })` | `.engineConfig === ""` ("reads a null engine config as an empty field, whatever the type says", `games.test.ts`) |
+| hub-domain-games-022 | jsonb-empty-value-differs-by-column | `definitionFromWire(definitionRow)` where `data` is `null`; `definitionToWire({ ...definitionInput, data: "" })` | Read: `.data === ""`. Write: `.data === null` (never `{}`) ("crosses an empty definition payload as NULL, both ways", `games.test.ts`) |
 | hub-domain-games-023 | jsonb-write-as-parsed-value, jsonb-read-as-indented-text | `definitionToWire({ ...definitionInput, data: '{"prose":"a hall"}' })`, then `definitionFromWire({ ...definitionRow, data: <that written value> })` | Write: `.data` deep-equals `{ prose: "a hall" }`. Read-back: `.data === '{\n  "prose": "a hall"\n}'` ("round-trips a real payload through both directions of the crossing", `games.test.ts`) |
 | hub-domain-games-024 | jsonb-write-refuses-unparseable-text | `gameToWire({ ...gameInput, engineConfig: "{oops" })` and `definitionToWire({ ...definitionInput, data: "{oops" })` | Both throw an `Error` whose `.status === 400` and `.message` is `"Engine config must be valid JSON."` / `"Data must be valid JSON."` respectively ("refuses unparseable JSON with a 4xx the shared reporter drops", `games.test.ts`) |
 
@@ -525,9 +524,9 @@ responsibility.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/data/src/games/games.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/data/src/games/games.ts` | confirmed (1.0.4) |
 
 ## Design Decisions
 
@@ -601,17 +600,17 @@ idealized "always maps a 409."
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [error-response-handling](agenticdevelopercookbook://compliance/access-patterns#error-response-handling) | partial | Access Patterns |
-| [retry-with-backoff](agenticdevelopercookbook://compliance/access-patterns#retry-with-backoff) | failed | Access Patterns |
-| [offline-behavior](agenticdevelopercookbook://compliance/access-patterns#offline-behavior) | failed | Access Patterns |
-| [timeout-handling](agenticdevelopercookbook://compliance/reliability#timeout-handling) | failed | Reliability |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | partial | Reliability |
-| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | partial | Security |
-| [data-minimization](agenticdevelopercookbook://compliance/privacy-and-data#data-minimization) | passed | Privacy and Data |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | partial | Access Patterns |
+| [adc.check.access-patterns.retry-with-backoff](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bcb17bfe-d2d6-53f3-b2af-06b7eea3da61) | failed | Access Patterns |
+| [adc.check.access-patterns.offline-behavior](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/df7f401a-39be-5c60-bab4-85dd95bd1ab1) | failed | Access Patterns |
+| [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | failed | Reliability |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | partial | Reliability |
+| [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | partial | Security |
+| [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | Privacy and Data |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 
 `separation-of-concerns` **passed**: the wire types (`GameWire`,
 `GameDefinitionWire`) are kept distinct from the client-facing `Game`/
@@ -623,12 +622,13 @@ types it serves. `explicit-error-handling` **passed**: no path in this
 module silently drops a failure — every error either matches a specific
 remap (`rethrowConflict`'s message test, `textToJson`'s `clientRefusal`)
 or propagates unchanged; nothing is caught and discarded.
-`unit-test-coverage` **partial**: `games.test.ts` exercises `gamesApi`'s
-full surface (list scoping, `forEcosystem`, create/update body-vs-query
-scoping, conflict mapping, delete's id-encoding) and both column crossings
-exhaustively, but never exercises `childApi`'s `update` or `delete` for
-any of the three child collections, and never exercises
-`child-create-update-no-conflict-mapping`'s no-remap behavior directly.
+`unit-test-coverage` **passed**: all 24 conformance vectors
+(`hub-domain-games-001` through `-024`) are covered by passing tests in
+`games.test.ts`, one test per vector, covering `gamesApi`'s full surface
+(list scoping, `forEcosystem`, create/update body-vs-query scoping,
+conflict mapping, delete's id-encoding) and both column crossings. The
+vectors do not pin `childApi`'s `update` or `delete`, nor the no-remap
+behavior of `child-create-update-no-conflict-mapping`.
 `error-response-handling` **partial**: the module distinguishes a
 "duplicate slug" conflict from every other error by message content in
 exactly two functions (`gamesApi.create`/`update`); it never distinguishes
@@ -668,6 +668,7 @@ hidden one.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.4 | 2026-11-14 | Mike Fullerton | Conformance tests added (games.test.ts, 24 of 24 vectors; existing tests retitled with vector ids, vector text corrected to /api/v1 routes and snake_case wire fields); unit-test-coverage now passed. |
 | 1.0.3 | 2026-10-04 | Mike Fullerton | Swift-only constructs in normative sections restated as platform-neutral behavior; the Apple mechanism is in Platform Notes. |
 | 1.0.2 | 2026-09-27 | Mike Fullerton | Moved into the concept grouping. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

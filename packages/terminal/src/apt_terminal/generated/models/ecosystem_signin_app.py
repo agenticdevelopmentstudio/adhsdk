@@ -70,13 +70,13 @@ class EcosystemSigninApp:
                 "id": id,
                 "slug": slug,
                 "name": name,
-                "allowedReturnOrigins": allowed_return_origins,
-                "defaultEcosystemId": default_ecosystem_id,
-                "jwtAudience": jwt_audience,
-                "isInternal": is_internal,
-                "appTokenPrefix": app_token_prefix,
-                "githubEnabled": github_enabled,
-                "redirectUris": redirect_uris,
+                "allowed_return_origins": allowed_return_origins,
+                "default_ecosystem_id": default_ecosystem_id,
+                "jwt_audience": jwt_audience,
+                "is_internal": is_internal,
+                "app_token_prefix": app_token_prefix,
+                "github_enabled": github_enabled,
+                "redirect_uris": redirect_uris,
             }
         )
 
@@ -91,29 +91,29 @@ class EcosystemSigninApp:
 
         name = d.pop("name")
 
-        allowed_return_origins = cast(list[str], d.pop("allowedReturnOrigins"))
+        allowed_return_origins = cast(list[str], d.pop("allowed_return_origins"))
 
-        default_ecosystem_id = d.pop("defaultEcosystemId")
+        default_ecosystem_id = d.pop("default_ecosystem_id")
 
         def _parse_jwt_audience(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        jwt_audience = _parse_jwt_audience(d.pop("jwtAudience"))
+        jwt_audience = _parse_jwt_audience(d.pop("jwt_audience"))
 
-        is_internal = d.pop("isInternal")
+        is_internal = d.pop("is_internal")
 
         def _parse_app_token_prefix(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        app_token_prefix = _parse_app_token_prefix(d.pop("appTokenPrefix"))
+        app_token_prefix = _parse_app_token_prefix(d.pop("app_token_prefix"))
 
-        github_enabled = d.pop("githubEnabled")
+        github_enabled = d.pop("github_enabled")
 
-        redirect_uris = cast(list[str], d.pop("redirectUris"))
+        redirect_uris = cast(list[str], d.pop("redirect_uris"))
 
         ecosystem_signin_app = cls(
             id=id,

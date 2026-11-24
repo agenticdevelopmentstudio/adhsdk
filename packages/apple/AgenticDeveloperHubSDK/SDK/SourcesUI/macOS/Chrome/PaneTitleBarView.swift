@@ -4,8 +4,16 @@ import AppKit
 /// same order.
 ///
 /// ```
-/// [ ✕  −  ⤢ ]  Files          <accessory area>          [ ⚙ ]
+/// [ ✕  −  ⤢ ]  ▣ Files        <accessory area>          [ ⚙ ]
 /// ```
+///
+/// The icon after the window controls says what kind of pane this is at a
+/// glance; a pane with no icon closes the gap and the title follows the
+/// controls directly.
+///
+/// With `centersTitle` the icon and title sit in the middle of the bar instead,
+/// as a window's title does, and slide aside only as far as the controls or
+/// the accessories need.
 ///
 /// The accessory area between the title and the gear is the pane's to fill —
 /// a file browser's filter field, a terminal's shell name. This view knows only
@@ -36,6 +44,29 @@ public final class PaneTitleBarView: NSView {
             titleLabel.toolTip = newValue.isEmpty ? nil : newValue
         }
     }
+
+    /// What kind of pane this is, shown between the controls and the title;
+    /// `nil` hides it and the title moves up to the controls.
+    public var icon: NSImage? {
+        get { iconView.image }
+        set {
+            iconView.image = newValue
+            let shows = newValue != nil
+            iconView.isHidden = !shows
+            applyTitlePlacement()
+        }
+    }
+
+    /// Centers the icon and title in the bar, as a window centers its title.
+    /// Off by default, so a bar keeps its leading title unless its owner asks.
+    public var centersTitle = false {
+        didSet { applyTitlePlacement() }
+    }
+
+    /// The icon's side, small enough to sit on the title's baseline row.
+    public static let iconSize: CGFloat = 14
+
+    public let iconView = NSImageView()
 
     /// The pane's own controls, leading-to-trailing in array order.
     /// Assigning replaces: content whose controls change hands back a new
@@ -97,6 +128,11 @@ public final class PaneTitleBarView: NSView {
     public func yieldWidthToContainer() {
         yieldsWidth = true
         Self.yieldWidth(in: self)
+        // One step above the floor, so a centered title slides off center
+        // before it truncates; still below anything the container asks for.
+        titleLabel.setContentCompressionResistancePriority(
+            NSLayoutConstraint.Priority(rawValue: 2), for: .horizontal)
+        titleCentered.priority = Self.yieldingPriority
     }
 
     /// Whether chrome installed from here on yields too. The gear and the
@@ -120,6 +156,38 @@ public final class PaneTitleBarView: NSView {
     private let hairline = ThemedSeparatorView(role: .border, axis: .horizontal)
     private let accessoryStack = NSStackView()
     private var accessoryTrailing: NSLayoutConstraint!
+    private var titleAfterControls: NSLayoutConstraint!
+    private var titleAfterIcon: NSLayoutConstraint!
+    private var iconAfterControls: NSLayoutConstraint!
+    private var iconClearOfControls: NSLayoutConstraint!
+    private var titleClearOfControls: NSLayoutConstraint!
+    /// Spans the icon (when shown) through the title: the thing centered.
+    private let titleGroup = NSLayoutGuide()
+    private var groupStartsAtIcon: NSLayoutConstraint!
+    private var groupStartsAtTitle: NSLayoutConstraint!
+    /// Below the title's compression resistance, so a tight bar moves the
+    /// title off center rather than cutting it short.
+    private var titleCentered: NSLayoutConstraint!
+
+    /// Which of the leading constraints hold, from the two facts that decide
+    /// it: whether there is an icon, and whether the title is centered.
+    private func applyTitlePlacement() {
+        let shows = !iconView.isHidden
+        NSLayoutConstraint.deactivate([
+            titleAfterControls, titleAfterIcon, iconAfterControls, iconClearOfControls,
+            titleClearOfControls, groupStartsAtIcon, groupStartsAtTitle, titleCentered
+        ])
+        var active: [NSLayoutConstraint] = []
+        if shows {
+            active += [titleAfterIcon, centersTitle ? iconClearOfControls : iconAfterControls]
+        } else {
+            active.append(centersTitle ? titleClearOfControls : titleAfterControls)
+        }
+        if centersTitle {
+            active += [shows ? groupStartsAtIcon : groupStartsAtTitle, titleCentered]
+        }
+        NSLayoutConstraint.activate(active)
+    }
 
     public init() {
         super.init(frame: .zero)
@@ -130,11 +198,16 @@ public final class PaneTitleBarView: NSView {
         titleLabel.setContentHuggingPriority(.defaultHigh, for: .horizontal)
         titleLabel.accessibilityID("pane.title")
 
+        iconView.imageScaling = .scaleProportionallyUpOrDown
+        iconView.isHidden = true
+        iconView.setAccessibilityElement(false)
+        iconView.accessibilityID("pane.icon")
+
         accessoryStack.orientation = .horizontal
         accessoryStack.spacing = 4
         accessoryStack.alignment = .centerY
 
-        for child in [background, hairline, controls, titleLabel, accessoryStack] as [NSView] {
+        for child in [background, hairline, controls, iconView, titleLabel, accessoryStack] as [NSView] {
             child.translatesAutoresizingMaskIntoConstraints = false
             addSubview(child)
         }
@@ -142,6 +215,19 @@ public final class PaneTitleBarView: NSView {
         accessoryTrailing = accessoryStack.trailingAnchor.constraint(
             equalTo: trailingAnchor, constant: -6
         )
+        titleAfterControls = titleLabel.leadingAnchor.constraint(equalTo: controls.trailingAnchor, constant: 8)
+        titleAfterIcon = titleLabel.leadingAnchor.constraint(equalTo: iconView.trailingAnchor, constant: 5)
+        iconAfterControls = iconView.leadingAnchor.constraint(equalTo: controls.trailingAnchor, constant: 8)
+        iconClearOfControls = iconView.leadingAnchor.constraint(
+            greaterThanOrEqualTo: controls.trailingAnchor, constant: 8)
+        titleClearOfControls = titleLabel.leadingAnchor.constraint(
+            greaterThanOrEqualTo: controls.trailingAnchor, constant: 8)
+
+        addLayoutGuide(titleGroup)
+        groupStartsAtIcon = titleGroup.leadingAnchor.constraint(equalTo: iconView.leadingAnchor)
+        groupStartsAtTitle = titleGroup.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor)
+        titleCentered = titleGroup.centerXAnchor.constraint(equalTo: centerXAnchor)
+        titleCentered.priority = NSLayoutConstraint.Priority(rawValue: 200)
 
         NSLayoutConstraint.activate([
             heightAnchor.constraint(equalToConstant: Self.height),
@@ -158,7 +244,11 @@ public final class PaneTitleBarView: NSView {
             controls.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 6),
             controls.centerYAnchor.constraint(equalTo: centerYAnchor),
 
-            titleLabel.leadingAnchor.constraint(equalTo: controls.trailingAnchor, constant: 8),
+            iconView.centerYAnchor.constraint(equalTo: centerYAnchor),
+            iconView.widthAnchor.constraint(equalToConstant: Self.iconSize),
+            iconView.heightAnchor.constraint(equalToConstant: Self.iconSize),
+
+            titleGroup.trailingAnchor.constraint(equalTo: titleLabel.trailingAnchor),
             titleLabel.centerYAnchor.constraint(equalTo: centerYAnchor),
 
             accessoryStack.leadingAnchor.constraint(
@@ -167,6 +257,7 @@ public final class PaneTitleBarView: NSView {
             accessoryStack.centerYAnchor.constraint(equalTo: centerYAnchor),
             accessoryTrailing
         ])
+        applyTitlePlacement()
     }
 
     @available(*, unavailable)

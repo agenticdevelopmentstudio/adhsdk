@@ -3,6 +3,8 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { renderHook, act, cleanup } from "@testing-library/react";
 import { useBuildProgress } from "./use-build-progress";
 import type { ActivityRow } from "../lib/board-types";
+// @ts-expect-error vite raw import; read as text to check the directive
+import source from "./use-build-progress.ts?raw";
 
 // Fix Round 4 item 5.7. The cohort predicate used to AND in a private 10-minute clock
 // (`nowMs - Date.parse(a.at) < UNCONFIRMED_AFTER_MS`) that re-judged a verdict the
@@ -122,5 +124,103 @@ describe("useBuildProgress", () => {
     const { result } = renderHook(() => useBuildProgress([deployStep, probe]));
     expect(result.current.visible).toBe(false);
     expect(result.current.total).toBe(0);
+  });
+});
+
+// One `it` per conformance vector in cookbook/status/dashboard/state/build-progress/conformance-test-vectors.md.
+describe("useBuildProgress conformance vectors", () => {
+  type Props = { a: ActivityRow[] };
+  const mount = (a: ActivityRow[]) =>
+    renderHook(({ a: rows }: Props) => useBuildProgress(rows), { initialProps: { a } });
+
+  it("build-progress-001 one in-flight build is visible at 0%", () => {
+    const { result } = mount([buildRow("app", "progress", T0)]);
+    expect(result.current).toMatchObject({ visible: true, total: 1, completed: 0, pct: 0 });
+  });
+
+  it("build-progress-002 a settled build is complete at 100%", () => {
+    const { result, rerender } = mount([buildRow("app", "progress", T0)]);
+    rerender({ a: [buildRow("app", "good", T0)] });
+    expect(result.current).toMatchObject({ total: 1, completed: 1, pct: 100, complete: true });
+  });
+
+  it("build-progress-003 a server-expired (stale) build counts as completed", () => {
+    const { result, rerender } = mount([buildRow("app", "progress", T0)]);
+    rerender({ a: [buildRow("app", "stale", T0)] });
+    expect(result.current).toMatchObject({ completed: 1, complete: true });
+  });
+
+  it("build-progress-004 an hour-old in-flight build is never demoted by the client", () => {
+    const { result } = mount([buildRow("wedged", "progress", T0 - 60 * 60_000)]);
+    expect(result.current).toMatchObject({ visible: true, total: 1, completed: 0, pct: 0, complete: false });
+  });
+
+  it("build-progress-005 two-build cohort: 50%, 100% held, then hidden after 2100 ms", () => {
+    vi.useFakeTimers();
+    const { result, rerender } = mount([buildRow("one", "progress", T0), buildRow("two", "progress", T0)]);
+    expect(result.current.total).toBe(2);
+    rerender({ a: [buildRow("one", "good", T0), buildRow("two", "progress", T0)] });
+    expect(result.current).toMatchObject({ pct: 50, visible: true });
+    rerender({ a: [buildRow("one", "good", T0), buildRow("two", "good", T0)] });
+    expect(result.current).toMatchObject({ pct: 100, visible: true });
+    act(() => void vi.advanceTimersByTime(2100));
+    expect(result.current.visible).toBe(false);
+  });
+
+  it("build-progress-006 deploy-step and non-deploy rows are excluded", () => {
+    const deployStep: ActivityRow = { ...buildRow("app", "progress", T0), id: "deploy:vc_app:deploy", step: "deploy", buildInFlight: false };
+    const probe: ActivityRow = { ...buildRow("app", "progress", T0), id: `issue:ep-app:opened:${T0}:41`, kind: "probe", step: null, buildInFlight: false };
+    const { result } = mount([deployStep, probe]);
+    expect(result.current).toMatchObject({ visible: false, total: 0 });
+  });
+
+  it("build-progress-007 a build that drops out of the feed counts as completed", () => {
+    const { result, rerender } = mount([buildRow("app", "progress", T0)]);
+    rerender({ a: [] });
+    expect(result.current).toMatchObject({ total: 1, completed: 1, complete: true });
+  });
+
+  it("build-progress-008 a new build during the hold cancels the reset", () => {
+    vi.useFakeTimers();
+    const { result, rerender } = mount([buildRow("a", "progress", T0)]);
+    rerender({ a: [buildRow("a", "good", T0)] });
+    act(() => void vi.advanceTimersByTime(1000));
+    rerender({ a: [buildRow("a", "good", T0), buildRow("b", "progress", T0)] });
+    act(() => void vi.advanceTimersByTime(2000));
+    expect(result.current).toMatchObject({ total: 2, completed: 1, pct: 50, visible: true });
+  });
+
+  it("build-progress-009 percentage rounds to an integer (1/3 is 33, 2/3 is 67)", () => {
+    const rows = (tones: ActivityRow["tone"][]) => tones.map((t, i) => buildRow(`b${i}`, t, T0));
+    const { result, rerender } = mount(rows(["progress", "progress", "progress"]));
+    rerender({ a: rows(["good", "progress", "progress"]) });
+    expect(result.current).toMatchObject({ total: 3, completed: 1, pct: 33 });
+    rerender({ a: rows(["good", "good", "progress"]) });
+    expect(result.current).toMatchObject({ completed: 2, pct: 67 });
+  });
+
+  it("build-progress-010 two rows with the same id are one build", () => {
+    const { result } = mount([buildRow("app", "progress", T0), buildRow("app", "progress", T0)]);
+    expect(result.current.total).toBe(1);
+  });
+
+  it("build-progress-011 an empty feed on first evaluation is idle", () => {
+    const { result } = mount([]);
+    expect(result.current).toEqual({ visible: false, total: 0, completed: 0, pct: 0, complete: false });
+  });
+
+  it("build-progress-012 unmounting during the hold leaves no pending timer", () => {
+    vi.useFakeTimers();
+    const { result, rerender, unmount } = mount([buildRow("app", "progress", T0)]);
+    rerender({ a: [buildRow("app", "good", T0)] });
+    expect(result.current.complete).toBe(true);
+    expect(vi.getTimerCount()).toBe(1);
+    unmount();
+    expect(vi.getTimerCount()).toBe(0);
+    expect(() => vi.advanceTimersByTime(2000)).not.toThrow();
+  });
+
+  it("build-progress-013 the module is marked client-only", () => {
+    expect((source as string).trimStart().startsWith('"use client"')).toBe(true);
   });
 });

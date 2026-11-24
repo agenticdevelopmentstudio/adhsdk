@@ -16,13 +16,13 @@ class UsageStorageQuotaRow:
         user_id (str):
         ecosystem_id (str): Ecosystem id the override is scoped to
         quota_bytes (int):
-        updated_at (str):
+        updated (int): Unix timestamp, in seconds.
     """
 
     user_id: str
     ecosystem_id: str
     quota_bytes: int
-    updated_at: str
+    updated: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -32,16 +32,16 @@ class UsageStorageQuotaRow:
 
         quota_bytes = self.quota_bytes
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "userId": user_id,
-                "ecosystemId": ecosystem_id,
-                "quotaBytes": quota_bytes,
-                "updatedAt": updated_at,
+                "user_id": user_id,
+                "ecosystem_id": ecosystem_id,
+                "quota_bytes": quota_bytes,
+                "updated": updated,
             }
         )
 
@@ -50,19 +50,19 @@ class UsageStorageQuotaRow:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        user_id = d.pop("userId")
+        user_id = d.pop("user_id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        quota_bytes = d.pop("quotaBytes")
+        quota_bytes = d.pop("quota_bytes")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         usage_storage_quota_row = cls(
             user_id=user_id,
             ecosystem_id=ecosystem_id,
             quota_bytes=quota_bytes,
-            updated_at=updated_at,
+            updated=updated,
         )
 
         usage_storage_quota_row.additional_properties = d

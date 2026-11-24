@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "355a8f54-aee5-45cd-a28d-12c3b7a3085c",
     "title": "Sync Engine",
-    "domain": "adhsdk://cookbook/data/sync/sync-engine",
     "type": "ingredient",
     "version": "1.2.0",
     "status": "review",
@@ -26,7 +25,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/data/sync/offline-sync-client"
+      "d3a0b65f-92c0-43c1-b04c-77638eb72044"
     ],
     "references": [
       "packages/apple/AgenticDeveloperHubSDK/Sync/SyncEngine.swift",
@@ -41,7 +40,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "cbe238b57c37eaba",
+  "synced": "99e361716d59e1ef",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -60,7 +59,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

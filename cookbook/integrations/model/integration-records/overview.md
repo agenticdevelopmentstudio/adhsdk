@@ -1,0 +1,3 @@
+
+IntegrationRecords is the data model of the integrations store: five row types (`IntegrationConnection`, `ProviderConfig`, `EmailMessage`, `EmailLabel`, `ActionLog`), the small value types they embed (`ConnectionStatus`, `LabelColor`, `EmailAttachmentRef`), the `IntegrationRecord` protocol that gives every row the same column-naming rules, and `IntegrationClock`, the one source of timestamp strings. It holds no I/O of its own; the store and the sync worker read and write these rows. It embeds `MailSyncSettings` and `MailClass` from the sibling mail model files and calls `MailClassifier.classify(labelIds:)` when a message is built without a class.
+

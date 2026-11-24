@@ -1,13 +1,12 @@
 ---
 id: cf3a3dc9-6fed-47ba-a699-71ff806dcedd
 title: "Core Utilities"
-domain: adhsdk://cookbook/foundation/core-utilities
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -15,28 +14,18 @@ summary: "Six foundation-tier utilities: secret storage in the system credential
 platforms:
   - swift
   - macos
+  - ios
 tags:
   - credential-storage
   - secrets
   - semantic-versioning
   - logging
   - text-normalization
-  - value-types
 depends-on: []
 related:
-  - adhsdk://cookbook/ai/plugins/secret-storing
-  - adhsdk://cookbook/workspace/extensions/manifest/vs-code-engine-range
-references:
-  - packages/apple/AgenticDeveloperHubSDK/Core/CodableIgnored.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Core/KeychainHelper.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Core/Loggable.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Core/MathUtils.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Core/SemanticVersion.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Core/TextFolding.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/KeychainHelperTests.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Extensions/SemanticVersionTests.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Extensions/TextFoldingTests.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/CGFloatClampedTests.swift (adhsdk)
+  - d274abfa-3696-4fd0-b3e8-cff6fdffb825
+  - fea35fb1-9eeb-4647-b185-902c1d1cb988
+references: []
 approved-by: ""
 approved-date: ""
 ---
@@ -45,10 +34,12 @@ approved-date: ""
 
 ## Overview
 
-This recipe covers six independent foundation-tier utilities. Each has no
-dependency on anything else in this recipe or on any other part of the
-package; together they form the lowest tier of the toolkit — the tier every
-other logic and UI component is built on top of.
+This ingredient covers six foundation-tier utilities. Five have no
+dependency on anything else in this ingredient or on any other part of the
+package. The secret store has one: it conforms to the logger factory
+contract, so it depends on the logger factory and on nothing else. Together
+they form the foundation tier of the toolkit — the tier every other logic
+and UI component is built on top of.
 
 - **An encoding-skip wrapper** — removes a field from a model's standard
   structured encoding and decoding entirely, so a value can exist on a model
@@ -98,16 +89,27 @@ anything, holds view state, or performs networking.
   field holds a non-nothing value and then decoding the result back MUST
   yield a nothing wrapped value on the decoded copy — the original value
   MUST NOT survive an encode/decode round trip.
-- **encoding-skip-concurrency**: The wrapper MUST NOT claim to be safe to
-  share across concurrent contexts; its wrapped value is mutable, so a
-  caller sharing one instance across concurrency domains MUST supply its
-  own synchronization.
+
+Note (non-normative): the wrapper's wrapped value is mutable and the type
+makes no concurrency-safety promise, so a caller sharing one instance across
+concurrency domains should supply its own synchronization.
 
 ### Secret storage
 
 - **keychain-service-default**: the store's `service` identifier MUST
   default to the app's bundle identifier, or `"com.mikefullerton.agenticdeveloperhubsdk"` when
   none is available, and MUST be reassignable by a caller at any time.
+- **keychain-per-call-service**: `set`, `get`, `read`, `delete` and `exists`
+  MUST each accept an optional `service` argument that defaults to the
+  process-wide `service`; when a caller passes one, the operation MUST use it
+  in place of the process-wide value and MUST NOT change that value.
+- **keychain-data-protection-default**: the store's
+  `usesDataProtectionKeychain` flag MUST default to false.
+- **keychain-entitled-access-group**: `entitledAccessGroup(_:)` MUST return
+  the entry of the running process's keychain-access-groups entitlement that
+  equals the given group or ends in `"." + group`, and MUST return nothing
+  when the process carries no such entry. On every platform other than macOS
+  it MUST return nothing.
 - **keychain-access-group-default**: the store's `accessGroup` MUST default
   to nothing.
 - **keychain-legacy-services-default**: the store's `legacyServices` MUST
@@ -119,16 +121,17 @@ anything, holds view state, or performs networking.
 - **keychain-query-access-group-forces-data-protection**: when a query is
   built with a non-nothing access group, it MUST additionally scope to that
   group (`kSecAttrAccessGroup`) and require data-protection-keychain
-  semantics (`kSecUseDataProtectionKeychain` = true); when the access group
-  is nothing, both keys MUST be absent.
-- **keychain-set-overwrites**: setting a value that hits a duplicate-item
-  status on its first attempt MUST fall back to an update for the same
-  query, so a second `set` call for the same key MUST overwrite the first
-  value rather than fail.
+  semantics (`kSecUseDataProtectionKeychain` = true). When the access group
+  is nothing and `usesDataProtectionKeychain` is true, it MUST require
+  data-protection-keychain semantics without an access group. When the
+  access group is nothing and the flag is false, both keys MUST be absent.
+- **keychain-set-overwrites**: `set` MUST first delete any existing item for
+  the same query and then add the new value, so a second `set` call for the
+  same key MUST overwrite the first value rather than fail.
 - **keychain-set-access-group-accessibility**: when the store's access
-  group is non-nothing at the time `set` runs, the item's accessibility
-  attribute (`kSecAttrAccessible`) MUST be set to after-first-unlock,
-  this-device-only.
+  group is non-nothing or `usesDataProtectionKeychain` is true at the time
+  `set` runs, the item's accessibility attribute (`kSecAttrAccessible`) MUST
+  be set to after-first-unlock, this-device-only.
 - **keychain-set-returns-status**: `set` MUST return true only when the
   underlying add/update call reports success, and MUST return false for
   any other status.
@@ -136,22 +139,29 @@ anything, holds view state, or performs networking.
   `service`/`accessGroup` scope and MUST return the stored string directly
   when that query succeeds.
 - **keychain-get-access-group-migration**: when the primary lookup fails
-  and the store's access group is non-nothing, `get` MUST retry the query
-  with no access group; on success it MUST re-store the recovered value
-  under the current `service`/`accessGroup` scope via `set` before
-  returning it.
+  and the store's access group is non-nothing or `usesDataProtectionKeychain`
+  is true, `get` MUST retry the query against the login keychain with no
+  access group; on success it MUST re-store the recovered value under the
+  current `service`/`accessGroup` scope via `set` before returning it.
 - **keychain-get-legacy-service-migration**: when the access-group retry
   also fails (or does not apply), `get` MUST iterate `legacyServices` in
-  order and, for the first retired service under which the key is found,
-  MUST re-store the recovered value under the current `service` before
-  returning it.
+  order and, for the first retired service under which the key is found
+  (in the current scope or, when the login-keychain fallback applies, in the
+  login keychain), MUST re-store the recovered value under the current
+  `service` before returning it.
 - **keychain-get-exhausted-returns-nothing**: when the primary lookup, the
   access-group retry, and every entry in `legacyServices` all fail to
   locate the key, `get` MUST return nothing.
 - **keychain-legacy-item-not-deleted**: when `get` recovers a value from a
   legacy access-group scope or a retired service, it MUST NOT delete the
   original item under that legacy scope — only a new copy is written under
-  the current scope.
+  the current scope. `delete` is the operation that removes those copies
+  (see `keychain-delete-clears-legacy`).
+- **keychain-read-throws-on-failure**: `read` MUST query the current scope
+  and return the stored string when that succeeds; MUST fall back to `get`'s
+  migration paths when the status is item-not-found; and MUST throw an error
+  carrying the status for any other failure, so a caller can tell a failed
+  lookup from a missing key. `read` MUST log an error before throwing.
 - **keychain-copy-value-single-match**: the lookup helper MUST limit the
   match to a single item (`kSecMatchLimit` = `kSecMatchLimitOne`) and
   request the data back (`kSecReturnData` = true), and MUST decode the
@@ -160,32 +170,40 @@ anything, holds view state, or performs networking.
   MUST log an error when the underlying lookup call returns a status other
   than success and other than item-not-found; it MUST NOT log anything when
   the status is item-not-found.
-- **keychain-delete-idempotent**: `delete` MUST return true when the
-  underlying delete call reports success or item-not-found, and MUST
-  return false for any other status — deleting an already-absent key is
-  therefore never an error.
+- **keychain-delete-idempotent**: `delete` MUST return true when
+  every underlying delete call reports success or item-not-found, and MUST
+  return false when any call reports another status — deleting an
+  already-absent key is therefore never an error.
+- **keychain-delete-clears-legacy**: `delete` MUST remove the item under the
+  current scope, the login-keychain copy when the login-keychain fallback
+  applies, and the copies under every entry of `legacyServices`, so a cleared
+  secret cannot be recovered by a later `get`.
+- **keychain-delete-scoped-to-key**: deleting one key MUST NOT affect the
+  item stored for any other key.
 - **keychain-exists-checks-current-scope**: `exists` MUST return true when
   a query under the current `service`/`accessGroup` scope locates the key.
-- **keychain-exists-checks-legacy-scopes**: when the current-scope check
-  fails, `exists` MUST check `legacyServices` in order and MUST return true
+- **keychain-exists-checks-login-keychain**: when the current-scope check
+  fails and the login-keychain fallback applies, `exists` MUST check the
+  login keychain under the current `service` before it checks any retired
+  service.
+- **keychain-exists-checks-legacy-scopes**: when the earlier checks fail,
+  `exists` MUST check `legacyServices` in order and MUST return true
   if any retired service holds the key.
 - **keychain-exists-does-not-migrate**: unlike `get`, `exists` MUST NOT call
   `set` when it locates a key under a legacy scope — it only reports
   presence, it never re-stores.
-- **keychain-global-state-not-isolated**: `service`, `accessGroup`, and
-  `legacyServices` are shared mutable global state with no concurrency
-  confinement of their own; the store performs no locking around reads or
-  writes of these three values, so a caller that mutates one of them from
-  more than one concurrent context without external synchronization MUST
-  accept the resulting data race as the type's documented behavior, not a
-  defect to report.
-- **keychain-get-error-ambiguity**: `get`'s optional-string return cannot
-  distinguish "no secret was ever stored for this key" from "a lookup
+- **keychain-get-error-ambiguity**: `get`'s optional-string return does
+  not distinguish "no secret was ever stored for this key" from "a lookup
   failed for a reason other than not-found" (for example, an
   interaction-not-allowed status while the device is locked, or a missing
-  entitlement); the lookup helper logs the status in that second case, but
-  `get` still returns nothing either way, so no caller can tell the two
-  outcomes apart from the return value alone.
+  entitlement). The lookup helper logs the status in that second case, but
+  `get` MUST return nothing in both. A caller that needs to tell the two
+  apart MUST use `read` (see `keychain-read-throws-on-failure`).
+
+Note (non-normative): `service`, `accessGroup`, `legacyServices` and
+`usesDataProtectionKeychain` are shared mutable global state that the store
+does not lock. Callers should set them once at startup, before any other
+thread uses the store.
 
 ### Security
 
@@ -221,11 +239,10 @@ anything, holds view state, or performs networking.
   expose the identical logger value.
 - **loggable-factory**: the factory MUST return a structured logger
   constructed from `subsystem` and `category`.
-- **loggable-default-members-isolation**: only the contract's `logger`
-  requirement carries an explicit concurrency-context annotation; the
-  default `subsystem`, `category`, instance `logger`, and factory members
-  carry no isolation annotation of their own and so inherit whatever
-  isolation, if any, applies at each call site.
+
+Note (non-normative): only the contract's `logger` requirement carries an
+explicit concurrency-context annotation; the default `subsystem`,
+`category`, instance `logger`, and factory members carry none of their own.
 
 ### Float clamping
 
@@ -279,7 +296,7 @@ anything, holds view state, or performs networking.
 
 ## Appearance
 
-Not applicable: none of the six utilities in this recipe renders a view,
+Not applicable: none of the six utilities in this ingredient renders a view,
 draws, or has any visual representation.
 
 ## States
@@ -299,7 +316,6 @@ accessibility label, trait, or focus order to attach to.
 |----|--------------|-------|----------|
 | fc-001 | encoding-skip-shape, encoding-skip-decode-yields-nothing, decode-integration-skips-key | decode `{"a": 1, "b": 2}` into a model with a plain integer field `a` and an encoding-skip-wrapped optional integer field `b` | `b`'s stored value is nothing; the `2` in the input is discarded |
 | fc-002 | encoding-skip-encode-noop, encode-integration-skips-key, encoding-skip-round-trip-loses-value | encode a model with an encoding-skip-wrapped optional integer field `b` set to 42, then decode the result | encoded JSON has no `"b"` key at all; the decoded field's stored value is nothing |
-| fc-003 | encoding-skip-concurrency | one wrapper instance's stored value mutated from two concurrent tasks with no external synchronization | undefined/racy result; the type provides no protection of its own (no concurrency-safety guarantee, mutable storage) |
 | fc-004 | keychain-service-default | read the store's `service` in a process where no bundle identifier is available | `"com.mikefullerton.agenticdeveloperhubsdk"` |
 | fc-005 | keychain-set-returns-status, keychain-get-primary-lookup | `set("hello-world", forKey: key)` then `get(forKey: key)` | `set` returns `true`; `get` returns `"hello-world"` |
 | fc-006 | keychain-get-exhausted-returns-nothing | `get(forKey:)` for a key never set | nothing |
@@ -308,15 +324,14 @@ accessibility label, trait, or focus order to attach to.
 | fc-009 | keychain-set-returns-status | `set("", forKey: key)`, then `get(forKey: key)`, then `exists(forKey: key)` | `set` returns `true`; `get` returns `""`; `exists` returns `true` |
 | fc-010 | keychain-copy-value-single-match | set a string containing multibyte Unicode and control characters, then `get` it back | the identical string, byte-for-byte |
 | fc-011 | keychain-query-shape, keychain-query-access-group-forces-data-protection | build a query for account `"acct"` with access group `"ABCDE12345.example.shared"` | dictionary has `kSecAttrAccessGroup` equal to that group, `kSecUseDataProtectionKeychain` true, `kSecAttrAccount` equal to `"acct"` |
-| fc-012 | keychain-query-shape | build a query for account `"acct"` with no access group | no `kSecAttrAccessGroup`/`kSecUseDataProtectionKeychain` keys present, `kSecAttrAccount` equal to `"acct"` |
-| fc-013 | keychain-exists-checks-current-scope | set `keyA` and `keyB`, delete `keyA` | `get(keyA)` returns nothing; `get(keyB)` unaffected |
+| fc-012 | keychain-query-shape, keychain-query-access-group-forces-data-protection | build a query for account `"acct"` with no access group and `usesDataProtectionKeychain` false | no `kSecAttrAccessGroup`/`kSecUseDataProtectionKeychain` keys present, `kSecAttrAccount` equal to `"acct"` |
+| fc-013 | keychain-delete-scoped-to-key | set `keyA` and `keyB`, delete `keyA` | `get(keyA)` returns nothing; `get(keyB)` unaffected |
 | fc-014 | keychain-get-access-group-migration, keychain-set-access-group-accessibility | a secret stored while the access group is nothing; the access group is then set to a group and `get(forKey:)` is called for the same key | `get` locates the item under the no-group scope, re-stores it under the new group with `kSecAttrAccessible` set to after-first-unlock-this-device-only, and returns the value (traced to source, no dedicated test) |
-| fc-015 | keychain-get-legacy-service-migration, keychain-legacy-item-not-deleted | a secret stored under a service later listed in `legacyServices`; `service` now points elsewhere | `get(forKey:)` finds the value under the retired service, re-stores it under the current `service`, returns it, and leaves the original item under the retired service untouched (traced to source, no dedicated test) |
-| fc-016 | keychain-exists-checks-legacy-scopes, keychain-exists-does-not-migrate | a secret present only under a retired service listed in `legacyServices` | `exists(forKey:)` returns `true` without re-storing anything under the current service (traced to source, no dedicated test) |
+| fc-015 | keychain-get-legacy-service-migration, keychain-legacy-item-not-deleted | a secret stored under a service later listed in `legacyServices`; `service` now points elsewhere | `get(forKey:)` finds the value under the retired service, re-stores it under the current `service`, returns it, and leaves the original item under the retired service untouched (covered by the test `get recovers a secret stored under a retired service and leaves the old copy`) |
+| fc-016 | keychain-exists-checks-legacy-scopes, keychain-exists-does-not-migrate | a secret present only under a retired service listed in `legacyServices` | `exists(forKey:)` returns `true` without re-storing anything under the current service (covered by a conformance test) |
 | fc-017 | keychain-copy-value-logs-unexpected-errors-only | `copyValue` for a key that has never existed (item-not-found status) | no error is logged (traced to source, no dedicated test) |
 | fc-018 | keychain-secret-value-not-logged | review every error/info log call site in the secret-storage component's source | each interpolates only the account key and a status/message, never the secret string itself (traced to source, no dedicated test) |
-| fc-019 | keychain-access-group-default, keychain-legacy-services-default | read the store's `accessGroup` and `legacyServices` before any caller assigns them | `accessGroup` is nothing; `legacyServices` is `[]` (traced to source declaration, no dedicated test) |
-| fc-020 | keychain-global-state-not-isolated | thread A sets the store's `service` while thread B concurrently reads it, with no external synchronization | undefined/racy result; the store performs no locking of its own around these shared values (traced to source declaration, no dedicated test) |
+| fc-019 | keychain-access-group-default, keychain-legacy-services-default | read the store's `accessGroup` and `legacyServices` before any caller assigns them | `accessGroup` is nothing; `legacyServices` is `[]` (covered by a conformance test) |
 | fc-021 | keychain-secret-storage-mechanism, keychain-secret-no-transmission, keychain-secret-lifetime-caller-controlled | review every code path in the secret-storage component's source | every write goes through the underlying add/update call against a generic-password item, no path constructs a network call, and no path schedules a deletion or expiry timer (traced to source, whole-file review) |
 | fc-022 | semver-parse-forms | parse `"1.74.0"`, `"1.74"`, `"1"` | all equal the corresponding value with missing components defaulted to `0` |
 | fc-023 | semver-parse-forms | parse `"v1.74.0"` | equals major 1, minor 74, patch 0 |
@@ -331,10 +346,13 @@ accessibility label, trait, or focus order to attach to.
 | fc-032 | float-clamped-shape, float-clamped-pure | clamp `5`, `-3`, `42`, `0`, `10` to the range `0...10` | `5`, `0`, `10`, `0`, `10` respectively |
 | fc-033 | float-clamped-degenerate-range | clamp `-100`, `100`, `5` to the range `5...5` | `5` in every case |
 | fc-034 | float-clamped-shape | clamp `-100`, `100`, `-7` to the range `-10...-5` | `-10`, `-5`, `-7` respectively |
-| fc-035 | loggable-requirement, loggable-default-subsystem, loggable-default-category, loggable-factory | a type `Foo` conforms to the logger factory contract via a single factory-backed static logger property, running in a process where the bundle identifier is `"com.example.app"` | `Foo`'s logger's subsystem is `"com.example.app"`; its category is `"Foo"` (traced to source, no dedicated test) |
+| fc-035 | loggable-requirement, loggable-default-subsystem, loggable-default-category, loggable-factory | a type `Foo` conforms to the logger factory contract via a single factory-backed static logger property, running in a process where the bundle identifier is `"com.example.app"` | `Foo`'s logger's subsystem is `"com.example.app"`; its category is `"Foo"` (covered by a conformance test) |
 | fc-036 | loggable-instance-forwarding | an instance's `logger` on a type conforming to the logger factory contract | identical to the type-level value (traced to source, no dedicated test) |
-| fc-037 | loggable-default-members-isolation | inspect the declarations of `subsystem`, `category`, the instance `logger`, and the factory method in the contract's default implementations | none carries its own explicit isolation annotation; only the contract's `logger` requirement declares one (traced to source, no dedicated test) |
-
+| fc-038 | keychain-delete-clears-legacy | a secret stored under a service listed in `legacyServices`; `delete(forKey:)` is called; then `get(forKey:)` | `delete` returns `true`; `get` returns nothing (covered by the test `delete also removes the retired copy, so a cleared secret stays cleared`) |
+| fc-039 | keychain-per-call-service | `set("v", forKey: key, service: "other")`, then `get(forKey: key, service: "other")` and `get(forKey: key)` | the first `get` returns `"v"`; the second returns nothing; the process-wide `service` is unchanged (covered by the test `an explicit service scopes set, get, exists and delete without touching the global one`) |
+| fc-040 | keychain-query-access-group-forces-data-protection | build a query for account `"acct"` with no access group and `usesDataProtectionKeychain` true | `kSecUseDataProtectionKeychain` true; no `kSecAttrAccessGroup` key (covered by a conformance test) |
+| fc-041 | keychain-read-throws-on-failure | `read(forKey:)` for a key never set | nothing, and no error is thrown (covered by a conformance test) |
+| fc-042 | keychain-entitled-access-group, keychain-data-protection-default | on a platform other than macOS, call `entitledAccessGroup("com.example.shared")`; read `usesDataProtectionKeychain` before any assignment | nothing; `false` (traced to source, no dedicated test) |
 ## Edge Cases
 
 - **Empty string as a stored secret**: `set("", forKey:)` MUST succeed, and
@@ -350,23 +368,17 @@ accessibility label, trait, or focus order to attach to.
 - **Degenerate clamp range**: clamping with equal lower and upper bounds
   MUST collapse every input to that single value, never trap or produce an
   unrelated result.
-- **Concurrent mutation of the secret store's global state**: `service`,
-  `accessGroup`, and `legacyServices` are shared mutable state with no
-  concurrency confinement of their own; concurrent mutation from more than
-  one execution context without external synchronization is a documented
-  data race, not a crash the type guards against.
-- **Concurrent mutation of a shared encoding-skip wrapper instance**: the
-  wrapper provides no concurrency-safety guarantee; sharing one instance's
-  mutable stored value across concurrent contexts without synchronization
-  is the caller's responsibility, not something the wrapper prevents.
 - **Credential-store lookup failure that is not "not found"**: the lookup
   helper logs any status other than success and item-not-found, but `get`
   still returns nothing for that case exactly as it does for a genuine
-  absence — see `keychain-get-error-ambiguity` above.
+  absence; `read` throws instead — see `keychain-get-error-ambiguity` and
+  `keychain-read-throws-on-failure` above.
 - **Secret recovered from a legacy or access-group scope**: `get` re-stores
   the recovered value under the current scope but MUST NOT delete the
   original — a second install still pointed at the old scope MUST continue
-  to find its copy.
+  to find its copy until a caller calls `delete`, which removes the copies
+  under the login keychain and every legacy service
+  (`keychain-delete-clears-legacy`).
 - **Unicode and control characters in a stored secret**: the secret store
   MUST round-trip a value containing multibyte Unicode, emoji, and control
   characters (newline, tab) exactly, since `set`/`get` encode/decode as raw
@@ -379,8 +391,9 @@ accessibility label, trait, or focus order to attach to.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `service` (of the secret store) | string (mutable, shared) | app's bundle identifier, or `"com.mikefullerton.agenticdeveloperhubsdk"` when none is available | Credential-store service identifier that scopes every query, set, and delete. |
-| `accessGroup` (of the secret store) | optional string (mutable, shared) | nothing | Optional shared credential-store access group; when set, forces data-protection-keychain semantics and after-first-unlock-this-device-only accessibility on new writes. |
+| `service` (of the secret store; also a per-call argument on `set`, `get`, `read`, `delete` and `exists`) | string (mutable, shared) | app's bundle identifier, or `"com.mikefullerton.agenticdeveloperhubsdk"` when none is available | Credential-store service identifier that scopes every query, set, and delete. |
+| `accessGroup` (of the secret store) | optional string (mutable, shared) | nothing | Optional shared credential-store access group; when set, forces data-protection-keychain semantics, after-first-unlock-this-device-only accessibility on new writes, and login-keychain recovery in `get`, `exists` and `delete`. |
+| `usesDataProtectionKeychain` (of the secret store) | boolean (mutable, shared) | `false` | When true, new writes go to the data-protection keychain with after-first-unlock-this-device-only accessibility, and `get`, `exists` and `delete` also reach the login keychain copy. |
 | `legacyServices` (of the secret store) | list of strings (mutable, shared) | empty list | Retired service identifiers `get`/`exists` fall back to, newest-retired-first, for migrating secrets forward. |
 | the semantic-version component ceiling | integer constant | `2,147,483,647` | Fixed plausibility bound on `major`/`minor`/`patch`; not caller-configurable. |
 
@@ -399,7 +412,7 @@ Not applicable: none of the six utilities constructs a user-facing string.
 The secret store's and the logger factory contract's only string output is
 diagnostic log text (see Logging below), never text displayed to a user;
 semantic-version parsing and text folding operate on caller-supplied data,
-not on any string this recipe itself presents to a user.
+not on any string this ingredient itself presents to a user.
 
 ## Accessibility Options
 
@@ -418,16 +431,18 @@ event.
 
 ## Privacy
 
-The secret store is the one utility in this recipe that handles sensitive
+The secret store is the one utility in this ingredient that handles sensitive
 data; the other five collect, store, and transmit nothing.
 
 - **Data handled**: the secret string values a caller passes to `set` —
   arbitrary caller-supplied text such as an API key or credential. The
   store never inspects, parses, or transforms the value itself.
 - **Storage**: the system's credential store, scoped by `service` and
-  optionally `accessGroup`. An access-group item is additionally marked
-  accessible only after the device's first unlock, and never synced
-  off-device.
+  optionally `accessGroup`. An item written while an access group is set or
+  `usesDataProtectionKeychain` is true is additionally marked accessible
+  only after the device's first unlock, and never synced off-device. An
+  item written with neither is stored with the credential store's default
+  accessibility class.
 - **Transmission**: none. The store performs no networking; a caller that
   later transmits a retrieved secret does so outside this component's
   boundary.
@@ -445,17 +460,21 @@ app's bundle identifier — Category: the store's own type name.
 |-------|-------|----------------|
 | the underlying add/update call did not report success in `set` | error | interpolates the account key and the resulting status |
 | the underlying lookup call reported a status other than success or item-not-found in `copyValue` | error | interpolates the account key and the resulting status |
-| a secret was recovered from a legacy access-group scope or a retired service and re-stored under the current scope | info | interpolates the account key and the scope it was recovered from |
+| the underlying lookup call in `read` reported a status other than success or item-not-found | error | interpolates the account key and the resulting status |
+| a secret was recovered from a retired service and re-stored under the current service | info | interpolates the account key; the message does not name which retired service |
+
+Recovery from a legacy access-group scope or the login keychain logs
+nothing.
 
 No log call in the secret store interpolates the secret value itself (see
 `keychain-secret-value-not-logged` above). The other five utilities in this
-recipe produce no log output at all; the logger factory contract only
+ingredient produce no log output at all; the logger factory contract only
 provides the factory the secret store and other conforming types build
 their logger from.
 
 ## Platform Notes
 
-- **SwiftUI (source platform)**: all six files (`CodableIgnored.swift`,
+- **Swift (source implementation)**: all six files (`CodableIgnored.swift`,
   `KeychainHelper.swift`, `Loggable.swift`, `MathUtils.swift`,
   `SemanticVersion.swift`, `TextFolding.swift`) depend only on `Foundation`,
   `Security`, and `os` (`OSLog`) — none imports `SwiftUI`, so they are
@@ -487,25 +506,29 @@ their logger from.
   package, to preserve this type's short-form leniency and its explicit
   `Number.MAX_SAFE_INTEGER`-scale bound check, since JavaScript numbers do
   not trap on overflow the way `Int` arithmetic does. `TextFolding` maps to
-  `string.normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase()`,
+  `string.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()`,
   with no locale argument, matching this type's `locale: nil`.
 - **AppKit/UIKit**: identical to the SwiftUI note — none of the six files
   imports `AppKit` or `UIKit`, so an AppKit- or UIKit-hosted app consumes
-  the same `AgenticDeveloperHubSDKCore` types unchanged. One platform-specific
+  the same types unchanged. `KeychainHelper` and `Loggable` live in the
+  foundation `AgenticDeveloperHubSDK` framework, which builds for macOS, iOS,
+  watchOS, tvOS and visionOS; `AgenticDeveloperHubSDKCore` re-exports it, so
+  Core call sites still resolve them. On every platform but macOS,
+  `KeychainHelper.entitledAccessGroup` returns nil, because `SecTask` is
+  macOS only, and the caller keeps the per-binary default. One platform-specific
   nuance carries forward regardless of UI framework: `KeychainHelper`'s
-  `kSecUseDataProtectionKeychain` flag (set only when `accessGroup` is
-  non-nil) is required for access-group Keychain sharing on macOS
-  specifically, per the type's own source comment.
-- **WinUI 3**: the reason this recipe exists — none of these six types has
-  a direct Windows App SDK equivalent, so each needs a concrete port.
+  `kSecUseDataProtectionKeychain` flag (set whenever `accessGroup` is
+  non-nil or `usesDataProtectionKeychain` is true) is required for
+  access-group Keychain sharing on macOS specifically.
+- **WinUI 3**: translation guidance for each of the six types.
   `CodableIgnored` maps to `System.Text.Json`'s `[JsonIgnore]` attribute
   directly (the BCL already provides this exact "never encode, always
   null/default on decode" contract — no wrapper type is needed).
   `KeychainHelper` maps to `Windows.Security.Credentials.PasswordVault`
   (`PasswordCredential`), resourced by the same string `service` scopes a
   Keychain query with; Windows has no access-group concept, so the
-  access-group migration path (`accessGroup`, and the migration branch of
-  `get(forKey:)`) has no analog and should be dropped, while the
+  access-group migration path (`accessGroup`, `usesDataProtectionKeychain`, and the
+  login-keychain recovery branch of `get(forKey:)`) has no analog and should be dropped, while the
   `legacyServices` migration path still applies (a `PasswordVault` resource
   rename). `Loggable` maps to `Microsoft.Extensions.Logging`'s
   `ILogger<T>`, resolved per type the same way `makeLogger()` derives a
@@ -516,7 +539,7 @@ their logger from.
   component against `int.MaxValue` explicitly, mirroring
   `SemanticVersion.maximumComponent`. `TextFolding` maps to `string
   .Normalize(NormalizationForm.FormD)` with combining marks stripped by
-  Unicode category, followed by `ToUpperInvariant()`/`ToLowerInvariant()`
+  Unicode category, followed by `ToLowerInvariant()`
   (never the current-culture `ToLower()`) to preserve `locale: nil`'s
   locale independence. `Task`, `HttpClient`, and `Windows.Storage` have no
   role in any of the six ports: every operation here is synchronous, with
@@ -524,14 +547,18 @@ their logger from.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/CodableIgnored.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/KeychainHelper.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Loggable.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/MathUtils.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SemanticVersion.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/TextFolding.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/CodableIgnored.swift` | confirmed (1.1.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Keychain/KeychainHelper.swift` | confirmed (1.1.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Logging/Loggable.swift` | confirmed (1.1.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/MathUtils.swift` | confirmed (1.1.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SemanticVersion.swift` | confirmed (1.1.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/TextFolding.swift` | confirmed (1.1.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Tests/AgenticDeveloperHubSDKTests/KeychainHelperTests.swift` | confirmed (1.1.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Extensions/SemanticVersionTests.swift` | confirmed (1.1.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Extensions/TextFoldingTests.swift` | confirmed (1.1.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/CGFloatClampedTests.swift` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -583,47 +610,34 @@ their logger from.
   discards whatever was present, so an ignored field's contract is
   "invisible," not "present but nulled."
   **Approved**: pending
-
-- **Decision**: `Loggable.swift` retains a large `#if false` block of
-  authoring notes and usage examples after its real declarations.
-  **Rationale**: this is a documented fact about the file's actual
-  contents, not a convention to imitate — the block never compiles and has
-  zero runtime effect; it is preserved here for source fidelity rather than
-  silently dropped or treated as executable guidance.
-  **Approved**: pending
-
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [secure-storage](agenticdevelopercookbook://compliance/security#secure-storage) | passed | Security |
-| [secure-log-output](agenticdevelopercookbook://compliance/security#secure-log-output) | passed | Security |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.security.secure-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bb5dfc9b-c5b0-54fa-882f-007ae7dad0e9) | passed | Security |
+| [adc.check.security.secure-log-output](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b258657f-bb73-5491-9c70-0d14afdfa6ce) | passed | Security |
 
 `separation-of-concerns` passes because each of the six files owns exactly
 one concern (Codable-field exclusion, Keychain access, logger
-construction, a math clamp, version parsing, text folding) with no
-cross-file coupling — none imports another file in this recipe.
+construction, a math clamp, version parsing, text folding) with one
+coupling: the secret store conforms to the logger factory contract, and no other file in this ingredient imports another.
 
-`unit-test-coverage` is `partial`: `KeychainHelper`, `SemanticVersion`,
-`TextFolding`, and `MathUtils`'s `CGFloat.clamped(to:)` each have a
-dedicated test file with meaningful assertions (`KeychainHelperTests
-.swift`, `SemanticVersionTests.swift`, `TextFoldingTests.swift`,
-`CGFloatClampedTests.swift`), but `CodableIgnored` and `Loggable` have no
-test file anywhere in the repository.
+`unit-test-coverage` is `partial`: 31 of 39 vectors have a test. `KeychainHelperTests.swift` and `LoggableConformanceTests.swift` (SDK tests), `SemanticVersionTests.swift`, `TextFoldingTests.swift`, `CGFloatClampedTests.swift` and `CodableIgnoredConformanceTests.swift` (Core tests) cover them. Skipped with a reason: fc-004 (the test host always has a bundle identifier), fc-014 (needs the keychain-access-groups entitlement), fc-017 (the unified log is not observable), fc-018 and fc-021 (source-review vectors), fc-031 (the process locale cannot be switched), fc-036 (`Logger` has no equality) and fc-042 (the off-macOS half cannot run on macOS).
 
 `explicit-error-handling` passes because every fallible operation reports
 its outcome through its return value — `KeychainHelper.set`/`.delete`
 return `Bool`, `.get` returns `String?`, `SemanticVersion.init?` returns an
-optional — none swallows a failure silently without any signal reaching
-the caller (see `keychain-get-error-ambiguity` above for the one place
-that signal is coarser than it could be).
+optional, and `.read` throws a `KeychainReadError` for any failure other
+than not-found, so a caller that needs to tell a failed lookup from a
+missing key has a way to (see `keychain-get-error-ambiguity` above for the
+one place `get` stays coarse).
 
 `secure-storage` passes because `KeychainHelper` is the only file in this
-recipe that stores sensitive material, and it stores it exclusively as
-macOS Keychain generic-password items via `SecItemAdd`/`SecItemUpdate` —
+ingredient that stores sensitive material, and it stores it exclusively as
+macOS Keychain generic-password items via `SecItemAdd` —
 never in `UserDefaults`, a file, or any other unencrypted location.
 
 `secure-log-output` passes because every log call site in
@@ -634,6 +648,7 @@ scope, never the secret string itself.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | KeychainHelper and Loggable moved to the foundation SDK; entitledAccessGroup is nil off macOS |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Inverted prohibitions (none/neither/no X MUST) restated as MUST NOT. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to foundation/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

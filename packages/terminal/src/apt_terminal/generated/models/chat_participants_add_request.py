@@ -36,18 +36,18 @@ class ChatParticipantsAddRequest:
         field_dict.update(self.additional_properties)
         field_dict.update({})
         if user_ids is not UNSET:
-            field_dict["userIds"] = user_ids
+            field_dict["user_ids"] = user_ids
         if persona_ids is not UNSET:
-            field_dict["personaIds"] = persona_ids
+            field_dict["persona_ids"] = persona_ids
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        user_ids = cast(list[str], d.pop("userIds", UNSET))
+        user_ids = cast(list[str], d.pop("user_ids", UNSET))
 
-        persona_ids = cast(list[str], d.pop("personaIds", UNSET))
+        persona_ids = cast(list[str], d.pop("persona_ids", UNSET))
 
         chat_participants_add_request = cls(
             user_ids=user_ids,

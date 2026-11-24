@@ -1,0 +1,24 @@
+
+- **sortable-model-input**: SortableSurface MUST accept a `zones` array of `{ id: string, itemIds: readonly string[] }` objects, each describing one ordered collection and the items it contains in render order.
+- **drag-surface-config-input**: DragSurface MUST accept an `onDrop` callback, plus optional `describeItem`, `describeTarget`, `renderOverlay`, `axis`, and `keyboard` props to configure its behavior.
+- **drag-surface-drop-payload**: On drop, DragSurface's `onDrop` callback MUST receive `{ itemId: string, targetId: string | null, delta: { x: number, y: number } }` — the target the item landed on (or null if none) and the pixel distance it travelled.
+- **drop-position-report**: SortableSurface MUST report drop position as `afterId` (item before the dropped item, or null if dropped at top) and `beforeId` (item after, or null if dropped at bottom).
+- **center-crossing-drop-position**: When a drag ends over another item, SortableSurface MUST decide before/after by comparing the dragged element's translated-rect center to the target element's rect center along the active orientation axis (horizontal: `left + width/2`; vertical: `top + height/2`); the item lands after the target once the dragged center has passed the target's center.
+- **no-op-reorder-ignored**: SortableSurface MUST NOT report a drop if the item lands in its original position.
+- **pointer-drag-activation-distance**: Pointer drags MUST NOT start until the pointer has moved at least 5 pixels from its starting position.
+- **continuous-drop-target-remeasurement**: Droppable zones MUST be re-measured continuously during a drag (not just at drag start), to accommodate zones that grow or scroll during the operation.
+- **pointer-and-keyboard-interaction**: Both SortableSurface and DragSurface MUST support pointer drags and MUST provide keyboard interaction (Space or Enter to start, arrow keys to move, Enter to drop, Escape to cancel) when keyboard is enabled. SortableItem defaults to keyboard enabled; DragItem defaults to keyboard disabled. When keyboard is disabled, the host MUST provide an equivalent non-pointer path to the same change (e.g., the form fields a calendar or timeline drag would otherwise set).
+- **optional-drag-overlay**: SortableSurface and DragSurface MUST render a DragOverlay component under the pointer during a drag when `renderOverlay` prop is provided; when omitted, no overlay is rendered.
+- **axis-constraint**: DragSurface MAY accept an `axis` prop to constrain movement to the x or y axis only.
+- **grip-handle-rendering**: DragGrip MAY render a span element with grab/grabbing cursor, icon, and optional accessible label.
+- **drag-event-announcements**: SortableSurface and DragSurface MUST provide accessibility announcements (via aria-live regions) for drag start, drag over a target, drag end, and drag cancel events.
+- **optional-item-and-zone-descriptions**: SortableSurface MUST accept `describeItem` and `describeZone` callbacks to customize item and zone names in announcements; DragSurface MUST accept `describeItem` and `describeTarget` callbacks.
+- **nearest-corner-collision-detection**: Both surfaces MUST use nearest-corner collision detection (not center-point or bounding-box overlap) to decide which zone or target a drag is over.
+- **dragged-item-de-emphasis**: During a pointer drag in SortableSurface, the dragged item's original element MUST be visibly de-emphasized (reduced opacity) to indicate it is lifted, while the overlay renders the visual representation under the pointer.
+- **dragged-item-visual-elevation**: During a pointer drag in DragSurface, the dragged element MUST be visually elevated above surrounding content.
+- **grip-touch-scroll-suppression**: DragGrip MUST disable the browser's touch-scroll gesture on the handle so it does not interfere with the pointer sensor.
+- **horizontal-layout-support**: SortableSurface SHOULD accept an `orientation` prop set to `"horizontal"` to handle zones laid out left-to-right; the default orientation is `"vertical"`.
+- **conditional-drag-disabling**: Both SortableItem and DragItem MUST accept an `enabled` prop (default true) to disable dragging for specific items (e.g., filtered rows, busy rows).
+- **conditional-keyboard-attribute-spreading**: SortableItem and DragItem MAY accept a `keyboard` prop (default true for SortableItem, false for DragItem) to control whether dnd-kit's keyboard attributes are spread onto the handle; when false, only listeners are spread.
+- **sortable-zone-droppable**: SortableZone MUST register its own droppable (via useDroppable) so that drops into an empty zone are reachable.
+

@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
-    "id": "A1563AD8-D4E4-44F0-9823-3D9229C9321D",
+    "id": "a1563ad8-d4e4-44f0-9823-3d9229c9321d",
     "title": "Billing Rounding",
-    "domain": "adhsdk://cookbook/foundation/billing/billing-rounding",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -25,14 +24,14 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/foundation/billing/billing-clock",
-      "adhsdk://cookbook/foundation/billing/billing-rollup"
+      "51bf262a-9c94-4533-a34d-1aeadf63037b",
+      "a252605d-12ce-4235-9eb4-2582678f6f49"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "ea157921e024c42a",
+  "synced": "b541e723e9f48ecd",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -51,7 +50,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

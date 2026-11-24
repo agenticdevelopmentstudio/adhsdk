@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "2469d716-84aa-4984-9e71-4cfe49d05854",
     "title": "Projects Coordinator",
-    "domain": "adhsdk://cookbook/workspace/projects/projects-coordinator",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",
@@ -27,13 +26,13 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/workspace/projects/git-repo",
-      "adhsdk://cookbook/workspace/projects/project-database",
-      "adhsdk://cookbook/workspace/projects/project-reconciler",
-      "adhsdk://cookbook/workspace/projects/git-repo-scanner",
-      "adhsdk://cookbook/workspace/projects/project-chooser-window",
-      "adhsdk://cookbook/workspace/projects/project-scan-progress-window",
-      "adhsdk://cookbook/ui/layout/composable-tabs/tabs-window"
+      "1463e7a2-e290-4b8c-8643-df9462a758e6",
+      "c212ea39-10e7-4146-89dd-36edb3b3455a",
+      "fcff7387-19aa-49ab-b75d-f0c7bfcdf27c",
+      "3bec9b27-a9e3-4716-b516-688cc7f5a1c5",
+      "ae0932d6-572f-4173-ba49-df68f4039ba4",
+      "46e79f87-0dbb-4bd5-b11c-bd65ae0087a9",
+      "55a394e6-9934-404b-941d-25bebbf71378"
     ],
     "references": [
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectsCoordinator.swift (adhsdk)",
@@ -55,7 +54,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "3cea63b62d16c606",
+  "synced": "85c20f11b7f3f292",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -74,7 +73,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

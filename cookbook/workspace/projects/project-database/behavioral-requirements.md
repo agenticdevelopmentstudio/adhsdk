@@ -70,7 +70,7 @@
 ### Migrations
 
 - **schema-version-constant**: The current schema version constant MUST be
-  `4`, matching the highest version number any migration in this component
+  `7`, matching the highest version number any migration in this component
   inserts into `schema_migrations`.
 - **migrations-run-in-one-transaction**: Running migrations MUST wrap the
   `schema_migrations` table creation and every pending migration in a
@@ -83,7 +83,7 @@
   propagate the original failure to the caller; the file MUST be left
   exactly as it was before running migrations began.
 - **migrations-are-sequential-and-append-only**: Running migrations MUST
-  run migration 1, migration 2, migration 3, and migration 4, in that
+  run migrations 1 through 7, in that
   fixed order, and MUST run each one if and only if the current schema
   version is less than that migration's target version; a migration MUST
   NOT be skipped because a later migration already ran, and MUST NOT run
@@ -125,6 +125,23 @@
 - **migration004-working-directory**: Migration 4 MUST add a nullable
   `project_tabs.working_directory TEXT` column when it does not already
   exist, and MUST insert version row `4`.
+- **migration005-browser-jars**: Migration 5 MUST create, guarded by `IF NOT
+  EXISTS`, table `browser_jars` (`kind` checked to `'worktree'` or
+  `'pane'`) with a unique index on `(kind, repo_id, worktree_path)` for
+  worktree jars and one on `pane_node_id` where it is not null, MUST keep
+  the browser panes already in the file on the shared store, and MUST
+  insert version row `5`.
+- **migration006-repo-kind**: Migration 6 MUST, when `git_repo` has no
+  `kind` column, rebuild `git_repo` with `kind TEXT NOT NULL DEFAULT
+  'project'` and `UNIQUE(path, kind)` in place of a unique `path`, copying
+  every row across as a project and recreating `idx_git_repo_name`, and
+  MUST insert version row `6`.
+- **migration007-edges-follow-global**: Migration 7 MUST set
+  `project_state.enabled_edges` to the empty string (no stored edge choice)
+  on every row whose value is exactly `'top'`, since older code wrote
+  `'top'` on every save unless the user chose otherwise, so a stored
+  `'top'` is the old default rather than a choice; it MUST leave every
+  other value alone and MUST insert version row `7`.
 - **migration-idempotency**: Re-running construction — and therefore
   running migrations — against a database file that already has every
   migration applied MUST be a no-op that leaves every row unchanged, and
@@ -150,6 +167,9 @@
   design rationale, "one [the scanner] did not [find] is deleted, not
   filtered out here" — listing performs no filtering by recency, missing
   state, or any other criterion.
+- **repos-of-a-kind**: Listing the repositories of one kind MUST return
+  every row whose `kind` equals that kind, in no promised order, and no row
+  of any other kind.
 - **repo-lookup-by-id-and-path**: Looking up a repository by id MUST
   filter by `id = ?` bound to the id's string form, and looking up by path
   MUST filter by `path = ?` bound to the given string; both MUST return

@@ -299,6 +299,58 @@ final class LivenessServiceTests: XCTestCase {
         XCTAssertEqual(try status("ghost"), "ended", "a named process leaves no slot for the directory to hand out")
     }
 
+    func testALiveSessionInADeletedWorktreeMovesToItsProcessDirectory() throws {
+        // `/ship`'s docs worktree: the session entered it, left, and the worktree was
+        // deleted, with no hook since. The row went on naming the gone directory and
+        // its branch for as long as the session idled.
+        let root = try makeProjectDir()
+        let worktree = try makeSubdir(of: root, named: ".claude/worktrees/docs-update-x")
+        try seedSession("shipped", cwd: worktree)
+        database.updateSessionGitBranch("docs-update-x", sessionId: "shipped")
+        try FileManager.default.removeItem(atPath: worktree)
+
+        try runLiveness(processes: [.init(pid: 28_376, parentPid: 1, cwd: root, sessionId: "shipped")])
+
+        let session = try XCTUnwrap(database.fetchSession(sessionId: "shipped"))
+        XCTAssertEqual(session.status, "active")
+        XCTAssertEqual(session.cwd, root)
+        XCTAssertEqual(session.gitBranch, "", "the deleted worktree's branch is not where the session is")
+    }
+
+    func testALiveSessionFollowsItsProcessEvenIntoADeletedDirectory() throws {
+        // The session left the docs worktree for another worktree, and both have been
+        // shipped and deleted while the process idles in the second. The process's
+        // directory is gone too, but it is still where the session is — the older
+        // one is not.
+        let root = try makeProjectDir()
+        let docs = try makeSubdir(of: root, named: ".claude/worktrees/docs-update-x")
+        let feature = try makeSubdir(of: root, named: ".claude/worktrees/new-tool")
+        try seedSession("twice-shipped", cwd: docs)
+        try FileManager.default.removeItem(atPath: docs)
+        try FileManager.default.removeItem(atPath: feature)
+
+        try runLiveness(processes: [.init(pid: 68_828, parentPid: 1, cwd: feature, sessionId: "twice-shipped")])
+
+        let session = try XCTUnwrap(database.fetchSession(sessionId: "twice-shipped"))
+        XCTAssertEqual(session.status, "active")
+        XCTAssertEqual(session.cwd, feature)
+    }
+
+    func testALiveSessionBelowItsProcessDirectoryKeepsItsCwd() throws {
+        // An agent that `cd`s into a subdirectory is somewhere real: only a directory
+        // that is gone gets replaced.
+        let root = try makeProjectDir()
+        let sub = try makeSubdir(of: root, named: "Sources")
+        try seedSession("wandered", cwd: sub)
+        database.updateSessionGitBranch("feature", sessionId: "wandered")
+
+        try runLiveness(processes: [.init(pid: 4242, parentPid: 1, cwd: root, sessionId: "wandered")])
+
+        let session = try XCTUnwrap(database.fetchSession(sessionId: "wandered"))
+        XCTAssertEqual(session.cwd, sub)
+        XCTAssertEqual(session.gitBranch, "feature")
+    }
+
     func testHelperProcessesOfALiveClaudeClaimNothing() throws {
         // A background agent runs as a daemon launched from the home directory plus a
         // pty host beside the session; neither writes a session file. Counted by

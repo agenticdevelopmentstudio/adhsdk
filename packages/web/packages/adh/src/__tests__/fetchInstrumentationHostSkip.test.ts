@@ -37,7 +37,7 @@ describe('telemetry host skip (relative reverse-proxy api_host)', () => {
     await wfetch('/ingest/e/', { method: 'POST' })
     expect(captureEventMock).not.toHaveBeenCalled()
 
-    await wfetch('/api/auth/me')
+    await wfetch('/api/v1/account')
     expect(captureEventMock).toHaveBeenCalledTimes(1)
   })
 

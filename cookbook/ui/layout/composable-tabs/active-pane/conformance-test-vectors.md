@@ -33,7 +33,7 @@
 | CTA-30 | focus-walk-stops-on-outgoing-refusal | The current focus holder refuses to give up focus | Taking focus reports refusal; the walk does not continue to further candidates |
 | CTA-31 | focus-walk-restores-the-original-responder-on-exhaustion | Every view in the hit-tested chain reports that it can accept focus but declines to actually take it, so each focus-assignment attempt gives up the outgoing holder yet leaves the window itself holding focus before the walk tries the next candidate | After the walk exhausts every candidate, taking focus reassigns the original focus holder and it succeeds, restoring it; taking focus reports that there was nowhere to put the keys |
 | CTA-32 | focus-walk-reports-refused-when-restoration-fails | No candidate accepts focus and restoring the original focus holder fails | Taking focus reports refusal |
-| CTA-33 | every-pane-is-always-outlined | Any pane, active or not | The border width is `2` |
+| CTA-33 | every-pane-is-always-outlined | Any pane, active or not, with its outline on (the default) | The border width is `2` |
 | CTA-34 | the-backdrop-is-always-the-pane-backdrop-color | Any pane, active or not | The background equals the theme's pane-backdrop color |
 | CTA-35 | the-active-pane-uses-the-accent-outline-color | Pane is active, its window is focused, highlighting enabled | The border color equals the theme's active-pane-outline color |
 | CTA-36 | every-other-pane-uses-the-hairline-outline-color | Pane is inactive (or active but window unfocused, or highlighting disabled) | The border color equals the theme's pane-outline color |
@@ -55,4 +55,5 @@
 | CTA-52 | the-active-pane-uses-the-accent-outline-color | No pane in a window has claimed the active id; applying the theme runs for any pane in it | The border color equals the theme's pane-outline color for every pane in the window, not the accent, even though checking membership reports `true` for a view in any of them |
 | CTA-53 | contrast | Theme whose active-pane outline color is close to its pane backdrop color | The active pane's border is drawn in the theme's active-pane-outline color; no contrast adjustment is applied. |
 | CTA-54 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
+| CTA-55 | the-backdrop-outline-is-optional | A pane backdrop, active and focused with the highlight setting on, whose owner has switched its outline off | The border width is `0`; switching the outline back on repaints it with a border width of `2` in the active color |
 

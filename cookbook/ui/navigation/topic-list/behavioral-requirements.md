@@ -109,5 +109,36 @@
 - **automatic-outline-style**: Component MUST render the list with a
   theme-following material rather than a forced, fixed-appearance
   material, regardless of the active system appearance.
+- **item-badge**: Component MUST show an item's badge, when it has one, as a
+  trailing label in the secondary text color after the item's label, and
+  MUST hide that label for an item without one. The badge label's
+  accessibility identifier is the item label's with `.badge` appended.
+- **item-emphasis**: Component MUST render an emphasized item's label in
+  the bold variant of the body font, and every other item's in the body
+  font.
+- **preferred-width-badge-emphasis**: The preferred width MUST measure an
+  emphasized item's title in the bold font and MUST add, for an item with
+  a badge, the badge gap and the badge's rendered width in the badge font
+  to that item's candidate width.
+- **row-context-menu**: Component MUST show, for a secondary click on an
+  item row, the menu the item-menu provider returns for that row's item,
+  and for a secondary click on a section header row the menu the
+  header-menu provider returns for that header's title. A provider that is
+  unset or returns none, and a click outside the rows, MUST show no menu.
+  The menu is built for the clicked row, not the selected one, and opening
+  it MUST NOT change the selection.
+- **item-double-click**: Component MUST call the double-click callback
+  with an item row's item when that row is double-clicked, and MUST NOT
+  call it for a section header row or outside the rows.
+- **item-drag-payload**: Component MUST let an item row be dragged exactly when the
+  drag-payload provider returns a payload for its item, and MUST write that payload
+  as a string of the component's item pasteboard type; a section header row, an item
+  the provider declines, and every row while no provider is set MUST NOT drag.
+- **item-drop-validation**: Component MUST accept a drag carrying its item pasteboard
+  type only onto an item row, and only when the drop validator answers yes for the
+  dragged payload and that row's item; a drop between rows, onto a section header,
+  and every drop while no validator is set MUST be refused.
+- **item-drop-delivery**: An accepted drop MUST call the drop callback once with the
+  payload and the target row's item; a refused drop MUST NOT call it.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
 

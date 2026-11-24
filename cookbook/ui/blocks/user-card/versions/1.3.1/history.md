@@ -1,0 +1,8 @@
+
+| Version | Date | Author | Summary |
+|---|---|---|---|
+| 1.0.0 | 2026-06-26 | Mike Fullerton | Initial recipe authoring for existing shared component. |
+| 1.1.0 | 2026-07-03 | Mike Fullerton | Reattribute the avatar image engine from Radix to Base UI (`@base-ui/react/avatar`), matching `avatar.tsx`; behavior (load/error → initials fallback) unchanged. |
+| 1.2.0 | 2026-09-22 | Claude Haiku 4.5 | Add missing template sections (Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, Privacy) with proper "not applicable" explanations; restructure Platform Notes into five-platform format with concrete implementation guidance for each platform; correct domain URI; set status to review. |
+| 1.3.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename all requirements to subject-only kebab-case (no `must-` prefix); fix the member-since and initials-count requirement/vector contradictions; formalize `native-contact-links` and add vectors for field-passthrough, per-section suppression, avatar load failure, contact links, and the empty-slug/displayName edge case; correct Platform Notes APIs (WinUI `PersonPicture`, Compose `LinkAnnotation`/`LocalUriHandler`, AppKit/UIKit stack view + `URLSession`, SwiftUI `.dateTime.month(.wide).year()`); mark Localization and Privacy applicable; reformat Design Decisions and rebuild Compliance from the actual catalog; add `depends-on` for the composed avatar/skeleton/separator/badge/external-link/section-label pieces; generalize ADH-specific wording into a Known Consumers note. |
+| 1.3.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |

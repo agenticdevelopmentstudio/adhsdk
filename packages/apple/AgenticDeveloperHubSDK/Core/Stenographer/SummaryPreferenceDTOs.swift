@@ -80,4 +80,7 @@ public enum SummarySettingsKeys {
     public static let intervalMinutes = "ai_summary_interval_minutes"
     public static let maxPerRun = "ai_summary_max_per_run"
     public static let timeoutSeconds = "ai_summary_timeout_seconds"
+    /// The model summaries ask for, overriding the selected configuration's own;
+    /// blank keeps the configuration's model.
+    public static let model = "ai_summary_model"
 }

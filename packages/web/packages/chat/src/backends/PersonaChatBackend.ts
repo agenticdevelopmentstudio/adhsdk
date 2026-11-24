@@ -104,7 +104,7 @@ export class PersonaChatBackend implements Backend {
 
   constructor(private readonly opts: PersonaChatBackendOptions) {
     this.participantID = opts.participantID ?? opts.personaSlug
-    this.conversationsPath = `${opts.baseURL ?? '/api'}/chat/conversations`
+    this.conversationsPath = `${opts.baseURL ?? '/api'}/v1/chats`
   }
 
   get inboundEvents(): AsyncIterable<InboundEvent> {
@@ -174,7 +174,9 @@ export class PersonaChatBackend implements Backend {
       signal: this.lifetime.signal,
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
-        personaSlug: this.opts.personaSlug,
+        // `type` is the /v1 discriminator: a persona conversation, not a direct message.
+        type: 'persona',
+        persona_slug: this.opts.personaSlug,
         // adh resolves model as persona.model || conversation.model, so
         // passing the persona's model keeps an unset persona.model working.
         model: this.opts.model ?? undefined,

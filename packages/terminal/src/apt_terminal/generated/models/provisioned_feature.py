@@ -20,14 +20,14 @@ class ProvisionedFeature:
         state (ProvisionedFeatureState): Only `active` counts as on. `provisioning` is a claim whose artifacts are not
             all there yet; `removed` keeps the record (and the data) of a feature taken off the rail.
         provisioned_at (str): When the feature was FIRST added. Never rewritten by a re-add.
-        updated_at (str):
+        updated (int): Unix timestamp, in seconds.
         provisioned_by (None | str | Unset):
     """
 
     feature_key: str
     state: ProvisionedFeatureState
     provisioned_at: str
-    updated_at: str
+    updated: int
     provisioned_by: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -38,7 +38,7 @@ class ProvisionedFeature:
 
         provisioned_at = self.provisioned_at
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         provisioned_by: None | str | Unset
         if isinstance(self.provisioned_by, Unset):
@@ -50,27 +50,27 @@ class ProvisionedFeature:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "featureKey": feature_key,
+                "feature_key": feature_key,
                 "state": state,
-                "provisionedAt": provisioned_at,
-                "updatedAt": updated_at,
+                "provisioned_at": provisioned_at,
+                "updated": updated,
             }
         )
         if provisioned_by is not UNSET:
-            field_dict["provisionedBy"] = provisioned_by
+            field_dict["provisioned_by"] = provisioned_by
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        feature_key = d.pop("featureKey")
+        feature_key = d.pop("feature_key")
 
         state = ProvisionedFeatureState(d.pop("state"))
 
-        provisioned_at = d.pop("provisionedAt")
+        provisioned_at = d.pop("provisioned_at")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         def _parse_provisioned_by(data: object) -> None | str | Unset:
             if data is None:
@@ -79,13 +79,13 @@ class ProvisionedFeature:
                 return data
             return cast(None | str | Unset, data)
 
-        provisioned_by = _parse_provisioned_by(d.pop("provisionedBy", UNSET))
+        provisioned_by = _parse_provisioned_by(d.pop("provisioned_by", UNSET))
 
         provisioned_feature = cls(
             feature_key=feature_key,
             state=state,
             provisioned_at=provisioned_at,
-            updated_at=updated_at,
+            updated=updated,
             provisioned_by=provisioned_by,
         )
 

@@ -1,0 +1,26 @@
+
+- **closed-by-default**: The component MUST NOT render to the DOM when the `open` prop is `false`. The entire component tree MUST return `null`.
+- **open-as-modal**: When the `open` prop is `true`, the component MUST render as a modal dialog with `role="dialog"` and `aria-modal="true"` on the root container.
+- **dismissible-backdrop**: The component MUST render a full-screen backdrop element. Clicking the backdrop MUST invoke the `onClose` callback.
+- **focus-input-on-open**: When the `open` prop transitions from `false` to `true`, the input field MUST receive focus once the dialog has rendered. (See **requestAnimationFrame for focus** under Design Decisions for the timing mechanism.)
+- **reset-search-state-on-open**: When the `open` prop transitions from `false` to `true`, the component MUST reset the search state to its initial values: empty query, no results, and `state.selectedIndex` reset to `0` — the same value the state starts at and that `setQuery` also resets to on every keystroke, not an unselected/`-1` state. Because the results section only renders when `state.query` is truthy, no row is visibly highlighted right after reset, but the first ranked result becomes pre-selected the instant any results exist, even before an arrow key is pressed.
+- **input-row-with-search-icon**: The input row MUST render as a form element containing a search icon (magnifying glass SVG) and an input field with placeholder text. (For the form's `role="search"`, see **search-role-on-form**.)
+- **escape-hint**: The input row MUST display a keyboard hint showing "Esc" to indicate the escape key can dismiss the dialog.
+- **placeholder-prop**: The component MUST accept an optional `placeholder` prop. If not provided, it MUST default to `"Search documentation..."`.
+- **escape-dismisses**: When the user presses the Escape key in the input field, the component MUST immediately invoke `onClose()`.
+- **enter-selects-highlighted-result**: When the user presses Enter in the input field, if `state.selectedIndex` is a valid index into `state.results` (the flat, ungrouped, rank-ordered top-20 array), the component MUST invoke `onSelect()` with `state.results[state.selectedIndex]`. If no result is selected, Enter MUST have no other effect. Enter never submits the form (see **prevent-form-submission**). This is rank order, not the grouped-by-section render order used for the highlight — see **highlight-selected-result** and the edge case **Highlight and Enter target can diverge**.
+- **delegate-other-keys**: When the user presses any key other than Escape or Enter, the component MUST delegate handling to `state.handleKey(e)`.
+- **update-query-on-input**: As the user types in the input field, the component MUST update the search state by calling `state.setQuery(e.target.value)` for each change event.
+- **show-results-only-when-querying**: The results section MUST only render when `state.query` is truthy (non-empty string).
+- **limit-results-to-twenty**: The component MUST slice results to display at most 20 entries from `state.results`.
+- **group-results-by-section**: The component MUST group the top 20 results by `entry.section`. Entries without a section MUST be grouped under `"other"`. Section order follows first appearance among the top 20 results, not alphabetical or any other sort.
+- **translate-section-labels**: For each section, the component MUST display the label from `sectionLabels[section]` if provided, otherwise MUST display the section key as-is.
+- **empty-state-when-no-results**: When `state.query` is truthy but no results exist (top 20 is empty), the component MUST display a `No results for "{query}"` message.
+- **result-title-and-summary**: Each result MUST display `entry.frontmatter.title`. If `entry.frontmatter.summary` exists, it MUST also be displayed below the title.
+- **result-as-button**: Each result MUST be rendered as a `<button>` element with `type="button"`. Clicking a result MUST invoke `onSelect(entry)`.
+- **highlight-selected-result**: The row at flat position `state.selectedIndex` within the results as GROUPED by section (see **group-results-by-section**) MUST be visually distinguished by applying the `awt-search-dialog__result--selected` CSS class modifier. Because grouping reorders results by section before this position is counted, the highlighted row is not necessarily `state.results[state.selectedIndex]` — see the edge case **Highlight and Enter target can diverge**.
+- **stable-result-identity**: Each rendered result MUST derive a stable identity from `entry.slug`, so reconciliation stays correct if the same entries reorder or reappear across renders. (Implemented as the React `key` prop; see **Slug as React key** under Design Decisions.)
+- **prevent-form-submission**: The search form wrapper MUST have an `onSubmit` handler that calls `e.preventDefault()`, so an implicit form submission never navigates the page.
+- **search-role-on-form**: The form element containing the input field MUST have `role="search"` to declare its semantic purpose.
+- **suppress-autofill-suggestions**: The input field MUST NOT trigger the browser's autofill suggestion UI (for example, iOS Safari's "AutoFill Contact" prompt). (See **Form wrapper for autofill suppression** under Design Decisions for the mechanism.)
+

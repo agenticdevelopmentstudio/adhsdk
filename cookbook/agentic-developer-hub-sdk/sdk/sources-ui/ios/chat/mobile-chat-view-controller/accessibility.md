@@ -1,0 +1,6 @@
+
+- **Role/trait**: Main container is a view controller (iOS) or div with role `region` (web). Input field is a text field / input[type="text"]. Send button is a button. Close affordance is a button (web's `pc-mobile-close` header button); on iOS the presenting host supplies equivalent chrome (see Platform Notes).
+- **Label requirements**: Input field MUST have a visual or programmatic label or placeholder indicating it accepts message text (placeholder "Type a message..." suffices). The close affordance's accessible label MUST describe the action in words (e.g., "Back" or "Close chat") and MUST NOT rely on the "←" glyph alone, since screen readers can read the raw arrow character literally; where the visible text is the default "← back", the accessible name given to assistive technology MUST differ from that literal string. Send button MUST have a label describing its action (e.g., "send").
+- **Announce state changes**: Status line updates (typing, thinking) SHOULD be announced to screen readers. Message arrival SHOULD trigger an announcement if the transcript is off-screen.
+- **Minimum tap target**: All buttons (close, send) MUST have a touch target of at least 44×44pt on iOS per Apple HIG.
+

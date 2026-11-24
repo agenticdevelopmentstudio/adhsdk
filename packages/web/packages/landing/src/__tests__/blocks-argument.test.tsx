@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { render } from '@testing-library/react'
 import { Checklist, Chips, Roadmap, Rule, Stats, Versus } from '../index'
 
@@ -59,6 +59,86 @@ describe('Versus', () => {
     const them = container.querySelector('.lp-versus__them')!
     expect(Array.from(them.children).map((c) => c.tagName)).toEqual(['H3'])
   })
+
+  it('versus-001: renders two panels, each with its title in an h3', () => {
+    const { container } = render(<Versus them={{ title: 'Option A' }} us={{ title: 'Option B' }} />)
+    const panels = container.querySelectorAll('.lp-versus > div')
+    expect(panels).toHaveLength(2)
+    expect(panels[0]!.querySelector('h3')!.textContent).toBe('Option A')
+    expect(panels[1]!.querySelector('h3')!.textContent).toBe('Option B')
+  })
+
+  it('versus-002: the h3 contains the title text', () => {
+    const { container } = render(<Versus them={{ title: 'Text' }} us={{ title: 'Other' }} />)
+    expect(container.querySelector('.lp-versus__them h3')!.textContent).toBe('Text')
+  })
+
+  it('versus-003: a defined lede renders in a paragraph', () => {
+    const { container } = render(<Versus them={{ title: 'A', lede: 'Introduction' }} us={{ title: 'B' }} />)
+    expect(container.querySelector('.lp-versus__them p')!.textContent).toBe('Introduction')
+  })
+
+  it('versus-004: no paragraph when lede is omitted on both sides', () => {
+    const { container } = render(<Versus them={{ title: 'A' }} us={{ title: 'B' }} />)
+    expect(container.querySelectorAll('p')).toHaveLength(0)
+  })
+
+  it('versus-005: points render as a ul with one li each', () => {
+    const { container } = render(
+      <Versus them={{ title: 'A', points: ['Point 1', 'Point 2'] }} us={{ title: 'B' }} />
+    )
+    const items = container.querySelectorAll('.lp-versus__them ul > li')
+    expect(items).toHaveLength(2)
+    expect(Array.from(items).map((li) => li.textContent)).toEqual(['Point 1', 'Point 2'])
+  })
+
+  it('versus-006: no list for empty or omitted points', () => {
+    const empty = render(<Versus them={{ title: 'A', points: [] }} us={{ title: 'B' }} />)
+    expect(empty.container.querySelectorAll('ul')).toHaveLength(0)
+    empty.unmount()
+    const omitted = render(<Versus them={{ title: 'A' }} us={{ title: 'B' }} />)
+    expect(omitted.container.querySelectorAll('ul')).toHaveLength(0)
+  })
+
+  // jsdom resolves no stylesheet here, so the "different border and background" half of the
+  // vector is CSS; what the component owns, and what is asserted, is the distinct marker class.
+  it('versus-007: the us panel carries lp-versus__us, the them panel lp-versus__them', () => {
+    const { container } = render(<Versus them={{ title: 'A' }} us={{ title: 'B' }} />)
+    const them = container.querySelector('.lp-versus__them')!
+    const us = container.querySelector('.lp-versus__us')!
+    expect(them).not.toBe(us)
+    expect(them.className).toBe('lp-versus__them')
+    expect(us.className).toBe('lp-versus__us')
+    expect(them.classList.contains('lp-versus__us')).toBe(false)
+    expect(us.classList.contains('lp-versus__them')).toBe(false)
+  })
+
+  it('versus-008: a defined-but-empty lede still renders an empty paragraph', () => {
+    const { container } = render(<Versus them={{ title: 'A', lede: <></> }} us={{ title: 'B' }} />)
+    const p = container.querySelectorAll('.lp-versus__them p')
+    expect(p).toHaveLength(1)
+    expect(p[0]!.textContent).toBe('')
+    expect(container.querySelectorAll('.lp-versus__us p')).toHaveLength(0)
+  })
+
+  it('versus-009: identical props give both panels identical element structure', () => {
+    const side = { title: 'T', lede: 'L', points: ['a', 'b'] }
+    const { container } = render(<Versus them={side} us={side} />)
+    const shape = (el: Element): string =>
+      `${el.tagName}(${Array.from(el.children).map(shape).join(',')})`
+    expect(shape(container.querySelector('.lp-versus__them')!)).toBe(
+      shape(container.querySelector('.lp-versus__us')!)
+    )
+  })
+
+  it('versus-010: them precedes us in DOM order', () => {
+    const { container } = render(<Versus them={{ title: 'A' }} us={{ title: 'B' }} />)
+    const root = container.querySelector('.lp-versus')!
+    expect(root.children[0]!.className).toBe('lp-versus__them')
+    expect(root.children[1]!.className).toBe('lp-versus__us')
+  })
+
+  it.skip('versus-011: stacks into one column below two 18rem columns plus the gap (needs real layout and container-width CSS; jsdom has neither)', () => {})
 })
 
 describe('Rule', () => {
@@ -69,6 +149,70 @@ describe('Rule', () => {
     const dl = container.querySelector('dl.lp-rule')!
     expect(Array.from(dl.children).map((c) => c.tagName)).toEqual(['DT', 'DD', 'DT', 'DD'])
     expect(dl.querySelectorAll('dt')[1].textContent).toBe('Then')
+  })
+
+  describe('conformance vectors', () => {
+    it('rule-001 renders two dt/dd pairs in order', () => {
+      const { container } = render(
+        <Rule steps={[{ term: 'A', detail: 'First' }, { term: 'B', detail: 'Second' }]} />
+      )
+      expect(Array.from(container.querySelectorAll('dt')).map((e) => e.textContent)).toEqual(['A', 'B'])
+      expect(Array.from(container.querySelectorAll('dd')).map((e) => e.textContent)).toEqual(['First', 'Second'])
+    })
+
+    it('rule-002 renders ReactNode term and detail inside dt and dd', () => {
+      const { container } = render(<Rule steps={[{ term: <strong>Bold</strong>, detail: <em>Italic</em> }]} />)
+      expect(container.querySelector('dt')!.innerHTML).toBe('<strong>Bold</strong>')
+      expect(container.querySelector('dd')!.innerHTML).toBe('<em>Italic</em>')
+    })
+
+    it('rule-003 is a dl whose direct children are only dt and dd', () => {
+      const { container } = render(<Rule steps={[{ term: 'A', detail: '1' }, { term: 'B', detail: '2' }]} />)
+      const root = container.firstElementChild!
+      expect(root.tagName).toBe('DL')
+      expect(Array.from(root.children).map((c) => c.tagName)).toEqual(['DT', 'DD', 'DT', 'DD'])
+    })
+
+    it('rule-004 gives the root dl the lp-rule class', () => {
+      const { container } = render(<Rule steps={[{ term: 'A', detail: '1' }]} />)
+      expect(container.firstElementChild!.classList.contains('lp-rule')).toBe(true)
+    })
+
+    it('rule-005 renders an empty dl for no steps', () => {
+      const { container } = render(<Rule steps={[]} />)
+      expect(container.innerHTML).toBe('<dl class="lp-rule"></dl>')
+    })
+
+    it('rule-006 renders exactly one dt and one dd for one step', () => {
+      const { container } = render(<Rule steps={[{ term: 'A', detail: '1' }]} />)
+      expect(container.querySelectorAll('dt')).toHaveLength(1)
+      expect(container.querySelectorAll('dd')).toHaveLength(1)
+      expect(container.querySelector('dt')!.textContent).toBe('A')
+      expect(container.querySelector('dd')!.textContent).toBe('1')
+    })
+
+    it('rule-007 renders empty dt and dd for null term and undefined detail', () => {
+      const { container } = render(<Rule steps={[{ term: null, detail: undefined }]} />)
+      expect(container.querySelector('dt')!.textContent).toBe('')
+      expect(container.querySelector('dd')!.textContent).toBe('')
+    })
+
+    it('rule-008 renders a numeric term as text and a boolean detail as nothing', () => {
+      const { container } = render(<Rule steps={[{ term: 42, detail: true }]} />)
+      expect(container.querySelector('dt')!.textContent).toBe('42')
+      expect(container.querySelector('dd')!.textContent).toBe('')
+    })
+
+    it('rule-009 lets React reject a plain object term (web-only, informational)', () => {
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      try {
+        expect(() => render(<Rule steps={[{ term: {} as never, detail: 'x' }]} />)).toThrow(/Objects are not valid/)
+      } finally {
+        spy.mockRestore()
+      }
+    })
+
+    it.skip('rule-010 treats a missing steps value as empty (not applicable to the typed web source)', () => {})
   })
 })
 

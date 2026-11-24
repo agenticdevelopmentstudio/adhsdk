@@ -93,4 +93,26 @@ struct SubprocessChannelRunTests {
         #expect(URL(fileURLWithPath: printed).resolvingSymlinksInPath().path
                 == directory.resolvingSymlinksInPath().path)
     }
+
+    /// Larger than a pipe's buffer, so the input has to be written while the output is
+    /// read: a run that wrote all of it first would wait on a child waiting on it.
+    @Test("feeds standard input to the child and closes it")
+    func standardInput() async throws {
+        let input = Data(String(repeating: "0123456789abcdef\n", count: 16_384).utf8)
+        let configuration = SubprocessChannel.Configuration(executableURL: URL(fileURLWithPath: "/bin/cat"))
+        let result = try await SubprocessChannel.run(configuration, standardInput: input, budget: Self.budget)
+        #expect(result.exitStatus == 0)
+        #expect(result.standardOutput == input)
+    }
+
+    @Test("a child that exits without reading its input still reports its exit")
+    func unreadStandardInput() async throws {
+        let configuration = SubprocessChannel.Configuration(
+            executableURL: URL(fileURLWithPath: "/bin/sh"),
+            arguments: ["-c", "exit 2"]
+        )
+        let input = Data(repeating: 0x41, count: 1_000_000)
+        let result = try await SubprocessChannel.run(configuration, standardInput: input, budget: Self.budget)
+        #expect(result.exitStatus == 2)
+    }
 }

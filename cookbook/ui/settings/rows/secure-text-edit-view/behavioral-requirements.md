@@ -10,7 +10,7 @@ model, theme styling, restyling an existing placeholder, exposing the
 label and the field, the designated-initializer-only construction rule,
 and UI-thread confinement — is inherited unmodified from the text edit
 row; see
-adhsdk://cookbook/ui/settings/rows/text-edit-view#behavioral-requirements
+behavioral-requirements ([adhsdk.ingredient.ui.settings.rows.text-edit-view](cookbook:c1787e74-2485-4d7b-a219-feb4c07cf97c))
 (arranges-row-layout, expands-text-field-to-fill-row,
 wires-text-field-action, initializes-from-view-model,
 commits-value-on-change, skips-redundant-commits, syncs-on-external-change,

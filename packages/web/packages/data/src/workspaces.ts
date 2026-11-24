@@ -13,7 +13,7 @@
 // (The hub's own switcher shows teams because it navigates to team routes; this
 // client exists for owner-scoping, which is a strictly smaller set.)
 
-import { authedJson } from "./http";
+import { authedJson, listAllV1 } from "./http";
 import { sortByText } from "./client-helpers";
 import { getToolkitQueryClient } from "./query";
 import { revalidateResources } from "./use-resource-list";
@@ -74,7 +74,7 @@ export function onWorkspacesChanged(listener: () => void): () => void {
   return () => window.removeEventListener(WORKSPACES_CHANGED_EVENT, listener);
 }
 
-/** `GET /auth/slug-available/:slug`, verbatim: `reason` says which test refused it. */
+/** `GET /v1/handles/{handle}`, verbatim: `reason` says which test refused it. */
 export interface SlugAvailability {
   available: boolean;
   reason?: "format" | "taken";
@@ -89,7 +89,7 @@ export interface SlugAvailability {
  * current slug, or its live row comes back "taken" and the form refuses the value it already has.
  */
 export function checkWorkspaceSlugAvailable(slug: string): Promise<SlugAvailability> {
-  return authedJson<SlugAvailability>(`/api/auth/slug-available/${encodeURIComponent(slug)}`);
+  return authedJson<SlugAvailability>(`/api/v1/handles/${encodeURIComponent(slug)}`);
 }
 
 interface WorkspaceRow {
@@ -101,7 +101,7 @@ interface WorkspaceRow {
 export const workspacesApi = {
   /** The caller's personal workspace first, then their organizations (A→Z). */
   async list(): Promise<Workspace[]> {
-    const rows = await authedJson<WorkspaceRow[]>("/api/workspaces");
+    const rows = await listAllV1<WorkspaceRow>("/api/v1/workspaces");
     const own = rows.filter((r) => r.type === "individual");
     const orgs = rows.filter((r) => r.type === "organization");
     return [...own, ...sortByText(orgs, (o) => o.name)].map((r) => ({

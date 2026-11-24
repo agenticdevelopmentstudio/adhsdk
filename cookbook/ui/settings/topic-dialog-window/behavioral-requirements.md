@@ -1,0 +1,43 @@
+
+- **main-actor-confined**: The dialog MUST be confined to the main actor.
+- **answers-once**: `finish` MUST call `onFinish` at most once, with true after OK and false after Cancel; every later call MUST do nothing.
+- **ok-validates**: After it has cleared the problem line, OK MUST call `validate` before it finishes or calls `onOK`.
+- **problem-keeps-open**: When `validate` returns a sentence, OK MUST show it as the problem line, MUST leave the dialog open and MUST NOT call `onFinish`.
+- **ok-clears-stale-problem**: OK MUST clear any earlier problem line before it calls `validate`.
+- **ok-finishes**: When `validate` returns nothing and `onOK` is unset, OK MUST finish the dialog with true.
+- **ok-hands-over**: When `validate` returns nothing and `onOK` is set, OK MUST call `onOK` instead of finishing, and MUST disable the OK button first.
+- **ok-single-flight**: While OK is disabled, OK (including Return) MUST do nothing.
+- **ok-re-enable**: Setting `okEnabled` MUST update the OK button's enabled state at once.
+- **cancel-finishes-false**: Cancel MUST finish the dialog with false and MUST NOT call `validate`.
+- **close-cancels**: The window's close button MUST cancel the dialog and MUST refuse to close the window itself, leaving `finish` to take it down.
+- **escape-cancels**: The Cancel button MUST carry the Escape key equivalent.
+- **return-confirms**: The OK button MUST carry the Return key equivalent.
+- **problem-line**: `showProblem` MUST show the given sentence beside the buttons and MUST hide the line for nil; the problem MUST be readable as the dialog's `problem`.
+- **problem-line-color**: The problem line MUST be drawn in the system red color and MUST wrap to at most 2 lines.
+- **footer-buttons**: Cancel and OK MUST be standard push buttons at the regular control size, with OK trailing 20 points from the footer's right edge and Cancel 12 points to OK's left, OK never narrower than Cancel.
+- **ok-title**: The OK button's title MUST be the initializer's `okTitle`, defaulting to "OK".
+- **resizable-not-minimizable**: The window MUST be titled, closable and resizable, and MUST NOT be miniaturizable.
+- **default-size**: The window MUST open centered at 860 by 600 points the first time and remember its frame afterward, with a minimum size of 680 by 460 points; an owner MAY set its own window spec.
+- **frame-keyed-by-id**: The saved size and position MUST be keyed by the `windowID` given to the initializer.
+- **topics-in-order**: The topics MUST keep the order given, MUST NOT be sorted by title and MUST NOT offer a sidebar search field.
+- **single-topic-no-list**: With one topic or fewer, the topic list MUST be hidden.
+- **sidebar-width-apart**: The sidebar width MUST be saved under its own autosave name, `ComposableSettings.TopicDialogSidebar`, apart from the settings window's.
+- **help-drawer-memory-apart**: Whether the help drawer is open MUST be remembered in the dialog's own user setting, apart from the settings window's.
+- **toolbar-title**: The toolbar title MUST be the dialog title followed by an em dash flanked by spaces and the selected topic's title; it MUST be the dialog title alone when the topic title is nil or empty or when the topic list is hidden.
+- **first-topic-selected**: `prepare` MUST select the first topic when none is selected and MUST return the built window without showing it.
+- **present-app-modal**: `present()` MUST return at once and start the app-modal session on the next pass of the run loop, not inside the call.
+- **present-activates**: The modal session MUST bring the app forward before it runs.
+- **present-skips-finished**: `present()` MUST do nothing when the dialog has already finished, and a session MUST NOT start if the dialog finished before it began.
+- **show-modeless**: `show()` MUST order the window front and activate the app without holding up any other window, and MUST do nothing when the dialog has finished or is already a sheet.
+- **sheet-no-toolbar**: `beginSheet(on:)` MUST remove the toolbar, hide the window title and show the help button.
+- **sheet-help-button**: The help button MUST be a standard round help button with tooltip and accessibility label "Help" that toggles the help drawer, and MUST be hidden unless the dialog is a sheet.
+- **sheet-problem-offset**: In a sheet, the problem line MUST start 12 points right of the help button; otherwise it MUST start 20 points from the footer's left edge.
+- **sheet-guard**: `beginSheet(on:)` MUST do nothing when the dialog has finished or already has a sheet parent.
+- **sheet-ends-before-finish**: When finishing a sheet, the dialog MUST end the sheet before calling `onFinish`, so the owner can begin the next sheet on the same parent, and MUST clear `sheetParent`.
+- **keeps-itself-alive**: A presented dialog MUST keep itself alive until it finishes, so an owner that lets go does not lose it.
+- **modal-ends-without-event**: Finishing a running modal session MUST stop the session and post an application-defined event so the session ends even when no event is pending.
+- **releases-owner-closures**: On finish, the dialog MUST replace `onFinish` with a no-op, clear `onOK` and replace `validate` with one that returns nothing, so that what the owner captured is released.
+- **hides-on-finish**: Finishing MUST order the window out.
+- **is-finished**: `isFinished` MUST be true from the first `finish` onward.
+- **detail-fills**: The panels MUST take the height above the footer.
+

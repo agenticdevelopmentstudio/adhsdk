@@ -1,13 +1,12 @@
 ---
 id: bd58dfa4-13f8-4e92-adbe-45f8a020168d
 title: "Monitor Worker Client"
-domain: adhsdk://cookbook/status/service/monitor/worker-client
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-09-27
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -21,12 +20,12 @@ tags:
   - concurrency
   - server
 depends-on:
-  - agenticdevelopercookbook://guidelines/implementing/concurrency/concurrency
-  - agenticdevelopercookbook://guidelines/implementing/networking/timeouts
-  - agenticdevelopercookbook://guidelines/implementing/code-quality/dependency-injection
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/6302654b-8200-4e03-862d-4734d4960d19
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c3883e6e-3bce-4bb9-a3be-61509a139288
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/e80d67b3-813f-47fb-8894-aa4e6f6479f3
 related:
-  - adhsdk://cookbook/status/service/config
-  - adhsdk://cookbook/status/service/monitor/cycle-runner
+  - 31fe479f-e95e-4f03-b957-faa2314a03be
+  - 99e2ec9b-b209-4af9-a7d9-f3c4cc5e27db
 references:
   - packages/web/packages/status-server/src/monitor/worker-client.ts (adhsdk)
   - packages/web/packages/status-server/src/monitor/worker.ts (adhsdk)
@@ -118,7 +117,7 @@ Not applicable — this is a background-worker RPC client, not a visual componen
 
 ## Conformance Test Vectors
 
-No test exercises the worker client directly (see Compliance); every vector below is traced to the component's own specified behavior, except where an integration test is cited.
+`test/worker-client.test.ts` exercises the worker client against a scripted fake worker; vector 011's real-thread round trip is covered by the integration test it cites.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -208,9 +207,9 @@ This component makes no logging call of its own — no console output and no str
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/monitor/worker-client.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/monitor/worker-client.ts` | confirmed (1.1.1) |
 
 ## Design Decisions
 
@@ -231,21 +230,22 @@ This component makes no logging call of its own — no console output and no str
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [error-recovery](agenticdevelopercookbook://compliance/reliability#error-recovery) | passed | Reliability |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
-| [timeout-handling](agenticdevelopercookbook://compliance/reliability#timeout-handling) | passed | Reliability |
-| [health-observability](agenticdevelopercookbook://compliance/reliability#health-observability) | partial | Reliability |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.reliability.error-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/694a971d-282d-501b-8861-c4ece3b01edd) | passed | Reliability |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
+| [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | passed | Reliability |
+| [adc.check.reliability.health-observability](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d4ece88d-eeff-5e3f-8823-d8c2929a35e0) | partial | Reliability |
 
-`unit-test-coverage` fails: no test file imports or constructs `MonitorWorkerClient`. `worker-boot.int.test.ts` exercises the same package-`exports` resolution mechanism and `worker.ts` directly through a bare `new Worker(...)` call in its driver script, which proves the worker entry boots under production conditions, but it never goes through the `MonitorWorkerClient` class itself — `runCycle`, the timeout/terminate/respawn path, `failAll`'s crash/exit handling, and the cooldown-buffer attachment on spawn are all unexercised by any existing test. `separation-of-concerns` passes: this file owns only worker lifecycle and RPC correlation, delegating all cycle logic to `cycle-runner.ts` via `worker.ts`, and never touches the connection type it is generic over. `explicit-error-handling` passes: every failure path (timeout, a not-`ok` reply, a worker crash, a worker exit) rejects its promise(s) explicitly with a descriptive message rather than swallowing anything; the one fire-and-forget call, `void worker.terminate()`, is intentional per the source's own framing of the container supervisor's restart as the backstop of last resort, not a silently dropped error. `error-recovery` and `graceful-degradation` pass: a wedged, crashed, or exited worker never crashes the client's host process — it fails only the in-flight cycle(s) and lazily respawns a fresh worker on the next call, exactly as the class's own header comment describes. `fault-tolerance` passes: an unmatched reply, an empty `pending` map on a second crash-handling pass, and a not-`ok` reply with no `error` field are all handled without throwing. `timeout-handling` passes: a timed-out cycle leaves the system in a defined, consistent state — the worker is terminated, the client's worker reference is cleared, and the next call spawns cleanly. `health-observability` is partial: a caller does get a specific, typed rejection reason for every failure mode (timeout, crash, exit, application-level failure), which is enough to build monitoring on top of, but this file itself emits no log line or metric of its own — unlike sibling files (`heartbeat.ts`, `cycle-runner.ts`) that `console.log`/`console.error` directly, a caller that does not thread the rejection into its own logging gets no visibility at all.
+`unit-test-coverage` passes: `test/worker-client.test.ts` drives `MonitorWorkerClient` against a scripted fake `Worker` and covers all fourteen conformance vectors. Before it, no test file imported or constructed `MonitorWorkerClient`. `worker-boot.int.test.ts` exercises the same package-`exports` resolution mechanism and `worker.ts` directly through a bare `new Worker(...)` call in its driver script, which proves the worker entry boots under production conditions, but it never goes through the `MonitorWorkerClient` class itself — `runCycle`, the timeout/terminate/respawn path, `failAll`'s crash/exit handling, and the cooldown-buffer attachment on spawn are all unexercised by any existing test. `separation-of-concerns` passes: this file owns only worker lifecycle and RPC correlation, delegating all cycle logic to `cycle-runner.ts` via `worker.ts`, and never touches the connection type it is generic over. `explicit-error-handling` passes: every failure path (timeout, a not-`ok` reply, a worker crash, a worker exit) rejects its promise(s) explicitly with a descriptive message rather than swallowing anything; the one fire-and-forget call, `void worker.terminate()`, is intentional per the source's own framing of the container supervisor's restart as the backstop of last resort, not a silently dropped error. `error-recovery` and `graceful-degradation` pass: a wedged, crashed, or exited worker never crashes the client's host process — it fails only the in-flight cycle(s) and lazily respawns a fresh worker on the next call, exactly as the class's own header comment describes. `fault-tolerance` passes: an unmatched reply, an empty `pending` map on a second crash-handling pass, and a not-`ok` reply with no `error` field are all handled without throwing. `timeout-handling` passes: a timed-out cycle leaves the system in a defined, consistent state — the worker is terminated, the client's worker reference is cleared, and the next call spawns cleanly. `health-observability` is partial: a caller does get a specific, typed rejection reason for every failure mode (timeout, crash, exit, application-level failure), which is enough to build monitoring on top of, but this file itself emits no log line or metric of its own — unlike sibling files (`heartbeat.ts`, `cycle-runner.ts`) that `console.log`/`console.error` directly, a caller that does not thread the rejection into its own logging gets no visibility at all.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-11-14 | Mike Fullerton | Conformance tests added (worker-client.test.ts, 14 of 14 vectors); unit-test-coverage now passed. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to status/service/monitor/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.0.0 | 2026-09-24 | Mike Fullerton | Initial creation |

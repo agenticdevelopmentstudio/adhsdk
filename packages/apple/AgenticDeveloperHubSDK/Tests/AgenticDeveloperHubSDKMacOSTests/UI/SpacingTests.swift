@@ -1,6 +1,9 @@
+import AppKit
 import XCTest
 import AgenticDeveloperHubSDKCore
+import AgenticDeveloperHubSDKCoreMacOS
 @testable import AgenticDeveloperHubSDKMacOS
+@testable import AgenticDeveloperHubSDKUI
 
 /// Each edge carries two arrows, and which number each one moves — and which
 /// way — is the whole of the control's meaning. Getting it wrong looks like the
@@ -440,5 +443,401 @@ final class SpacingControlResetTests: XCTestCase {
         for gutter in SpacingGutter.allCases {
             XCTAssertEqual(dividers.resetValue[gutter], UserSettings.defaultPaneSpacing)
         }
+    }
+}
+
+/// Conformance vectors for the `ui/controls/spacing-control` recipe, driven through the
+/// control's own views the way a user would: arrows, fields, the Reset button and the
+/// field delegate.
+@MainActor
+final class SpacingControlConformanceTests: XCTestCase {
+
+    private var windows: [NSWindow] = []
+
+    override func tearDown() async throws {
+        windows.forEach { $0.orderOut(nil) }
+        windows.removeAll()
+        try await super.tearDown()
+    }
+
+    // MARK: - Fixtures
+
+    private func makeControl(
+        style: SpacingDiagram = .frame,
+        value: Spacing = Spacing(),
+        range: ClosedRange<Int> = 0...40
+    ) -> SpacingControl {
+        let control = SpacingControl(style: style, value: value, range: range)
+        control.frame = CGRect(origin: .zero, size: control.intrinsicContentSize)
+        control.layoutSubtreeIfNeeded()
+        return control
+    }
+
+    /// A control in a window, so a field can take focus and own a field editor.
+    private func makeWindowedControl(value: Spacing = Spacing()) -> SpacingControl {
+        let control = makeControl(value: value)
+        let window = NSWindow(
+            contentRect: control.frame, styleMask: [.titled], backing: .buffered, defer: false)
+        window.contentView = control
+        windows.append(window)
+        return control
+    }
+
+    private func find(_ identifier: String, in view: NSView) -> NSView? {
+        if view.accessibilityIdentifier() == identifier { return view }
+        for sub in view.subviews {
+            if let found = find(identifier, in: sub) { return found }
+        }
+        return nil
+    }
+
+    private func identifiers(in view: NSView) -> Set<String> {
+        var found: Set<String> = []
+        for sub in view.subviews {
+            if !sub.accessibilityIdentifier().isEmpty { found.insert(sub.accessibilityIdentifier()) }
+            found.formUnion(identifiers(in: sub))
+        }
+        return found
+    }
+
+    private func field(_ name: String, in control: SpacingControl) throws -> NSTextField {
+        try XCTUnwrap(find("spacing.\(name)", in: control) as? NSTextField, "no field \(name)")
+    }
+
+    private func edgeArrow(
+        _ edge: SpacingEdge, more: Bool, in control: SpacingControl
+    ) throws -> NSButton {
+        let name = "spacing.edge.\(edge.rawValue).\(more ? "more" : "less")"
+        return try XCTUnwrap(find(name, in: control) as? NSButton, "no arrow \(name)")
+    }
+
+    private func click(_ button: NSButton) {
+        button.sendAction(button.action, to: button.target)
+    }
+
+    /// Ends editing the way Return does: the field's own action.
+    private func pressReturn(in field: NSTextField) {
+        field.sendAction(field.action, to: field.target)
+    }
+
+    private func centre(of view: NSView, in control: SpacingControl) -> CGPoint {
+        let rect = control.convert(view.bounds, from: view)
+        return CGPoint(x: rect.midX, y: rect.midY)
+    }
+
+    private func focusedField(in window: NSWindow?) -> NSTextField? {
+        (window?.firstResponder as? NSText)?.delegate as? NSTextField
+    }
+
+    // MARK: - Vectors
+
+    func testV001_frameStyleBuildsEdgeControlsOnly() {
+        let found = identifiers(in: makeControl(style: .frame))
+        for edge in SpacingEdge.allCases {
+            let name = edge.rawValue
+            for expected in ["spacing.\(name)", "spacing.\(name).stepper", "spacing.edge.\(name).more",
+                             "spacing.edge.\(name).less", "spacing.edge.\(name).handle"] {
+                XCTAssertTrue(found.contains(expected), "missing \(expected)")
+            }
+        }
+        XCTAssertFalse(found.contains { $0.contains("betweenColumns") || $0.contains("betweenRows") })
+    }
+
+    func testV002_paneDividersStyleBuildsGutterControlsOnly() {
+        let found = identifiers(in: makeControl(style: .paneDividers))
+        for gutter in SpacingGutter.allCases {
+            let name = gutter.rawValue
+            XCTAssertTrue(found.contains("spacing.\(name)"), "missing field \(name)")
+            XCTAssertTrue(found.contains("spacing.\(name).stepper"), "missing stepper \(name)")
+            for kind in ["narrower", "wider"] {
+                XCTAssertTrue(found.contains("spacing.gutter.\(name).\(kind).handle"))
+                for side in ["near", "far"] {
+                    XCTAssertTrue(found.contains("spacing.gutter.\(name).\(kind).\(side)"))
+                }
+            }
+        }
+        let edgeNames = SpacingEdge.allCases.map(\.rawValue)
+        XCTAssertFalse(found.contains { $0.hasPrefix("spacing.edge.") })
+        for name in edgeNames {
+            XCTAssertFalse(found.contains("spacing.\(name)"), "edge field \(name) must not exist")
+        }
+    }
+
+    func testV003_arrowClickFiresOnChangeOnceWithTopIncreased() throws {
+        let control = makeControl(value: Spacing(top: 5))
+        var received: [Spacing] = []
+        control.onChange = { received.append($0) }
+        click(try edgeArrow(.top, more: true, in: control))
+        XCTAssertEqual(received.count, 1)
+        XCTAssertEqual(received.first?.top, 6)
+    }
+
+    func testV004_assigningValueDoesNotFireOnChange() {
+        let control = makeControl()
+        var calls = 0
+        control.onChange = { _ in calls += 1 }
+        control.value = Spacing(top: 5)
+        XCTAssertEqual(calls, 0)
+        XCTAssertEqual(control.value.top, 5)
+    }
+
+    func testV005_arrowAtUpperBoundSkipsOnChange() throws {
+        let control = makeControl(value: Spacing(top: 40))
+        var calls = 0
+        control.onChange = { _ in calls += 1 }
+        click(try edgeArrow(.top, more: true, in: control))
+        XCTAssertEqual(calls, 0)
+        XCTAssertEqual(control.value, Spacing(top: 40))
+    }
+
+    func testV006_arrowClampsAtRangeUpperBound() throws {
+        let control = makeControl(value: Spacing(top: 40))
+        click(try edgeArrow(.top, more: true, in: control))
+        XCTAssertEqual(control.value.top, 40)
+    }
+
+    func testV007_typedNumberAboveRangeIsClampedAndShown() throws {
+        let control = makeControl()
+        let top = try field("top", in: control)
+        top.stringValue = "999"
+        pressReturn(in: top)
+        XCTAssertEqual(control.value.top, 40)
+        XCTAssertEqual(top.stringValue, "40")
+    }
+
+    func testV008_typingWithoutEndingEditingDoesNotCommit() throws {
+        let control = makeControl()
+        var calls = 0
+        control.onChange = { _ in calls += 1 }
+        try field("top", in: control).stringValue = "7"
+        XCTAssertEqual(control.value.top, 0)
+        XCTAssertEqual(calls, 0)
+    }
+
+    func testV009_typedNumberCommitsWhenEditingEnds() throws {
+        let control = makeControl()
+        let top = try field("top", in: control)
+        top.stringValue = "7"
+        pressReturn(in: top)
+        XCTAssertEqual(control.value.top, 7)
+
+        let leading = try field("leading", in: control)
+        leading.stringValue = "9"
+        control.controlTextDidEndEditing(
+            Notification(name: NSControl.textDidEndEditingNotification, object: leading))
+        XCTAssertEqual(control.value.leading, 9)
+    }
+
+    func testV010_unparseableTextRecoversToTheHeldNumber() throws {
+        let control = makeControl(value: Spacing(top: 5))
+        let top = try field("top", in: control)
+        top.stringValue = "abc"
+        let handled = control.control(top, didFailToFormatString: "abc", errorDescription: nil)
+        XCTAssertTrue(handled)
+        XCTAssertEqual(top.stringValue, "5")
+        XCTAssertEqual(control.value.top, 5)
+    }
+
+    func testV011_arrowsAreConfiguredToRepeatWhileHeld() throws {
+        let control = makeControl()
+        let button = try edgeArrow(.top, more: true, in: control)
+        var delay: Float = 0
+        var interval: Float = 0
+        button.getPeriodicDelay(&delay, interval: &interval)
+        XCTAssertTrue(button.isContinuous)
+        XCTAssertEqual(delay, 0.45, accuracy: 0.001)
+        XCTAssertEqual(interval, 0.06, accuracy: 0.001)
+    }
+
+    func testV012_freezesPressedArrowPair() throws {
+        throw XCTSkip("A pressed arrow exists only inside AppKit's mouse-tracking loop; a unit test cannot hold one")
+    }
+
+    func testV013_dragsEdgeOneToOne() throws {
+        throw XCTSkip("Drag handle is file-private and runs a live mouse loop; no seam to inject a drag")
+    }
+
+    func testV014_dragsGutterTwoToOneOutward() throws {
+        throw XCTSkip("Drag handle is file-private and runs a live mouse loop; no seam to inject a drag")
+    }
+
+    func testV015_arrowsPointInTheDirectionTheirLineTravels() throws {
+        let control = makeControl()
+        XCTAssertEqual(SpacingEdge.top.growing, .down)
+        XCTAssertEqual(SpacingEdge.top.shrinking, .up)
+        // Each arrow's body stands on the far side of the line from where it points.
+        let topMore = centre(of: try edgeArrow(.top, more: true, in: control), in: control)
+        let topLess = centre(of: try edgeArrow(.top, more: false, in: control), in: control)
+        XCTAssertGreaterThan(topMore.y, topLess.y, "top: more points down, less points up")
+        let bottomMore = centre(of: try edgeArrow(.bottom, more: true, in: control), in: control)
+        let bottomLess = centre(of: try edgeArrow(.bottom, more: false, in: control), in: control)
+        XCTAssertLessThan(bottomMore.y, bottomLess.y, "bottom: more points up, less points down")
+        let leadingMore = centre(of: try edgeArrow(.leading, more: true, in: control), in: control)
+        let leadingLess = centre(of: try edgeArrow(.leading, more: false, in: control), in: control)
+        XCTAssertLessThan(leadingMore.x, leadingLess.x, "leading: more points right, less points left")
+        let trailingMore = centre(of: try edgeArrow(.trailing, more: true, in: control), in: control)
+        let trailingLess = centre(of: try edgeArrow(.trailing, more: false, in: control), in: control)
+        XCTAssertGreaterThan(trailingMore.x, trailingLess.x, "trailing: more points left, less points right")
+    }
+
+    func testV016_resetZeroesOnlyTheVisibleNumbersInOneChange() throws {
+        let start = Spacing(top: 5, leading: 6, bottom: 7, trailing: 8, betweenColumns: 9, betweenRows: 11)
+        let control = makeControl(style: .frame, value: start)
+        var received: [Spacing] = []
+        control.onChange = { received.append($0) }
+        click(try XCTUnwrap(find("spacing.reset", in: control) as? NSButton))
+        XCTAssertEqual(received.count, 1)
+        XCTAssertEqual(
+            control.value, Spacing(betweenColumns: 9, betweenRows: 11), "edges zeroed, gutters untouched")
+    }
+
+    func testV017_tabVisitsTopLeadingTrailingBottomAndNeverAStepperOrArrow() throws {
+        let control = makeWindowedControl()
+        let window = try XCTUnwrap(control.window)
+        let top = try field("top", in: control)
+        XCTAssertTrue(window.makeFirstResponder(top))
+
+        var visited: [String] = []
+        var current = top
+        for _ in 0..<3 {
+            let handled = control.control(
+                current, textView: NSTextView(), doCommandBy: #selector(NSResponder.insertTab(_:)))
+            XCTAssertTrue(handled)
+            let next = try XCTUnwrap(focusedField(in: window))
+            visited.append(next.accessibilityIdentifier())
+            current = next
+        }
+        XCTAssertEqual(visited, ["spacing.leading", "spacing.trailing", "spacing.bottom"])
+
+        for edge in SpacingEdge.allCases {
+            let stepper = try XCTUnwrap(find("spacing.\(edge.rawValue).stepper", in: control) as? NSControl)
+            XCTAssertTrue(stepper.refusesFirstResponder)
+            XCTAssertTrue(try edgeArrow(edge, more: true, in: control).refusesFirstResponder)
+            XCTAssertTrue(try edgeArrow(edge, more: false, in: control).refusesFirstResponder)
+        }
+    }
+
+    func testV018_upArrowKeyAdjustsFocusedFieldAndSidewaysKeysDoNot() throws {
+        let control = makeControl(value: Spacing(top: 5))
+        let top = try field("top", in: control)
+        let handledUp = control.control(top, textView: NSTextView(), doCommandBy: #selector(NSResponder.moveUp(_:)))
+        XCTAssertTrue(handledUp)
+        XCTAssertEqual(control.value.top, 6)
+        for key in [#selector(NSResponder.moveLeft(_:)), #selector(NSResponder.moveRight(_:))] {
+            XCTAssertFalse(control.control(top, textView: NSTextView(), doCommandBy: key))
+        }
+        XCTAssertEqual(control.value.top, 6)
+    }
+
+    func testV019_otherFieldsUncommittedTextSurvivesAnArrowClick() throws {
+        let control = makeWindowedControl()
+        let window = try XCTUnwrap(control.window)
+        let leading = try field("leading", in: control)
+        XCTAssertTrue(window.makeFirstResponder(leading))
+        let editor = try XCTUnwrap(leading.currentEditor())
+        editor.string = "1"
+
+        click(try edgeArrow(.top, more: true, in: control))
+
+        XCTAssertEqual(try XCTUnwrap(leading.currentEditor()).string, "1")
+        XCTAssertEqual(try field("top", in: control).stringValue, "1")
+    }
+
+    func testV020_committedClampedNumberIsReshownEvenWhenUnchanged() throws {
+        let control = makeWindowedControl(value: Spacing(top: 40))
+        let window = try XCTUnwrap(control.window)
+        let top = try field("top", in: control)
+        XCTAssertTrue(window.makeFirstResponder(top))
+        let editor = try XCTUnwrap(top.currentEditor())
+        editor.string = "999"
+
+        pressReturn(in: top)
+
+        XCTAssertEqual(control.value.top, 40)
+        XCTAssertEqual(try XCTUnwrap(top.currentEditor()).string, "40")
+    }
+
+    func testV021_controlIsOneAccessibilityGroup() {
+        let control = makeControl()
+        XCTAssertTrue(control.isAccessibilityElement())
+        XCTAssertEqual(control.accessibilityRole(), .group)
+    }
+
+    func testV022_reportsFixedIntrinsicSize() {
+        for style in SpacingDiagram.allCases {
+            let control = makeControl(style: style, value: Spacing(uniform: 17))
+            XCTAssertEqual(control.intrinsicContentSize, NSSize(width: 420, height: 250))
+        }
+    }
+
+    func testV023_stopsShrinkingTheDiagramAtTheMinimumSize() throws {
+        // The floor is the larger of two: room for three number groups across,
+        // and room to draw the whole range.
+        let chrome = SpacingControlLayout.chrome
+        let group = SpacingControlLayout.fieldGroupSize
+        let least = SpacingControlLayout.minimumDiagramSize
+        let diagram = CGRect(
+            x: chrome.width, y: chrome.height,
+            width: max(least.width, group.width * 3), height: max(least.height, group.height * 3))
+        let squeezed = makeControl()
+        squeezed.frame = CGRect(x: 0, y: 0, width: 100, height: 100)
+        squeezed.layoutSubtreeIfNeeded()
+        let floor = makeControl()
+        floor.frame = CGRect(
+            x: 0, y: 0, width: diagram.width + chrome.width * 2, height: diagram.height + chrome.height * 2)
+        floor.layoutSubtreeIfNeeded()
+
+        XCTAssertEqual(chrome, CGSize(width: 75, height: 41))
+        let plan = SpacingControlLayout(diagram: diagram, spacing: Spacing(), style: .frame)
+        for edge in SpacingEdge.allCases {
+            let name = "spacing.\(edge.rawValue)"
+            let squeezedField = try XCTUnwrap(find(name, in: squeezed))
+            let floorField = try XCTUnwrap(find(name, in: floor))
+            XCTAssertEqual(squeezedField.frame, floorField.frame, "\(edge) is laid out from the floor")
+            // The plan names the centre of the number and its stepper; the
+            // number is the group's leading end.
+            let point = plan.fieldPosition(of: edge)
+            let fieldX = point.x - group.width / 2 + SpacingControlLayout.fieldSize.width / 2
+            XCTAssertEqual(squeezedField.frame.midX, fieldX, accuracy: 1)
+            XCTAssertEqual(squeezedField.frame.midY, point.y, accuracy: 1)
+        }
+    }
+
+    func testV024_fieldAndResetFontsFollowAThemeChange() throws {
+        let control = makeControl()
+        let top = try field("top", in: control)
+        let reset = try XCTUnwrap(find("spacing.reset", in: control) as? NSButton)
+        top.font = .systemFont(ofSize: 31)
+        reset.font = .systemFont(ofSize: 31)
+
+        NotificationCenter.default.post(name: ThemeManager.didChangeNotification, object: nil)
+
+        XCTAssertEqual(top.font, top.resolvedThemeScope.palette.font(.code))
+        XCTAssertEqual(reset.font, reset.resolvedThemeScope.palette.font(.body))
+    }
+
+    func testV025_displayedInsetIsCappedAtTheMaximum() {
+        let diagram = CGRect(x: 75, y: 41, width: 270, height: 168)
+        func topLine(_ top: Int) -> CGPoint {
+            SpacingControlLayout(diagram: diagram, spacing: Spacing(top: top), style: .frame).position(of: .top)
+        }
+        XCTAssertEqual(SpacingControlLayout.displayed(100), SpacingControlLayout.maximumDisplayedInset)
+        XCTAssertEqual(topLine(100), topLine(40))
+    }
+
+    func testV026_gutterDragSignStaysFixedAcrossTheCentre() throws {
+        throw XCTSkip("Drag handle is file-private and runs a live mouse loop; no seam to inject a drag")
+    }
+
+    func testV027_fieldTextIsThePrimaryTextRoleWithNoAdjustment() throws {
+        let control = makeControl()
+        let top = try field("top", in: control)
+        top.textColor = .systemPink
+        NotificationCenter.default.post(name: ThemeManager.didChangeNotification, object: nil)
+        XCTAssertEqual(top.textColor, top.resolvedThemeScope.palette.nsColor(.primaryText))
+    }
+
+    func testV028_confinesToUiThread() throws {
+        throw XCTSkip("Enforced at build time by @MainActor isolation; not exercisable at run time")
     }
 }

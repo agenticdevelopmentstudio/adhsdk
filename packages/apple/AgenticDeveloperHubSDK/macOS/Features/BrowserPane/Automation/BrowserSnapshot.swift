@@ -1,7 +1,7 @@
 import Foundation
 import WebKit
 
-/// Options for `browser_snapshot`, mirrored to the JS runtime.
+/// Options for `browser_snapshot`, applied by the agent page's walk and rendering.
 public struct BrowserSnapshotOptions: Sendable {
     public var interactiveOnly = false
     public var depth: Int?
@@ -9,17 +9,10 @@ public struct BrowserSnapshotOptions: Sendable {
     public var includeURLs = false
     public var delta = false
     public init() {}
-
-    /// What the JS `snapshot(opts)` call receives.
-    var jsArguments: [String: Any] {
-        var out: [String: Any] = ["interactiveOnly": interactiveOnly]
-        if let depth { out["depth"] = depth }
-        if let scope { out["scope"] = scope }
-        return out
-    }
 }
 
-/// One node of the JSON tree the runtime returns.
+/// One node of the tree `browser_snapshot` prints: the agent page mapped
+/// onto the legacy snapshot's shape (`AgentSnapshotMapper`).
 public struct BrowserSnapshotNode: Decodable, Sendable {
     public var role: String
     public var name: String?
@@ -46,29 +39,6 @@ public struct BrowserSnapshotNode: Decodable, Sendable {
         value = try container.decodeIfPresent(String.self, forKey: .value)
         text = try container.decodeIfPresent(String.self, forKey: .text)
         children = try container.decodeIfPresent([BrowserSnapshotNode].self, forKey: .children) ?? []
-    }
-}
-
-/// The whole JSON answer of `snapshot(opts)`.
-public struct BrowserSnapshotPayload: Decodable, Sendable {
-    public var url: String
-    public var title: String
-    public var generation: Int
-    public var root: BrowserSnapshotNode
-}
-
-/// A rendered snapshot: what a tool returns.
-public struct BrowserSnapshot: Sendable {
-    public var text: String
-    public var url: String
-    public var title: String
-    public var generation: Int
-
-    public init(payload: BrowserSnapshotPayload, includeURLs: Bool) {
-        self.text = BrowserSnapshotRenderer.render(payload.root, includeURLs: includeURLs)
-        self.url = payload.url
-        self.title = payload.title
-        self.generation = payload.generation
     }
 }
 
@@ -109,14 +79,18 @@ public enum BrowserSnapshotRenderer {
 /// clicking what the page chose. Only `BrowserAutomation.evaluate` runs in the
 /// page world, because reading the page's own JavaScript is its purpose.
 public enum BrowserSnapshotRuntime {
-    public static let version = 1
+    /// Equal to the `version` in `BrowserSnapshot.js`.
+    public static let version = 5
+
+    /// The automation world's name, for an engine that names worlds itself.
+    public static let worldName = "adkitchen.automation"
 
     /// The content world the runtime lives in, made once and kept. Every call
     /// must pass this same object: on macOS 26 a second `WKContentWorld.world(name:)`
     /// with the same name runs in a fresh world, so a runtime installed through
     /// one is invisible to a call made through the other.
     @MainActor
-    public static let world: WKContentWorld = .world(name: "adkitchen.automation")
+    public static let world: WKContentWorld = .world(name: worldName)
 
     public static var source: String {
         get throws {
@@ -148,6 +122,9 @@ public enum BrowserAutomationError: Error, CustomStringConvertible, Equatable, S
     case noWindow
     case notOnScreen
     case screenshotTimedOut
+    /// An element screenshot that may not scroll, of an element outside the
+    /// viewport.
+    case notInView(String)
     /// `clickAt` before any screenshot: its coordinates are read off one.
     case noScreenshot
     case cspRefusesEvaluation
@@ -165,6 +142,8 @@ public enum BrowserAutomationError: Error, CustomStringConvertible, Equatable, S
         case .noWindow: return "the pane is not in a window"
         case .notOnScreen: return "the pane is not on screen"
         case .screenshotTimedOut: return "the screenshot timed out"
+        case .notInView(let ref):
+            return "\(ref) is outside the viewport, and this pane is read only, so it cannot be scrolled into view"
         case .noScreenshot:
             return "take a browser_screenshot first; browser_click_at reads its coordinates off that image"
         case .cspRefusesEvaluation: return "the page's Content Security Policy refuses evaluation"

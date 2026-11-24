@@ -4,11 +4,18 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import type { NodeLog, ProcessingNode, WorkerToken } from "../api/processing";
 
-const { authedJson, authedRequest } = vi.hoisted(() => ({
+const { authedJson, authedRequest, listAllV1 } = vi.hoisted(() => ({
   authedJson: vi.fn(),
   authedRequest: vi.fn(),
+  listAllV1: vi.fn(),
 }));
-vi.mock("../api/http", () => ({ authedJson, authedRequest }));
+// Keep the real pure helpers (`unixToIso`, ...); only the network edge is replaced.
+vi.mock("../api/http", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../api/http")>()),
+  authedJson,
+  authedRequest,
+  listAllV1,
+}));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
 import { AiNodesPane } from "./AiNodesPane";
@@ -21,22 +28,22 @@ const node = (over: Partial<ProcessingNode>): ProcessingNode => ({
   providers: ["local", "openai"],
   config: { pollIntervalMs: 2000, model: "llama3.2" },
   online: true,
-  firstSeenAt: "2026-10-01T00:00:00Z",
-  lastSeenAt: new Date().toISOString(),
-  jobsCompleted: 12,
-  jobsFailed: 3,
+  first_seen_at: "2026-10-01T00:00:00Z",
+  last_seen_at: new Date().toISOString(),
+  jobs_completed: 12,
+  jobs_failed: 3,
   ...over,
 });
 
 const log = (id: number, over: Partial<NodeLog> = {}): NodeLog => ({
   id,
-  nodeId: "node-a",
-  occurredAt: "2026-10-21T10:00:00Z",
-  receivedAt: "2026-10-21T10:00:01Z",
+  node_id: "node-a",
+  occurred_at: "2026-10-21T10:00:00Z",
+  received_at: "2026-10-21T10:00:01Z",
   level: "info",
   event: "job.claimed",
   message: `message ${id}`,
-  jobId: null,
+  job_id: null,
   data: null,
   ...over,
 });
@@ -45,42 +52,45 @@ const workerToken = (over: Partial<WorkerToken>): WorkerToken => ({
   id: "tok-1",
   name: "railway-staging",
   prefix: "tmp_ab12",
-  createdAt: "2026-10-20T00:00:00Z",
-  expiresAt: null,
-  lastUsedAt: null,
+  created: 1792454400,
+  expires_at: null,
+  last_used_at: null,
   nodes: [],
   ...over,
 });
 
-let logPages: Record<string, { entries: NodeLog[]; nextBefore: number | null }>;
+let logPages: Record<string, { entries: NodeLog[]; next_before: number | null }>;
 
 beforeEach(() => {
   authedJson.mockReset();
   authedRequest.mockReset();
   authedRequest.mockResolvedValue(undefined);
   logPages = {};
-  authedJson.mockImplementation(async (url: string, init?: unknown) => {
-    if (url === "/api/processing/admin/nodes") {
-      return {
-        nodes: [
-          node({}),
-          node({ id: "node-b", kind: "swift", online: false, providers: ["local"], jobsFailed: 0 }),
-        ],
-      };
+  // The two collections walk the /v1 envelope in `listAllV1`; everything else is `authedJson`.
+  listAllV1.mockReset();
+  listAllV1.mockImplementation(async (url: string) => {
+    if (url === "/api/v1/processing/nodes") {
+      return [
+        node({}),
+        node({ id: "node-b", kind: "swift", online: false, providers: ["local"], jobs_failed: 0 }),
+      ];
     }
-    if (url === "/api/processing/admin/settings") return { logRetentionDays: 14 };
-    if (url === "/api/processing/admin/worker-tokens") {
+    if (url === "/api/v1/processing/worker_tokens") {
+      return [
+        workerToken({ nodes: ["node-a"], last_used_at: new Date().toISOString() }),
+        workerToken({ id: "tok-2", name: "laptop", prefix: "tmp_cd34" }),
+      ];
+    }
+    return [];
+  });
+  authedJson.mockImplementation(async (url: string, init?: unknown) => {
+    if (url === "/api/v1/processing/settings") return { log_retention_days: 14 };
+    if (url === "/api/v1/processing/worker_tokens") {
       if ((init as RequestInit | undefined)?.method === "POST") {
         return { ...workerToken({ id: "tok-new", name: "railway-testing" }), token: "tmp_secretvalue" };
       }
-      return {
-        workerTokens: [
-          workerToken({ nodes: ["node-a"], lastUsedAt: new Date().toISOString() }),
-          workerToken({ id: "tok-2", name: "laptop", prefix: "tmp_cd34" }),
-        ],
-      };
     }
-    if (url.includes("/logs")) return logPages[url] ?? { entries: [], nextBefore: null };
+    if (url.includes("/logs")) return logPages[url] ?? { entries: [], next_before: null };
     return {};
   });
 });
@@ -118,7 +128,7 @@ describe("AiNodesPane list", () => {
     fireEvent.change(await screen.findByLabelText(/Type the word/), { target: { value: "delete" } });
     fireEvent.click(screen.getAllByRole("button", { name: "Delete" }).at(-1)!);
     await waitFor(() =>
-      expect(authedRequest).toHaveBeenCalledWith("/api/processing/admin/nodes/node-b", {
+      expect(authedRequest).toHaveBeenCalledWith("/api/v1/processing/nodes/node-b", {
         method: "DELETE",
       }),
     );
@@ -139,24 +149,24 @@ describe("AiNodesPane detail", () => {
     mount();
     await openNode("node-a");
     await waitFor(() =>
-      expect(authedJson).toHaveBeenCalledWith("/api/processing/admin/nodes/node-a/logs?limit=50"),
+      expect(authedJson).toHaveBeenCalledWith("/api/v1/processing/nodes/node-a/logs?limit=50"),
     );
     fireEvent.change(await screen.findByLabelText("Level"), { target: { value: "error" } });
     await waitFor(() =>
       expect(authedJson).toHaveBeenCalledWith(
-        "/api/processing/admin/nodes/node-a/logs?level=error&limit=50",
+        "/api/v1/processing/nodes/node-a/logs?level=error&limit=50",
       ),
     );
   });
 
   it("Load more pages with nextBefore, appending older entries", async () => {
-    logPages["/api/processing/admin/nodes/node-a/logs?limit=50"] = {
+    logPages["/api/v1/processing/nodes/node-a/logs?limit=50"] = {
       entries: [log(100), log(99)],
-      nextBefore: 99,
+      next_before: 99,
     };
-    logPages["/api/processing/admin/nodes/node-a/logs?before=99&limit=50"] = {
+    logPages["/api/v1/processing/nodes/node-a/logs?before=99&limit=50"] = {
       entries: [log(98)],
-      nextBefore: null,
+      next_before: null,
     };
     mount();
     await openNode("node-a");
@@ -191,7 +201,7 @@ describe("AiNodesPane retention", () => {
   it("shows a failed settings read", async () => {
     const base = authedJson.getMockImplementation()!;
     authedJson.mockImplementation(async (url: string, init?: unknown) => {
-      if (url === "/api/processing/admin/settings") throw new Error("settings unavailable");
+      if (url === "/api/v1/processing/settings") throw new Error("settings unavailable");
       return base(url, init);
     });
     mount();
@@ -206,7 +216,7 @@ describe("AiNodesPane retention", () => {
     expect(input.value).toBe("99");
     // a refetch returning a different stored value must leave the typed text alone
     authedJson.mockImplementation(async (url: string) =>
-      url === "/api/processing/admin/settings" ? { logRetentionDays: 20 } : { nodes: [] },
+      url === "/api/v1/processing/settings" ? { log_retention_days: 20 } : {},
     );
     const calls = authedJson.mock.calls.length;
     await client.invalidateQueries({ queryKey: ["processing-admin", "settings"] });
@@ -231,9 +241,9 @@ describe("AiNodesPane retention", () => {
     expect(saveBtn.disabled).toBe(false);
     fireEvent.click(saveBtn);
     await waitFor(() =>
-      expect(authedJson).toHaveBeenCalledWith("/api/processing/admin/settings", {
-        method: "PUT",
-        body: JSON.stringify({ logRetentionDays: 30 }),
+      expect(authedJson).toHaveBeenCalledWith("/api/v1/processing/settings", {
+        method: "POST",
+        body: JSON.stringify({ log_retention_days: 30 }),
       }),
     );
   });
@@ -258,7 +268,7 @@ describe("AiNodesPane worker tokens", () => {
     fireEvent.change(screen.getByLabelText("Name"), { target: { value: "  railway-testing " } });
     fireEvent.click(create);
     await waitFor(() =>
-      expect(authedJson).toHaveBeenCalledWith("/api/processing/admin/worker-tokens", {
+      expect(authedJson).toHaveBeenCalledWith("/api/v1/processing/worker_tokens", {
         method: "POST",
         body: JSON.stringify({ name: "railway-testing" }),
       }),
@@ -306,7 +316,7 @@ describe("AiNodesPane worker tokens", () => {
     expect(await screen.findByText(/Every node using it stops getting jobs/)).toBeTruthy();
     fireEvent.click(screen.getAllByRole("button", { name: "Revoke" }).at(-1)!);
     await waitFor(() =>
-      expect(authedRequest).toHaveBeenCalledWith("/api/processing/admin/worker-tokens/tok-2", {
+      expect(authedRequest).toHaveBeenCalledWith("/api/v1/processing/worker_tokens/tok-2", {
         method: "DELETE",
       }),
     );

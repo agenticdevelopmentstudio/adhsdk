@@ -69,13 +69,13 @@ const DONE = 'event: done\ndata: {}\n\n'
 /** Default happy-path router: mint → bootstrap → create conversation → SSE turn. */
 function happyHandler(convoId = 'c1'): (call: Call) => Response {
   return (call) => {
-    if (call.url.endsWith('/visitor-tokens')) {
-      return json({ token: 'tok-1', expiresAt: FUTURE, personaId: 'p1' }, 201)
+    if (call.url.endsWith('/visitor_tokens')) {
+      return json({ token: 'tok-1', expires_at: FUTURE, persona_id: 'p1' }, 201)
     }
-    if (call.url.endsWith('/persona/bootstrap')) {
-      return json({ persona: { name: 'bitbag' }, chat: { limits: { maxConversationLength: 200 } } })
+    if (call.url.endsWith('/personas/bootstrap')) {
+      return json({ persona: { name: 'bitbag' }, chat: { limits: { max_conversation_length: 200 } } })
     }
-    if (call.url.endsWith('/conversations')) return json({ id: convoId }, 201)
+    if (call.url.endsWith('/visitor_chats')) return json({ id: convoId }, 201)
     if (call.url.endsWith('/turns')) return sse(OPEN, token('Hi '), token('there'), DONE)
     throw new Error(`unexpected url ${call.url}`)
   }
@@ -94,9 +94,9 @@ describe('AdhChatBackend — token lifecycle', () => {
     const backend = new AdhChatBackend({ personaSlug: SLUG, fetchImpl, store })
     await drain(backend)
 
-    const mint = calls.find((c) => c.url.endsWith('/visitor-tokens'))
+    const mint = calls.find((c) => c.url.endsWith('/visitor_tokens'))
     expect(mint?.method).toBe('POST')
-    expect(mint?.url).toBe('/api/public/personas/bitbag/visitor-tokens')
+    expect(mint?.url).toBe('/api/v1/personas/bitbag/visitor_tokens')
     expect(JSON.parse(store.map.get(TOKEN_KEY)!)).toMatchObject({ token: 'tok-1', personaId: 'p1' })
     // The new token is a new session: the pre-existing (foreign) conversation id is dropped,
     // then a fresh one is created and stored.
@@ -112,12 +112,12 @@ describe('AdhChatBackend — token lifecycle', () => {
     const backend = new AdhChatBackend({ personaSlug: SLUG, fetchImpl, store })
     await drain(backend)
 
-    expect(calls.some((c) => c.url.endsWith('/visitor-tokens'))).toBe(false)
+    expect(calls.some((c) => c.url.endsWith('/visitor_tokens'))).toBe(false)
     // Bearer is the stored token, and the stored conversation is resumed (no create call).
     const turn = calls.find((c) => c.url.endsWith('/turns'))
     expect(turn?.headers.Authorization).toBe('Bearer stored')
-    expect(turn?.url).toBe('/api/public/visitor-chat/conversations/c9/turns')
-    expect(calls.some((c) => c.method === 'POST' && c.url.endsWith('/conversations'))).toBe(false)
+    expect(turn?.url).toBe('/api/v1/visitor_chats/c9/turns')
+    expect(calls.some((c) => c.method === 'POST' && c.url.endsWith('/visitor_chats'))).toBe(false)
   })
 
   it('treats a token within the expiry skew as expired and re-mints', async () => {
@@ -129,7 +129,7 @@ describe('AdhChatBackend — token lifecycle', () => {
     const backend = new AdhChatBackend({ personaSlug: SLUG, fetchImpl, store })
     await drain(backend)
 
-    expect(calls.some((c) => c.url.endsWith('/visitor-tokens'))).toBe(true)
+    expect(calls.some((c) => c.url.endsWith('/visitor_tokens'))).toBe(true)
     expect(JSON.parse(store.map.get(TOKEN_KEY)!).token).toBe('tok-1')
   })
 
@@ -137,12 +137,12 @@ describe('AdhChatBackend — token lifecycle', () => {
     const store = memStore()
     let mints = 0
     const { fetchImpl, calls } = fakeFetch((call) => {
-      if (call.url.endsWith('/visitor-tokens')) {
+      if (call.url.endsWith('/visitor_tokens')) {
         mints += 1
-        return json({ token: `tok-${mints}`, expiresAt: FUTURE, personaId: 'p1' }, 201)
+        return json({ token: `tok-${mints}`, expires_at: FUTURE, persona_id: 'p1' }, 201)
       }
-      if (call.url.endsWith('/persona/bootstrap')) return json({ persona: { name: 'bitbag' } })
-      if (call.url.endsWith('/conversations')) return json({ id: `c${mints}` }, 201)
+      if (call.url.endsWith('/personas/bootstrap')) return json({ persona: { name: 'bitbag' } })
+      if (call.url.endsWith('/visitor_chats')) return json({ id: `c${mints}` }, 201)
       if (call.url.endsWith('/turns')) {
         // First turn (under tok-1 / c1) is unauthorized; the retry under the fresh token succeeds.
         return call.headers.Authorization === 'Bearer tok-1'
@@ -156,7 +156,7 @@ describe('AdhChatBackend — token lifecycle', () => {
 
     expect(mints).toBe(2)
     // Two conversations created (the first orphaned by the re-mint), two turn attempts.
-    expect(calls.filter((c) => c.method === 'POST' && c.url.endsWith('/conversations')).length).toBe(2)
+    expect(calls.filter((c) => c.method === 'POST' && c.url.endsWith('/visitor_chats')).length).toBe(2)
     expect(calls.filter((c) => c.url.endsWith('/turns')).length).toBe(2)
     expect(events.some((e) => e.type === 'token' && e.text === 'ok')).toBe(true)
   })
@@ -167,12 +167,12 @@ describe('AdhChatBackend — token lifecycle', () => {
       [CONVO_KEY]: 'dead',
     })
     const { fetchImpl, calls } = fakeFetch((call) => {
-      if (call.url.endsWith('/persona/bootstrap')) return json({ persona: { name: 'bitbag' } })
-      if (call.url.endsWith('/conversations')) return json({ id: 'fresh' }, 201)
+      if (call.url.endsWith('/personas/bootstrap')) return json({ persona: { name: 'bitbag' } })
+      if (call.url.endsWith('/visitor_chats')) return json({ id: 'fresh' }, 201)
       if (call.url.endsWith('/turns')) {
         // The stored 'dead' conversation was reaped server-side (expiry window elapsed) → 404.
         // The retry under a freshly created conversation succeeds; the token never changes.
-        return call.url.includes('/conversations/dead/')
+        return call.url.includes('/visitor_chats/dead/')
           ? new Response('', { status: 404 })
           : sse(OPEN, token('ok'), DONE)
       }
@@ -182,8 +182,8 @@ describe('AdhChatBackend — token lifecycle', () => {
     const events = await drain(backend)
 
     // No re-mint — the token was valid; only the conversation was recreated.
-    expect(calls.some((c) => c.url.endsWith('/visitor-tokens'))).toBe(false)
-    expect(calls.filter((c) => c.method === 'POST' && c.url.endsWith('/conversations')).length).toBe(1)
+    expect(calls.some((c) => c.url.endsWith('/visitor_tokens'))).toBe(false)
+    expect(calls.filter((c) => c.method === 'POST' && c.url.endsWith('/visitor_chats')).length).toBe(1)
     expect(calls.filter((c) => c.url.endsWith('/turns')).length).toBe(2)
     // The dead id is replaced by the fresh one, so the next message resumes the live convo.
     expect(store.map.get(CONVO_KEY)).toBe('fresh')
@@ -206,16 +206,16 @@ describe('AdhChatBackend — token lifecycle', () => {
     })
     let mints = 0
     const { fetchImpl, calls } = fakeFetch((call) => {
-      if (call.url.endsWith('/visitor-tokens')) {
+      if (call.url.endsWith('/visitor_tokens')) {
         mints += 1
-        return json({ token: 'tok-1', expiresAt: FUTURE, personaId: 'p1' }, 201)
+        return json({ token: 'tok-1', expires_at: FUTURE, persona_id: 'p1' }, 201)
       }
-      if (call.url.endsWith('/persona/bootstrap')) {
+      if (call.url.endsWith('/personas/bootstrap')) {
         return call.headers.Authorization === 'Bearer stale'
           ? new Response('', { status: 401 })
           : json({ persona: { name: 'bitbag' } })
       }
-      if (call.url.endsWith('/conversations')) return json({ id: 'fresh' }, 201)
+      if (call.url.endsWith('/visitor_chats')) return json({ id: 'fresh' }, 201)
       if (call.url.endsWith('/turns')) return sse(OPEN, token('ok'), DONE)
       throw new Error(`unexpected ${call.url}`)
     })
@@ -226,7 +226,7 @@ describe('AdhChatBackend — token lifecycle', () => {
     expect(JSON.parse(store.map.get(TOKEN_KEY)!).token).toBe('tok-1')
     // The old id is abandoned outright: never POSTed to, and replaced in the store by a conversation
     // the NEW token owns. One turn attempt — preserving the old id would spend an extra doomed 404.
-    expect(calls.some((c) => c.url.includes('/conversations/old'))).toBe(false)
+    expect(calls.some((c) => c.url.includes('/visitor_chats/old'))).toBe(false)
     expect(calls.filter((c) => c.url.endsWith('/turns')).length).toBe(1)
     expect(store.map.get(CONVO_KEY)).toBe('fresh')
     expect(events.some((e) => e.type === 'token' && e.text === 'ok')).toBe(true)
@@ -240,8 +240,8 @@ describe('AdhChatBackend — conversation + bootstrap', () => {
     const backend = new AdhChatBackend({ personaSlug: SLUG, fetchImpl, store })
     await drain(backend)
 
-    const create = calls.find((c) => c.method === 'POST' && c.url.endsWith('/conversations'))
-    expect(create?.url).toBe('/api/public/visitor-chat/conversations')
+    const create = calls.find((c) => c.method === 'POST' && c.url.endsWith('/visitor_chats'))
+    expect(create?.url).toBe('/api/v1/visitor_chats')
     expect(create?.body).toBe('{}')
     expect(store.map.get(CONVO_KEY)).toBe('conv-42')
   })
@@ -261,7 +261,7 @@ describe('AdhChatBackend — conversation + bootstrap', () => {
 
     expect(seen).toEqual([{ personaName: 'bitbag', maxConversationLength: 200 }])
     // Bootstrap fetched exactly once across two turns.
-    expect(calls.filter((c) => c.url.endsWith('/persona/bootstrap')).length).toBe(1)
+    expect(calls.filter((c) => c.url.endsWith('/personas/bootstrap')).length).toBe(1)
   })
 })
 
@@ -286,9 +286,9 @@ describe('AdhChatBackend — streaming + fail-closed gates', () => {
   it('maps a 409 length cap to a friendly error and drops the maxed-out conversation', async () => {
     const store = memStore()
     const { fetchImpl } = fakeFetch((call) => {
-      if (call.url.endsWith('/visitor-tokens')) return json({ token: 't', expiresAt: FUTURE, personaId: 'p' }, 201)
-      if (call.url.endsWith('/persona/bootstrap')) return json({ chat: { limits: { maxConversationLength: 200 } } })
-      if (call.url.endsWith('/conversations')) return json({ id: 'full' }, 201)
+      if (call.url.endsWith('/visitor_tokens')) return json({ token: 't', expires_at: FUTURE, persona_id: 'p' }, 201)
+      if (call.url.endsWith('/personas/bootstrap')) return json({ chat: { limits: { max_conversation_length: 200 } } })
+      if (call.url.endsWith('/visitor_chats')) return json({ id: 'full' }, 201)
       if (call.url.endsWith('/turns')) return new Response('', { status: 409 })
       throw new Error('unexpected')
     })
@@ -305,9 +305,9 @@ describe('AdhChatBackend — streaming + fail-closed gates', () => {
   it('an `ended` event drops the stored conversation so the next message starts fresh', async () => {
     const store = memStore()
     const { fetchImpl } = fakeFetch((call) => {
-      if (call.url.endsWith('/visitor-tokens')) return json({ token: 't', expiresAt: FUTURE, personaId: 'p' }, 201)
-      if (call.url.endsWith('/persona/bootstrap')) return json({})
-      if (call.url.endsWith('/conversations')) return json({ id: 'over' }, 201)
+      if (call.url.endsWith('/visitor_tokens')) return json({ token: 't', expires_at: FUTURE, persona_id: 'p' }, 201)
+      if (call.url.endsWith('/personas/bootstrap')) return json({})
+      if (call.url.endsWith('/visitor_chats')) return json({ id: 'over' }, 201)
       // The persona said goodbye and ended the chat. No `done` follows it on the wire.
       if (call.url.endsWith('/turns'))
         return sse(OPEN, token('goodbye'), 'event: ended\ndata: {"reason":"persona_ended"}\n\n')
@@ -328,9 +328,9 @@ describe('AdhChatBackend — streaming + fail-closed gates', () => {
   it('a 409 after termination also starts fresh, and says so rather than citing the length cap', async () => {
     const store = memStore()
     const { fetchImpl } = fakeFetch((call) => {
-      if (call.url.endsWith('/visitor-tokens')) return json({ token: 't', expiresAt: FUTURE, personaId: 'p' }, 201)
-      if (call.url.endsWith('/persona/bootstrap')) return json({ chat: { limits: { maxConversationLength: 200 } } })
-      if (call.url.endsWith('/conversations')) return json({ id: 'over' }, 201)
+      if (call.url.endsWith('/visitor_tokens')) return json({ token: 't', expires_at: FUTURE, persona_id: 'p' }, 201)
+      if (call.url.endsWith('/personas/bootstrap')) return json({ chat: { limits: { max_conversation_length: 200 } } })
+      if (call.url.endsWith('/visitor_chats')) return json({ id: 'over' }, 201)
       // Reached when this client still holds an id the server has since closed — a second tab, or
       // a turn aborted after the persona ended it but before the `ended` block was read.
       if (call.url.endsWith('/turns'))
@@ -349,9 +349,9 @@ describe('AdhChatBackend — streaming + fail-closed gates', () => {
 
   it('maps a 503 turn (kill switch / budget) to the "resting" error', async () => {
     const { fetchImpl } = fakeFetch((call) => {
-      if (call.url.endsWith('/visitor-tokens')) return json({ token: 't', expiresAt: FUTURE, personaId: 'p' }, 201)
-      if (call.url.endsWith('/persona/bootstrap')) return json({})
-      if (call.url.endsWith('/conversations')) return json({ id: 'c' }, 201)
+      if (call.url.endsWith('/visitor_tokens')) return json({ token: 't', expires_at: FUTURE, persona_id: 'p' }, 201)
+      if (call.url.endsWith('/personas/bootstrap')) return json({})
+      if (call.url.endsWith('/visitor_chats')) return json({ id: 'c' }, 201)
       if (call.url.endsWith('/turns')) return new Response('', { status: 503 })
       throw new Error('unexpected')
     })
@@ -364,9 +364,9 @@ describe('AdhChatBackend — streaming + fail-closed gates', () => {
 
   it('maps a 503 at conversation-create to the "resting" error', async () => {
     const { fetchImpl } = fakeFetch((call) => {
-      if (call.url.endsWith('/visitor-tokens')) return json({ token: 't', expiresAt: FUTURE, personaId: 'p' }, 201)
-      if (call.url.endsWith('/persona/bootstrap')) return json({})
-      if (call.url.endsWith('/conversations')) return new Response('', { status: 503 })
+      if (call.url.endsWith('/visitor_tokens')) return json({ token: 't', expires_at: FUTURE, persona_id: 'p' }, 201)
+      if (call.url.endsWith('/personas/bootstrap')) return json({})
+      if (call.url.endsWith('/visitor_chats')) return new Response('', { status: 503 })
       throw new Error('unexpected')
     })
     const backend = new AdhChatBackend({ personaSlug: SLUG, fetchImpl, store: memStore() })
@@ -383,9 +383,9 @@ describe('AdhChatBackend — a refused turn surfaces only actionable copy', () =
   /** Fail the TURN itself (not the create) with `status` and `body`. */
   function turnFailing(status: number, body: unknown) {
     return fakeFetch((call) => {
-      if (call.url.endsWith('/visitor-tokens')) return json({ token: 't', expiresAt: FUTURE, personaId: 'p' }, 201)
-      if (call.url.endsWith('/persona/bootstrap')) return json({})
-      if (call.url.endsWith('/conversations')) return json({ id: 'c' }, 201)
+      if (call.url.endsWith('/visitor_tokens')) return json({ token: 't', expires_at: FUTURE, persona_id: 'p' }, 201)
+      if (call.url.endsWith('/personas/bootstrap')) return json({})
+      if (call.url.endsWith('/visitor_chats')) return json({ id: 'c' }, 201)
       if (call.url.endsWith('/turns')) return json(body, status)
       throw new Error('unexpected')
     }).fetchImpl
@@ -467,9 +467,9 @@ describe('AdhChatBackend — failure copy names the persona', () => {
   /** Fail at conversation-create with `status`, so the copy is produced by the gate path. */
   function failingAt(status: number) {
     return fakeFetch((call) => {
-      if (call.url.endsWith('/visitor-tokens')) return json({ token: 't', expiresAt: FUTURE, personaId: 'p' }, 201)
-      if (call.url.endsWith('/persona/bootstrap')) return json({})
-      if (call.url.endsWith('/conversations')) return new Response('', { status })
+      if (call.url.endsWith('/visitor_tokens')) return json({ token: 't', expires_at: FUTURE, persona_id: 'p' }, 201)
+      if (call.url.endsWith('/personas/bootstrap')) return json({})
+      if (call.url.endsWith('/visitor_chats')) return new Response('', { status })
       throw new Error('unexpected')
     }).fetchImpl
   }
@@ -499,9 +499,9 @@ describe('AdhChatBackend — failure copy names the persona', () => {
     // The mint succeeds and bootstrap answers with the real name; the TURN then 503s, so the
     // copy is emitted after bootstrap and must use its name over the constructor's.
     const { fetchImpl } = fakeFetch((call) => {
-      if (call.url.endsWith('/visitor-tokens')) return json({ token: 't', expiresAt: FUTURE, personaId: 'p' }, 201)
-      if (call.url.endsWith('/persona/bootstrap')) return json({ persona: { name: 'Renamed Persona' } })
-      if (call.url.endsWith('/conversations')) return json({ id: 'c' }, 201)
+      if (call.url.endsWith('/visitor_tokens')) return json({ token: 't', expires_at: FUTURE, persona_id: 'p' }, 201)
+      if (call.url.endsWith('/personas/bootstrap')) return json({ persona: { name: 'Renamed Persona' } })
+      if (call.url.endsWith('/visitor_chats')) return json({ id: 'c' }, 201)
       if (call.url.endsWith('/turns')) return new Response('', { status: 503 })
       throw new Error('unexpected')
     })

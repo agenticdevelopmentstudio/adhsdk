@@ -13,9 +13,9 @@ describe("connection-spec-draft: headerVars", () => {
     // them, because draftFromConnectionSpec ignored the field and connectionSpecFromDraft
     // never re-emitted it.
     const spec = {
-      specVersion: 1 as const,
+      spec_version: 1 as const,
       auth: { type: "header" as const, header: "x-portkey-api-key", scheme: "raw" as const },
-      headerVars: [
+      header_vars: [
         { header: "x-portkey-provider", label: "Upstream provider", example: "openai" },
       ],
     };
@@ -24,7 +24,7 @@ describe("connection-spec-draft: headerVars", () => {
       { localId: expect.any(String), header: "x-portkey-provider", label: "Upstream provider", example: "openai", secret: false },
     ]);
     const back = connectionSpecFromDraft(draft);
-    expect(back?.headerVars).toEqual([
+    expect(back?.header_vars).toEqual([
       { header: "x-portkey-provider", label: "Upstream provider", example: "openai" },
     ]);
   });
@@ -56,7 +56,7 @@ describe("connection-spec-draft: headerVars", () => {
     draft.headerVars = [
       { localId: "a", header: "x-vk", label: "Virtual key", example: "vk-123", secret: true },
     ];
-    expect(connectionSpecFromDraft(draft)?.headerVars).toEqual([
+    expect(connectionSpecFromDraft(draft)?.header_vars).toEqual([
       { header: "x-vk", label: "Virtual key", example: "vk-123", secret: true },
     ]);
   });

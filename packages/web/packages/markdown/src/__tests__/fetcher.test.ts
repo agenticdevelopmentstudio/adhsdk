@@ -31,19 +31,60 @@ afterEach(() => {
 })
 
 describe('defaultMarkdownFetcher', () => {
-  it('resolves to the JSON body on an ok response', async () => {
-    const doc = { id: 'abc', title: 'Test doc', content: '# Hello' }
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(makeOkResponse(doc)))
+  it('mdc-027: resolves to the JSON body on an ok response', async () => {
+    const wire = {
+      object: 'paper',
+      id: 'abc',
+      owner_kind: 'customer',
+      owner_id: 'c1',
+      ecosystem_id: 'e1',
+      title: 'Test doc',
+      content: '# Hello',
+      tags: ['a'],
+      visibility: 'private',
+      stage: 'draft',
+      kind: 'paper',
+      content_hash: 'h',
+      size_bytes: 7,
+      current_version: 2,
+      created: 1767323045,
+      updated: 1767323046,
+      is_deleted: false,
+    }
+    const fetchMock = vi.fn().mockResolvedValue(makeOkResponse(wire))
+    vi.stubGlobal('fetch', fetchMock)
 
     const signal = new AbortController().signal
     const result = await defaultMarkdownFetcher('abc', signal)
 
-    expect(result).toEqual(doc)
+    expect(fetchMock.mock.calls[0]![0]).toBe('/api/v1/papers/abc')
+    expect(result).toMatchObject({
+      id: 'abc',
+      ownerKind: 'customer',
+      ownerId: 'c1',
+      ecosystemId: 'e1',
+      title: 'Test doc',
+      content: '# Hello',
+      contentHash: 'h',
+      sizeBytes: 7,
+      currentVersion: 2,
+      createdAt: '2026-01-02T03:04:05.000Z',
+      updatedAt: '2026-01-02T03:04:06.000Z',
+      isDeleted: false,
+    })
+  })
+
+  it('rejects with the message of a /v1 error body', async () => {
+    const body = JSON.stringify({ error: { type: 'invalid_request_error', code: 'bad', message: 'Nope.' } })
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(makeErrorResponse(400, 'application/json', body)))
+
+    const signal = new AbortController().signal
+    await expect(defaultMarkdownFetcher('x', signal)).rejects.toThrow('Nope.')
   })
 
   // body-read-once path: the fetcher reads the body as text and then parses
   // problem+json from that string — no double-read on the Response stream.
-  it('rejects with a "title — detail" message for problem+json errors', async () => {
+  it('mdc-028: rejects with a "title — detail" message for problem+json errors', async () => {
     const body = JSON.stringify({ title: 'Bad', detail: 'nope' })
     vi.stubGlobal(
       'fetch',
@@ -56,7 +97,7 @@ describe('defaultMarkdownFetcher', () => {
     await expect(defaultMarkdownFetcher('x', signal)).rejects.toThrow('Bad — nope')
   })
 
-  it('rejects with "Document not found" for a 404', async () => {
+  it('mdc-029: rejects with "Document not found" for a 404', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue(makeErrorResponse(404, null, '')),

@@ -21,8 +21,8 @@ class RegistryAgentMcpServer:
         url (str): The remote MCP server's http(s) endpoint URL
         enabled (bool): Opt-in: a server contributes no tools until an operator enables it
         has_auth_secret (bool): true iff a per-server bearer secret is stored; the secret itself is NEVER returned
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
         created_by (None | str | Unset): The admin who registered it (null for system rows)
     """
 
@@ -32,8 +32,8 @@ class RegistryAgentMcpServer:
     url: str
     enabled: bool
     has_auth_secret: bool
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     created_by: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -50,9 +50,9 @@ class RegistryAgentMcpServer:
 
         has_auth_secret = self.has_auth_secret
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         created_by: None | str | Unset
         if isinstance(self.created_by, Unset):
@@ -69,13 +69,13 @@ class RegistryAgentMcpServer:
                 "name": name,
                 "url": url,
                 "enabled": enabled,
-                "hasAuthSecret": has_auth_secret,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
+                "has_auth_secret": has_auth_secret,
+                "created": created,
+                "updated": updated,
             }
         )
         if created_by is not UNSET:
-            field_dict["createdBy"] = created_by
+            field_dict["created_by"] = created_by
 
         return field_dict
 
@@ -92,11 +92,11 @@ class RegistryAgentMcpServer:
 
         enabled = d.pop("enabled")
 
-        has_auth_secret = d.pop("hasAuthSecret")
+        has_auth_secret = d.pop("has_auth_secret")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         def _parse_created_by(data: object) -> None | str | Unset:
             if data is None:
@@ -105,7 +105,7 @@ class RegistryAgentMcpServer:
                 return data
             return cast(None | str | Unset, data)
 
-        created_by = _parse_created_by(d.pop("createdBy", UNSET))
+        created_by = _parse_created_by(d.pop("created_by", UNSET))
 
         registry_agent_mcp_server = cls(
             id=id,
@@ -114,8 +114,8 @@ class RegistryAgentMcpServer:
             url=url,
             enabled=enabled,
             has_auth_secret=has_auth_secret,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
             created_by=created_by,
         )
 

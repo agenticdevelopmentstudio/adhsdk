@@ -226,4 +226,20 @@
   operation's emptiness check and removal are each atomic only relative to
   that one instance's queue, never relative to a second instance or process
   racing the same path in between.
-
+- **open-location-resolves-typed-text**: Resolving the text typed into
+  Open Location MUST trim surrounding whitespace and then answer: a web
+  address for an `http` or `https` URL with a non-empty host; for a `file`
+  URL, a path starting with `~` (expanded to the home directory) or a path
+  starting with `/`, a directory or a file when the path exists, and invalid
+  when it does not; a web address over `https` for text with no whitespace
+  whose host part (before the first `/`) contains a dot that is neither its
+  first nor last character; and invalid for anything else, empty text
+  included.
+- **open-location-touches-only-existence**: Resolving Open Location text
+  MUST do nothing but ask the file system whether a path exists and whether
+  it is a directory, so the rules are testable without a window; a
+  resolved file or directory MUST be the standardized absolute path.
+- **open-location-file-opens-in-a-document-window**: The host MUST open a
+  resolved web address in a web browser, a directory in a File Browser
+  window, a file in a Document window (where the single-document tab
+  setting says it opens), and MUST refuse invalid text with an alert.

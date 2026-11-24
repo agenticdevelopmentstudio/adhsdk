@@ -1,0 +1,23 @@
+
+- **raw-output**: `rawGit(_:)` MUST return the standard output of the command byte-for-byte as a UTF-8 string, with no trimming.
+- **trimmed-output**: `git(_:)` MUST return the same text as `rawGit(_:)` with leading and trailing whitespace and newlines removed.
+- **failure-is-empty**: Both forms MUST return the empty string when the command exits with a non-zero status.
+- **timeout-is-empty**: Both forms MUST return the empty string when the command is still running after 5 seconds, and the child MUST be stopped.
+- **spawn-error-is-empty**: Both forms MUST return the empty string when the process cannot be started or run.
+- **non-utf8-is-empty**: Both forms MUST return the empty string when the standard output is not valid UTF-8.
+- **no-throw**: Both forms MUST NOT throw or trap on any failure listed above.
+- **optional-locks-off**: The child's environment MUST set `GIT_OPTIONAL_LOCKS` to `0`, replacing any value the caller's environment holds.
+- **environment-inherited**: The child MUST get the calling process's environment otherwise unchanged, except for `GIT_OPTIONAL_LOCKS` and `PATH`.
+- **path-repaired**: The child's `PATH` MUST be the caller's `PATH` entries in their order, followed by each of `/usr/bin`, `/bin`, `/usr/local/bin` and `/opt/homebrew/bin` that is not already present, joined with `:`.
+- **path-repaired-missing**: `repairedPath(_:)` MUST give `/usr/bin:/bin:/usr/local/bin:/opt/homebrew/bin` when the given path is nil or empty.
+- **path-repaired-order**: `repairedPath(_:)` MUST NOT reorder or drop a non-empty entry already present, MUST drop empty entries (from `::`, a leading `:` or a trailing `:`), and MUST add each missing directory only once.
+- **path-repaired-public**: `repairedPath(_:)` MUST be public so a test that spawns its own `git` to build a fixture can repair `PATH` the same way.
+- **no-shell**: The command MUST be started as `/usr/bin/env git` followed by the given arguments, with no shell, so `git` is found on `PATH` and an argument is never reinterpreted by a shell.
+- **arguments-verbatim**: The arguments MUST be passed to `git` as given, after the word `git`.
+- **working-directory**: The command MUST run in the calling process's working directory unless the caller passes `-C <dir>` among the arguments.
+- **stdin-closed**: The child's standard input MUST be at end-of-file from the start (an empty input), so it can never block waiting on a prompt.
+- **output-drained**: Standard output MUST be read while `git` writes, so a large output (a long branch listing) cannot fill the pipe and deadlock the child.
+- **stdout-only**: The result MUST contain only standard output; standard error MUST NOT be part of it.
+- **read-only-by-contract**: Callers MUST pass only commands that read repository state; the type does not check the arguments.
+- **blocking**: Both forms MUST block the calling thread until the command ends or times out.
+

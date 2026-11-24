@@ -2,10 +2,11 @@ import Foundation
 
 /// Everything `GitClient` can fail with.
 ///
-/// Four cases, and the split between them is about *how far the invocation
-/// got*, because that is what a caller can act on: nothing executable to run,
-/// a process that never produced an exit status, a process that ran out of
-/// time, or a process that ran and disagreed.
+/// Five cases, and the split between them is about *how far the invocation
+/// got*, because that is what a caller can act on: a write refused before
+/// anything ran, nothing executable to run, a process that never produced an
+/// exit status, a process that ran out of time, or a process that ran and
+/// disagreed.
 ///
 /// One error deliberately does **not** appear here: `CancellationError` leaves
 /// `GitClient` as itself, unwrapped. See `GitClient.execute`.
@@ -27,9 +28,18 @@ public enum GitClientError: Error, LocalizedError, Equatable {
     case launchFailed(verb: String, reason: String)
     /// Nothing executable at the configured path; no process was spawned.
     case executableNotFound(path: String)
+    /// A write was refused before anything ran: `argument`, a ref, branch, tag, remote or
+    /// commit, was empty or began with `-`, so git would have read it as an option. Any other
+    /// `argument` is a sentence saying why (an interactive rebase plan git would refuse, a
+    /// relative worktree path, a rebase range holding a merge), shown as it is.
+    case invalidArgument(verb: String, argument: String)
 
     public var errorDescription: String? {
         switch self {
+        case let .invalidArgument(verb, argument):
+            if argument.isEmpty { return "git \(verb) was not run: a name or commit is empty." }
+            if !argument.hasPrefix("-") { return "git \(verb) was not run: \(argument)" }
+            return "git \(verb) was not run: “\(argument)” begins with “-”, so git would read it as an option."
         case let .commandFailed(verb, exitStatus, standardError):
             let detail = standardError.trimmingCharacters(in: .whitespacesAndNewlines)
             return detail.isEmpty
@@ -60,6 +70,25 @@ public enum GitClientError: Error, LocalizedError, Equatable {
             return "launchFailed(verb: \(verb))"
         case .executableNotFound:
             return "executableNotFound"
+        case let .invalidArgument(verb, _):
+            return "invalidArgument(verb: \(verb))"
         }
+    }
+
+    /// What to show a person when `error` ends a git call: git's own standard error,
+    /// trimmed, for a `.commandFailed` that has one; otherwise the error's
+    /// `localizedDescription`. For display only — never log it.
+    public static func userMessage(of error: Error) -> String {
+        if case let .commandFailed(_, _, standardError)? = error as? GitClientError {
+            let detail = standardError.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !detail.isEmpty { return detail }
+        }
+        return error.localizedDescription
+    }
+
+    /// `error`'s `logDescription` when it is a `GitClientError`, else only its type name:
+    /// any other error's description could carry git's output too.
+    public static func logDescription(of error: Error) -> String {
+        (error as? GitClientError)?.logDescription ?? String(describing: type(of: error))
     }
 }

@@ -109,8 +109,8 @@ public actor PersonaChatCoordinator: Backend {
         self.options = options
         self.participantID = options.participantID ?? options.personaSlug
         self.conversationsURL = options.baseURL
-            .appendingPathComponent("chat")
-            .appendingPathComponent("conversations")
+            .appendingPathComponent("v1")
+            .appendingPathComponent("chats")
         let (stream, continuation) = AsyncStream<InboundEvent>.makeStream(
             of: InboundEvent.self,
             bufferingPolicy: .unbounded
@@ -527,8 +527,16 @@ private struct CoordinatorCommandResult: CommandResult {
 }
 
 private struct CreateConversationBody: Encodable {
+    /// The `/v1/chats` discriminator: a persona conversation, not a direct message.
+    let type = "persona"
     let personaSlug: String
     let model: String?
+
+    enum CodingKeys: String, CodingKey {
+        case type
+        case personaSlug = "persona_slug"
+        case model
+    }
 }
 
 private struct SendMessageBody: Encodable {

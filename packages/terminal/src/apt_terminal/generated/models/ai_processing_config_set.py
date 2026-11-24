@@ -30,8 +30,8 @@ class AiProcessingConfigSet:
         model (str):
         params (AiProcessingConfigSetParams):
         is_default (bool):
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
     """
 
     id: UUID
@@ -42,8 +42,8 @@ class AiProcessingConfigSet:
     model: str
     params: AiProcessingConfigSetParams
     is_default: bool
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -72,9 +72,9 @@ class AiProcessingConfigSet:
 
         is_default = self.is_default
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -87,9 +87,9 @@ class AiProcessingConfigSet:
                 "provider": provider,
                 "model": model,
                 "params": params,
-                "isDefault": is_default,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
+                "is_default": is_default,
+                "created": created,
+                "updated": updated,
             }
         )
 
@@ -137,11 +137,11 @@ class AiProcessingConfigSet:
 
         params = AiProcessingConfigSetParams.from_dict(d.pop("params"))
 
-        is_default = d.pop("isDefault")
+        is_default = d.pop("is_default")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         ai_processing_config_set = cls(
             id=id,
@@ -152,8 +152,8 @@ class AiProcessingConfigSet:
             model=model,
             params=params,
             is_default=is_default,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
         )
 
         ai_processing_config_set.additional_properties = d

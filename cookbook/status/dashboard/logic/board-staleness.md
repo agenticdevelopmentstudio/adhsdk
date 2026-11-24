@@ -1,7 +1,6 @@
 ---
 id: 01f6f7b6-4bc5-4f35-a46a-1e80fe470097
 title: "Board Staleness"
-domain: adhsdk://cookbook/status/dashboard/logic/board-staleness
 type: ingredient
 version: 1.0.2
 status: review
@@ -18,7 +17,7 @@ platforms:
 tags: []
 depends-on: []
 related:
-  - adhsdk://cookbook/status/dashboard/state/board
+  - 7610ef55-32c9-43b6-8a70-aaa247cc4899
 references: []
 approved-by: ""
 approved-date: ""
@@ -33,7 +32,7 @@ approved-date: ""
 - `isBoardStale(generatedAt, nowMs)` catches a board read that has stopped ARRIVING. It compares the board's `generatedAt` against the client clock.
 - `boardDataFreshness(dataAsOfMs, generatedAt, probeIntervalMs?)` catches a board that keeps arriving over frozen FACTS. It compares two server clocks: `generatedAt` minus `dataAsOfMs`.
 
-Per the module's doc comment, the two rules compose and "neither can substitute for the other". The module has no state, no I/O and no side effects. Its one call site is the `useBoard` hook ([useBoard](adhsdk://cookbook/status/dashboard/state/board)), which folds both verdicts into `board === null` with a reason. The data-clock window is derived from `snapshotStaleMs` in the sibling `snapshot-staleness.ts`, so board and snapshot freshness share one "how old is too old" rule.
+Per the module's doc comment, the two rules compose and "neither can substitute for the other". The module has no state, no I/O and no side effects. Its one call site is the `useBoard` hook (useBoard ([adhsdk.ingredient.status.dashboard.state.board](cookbook:7610ef55-32c9-43b6-8a70-aaa247cc4899))), which folds both verdicts into `board === null` with a reason. The data-clock window is derived from `snapshotStaleMs` in the sibling `snapshot-staleness.ts`, so board and snapshot freshness share one "how old is too old" rule.
 
 ## Behavioral Requirements
 
@@ -180,12 +179,6 @@ Not applicable: the module makes no log calls. Its verdicts reach the user throu
 - **AppKit / UIKit**: Use the same pure Swift functions as the SwiftUI port. Drive `nowMs` from a `Timer` or the UI layer's clock. Nothing in the module is UI-bound, so the code belongs in a shared framework target.
 - **WinUI 3**: Port as a `public static class BoardStaleness` in C#. Use `public const long BoardPollIntervalMs = 60_000;`, `BoardStaleMs = 3 * BoardPollIntervalMs`, `BoardDataStaleCycles = 2`, and a `public enum BoardDataFreshness { Current, Frozen, NoData }`. Serialise it to `"no-data"` with `[JsonStringEnumMemberName]` or a converter if it crosses `System.Text.Json`. Parse with `DateTimeOffset.TryParse(generatedAt, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var t)` and treat `false` as stale or `Frozen`, since .NET has no NaN parse result. Compute ms with `t.ToUnixTimeMilliseconds()`. Take the client clock from `DateTimeOffset.UtcNow` or an injected `TimeProvider`, so tests can pin it. `dataAsOfMs` becomes `long?` and `probeIntervalMs` becomes `long?`. The view model that calls these (the `useBoard` equivalent) would re-evaluate on a `DispatcherQueueTimer` tick and raise `INotifyPropertyChanged` for the derived reason. The functions themselves stay synchronous and pure, with no `Task`.
 
-## Reference Implementations
-
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-web/src/lib/board-staleness.ts` |
-
 ## Design Decisions
 
 **Decision**: Judge read staleness against the client clock, not a server timestamp.
@@ -216,11 +209,11 @@ Not applicable: the module makes no log calls. Its verdicts reach the user throu
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | best-practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | best-practices |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | reliability |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | passed | reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | best-practices |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | reliability |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | reliability |
 
 **Separation of concerns.** The module holds only the rules and thresholds, with no I/O or React. The hook applies them.
 

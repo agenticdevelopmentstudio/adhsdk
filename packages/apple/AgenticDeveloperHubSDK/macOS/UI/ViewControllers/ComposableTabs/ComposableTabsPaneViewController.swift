@@ -13,8 +13,8 @@ import AgenticDeveloperHubSDKCoreMacOS
 /// active-pane outline, and what arrange mode does over the top.
 ///
 /// The layout can be rearranged two ways, and they answer different needs. The
-/// gear menu carries `Move` always, for the user who knows exactly which pane
-/// goes where. Arrange mode dims the content and puts the same four directions
+/// title bar's Move button, beside zoom, drops the four directions down for the
+/// user who knows exactly which pane goes where. Arrange mode dims the content and puts the same four directions
 /// in a toolbar in the middle of the pane, for the user who is looking at the
 /// window deciding — which is why it can also add and remove, and why the
 /// affordance is big and central rather than a corner pull-down. Both ask
@@ -35,7 +35,7 @@ public final class ComposableTabsPaneViewController: PaneViewController {
 
     private lazy var arrange: PaneArrangeOverlayController = makeArrangeController()
 
-    /// The four directions, for the gear menu. Held rather than made per click
+    /// The four directions, for the Move button. Held rather than made per click
     /// because `NSMenuItem` keeps its target unowned — the items would fire
     /// into nothing if the thing that made them died with the call.
     private lazy var moveMenu: ComposableTabsMoveMenu = {
@@ -90,7 +90,18 @@ public final class ComposableTabsPaneViewController: PaneViewController {
     /// The backdrop that draws the active-pane outline. Unchanged — it is the
     /// reason this pane has a container of its own at all.
     public override func makeContainerView() -> NSView {
-        ComposableTabsPaneBackgroundView(nodeID: nodeID)
+        let background = ComposableTabsPaneBackgroundView(nodeID: nodeID)
+        background.drawsOutline = showsOutline
+        return background
+    }
+
+    /// Whether the backdrop draws this pane's outline. Stamped by the
+    /// enclosing split from its `showsPaneOutlines`.
+    var showsOutline = true {
+        didSet {
+            guard showsOutline != oldValue, isViewLoaded else { return }
+            (view as? ComposableTabsPaneBackgroundView)?.drawsOutline = showsOutline
+        }
     }
 
     /// `nil` only if the project went away first.
@@ -120,6 +131,13 @@ public final class ComposableTabsPaneViewController: PaneViewController {
     /// used when the content does not name itself.
     public override var fallbackTitle: String { paneName }
 
+    /// The registry's symbol for this kind of pane — the same one the Add
+    /// popup shows beside its name.
+    public override var fallbackIcon: NSImage? {
+        guard let symbolName = paneDescriptor.symbolName else { return nil }
+        return NSImage(systemSymbolName: symbolName, accessibilityDescription: paneName)
+    }
+
     /// `pane.<content-type>`, numbered only when the tab holds more than one of
     /// this kind. The number comes from the tree, which is the only thing that
     /// can know.
@@ -147,7 +165,23 @@ public final class ComposableTabsPaneViewController: PaneViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
 
+        titleBar.centersTitle = true
         arrange.attach(to: view)
+        wirePreferredThickness()
+    }
+
+    /// Passes a content's preferred width on to the host, plus what this pane
+    /// puts around the content: the border inset on both sides and the
+    /// spacing insets. The content measures only itself (`separation-of-concerns`).
+    private func wirePreferredThickness() {
+        guard let provider = contentViewController as? PanePreferredThicknessProviding else { return }
+        provider.onPreferredThicknessChange = { [weak self] contentWidth in
+            guard let self else { return }
+            let insets = self.contentSpacingInsets
+            let thickness = contentWidth + self.contentInset * 2 + insets.left + insets.right
+            self.host?.paneDidRequestThickness(self, thickness: thickness)
+        }
+        titleBar.controls.onFit = { [weak provider] in provider?.reportPreferredThickness() }
     }
 
     public override func viewDidAppear() {
@@ -155,6 +189,8 @@ public final class ComposableTabsPaneViewController: PaneViewController {
         // Also the re-entry point after a move: `rebuild(from:)` re-hosts this
         // controller, and the pane has to come back with the scrim it left with.
         arrange.update()
+        // Now the split is `parent`, Move can say which ways are open.
+        refreshControlAvailability()
     }
 
     /// The active-pane border is drawn on the backdrop's own layer, so the
@@ -200,9 +236,12 @@ public final class ComposableTabsPaneViewController: PaneViewController {
     /// content from: a pane nested inside another pane's tree — a Document
     /// editor — is registered only in the override, and asking the project's
     /// registry about it answers `.unknown`.
-    var paneName: String {
+    var paneName: String { paneDescriptor.displayName }
+
+    /// This pane's registry entry, from the layout its content is vended from.
+    private var paneDescriptor: ComposableTabsViewDescriptor {
         let layout = layoutOverride ?? project?.layout ?? ComposableTabsLayout.placeholderOnly()
-        return layout.registry.descriptor(for: viewID).displayName
+        return layout.registry.descriptor(for: viewID)
     }
 
     private func makeArrangeController() -> PaneArrangeOverlayController {
@@ -230,26 +269,14 @@ public final class ComposableTabsPaneViewController: PaneViewController {
         }
     }
 
-    // MARK: - The gear menu
+    // MARK: - The Move button
 
-    /// `Move ▸`, above the pane's `Settings…`.
-    ///
-    /// Built fresh with the menu that holds it, so the four items are enabled
-    /// against the tree as it stands at the click — and the parent is disabled
-    /// outright when this pane is the only one there is, rather than opening
-    /// onto four dead items.
-    public override func makeMenuItems() -> [NSMenuItem] {
-        let items = moveMenu.makeItems(accessibilityPrefix: "pane.options.move")
+    public override var offersMove: Bool { true }
 
-        let submenu = NSMenu()
-        submenu.autoenablesItems = false
-        for item in items { submenu.addItem(item) }
-
-        let move = NSMenuItem(title: "Move", action: nil, keyEquivalent: "")
-        move.submenu = submenu
-        move.isEnabled = items.contains { $0.isEnabled }
-        move.accessibilityID("pane.options.move")
-        return [move] + super.makeMenuItems()
+    /// Built fresh per click, so the four items are enabled against the tree
+    /// as it stands then.
+    public override func makeMoveMenuItems() -> [NSMenuItem] {
+        moveMenu.makeItems(accessibilityPrefix: "pane.move")
     }
 
     /// The distinct views the spec will let this pane sit beside, named for the

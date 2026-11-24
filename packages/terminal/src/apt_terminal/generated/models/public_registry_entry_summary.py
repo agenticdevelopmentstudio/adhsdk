@@ -63,13 +63,13 @@ class PublicRegistryEntrySummary:
         field_dict.update(
             {
                 "slug": slug,
-                "displayName": display_name,
+                "display_name": display_name,
                 "summary": summary,
                 "category": category,
                 "keywords": keywords,
-                "locationText": location_text,
-                "deliveryMode": delivery_mode,
-                "photoAttachmentId": photo_attachment_id,
+                "location_text": location_text,
+                "delivery_mode": delivery_mode,
+                "photo_attachment_id": photo_attachment_id,
             }
         )
 
@@ -80,7 +80,7 @@ class PublicRegistryEntrySummary:
         d = dict(src_dict)
         slug = d.pop("slug")
 
-        display_name = d.pop("displayName")
+        display_name = d.pop("display_name")
 
         summary = d.pop("summary")
 
@@ -88,16 +88,16 @@ class PublicRegistryEntrySummary:
 
         keywords = cast(list[str], d.pop("keywords"))
 
-        location_text = d.pop("locationText")
+        location_text = d.pop("location_text")
 
-        delivery_mode = PublicRegistryEntrySummaryDeliveryMode(d.pop("deliveryMode"))
+        delivery_mode = PublicRegistryEntrySummaryDeliveryMode(d.pop("delivery_mode"))
 
         def _parse_photo_attachment_id(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        photo_attachment_id = _parse_photo_attachment_id(d.pop("photoAttachmentId"))
+        photo_attachment_id = _parse_photo_attachment_id(d.pop("photo_attachment_id"))
 
         public_registry_entry_summary = cls(
             slug=slug,

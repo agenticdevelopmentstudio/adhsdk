@@ -92,12 +92,16 @@ public final class ChatInputField: NSTextField, Themeable {
     /// The block caret. A layer rather than something drawn in `draw(_:)` so a
     /// blink costs an `isHidden` flip instead of a redraw of the whole field.
     let caretLayer = CALayer()
-    private var caretTimer: Timer?
-    private var selectionObserver: (any NSObjectProtocol)?
+    // `nonisolated(unsafe)`: mutated only on the main actor while the view
+    // lives; the nonisolated `deinit` reads it only once no other reference
+    // remains, so the two can never overlap.
+    nonisolated(unsafe) private var caretTimer: Timer?
+    nonisolated(unsafe) private var selectionObserver: (any NSObjectProtocol)?
 
     /// The field editor's clip view, watched so the block caret follows the
     /// text when it scrolls rather than only when it changes.
-    private var scrollObserver: (any NSObjectProtocol)?
+    /// `nonisolated(unsafe)` for the same reason as `selectionObserver`.
+    nonisolated(unsafe) private var scrollObserver: (any NSObjectProtocol)?
 
     /// Web's `ost-caret-blink` is `1.06s steps(1)` with `50% { opacity: 0 }` —
     /// half the period lit, half dark, and no interpolation between them.

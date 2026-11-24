@@ -1,7 +1,6 @@
 ---
 id: aa2f3a92-8bac-4a0f-8e61-382958ab53ef
 title: "Uptime Math"
-domain: adhsdk://cookbook/status/dashboard/logic/uptime
 type: ingredient
 version: 1.1.1
 status: review
@@ -17,10 +16,10 @@ platforms:
   - web
 tags: []
 depends-on:
-  - adhsdk://cookbook/status/dashboard/logic/health
+  - 4ed891c0-4e4f-4955-8314-d143c45490ec
 related:
-  - adhsdk://cookbook/status/service/monitor/uptime
-  - adhsdk://cookbook/status/dashboard/state/uptime
+  - 88dabdf6-14a3-44eb-ab0d-ae18007c683e
+  - e322fd0c-1552-4bd9-b129-3c809af3a972
 references: []
 approved-by: ""
 approved-date: ""
@@ -30,14 +29,14 @@ approved-date: ""
 
 ## Overview
 
-This logic is the client's copy of the uptime arithmetic. It has no I/O, no state and no dependencies beyond a health status (see [Health Classification](adhsdk://cookbook/status/dashboard/logic/health)). It exports:
+This logic is the client's copy of the uptime arithmetic. It has no I/O, no state and no dependencies beyond a health status (see Health Classification ([adhsdk.ingredient.status.dashboard.logic.health](cookbook:4ed891c0-4e4f-4955-8314-d143c45490ec))). It exports:
 
 - **counts**: a shape of four numbers: `total`, `healthy`, `degraded`, `down`.
 - **the uptime-percent function** — takes counts and returns a number or null: the share of checks that were up (healthy or degraded), as a percentage rounded to two decimals, or null when there were no checks.
 - **the day-status function** — takes counts and returns a health status: collapses a day's counts to one `"healthy"`, `"degraded"` or `"down"` verdict.
 - **the overall-uptime-percent function** — takes a list of services and returns a number or null: the portfolio-wide uptime, the simple unweighted mean of each service's own uptime percent, rounded to two decimals, or null when no service has data.
 
-At runtime only the overall-uptime-percent function is called: the overview tab view passes it the list of services from [the uptime state](adhsdk://cookbook/status/dashboard/state/uptime), or an empty list while loading, and renders the result in the overview stats view. The per-day uptime-percent and status values arrive already computed from the status server, whose own counterpart (see [Status Server Monitor Uptime](adhsdk://cookbook/status/service/monitor/uptime)) carries the same three functions and backs the `/uptime` read route. The two implementations differ only in comments and line wrapping.
+At runtime only the overall-uptime-percent function is called: the overview tab view passes it the list of services from the uptime state ([adhsdk.ingredient.status.dashboard.state.uptime](cookbook:e322fd0c-1552-4bd9-b129-3c809af3a972)), or an empty list while loading, and renders the result in the overview stats view. The per-day uptime-percent and status values arrive already computed from the status server, whose own counterpart (see Status Server Monitor Uptime ([adhsdk.ingredient.status.service.monitor.uptime](cookbook:88dabdf6-14a3-44eb-ab0d-ae18007c683e))) carries the same three functions and backs the `/uptime` read route. The two implementations differ only in comments and line wrapping.
 
 Use this component whenever a port must reproduce the status page's uptime numbers exactly: the rounding and the "degraded counts as up" rule are what make the numbers match.
 
@@ -139,7 +138,7 @@ Vectors 001–009 are the assertions in the implementation's test suite (see Pla
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | the counts argument (to the uptime-percent function and the day-status function) | counts (four numbers) | none — required | The day's check counts: `total`, `healthy`, `degraded`, `down`. |
-| the services argument (to the overall-uptime-percent function) | a list of objects each carrying `uptimePercent` (a number or null) | none — required | One entry per service; the list of services from [the uptime state](adhsdk://cookbook/status/dashboard/state/uptime), or an empty list while loading. |
+| the services argument (to the overall-uptime-percent function) | a list of objects each carrying `uptimePercent` (a number or null) | none — required | One entry per service; the list of services from the uptime state ([adhsdk.ingredient.status.dashboard.state.uptime](cookbook:e322fd0c-1552-4bd9-b129-3c809af3a972)), or an empty list while loading. |
 | Down-majority threshold | constant | `0.5` | Hardcoded in the day-status function; strictly greater than this share of down checks makes the day `"down"`. Not configurable. |
 | Rounding precision | constant | 2 decimal places | Hardcoded in both percent functions. Not configurable. |
 
@@ -181,12 +180,6 @@ Not applicable: no function in this logic logs.
 - **AppKit / UIKit**: Same Swift port as SwiftUI — this logic is UI-free; share it from a framework target so both app flavors and any server-side Swift use one implementation. Format the returned `Double` for display with `NumberFormatter` or `FormatStyle` in the view layer, not in this logic.
 - **WinUI 3**: Port to a C# `static class UptimeMath` in a .NET class library with `public readonly record struct Counts(int Total, int Healthy, int Degraded, int Down)` and `public enum HealthStatus { Healthy, Degraded, Down }`; return `double?`. Match JavaScript rounding with `Math.Round(ratio * 10000, MidpointRounding.AwayFromZero) / 100` — the default `Math.Round` uses banker's rounding (`MidpointRounding.ToEven`) and would diverge on halves. Cast to `double` before dividing (`(double)c.Down / c.Total`) so integer division does not truncate, and so a zero total yields `double.PositiveInfinity` rather than a `DivideByZeroException`. `services.Select(s => s.UptimePercent).Where(p => p.HasValue).Select(p => p!.Value)` then `Average()` gives the mean; check `Any()` first because `Average()` on an empty sequence throws. When the input is deserialized with `System.Text.Json` from the `/uptime` response, map `uptimePercent` to `double?`. Nothing here needs `Task`/`async`, `ObservableCollection` or `INotifyPropertyChanged`: call the functions from the view model that owns the uptime data and expose the result as a bound property there.
 
-## Reference Implementations
-
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-web/src/lib/uptime.ts` |
-
 ## Design Decisions
 
 **Decision**: Portfolio-wide uptime is the unweighted mean of each service's own uptime percent.
@@ -217,10 +210,10 @@ Not applicable: no function in this logic logs.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | best-practices |
-| [good-test-properties](agenticdevelopercookbook://compliance/best-practices#good-test-properties) | passed | best-practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | best-practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
+| [adc.check.best-practices.good-test-properties](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9144e220-ad70-51db-ba81-cdb0cc1b66c8) | passed | best-practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | best-practices |
 
 `uptime.ts` is pure arithmetic with no I/O, rendering or state, separated from the hook that fetches the data and the component that displays it, so separation-of-concerns passes. `uptime.test.ts` covers every exported function, including the null paths and each `dayStatus` branch, with small independent Vitest cases, so unit-test-coverage and good-test-properties pass. explicit-error-handling is partial: "no data" is signalled explicitly with `null`, but inconsistent or `NaN` counts pass through unvalidated and surface as out-of-range or `NaN` percentages rather than being rejected; the boundary cases (exactly half down, zero total with down checks, negative total) are not in the test suite.
 

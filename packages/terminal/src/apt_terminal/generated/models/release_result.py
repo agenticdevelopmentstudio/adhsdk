@@ -66,9 +66,9 @@ class ReleaseResult:
                 "rdid": rdid,
                 "reason": reason,
                 "freed": freed,
-                "aliasesRemoved": aliases_removed,
-                "stillHeldBy": still_held_by,
-                "renamedTo": renamed_to,
+                "aliases_removed": aliases_removed,
+                "still_held_by": still_held_by,
+                "renamed_to": renamed_to,
                 "children": children,
             }
         )
@@ -86,16 +86,16 @@ class ReleaseResult:
 
         freed = d.pop("freed")
 
-        aliases_removed = d.pop("aliasesRemoved")
+        aliases_removed = d.pop("aliases_removed")
 
-        still_held_by = cast(list[str], d.pop("stillHeldBy"))
+        still_held_by = cast(list[str], d.pop("still_held_by"))
 
         def _parse_renamed_to(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        renamed_to = _parse_renamed_to(d.pop("renamedTo"))
+        renamed_to = _parse_renamed_to(d.pop("renamed_to"))
 
         children = []
         _children = d.pop("children")

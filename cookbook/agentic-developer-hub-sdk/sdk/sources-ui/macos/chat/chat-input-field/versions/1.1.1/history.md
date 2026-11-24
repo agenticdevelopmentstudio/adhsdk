@@ -1,0 +1,6 @@
+
+| Version | Date | Author | Summary |
+|---------|------|--------|---------|
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: dropped `must-` prefixes from requirement names and their citations; reformatted Design Decisions into Decision/Rationale/Approved entries and rebuilt Compliance as a linked, source-verified table; added test vectors for previously-untested edge cases and Logging events; corrected the external-ref/`onChange` edge case, the SwiftUI note (`ViewModifier`, `.onSubmit`), and the WinUI 3 note (`KeyDown`/`VirtualKey.Enter`, `AccentButtonStyle`, a composed overlay caret instead of a `TextBox` subclass); scoped the autofill opt-out requirements to web; added `name`/send-button-label requirements and vectors; unified Appearance units to pt; clarified that theme-driven Appearance values are applied through the AppKit Configuration options rather than read internally; and populated `related` with sibling recipes |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Fixed Shift+Enter, aria-label, and Logging sections to split AppKit vs Web; softened screen-reader-support to partial. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: partial). |

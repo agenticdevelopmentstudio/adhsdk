@@ -24,7 +24,7 @@
   sibling extension in the same module, to call.
 - **Compose**: Port the SQLite access with `androidx.sqlite` or a light
   wrapper over `android.database.sqlite.SQLiteOpenHelper`/`SQLiteDatabase`,
-  keeping the same one-connection-per-store shape; run the four migrations
+  keeping the same one-connection-per-store shape; run the seven migrations
   inside `SQLiteDatabase.beginTransactionNonExclusive()`/`endTransaction()`,
   re-issue the `foreign_keys=ON` pragma per connection the same way opening
   the connection does here, and represent `GitRepo` as the Kotlin `data
@@ -52,7 +52,7 @@
   5-second wait (`Microsoft.Data.Sqlite` has no dedicated
   `SQLITE_OPEN_FULLMUTEX` flag, but serializes access per connection by
   default, preserving the same one-connection, thread-safe-by-default
-  shape). Run the four migrations inside a transaction opened with `BEGIN
+  shape). Run the seven migrations inside a transaction opened with `BEGIN
   IMMEDIATE;`/`COMMIT;`/`ROLLBACK;` issued as raw command text the way this
   file's own execute operation does, guarding each `ALTER TABLE` with a
   `PRAGMA table_info('table')` read the way this file's column-existence

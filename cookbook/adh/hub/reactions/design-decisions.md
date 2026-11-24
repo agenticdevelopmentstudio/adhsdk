@@ -8,6 +8,6 @@
 **Approved**: pending
 
 **Decision**: this component owns no reaction UI state — no toggle logic, no optimistic update, no re-fetch-after-write. `add`/`remove` resolve once and return; the caller decides when and how to re-read.
-**Rationale**: `tally` and `byTarget` are pure folds over whatever `Reaction[]` a caller already has; the module comment frames the batched `list` read as the caller's job "rendering a pane," not this client's. The sibling presentational component [ReactionBar](adhsdk://recipes/reaction-bar) is built on exactly this split — it is stateless itself and calls back with an emoji, leaving the write and the re-read to its consumer — the same division this data client assumes.
+**Rationale**: `tally` and `byTarget` are pure folds over whatever `Reaction[]` a caller already has; the module comment frames the batched `list` read as the caller's job "rendering a pane," not this client's. The sibling presentational component ReactionBar ([adhsdk.ingredient.ui.components.actions.reaction-bar](cookbook:169da1b6-2a22-4fec-9f01-8118e5242bd5)) is built on exactly this split — it is stateless itself and calls back with an emoji, leaving the write and the re-read to its consumer — the same division this data client assumes.
 **Approved**: pending
 

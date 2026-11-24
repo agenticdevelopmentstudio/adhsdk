@@ -30,8 +30,9 @@
   spawned, and the attempt MUST still be recorded (git-client-037). A
   command that runs to completion and exits non-zero MUST throw a
   command-failed outcome carrying the real exit status and standard-error
-  text, with that standard-error text never reaching the command log
-  (git-client-038, git-client-046). The unset-global-config verb on a key
+  text, with that standard-error text never reaching OSLog and kept, cut
+  and URL-redacted, only in the in-memory ring (git-client-038,
+  git-client-046, git-client-112). The unset-global-config verb on a key
   that was never set MUST surface git's exit status 5 as an ordinary
   command-failed outcome, with no dedicated outcome for it.
 - **Timeout (this component's offline-equivalent state)**: This component

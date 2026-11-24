@@ -32,7 +32,7 @@ class UsageInsightRunRateByCategoryItem:
         field_dict.update(
             {
                 "category": category,
-                "directMicros": direct_micros,
+                "direct_micros": direct_micros,
             }
         )
 
@@ -48,7 +48,7 @@ class UsageInsightRunRateByCategoryItem:
                 return data
             return cast(int | None, data)
 
-        direct_micros = _parse_direct_micros(d.pop("directMicros"))
+        direct_micros = _parse_direct_micros(d.pop("direct_micros"))
 
         usage_insight_run_rate_by_category_item = cls(
             category=category,

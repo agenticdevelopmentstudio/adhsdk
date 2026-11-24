@@ -77,9 +77,12 @@ function getHighlighter(): Promise<Highlighter> {
 
 /**
  * Allowlist sanitize schema. Attribute keys use hast property names (camelCase:
- * `className`, `tabIndex`, `style`). Allows a safe prose subset plus the
- * `className`/`style` shiki emits on `pre`/`code`/`span` (the dual-theme CSS
- * variables that drive code-block colors).
+ * `className`, `tabIndex`, `style`), and hast-util-sanitize matches them exactly.
+ * Allows a safe prose subset plus what shiki puts on its nodes: on `pre`, the raw
+ * lowercase properties `class` ("shiki …") and `tabindex` ("0"); on each line
+ * `span`, the raw `class` ("line"); and on
+ * `pre`/`code`/`span`, the `style` carrying the dual-theme CSS variables that
+ * drive code-block colors.
  *
  * Event handlers (on*), `javascript:` URLs, and <script>/<style>/<iframe> are
  * intentionally absent — this is an allowlist, not a denylist.
@@ -110,9 +113,12 @@ const sanitizeSchema = {
     ins: ['dateTime', 'cite'],
     li: ['className'],
     ol: ['reversed', 'start', 'type'],
-    pre: ['className', 'style', 'tabIndex'],
+    // shiki emits the raw hast properties `class` and `tabindex` (not `className`/`tabIndex`);
+    // allow both spellings so `pre.shiki` survives and stays keyboard-focusable.
+    pre: ['className', 'class', 'style', 'tabIndex', 'tabindex'],
     q: ['cite'],
-    span: ['className', 'style'],
+    // shiki's line spans carry the raw `class` ("line"); keep it so per-line styling still applies.
+    span: ['className', 'class', 'style'],
     table: ['align', 'cellPadding', 'cellSpacing'],
     td: ['align', 'colSpan', 'rowSpan', 'valign'],
     th: ['align', 'colSpan', 'rowSpan', 'scope', 'valign'],

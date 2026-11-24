@@ -1,0 +1,6 @@
+
+| Version | Date | Author | Summary |
+|---------|------|--------|---------|
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: merged duplicate requirements (loading aria, URL back/forward, escape-from-header), resolved the Enter-ownership conflict between roving focus and active-index tracking, corrected the Privacy transmission/retention claims, rewrote Appearance in tokens/measurements instead of raw Tailwind classes and fixed its accuracy errors (gap size, corner-radius conflict, a typo), populated Configuration and Compliance as real tables, reformatted Design Decisions to the Decision/Rationale/Approved form and retitled a misleading one, corrected Platform Notes APIs (SwiftUI, WinUI, AppKit/UIKit) and replaced the commercial WinUI splitter suggestion, rebuilt the Localization table's misused columns, generalized app-specific wording in a merged requirement, added two new requirements for previously-orphaned edge cases plus test vectors for all previously-uncovered requirements, retagged two mistagged vectors, and renamed every requirement to subject-only kebab-case with no `must-` prefix. |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Escape deselects (both list/preview); preview Escape refocuses activeIndex, not opened row. |

@@ -145,7 +145,7 @@ describe('setFrontmatterTitle', () => {
     expect(after).toBe('---\ntitle: "Gamma"\nname: Alpha\n---\n\nbody\n')
   })
 
-  it('does not inject frontmatter when the document already derives the requested title', () => {
+  it('mdc-035: does not inject frontmatter when the document already derives the requested title', () => {
     // No `title:` line, and the derived title (from `name:`) already matches — writing would
     // just be adding a key the author never asked for.
     const before = '---\nname: Same\n---\n\nbody\n'
@@ -180,7 +180,7 @@ describe('multi-line and quoted YAML scalars', () => {
     'body\n',
   ].join('\n')
 
-  it('reads a folded (>-) title as its folded VALUE, not as the ">-" marker', () => {
+  it('mdc-037: reads a folded (>-) title as its folded VALUE, not as the ">-" marker', () => {
     expect(frontmatterTitle(FOLDED)).toBe('A long research title continued here')
     expect(deriveDocumentTitle(FOLDED)).toBe('A long research title continued here')
   })
@@ -272,7 +272,7 @@ describe('multi-line and quoted YAML scalars', () => {
     expect(parseYaml(madeBlock)).toEqual({ title: 'Two lines\nof title' })
   })
 
-  it('re-emits an untouched block byte-identically', () => {
+  it('mdc-036: re-emits an untouched block byte-identically', () => {
     // Setting the title a document ALREADY states must return the same string — not merely an
     // equivalent one. The store hashes `content`, so a re-quoted or re-wrapped bystander line
     // is a phantom edit and a spurious save conflict.
@@ -292,7 +292,7 @@ describe('multi-line and quoted YAML scalars', () => {
     expect(setFrontmatterTitle(doc, 'Plain Title')).toBe(doc)
   })
 
-  it('refuses to rewrite frontmatter it cannot parse', () => {
+  it('mdc-034: refuses to rewrite frontmatter it cannot parse', () => {
     // Unparseable YAML is exactly where a line rewrite did its damage. There is nothing safe to
     // write into a block whose shape is unknown, and the author can still edit the frontmatter
     // directly — it is part of `content`.

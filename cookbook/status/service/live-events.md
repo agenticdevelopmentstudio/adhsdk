@@ -1,13 +1,12 @@
 ---
 id: 635cbbe4-a8e1-4ae1-a8a5-437f5bba27a6
 title: "Status Server Live"
-domain: adhsdk://cookbook/status/service/live-events
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -21,9 +20,9 @@ tags:
   - sse
   - pub-sub
 depends-on:
-  - agenticdevelopercookbook://principles/separation-of-concerns
-  - agenticdevelopercookbook://principles/fail-fast
-  - agenticdevelopercookbook://guidelines/implementing/networking/caching
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1357be12-5a58-4143-a570-849c114770c5
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/425271ea-92b6-4df6-9a83-94795f1be377
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3416a359-e01c-40b2-8876-4a8634d4395e
 related: []
 references:
   - packages/web/packages/status-server/src/live/live-events.ts (adhsdk)
@@ -327,9 +326,9 @@ Subsystem: `status-server` | Category: `live-events`
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/live/live-events.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/live/live-events.ts` | confirmed (1.1.1) |
 
 ## Design Decisions
 
@@ -401,28 +400,20 @@ Subsystem: `status-server` | Category: `live-events`
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
-| [health-observability](agenticdevelopercookbook://compliance/reliability#health-observability) | passed | Reliability |
-| [caching-strategy](agenticdevelopercookbook://compliance/performance#caching-strategy) | passed | Performance |
-| [resource-efficiency](agenticdevelopercookbook://compliance/performance#resource-efficiency) | passed | Performance |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
+| [adc.check.reliability.health-observability](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d4ece88d-eeff-5e3f-8823-d8c2929a35e0) | passed | Reliability |
+| [adc.check.performance.caching-strategy](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3b773606-ab90-5e7d-8e96-093777dcf070) | passed | Performance |
+| [adc.check.performance.resource-efficiency](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d5fe7b8e-1051-5581-b2c5-1adae8fdd5fc) | passed | Performance |
 
 `separation-of-concerns` passes: this module does exactly one thing —
 in-process fan-out, a recency cache, and a debounce trigger — and delegates
 snapshot construction to `buildLiveSnapshot` (external), persistence to
 `Storage` (external), and HTTP/SSE transport to `routes/stream.ts` (external);
-it holds no query, no route, and no rendering code. `unit-test-coverage` is
-`partial`: `live-events.test.ts` directly and thoroughly exercises the
-pub/sub core and the recency cache (fan-out, unsubscribe, subscriber
-isolation, freshness window — vectors 001-009), but `emitLiveUpdate`'s own
-behavior — the empty-subscriber skip, the coalescing window, and the
-fail-soft catch (vectors 010-012) — has no direct unit test anywhere in
-`test/`; the only test file that touches `emitLiveUpdate` at all
-(`hooks-gate.test.ts`) replaces it entirely with `vi.fn()`, so that behavior
-is presently verified only by reading the source. `explicit-error-handling`
+it holds no query, no route, and no rendering code. `unit-test-coverage` passes: `live-events.test.ts` carries one test per conformance vector (001-013), covering the pub/sub core, the recency cache and `emitLiveUpdate`'s own behavior (the empty-subscriber skip, the coalescing window, the fail-soft catch and the reset-cancels-timer path) with `buildLiveSnapshot` mocked and fake timers. `explicit-error-handling`
 is `partial`: both failure paths in this file are logged, never silently
 dropped with no signal (`console.error` in both `publishSnapshot` and the
 scheduled build), but `emitLiveUpdate`'s failure is a deliberate dead end by
@@ -448,6 +439,7 @@ instead of one build per stream.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-11-14 | Mike Fullerton | Conformance tests added (live-events.test.ts, 13 of 13 vectors); unit-test-coverage now passed. |
 | 1.1.0 | 2026-10-04 | Mike Fullerton | Resolved in-flight-build-cancellation marker as current behavior plus pending decision |
 | 1.0.2 | 2026-09-27 | Mike Fullerton | Moved into the concept grouping. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

@@ -30,8 +30,8 @@ class PersonaBootstrapChatLimits:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "maxConversationLength": max_conversation_length,
-                "maxMessageChars": max_message_chars,
+                "max_conversation_length": max_conversation_length,
+                "max_message_chars": max_message_chars,
             }
         )
 
@@ -40,9 +40,9 @@ class PersonaBootstrapChatLimits:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        max_conversation_length = d.pop("maxConversationLength")
+        max_conversation_length = d.pop("max_conversation_length")
 
-        max_message_chars = d.pop("maxMessageChars")
+        max_message_chars = d.pop("max_message_chars")
 
         persona_bootstrap_chat_limits = cls(
             max_conversation_length=max_conversation_length,

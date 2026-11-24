@@ -1,11 +1,11 @@
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [good-test-properties](agenticdevelopercookbook://compliance/best-practices#good-test-properties) | passed | Best Practices |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
-| [health-observability](agenticdevelopercookbook://compliance/reliability#health-observability) | failed | Reliability |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.good-test-properties](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9144e220-ad70-51db-ba81-cdb0cc1b66c8) | passed | Best Practices |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
+| [adc.check.reliability.health-observability](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d4ece88d-eeff-5e3f-8823-d8c2929a35e0) | failed | Reliability |
 
 `unit-test-coverage` passes: `self-check-stability.test.ts` exercises first-run suppression, window-not-yet-elapsed suppression, single-provider confirmation, recovery-resets-the-streak, correlated multi-provider downgrade, real-HTTP-error passthrough, and warn-level passthrough — seven `it` blocks covering every branch except the empty-array, `reset()`, and multi-instance-independence facts this recipe traces directly to source (status-server-monitor-self-check-stability-008, -009, -011). `separation-of-concerns` passes: this file's only concern is cross-run debounce and correlation arithmetic over an already-computed `IntegrationCheck[]`; it performs no network I/O, no probing, and has no knowledge of what a provider check actually does, leaving that entirely to its sole consumer, `integrations.ts`. `good-test-properties` passes: every test in `self-check-stability.test.ts` drives an explicit `nowMs` argument instead of real timers, constructs a fresh stabilizer per `it` block via its own `createSelfCheckStabilizer()` call, and asserts with plain `expect` calls against concrete return values — fast, isolated, repeatable, and self-validating. `fault-tolerance` passes: the function is total over any well-typed `IntegrationCheck[]` input, including an empty array and, per the recorded Design Decision, a duplicate id — it never throws and never crashes on any input this recipe or its test file exercises. `health-observability` fails: `SelfCheckStabilizer` exposes no way for any caller to read a given id's current run count, its first-failed time, or how close it is to confirmation — a long-lived process using this stabilizer has no observability into a pending streak other than by waiting for `stabilize`'s own suppressed or confirmed output to change.
 

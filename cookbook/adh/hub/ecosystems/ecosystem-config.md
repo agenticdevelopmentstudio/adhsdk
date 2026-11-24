@@ -1,17 +1,16 @@
 ---
 id: 87ca0139-6cd0-46dd-a9fb-40ad3406f175
 title: "Ecosystem Config"
-domain: adhsdk://cookbook/adh/hub/ecosystems/ecosystem-config
 type: ingredient
-version: 1.2.1
+version: 2.0.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "Five product-rail topics (User Auth, Sign-in apps, Feature flags, Server bags, Storage Access Tokens) that let a hub caller view and edit one ecosystem's configuration, plus their shared data models and matching client-side data layer."
+summary: "Five product-rail topics (User Auth, Sign-in apps, Feature flags, Server bags, Storage Access Tokens) that let a hub caller view and edit one ecosystem's configuration, plus their shared data models and matching client-side data layer, and a web-only sync-tables client and pane."
 platforms:
   - swift
   - macos
@@ -21,43 +20,14 @@ platforms:
 tags:
   - hub
   - ecosystem-config
-  - configuration
   - feature-flags
-  - server-bags
   - oauth
-  - storage-tokens
+  - sync-tables
 depends-on: []
 related:
-  - adhsdk://cookbook/adh/hub/security/authentication-client
-  - adhsdk://cookbook/adh/hub/ecosystems/ecosystems
-references:
-  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/AuthSettingsTopic.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/EcosystemConfigModels.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/FeatureFlagsTopic.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/ServerBagsTopic.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/SigninAppsTopic.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/StorageTokensRail.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/StorageTokensTopic.swift (adhsdk)
-  - packages/web/packages/data/src/ecosystem-config/feature-flags.ts (adhsdk)
-  - packages/web/packages/data/src/ecosystem-config/server-bags.ts (adhsdk)
-  - packages/web/packages/data/src/ecosystem-config/client-auth.ts (adhsdk)
-  - packages/web/packages/data/src/ecosystem-config/storage-tokens.ts (adhsdk)
-  - packages/web/packages/data/src/ecosystem-config/wire.ts (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKHubTests/EcosystemConfigTopicsTests.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Hub/HubError.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/EcosystemTopic.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/EcosystemsModels.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/Slug.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/HubDates.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/HubText.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/JSONValue.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Applications/ApplicationsTopic.swift (adhsdk)
-  - packages/web/packages/data/src/http.ts (adhsdk)
-  - packages/web/packages/data/src/client-helpers.ts (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/project.yml (adhsdk)
-  - packages/web/packages/features/ecosystem-config/src/dialog-state/bag-dialog-state.ts (adhsdk)
-  - packages/web/packages/features/ecosystem-config/src/dialog-state/flag-dialog-state.ts (adhsdk)
-  - packages/web/packages/features/ecosystem-config/src/ApplicationClientAuthSection.tsx (adhsdk)
+  - 65fbb2b1-ca41-499f-ac03-7ecc0e206dcc
+  - 201572ee-2e0f-4839-94f5-252f8044c4bf
+references: []
 approved-by: ""
 approved-date: ""
 ---
@@ -66,11 +36,11 @@ approved-date: ""
 
 ## Overview
 
-This component is five topic implementations that hang off one ecosystem's product
+This ingredient is five topic implementations that hang off one ecosystem's product
 rail — a user-auth topic, a sign-in-apps topic, a feature-flags topic, a
 server-bags topic, and a storage-tokens topic (a thin wrapper around a shared token
 rail) — plus the data models and five data-source interfaces they share, and a
-matching client-side data layer for the same five resources. Each topic resolves a
+matching client-side data layer for the same five resources. A sixth, web-only topic, sync tables, holds a client and a pane for choosing which catalog resources the ecosystem syncs to offline clients. Each topic resolves a
 rail-relative navigation path into a level (a list of that ecosystem's
 flags/bags/apps/tokens, with a create action) or a detail (a form specification for
 viewing/editing one entity), orchestrating an injected data-source interface, domain
@@ -78,7 +48,7 @@ validation, and error normalization through a shared error type. A second,
 independently maintained client layer implements the corresponding fetch operations
 for the same five resources, consumed by presentation-layer panes and dialog-state
 modules that are not part of this component's given sources. This is a **logic**
-component: none of these five topics render anything themselves — they build
+ingredient: none of these five topics render anything themselves — they build
 declarative form/level/detail value objects that a separate presentation layer
 (outside these sources) turns into UI, and the second client layer is a set of plain
 fetch-based operations with no view code of its own.
@@ -131,11 +101,38 @@ fetch-based operations with no view code of its own.
   `auth-settings:<ecosystem.id>`.
 - **auth-no-delete-action**: the detail's delete action MUST be absent — auth
   settings can be edited but never removed.
-- **auth-allowed-providers-not-editable**: the user-auth record's `allowedProviders`
-  list decodes from the read operation's response, but the detail's form
-  specification never reads, displays, or edits it, and the update shape has no
-  field to write it back; this component offers no way to view or change the
-  allowed providers.
+- **auth-allowed-providers-not-editable**: the Swift user-auth detail's form
+  specification MAY leave the record's `allowedProviders` list out. Today the list
+  decodes from the read operation's response, but the form never reads, displays, or
+  edits it, and the update shape has no field to write it back, so the Swift topic
+  offers no way to view or change the allowed providers.
+- **auth-login-allow-list-wire**: the web data layer's `AuthSettings` (and so
+  `ClientAuthPolicy`) MUST carry `loginAllowedEmails: string[] | null`, read
+  from the wire's `login_allowed_emails`. `null` means every customer may
+  sign in and `[]` means nobody; a response that omits the field (an older
+  backend) MUST read as `null`. A patch that sets it to `null` MUST send the
+  explicit `null`, never drop it, so "every customer" can be restored.
+- **auth-login-allow-list-edit**: the web ecosystem client-auth pane MUST draw a
+  "Who can sign in" section with an "Only listed people" switch. Off is `null`;
+  turning it on starts one blank email row, which saves as `[]` (nobody) if left
+  blank. A save MUST send each email trimmed and lowercased, with blank rows and
+  duplicates dropped and the first occurrence's order kept; a blank row added to
+  a saved list, or an entry whose only change is letter case, MUST NOT count as
+  an edit.
+- **auth-login-allow-list-bounds**: Save MUST be blocked, with the reason shown,
+  when the cleaned list holds more than 500 emails, or any entry longer than 254
+  characters or not shaped as an email address (exactly one `@`, a non-empty
+  local part with no whitespace and no quote, and a domain of at least two
+  non-empty dot-separated labels) — the backend's own bounds, mirrored so the
+  refusal comes before the round trip. The backend stays authoritative.
+- **auth-login-allow-list-dropped**: when a save sent `loginAllowedEmails` and
+  the saved policy comes back without that list (a backend that predates the
+  allow-list strips the unknown field and still answers 200), the save MUST fail
+  with "The sign-in list was not saved, so everyone can still sign in. This
+  backend does not support the list yet." The draft MUST keep the owner's list and
+  the switch, rather than re-seeding them off. The cache still takes the answer,
+  because the other fields did save. An absent list reads as `null`, so sending
+  `null` to such a backend is not a failure.
 
 ### Sign-in Apps
 
@@ -200,9 +197,10 @@ fetch-based operations with no view code of its own.
   **signinapps-origin-validation**) live in a separate presentation-layer file
   outside this component's given sources, not in the data-client layer itself (see
   Design Decisions).
-- **leaf-helper-absent**: the alternate client's own data shape has no equivalent of
-  the leaf-computation step; a caller on that side that needs the ecosystem-stripped
-  leaf must recompute it from `slug` and the ecosystem's own slug itself.
+- **leaf-helper-absent**: the alternate client's own data shape MAY omit an
+  equivalent of the leaf-computation step. A caller on that side that needs the
+  ecosystem-stripped leaf MUST recompute it from `slug` and the ecosystem's own slug
+  itself.
 
 ### Feature Flags
 
@@ -228,12 +226,14 @@ fetch-based operations with no view code of its own.
   falls back to its default.`.
 - **flags-detail-id-format**: the detail id MUST be
   `feature-flag:<ecosystem.id>:<flag.key>`.
-- **flags-key-charset-unrestricted**: neither the create form's `key` field in the primary
-  implementation nor the alternate client's create operation/dialog state enforces any
-  character-set restriction on a feature-flag key — only non-blank and non-duplicate are checked —
-  yet the key is later embedded unescaped in the colon-delimited composite id
-  `feature-flag:<ecosystem.id>:<flag.key>` and used directly as a navigation-item id, so a key
-  containing a colon could collide with another item's composite id.
+- **flags-key-charset-unrestricted**: a feature-flag key SHOULD NOT contain a colon,
+  because the key is embedded unescaped in the colon-delimited composite id
+  `feature-flag:<ecosystem.id>:<flag.key>` and used directly as a navigation-item id,
+  so a key containing a colon could collide with another item's composite id. A port
+  SHOULD reject such a key on the create form's `key` field. Today neither the primary
+  implementation's create form nor the alternate client's create operation and dialog
+  state enforces any character-set restriction: only non-blank and non-duplicate are
+  checked.
 - **flag-key-immutable-in-path**: the alternate client's update/delete operations
   MUST address a flag by embedding its `key` in the request path, never in the
   body — the key is immutable once created, matching the primary implementation's
@@ -299,10 +299,11 @@ fetch-based operations with no view code of its own.
 - **tokens-name-pattern**: the create form's `name` field MUST validate against the
   shared slug-format rule ("Use lowercase letters, numbers and hyphens.").
 - **tokens-create-three-way-catch**: the create form's save action MUST catch
-  errors in three tiers: a conflict error becomes a validation error with a fixed
-  "name taken" message; any other shared error kind MUST be re-thrown unchanged;
-  any error outside that shared taxonomy MUST become a generic unexpected error
-  with a fixed message, discarding the original error's own message. This is an
+  errors in three tiers: a conflict error becomes a validation error reading `That name is already in use.
+  Token names stay reserved even after revoke — pick a different one.`; any other
+  shared error kind MUST be re-thrown unchanged; any error outside that shared
+  taxonomy MUST become a generic unexpected error reading `Couldn't create the
+  token. Please try again.`, discarding the original error's own message. This is an
   explicitly different pattern from the shared error-wrapping convention used
   everywhere else in this component (see Design Decisions).
 - **tokens-reveal-once-on-create**: on a successful create, the raw secret MUST be
@@ -340,6 +341,46 @@ fetch-based operations with no view code of its own.
   plaintext secret) MUST be a distinct shape from the token list-row shape (which
   carries only a `prefix`); the alternate client gives no other route through which
   the raw secret can be retrieved again.
+
+### Sync tables (web)
+
+Which catalog resources one ecosystem syncs to offline clients. The backend
+contract is adhbackend's sync-table-enrollment recipe; this topic is its client
+and pane. It is web-only for now.
+
+- **sync-tables-two-families**: the sync-tables client MUST be built for one of two
+  route families. `"admin"` addresses `/api/v1/sync/tables/{id}`, with one resource
+  at `/api/v1/sync/tables/{id}/resources/{resource}`, for platform staff.
+  `"ecosystem"` addresses `/api/v1/ecosystems/{id}/sync_tables`, with one resource
+  at `/api/v1/ecosystems/{id}/sync_tables/{resource}`, for the ecosystem's
+  managers. The ecosystem id and the resource MUST be URL-encoded in both.
+- **sync-tables-camel-rows**: each catalog row MUST be mapped from the wire's
+  snake_case (`push_mode`, `default_enabled`) to `pushMode` and `defaultEnabled`,
+  keeping `resource`, `scope`, `enabled` and `overridden` as they are.
+- **sync-tables-read-drains-list**: reading the catalog MUST drain the /v1 list
+  envelope, so every resource is returned however the server pages it. It pages
+  by each row's `id`, which the backend sets to the row's resource, because the
+  /v1 gateway pages only by `id`.
+- **sync-tables-set-returns-catalog**: setting a resource MUST POST
+  `{ enabled }` to its resource path and return the full refreshed catalog from the
+  response's `tables`.
+- **sync-tables-clear-rereads**: clearing a resource's override MUST DELETE its
+  resource path and then re-read the catalog, because /v1 answers a DELETE with a
+  tombstone, not the catalog.
+- **sync-tables-schema-of**: a row's schema MUST be the part of its resource before
+  the first dot.
+- **sync-tables-pane-family**: the pane MUST take the family as a prop, defaulting
+  to `"ecosystem"`, and MUST key its cached catalog by family and ecosystem id, so
+  the admin console and the hub never share a cache entry.
+- **sync-tables-pane-skips-noops**: Sync and Don't sync MUST act only on selected
+  rows not already in that state, and Reset to default only on selected rows that
+  are overridden. A no-op set would store an override that pins the resource
+  against a later change to its default.
+- **sync-tables-pane-sequential**: the pane's bulk actions MUST run one resource at
+  a time through the shared batch runner, halting on the first failure until the
+  user continues or stops, and leaving earlier saves in place.
+- **sync-tables-pane-reseed**: after each write the pane MUST replace its cached
+  catalog with the catalog the write returned, then refetch once the write settles.
 
 ## Appearance
 
@@ -383,12 +424,27 @@ component not among these given sources.
 | ecosystem-config-015 | bags-json-parse-before-duplicate-check, bags-invalid-json-message-generic | Create attempted with key "limits", value "{oops" | Save fails with a JSON error on the value field before any duplicate check runs |
 | ecosystem-config-016 | bags-detail-full-replace-on-save, bags-json-equality-int-number | Bag `onboarding` (originally value 20) edited by typing `{"maxItems": 50}` | The recorded update's value is the object `{maxItems: 50}` with `50` written as an integer even though the original was a floating-point `20`; delete confirmation reads "\"onboarding\" will be deleted. Anything reading it gets nothing — there is no default." |
 | ecosystem-config-017 | tokens-reveal-once-on-create, tokens-detail-extra-fields-while-revealed, tokens-expire-revealed-secret-on-navigate | Mint token "nightly", view its detail twice, then view the level, then view its detail again | Secret shown both times before navigating away; the revealed-secrets store holds nothing for that token and the `token`/`notice` fields are absent after visiting the level |
-| ecosystem-config-018 | tokens-create-three-way-catch | The create operation throws a conflict error for name "ci-sync" | Save fails with the fixed "name taken" message |
+| ecosystem-config-018 | tokens-create-three-way-catch | The create operation throws a conflict error for name "ci-sync" | Save fails with "That name is already in use. Token names stay reserved even after revoke — pick a different one." |
 | ecosystem-config-019 | tokens-revoke-clears-revealed-secret, tokens-no-save-action-on-detail | Revoke token `tok-1` | No save action present; the revocation is recorded against ecosystem "org.acme.shop", token id "tok-1" |
 | ecosystem-config-020 | tokens-shared-rail-parameterization, tokens-about-text-variant | The shared token rail resolved with no ecosystem id | The caller's-own-tokens listing is used; the no-ecosystem about-text reads "A storage principal scoped to your account; it gets its own empty bucket." |
-| ecosystem-config-021 | flag-key-immutable-in-path | The alternate client's update operation invoked for ecosystem "eco-1", flag "dark_mode", disabling it | The request addresses the flag by embedding its key in the request path, with only `{enabled: false}` in the body |
+| ecosystem-config-021 | flag-key-immutable-in-path | The alternate client's update operation invoked for ecosystem "eco-1", flag "dark_mode", disabling it | The request addresses the flag by embedding its key in the request path, with only the ecosystem id (`ecosystem: "eco-1"`) and `enabled: false` in the body, and never the key |
 | ecosystem-config-022 | conflict-message-parity | The alternate client's create operation invoked for slug "kiosk", where the backend responds with a conflict status | Rejects with "A sign-in app \"kiosk\" already exists in this ecosystem." |
 | ecosystem-config-023 | dual-scoping-channels | The alternate client's mint operation invoked with name "nightly" and ecosystem id "eco-1" via the scope-query channel | The request carries the ecosystem id only in the scope-query channel, not in the body |
+| ecosystem-config-024 | sync-tables-two-families | The `"ecosystem"` client sets `content.notes` on for ecosystem "eco-1" | POST `/api/v1/ecosystems/eco-1/sync_tables/content.notes` with `{"enabled":true}` |
+| ecosystem-config-025 | sync-tables-two-families | The `"admin"` client sets `content.notes` off for ecosystem "eco-1" | POST `/api/v1/sync/tables/eco-1/resources/content.notes` with `{"enabled":false}` |
+| ecosystem-config-026 | sync-tables-camel-rows, sync-tables-read-drains-list | The list returns `{resource:"content.feed", push_mode:"generic", default_enabled:true, …}` | The row reads `pushMode: "generic"`, `defaultEnabled: true` |
+| ecosystem-config-027 | sync-tables-clear-rereads | The `"ecosystem"` client clears `content.notes`, and the DELETE answers a tombstone | DELETE `/api/v1/ecosystems/eco-1/sync_tables/content.notes`, then a fresh read of the catalog is returned |
+| ecosystem-config-028 | sync-tables-schema-of | Resource `persona_memory.links` | Schema `persona_memory` |
+| ecosystem-config-029 | sync-tables-pane-skips-noops | Two rows selected, one already synced, then Sync | One POST, for the row that was not synced |
+| ecosystem-config-030 | auth-login-allow-list-wire | A response omitting `login_allowed_emails`, then one carrying `[]`, then a patch setting `loginAllowedEmails` to `null` | The first reads `null`; the second reads `[]`; the patch body carries `"login_allowed_emails": null` rather than dropping the key |
+| ecosystem-config-031 | auth-login-allow-list-edit | The allow-list `[" A@x.com ", "", "b@x.com", "a@X.com"]`, then `null`, then `[]` | The first saves as `["a@x.com", "b@x.com"]`; `null` stays `null`; `[]` stays `[]`; a blank row added to a saved list, or a case-only change, is not counted as an edit |
+| ecosystem-config-032 | auth-login-allow-list-bounds | An allow-list of 501 distinct emails; then one entry each of `alice`, `a@x`, `a b@x.com`, `"a"@x.com`, and a 255-character address; then a 254-character address | 501 is refused with "At most 500 people can be listed."; each bad entry with `"<the entry>" is not an email address.`; Save is blocked in each; the 254-character address is accepted |
+| ecosystem-config-033 | sync-tables-set-returns-catalog | The `"ecosystem"` client sets `content.notes` on for "eco-1" and the response is `{tables: [...]}` | The result is the full refreshed catalog mapped from `tables`, not a single row |
+| ecosystem-config-034 | sync-tables-pane-family | The pane mounted with no `family`, then with `family="admin"`, both for "eco-1" | The first uses the `"ecosystem"` family; the two keep separate cached catalogs, keyed by family and ecosystem id |
+| ecosystem-config-035 | sync-tables-pane-sequential | Three rows selected, Sync, and the second write fails | The writes run one at a time; the run halts at the second until the user continues or stops; the first save stays in place |
+| ecosystem-config-036 | sync-tables-pane-reseed | A write returns a catalog | The cached catalog is replaced with the returned catalog, then refetched once the write settles |
+| ecosystem-config-038 | sync-tables-read-drains-list | A catalog row `{id:"content.feed", resource:"content.feed", …}` | The read pages from `content.feed` (the row's `id`) |
+| ecosystem-config-037 | auth-login-allow-list-dropped | The allow-list switch on with `alice@example.com`, Save, and the backend answers 200 with no `loginAllowedEmails`; then a save sending `null` answered the same way | The first save fails with "The sign-in list was not saved, so everyone can still sign in. This backend does not support the list yet.", and the switch and the row stay as typed; the `null` save succeeds |
 
 ## Edge Cases
 
@@ -415,13 +471,14 @@ component not among these given sources.
   secret — the secret-expiry check's same-detail guard leaves it untouched; only
   navigating to a *different* destination drops it.
 - **A value outside the shared error taxonomy thrown during storage-token create**:
-  MUST be converted to a generic unexpected error with a fixed message, discarding
-  the original error's own message text — a deliberate divergence from the shared
+  MUST be converted to a generic unexpected error reading "Couldn't create the
+  token. Please try again.", discarding the original error's own message text — a deliberate divergence from the shared
   error-wrapping step's usual behavior of preserving as much detail as possible (see
   Design Decisions).
-- **A feature-flag key containing a reserved character (e.g. `:`)**: see the open
-  question on **flags-key-charset-unrestricted** — no given implementation rejects it, but it is
-  later embedded unescaped in a colon-delimited composite id.
+- **A feature-flag key containing a reserved character (e.g. `:`)**: see
+  **flags-key-charset-unrestricted** — it SHOULD be rejected, but no given
+  implementation rejects it yet, and it is later embedded unescaped in a
+  colon-delimited composite id.
 - **Path segments containing special characters**: the alternate client's
   path-encoding step MUST percent-encode every ecosystem id, flag key, bag key, and
   sign-in-app id interpolated into a request path, so a key/id with `/`, `?`, or
@@ -432,16 +489,24 @@ component not among these given sources.
   **dual-scoping-channels** documents that the rail always leaves the body field
   unset and relies on the parameter/query channel exclusively.
 
+- **A follower turned on while its parent is off**: the sync-tables write succeeds
+  and the row comes back `overridden` but not `enabled`. The pane shows the server's
+  answer rather than the requested state.
+- **Switching ecosystems with rows selected**: the admin console clears the
+  selection with the ecosystem, because resource ids are the same in every
+  ecosystem and a kept selection would write to one the user has not looked at.
+
 ## Configuration
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `dataSource` | data-source interface | none (required) | Injected transport for the user-auth topic: read and update operations. |
-| `dataSource` | data-source interface | none (required) | Injected transport for the sign-in-apps topic: list / create / update / delete, all scoped by the ecosystem id. |
-| `dataSource` | data-source interface | none (required) | Injected transport for the feature-flags topic: list / create / update(key) / delete(key). |
-| `dataSource` | data-source interface | none (required) | Injected transport for the server-bags topic: list / create / update(key) / delete(key). |
-| `dataSource` | data-source interface | none (required) | Injected transport for the storage-tokens topic and its shared rail: list / create / revoke, where an absent ecosystem id means the caller's own workspace tokens. |
+| `dataSource` (user-auth topic) | data-source interface | none (required) | Injected transport for the user-auth topic: read and update operations. |
+| `dataSource` (sign-in-apps topic) | data-source interface | none (required) | Injected transport for the sign-in-apps topic: list / create / update / delete, all scoped by the ecosystem id. |
+| `dataSource` (feature-flags topic) | data-source interface | none (required) | Injected transport for the feature-flags topic: list / create / update(key) / delete(key). |
+| `dataSource` (server-bags topic) | data-source interface | none (required) | Injected transport for the server-bags topic: list / create / update(key) / delete(key). |
+| `dataSource` (storage-tokens topic) | data-source interface | none (required) | Injected transport for the storage-tokens topic and its shared rail: list / create / revoke, where an absent ecosystem id means the caller's own workspace tokens. |
 | `ecosystem` | record | none (required) | Supplies the id/slug used to scope every list/create/update/delete call and to build composite detail ids. |
+| `family` (sync tables, web only) | `"admin"` or `"ecosystem"` | `"ecosystem"` | Which route family the sync-tables client and pane address; see **sync-tables-two-families**. |
 | `path` | list of navigation-path segments | empty | Rail-relative navigation path; see **path-depth-dispatch**. |
 | `rail` | rail-provider interface | none (required, unused) | Passed to every rail path resolution per the topic-provider contract; none of these five topics call back through it themselves. |
 | ecosystem id (alternate client) | string | none (required) | Ecosystem id, percent-encoded into every ecosystem-config request path. |
@@ -463,7 +528,7 @@ one can sign in to this ecosystem."; the sign-up-mode help text's three case
 strings; the feature-flags and server-bags removal messages; the origin-validation
 step's four rejection messages; the storage-tokens rail's name-taken, create-failed,
 and about-text messages. This is a fact of the current implementation, not a gap
-this recipe marks — nothing in the source suggests localization is planned or
+this ingredient marks — nothing in the source suggests localization is planned or
 partially wired.
 
 ## Accessibility Options
@@ -490,7 +555,9 @@ kind.
 
 - **Data collected**: this component collects no analytics of its own. It
   transports user-auth, sign-in-app, feature-flag, and server-bag records —
-  configuration entities holding no end-user personal data — and storage-token
+  configuration entities holding no end-user personal data, except the user-auth
+  login allow-list, which holds the email addresses an owner types to name who
+  may sign in — and storage-token
   records, which do carry a security-sensitive secret: the raw `adh_`-prefixed
   token minted by the create/mint operation.
 - **Storage**: on the primary implementation, the revealed-secrets store holds the
@@ -558,7 +625,9 @@ kind.
   from `SignupMode.help` (declared in `EcosystemConfigModels.swift`).
   `AuthSettings.allowedProviders: [String]?` decodes from
   `AuthSettingsDataSource.get`'s response but `AuthSettingsTopic.detail`'s form
-  specification never surfaces it, and `AuthSettingsUpdate` has no field for it.
+  specification never surfaces it, and `AuthSettingsUpdate` has no field for it. The
+  login allow-list (`login_allowed_emails`) is not decoded on Apple at all
+  yet; that editor is planned.
 
   `SigninApp.leaf(in:)` implements leaf computation; the duplicate check compares
   against it case-insensitively; the `clientId` field validates against
@@ -605,8 +674,29 @@ kind.
   `EcosystemServerBagUpdate.value` are typed `unknown` in `server-bags.ts`. The UI
   panes and dialog-state modules that call these clients (`FeatureFlagsPane.tsx`,
   `bag-dialog-state.ts`, `flag-dialog-state.ts`, `ApplicationClientAuthSection.tsx`) are not
-  among this recipe's given sources, but see Design Decisions for the
+  among this ingredient's given sources, but see Design Decisions for the
   validation-layering split observed there.
+  The login allow-list (**auth-login-allow-list-edit**,
+  **auth-login-allow-list-bounds**) is the exception: its editor lives in
+  `packages/web/packages/features/ecosystem-config/src/` — `ClientAuthFields.tsx`
+  draws the section, `client-auth-model.ts` holds `cleanEmailList`,
+  `policyPatch`, `samePolicy` and `policyError`, and `ClientAuthSettingsPane.tsx`
+  blocks Save on `policyError` and re-keys the rows editor on each re-seed.
+  Emails are typed: the list names people by email so an owner can admit someone
+  who has never signed in, and the hub has no owner-scoped customer listing to
+  pick from. The email shape check is a local regular expression in
+  `client-auth-model.ts`, because no shared web package exports an email
+  validator; the backend's zod check stays authoritative.
+  The sync-tables topic is web-only. `sync-tables.ts` in the same data folder is
+  the client (`syncTablesApi(family)`, `schemaOf`). `SyncTablesPane.tsx` in the
+  features package holds `SyncTablesEditor` (the list and its progress modal, no
+  chrome, `family` defaulting to `"ecosystem"`) and `SyncTablesPane` (the hub's
+  `DetailsPane` around it); the hooks are in `sync-tables-hooks.ts`, keyed by
+  family and ecosystem. Bulk actions run through `useBatchRun` from
+  `@adh-sdk/data/query`. The admin console's `SyncPane` adds a picker over every
+  ecosystem and mounts `SyncTablesEditor` with `family="admin"`, keyed on the
+  ecosystem id; the hub's `[workspace]/sync` page mounts `SyncTablesPane`. Apple,
+  Android and Windows have no sync-tables editor; it is planned.
 - **Compose**: model each Apple protocol as a Kotlin `interface` with `suspend
   fun`s (e.g. `interface FeatureFlagsDataSource { suspend fun list(ecosystemId:
   String): List<FeatureFlag> }`); represent the shared token rail's revealed-secrets
@@ -614,7 +704,10 @@ kind.
   observes the reveal-once transition; model the wrapped JSON value type with
   `kotlinx.serialization.json.JsonElement`, noting the same integral-`Double`-vs-`Long`
   equality pitfall **bags-json-equality-int-number** documents applies to
-  `JsonPrimitive` unless normalized the same way.
+  `JsonPrimitive` unless normalized the same way. Model the sync-tables client as a
+  Kotlin `interface` with `suspend fun`s that return the refreshed catalog, and the
+  login allow-list as a `List<String>?` of lowercase emails, where `null` means
+  every customer and an empty list means nobody.
 - **WinUI 3**: model each data-source interface as a C# interface returning
   `Task<T>` (e.g. `Task<IReadOnlyList<FeatureFlag>> ListAsync(string
   ecosystemId)`) backed by `HttpClient` and `System.Text.Json` for
@@ -625,14 +718,48 @@ kind.
   secret, keep the equivalent of `revealedSecrets` as a plain in-memory field on the
   view-model — deliberately never written to `Windows.Storage.ApplicationData` or
   any DPAPI-backed store — so the "shown once" contract this component enforces is
-  preserved rather than accidentally persisted.
+  preserved rather than accidentally persisted. Model the sync-tables client as a
+  C# interface with one `Task`-returning method per operation, and the login
+  allow-list editor as a view-model holding a nullable `List<string>` of lowercase
+  emails, where `null` means every customer and an empty list means nobody.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/` |
-| web | `packages/web/packages/data/src/ecosystem-config/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/` | confirmed (2.0.0) |
+| web | `packages/web/packages/data/src/ecosystem-config/` | confirmed (2.0.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/` | confirmed (2.0.0) |
+| web | `packages/web/packages/data/src/ecosystem-config/sync-tables.ts` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/AuthSettingsTopic.swift` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/EcosystemConfigModels.swift` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/FeatureFlagsTopic.swift` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/ServerBagsTopic.swift` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/SigninAppsTopic.swift` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/StorageTokensRail.swift` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/StorageTokensTopic.swift` | confirmed (2.0.0) |
+| web | `packages/web/packages/data/src/ecosystem-config/feature-flags.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/data/src/ecosystem-config/server-bags.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/data/src/ecosystem-config/client-auth.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/data/src/ecosystem-config/storage-tokens.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/data/src/ecosystem-config/wire.ts` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKHubTests/EcosystemConfigTopicsTests.swift` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/EcosystemTopic.swift` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/EcosystemsModels.swift` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/Slug.swift` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/HubDates.swift` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/HubText.swift` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/JSONValue.swift` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Applications/ApplicationsTopic.swift` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/project.yml` | confirmed (2.0.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/dialog-state/bag-dialog-state.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/dialog-state/flag-dialog-state.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/ApplicationClientAuthSection.tsx` | confirmed (2.0.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/SyncTablesPane.tsx` | confirmed (2.0.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/sync-tables-hooks.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/ClientAuthFields.tsx` | confirmed (2.0.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/client-auth-model.ts` | confirmed (2.0.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/ClientAuthSettingsPane.tsx` | confirmed (2.0.0) |
 
 ## Design Decisions
 
@@ -641,47 +768,51 @@ kind.
 **Approved**: pending
 
 **Decision**: the storage-tokens create form's save action uses a three-way catch (a conflict error → friendly message; any other shared error kind → rethrown as-is; anything else → a generic unexpected error) instead of the shared error-wrapping convention every other create/update/delete call in this component uses.
-**Rationale**: the conflict case needs its own friendly text rather than whatever detail the backend's conflict response carries, and the source chooses to discard a non-shared-error-kind failure's own message in favor of a generic one rather than risk surfacing raw transport detail from a mint request specifically. This is documented here as an observed, intentional divergence rather than corrected to match the shared error-wrapping convention, since changing it would alter the exact error text this component's tests assert.
-Platform scope: Swift implementation (the alternate client has no equivalent create-error taxonomy to diverge from).
+**Rationale**: the conflict case needs its own friendly text rather than whatever detail the backend's conflict response carries, and the source chooses to discard a non-shared-error-kind failure's own message in favor of a generic one rather than risk surfacing raw transport detail from a mint request specifically. This is documented here as an observed, intentional divergence rather than corrected to match the shared error-wrapping convention. It applies to the Swift implementation only; the alternate client has no equivalent create-error taxonomy to diverge from.
 **Approved**: pending
 
 **Decision**: the storage-tokens detail sources its post-reveal notice text from a constant declared in a sibling Applications module (Applications' own token-reveal notice), rather than declaring its own copy.
-**Rationale**: the source's own comment states this directly — the reveal-once behavior exists specifically because that sibling constant's promise ("you won't be able to see it again") must actually hold; the same lifecycle and constant are documented as canonical in the sibling recipe `adhsdk://cookbook/adh/hub/security/authentication-client`, which this recipe treats as the complete reference for that shared behavior rather than re-deriving it here. The coupling means a future rename of that constant would need to be tracked across both modules with no compiler-enforced link beyond the direct reference.
-Platform scope: Swift implementation — this is a cross-module source-file coupling specific to that codebase's module layout.
+**Rationale**: the source's own comment states this directly — the reveal-once behavior exists specifically because that sibling constant's promise ("you won't be able to see it again") must actually hold; the same lifecycle and constant are documented as canonical in the sibling recipe [adhsdk.ingredient.adh.hub.security.authentication-client](cookbook:65fbb2b1-ca41-499f-ac03-7ecc0e206dcc), which this ingredient treats as the complete reference for that shared behavior rather than re-deriving it here. The coupling means a future rename of that constant would need to be tracked across both modules with no compiler-enforced link beyond the direct reference. This is a cross-module source-file coupling specific to the Swift codebase's module layout.
 **Approved**: pending
 
 **Decision**: JSON-shape validation for a server bag's value lives inside the value-parsing step on the Swift implementation, combining transport-adjacent orchestration with domain validation in one type; on the web implementation, the equivalent validation is not in the given data client at all — it lives in a sibling `features/ecosystem-config` package's dialog-state module.
-**Rationale**: the two platforms split responsibilities differently: the Swift topic types are the single place that both talk to the data source and build the declarative form, so validation naturally lives there too; the web implementation keeps its data-client layer free of any dependency on UI-adjacent validation state, pushing that concern into the package that owns the dialog. Both are internally consistent with their own layering; this recipe documents the divergence rather than treating either as a gap.
-Platform scope: applies differently to each of the two reference implementations, by design.
+**Rationale**: the two platforms split responsibilities differently: the Swift topic types are the single place that both talk to the data source and build the declarative form, so validation naturally lives there too; the web implementation keeps its data-client layer free of any dependency on UI-adjacent validation state, pushing that concern into the package that owns the dialog. Both are internally consistent with their own layering; this ingredient documents the divergence rather than treating either as a gap. It applies differently to each of the two reference implementations, by design.
 **Approved**: pending
 
 **Decision**: on the web implementation, origin-format validation for a sign-in app's `allowedReturnOrigins` (mirroring the Swift implementation's origin-validation/canonicalization steps) is not present in the given data client — it lives in a UI-pane file's own validation helpers, outside this component's given sources.
-**Rationale**: this follows the same data-client/features-package split as the server-bag JSON validation above, and was confirmed by reading the actual caller rather than assumed, per this recipe's requirement to resolve an apparent gap against the real codebase before marking it unresolved.
-Platform scope: web implementation.
+**Rationale**: this follows the same data-client/features-package split as the server-bag JSON validation above, and was confirmed by reading the actual caller rather than assumed, per this ingredient's requirement to resolve an apparent gap against the real codebase before marking it unresolved. It applies to the web implementation.
 **Approved**: pending
 
-**Decision**: feature-flag keys have no character-set restriction, unlike the slug-pattern restriction applied to the sign-in-app `clientId` field and the storage-token `name` field.
-
-**Rationale**: the key is embedded unescaped in a colon-delimited composite id, so a colon in a key could collide with another item's id; closing the gap takes a validating pattern on the key field, or confirmation from the composite-id format's other consumers that a reserved character cannot collide.
-
+**Decision**: feature-flag keys SHOULD be restricted so they cannot contain the composite id's `:` delimiter, either by the slug-pattern restriction already applied to the sign-in-app `clientId` field and the storage-token `name` field or by escaping the key inside the composite id. Neither is implemented yet.
+**Rationale**: the key is embedded unescaped in a colon-delimited composite id, so a colon in a key could collide with another item's id; a validating pattern on the key field, or confirmation from the composite-id format's other consumers that a reserved character cannot collide, would close the gap.
 **Approved**: pending
+
+**Decision**: one sync-tables pane, in this package, serves both the admin
+console and the hub's `[workspace]/sync` page; the route family is a prop.
+**Rationale**: the two surfaces differ only in who may call the backend, and the
+backend already shares one handler set between its two route families. A second
+pane would be two copies of the same list that nothing keeps in step. This package
+is the lowest tier that holds an ecosystem's configuration panes, and the admin
+console already sits above it. The owner approved this in the Temporal plan on 2026-11-13.
+**Approved**: yes
 
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | partial | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | partial | Security |
-| [secure-storage](agenticdevelopercookbook://compliance/security#secure-storage) | partial | Security |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | partial | Security |
+| [adc.check.security.secure-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bb5dfc9b-c5b0-54fa-882f-007ae7dad0e9) | partial | Security |
 
-`separation-of-concerns` is partial: transport is cleanly isolated behind five single-purpose protocols (`AuthSettingsDataSource`, `SigninAppsDataSource`, `FeatureFlagsDataSource`, `ServerBagsDataSource`, `StorageTokensDataSource`), and none of the twelve given files import a UI-rendering framework — but each Topic still combines data-source orchestration, domain validation (origin/JSON/duplicate-key checks), and declarative `FormSpec`/`HTDVLevel` construction with hardcoded user-facing strings in one type; this follows from the HTDV framework's declarative-model design rather than a UI-rendering leak, but it is still multiple responsibilities sharing one file. `unit-test-coverage` is partial: `EcosystemConfigTopicsTests.swift` exercises every Apple sub-component with fakes and concrete assertions, but none of the five given web files (`feature-flags.ts`, `server-bags.ts`, `signin-apps.ts`, `storage-tokens.ts`, `wire.ts`) has any adjacent test anywhere in the repository. `explicit-error-handling` passes: every Apple call site wraps its data-source call in `HubError.wrap` or an explicit `catch` (including `StorageTokensRail`'s three-way catch, which is still explicit, never silent), and every web call either lets `authedJson`'s thrown rejection propagate or maps it through `rethrowConflict`; no given source catches and discards an error. `input-sanitization` is partial: `SigninAppsTopic.validateOrigin`/`canonicalOrigin`, `ServerBagsTopic.parsedValue`, and the `Slug.pattern`-constrained `clientId`/token-`name` fields validate before any network call on Apple, but the parallel web data clients (`signin-apps.ts`, `server-bags.ts`) forward `allowedReturnOrigins`/`value` with no validation of their own (that validation lives in sibling UI-layer files outside this component's given sources — see Design Decisions), and neither platform restricts a feature-flag key's character set at all (see the `flags-key-charset-unrestricted` requirement). `secure-storage` is partial: the one genuinely sensitive value, the storage-token secret, is deliberately never written to the Keychain, `UserDefaults`, or any persistent store by this component — it lives only in `StorageTokensRail.revealedSecrets`'s in-memory dictionary and is dropped on navigation-away or revoke — which avoids insecure persistence entirely rather than routing through a platform secure-storage API, so the check's literal Keychain/DPAPI expectation does not apply the way it would to a persisted credential.
+`separation-of-concerns` is partial: transport is cleanly isolated behind five single-purpose protocols (`AuthSettingsDataSource`, `SigninAppsDataSource`, `FeatureFlagsDataSource`, `ServerBagsDataSource`, `StorageTokensDataSource`), and none of the Swift topic files import a UI-rendering framework — but each Topic still combines data-source orchestration, domain validation (origin/JSON/duplicate-key checks), and declarative `FormSpec`/`HTDVLevel` construction with hardcoded user-facing strings in one type; this follows from the HTDV framework's declarative-model design rather than a UI-rendering leak, but it is still multiple responsibilities sharing one file. `unit-test-coverage` is partial: `EcosystemConfigTopicsTests.swift` exercises every Apple sub-component with fakes and concrete assertions, and the web side is covered unevenly. `sync-tables.test.ts` tests the sync-tables client; `client-auth-model.test.ts`, `ClientAuthSettingsPane.test.tsx`, `ApplicationClientAuthSection.test.tsx`, `BagDialog.test.tsx`, `FlagDialog.test.tsx`, `flag-dialog-state.test.ts`, `bag-dialog-state.test.ts`, `StorageTokensPanel.test.tsx` and `SyncTablesPane.test.tsx` test the panes and dialog state. The web data clients are covered by `feature-flags.test.ts` (021), `storage-tokens.test.ts` (023) and `client-auth.test.ts` (030), and the sync-tables hooks by `sync-tables-hooks.test.tsx` (036); every web vector has a test id-prefixed `ecosystem-config-NNN`. Still unproven by unit tests, hence partial: vectors 001-020 are Apple-only and are skipped as placeholders on the web side (the Swift suite covers them), and 022 names a web sign-in-app create client that does not exist. `server-bags.ts` and `wire.ts` have no adjacent test. `explicit-error-handling` passes: every Apple call site wraps its data-source call in `HubError.wrap` or an explicit `catch` (including `StorageTokensRail`'s three-way catch, which is still explicit, never silent), and every web call either lets `authedJson`'s thrown rejection propagate or maps it through `rethrowConflict`; no given source catches and discards an error. `input-sanitization` is partial: `SigninAppsTopic.validateOrigin`/`canonicalOrigin`, `ServerBagsTopic.parsedValue`, and the `Slug.pattern`-constrained `clientId`/token-`name` fields validate before any network call on Apple, but the parallel web data clients (`client-auth.ts`, `server-bags.ts`) forward `allowedReturnOrigins`/`value` with no validation of their own (that validation lives in the features package: `registrationError` and `policyError` in `client-auth-model.ts`, and `bag-dialog-state.ts` — see Design Decisions), and neither platform restricts a feature-flag key's character set at all (see the `flags-key-charset-unrestricted` requirement). `secure-storage` is partial: the one genuinely sensitive value, the storage-token secret, is deliberately never written to the Keychain, `UserDefaults`, or any persistent store by this component — it lives only in `StorageTokensRail.revealedSecrets`'s in-memory dictionary and is dropped on navigation-away or revoke — which avoids insecure persistence entirely rather than routing through a platform secure-storage API, so the check's literal Keychain/DPAPI expectation does not apply the way it would to a persisted credential.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 2.0.0 | 2026-11-15 | Mike Fullerton | Login allow-list by email (loginAllowedEmails, login_allowed_emails): the client-auth pane's Who can sign in editor, lowercased on save, with email-shape, 254-character and 500-entry bounds |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Design Decisions keep the Decision / Rationale / Approved triple; each decision's platform line is folded into its rationale. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolve open-question markers against the code; restate unimplemented behavior as current behavior with pending Decisions. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to adh/hub/ecosystems/. |

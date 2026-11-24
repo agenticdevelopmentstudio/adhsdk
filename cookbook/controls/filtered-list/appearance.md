@@ -1,0 +1,23 @@
+
+- **Corner radius**: `.fl-input` `6px`; `.fl-item-button` `4px` (source: filtered-list.css).
+- **Padding**: `.fl-input` `0.55rem 0.75rem`; `.fl-item` `0.5rem 0` (`0` when clickable); `.fl-item-button` `0.5rem 0.6rem`; `.fl-empty` `0.75rem 0.25rem`; `.fl-footer` `0.5rem 0 0`.
+- **Font**: `.fl-root` uses `var(--font-sans, Inter, system-ui, sans-serif)`; `.fl-input` `0.9rem`; `.fl-title` `0.9rem` weight 500; `.fl-subtitle` `0.75rem` uppercase with `0.04em` letter-spacing; `.fl-details` `0.75rem` monospace.
+- **Background**: `.fl-input` `var(--color-surface-raised, #fff)`; `.fl-item--active` `var(--color-accent-dim, rgba(0,0,0,0.06))`; item buttons are transparent, with a hover/focus-visible background of `var(--color-surface-hover, ...)`.
+- **Foreground/Text**: `.fl-root` and `.fl-title` `var(--color-text-primary, #1a1a24)`; `.fl-subtitle` `var(--color-text-secondary, ...)`; `.fl-details`, `.fl-empty` and the input placeholder `var(--color-text-dim, ...)`.
+- **Border**: `.fl-input` has a 1px border by default; on `:focus` its border-color changes to `var(--color-accent, #1e3a5f)` with an added 2px box-shadow ring (`var(--color-accent-dim)`), and `.fl-item-button` shows a background change (no outline) on `:focus-visible` (source: filtered-list.css). Other border details are otherwise controlled by CSS classes.
+- **Shadow**: None, except the 2px focus ring on `.fl-input:focus` (see Border).
+- **Min/Max size**: Input is width: 100%; list items are full-width within the root container
+- **CSS class structure**:
+  - `fl-root`: Root container wrapper
+  - `fl-input`: Text input field
+  - `fl-list`: Unordered list element
+  - `fl-item`: List item element
+  - `fl-item--active`: Applied to active/highlighted item
+  - `fl-item--clickable`: Applied to items when onSelect is provided
+  - `fl-item-button`: Button wrapper around item content when clickable
+  - `fl-title`: Title text within an item
+  - `fl-subtitle`: Subtitle text within an item
+  - `fl-details`: Details text within an item
+  - `fl-empty`: Empty state message element
+  - `fl-footer`: Footer element
+

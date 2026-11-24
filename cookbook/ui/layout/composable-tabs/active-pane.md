@@ -1,13 +1,12 @@
 ---
 id: 08bfb299-851b-4b01-a84a-6a2a13e07c12
 title: "Composable Tabs Active Pane"
-domain: adhsdk://cookbook/ui/layout/composable-tabs/active-pane
 type: ingredient
-version: 1.3.0
+version: 2.0.1
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-16
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -20,9 +19,9 @@ tags:
   - active-pane
   - focus
 depends-on:
-  - adhsdk://cookbook/ui/layout/composable-tabs/leaf-pane-view
+  - 4d75a371-181e-4d80-a16b-022d37dc0d48
 related:
-  - adhsdk://cookbook/ui/layout/composable-tabs/arrange-overlay-view
+  - bfc2dcde-d905-4923-bff2-577c85f17d5f
 references:
   - https://developer.apple.com/documentation/appkit/nsevent/addlocalmonitorforevents(matching:handler:)
   - https://developer.apple.com/documentation/appkit/nswindow/makefirstresponder(_:)
@@ -182,8 +181,10 @@ controller, not to this component, and is out of scope for this ingredient.
 - **focus-walk-reports-refused-when-restoration-fails**: When no candidate
   accepts input-focus status and the attempt to restore the original focus
   holder fails, taking input focus MUST report a refusal.
-- **every-pane-is-always-outlined**: Applying the theme MUST draw a 2-point
-  border on every pane backdrop, whether or not it is the active pane.
+- **every-pane-is-always-outlined**: While the backdrop's outline is on
+  (the default; see **the-backdrop-outline-is-optional**), applying the
+  theme MUST draw a 2-point border on every pane backdrop, whether or not
+  it is the active pane.
 - **the-backdrop-is-always-the-pane-backdrop-color**: Applying the theme MUST
   set the view's background to the theme's pane-backdrop color regardless of
   active state.
@@ -228,6 +229,10 @@ controller, not to this component, and is out of scope for this ingredient.
   own.
 - **the-backdrop-repaints-on-a-highlight-setting-change**: The backdrop MUST
   reapply its theme when the highlight setting changes.
+- **the-backdrop-outline-is-optional**: The backdrop MUST draw its outline
+  by default and MUST draw none, in either the active or the inactive
+  color, while its owner has switched the outline off; switching it MUST
+  repaint the backdrop.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
 
 ## Appearance
@@ -325,7 +330,7 @@ controller, not to this component, and is out of scope for this ingredient.
 | CTA-30 | focus-walk-stops-on-outgoing-refusal | The current focus holder refuses to give up focus | Taking focus reports refusal; the walk does not continue to further candidates |
 | CTA-31 | focus-walk-restores-the-original-responder-on-exhaustion | Every view in the hit-tested chain reports that it can accept focus but declines to actually take it, so each focus-assignment attempt gives up the outgoing holder yet leaves the window itself holding focus before the walk tries the next candidate | After the walk exhausts every candidate, taking focus reassigns the original focus holder and it succeeds, restoring it; taking focus reports that there was nowhere to put the keys |
 | CTA-32 | focus-walk-reports-refused-when-restoration-fails | No candidate accepts focus and restoring the original focus holder fails | Taking focus reports refusal |
-| CTA-33 | every-pane-is-always-outlined | Any pane, active or not | The border width is `2` |
+| CTA-33 | every-pane-is-always-outlined | Any pane, active or not, with its outline on (the default) | The border width is `2` |
 | CTA-34 | the-backdrop-is-always-the-pane-backdrop-color | Any pane, active or not | The background equals the theme's pane-backdrop color |
 | CTA-35 | the-active-pane-uses-the-accent-outline-color | Pane is active, its window is focused, highlighting enabled | The border color equals the theme's active-pane-outline color |
 | CTA-36 | every-other-pane-uses-the-hairline-outline-color | Pane is inactive (or active but window unfocused, or highlighting disabled) | The border color equals the theme's pane-outline color |
@@ -347,6 +352,7 @@ controller, not to this component, and is out of scope for this ingredient.
 | CTA-52 | the-active-pane-uses-the-accent-outline-color | No pane in a window has claimed the active id; applying the theme runs for any pane in it | The border color equals the theme's pane-outline color for every pane in the window, not the accent, even though checking membership reports `true` for a view in any of them |
 | CTA-53 | contrast | Theme whose active-pane outline color is close to its pane backdrop color | The active pane's border is drawn in the theme's active-pane-outline color; no contrast adjustment is applied. |
 | CTA-54 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
+| CTA-55 | the-backdrop-outline-is-optional | A pane backdrop, active and focused with the highlight setting on, whose owner has switched its outline off | The border width is `0`; switching the outline back on repaints it with a border width of `2` in the active color |
 
 ## Edge Cases
 
@@ -530,9 +536,9 @@ this file.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsActivePane.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsActivePane.swift` | confirmed (2.0.1) |
 
 ## Design Decisions
 
@@ -588,8 +594,11 @@ this file.
   (for example, a checkbox being clicked) would not run until the tracking
   loop ended. `DispatchQueue.main` is drained in every mode.
   **Approved**: pending
-- **Decision**: Every pane's backdrop is always outlined at a constant 2pt
-  width; only the border color distinguishes the active pane.
+- **Decision**: Every pane's backdrop is outlined at a constant 2pt width;
+  only the border color distinguishes the active pane. The one exception
+  is a backdrop whose owner switches the outline off (a window that is a
+  single pane, with no other pane to tell it from), which draws no outline
+  at all (**the-backdrop-outline-is-optional**).
   **Rationale**: The source states that outlining only the active pane left
   every other pane reading as an unbounded field of the window-background
   role, so two panes side by side would look like one pane with a seam down
@@ -620,10 +629,10 @@ this file.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [focus-management](agenticdevelopercookbook://compliance/accessibility#focus-management) | passed | accessibility |
-| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | accessibility |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | best-practices |
+| [adc.check.accessibility.focus-management](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/eec52703-a32a-5dee-b763-59a3bac826ea) | passed | accessibility |
+| [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | accessibility |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
 
 `focus-management` passes because every pointer-driven activation is
 paired with a standard `NSResponder` focus change, with no private
@@ -632,7 +641,7 @@ the actual color values behind `projectPaneBackdrop`, `projectPaneOutline`,
 and `projectActivePaneOutline` are chosen per theme, outside this file, per
 the contrast requirement and its pending decision.
 
-`separation-of-concerns` passes because `ComposableTabsActivePane` only tracks which pane is active and draws the pane backdrop and outline from theme roles; what a pane contains and what activation means to the content belong to the panes and the controller. `unit-test-coverage` is `partial`: no test file references `ComposableTabsActivePane`, so activation, event routing and the focus walk are unpinned, but `ComposableTabs/ComposableTabsPaneChromeTests.swift` tests the pane backdrop that file also defines, `ComposableTabsPaneBackgroundView` (`testTheContainerIsStillTheBackgroundThatDrawsTheFocusOutline`, `testTheTrackAroundAPaneIsTheWorkspaceBackdrop`, `testThePaneItselfIsFilledInsideThatTrack`), which pins the backdrop color, the 2-point fill inset and the fill being the first subview; nothing tests the outline colors.
+`separation-of-concerns` passes because `ComposableTabsActivePane` only tracks which pane is active and draws the pane backdrop and outline from theme roles; what a pane contains and what activation means to the content belong to the panes and the controller. `unit-test-coverage` is `partial`: `ComposableTabs/ComposableTabsActivePaneConformanceTests.swift` covers 51 of the 54 vectors, driving the tracker and the pane backdrop through real windows and pointer events sent with `NSApp.sendEvent`. Skipped: CTA-39 (the highlight override lives on the active theme, which a test cannot swap per pane), CTA-50 (a window belonging to another application cannot be created from inside the test process) and CTA-54 (main-actor isolation, enforced at build time). Tests that need a key window, a window held apart from the key one, or a sheet that takes key skip themselves where the environment cannot provide one. CTA-52 is checked in a closed window, the one place a window can have panes and no active id, so it shows the unclaimed outline colour without a focused window. `ComposableTabs/ComposableTabsPaneChromeTests.swift` also pins the backdrop colour, the 2-point fill inset and the fill being the first subview.
 
 ## Change History
 
@@ -645,3 +654,5 @@ the contrast requirement and its pending decision.
 | 1.1.3 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/layout/composable-tabs/. |
 | 1.3.0 | 2026-10-04 | Mike Fullerton | Resolved the contrast NEEDS REVIEW marker as current behavior (no contrast check) with a vector and a pending decision; added separation-of-concerns (passed) and unit-test-coverage compliance rows. Added the confines-to-ui-thread requirement and vector. Corrected unit-test-coverage to partial: the pane backdrop's fill and backdrop color are tested in ComposableTabsPaneChromeTests. |
+| 2.0.0 | 2026-11-15 | Mike Fullerton | The outline can be switched off for a single-pane window (the-backdrop-outline-is-optional); every-pane-is-always-outlined, CTA-33 and the constant-width Decision now hold only while it is on, and CTA-55 covers it switched off. |
+| 2.0.1 | 2026-11-16 | Mike Fullerton | Conformance tests added (ComposableTabsActivePaneConformanceTests.swift, 51 of 54 vectors); unit-test-coverage stays partial (039, 050, 054 skipped). |

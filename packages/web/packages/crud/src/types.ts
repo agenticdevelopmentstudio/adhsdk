@@ -12,7 +12,8 @@ export type CrudColumnType =
   | 'unknown'
 
 export interface CrudColumn {
-  /** camelCase JSON field name, exactly as served by the API. */
+  /** snake_case JSON field name, exactly as /v1 serves it. `created` / `updated` are integer
+   *  unix seconds. */
   name: string
   type: CrudColumnType
   /** Required in the create body. */
@@ -51,9 +52,9 @@ export interface CrudTableMeta {
   schema: string
   /** URL table segment (kebab), e.g. 'subscription-tiers'. */
   table: string
-  /** Collection REST path on the backend (no /api prefix), e.g. '/billing/subscription-tiers'. */
+  /** Collection /v1 path on the backend (no /api prefix), e.g. '/v1/billing/subscription_tiers'. */
   basePath: string
-  /** Item path template, e.g. '/billing/subscription-tiers/{id}'. */
+  /** Item path template, e.g. '/v1/billing/subscription_tiers/{id}'. */
   itemPath: string
   /** itemPath's params in order — also the row fields holding the primary key. */
   pkParams: string[]

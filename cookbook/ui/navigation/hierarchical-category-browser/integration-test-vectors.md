@@ -20,4 +20,10 @@
 | T17 | disable-not-hide-an-invalid-file-target | open Also file for Q3 (filed under Work and Planning, holding child Budget) | Work, Planning, Q3 itself and Budget are all present but `aria-disabled`; Archive is enabled; Confirm is disabled until a real row is picked |
 | T18 | not-call-an-unfiling-a-rooting | Q3 filed under Work AND Planning; standing in `work/q3`, open Move | the no-parent row reads "Remove from “Work”"; confirming it removes only the Work edge, adds nothing, and does NOT navigate. With Q3 filed under Work alone, the same row reads "Top level" and the route becomes `["q3"]` |
 | T19 | follow-a-rename-to-the-new-slug | standing on the currently selected category, rename it to an uncontested name | the route swaps only that segment to the new slug and keeps the tail below it unchanged; renaming a category that is not the current selection leaves the route alone; a rename that fails leaves the route alone too |
+| T20 | add-dialog-guards-duplicates, add-dialog-titles-its-parent | open Add from the Work level, type "work" while a root named "Work" exists, then type "Archive" and press Enter | the title reads "New category in “Work”"; the first name shows the "already exists" line and Create is disabled; the second creates one category with `parentIds` holding Work's id |
+| T21 | failure-belongs-to-its-dialog | a delete rejects, the user cancels, then opens Add | the Add dialog shows no "Could not delete" text |
+| T22 | picker-dedupes-filter-hits | Budget is filed under Work and Planning; type "budget" in the picker | one option, with the trail of its first placement |
+| T23 | picker-root-row-only-unfiltered | Move picker with `allowRoot`; type "reports" without clicking a row | Confirm is disabled |
+| T24 | picker-roving-keyboard | focus the first tree row, press Right, Down, Left, End | a collapsed branch expands, focus moves to its first child, then back to the parent, then to the last visible row |
+| T25 | picker-selects-one-drawing | pick Q3 where it is drawn under both Work and Planning | exactly one row has `aria-selected="true"` |
 

@@ -1,0 +1,4 @@
+
+`ParsedEventEnvelope.swift` extends `ParsedEvent` ([adhsdk.ingredient.foundation.sessions.parsed-event](cookbook:81735174-d7d7-4103-87df-7be5944c78cc)) with two members and declares one error. `sessionId` reads the session the event belongs to from its payload, so a spool row can be indexed by session without decoding every envelope. `envelopeJSON()` re-encodes the event as the drop-file envelope, the same shape `ParseResult.parse(envelopeJSON:)` ([adhsdk.ingredient.foundation.sessions.parse-result](cookbook:67b656ef-78a2-41ae-a910-f87f527360b1)) reads. The spool stores that one opaque blob and round-trips it through the parser every other capture path already uses, so spooling adds no second format and no second decoder. `EnvelopeEncodingError` says why an event could not be written to the spool.
+
+The envelope is built at capture time, never at drain time; the reason is in Design Decisions.

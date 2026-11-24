@@ -10,6 +10,13 @@ export interface TransferConflict {
   detail: string;
 }
 
+/** The `/v1` wire form of a `TransferConflict`. */
+interface TransferWireConflict {
+  user_id: string;
+  constraint: string;
+  detail: string;
+}
+
 /**
  * What the whole selection would hit, asked BEFORE any of it moves.
  *
@@ -32,11 +39,15 @@ export function useTransferPreview(userIds: string[], target: string | null, ena
     // about a different database.
     staleTime: 0,
     queryFn: async (): Promise<TransferConflict[]> => {
-      const params = new URLSearchParams({ userIds: key, target: target! });
-      const body = await authedJson<{ target: string; conflicts: TransferConflict[] }>(
-        `/api/customer/transfer/preview?${params}`,
+      const params = new URLSearchParams({ user_ids: key, target: target! });
+      const body = await authedJson<{ target: string; conflicts: TransferWireConflict[] }>(
+        `/api/v1/customers/transfer/preview?${params}`,
       );
-      return body.conflicts;
+      return body.conflicts.map((c) => ({
+        userId: c.user_id,
+        constraint: c.constraint,
+        detail: c.detail,
+      }));
     },
   });
 }
@@ -47,7 +58,7 @@ export function useTransferPreview(userIds: string[], target: string | null, ena
  * sequencing and halting argument that used to live in this file.
  */
 export const transferUser = (userId: string, target: string): Promise<unknown> =>
-  authedJson("/api/customer/transfer", {
+  authedJson("/api/v1/customers/transfer", {
     method: "POST",
-    body: JSON.stringify({ userId, target }),
+    body: JSON.stringify({ user_id: userId, target }),
   });

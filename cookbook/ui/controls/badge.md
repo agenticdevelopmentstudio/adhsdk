@@ -1,13 +1,12 @@
 ---
 id: 2cfe57f0-cdd4-4723-a6e0-2ce4f136ce7f
 title: "Badge"
-domain: adhsdk://cookbook/ui/controls/badge
 type: ingredient
-version: 1.3.0
+version: 1.3.1
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -21,8 +20,7 @@ tags:
   - status-indicator
 depends-on: []
 related:
-  - adhsdk://cookbook/ui/controls/badge
-  - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2
 references:
   - https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html
   - https://developer.apple.com/design/human-interface-guidelines/color
@@ -309,7 +307,7 @@ Not applicable: the source contains no logging calls.
   `padding: 2px 6px`, background/border/color driven by the equivalent style
   prop, and a `getContrastingTextColor` helper reimplementing the same
   0.299/0.587/0.114 luminance weights and 0.6 threshold. The sibling web
-  Badge recipe (`adhsdk://cookbook/ui/controls/badge`) already implements
+  Badge recipe ([adhsdk.ingredient.ui.controls.badge](cookbook:2cfe57f0-cdd4-4723-a6e0-2ce4f136ce7f)) already implements
   this on the web; reuse its formula so filled-style contrast decisions agree
   across platforms rather than re-deriving a possibly different threshold.
 - **AppKit / UIKit** (source platform): Source at
@@ -377,9 +375,9 @@ Not applicable: the source contains no logging calls.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Badge/Badge.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Badge/Badge.swift` | confirmed (1.3.1) |
 
 ## Design Decisions
 
@@ -443,16 +441,16 @@ Not applicable: the source contains no logging calls.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | accessibility |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | best-practices |
+| [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | accessibility |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
 
 This status rests on `Badge.swift`: `contrastingTextColor(on:)` uses an
 unverified perceptual-luminance heuristic rather than a WCAG contrast-ratio
 computation, so a specific minimum ratio cannot be confirmed from the source
 alone (`contrast-ratio`).
 
-`separation-of-concerns` passes because `Badge.swift` owns only the pill shape, padding and text styling and takes its text, color and style from the caller rather than deriving them from a status vocabulary of its own. `unit-test-coverage` is `failed`: a search of the Apple test targets finds no test file for `Badge`, so vectors badge-001 through badge-016 are unpinned by automated tests.
+`separation-of-concerns` passes because `Badge.swift` owns only the pill shape, padding and text styling and takes its text, color and style from the caller rather than deriving them from a status vocabulary of its own. `unit-test-coverage` is `partial`: `UI/BadgeConformanceTests.swift` covers badge-001 through badge-013 and badge-016; badge-014 (`@MainActor` isolation is enforced at build time) and badge-015 (the archived-construction refusal calls `fatalError` and cannot be caught) are skipped.
 
 ## Change History
 
@@ -465,3 +463,4 @@ alone (`contrast-ratio`).
 | 1.1.3 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/controls/. |
 | 1.3.0 | 2026-10-04 | Mike Fullerton | Wrote the main-thread confinement and archive-rejection requirements platform-neutrally with vectors badge-014 and badge-015; resolved the minimum-contrast-ratio NEEDS REVIEW marker as current behavior (no ratio check) with vector badge-016 and a pending decision; added separation-of-concerns and unit-test-coverage compliance rows. Renamed the thread-confinement requirement to confines-to-ui-thread with the standard wording. |
+| 1.3.1 | 2026-11-15 | Mike Fullerton | Conformance tests added (BadgeConformanceTests.swift, 16 of 18 vectors); unit-test-coverage now partial. |

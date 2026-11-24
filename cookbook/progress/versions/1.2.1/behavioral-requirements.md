@@ -1,0 +1,22 @@
+
+- **renders-progressbar-role** (UI, Controls): The component MUST render an element with `role="progressbar"`.
+- **reflects-value-in-valuenow** (UI): The component MUST expose the current percentage as `aria-valuenow`, rounded to an integer.
+- **fixed-value-bounds** (UI): The component MUST report `aria-valuemin` as 0 and `aria-valuemax` as 100.
+- **clamps-below-zero** (UI): Given a `value` below 0, the component MUST clamp it to 0 and render an empty fill.
+- **clamps-above-hundred** (UI): Given a `value` above 100, the component MUST clamp it to 100 and render a full fill.
+- **defaults-to-zero** (UI): With no `value` prop, the component MUST render at 0 with an empty fill.
+- **fill-tracks-value** (UI): The component MUST size the visible fill proportionally to the clamped value, from empty at 0 to full at 100, by translating a full-width indicator horizontally.
+- **indicator-class-tints-fill** (UI): The component MUST apply any `indicatorClassName` to the fill element so a consumer MAY override its color.
+- **forwards-track-props** (UI): The component MUST forward arbitrary props (`className`, `aria-label`, `id`, `data-*`) onto the track element.
+- **requires-accessible-name** (UI): The consumer MUST supply an accessible name (`aria-label` or `aria-labelledby`) via the forwarded track props; an unnamed `progressbar` fails WCAG 4.1.2 (Name, Role, Value).
+- **pairs-tint-with-text-status** (UI): When a consumer uses `indicatorClassName` to encode semantic status (e.g., amber while building, green once complete), the consumer MUST also convey that status via text or `aria-valuetext`, forwarded through the track props, rather than via color alone.
+- **honors-shared-reduce-motion** (UI): The fill's transition MUST be expressed as an ordinary class-based `transition`/`duration` utility, never an inline `style` or `!important` override, so the shared `accessibility.css` reduce-motion rule (`html[data-reduce-motion="on"] *`, or the `prefers-reduced-motion` media query when the setting is "auto") can zero its duration without any change to this component.
+- **valuemin-fixed-valuemax-configurable** (Controls): The component MUST report `aria-valuemin` as 0 and `aria-valuemax` as the `max` prop (default 100), unlike the UI bar's fixed 0–100 bounds.
+- **reports-raw-valuenow** (Controls): Unless `indeterminate` or `value` is `undefined`, the component MUST expose `value` verbatim as `aria-valuenow` — not clamped to the 0–`max` range and not rounded, unlike the UI bar's **clamps-below-zero**/**clamps-above-hundred**/**reflects-value-in-valuenow**.
+- **omits-valuenow-without-value** (Controls): With no `value` prop and `indeterminate` not set, the component MUST omit `aria-valuenow` entirely, rather than defaulting it to 0 the way the UI bar's **defaults-to-zero** does.
+- **clamps-fill-width-only** (Controls): The component MUST clamp the fill's visual width to the 0–100% range (via `value / max`) even when the value it reports through `aria-valuenow` is out of range or non-numeric-looking.
+- **indeterminate-mode** (Controls): The component MUST accept an `indeterminate` boolean prop; when true, it MUST apply the `aws-field--progress-indeterminate` modifier class, omit `aria-valuenow`, and drive the fill's position from the CSS keyframe animation instead of an inline `width` style.
+- **accepts-label** (Controls): The component MUST conditionally render an `aws-field__label` element when the `label` prop is provided.
+- **accepts-hint** (Controls): The component MUST conditionally render an `aws-field__hint` paragraph when the `hint` prop is provided.
+- **custom-wrapper-classname** (Controls): The component MUST append any `className` prop to the wrapper's fixed `aws-field aws-field--progress[ aws-field--progress-indeterminate]` class list.
+

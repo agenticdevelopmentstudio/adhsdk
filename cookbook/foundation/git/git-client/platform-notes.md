@@ -40,13 +40,13 @@
   privacy after redaction, never through `OSLogPrivacy.private`, because
   that would collapse the whole interpolation for every verb rather than
   redacting the one argument position that needs it. An AppKit or UIKit
-  caller consumes the same actor and the same four-case error outcome
+  caller consumes the same actor and the same five-case error outcome
   through ordinary `async`/`await`, with no framework-specific adaptation
   needed.
 - **Compose (Kotlin/Android)**: The actor's bottleneck-for-accounting model
   maps to a Kotlin object exposing `suspend fun`s backed by
   `ProcessBuilder`/`Process`, run on `Dispatchers.IO`; `withTimeout` stands
-  in for the wall-clock budget, a sealed class with the same four variants
+  in for the wall-clock budget, a sealed class with the same five variants
   stands in for the git client's error outcome, and
   `kotlinx.coroutines.CancellationException` is the analog that MUST
   likewise be left to propagate unchanged rather than wrapped.
@@ -54,7 +54,7 @@
   git process; a web port MUST run the equivalent of this component in a
   Node.js backend (`child_process.spawn`/`execa`) behind an API the page
   calls, with an `AbortController`/`AbortSignal.timeout` standing in for
-  the configured timeout and a discriminated union mirroring the four
+  the configured timeout and a discriminated union mirroring the five
   error-outcome cases returned as the API's error shape.
 - **WinUI 3**: This is a process-spawning wrapper, not an HTTP client, so
   `HttpClient`/`System.Text.Json` do not apply. The port is

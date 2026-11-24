@@ -1,0 +1,62 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "231a7e9a-8c03-44b3-afaf-b71755e05c1d",
+    "title": "ITermColorsParser",
+    "type": "ingredient",
+    "version": "1.0.3",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-14",
+    "modified": "2026-11-14",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Parses an iTerm2 .itermcolors property list into a ColorTheme, failing fast on missing required colors and falling back for cursor and selection.",
+    "platforms": [
+      "swift",
+      "macos",
+      "ios"
+    ],
+    "tags": [
+      "theme",
+      "parser",
+      "iterm2",
+      "color"
+    ],
+    "depends-on": [
+      "932449c9-b57f-4e2c-992a-1e27584742b6",
+      "ad5bae6b-0172-4cd4-a4b7-297eb58eb28d",
+      "591d0b87-ce71-4b11-8642-149fc405cce9"
+    ],
+    "related": [
+      "d15bba09-4574-4fd1-93a0-f7d2cccd04f2"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "6e2ceba51933db1c",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

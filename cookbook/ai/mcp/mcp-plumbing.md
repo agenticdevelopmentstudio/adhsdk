@@ -1,13 +1,12 @@
 ---
 id: 52650804-a096-4b71-b4eb-da3afa95ac56
 title: "MCP Plumbing"
-domain: adhsdk://cookbook/ai/mcp/mcp-plumbing
 type: ingredient
-version: 1.2.1
+version: 1.3.1
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-16
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -23,7 +22,7 @@ tags:
   - settings
 depends-on: []
 related:
-  - adhsdk://cookbook/ai/chat/chat-window/mcp-chips-bar-view
+  - bea6525c-171f-4547-bbb3-7c709543552e
 references: []
 approved-by: ""
 approved-date: ""
@@ -36,8 +35,7 @@ approved-date: ""
 MCP Plumbing is the connection-lifecycle and reconciliation layer for the
 Model Context Protocol: it turns a stored server configuration into a live,
 tool-capable connection, keeps that connection's lifecycle safe under
-concurrent connect/disconnect requests, and lets the host application itself
-act as an in-process MCP server. It spans six files:
+concurrent connect/disconnect requests. It spans five files:
 
 - `packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPClient.swift` — the client, its
   client-protocol surface, its connection-state type, and its error type. One
@@ -58,11 +56,6 @@ act as an in-process MCP server. It spans six files:
   subprocess transport, an implementation of MCP's own transport contract
   built on this codebase's shared subprocess-channel abstraction, used for
   every `.stdio` server instead of the MCP SDK's own stock stdio transport.
-- `packages/apple/AgenticDeveloperHubSDK/macOS/Features/MCP/HostMCPServer.swift` — a
-  self-contained in-process MCP server that exposes host
-  application info and a "open a chat window" tool over an in-memory
-  transport pair, with no subprocess and no registry integration.
-
 ## Behavioral Requirements
 
 The client's error and connection-state types
@@ -134,18 +127,13 @@ The subprocess transport
 - **subprocess-send-requires-connected-state**: Sending MUST throw a "not connected" transport error when the state is not connected — sending before connecting or after disconnecting MUST fail with that specific error, matching the stock stdio transport's contract byte for byte — and otherwise MUST forward the framed data to the channel.
 - **subprocess-receive-returns-stable-stream**: Receiving events MUST return the same underlying stream instance on every call, not a new stream per call.
 
-The host MCP server
+The in-process host MCP server is specified in the [adhsdk.ingredient.ai.mcp.host-mcp-server](cookbook:dac3e46e-2eeb-4ebd-b88d-4e4999870db7) recipe.
 
-- **host-server-runs-on-main-thread**: The host MCP server MUST run on the main thread of execution.
-- **host-server-wires-in-memory-pair**: Constructing the host MCP server MUST create a connected in-memory transport pair, expose the client side publicly, and retain the server side privately.
-- **host-server-declares-no-list-changed**: The underlying MCP server MUST declare that it does not support the tools-list-changed capability — this server MUST NOT claim it will emit `tools/list_changed`.
-- **host-server-start-and-stop**: Starting MUST register the tool handlers and then start the underlying MCP server against its own transport; stopping MUST stop that server.
-- **host-server-lists-two-tools**: Listing tools MUST return exactly two tools, `host_app_info` and `host_open_chat_window`, each declaring an object input schema with no properties.
-- **host-app-info-tool-body**: Calling `host_app_info` MUST return non-error text containing the app's name, its version, and its plugin names joined by `", "`, or the literal `(none)` when there are no plugin names.
-- **host-open-chat-window-tool-effect**: Calling `host_open_chat_window` MUST invoke the callback supplied when the host MCP server was constructed and MUST return the fixed non-error text "Opened a new chat window."
-- **host-server-unknown-tool-is-not-an-error-throw**: Calling any tool name other than the two declared tools MUST return a result with an error flag set and text "Unknown tool: <name>" — it MUST NOT throw.
-- **host-server-ignores-tool-arguments**: The tool handlers MUST NOT read the call's arguments — both declared input schemas have no properties and no handler inspects the arguments given, so any arguments a caller supplies are accepted and ignored.
+The HTTP endpoint
 
+- **http-endpoint-stop-grace-default**: Stopping the HTTP endpoint MUST take a grace, the time a response already being written is given to finish, and that grace MUST default to 1 second.
+- **http-endpoint-stop-waits-only-for-in-flight-work**: Stopping MUST close the listening socket, wait for the requests already being handled to finish, but no longer than the grace, then stop the HTTP server with a write margin, cancel the endpoint's own run task and stop the host MCP server, in that order. The write margin, the time a response that has just been returned is given to reach the client, MUST be the smaller of 0.1 seconds and what remains of the grace when every request finished in time, and 0 when the grace ran out first. A stop with nothing in flight MUST therefore finish at once, so the grace is an upper bound, never a fixed wait; a caller that must not wait at all (an app that is quitting) passes a grace of 0.
+- **http-endpoint-stop-is-idempotent**: Stopping an endpoint that is idle or already stopping MUST do nothing; stopping one that is still starting MUST make that start tear everything down and throw its stopped-while-starting error.
 ## Appearance
 
 Not applicable — this is a Model Context Protocol connection and reconciliation layer, not a visual component.
@@ -178,14 +166,14 @@ Not applicable — this is a Model Context Protocol connection and reconciliatio
 | mcp-plumbing-014 | abandoned-connect-budget-value, teardown-error-suppression | A connect is suspended (via the test seam) exactly between publishing the transport and connecting the underlying MCP client to it, then disconnect is called | Disconnect returns within its budget (well under 8s) and no probe process survives (`MCPClientRaceTests.teardownAbandonsAWedgedConnectAndStillReapsTheChild`) |
 | mcp-plumbing-015 | teardown-sequence | Same wedged-connect setup as mcp-plumbing-014, with CPU consumption measured for 1 second after disconnect returns | Measured CPU consumption stays under the test's `0.25` CPU-second ceiling, and the abandoned connect operation itself completes (`MCPClientRaceTests.teardownFreesTheAbandonedConnectRatherThanSpinning`) |
 | mcp-plumbing-016 | client-serializes-operations, connect-suspension-hook-is-nil-in-production | A connect is suspended (via the test seam) before its cancellation check, then raced with disconnect | The connect operation ends as cancelled (not a spawn), disconnect returns, and no probe process survives (`MCPClientRaceTests.connectCancelledBeforeItBuildsATransportNeverSpawns`) |
-| mcp-plumbing-017 | subprocess-blank-line-filtering | A raw frame consisting of the two bytes `0x0D 0x0A` (a CRLF blank line) is produced by the child | The subprocess transport's blank-line check reports true for that frame, and the frame is never yielded into the message stream |
-| mcp-plumbing-018 | subprocess-send-requires-connected-state | Sending is attempted on a subprocess transport whose state is idle | The call throws the "not connected" transport error without touching the underlying channel |
-| mcp-plumbing-019 | host-app-info-tool-body | The host MCP server, constructed with app name "Demo", version "2.0", and no plugin names, receives a call to `host_app_info` | Returned text reads `Host: Demo\nVersion: 2.0\nPlugins: (none)`, with the error flag false |
-| mcp-plumbing-020 | host-server-unknown-tool-is-not-an-error-throw | A tool call is invoked with the tool name `nonexistent_tool` | Returned result has the error flag true and text `Unknown tool: nonexistent_tool`; no error is thrown |
+| mcp-plumbing-017 | subprocess-blank-line-filtering | A raw frame consisting of the two bytes `0x0D 0x0A` (a CRLF blank line) is produced by the child | The subprocess transport's blank-line check reports true for that frame, and the frame is never yielded into the message stream (`SubprocessTransportTests.isBlankLineClassification`, `crlfAndWhitespaceOnlyLinesAreNotForwarded`) |
+| mcp-plumbing-018 | subprocess-send-requires-connected-state | Sending is attempted on a subprocess transport whose state is idle | The call throws the "not connected" transport error without touching the underlying channel (`SubprocessTransportTests.sendWithoutAConnectionThrowsENOTCONN`) |
+| mcp-plumbing-019 | call-prefix-stripped | A host MCP server with one registered source advertising `info` under the prefix `host_`, joined to a client by an in-memory transport pair; the client calls `host_info` | The source receives the bare name `info` and the client gets non-error text `echo:info` (`HostMCPServerTests.testPrefixIsAppliedToNamesAndStrippedOnCall`; requirement in the host-mcp-server recipe) |
+| mcp-plumbing-020 | call-unknown-tool | A tool call is invoked with a name no registered source advertises (`nope`) | Returned result has the error flag true and text `unknown tool nope`; no error is thrown (`HostMCPServerTests.testUnknownToolIsAnErrorResultNotAProtocolError`; requirement in the host-mcp-server recipe) |
 
 ## Edge Cases
 
-- **Null/empty input**: The server configuration's stdio transport with no environment variables MUST leave secrets-override-environment's merge as exactly the secrets (MUST). The host MCP server with no plugin names MUST render the plugin list as the literal `(none)` (MUST). The registry's reconcile step with no secrets recorded for a server MUST treat that server's secrets as empty, not fail (MUST). `tools(forIds: [])` MUST return an empty list (MUST).
+- **Null/empty input**: The server configuration's stdio transport with no environment variables MUST leave secrets-override-environment's merge as exactly the secrets (MUST). The registry's reconcile step with no secrets recorded for a server MUST treat that server's secrets as empty, not fail (MUST). `tools(forIds: [])` MUST return an empty list (MUST).
 - **Boundary values**: The abandoned-connect wall-clock budget is fixed at `1.0` seconds; teardown's step-4 wait MUST NOT exceed that bound regardless of how long the abandoned connect would otherwise take (MUST). The subprocess transport's blank-line check applied to a zero-length frame MUST return true (an empty collection trivially satisfies the check), so an empty frame MUST be filtered exactly as a whitespace-only one is (MUST).
 - **Concurrent access**: The client serializes its own connect, disconnect, tool-list-refresh, and call-tool operations onto one execution context; a connect racing a disconnect on the same instance MUST resolve deterministically per teardown-sequence and connect-guard-is-first, never stranding a child process (MUST). The registry's reconcile step begins each client's connect or disconnect independently and does not wait for any of them to finish before reconciling itself returns, so multiple servers' connections and teardowns proceed concurrently and independently of one another (MUST, per registry-reconcile-removes-first and registry-reconcile-adds-missing). A second, concurrent connect call on the subprocess transport while the first is still connecting MUST return immediately without spawning a second child (MUST, per subprocess-connect-is-idempotent).
 - **Error states**: A `.stdio` command that cannot be launched surfaces as a thrown error out of launching the channel, which the subprocess transport's connect propagates after resetting its own state to idle, and which the client's connect propagates after marking its state failed (carrying the error) and running teardown (MUST). A connect failure raised inside the registry's independent connect attempt is caught and logged, and the client remains present in the live map with its own state set to failed; reconciling itself never throws or crashes on a connect failure (MUST, per registry-connect-failure-is-logged-not-thrown). Sending on a subprocess transport that is not connected throws the "not connected" transport error rather than whatever the underlying channel would otherwise raise (MUST).
@@ -207,40 +195,32 @@ Not applicable — this is a Model Context Protocol connection and reconciliatio
 | `mcp.serverConfigurations` (settings key) | `[MCPServerConfiguration]` | `[]` | Non-secret server descriptions, routed to the regular settings provider. |
 | `mcp.serverSecrets` (settings key) | `MCPServerSecrets` (`[String: [String: String]]`) | `[:]` | Secret environment values keyed by server id, routed to the secure (Keychain) settings provider. |
 | `logger` (parameter to constructing the subprocess transport) | `Logger?` | `nil` (a no-op logger) | Diagnostic logger for the transport's own debug messages; production code does not supply one. |
-| `appName`, `appVersion` (parameters to constructing the host MCP server) | `String` | none — required | Reported by the `host_app_info` tool. |
-| `pluginNames` (parameter to constructing the host MCP server) | `[String]` | `[]` | Reported by the `host_app_info` tool, joined by `", "` or rendered as `(none)` when empty. |
-| `openChatWindow` (parameter to constructing the host MCP server) | a shareable callback taking no arguments and returning nothing | a no-op callback | Invoked when the `host_open_chat_window` tool is called. |
 | `abandonedConnectBudgetSeconds` (a fixed constant owned by the client) | `TimeInterval` | `1.0` | Fixed wall-clock bound teardown gives an in-flight connect before abandoning it; not exposed to callers. |
 
 ## Deep Linking
 
-Not applicable: none of the six sources define a URL scheme, route, or navigation destination — the server configuration's HTTP transport addresses an MCP server's HTTP endpoint, not an app deep link.
+Not applicable: none of the five sources define a URL scheme, route, or navigation destination — the server configuration's HTTP transport addresses an MCP server's HTTP endpoint, not an app deep link.
 
 ## Localization
 
-The client's errors and the registry's log messages are hardcoded, unlocalized English strings with no string-catalog key, and the host MCP server's tool descriptions and tool-call bodies are likewise hardcoded English:
+The client's errors and the registry's log messages are hardcoded, unlocalized English strings with no string-catalog key:
 
 | String Key | Default (en) | Context |
 |-----------|-------------|---------|
 | (none — literal, no catalog key) | "The MCP server was disabled or removed before its connection finished starting; nothing was launched." | The client's "already disconnected" error description |
 | (none — literal, no catalog key) | "Failed to connect MCP server %@: %@" (interpolated with the configuration's name and the error's description) | The registry's reconcile failure log line |
-| (none — literal, no catalog key) | "Return the host application's name, version, and configured AI plugins." | `host_app_info`'s tool description |
-| (none — literal, no catalog key) | "Open a new AI chat window in the host application." | `host_open_chat_window`'s tool description |
-| (none — literal, no catalog key) | "Host: %@\nVersion: %@\nPlugins: %@" | `host_app_info`'s success body |
-| (none — literal, no catalog key) | "Opened a new chat window." | `host_open_chat_window`'s success body |
-| (none — literal, no catalog key) | "Unknown tool: %@" | The unrecognized-tool-name default case body |
 
 ## Accessibility Options
 
-Not applicable: none of the six sources render UI, so none observes Reduce Motion, Increase Contrast, or Differentiate Without Color.
+Not applicable: none of the five sources render UI, so none observes Reduce Motion, Increase Contrast, or Differentiate Without Color.
 
 ## Feature Flags
 
-Not applicable: none of the six sources reads a feature-flag or settings key beyond the two settings (`mcp.serverConfigurations`, `mcp.serverSecrets`) already documented under Configuration, neither of which gates a feature on or off.
+Not applicable: none of the five sources reads a feature-flag or settings key beyond the two settings (`mcp.serverConfigurations`, `mcp.serverSecrets`) already documented under Configuration, neither of which gates a feature on or off.
 
 ## Analytics
 
-Not applicable: none of the six sources contains an analytics or event-tracking call.
+Not applicable: none of the five sources contains an analytics or event-tracking call.
 
 ## Privacy
 
@@ -264,7 +244,7 @@ The client itself has its own logger, but the given source contains no call site
 
 ## Platform Notes
 
-- **SwiftUI**: The sources are `packages/apple/AgenticDeveloperHubSDK/Core/MCP/*.swift` (built into the `AgenticDeveloperHubSDKCore` framework target, macOS-only) and `packages/apple/AgenticDeveloperHubSDK/macOS/Features/MCP/HostMCPServer.swift` (built into the `AgenticDeveloperHubSDKMacOS` target). `MCPServerRegistry`'s `@Published clients` and `MCPClient`'s `state`/`cachedTools` are consumed reactively by SwiftUI views (e.g. the sibling `MCPChipsBarView` recipe) via `ObservableObject`, but nothing in these six files imports `SwiftUI` itself — the layer is UI-framework-agnostic.
+- **SwiftUI**: The sources are `packages/apple/AgenticDeveloperHubSDK/Core/MCP/*.swift` (built into the `AgenticDeveloperHubSDKCore` framework target, macOS-only). `MCPServerRegistry`'s `@Published clients` and `MCPClient`'s `state`/`cachedTools` are consumed reactively by SwiftUI views (e.g. the sibling `MCPChipsBarView` recipe) via `ObservableObject`, but nothing in these five files imports `SwiftUI` itself — the layer is UI-framework-agnostic.
 - **Compose**: Model `MCPClient` as a class wrapping a `Mutex`-guarded `MutableStateFlow<MCPClientState>` and `MutableStateFlow<List<Tool>>` in place of the actor's isolated `state`/`cachedTools`, with `connect`/`disconnect`/`refreshTools`/`callTool` as `suspend` functions; reproduce `teardown-sequence`'s ordering with `withTimeoutOrNull(1_000L) { connectJob?.join() }` in place of the wall-clock budget, and `connectJob?.cancel()` in place of `connectTask?.cancel()`. Model `MCPServerRegistry` as a class exposing `StateFlow<Map<UUID, MCPClientProtocol>>`, driven by `combine` over two settings `Flow`s in place of Combine's `combineLatest`. Model `SubprocessTransport` with `ProcessBuilder`, reading stdout line-by-line on a background dispatcher to reproduce `.newlineDelimited` framing, and filtering blank lines the same way `subprocess-blank-line-filtering` does. Route secrets through Android's `EncryptedSharedPreferences` in place of Keychain.
 - **React/Web**: In a Node.js or Electron host (a browser has no subprocess primitive and no OS keychain), model `MCPClient` as an `EventEmitter`-based class or an async class exposing `state`/`cachedTools` getters, with `connect`/`disconnect` as `async` methods; reproduce `teardown-sequence`'s bounded wait with `Promise.race([connectPromise, delay(1000)])` in place of the wall-clock budget. Model `MCPServerRegistry` as a class holding a `Map<string, MCPClientProtocol>` and re-running its reconcile logic on every settings-store change event. Model `SubprocessTransport` with `child_process.spawn`, reading `.stdout` through `readline.createInterface` (or manual `\n`-splitting) for `.newlineDelimited` framing, and filtering blank lines per `subprocess-blank-line-filtering`; route secrets through an OS-keychain wrapper (e.g. `keytar`) in place of Keychain, and support only the `.http` transport in an Electron renderer sandbox that cannot spawn arbitrary executables.
 - **AppKit / UIKit**: Identical to the SwiftUI note — this component is UI-framework-agnostic; only the application embedding `AgenticDeveloperHubSDKCore`/`AgenticDeveloperHubSDKMacOS` differs, never this contract.
@@ -274,14 +254,14 @@ The client itself has its own logger, but the given source contains no call site
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPClient.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPServerConfiguration.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPServerRegistry.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPSettings.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/MCP/SubprocessTransport.swift` |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/MCP/HostMCPServer.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPClient.swift` | confirmed (1.3.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPServerConfiguration.swift` | confirmed (1.3.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPServerRegistry.swift` | confirmed (1.3.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPSettings.swift` | confirmed (1.3.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/MCP/SubprocessTransport.swift` | confirmed (1.3.1) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/MCP/MCPHTTPEndpoint.swift` | confirmed (1.3.1) |
 
 ## Design Decisions
 
@@ -299,10 +279,6 @@ All four decisions below are specific to the Apple/Swift reference implementatio
 **Rationale**: Per the type's own doc comment, a `Bool` set only after `connect()`'s suspension at `channel.launch()` would let a `disconnect()` landing in that window observe "not yet connected" and become a no-op while a live child exists — stranding it for the life of the app. The `connecting` case exists precisely to make `disconnect()` treat that window the same as a fully connected one.
 **Approved**: pending
 
-**Decision**: `HostMCPServer` is self-contained, with no integration into `MCPServerRegistry` and no new case added to `MCPServerConfiguration.Transport` for an in-process server.
-**Rationale**: Per the type's own doc comment, this keeps the sample from expanding the `Transport` enum with an in-process variant; a host application that wants `HostMCPServer`'s tools available to its own chat surface is expected to build an `MCP.Client` directly against `clientTransport` and wire that in wherever it already routes tool calls, rather than this component doing so on the host's behalf.
-**Approved**: pending
-
 **Decision**: A failed tool-list refresh after a list-changed notification is silent.
 **Rationale**: The handler discards the refresh error, leaving the previously cached tools in place with no log, state change or retry; closing the gap needs a decision from whoever owns the client's error-reporting contract on whether a failed refresh should log or mark the client failed.
 **Approved**: pending
@@ -311,16 +287,16 @@ All four decisions below are specific to the Apple/Swift reference implementatio
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [secure-storage](agenticdevelopercookbook://compliance/security#secure-storage) | passed | Security |
-| [secure-log-output](agenticdevelopercookbook://compliance/security#secure-log-output) | passed | Security |
-| [token-lifecycle](agenticdevelopercookbook://compliance/security#token-lifecycle) | failed | Security |
-| [timeout-handling](agenticdevelopercookbook://compliance/reliability#timeout-handling) | passed | Reliability |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | partial | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.security.secure-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bb5dfc9b-c5b0-54fa-882f-007ae7dad0e9) | passed | Security |
+| [adc.check.security.secure-log-output](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b258657f-bb73-5491-9c70-0d14afdfa6ce) | passed | Security |
+| [adc.check.security.token-lifecycle](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/61edfc73-f26a-5cfa-8c09-d1011eb8b7cd) | failed | Security |
+| [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | passed | Reliability |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | partial | Reliability |
 
-`separation-of-concerns` passes because connection lifecycle and settings-reconciliation logic live entirely in these six files, with `MCPServerRegistry` exposing only `client(for:)` and `tools(forIds:)` to UI-layer consumers such as the sibling `MCPChipsBarView` recipe. `unit-test-coverage` is partial because `MCPClientRaceTests`, `MCPServerRegistryTests`, `MCPServerConfigurationTests`, and `MCPSettingsTests` cover `MCPClient`, `MCPServerRegistry`, `MCPServerConfiguration`, and the `UserSetting` routing thoroughly, but the given sources include no dedicated test file for `SubprocessTransport` or `HostMCPServer`. `explicit-error-handling` is partial because most failure paths throw a specific, named error or log explicitly, but two paths deliberately swallow an error with `try?` and no signal at all: `registerToolListChangedHandler`'s notification handler (a failed `refreshTools()` leaves `cachedTools` silently stale, see the Edge Cases "Tool list refresh failure" item) and `teardown()`'s step-4 wait (`teardown-error-suppression`) — the latter is a documented, argued trade-off, the former is a genuine gap recorded in a Design Decision. `secure-storage` passes because `mcp.serverSecrets` is the only field carrying credential-shaped data and it is routed to the secure (Keychain) provider via `isSecure: true`, per `secrets-setting-routing`. `secure-log-output` passes because the only log call in these six sources (`registry-connect-failure-is-logged-not-thrown`) interpolates only a server's `name` and `error.localizedDescription`, never an environment value or secret. `token-lifecycle` fails because the source defines no expiry, rotation, or revocation for a stored server secret, as detailed in the Privacy section's Token lifecycle bullet. `timeout-handling` passes because `teardown-sequence`'s wall-clock budget leaves `MCPClient` in a consistent state — `connectTask` cleared, `transport` disconnected exactly twice, `client` disconnected exactly twice — whether the awaited task finishes first or the budget expires first. `fault-tolerance` is partial because `connect()` itself has no wall-clock bound of its own (only an already-torn-down client's `teardown()` is bounded), so a `.stdio` server whose child never answers `initialize`, or a `.http` server behind an unresponsive endpoint, can leave a single `connect()` call hanging indefinitely until some other code path calls `disconnect()`.
+`separation-of-concerns` passes because connection lifecycle and settings-reconciliation logic live entirely in these five files, with `MCPServerRegistry` exposing only `client(for:)` and `tools(forIds:)` to UI-layer consumers such as the sibling `MCPChipsBarView` recipe. `unit-test-coverage` passes because every conformance vector has a test: `MCPClientRaceTests`, `MCPServerRegistryTests`, `MCPServerConfigurationTests`, and `MCPSettingsTests` cover `MCPClient`, `MCPServerRegistry`, `MCPServerConfiguration`, and the `UserSetting` routing, `SubprocessTransportTests` covers the blank-line filter and the not-connected send. `explicit-error-handling` is partial because most failure paths throw a specific, named error or log explicitly, but two paths deliberately swallow an error with `try?` and no signal at all: `registerToolListChangedHandler`'s notification handler (a failed `refreshTools()` leaves `cachedTools` silently stale, see the Edge Cases "Tool list refresh failure" item) and `teardown()`'s step-4 wait (`teardown-error-suppression`) — the latter is a documented, argued trade-off, the former is a genuine gap recorded in a Design Decision. `secure-storage` passes because `mcp.serverSecrets` is the only field carrying credential-shaped data and it is routed to the secure (Keychain) provider via `isSecure: true`, per `secrets-setting-routing`. `secure-log-output` passes because the only log call in these five sources (`registry-connect-failure-is-logged-not-thrown`) interpolates only a server's `name` and `error.localizedDescription`, never an environment value or secret. `token-lifecycle` fails because the source defines no expiry, rotation, or revocation for a stored server secret, as detailed in the Privacy section's Token lifecycle bullet. `timeout-handling` passes because `teardown-sequence`'s wall-clock budget leaves `MCPClient` in a consistent state — `connectTask` cleared, `transport` disconnected exactly twice, `client` disconnected exactly twice — whether the awaited task finishes first or the budget expires first. `fault-tolerance` is partial because `connect()` itself has no wall-clock bound of its own (only an already-torn-down client's `teardown()` is bounded), so a `.stdio` server whose child never answers `initialize`, or a `.http` server behind an unresponsive endpoint, can leave a single `connect()` call hanging indefinitely until some other code path calls `disconnect()`.
 
 Two further gaps that qualify these findings are recorded beside the requirements they concern rather than here: the tool-list-refresh-failure behavior and its Design Decision (Edge Cases), and the abandoned-connect teardown over the `.http` transport, whose repeated-disconnect fix is measured only for `.stdio` (Edge Cases, "HTTP transport abandoned connect").
 
@@ -328,6 +304,8 @@ Two further gaps that qualify these findings are recorded beside the requirement
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.1 | 2026-11-16 | Mike Fullerton | Drop the old host MCP server text; point at host-mcp-server |
+| 1.3.0 | 2026-11-14 | Mike Fullerton | The HTTP endpoint's stop grace (http-endpoint-stop-grace-default); a stop waits only for in-flight requests, up to the grace, with a write margin of at most 0.1 s, and finishes at once when idle (http-endpoint-stop-waits-only-for-in-flight-work). |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Swift-only constructs in normative sections restated as platform-neutral behavior; the Apple mechanism is in Platform Notes. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolved the tool-list-refresh-failure NEEDS REVIEW marker as current behavior plus a pending Design Decision; reworded host-server-ignores-tool-arguments as a MUST NOT. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ai/mcp/. |

@@ -1,10 +1,10 @@
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
-| [secure-log-output](agenticdevelopercookbook://compliance/security#secure-log-output) | failed | Security |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
+| [adc.check.security.secure-log-output](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b258657f-bb73-5491-9c70-0d14afdfa6ce) | failed | Security |
 
 `separation-of-concerns` passes because the file's own header comment states it was split out of `MainThreadWindow.swift` specifically to keep the adaptor's argument parsing and promise settlement testable without AppKit, and the file itself confines its own responsibility to turning one `ExtensionMessageRequest` into `NSAlert` calls and back into an index. `unit-test-coverage` is partial: `MainThreadWindowTests` directly pins `buttonPlan(for:)` and `escapeKeyEquivalentPosition(in:)`, but every test exercising message *presentation* substitutes a `RecordingMessagePresenter`/`SuspendingMessagePresenter` double for `NSAlertMessagePresenter` itself, so `presentMessage(_:)`, `sheetWindow()`, `presentedResponse(for:)`, `alertStyle(for:)`, and `anyVisibleWindow()` have no given test of their own. `fault-tolerance` passes: the no-window case (**drop-when-no-window**) and an out-of-range button response (**out-of-range-response-resolves-absent**) both resolve to `nil` rather than crash, block, or throw, and neither depends on an external service being reachable. `secure-log-output` fails: `presentedResponse(for:)`'s dropped-message log interpolates `alert.messageText` — i.e., `request.message`, arbitrary caller-supplied text with no length or content constraint — with `privacy: .public`, so any sensitive content an extension happened to put in that message is not redacted from the unified log, contrary to the guideline's requirement that log output not carry PII.
 

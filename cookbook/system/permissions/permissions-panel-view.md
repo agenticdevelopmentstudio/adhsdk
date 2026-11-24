@@ -1,7 +1,6 @@
 ---
 id: 07388a5c-901d-4cf3-b818-bf52c180be08
 title: "Permissions Panel View"
-domain: adhsdk://cookbook/system/permissions/permissions-panel-view
 type: ingredient
 version: 1.2.2
 status: review
@@ -19,9 +18,9 @@ tags:
   - permissions
   - settings
 depends-on:
-  - adhsdk://cookbook/system/permissions/permission-row-view
+  - c3269cfa-a8ec-4ba9-bc68-9cdf98e7e1fc
 related:
-  - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2
 references: []
 approved-by: ""
 approved-date: ""
@@ -346,9 +345,9 @@ Not applicable: the component contains no logging call of any kind.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/PermissionsUI/PermissionsPanelView.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/PermissionsUI/PermissionsPanelView.swift` | unverified |
 
 ## Design Decisions
 
@@ -404,10 +403,10 @@ by the current minimum-deployment behavior.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | Accessibility |
-| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
 
 `screen-reader-support` is partial because the component registers no
 accessibility-grouping role for its row list (see Accessibility);

@@ -1,0 +1,65 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "c9e70ad4-89c9-4c44-a2d6-a64da32a64af",
+    "title": "Error Text",
+    "type": "ingredient",
+    "version": "1.1.2",
+    "status": "review",
+    "language": "en",
+    "created": "2026-09-22",
+    "modified": "2026-11-14",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Canonical inline error display component for validation and alert messages",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "error-text",
+      "alerts",
+      "form-validation"
+    ],
+    "depends-on": [],
+    "related": [
+      "972be0d0-a9f5-45cd-a23b-c8329410b3d1",
+      "0c199036-81c3-47c3-9e79-e4b8187ca69a",
+      "dc548100-af44-4d93-9cb9-93c35546e08c"
+    ],
+    "references": [
+      "https://www.w3.org/TR/wai-aria-1.2/#alert",
+      "https://base-ui.com/react/components/dialog",
+      "https://github.com/dcastil/tailwind-merge",
+      "https://developer.apple.com/documentation/uikit/uiaccessibility/post(notification:argument:)",
+      "https://developer.android.com/reference/kotlin/androidx/compose/ui/semantics/LiveRegionMode",
+      "https://learn.microsoft.com/en-us/uwp/api/windows.ui.xaml.automation.automationproperties.livesetting"
+    ],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "218cf3c11adf5868",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

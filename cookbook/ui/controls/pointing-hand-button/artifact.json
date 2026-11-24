@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "46b9d1b8-8a6e-4b61-98ec-5201be24302f",
     "title": "Pointing Hand Button",
-    "domain": "adhsdk://cookbook/ui/controls/pointing-hand-button",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",
@@ -34,7 +33,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "e4ddede355730d67",
+  "synced": "38b00b410d117b08",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -53,7 +52,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

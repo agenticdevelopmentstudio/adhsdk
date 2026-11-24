@@ -22,14 +22,50 @@ final class ProjectDatabaseLayoutTests: XCTestCase {
         try await super.tearDown()
     }
 
-    /// A project nobody has opened yet has no tabs and one tab bar, on top —
-    /// not an error and not an empty edge list.
-    func testAProjectThatWasNeverOpenedLoadsTheDefaultArrangement() throws {
+    /// A project nobody has opened yet has no tabs and no Tab Bars choice —
+    /// not an error, and not `[.top]`: with no edges row, the window follows
+    /// the app-wide tab positions.
+    func testAProjectThatWasNeverOpenedLoadsNoStoredEdgeChoice() throws {
         let (database, repo) = try makeRegisteredRepo()
         let loaded = try database.loadTabs(repoID: repo.id)
         XCTAssertTrue(loaded.tabs.isEmpty)
         XCTAssertNil(loaded.activeTabID)
-        XCTAssertEqual(loaded.enabledEdges, [.top])
+        XCTAssertNil(loaded.enabledEdges)
+    }
+
+    /// Saving the layout without an explicit Tab Bars choice — what seeding a
+    /// window and every layout save do — writes no edges, so the project
+    /// still reads as "no stored choice" and keeps following the global.
+    func testSavingWithoutAnEdgeChoiceWritesNoEdges() throws {
+        let (database, repo) = try makeRegisteredRepo()
+        let tab = TabRecord(edge: .top, title: "Code", root: .leaf(contentType: editor))
+        try database.saveTabs([tab], activeTabID: tab.id, repoID: repo.id)
+
+        let loaded = try database.loadTabs(repoID: repo.id)
+        XCTAssertEqual(loaded.tabs.map(\.title), ["Code"])
+        XCTAssertEqual(loaded.activeTabID, tab.id)
+        XCTAssertNil(loaded.enabledEdges)
+    }
+
+    /// A save with no choice of its own keeps a choice already stored: the
+    /// layout saves that follow the user's Tab Bars pick must not erase it.
+    func testSavingWithoutAnEdgeChoiceKeepsTheStoredChoice() throws {
+        let (database, repo) = try makeRegisteredRepo()
+        let tab = TabRecord(edge: .left, title: "Code", root: .leaf(contentType: editor))
+        try database.saveTabs([tab], activeTabID: tab.id, enabledEdges: [.left], repoID: repo.id)
+        try database.saveTabs([tab], activeTabID: tab.id, enabledEdges: nil, repoID: repo.id)
+
+        XCTAssertEqual(try database.loadTabs(repoID: repo.id).enabledEdges, [.left])
+    }
+
+    /// Projects that saved `[.top]` before edges became an explicit choice
+    /// keep it as their choice.
+    func testAnExplicitTopChoiceReadsBackAsAChoice() throws {
+        let (database, repo) = try makeRegisteredRepo()
+        let tab = TabRecord(edge: .top, title: "Code", root: .leaf(contentType: editor))
+        try database.saveTabs([tab], activeTabID: tab.id, enabledEdges: [.top], repoID: repo.id)
+
+        XCTAssertEqual(try database.loadTabs(repoID: repo.id).enabledEdges, [.top])
     }
 
     func testTabsRoundTripWithTheirTreesOrderAndActiveTab() throws {
@@ -127,7 +163,7 @@ final class ProjectDatabaseLayoutTests: XCTestCase {
                               enabledEdges: [.bottom], repoID: beta.id)
 
         XCTAssertEqual(try database.loadTabs(repoID: alpha.id).tabs.map(\.title), ["Alpha"])
-        XCTAssertEqual(try database.loadTabs(repoID: alpha.id).enabledEdges, [.top])
+        XCTAssertNil(try database.loadTabs(repoID: alpha.id).enabledEdges)
         XCTAssertEqual(try database.loadTabs(repoID: beta.id).tabs.map(\.title), ["Beta"])
         XCTAssertEqual(try database.loadTabs(repoID: beta.id).enabledEdges, [.bottom])
     }

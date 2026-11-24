@@ -76,19 +76,19 @@ class ProviderConnectionSpecType0:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "specVersion": spec_version,
+                "spec_version": spec_version,
             }
         )
         if url_vars is not UNSET:
-            field_dict["urlVars"] = url_vars
+            field_dict["url_vars"] = url_vars
         if header_vars is not UNSET:
-            field_dict["headerVars"] = header_vars
+            field_dict["header_vars"] = header_vars
         if auth is not UNSET:
             field_dict["auth"] = auth
         if default_query is not UNSET:
-            field_dict["defaultQuery"] = default_query
+            field_dict["default_query"] = default_query
         if extra_headers is not UNSET:
-            field_dict["extraHeaders"] = extra_headers
+            field_dict["extra_headers"] = extra_headers
 
         return field_dict
 
@@ -104,9 +104,9 @@ class ProviderConnectionSpecType0:
         from ..models.provider_connection_url_var import ProviderConnectionUrlVar
 
         d = dict(src_dict)
-        spec_version = ProviderConnectionSpecType0SpecVersion(d.pop("specVersion"))
+        spec_version = ProviderConnectionSpecType0SpecVersion(d.pop("spec_version"))
 
-        _url_vars = d.pop("urlVars", UNSET)
+        _url_vars = d.pop("url_vars", UNSET)
         url_vars: list[ProviderConnectionUrlVar] | Unset = UNSET
         if _url_vars is not UNSET:
             url_vars = []
@@ -115,7 +115,7 @@ class ProviderConnectionSpecType0:
 
                 url_vars.append(url_vars_item)
 
-        _header_vars = d.pop("headerVars", UNSET)
+        _header_vars = d.pop("header_vars", UNSET)
         header_vars: list[ProviderConnectionHeaderVar] | Unset = UNSET
         if _header_vars is not UNSET:
             header_vars = []
@@ -131,14 +131,14 @@ class ProviderConnectionSpecType0:
         else:
             auth = ProviderConnectionAuth.from_dict(_auth)
 
-        _default_query = d.pop("defaultQuery", UNSET)
+        _default_query = d.pop("default_query", UNSET)
         default_query: ProviderConnectionStringMap | Unset
         if isinstance(_default_query, Unset):
             default_query = UNSET
         else:
             default_query = ProviderConnectionStringMap.from_dict(_default_query)
 
-        _extra_headers = d.pop("extraHeaders", UNSET)
+        _extra_headers = d.pop("extra_headers", UNSET)
         extra_headers: ProviderConnectionStringMap | Unset
         if isinstance(_extra_headers, Unset):
             extra_headers = UNSET

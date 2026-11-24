@@ -42,4 +42,5 @@
 | tab-bar-view-041 | vertical-edge-cards-overlap-and-order-by-distance | A left-edge bar, 3 hosted items at indices 0,1,2; index 1 selected | Between the tied depth-1 neighbors (indices 0 and 2), index 0's wrapper view ends up more frontmost than index 2's, per the descending-index tie-break; index 1 (depth 0, selected) is frontmost of all three |
 | tab-bar-view-042 | bar-never-fires-reorder | A bar with three items; the user clicks a tab, presses its close control, and drags a tab toward a new position | Select and close fire; the reorder notification never fires |
 | tab-bar-view-043 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
+| tab-bar-view-044 | close-button-has-tooltip | A tab button is constructed for a given id | The close button's tooltip reads "Close Tab" |
 

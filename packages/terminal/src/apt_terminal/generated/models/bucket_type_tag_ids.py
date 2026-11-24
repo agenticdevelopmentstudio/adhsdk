@@ -26,7 +26,7 @@ class BucketTypeTagIds:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "tagIds": tag_ids,
+                "tag_ids": tag_ids,
             }
         )
 
@@ -35,7 +35,7 @@ class BucketTypeTagIds:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        tag_ids = cast(list[str], d.pop("tagIds"))
+        tag_ids = cast(list[str], d.pop("tag_ids"))
 
         bucket_type_tag_ids = cls(
             tag_ids=tag_ids,

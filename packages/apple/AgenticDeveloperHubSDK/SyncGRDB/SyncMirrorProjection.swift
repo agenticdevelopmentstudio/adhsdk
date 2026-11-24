@@ -87,6 +87,18 @@ public protocol SyncMirrorProjection: Sendable {
     /// no change.
     func purgeIdentityState(in conn: Database) throws
 
+    /// Called once at the end of a write, inside its transaction, after its
+    /// last row: for every projection at the end of each pulled batch in
+    /// `apply` (whatever resources the batch held, since a projection may
+    /// derive from a resource it does not own), and for the claiming
+    /// projection at the end of a `stage`. A projection that derives
+    /// something from several rows (an index rebuilt per document) does that
+    /// work here, once per batch, instead of once per row. Throwing rolls the
+    /// whole write back.
+    ///
+    /// Defaulted to a no-op below.
+    func finishBatch(in conn: Database) throws
+
     /// Live rows as the generic mirror would have returned them — including
     /// an `"id"` key — so `liveRows`/`liveRow` have one return contract.
     func rows(resource: String, limit: Int, offset: Int, in conn: Database) throws -> [[String: JSONValue]]
@@ -117,4 +129,8 @@ public extension SyncMirrorProjection {
     /// by the store's own `deleteMirrorRows`, so the honest default is to do
     /// nothing rather than to guess at table names.
     func purgeIdentityState(in conn: Database) throws {}
+
+    /// Default for `finishBatch(in:)`: a projection that keeps nothing
+    /// derived across rows has nothing to finish.
+    func finishBatch(in conn: Database) throws {}
 }

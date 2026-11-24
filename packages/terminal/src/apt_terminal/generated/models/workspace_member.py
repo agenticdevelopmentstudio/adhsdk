@@ -52,26 +52,26 @@ class WorkspaceMember:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "userId": user_id,
-                "isAdmin": is_admin,
-                "addedAt": added_at,
+                "user_id": user_id,
+                "is_admin": is_admin,
+                "added_at": added_at,
             }
         )
         if email is not UNSET:
             field_dict["email"] = email
         if display_name is not UNSET:
-            field_dict["displayName"] = display_name
+            field_dict["display_name"] = display_name
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        user_id = d.pop("userId")
+        user_id = d.pop("user_id")
 
-        is_admin = d.pop("isAdmin")
+        is_admin = d.pop("is_admin")
 
-        added_at = d.pop("addedAt")
+        added_at = d.pop("added_at")
 
         def _parse_email(data: object) -> None | str | Unset:
             if data is None:
@@ -89,7 +89,7 @@ class WorkspaceMember:
                 return data
             return cast(None | str | Unset, data)
 
-        display_name = _parse_display_name(d.pop("displayName", UNSET))
+        display_name = _parse_display_name(d.pop("display_name", UNSET))
 
         workspace_member = cls(
             user_id=user_id,

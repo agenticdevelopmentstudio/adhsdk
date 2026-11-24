@@ -16,7 +16,7 @@ documented 400/404/409 response into a friendlier, entity-named message
 (`error-propagation-unmodified`).
 **Rationale**: the source does not explain why. This is a notable
 divergence from the sibling component
-[Ecosystems](adhsdk://cookbook/adh/hub/ecosystems/ecosystems),
+[adhsdk.ingredient.adh.hub.ecosystems.ecosystems](cookbook:201572ee-2e0f-4839-94f5-252f8044c4bf),
 whose `ecosystems.ts` and `identifiers.ts` call `rethrowConflict` to
 turn a backend 409 into a friendly, entity-named message before it
 reaches a caller. This recipe records the observed divergence rather

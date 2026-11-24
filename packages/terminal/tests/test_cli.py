@@ -33,8 +33,11 @@ def test_persona_services_list_end_to_end(monkeypatch, tmp_path):
         'base_url = "https://api.test"\naccess_token = "acc"\n'
     )
     monkeypatch.setenv("APT_CONFIG", str(cfgfile))
-    respx.get("https://api.test/persona/services").mock(
-        return_value=httpx.Response(200, json=[{"id": "1", "name": "svc"}])
+    respx.get("https://api.test/v1/ai_services").mock(
+        return_value=httpx.Response(200, json={
+            "object": "list", "data": [{"id": "1", "object": "ai_service", "name": "svc"}],
+            "has_more": False, "url": "/v1/ai_services",
+        })
     )
     res = runner.invoke(cli.app, ["persona", "services", "list", "--json"])
     assert res.exit_code == 0, res.output

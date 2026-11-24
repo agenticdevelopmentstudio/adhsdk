@@ -63,7 +63,7 @@
   `registerWithInvite` each make exactly one unauthenticated `fetch` call
   with no retry; `accept` inherits `authedJson`'s one-refresh-then-retry
   behavior on a `401` only (documented in
-  `adhsdk://cookbook/adh/hub/security/authentication-client`), not a general
+  [adhsdk.ingredient.adh.hub.security.authentication-client](cookbook:65fbb2b1-ca41-499f-ac03-7ecc0e206dcc)), not a general
   offline retry. `preview`'s specific gap for a raw network failure (as
   opposed to an HTTP-status failure) is recorded under
   **preview-network-failure-rejects**.

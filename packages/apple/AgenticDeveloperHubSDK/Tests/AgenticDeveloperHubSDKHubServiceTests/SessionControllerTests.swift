@@ -12,11 +12,17 @@ final class SessionControllerTests: XCTestCase {
     // `nonisolated`: plain immutable `String` literals, safe to read from the
     // `@Sendable` stub handler closure in `testSocialExchangeRetriesOnceOnTransportFailure`.
     private nonisolated static let userJSON = """
+    {"object":"account","id":"u1","email":"a@b.c","name":"Ada","avatar_url":"","slug":"ada",\
+    "public_profile_enabled":false,"profile_visibility":"public","capabilities":[]}
+    """
+    private nonisolated static let authJSON = #"{"token":"jwt-1","refresh_token":"r-1","user":\#(userJSON)}"#
+    /// `/oauth/signin/exchange` is unversioned and not in the /v1 document, so it keeps the legacy camelCase body.
+    private nonisolated static let legacyUserJSON = """
     {"id":"u1","email":"a@b.c","name":"Ada","avatarUrl":"","slug":"ada",\
     "publicProfileEnabled":false,"profileVisibility":"public","capabilities":[]}
     """
-    private nonisolated static let authJSON = #"{"token":"jwt-1","refreshToken":"r-1","user":\#(userJSON)}"#
-    private static let mfaJSON = #"{"mfaRequired":true,"token":"mfa-tok","methods":["totp","sms"]}"#
+    private nonisolated static let exchangeJSON = #"{"token":"jwt-1","refreshToken":"r-1","user":\#(legacyUserJSON)}"#
+    private nonisolated static let mfaJSON = #"{"token":"mfa-tok","methods":["totp","sms"]}"#
     private static let ada = HubUser(id: "u1", email: "a@b.c", name: "Ada", slug: "ada", avatarURL: nil)
 
     private var isolated: IsolatedDefaults!
@@ -148,7 +154,7 @@ final class SessionControllerTests: XCTestCase {
         let harness = makeHarness(
             session: HubSession(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
         )
-        harness.stub.on(.get, "/auth/me", json: Self.userJSON)
+        harness.stub.on(.get, "/v1/account", json: Self.userJSON)
         var observed: [SessionState] = []
         harness.controller.onChange = { observed.append($0) }
         await harness.controller.restore()
@@ -162,8 +168,8 @@ final class SessionControllerTests: XCTestCase {
             session: HubSession(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
         )
         CachedUserStore(defaults: isolated.defaults).save(Self.ada)
-        harness.stub.on(.get, "/auth/me", status: 401, json: #"{"error":{"message":"expired"}}"#)
-        harness.stub.on(.post, "/auth/refresh", status: 401, json: #"{"error":"revoked"}"#)
+        harness.stub.on(.get, "/v1/account", status: 401, json: StubClientTransport.error("expired"))
+        harness.stub.on(.post, "/v1/auth/sessions/refresh", status: 401, json: StubClientTransport.error("revoked"))
         await harness.controller.restore()
         XCTAssertEqual(harness.controller.state, .signedOut)
         XCTAssertNil(harness.store.currentSession())
@@ -175,7 +181,7 @@ final class SessionControllerTests: XCTestCase {
             session: HubSession(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
         )
         CachedUserStore(defaults: isolated.defaults).save(Self.ada)
-        harness.stub.on(.get, "/auth/me") { _, _ in throw URLError(.notConnectedToInternet) }
+        harness.stub.on(.get, "/v1/account") { _, _ in throw URLError(.notConnectedToInternet) }
         await harness.controller.restore()
         XCTAssertEqual(harness.controller.state, .signedIn(Self.ada))
         XCTAssertNotNil(harness.store.currentSession())
@@ -185,7 +191,7 @@ final class SessionControllerTests: XCTestCase {
         let harness = makeHarness(
             session: HubSession(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
         )
-        harness.stub.on(.get, "/auth/me") { _, _ in throw URLError(.notConnectedToInternet) }
+        harness.stub.on(.get, "/v1/account") { _, _ in throw URLError(.notConnectedToInternet) }
         await harness.controller.restore()
         XCTAssertEqual(
             harness.controller.state,
@@ -206,8 +212,8 @@ final class SessionControllerTests: XCTestCase {
             session: HubSession(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
         )
         CachedUserStore(defaults: isolated.defaults).save(Self.ada)
-        harness.stub.on(.get, "/auth/me", status: 401, json: #"{"error":{"message":"unauthorized"}}"#)
-        harness.stub.on(.post, "/auth/refresh", json: #"{"token":"jwt-2","refreshToken":"r-2"}"#)
+        harness.stub.on(.get, "/v1/account", status: 401, json: StubClientTransport.error("unauthorized"))
+        harness.stub.on(.post, "/v1/auth/sessions/refresh", json: #"{"token":"jwt-2","refresh_token":"r-2"}"#)
         await harness.controller.restore()
         XCTAssertEqual(harness.controller.state, .signedOut)
         XCTAssertNil(harness.store.currentSession())
@@ -218,7 +224,7 @@ final class SessionControllerTests: XCTestCase {
 
     func testPasswordSignInCompletes() async throws {
         let harness = makeHarness()
-        harness.stub.on(.post, "/auth/login", json: Self.authJSON)
+        harness.stub.on(.post, "/v1/auth/sessions", json: Self.authJSON)
         let step = try await harness.controller.signIn(email: "a@b.c", password: "pw")
         XCTAssertEqual(step, .done(Self.ada))
         XCTAssertEqual(harness.controller.state, .signedIn(Self.ada))
@@ -228,8 +234,12 @@ final class SessionControllerTests: XCTestCase {
 
     func testPasswordSignInReturnsTheMfaChallengeAndTotpCompletesIt() async throws {
         let harness = makeHarness()
-        harness.stub.on(.post, "/auth/login", status: 202, json: Self.mfaJSON)
-        harness.stub.on(.post, "/auth/login/mfa", json: Self.authJSON)
+        // One route serves both steps; the second factor's body carries a `code`.
+        harness.stub.on(.post, "/v1/auth/sessions") { _, body in
+            let sent = String(data: body ?? Data(), encoding: .utf8) ?? ""
+            if sent.contains("\"code\"") { return StubClientTransport.Response(json: Self.authJSON) }
+            return StubClientTransport.Response(status: 202, json: Self.mfaJSON)
+        }
         let step = try await harness.controller.signIn(email: "a@b.c", password: "pw")
         let challenge = MfaChallengeInfo(token: "mfa-tok", methods: [.totp, .sms])
         XCTAssertEqual(step, .mfa(challenge))
@@ -238,7 +248,7 @@ final class SessionControllerTests: XCTestCase {
         let user = try await harness.controller.completeMfa(challenge: challenge, method: .totp, code: "123456")
         XCTAssertEqual(user, Self.ada)
         XCTAssertEqual(harness.controller.state, .signedIn(Self.ada))
-        let body = harness.stub.lastBody(.post, "/auth/login/mfa")
+        let body = harness.stub.lastBody(.post, "/v1/auth/sessions")
         XCTAssertEqual(body?["token"] as? String, "mfa-tok")
         XCTAssertEqual(body?["method"] as? String, "totp")
         XCTAssertEqual(body?["code"] as? String, "123456")
@@ -258,14 +268,14 @@ final class SessionControllerTests: XCTestCase {
 
     func testSendMfaSmsPostsTheChallengeToken() async throws {
         let harness = makeHarness()
-        harness.stub.on(.post, "/auth/login/mfa/sms/send", status: 202, json: #"{"ok":true}"#)
+        harness.stub.on(.post, "/v1/auth/sms_codes", status: 202, json: #"{"object":"auth.sms_code","ok":true}"#)
         try await harness.controller.sendMfaSms(challenge: MfaChallengeInfo(token: "mfa-tok", methods: [.sms]))
-        XCTAssertEqual(harness.stub.lastBody(.post, "/auth/login/mfa/sms/send")?["token"] as? String, "mfa-tok")
+        XCTAssertEqual(harness.stub.lastBody(.post, "/v1/auth/sms_codes")?["token"] as? String, "mfa-tok")
     }
 
     func testInvalidPasswordSurfacesInvalidCredentials() async {
         let harness = makeHarness()
-        harness.stub.on(.post, "/auth/login", status: 401, json: #"{"error":{"message":"invalid credentials"}}"#)
+        harness.stub.on(.post, "/v1/auth/sessions", status: 401, json: StubClientTransport.error("invalid credentials"))
         do {
             _ = try await harness.controller.signIn(email: "a@b.c", password: "nope")
             XCTFail("expected an error")
@@ -280,9 +290,9 @@ final class SessionControllerTests: XCTestCase {
 
     func testPasskeySignInFetchesOptionsAssertsAndCompletes() async throws {
         let harness = makeHarness()
-        harness.stub.on(.post, "/auth/login/webauthn/options",
+        harness.stub.on(.post, "/v1/auth/passkey_challenges",
                   json: #"{"token":"pk-tok","options":{"challenge":"AQID","rpId":"example.com"}}"#)
-        harness.stub.on(.post, "/auth/login/webauthn", json: Self.authJSON)
+        harness.stub.on(.post, "/v1/auth/sessions", json: Self.authJSON)
         let seen = Seen()
         let user = try await harness.controller.signInWithPasskey(
             identifier: "a@b.c",
@@ -291,32 +301,32 @@ final class SessionControllerTests: XCTestCase {
         XCTAssertEqual(user, Self.ada)
         XCTAssertEqual(harness.controller.state, .signedIn(Self.ada))
         XCTAssertEqual(seen.values.first?.value["rpId"] as? String, "example.com")
-        XCTAssertEqual(harness.stub.lastBody(.post, "/auth/login/webauthn/options")?["identifier"] as? String, "a@b.c")
-        let body = harness.stub.lastBody(.post, "/auth/login/webauthn")
+        XCTAssertEqual(harness.stub.lastBody(.post, "/v1/auth/passkey_challenges")?["identifier"] as? String, "a@b.c")
+        let body = harness.stub.lastBody(.post, "/v1/auth/sessions")
         XCTAssertEqual(body?["token"] as? String, "pk-tok")
         XCTAssertEqual((body?["response"] as? [String: Any])?["id"] as? String, "cred-1")
     }
 
     func testMfaPasskeyUsesTheMfaEndpoints() async throws {
         let harness = makeHarness()
-        harness.stub.on(.post, "/auth/login/mfa/webauthn/options",
+        harness.stub.on(.post, "/v1/auth/passkey_challenges",
                   json: #"{"token":"pk-tok-2","options":{"challenge":"AQID","rpId":"example.com"}}"#)
-        harness.stub.on(.post, "/auth/login/mfa/webauthn", json: Self.authJSON)
+        harness.stub.on(.post, "/v1/auth/sessions", json: Self.authJSON)
         let challenge = MfaChallengeInfo(token: "mfa-tok", methods: [.webauthn, .totp])
         let user = try await harness.controller.completeMfaWithPasskey(
             challenge: challenge,
             provider: CannedPasskey(seen: Seen())
         )
         XCTAssertEqual(user, Self.ada)
-        XCTAssertEqual(harness.stub.lastBody(.post, "/auth/login/mfa/webauthn/options")?["token"] as? String, "mfa-tok")
-        XCTAssertEqual(harness.stub.lastBody(.post, "/auth/login/mfa/webauthn")?["token"] as? String, "pk-tok-2")
+        XCTAssertEqual(harness.stub.lastBody(.post, "/v1/auth/passkey_challenges")?["token"] as? String, "mfa-tok")
+        XCTAssertEqual(harness.stub.lastBody(.post, "/v1/auth/sessions")?["token"] as? String, "pk-tok-2")
     }
 
     // MARK: social
 
     func testSocialSignInExchangesTheCallbackCode() async throws {
         let harness = makeHarness()
-        harness.stub.on(.post, "/oauth/signin/exchange", json: Self.authJSON)
+        harness.stub.on(.post, "/oauth/signin/exchange", json: Self.exchangeJSON)
         let social = CannedSocial()
         let user = try await harness.controller.signInWithSocial(.github, using: social)
         XCTAssertEqual(user, Self.ada)
@@ -330,7 +340,7 @@ final class SessionControllerTests: XCTestCase {
     /// carries one.
     func testSocialSignInForwardsTheBrowserUserAgentOnTheExchange() async throws {
         let harness = makeHarness()
-        harness.stub.on(.post, "/oauth/signin/exchange", json: Self.authJSON)
+        harness.stub.on(.post, "/oauth/signin/exchange", json: Self.exchangeJSON)
         let social = CannedSocial(userAgent: "Mozilla/5.0 (Macintosh) Safari/605.1.15")
         _ = try await harness.controller.signInWithSocial(.github, using: social)
         let request = harness.stub.lastRequest(.post, "/oauth/signin/exchange")
@@ -341,7 +351,7 @@ final class SessionControllerTests: XCTestCase {
     /// `/oauth/signin/start` rejects the custom scheme outright.
     func testSocialSignInStartsAtTheLoopbackReturnURL() async throws {
         let harness = makeHarness()
-        harness.stub.on(.post, "/oauth/signin/exchange", json: Self.authJSON)
+        harness.stub.on(.post, "/oauth/signin/exchange", json: Self.exchangeJSON)
         let starts = StartURLs()
         let social = CannedSocial(startURLs: starts)
         _ = try await harness.controller.signInWithSocial(.gitlab, using: social)
@@ -354,7 +364,7 @@ final class SessionControllerTests: XCTestCase {
 
     func testWebSignInOpensTheHostedPageAndExchangesItsCode() async throws {
         let harness = makeHarness()
-        harness.stub.on(.post, "/oauth/signin/exchange", json: Self.authJSON)
+        harness.stub.on(.post, "/oauth/signin/exchange", json: Self.exchangeJSON)
         let starts = StartURLs()
         let social = CannedSocial(userAgent: "Mozilla/5.0 (Macintosh) Safari/605.1.15", startURLs: starts)
         let user = try await harness.controller.signInWithWeb(using: social)
@@ -393,7 +403,7 @@ final class SessionControllerTests: XCTestCase {
 
     func testACodeArrivingAfterACancelNeverSignsIn() async {
         let harness = makeHarness()
-        harness.stub.on(.post, "/oauth/signin/exchange", status: 200, json: Self.authJSON)
+        harness.stub.on(.post, "/oauth/signin/exchange", status: 200, json: Self.exchangeJSON)
         let controller = harness.controller
         let signIn = Task { try await controller.signInWithWeb(using: LateCode()) }
         signIn.cancel()
@@ -424,7 +434,7 @@ final class SessionControllerTests: XCTestCase {
         let attempts = Counter()
         harness.stub.on(.post, "/oauth/signin/exchange") { _, _ in
             if attempts.next() == 1 { throw URLError(.networkConnectionLost) }
-            return StubClientTransport.Response(json: Self.authJSON)
+            return StubClientTransport.Response(json: Self.exchangeJSON)
         }
         let social = CannedSocial()
         let user = try await harness.controller.signInWithSocial(.gitlab, using: social)
@@ -467,7 +477,7 @@ final class SessionControllerTests: XCTestCase {
         // `testUnexpectedErrorDetailDoesNotReachSignInCopy`, rendered as the
         // generic fallback rather than that detail — any error not already
         // `.signedOut` demonstrates the point of this precondition.
-        harness.stub.on(.get, "/auth/me", status: 500, json: #"{"error":"boom"}"#)
+        harness.stub.on(.get, "/v1/account", status: 500, json: StubClientTransport.error("boom"))
         await harness.controller.restore()
         XCTAssertEqual(
             harness.controller.state,
@@ -478,7 +488,7 @@ final class SessionControllerTests: XCTestCase {
 
     func testSignInFailureNormalizesStateFromError() async {
         let harness = await makeHarnessStuckInError()
-        harness.stub.on(.post, "/auth/login", status: 401, json: #"{"error":{"message":"invalid credentials"}}"#)
+        harness.stub.on(.post, "/v1/auth/sessions", status: 401, json: StubClientTransport.error("invalid credentials"))
         do {
             _ = try await harness.controller.signIn(email: "a@b.c", password: "nope")
             XCTFail("expected an error")
@@ -490,7 +500,7 @@ final class SessionControllerTests: XCTestCase {
 
     func testCompleteMfaFailureNormalizesStateFromError() async {
         let harness = await makeHarnessStuckInError()
-        harness.stub.on(.post, "/auth/login/mfa", status: 401, json: #"{"error":{"message":"bad code"}}"#)
+        harness.stub.on(.post, "/v1/auth/sessions", status: 401, json: StubClientTransport.error("bad code"))
         let challenge = MfaChallengeInfo(token: "mfa-tok", methods: [.totp])
         do {
             _ = try await harness.controller.completeMfa(challenge: challenge, method: .totp, code: "000000")
@@ -503,7 +513,7 @@ final class SessionControllerTests: XCTestCase {
 
     func testSignInWithPasskeyFailureNormalizesStateFromError() async {
         let harness = await makeHarnessStuckInError()
-        harness.stub.on(.post, "/auth/login/webauthn/options", status: 401, json: #"{"error":{"message":"nope"}}"#)
+        harness.stub.on(.post, "/v1/auth/passkey_challenges", status: 401, json: StubClientTransport.error("nope"))
         do {
             _ = try await harness.controller.signInWithPasskey(
                 identifier: "a@b.c",
@@ -518,7 +528,7 @@ final class SessionControllerTests: XCTestCase {
 
     func testCompleteMfaWithPasskeyFailureNormalizesStateFromError() async {
         let harness = await makeHarnessStuckInError()
-        harness.stub.on(.post, "/auth/login/mfa/webauthn/options", status: 401, json: #"{"error":{"message":"nope"}}"#)
+        harness.stub.on(.post, "/v1/auth/passkey_challenges", status: 401, json: StubClientTransport.error("nope"))
         let challenge = MfaChallengeInfo(token: "mfa-tok", methods: [.webauthn])
         do {
             _ = try await harness.controller.completeMfaWithPasskey(
@@ -555,11 +565,11 @@ final class SessionControllerTests: XCTestCase {
         let harness = makeHarness(
             session: HubSession(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
         )
-        harness.stub.on(.get, "/auth/me", json: Self.userJSON)
+        harness.stub.on(.get, "/v1/account", json: Self.userJSON)
         await harness.controller.restore()
         XCTAssertEqual(harness.controller.state, .signedIn(Self.ada))
 
-        harness.stub.on(.post, "/auth/login", status: 401, json: #"{"error":{"message":"invalid credentials"}}"#)
+        harness.stub.on(.post, "/v1/auth/sessions", status: 401, json: StubClientTransport.error("invalid credentials"))
         do {
             _ = try await harness.controller.signIn(email: "a@b.c", password: "nope")
             XCTFail("expected an error")
@@ -575,8 +585,8 @@ final class SessionControllerTests: XCTestCase {
         let harness = makeHarness(
             session: HubSession(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
         )
-        harness.stub.on(.get, "/auth/me", json: Self.userJSON)
-        harness.stub.on(.post, "/auth/revoke", status: 204, json: "")
+        harness.stub.on(.get, "/v1/account", json: Self.userJSON)
+        harness.stub.on(.post, "/v1/auth/sessions/revoke", status: 204, json: "")
         isolated.defaults.set(["acme", "ada"], forKey: "hub.recents")
         await harness.controller.restore()
         XCTAssertEqual(harness.controller.state, .signedIn(Self.ada))
@@ -584,7 +594,7 @@ final class SessionControllerTests: XCTestCase {
         await harness.controller.signOut()
 
         XCTAssertEqual(harness.controller.state, .signedOut)
-        XCTAssertEqual(harness.stub.requestCount(.post, "/auth/revoke"), 1)
+        XCTAssertEqual(harness.stub.requestCount(.post, "/v1/auth/sessions/revoke"), 1)
         XCTAssertNil(isolated.defaults.object(forKey: "hub.recents"))
         XCTAssertNil(CachedUserStore(defaults: isolated.defaults).load())
         XCTAssertNil(harness.store.currentSession())
@@ -594,12 +604,12 @@ final class SessionControllerTests: XCTestCase {
         let harness = makeHarness(
             session: HubSession(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
         )
-        harness.stub.on(.get, "/auth/me", json: Self.userJSON)
+        harness.stub.on(.get, "/v1/account", json: Self.userJSON)
         await harness.controller.restore()
         XCTAssertEqual(harness.controller.state, .signedIn(Self.ada))
 
-        harness.stub.on(.get, "/auth/me", status: 401, json: #"{"error":{"message":"expired"}}"#)
-        harness.stub.on(.post, "/auth/refresh", status: 401, json: #"{"error":"revoked"}"#)
+        harness.stub.on(.get, "/v1/account", status: 401, json: StubClientTransport.error("expired"))
+        harness.stub.on(.post, "/v1/auth/sessions/refresh", status: 401, json: StubClientTransport.error("revoked"))
         _ = try? await harness.environment.client.currentUser()
         let signedOut = await waitUntil { harness.controller.state == .signedOut }
         XCTAssertTrue(signedOut)

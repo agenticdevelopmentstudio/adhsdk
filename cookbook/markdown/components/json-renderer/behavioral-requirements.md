@@ -1,0 +1,26 @@
+
+- **client-component**: The component MUST be a client component (the source opens with the `use client` directive).
+- **accept-content**: The component MUST take the raw JSON or JSON Lines text, as stored, in a required `content` string prop.
+- **accept-wrap**: The component MUST accept an optional boolean `wrap` prop that defaults to `false`.
+- **pretty-print-document**: When `content`, trimmed of surrounding whitespace, parses as a single JSON document, the component MUST show it re-serialised with two-space indents.
+- **pretty-print-lines**: When `content` is not a single JSON document but has at least two non-blank lines that each parse as JSON, the component MUST show each record pretty-printed with two-space indents, the records joined by a single newline in their original order.
+- **skip-blank-lines**: In the JSON Lines case the component MUST ignore lines that are empty or whitespace-only.
+- **single-line-not-lines**: A single non-blank line that fails to parse as a document MUST NOT be treated as JSON Lines; it is invalid text.
+- **invalid-shown-as-written**: When `content` is neither a JSON document nor JSON Lines (including when it is empty or whitespace-only, or when any one non-blank line of a multi-line text fails to parse), the component MUST show `content` unmodified, not trimmed and not re-indented.
+- **invalid-note**: In the invalid case the component MUST show the one-line note "Not valid JSON — shown as written." before the content.
+- **valid-no-note**: In the valid case the component MUST NOT show the invalid-text note.
+- **same-block-styling**: Below the size limit the component MUST render through `MarkdownRenderer`, by wrapping the body in a Markdown code fence, so the block carries the same styling and syntax colours as a fenced code block in a Markdown document.
+- **fence-language**: Valid JSON MUST be fenced with the language `json`; invalid text MUST be fenced with no language, so it is not highlighted as JSON.
+- **fence-longer-than-body**: The fence MUST use more backticks than the longest backtick run inside the body, and never fewer than three, so a body that contains backticks cannot close the fence early.
+- **forward-wrap**: Below the size limit the component MUST pass `wrap` to `MarkdownRenderer`.
+- **highlight-limit**: The component MUST treat a body longer than `JSON_HIGHLIGHT_LIMIT` (524288 characters, `512 * 1024`, counted as `String.length` UTF-16 code units) as too large to colour. The limit is exported as a constant.
+- **limit-boundary**: A body of exactly `JSON_HIGHLIGHT_LIMIT` characters MUST still be rendered through `MarkdownRenderer` with colours; only a body strictly longer takes the plain path.
+- **limit-measures-body**: The size test MUST measure the text that would be displayed (the pretty-printed text when valid, `content` when not), not the raw input length.
+- **plain-path-markup**: Above the limit the component MUST render the body, unaltered, inside a `pre` element with class `shiki` containing a `code` element, within a root `div` carrying the prose class list.
+- **plain-path-wrap**: Above the limit the component MUST apply the `adh-mv-prose--wrap` modifier to the root when `wrap` is true.
+- **plain-path-note**: Above the limit, when the body is invalid, the component MUST show the note as a paragraph with class `adh-mv-json-note` before the `pre` element.
+- **plain-path-no-processing**: Above the limit the component MUST NOT invoke the Markdown pipeline.
+- **memoise-pretty**: The component SHOULD recompute the pretty-printed text only when `content` changes (see Design Decisions).
+- **inherit-markdown-errors**: Below the limit, the component MUST NOT add its own handling of a Markdown pipeline failure; the rendering, error and "Rendering…" states are those of `MarkdownRenderer`.
+- **default-measure**: The component MUST NOT accept a prose-measure prop; the width is the default `reading` measure on both paths.
+

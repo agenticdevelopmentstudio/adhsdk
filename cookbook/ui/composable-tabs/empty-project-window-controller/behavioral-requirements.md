@@ -1,0 +1,26 @@
+
+- **identify-window-per-group**: `windowID(for:)` MUST return `project.window.empty.` followed by the group's UUID string, so that each group's empty window saves its frame under its own id.
+- **title-projects**: The window MUST be titled "Projects", with the title hidden from the title bar.
+- **default-size**: The window MUST open at 800 by 500 points when it has no saved frame and no placement template, centered on screen.
+- **minimum-size**: The window MUST NOT be resizable below 400 by 300 points.
+- **persist-frame**: The window MUST save and restore its frame under its window id.
+- **window-style**: The window MUST be titled, closable, resizable, miniaturizable and full-size-content.
+- **seamless-titlebar**: The window MUST use a unified toolbar, a transparent title bar, no title bar separator and a hidden title.
+- **disallow-tabbing**: The window MUST disallow native window tabbing.
+- **backdrop-color**: The window background MUST be the theme palette's project pane backdrop color, and MUST follow the palette when it changes.
+- **toolbar-content**: The window toolbar MUST hold the project shelf items (including the shelf toggle) followed by a flexible space.
+- **blank-content-message**: The content area MUST show the text "No project — choose one in the Project Browser." centered, in the tertiary text role and body text role, on the pane backdrop color.
+- **blank-content-accessibility-id**: The message MUST carry the accessibility identifier `project.empty.message`.
+- **message-keeps-margin**: The message MUST keep at least 20 points between its leading edge and the content's leading edge.
+- **place-from-template**: When a placement template window is set before the window loads and there is no saved frame to restore, the window MUST take the template's size and be cascaded from the template's top-left corner, and MUST do so before it is shown.
+- **default-placement-without-template**: When no placement template is set, the window MUST use the window spec's default placement.
+- **toggle-shelf**: `toggleShelf()` MUST toggle the visibility of the project shelf.
+- **show-shelf-for-choosing**: `showShelfForChoosing()` MUST show the shelf's browser panel, make the shelf visible, and when it is visible move keyboard focus to the shelf's filter field.
+- **expose-shelf-layout**: `shelfLayout` MUST report the shelf's visibility and width, and `adoptShelfLayout(_:)` MUST apply a layout taken from another window of the group.
+- **land-shelf-slide**: `landShelfSlide()` MUST complete a shelf slide in flight at its destination and run what waited for it.
+- **toggle-shelf-panel**: `toggleShelfPanel(_:)` MUST hide the shelf when it is visible and already showing the given panel; otherwise it MUST show that panel, make the shelf visible and move keyboard focus to the shelf's filter field once the shelf has landed.
+- **shelf-toggle-appearance**: The shelf toggle button MUST show a "sidebar.left" symbol, outline and filled the same, disclosed according to the shelf's visibility (accent tint when shown, secondary text tint when hidden), with the tooltip "Show Projects" when the shelf is hidden and "Hide Projects" when it is shown.
+- **refresh-toggle-on-change**: The toggle appearance MUST be refreshed when the shelf visibility changes, when the window is shown and when the theme palette changes.
+- **toolbar-delegate-retained**: The window MUST keep its own strong reference to the toolbar delegate, because the toolbar's delegate reference is weak.
+- **no-coder-init**: The controller MUST NOT be creatable from a decoder; `init(coder:)` is unavailable and traps if called.
+

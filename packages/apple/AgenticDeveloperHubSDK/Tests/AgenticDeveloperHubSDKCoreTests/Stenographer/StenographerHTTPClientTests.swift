@@ -93,6 +93,19 @@ final class StenographerHTTPClientTests: XCTestCase {
         XCTAssertEqual(result?.reason, "Finding is already acted")
     }
 
+    func testV013_actOnFindingNon2xxHasEmptyStatusAndRouteErrorOrHTTPCode() async {
+        StubDaemonProtocol.handler = { _ in (409, Data(#"{"error":"Finding is already acted"}"#.utf8)) }
+        let withError = await makeClient().actOnOversightFinding(findingId: 7)
+        XCTAssertEqual(withError?.succeeded, false)
+        XCTAssertEqual(withError?.status, "")
+        XCTAssertEqual(withError?.reason, "Finding is already acted")
+        StubDaemonProtocol.handler = { _ in (500, Data()) }
+        let withoutError = await makeClient().actOnOversightFinding(findingId: 7)
+        XCTAssertEqual(withoutError?.succeeded, false)
+        XCTAssertEqual(withoutError?.status, "")
+        XCTAssertEqual(withoutError?.reason, "HTTP 500")
+    }
+
     func testActOnFindingSuccess() async {
         StubDaemonProtocol.handler = { _ in (200, Data("""
             {"id":7,"session_id":"s","observer":"compact","kind":"k","severity":1,"status":"acted","reason":"r",
@@ -169,8 +182,107 @@ final class StenographerHTTPClientTests: XCTestCase {
         let client = makeClient(healthPollInterval: 0.05)
         let fired = expectation(description: "reconnect")
         fired.assertForOverFulfill = false
-        client.onReconnect { fired.fulfill() }
+        let count = HTTPClientCounter()
+        client.onReconnect { count.bump(); fired.fulfill() }
         await fulfillment(of: [fired], timeout: 2)
+        try? await Task.sleep(nanoseconds: 400_000_000)
+        XCTAssertEqual(count.value, 1)
+    }
+
+    func testV12_summarizeTimeoutIs605() {
+        XCTAssertEqual(StenographerHTTPClient.timeout(method: "POST", path: "/sessions/s1/summarize"), 605)
+    }
+
+    func testV13_timeoutsByRoute() {
+        XCTAssertEqual(StenographerHTTPClient.timeout(method: "GET", path: "/conversations"), 15)
+        XCTAssertEqual(StenographerHTTPClient.timeout(method: "GET", path: "/ai/interactions/5"), 15)
+        XCTAssertEqual(StenographerHTTPClient.timeout(method: "POST", path: "/ai/interactions"), 10)
+        XCTAssertEqual(StenographerHTTPClient.timeout(method: "GET", path: "/health"), 10)
+    }
+
+    func testV14_summarizeNonJSONFailureUsesHTTPStatus() async {
+        StubDaemonProtocol.handler = { _ in (500, Data("oops".utf8)) }
+        do {
+            try await makeClient().summarize(sessionId: "s1")
+            XCTFail("expected a throw")
+        } catch let failure as SummarizeDaemonFailure {
+            XCTAssertEqual(failure.reason, "HTTP 500")
+        } catch {
+            XCTFail("wrong error \(error)")
+        }
+    }
+
+    func testV15_summarizeWithNoDaemonThrowsURLError() async {
+        StubDaemonProtocol.handler = nil
+        do {
+            try await makeClient().summarize(sessionId: "s1")
+            XCTFail("expected a throw")
+        } catch let error as URLError {
+            XCTAssertEqual(error.code, .cannotConnectToHost)
+        } catch {
+            XCTFail("wrong error \(error)")
+        }
+    }
+
+    func testV16_steadyUptimeAndFailedPollsDoNotFire() async {
+        let count = HTTPClientCounter()
+        StubDaemonProtocol.handler = { _ in (200, Data(#"{"status":"ok","uptime":500,"version":"1"}"#.utf8)) }
+        let steady = makeClient(healthPollInterval: 0.05)
+        steady.onReconnect { count.bump() }
+        try? await Task.sleep(nanoseconds: 400_000_000)
+        XCTAssertEqual(count.value, 0)
+        StubDaemonProtocol.handler = nil
+        let failing = makeClient(healthPollInterval: 0.05)
+        failing.onReconnect { count.bump() }
+        try? await Task.sleep(nanoseconds: 400_000_000)
+        XCTAssertEqual(count.value, 0)
+    }
+
+    func testV17_defaultBaseURLHonoursEnvironment() {
+        let key = "STENOGRAPHER_URL"
+        let previous = ProcessInfo.processInfo.environment[key]
+        defer {
+            if let previous { setenv(key, previous, 1) } else { unsetenv(key) }
+        }
+        setenv(key, "http://localhost:9999", 1)
+        XCTAssertEqual(StenographerHTTPClient.defaultBaseURL.absoluteString, "http://localhost:9999")
+        unsetenv(key)
+        XCTAssertEqual(StenographerHTTPClient.defaultBaseURL.absoluteString, "http://127.0.0.1:22847")
+    }
+
+    func testV18_baseURLPathIsReplacedAndNoQueryWhenCountsIncluded() async {
+        let captured = Captured()
+        StubDaemonProtocol.handler = { request in
+            captured.set(request.url!)
+            return (404, Data())
+        }
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [StubDaemonProtocol.self]
+        let client = StenographerHTTPClient(
+            baseURL: URL(string: "http://127.0.0.1:22847/ignored")!,
+            session: URLSession(configuration: config), healthPollInterval: 3600)
+        _ = await client.session(id: "s1", includeCounts: true)
+        XCTAssertEqual(captured.url?.absoluteString, "http://127.0.0.1:22847/sessions/s1")
+    }
+
+    func testV19_contentTypeOnlyWhenThereIsABody() async {
+        let counter = HTTPClientCounter()
+        StubDaemonProtocol.handler = { request in
+            counter.record(request.httpMethod ?? "", request.value(forHTTPHeaderField: "Content-Type"))
+            return (200, Data("{}".utf8))
+        }
+        let client = makeClient()
+        _ = await client.actOnOversightFinding(findingId: 7)
+        _ = await client.health()
+        XCTAssertEqual(counter.contentType(for: "POST"), "application/json")
+        XCTAssertNil(counter.contentType(for: "GET"))
+        XCTAssertTrue(counter.sawMethod("GET"))
+    }
+
+    func testV20_actOnFindingWithNoDaemonIsNil() async {
+        StubDaemonProtocol.handler = nil
+        let result = await makeClient().actOnOversightFinding(findingId: 7)
+        XCTAssertNil(result)
     }
 
     private static func readAll(_ stream: InputStream) -> Data {
@@ -198,4 +310,15 @@ final class Uptimes: @unchecked Sendable {
     private let lock = NSLock(); private var values: [Int]
     init(_ values: [Int]) { self.values = values }
     func next() -> Int { lock.withLock { values.count > 1 ? values.removeFirst() : values[0] } }
+}
+
+final class HTTPClientCounter: @unchecked Sendable {
+    private let lock = NSLock()
+    private var count = 0
+    private var headers: [String: String?] = [:]
+    var value: Int { lock.withLock { count } }
+    func bump() { lock.withLock { count += 1 } }
+    func record(_ method: String, _ header: String?) { lock.withLock { headers[method] = .some(header) } }
+    func contentType(for method: String) -> String? { lock.withLock { headers[method] ?? nil } }
+    func sawMethod(_ method: String) -> Bool { lock.withLock { headers[method] != nil } }
 }

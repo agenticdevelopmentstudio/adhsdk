@@ -1,0 +1,3 @@
+
+# Pane Minimized Strip View
+

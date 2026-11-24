@@ -2,7 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { _resetProviderCooldowns, rateLimitedUntil } from "@adh-sdk/deploy-platform/cooldown";
 import {
   groupIdentity,
+  levelRank,
+  messageHead,
   messageShape,
+  RUNTIME_LEVELS,
   groupRuntimeEntries,
   loadRuntimeErrorsReport,
   logEventToEntry,
@@ -146,6 +149,16 @@ describe("grouping", () => {
     expect(groupIdentity(entry({ message: "x".repeat(300) })).message).toHaveLength(200);
   });
 
+  it("shapes the whole first line before cutting it, so the cut never splits one error in two", () => {
+    // "Order 1: …tail" is 199 characters and keeps its tail; "Order 1234567: …tail" is longer,
+    // and a cut before shaping would drop the tail and give the same error a second key.
+    const message = (n: string) => `Order ${n}: ${"x".repeat(185)} tail`;
+    const short = groupIdentity(entry({ message: message("1") }));
+    const long = groupIdentity(entry({ message: message("1234567") }));
+    expect(long.key).toBe(short.key);
+    expect(long.message).toHaveLength(200);
+  });
+
   it("a message that embeds an id, number or timestamp is one error, not one per value", () => {
     expect(messageShape("Order 8231 not found")).toBe("Order # not found");
     expect(messageShape("user 3f2504e0-4f89-11d3-9a0c-0305e82c3301 has no plan")).toBe("user :id has no plan");
@@ -159,6 +172,15 @@ describe("grouping", () => {
     const groups = groupRuntimeEntries(entries);
     expect(groups).toHaveLength(1);
     expect(groups[0]).toMatchObject({ count: 40, path: "/api/orders/:id", message: "Order 8231 not found" });
+    // Over 200 characters, an id of varying length shifts where the head is cut; the shape is
+    // taken before the cut, so it is still one error.
+    const tail = " failed after 3 retries: " + "the upstream answered with something long ".repeat(6);
+    const short = groupIdentity(entry({ message: `Job 7${tail}` }));
+    const long = groupIdentity(entry({ message: `Job 1234567${tail}` }));
+    expect(short.message).toHaveLength(200);
+    expect(long.key).toBe(short.key);
+    const uuid = (u: string) => groupIdentity(entry({ message: `${"x".repeat(190)} ${u} gone` })).key;
+    expect(uuid("3f2504e0-4f89-11d3-9a0c-0305e82c3301")).toBe(uuid("9a0c0305-11d3-4f89-3f25-04e04f8911d3"));
     // Different words stay different errors.
     expect(groupIdentity(entry({ message: "Order 1 not found" })).key).not.toBe(groupIdentity(entry({ message: "Order 1 shipped" })).key);
   });
@@ -515,9 +537,25 @@ describe("vercelRuntimeFetcher", () => {
   it("fails on any other error, so the store keeps what it had", async () => {
     fakeVercel({
       projects: [project("p1", "a-production")],
-      events: { "vercel.proxy_response": { status: 500 } },
+      events: { "vercel.log": { status: 500 } },
     });
     expect(await fetcher().fetch()).toEqual({ ok: false, items: [] });
+  });
+
+  it("keeps the runtime logs when only the 5xx responses query fails, and is not complete", async () => {
+    for (const status of [402, 429, 500]) {
+      _resetProviderCooldowns();
+      fakeVercel({
+        projects: [project("p1", "a-production")],
+        events: {
+          "vercel.log": { pages: [[logEvent("1")]] },
+          "vercel.proxy_response": { status },
+        },
+      });
+      const res = await fetcher().fetch();
+      expect(res).toMatchObject({ ok: true, complete: false });
+      expect(res.items.map((e) => e.requestId)).toEqual(["1"]);
+    }
   });
 
   it("fails on a 429, records the shared cooldown, and then asks nothing while it lasts", async () => {
@@ -624,6 +662,18 @@ describe("Vercel runtime errors in the cycle and the self-check", () => {
     expect(await storage.telemetry.runtimeErrors.load()).toHaveLength(1);
   });
 
+  it("turns red after two failures even when no read has ever succeeded", async () => {
+    process.env.VERCEL_API_TOKEN = "tok";
+    const storage = createLibsqlStorage(await freshDb());
+    const failing = fixed({ ok: false, items: [] });
+    await collectTelemetry(storage, testConfig(), { runtimeErrors: failing });
+    expect(await runtimeCheck(storage)).toMatchObject({ state: "warn", detail: "first runtime-log read pending" });
+    await collectTelemetry(storage, testConfig(), { runtimeErrors: failing });
+    const red = await runtimeCheck(storage);
+    expect(red).toMatchObject({ state: "error", ok: false });
+    expect(red?.detail).toMatch(/^no read has succeeded yet; .*\(2 in a row\)$/);
+  });
+
   it("warns when the read was cut short", async () => {
     process.env.VERCEL_API_TOKEN = "tok";
     const storage = createLibsqlStorage(await freshDb());
@@ -647,5 +697,242 @@ describe("Vercel runtime errors in the cycle and the self-check", () => {
     const fact = (await storage.board.readPlatformFacts()).find((p) => p.source === "vercel-runtime");
     expect(fact).toMatchObject({ configured: true, ok: false });
     errors.mockRestore();
+  });
+});
+
+// One test per row of the recipe's conformance-test-vectors.md (status/service/telemetry/runtime-errors).
+describe("conformance vectors — runtime-errors", () => {
+  const logRaw = { timestamp: iso(NOW), projectId: "prj_site", deploymentId: "dpl_1", requestId: "req_1", source: "function", message: "m" };
+
+  it("runtime-errors-001 keeps error and fatal lines, dated and placed by the event", () => {
+    expect(logEventToEntry({ ...logRaw, level: "error" }, PROJECTS)).toMatchObject({
+      level: "error",
+      project: "site-production",
+      domain: "site.example.com",
+      timestampMs: NOW,
+      status: null,
+    });
+    expect(logEventToEntry({ ...logRaw, level: "fatal" }, PROJECTS)?.level).toBe("fatal");
+  });
+
+  it("runtime-errors-002 drops lower levels, undated events and other projects", () => {
+    expect(logEventToEntry({ ...logRaw, level: "warning" }, PROJECTS)).toBeNull();
+    expect(logEventToEntry({ ...logRaw }, PROJECTS)).toBeNull();
+    expect(logEventToEntry({ ...logRaw, level: "error", timestamp: "x" }, PROJECTS)).toBeNull();
+    expect(logEventToEntry({ ...logRaw, level: "error", projectId: "prj_staging" }, PROJECTS)).toBeNull();
+  });
+
+  it("runtime-errors-003 strips query and fragment and prefers the event's domain", () => {
+    expect(
+      logEventToEntry({ ...logRaw, level: "error", requestPath: "/a/b?token=x#frag", requestMethod: "POST", domain: "other.example.com" }, PROJECTS),
+    ).toMatchObject({ path: "/a/b", method: "POST", domain: "other.example.com" });
+    expect(logEventToEntry({ ...logRaw, level: "error", requestPath: "?q=1" }, PROJECTS)?.path).toBe("/");
+  });
+
+  it("runtime-errors-004 keeps 5xx responses as error entries", () => {
+    const raw = { timestamp: iso(NOW), projectId: "prj_site", requestId: "req_9", requestPath: "/api/x" };
+    expect(responseEventToEntry({ ...raw, httpStatus: 503 }, PROJECTS)).toMatchObject({
+      level: "error",
+      source: "response",
+      status: 503,
+      message: "HTTP 503",
+      requestId: "req_9",
+    });
+  });
+
+  it("runtime-errors-005 drops responses below 500 or without a status", () => {
+    const raw = { timestamp: iso(NOW), projectId: "prj_site" };
+    expect(responseEventToEntry({ ...raw, httpStatus: 404 }, PROJECTS)).toBeNull();
+    expect(responseEventToEntry(raw, PROJECTS)).toBeNull();
+  });
+
+  it("runtime-errors-006 reads id-like segments as :id", () => {
+    expect(normalizePath("/posts/123/edit")).toBe("/posts/:id/edit");
+    expect(normalizePath("/u/3f2504e0-4f89-11d3-9a0c-0305e82c3301")).toBe("/u/:id");
+    expect(normalizePath("/blob/deadbeef1234abcd")).toBe("/blob/:id");
+    expect(normalizePath("/s/V1StGXR8Z5jdHi6BmyT2x")).toBe("/s/:id");
+    expect(normalizePath("/about/facebook-account")).toBe("/about/facebook-account");
+    expect(normalizePath("/")).toBe("/");
+    expect(normalizePath(null)).toBeNull();
+  });
+
+  it("runtime-errors-007 keys on the normalized path and first message line", () => {
+    const a = groupIdentity(entry({ path: "/api/posts/1", message: "boom\nstack a" }));
+    const b = groupIdentity(entry({ path: "/api/posts/2", message: "boom\nstack b" }));
+    expect(a.key).toBe(b.key);
+    expect(a.key).toMatch(/^[0-9a-f]{32}$/);
+    expect(a).toMatchObject({ path: "/api/posts/:id", message: "boom" });
+    expect(groupIdentity(entry({ status: 502 })).key).not.toBe(a.key);
+    expect(groupIdentity(entry({ message: "x".repeat(300) })).message).toHaveLength(200);
+  });
+
+  it("runtime-errors-008 shapes the whole first line before cutting it", () => {
+    const message = (n: string) => `Order ${n}: ${"x".repeat(185)} tail`;
+    const short = groupIdentity(entry({ message: message("1") }));
+    const long = groupIdentity(entry({ message: message("1234567") }));
+    expect(long.key).toBe(short.key);
+    expect(long.message).toHaveLength(200);
+  });
+
+  it("runtime-errors-009 messageShape reads ids, numbers and timestamps", () => {
+    expect(messageShape("Order 8231 not found")).toBe("Order # not found");
+    expect(messageShape("user 3f2504e0-4f89-11d3-9a0c-0305e82c3301 has no plan")).toBe("user :id has no plan");
+    expect(messageShape("timeout after 3000ms at 2026-11-06T10:00:00Z")).toBe("timeout after #ms at #-#-#T#:#:#Z");
+    expect(messageShape("Cannot read properties of undefined (reading 'id')")).toBe(
+      "Cannot read properties of undefined (reading 'id')",
+    );
+  });
+
+  it("runtime-errors-010 forty orders are one group", () => {
+    const entries = Array.from({ length: 40 }, (_, i) =>
+      entry({ path: `/api/orders/${8231 + i}`, message: `Order ${8231 + i} not found`, timestampMs: 1_000 + i }),
+    );
+    const groups = groupRuntimeEntries(entries);
+    expect(groups).toHaveLength(1);
+    expect(groups[0]).toMatchObject({ count: 40, path: "/api/orders/:id", message: "Order 8231 not found" });
+  });
+
+  it("runtime-errors-011 a fold keeps the worst level, the time span and the newest event", () => {
+    const [g, ...rest] = groupRuntimeEntries([
+      entry({ requestId: "r1", timestampMs: 1_000, level: "error", deploymentId: "dpl_old" }),
+      entry({ requestId: "r2", timestampMs: 3_000, level: "error", deploymentId: "dpl_new" }),
+      entry({ requestId: "r3", timestampMs: 2_000, level: "fatal", deploymentId: "dpl_old" }),
+    ]);
+    expect(rest).toEqual([]);
+    expect(g).toMatchObject({
+      count: 3,
+      level: "fatal",
+      firstSeen: iso(1_000),
+      lastSeen: iso(3_000),
+      deploymentId: "dpl_new",
+      sampleRequestId: "r2",
+    });
+    expect(worseLevel("error", "mystery")).toBe("error");
+  });
+
+  it("runtime-errors-012 the report orders, caps and dates by the read", () => {
+    const fatal = group({ key: "fatal", level: "fatal", count: 1 });
+    const many = group({ key: "many", count: 9 });
+    const few = group({ key: "few", count: 2 });
+    const r = runtimeErrorsReport([few, many, fatal], { readAtMs: NOW - 5 * 60_000, complete: false }, NOW);
+    expect(r).toMatchObject({
+      generatedAt: iso(NOW),
+      window: "24h",
+      readAt: iso(NOW - 5 * 60_000),
+      complete: false,
+      total: 3,
+    });
+    expect(r.groups.map((g) => g.key)).toEqual(["fatal", "many", "few"]);
+    const lots = Array.from({ length: 205 }, (_, i) => group({ key: `g${i}` }));
+    const capped = runtimeErrorsReport(lots, null, NOW);
+    expect(capped).toMatchObject({ total: 205, readAt: null, complete: true });
+    expect(capped.groups).toHaveLength(200);
+  });
+
+  it("runtime-errors-013 an old read is not re-windowed", () => {
+    const old = group({ lastSeen: iso(NOW - 3 * RUNTIME_ERROR_WINDOW_MS) });
+    const readAtMs = NOW - 2 * RUNTIME_ERROR_WINDOW_MS;
+    const r = runtimeErrorsReport([old], { readAtMs, complete: true }, NOW);
+    expect(r.total).toBe(1);
+    expect(r.readAt).toBe(iso(readAtMs));
+  });
+
+  it("runtime-errors-014 levelRank ranks worst highest and unknown lowest", () => {
+    expect([levelRank("fatal"), levelRank("trace"), levelRank("mystery"), levelRank(null)]).toEqual([5, 0, -1, -1]);
+  });
+
+  it("runtime-errors-015 equal timestamps: the later entry's deployment wins", () => {
+    const [g] = groupRuntimeEntries([
+      entry({ timestampMs: 1_000, deploymentId: "d1" }),
+      entry({ timestampMs: 1_000, deploymentId: "d2" }),
+    ]);
+    expect(g!.deploymentId).toBe("d2");
+  });
+
+  it("runtime-errors-016 a rejecting store load rejects the report", async () => {
+    const boom = new Error("load failed");
+    const store = { load: async (): Promise<RuntimeErrorGroup[]> => { throw boom; }, lastRead: async () => null };
+    await expect(loadRuntimeErrorsReport(store, NOW)).rejects.toBe(boom);
+  });
+
+  it("runtime-errors-017 RUNTIME_LEVELS is worst first", () => {
+    expect([...RUNTIME_LEVELS]).toEqual(["fatal", "error", "warning", "info", "debug", "trace"]);
+  });
+
+  it("runtime-errors-018 a log line without a source or string message gets the defaults", () => {
+    const e = logEventToEntry({ timestamp: iso(NOW), projectId: "prj_site", level: "error", message: 42 }, PROJECTS);
+    expect(e).toMatchObject({ source: "unknown", status: null, message: "" });
+  });
+
+  it("runtime-errors-019 a missing deploymentId reads an empty string", () => {
+    const e = logEventToEntry({ timestamp: iso(NOW), projectId: "prj_site", level: "error" }, PROJECTS);
+    expect(e!.deploymentId).toBe("");
+  });
+
+  it("runtime-errors-020 a null domain, requestId or deployment on the newest entry", () => {
+    const [g] = groupRuntimeEntries([
+      entry({ timestampMs: 1_000, domain: "d.example.com", requestId: "r1", deploymentId: "d1" }),
+      entry({ timestampMs: 3_000, domain: null, requestId: null, deploymentId: "" }),
+    ]);
+    expect(g).toMatchObject({ domain: "d.example.com", sampleRequestId: "r1", deploymentId: "" });
+  });
+
+  it("runtime-errors-021 the group shows the first entry's path and message", () => {
+    const [g] = groupRuntimeEntries([
+      entry({ path: "/o/1", message: "Order 1 not found", timestampMs: 1_000 }),
+      entry({ path: "/o/2", message: "Order 2 not found", timestampMs: 2_000 }),
+    ]);
+    expect(g).toMatchObject({ path: "/o/:id", message: "Order 1 not found" });
+  });
+
+  it("runtime-errors-022 the report sorts a copy", () => {
+    const few = group({ key: "few", count: 2 });
+    const many = group({ key: "many", count: 9 });
+    const input = [few, many];
+    expect(runtimeErrorsReport(input, null, NOW).groups.map((g) => g.key)).toEqual(["many", "few"]);
+    expect(input).toEqual([few, many]);
+  });
+
+  it("runtime-errors-023 the loader starts both reads before awaiting either", async () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(NOW);
+      const started: string[] = [];
+      const g = group();
+      const store = {
+        load: (): Promise<RuntimeErrorGroup[]> => {
+          started.push("load");
+          return Promise.resolve([g]);
+        },
+        lastRead: () => {
+          started.push("lastRead");
+          return Promise.resolve({ readAtMs: NOW - 1_000, complete: true });
+        },
+      };
+      const pending = loadRuntimeErrorsReport(store);
+      expect(started).toEqual(["load", "lastRead"]);
+      const report = await pending;
+      expect(report.groups).toEqual([g]);
+      expect(report.readAt).toBe(iso(NOW - 1_000));
+      expect(report.generatedAt).toBe(iso(NOW));
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("runtime-errors-024 a group of only unknown levels keeps the first", () => {
+    const [g] = groupRuntimeEntries([entry({ level: "mystery" }), entry({ level: "other" })]);
+    expect(g!.level).toBe("mystery");
+  });
+
+  it("runtime-errors-025 only \\n and \\r\\n end the head", () => {
+    expect(messageHead("a\r\nb")).toBe("a");
+    expect(messageHead("a\nb")).toBe("a");
+    expect(messageHead("a\rb")).toBe("a\rb");
+  });
+
+  it("runtime-errors-026 uuid and hex segments match in either case", () => {
+    expect(normalizePath("/u/3F2504E0-4F89-11D3-9A0C-0305E82C3301")).toBe("/u/:id");
+    expect(normalizePath("/b/DEADBEEF1234")).toBe("/b/:id");
   });
 });

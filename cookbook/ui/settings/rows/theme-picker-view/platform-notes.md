@@ -1,7 +1,7 @@
 
 - **SwiftUI**: Compose a `VStack(alignment: .leading, spacing: 10)` with a
   `Picker("Theme", selection: $activeThemeID)` built from `store.allThemes`
-  (mirroring `adhsdk://cookbook/ui/settings/rows/popup-menu-choice-view`'s own SwiftUI
+  (mirroring [adhsdk.ingredient.ui.settings.rows.popup-menu-choice-view](cookbook:3a3e4da0-e900-4281-a19c-e29cbd34cbab)'s own SwiftUI
   note) above a theme-preview view driven by the same `SemanticPalette`
   environment value or `@Observable` theme manager the rest of the app uses.
   Do not wire the picker's `Binding` directly to the preview's input;
@@ -12,7 +12,7 @@
   **decouples-preview-refresh-from-selection-commit**.
 - **Compose**: A `Column` with an `ExposedDropdownMenuBox`/`DropdownMenu`
   listing available themes (the Compose analog described in
-  `adhsdk://cookbook/ui/settings/rows/popup-menu-choice-view`) followed by a preview
+  [adhsdk.ingredient.ui.settings.rows.popup-menu-choice-view](cookbook:3a3e4da0-e900-4281-a19c-e29cbd34cbab)) followed by a preview
   `Composable` that reads the current theme from a shared
   `CompositionLocal`/`ViewModel` `StateFlow` rather than being called
   directly from the dropdown's `onItemSelected` — collect the flow with
@@ -21,7 +21,7 @@
   **decouples-preview-refresh-from-selection-commit**.
 - **React/Web**: A flex column (`display: flex; flex-direction: column; gap:
   10px`) with a `<select>` of theme options (per
-  `adhsdk://cookbook/ui/settings/rows/popup-menu-choice-view`'s web note) above a
+  [adhsdk.ingredient.ui.settings.rows.popup-menu-choice-view](cookbook:3a3e4da0-e900-4281-a19c-e29cbd34cbab)'s web note) above a
   preview component. Commit the selected value to global theme state (a
   context provider, a store dispatch) on `onChange`, and have the preview
   subscribe to that same global state independently (a context consumer, a
@@ -51,7 +51,7 @@
   non-macOS platforms) identically to `NSView`.
 - **WinUI 3**: Build the row as a vertical
   `StackPanel` with `Spacing="10"`: a themed `ComboBox`/`Grid` row at the top
-  matching `adhsdk://cookbook/ui/settings/rows/popup-menu-choice-view`'s own WinUI 3
+  matching [adhsdk.ingredient.ui.settings.rows.popup-menu-choice-view](cookbook:3a3e4da0-e900-4281-a19c-e29cbd34cbab)'s own WinUI 3
   note (bound to the available themes, writing the picked theme id through a
   settings service), and a preview `UserControl` beneath it. Do not update
   the preview `UserControl` directly from the `ComboBox`'s

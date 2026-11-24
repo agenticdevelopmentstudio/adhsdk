@@ -68,11 +68,6 @@ export interface OrganizationRenameInput {
  *  because call sites read as "what a rename gave back", and the two could diverge upstream. */
 export type OrganizationRenamed = Organization;
 
-/** The restore route's 200 body. */
-export interface OrganizationRestored {
-  organization: Organization;
-}
-
 /** One row of an organization workspace's roster. `email`/`displayName` are null for a member
  *  outside the caller's ecosystem (an RLS-bounded read, same as team rosters). */
 export interface WorkspaceMember {
@@ -87,4 +82,41 @@ export interface WorkspaceMember {
 
 export interface WorkspaceMembersResponse {
   members: WorkspaceMember[];
+}
+
+// ── /v1 wire shapes (snake_case) — organizations.ts / members.ts map these to the above ──────
+
+/** `/v1/organizations` row and the resolve/update/restore bodies. */
+export interface OrganizationWire {
+  object?: string;
+  id: string;
+  slug: string;
+  name: string;
+  description?: string | null;
+  rdid?: string;
+}
+
+/** `POST /v1/organizations` 201 body. */
+export interface OrganizationProvisionedWire {
+  organization: OrganizationWire;
+  namespace: {
+    id: string;
+    owner_kind: OrganizationProvisioned["namespace"]["ownerKind"];
+    owner_id: string;
+    slug: string | null;
+    name: string | null;
+    rdid: string | null;
+  };
+  team_id: string;
+  ecosystem: { id: string; slug: string; rdid: string };
+}
+
+/** `/v1/workspaces/{id}/members` row. */
+export interface WorkspaceMemberWire {
+  object?: string;
+  user_id: string;
+  email?: string | null;
+  display_name?: string | null;
+  is_admin: boolean;
+  added_at: string;
 }

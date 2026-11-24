@@ -1,0 +1,3 @@
+
+`CompositeChatToolSource` is a `ChatToolSource` that wraps an ordered list of other `ChatToolSource` values and presents them to a chat session as one source. Its own doc comment states the role: "Several tool sources presented as one: definitions concatenated in order, calls routed to whichever source advertises the name." A host that has several independent sources of model-callable tools constructs one composite from them and hands that single value to the chat engine. The composite holds no tool logic of its own; it forwards `toolDefinitions()` and `callTool(name:argumentsJSON:caller:)` and nothing else.
+

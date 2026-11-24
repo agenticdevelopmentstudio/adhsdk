@@ -1,0 +1,5 @@
+
+`RGBAColor+Theme.swift` is an `extension RGBAColor` that adds the color math the theme layer needs to derive a whole palette from a few base colors. It measures a color (`relativeLuminance`, `isDark`, `contrastRatio(against:)`), writes it out (`hexStringRGB`), and builds new colors from it (`blended(withFraction:of:)`, `composited(over:)`, `bestTextColor(black:white:)`, `dimmed(towards:by:minContrast:)`, `desaturated(by:)`). It also adds two constants, `opaqueBlack` and `opaqueWhite`.
+
+Every member is a pure computation over the four `Double` components of `RGBAColor` (see the RGBAColor ([adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.rgba-color](cookbook:ad5bae6b-0172-4cd4-a4b7-297eb58eb28d)) ingredient for the value type and its clamping). Nothing here reads or writes files, the network, defaults or logs. Theme derivation and import code are the example consumers, for instance palette role derivation and the iTerm color importer; the list of callers is not part of this contract.
+

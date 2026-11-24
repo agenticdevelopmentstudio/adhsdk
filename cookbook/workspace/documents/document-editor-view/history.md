@@ -8,3 +8,5 @@
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to workspace/documents/. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added separation-of-concerns (passed) and unit-test-coverage (partial) compliance rows. |
 | 1.2.2 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
+| 2.0.0 | 2026-11-15 | Mike Fullerton | Recent-documents menu between back and forward; navigation-bar-spans-the-pane, navigation-row-height, back-forward-is-outlined and markdown-opens-on-single-preview; the breadcrumb takes the 28-point navigation row's height inside the navigation bar (breadcrumb-fixed-height, breadcrumb-above-content, content-spans-container-width, devc-028 and devc-029 updated). |
+| 2.1.0 | 2026-11-16 | Mike Fullerton | The Markdown editor's tabs follow the global tab position's primary edge. |

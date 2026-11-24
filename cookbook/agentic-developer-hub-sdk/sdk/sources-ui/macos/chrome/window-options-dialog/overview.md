@@ -1,0 +1,5 @@
+
+The Window Options Dialog is a modal dialog system for managing window-specific appearance settings — distinct from application-wide settings. It is presented via a gear button positioned in the window's title bar chrome or custom layout. The dialog itself is app-modal: the window behind it remains visible, and MAY still change on screen, but only as a side effect of the dialog's own controls driving host state — the host window itself is blocked from receiving keyboard or mouse input while the dialog is up. The dialog is centered on the screen (not anchored to the gear), and dynamically built at open time from a host-supplied closure. This design allows live updates to controls as underlying state changes and ensures the dialog follows the host window's level hierarchy.
+
+The component comprises four related pieces: the dialog manager (`WindowOptionsDialog`), an optional slider with live caption (`WindowOptionsSlider`), an optional toggle/checkbox (`WindowOptionsToggle`), and an optional "Reset to Defaults" button (`WindowOptionsResetButton`).
+

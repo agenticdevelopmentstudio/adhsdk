@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "82d3214f-620d-4fab-b817-f194d93ac296",
     "title": "SyncEngineTriggers",
-    "domain": "adhsdk://cookbook/data/sync/sync-triggers",
     "type": "ingredient",
     "version": "1.0.3",
     "status": "review",
@@ -26,8 +25,8 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/data/sync/sync-engine",
-      "adhsdk://cookbook/data/sync/offline-sync-client"
+      "355a8f54-aee5-45cd-a28d-12c3b7a3085c",
+      "d3a0b65f-92c0-43c1-b04c-77638eb72044"
     ],
     "references": [
       "packages/apple/AgenticDeveloperHubSDK/Sync/Triggers/PeriodicTriggerSource.swift",
@@ -40,7 +39,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "e15f51ce00a79e09",
+  "synced": "de8b412948dd7574",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -59,7 +58,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

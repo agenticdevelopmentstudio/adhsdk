@@ -2,7 +2,7 @@
 - **inherits-single-window-controller-lifecycle**: The window controller
   MUST inherit all window build, frame-persistence, visibility-persistence,
   and HUD behavior unchanged from the single-instance window base (see
-  `adhsdk://cookbook/ui/windows/single-window-controller`), since it
+  [adhsdk.ingredient.ui.windows.single-window-controller](cookbook:3f6268b8-410d-4d3c-979c-2a9f9f1534f3)), since it
   overrides no member of the base.
 - **exposes-typed-view-controller-accessor**: The window controller MUST
   expose a computed typed accessor equal to the base's content, downcast to

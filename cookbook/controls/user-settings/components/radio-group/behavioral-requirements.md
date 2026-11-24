@@ -1,0 +1,16 @@
+
+- **render-choices**: The component MUST render each choice in the choices array as a distinct radio button option.
+- **reflect-value**: The component MUST render the choice whose value strictly equals (`===`) `value` as checked. The component is controlled and holds no selection state of its own.
+- **handle-value-change**: The component MUST invoke the `onChange` callback with the new value when the user selects a different choice.
+- **fieldset-root**: The component MUST render a `<fieldset>` element as the root container.
+- **legend-label**: When a label prop is provided, the component MUST render it inside a `<legend>` element as the first child of the fieldset. A label of `0` counts as provided and renders a legend reading `0`; only `null`, `undefined`, `false` and the empty string render no legend.
+- **radiogroup-role**: The component MUST render a container element with `role="radiogroup"` that contains all radio button inputs.
+- **choice-labels**: The component MUST display a label for each choice; the label MUST be associated with its corresponding radio input.
+- **choice-hints**: When a choice has a hint property, the component MUST render that hint adjacent to the choice label.
+- **field-hint**: When a hint prop is provided to the component, the component MUST render it as field-level guidance below all choices.
+- **disabled-state**: When the disabled prop is true, the component MUST set `disabled` on the root `<fieldset>`, which disables every radio input inside it (each input matches `:disabled`) and prevents user interaction with the entire group.
+- **individual-choice-disable**: When a choice has disabled: true, the component MUST disable only that specific radio input while allowing other choices to remain interactive.
+- **custom-classname**: The component MUST accept a className prop and apply it to the root fieldset element, allowing callers to customize appearance.
+- **generated-name**: When the name prop is not provided, the component MUST generate a unique name for the radio group using a stable mechanism (e.g., useId).
+- **provided-name**: When the name prop is provided, the component MUST use that name for all radio inputs in the group.
+- **css-class-hooks**: The component MUST render this element structure and class contract, which external stylesheets rely on: `<fieldset class="aws-field aws-field--radio [className]">` containing an optional `<legend class="aws-field__label">`, then `<div class="aws-radio-group" role="radiogroup">` containing one `<label class="aws-radio">` per choice, each holding `<input class="aws-radio__input">`, `<span class="aws-radio__indicator">`, `<span class="aws-radio__label">` and an optional `<span class="aws-radio__hint">`; the field-level hint renders as `<p class="aws-field__hint">` after the group.

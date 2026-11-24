@@ -1,0 +1,5 @@
+
+`TextSubstitutionFilter` is a two-way word substitution between what the user sees and what a program is given: the user writes an alias and the program receives the real text (`revealing`); the program prints the real text and the user reads the alias (`concealing`). It is a `Sendable`, `Equatable` value type holding an ordered list of `Pair` values (`alias`, `real`), built from a list of pairs (`init(pairs:)`) or from text (`init(parsing:)`) whose entries are separated by `;` or newlines.
+
+Matching is case-insensitive, because a program prints a name however it likes ("Mike", "mike", "MIKE") and every one of those is the same leak. The replacement is written as given unless the caller asks for case matching. Substitution is a single left-to-right pass rather than one replacement per pair, so a replacement is never itself rewritten by a later pair, and at each position the longest pattern wins. The filter can be parsed from, and serialised to, a one-field text form (`alias = real` entries). `BrowserPageWordFilter.js` applies the same casing rule as `casing(_:like:)`.
+

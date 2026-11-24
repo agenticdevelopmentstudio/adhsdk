@@ -55,7 +55,7 @@ class ShiprGroup:
         if id is not UNSET:
             field_dict["id"] = id
         if parent_id is not UNSET:
-            field_dict["parentId"] = parent_id
+            field_dict["parent_id"] = parent_id
         if name is not UNSET:
             field_dict["name"] = name
         if path is not UNSET:
@@ -79,7 +79,7 @@ class ShiprGroup:
                 return data
             return cast(None | str | Unset, data)
 
-        parent_id = _parse_parent_id(d.pop("parentId", UNSET))
+        parent_id = _parse_parent_id(d.pop("parent_id", UNSET))
 
         name = d.pop("name", UNSET)
 

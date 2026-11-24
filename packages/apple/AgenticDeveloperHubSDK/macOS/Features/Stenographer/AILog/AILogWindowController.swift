@@ -33,6 +33,7 @@ public final class AILogWindowController: SingleWindowController {
         super.init(windowID: "ai-log",
                    contentViewController: AILogViewController(service: service))
         self.windowTitle = "Stenographer — AI Log"
+        self.windowTitleSymbolName = "list.bullet.rectangle"
         self.windowStyleMask = [.titled, .closable, .resizable, .miniaturizable]
         self.windowSpec = WindowSpec(
             defaultSize: NSSize(width: 940, height: 560),

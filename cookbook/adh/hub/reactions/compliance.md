@@ -1,12 +1,12 @@
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | partial | Reliability |
-| [error-response-handling](agenticdevelopercookbook://compliance/access-patterns#error-response-handling) | partial | Access Patterns |
-| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | partial | Security |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | partial | Reliability |
+| [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | partial | Access Patterns |
+| [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | partial | Security |
 
 `separation-of-concerns` passes: `reactions.ts`/`wire.ts` contain no UI-rendering import and no business logic beyond building a path, choosing an HTTP verb, shaping a body, and folding an already-fetched array — a clean, single-purpose data-access layer consumed by a separate presentational package. `unit-test-coverage` passes: `reactions.test.ts` exercises every one of `list`'s branches (empty input, de-dupe, chunking, chunk-merge), both writes, and all three folding-function behaviors (`tally`'s count/mine/order/null-viewer, `byTarget`'s grouping). `explicit-error-handling` passes: every method lets `authedJson`/`authedRequest`'s rejection propagate untouched — there is no `catch` anywhere in either file to silently swallow one. `idempotent-operations` is partial: `add` is documented and (per the module comment) backend-enforced as idempotent on `(actor, target, emoji)`, but `remove`'s repeat-call behavior is undocumented in the given sources — see `repeat-remove-behavior` under Edge Cases and the second Design Decision above. `error-response-handling` is partial: every rejection from `authedJson`/`authedRequest` propagates to the caller unmodified, so no documented status code (404, 409, 503, etc.) is ever translated into a friendlier, entity-named message by this module itself — a caller must inspect the raw error (e.g. via `httpStatus`/`isConflict`/`isServiceUnavailable` in `http.ts`, outside these two given files) to act on a specific status. `input-sanitization` is partial: `enc()` (`encodeURIComponent`) sanitizes every dynamic URL segment against path injection, but no field-level validation of `emoji`'s shape, `targetKind`'s membership in a known set, or `targetId`'s format happens in this module — every one of those constraints, if any exist, is enforced only by the backend's response.
 

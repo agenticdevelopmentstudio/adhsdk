@@ -7,6 +7,6 @@ session." It self-reports visibility changes so a hosting group view can
 collapse the padding and hairline around a card row whose content has
 hidden itself, rather than leaving an empty band behind — the same
 mechanism the sibling conditional view recipe
-(`adhsdk://cookbook/ui/settings/layout/conditional-view`) uses for
+([adhsdk.ingredient.ui.settings.layout.conditional-view](cookbook:537cf2a7-6be6-4a09-9a6c-8f8ecc6012da)) uses for
 the same reason.
 

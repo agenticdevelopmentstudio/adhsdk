@@ -6,6 +6,7 @@ from typing import Any, TypeVar, cast
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
+from ..models.discussion_post_author_kind import DiscussionPostAuthorKind
 from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="DiscussionPost")
@@ -20,9 +21,11 @@ class DiscussionPost:
         parent_post_id (None | str):
         post_number (int):
         body_document_id (None | str): The content.markdown doc backing this post’s body.
-        created_at (str):
-        updated_at (str):
-        customer_id (str | Unset): Author (server-stamped principal). Omitted on the public surface.
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
+        author_kind (DiscussionPostAuthorKind | Unset): Kind of principal that wrote the post (omitted on the public
+            surface); null when nobody did (a storage token).
+        author_id (None | str | Unset): Id of that principal.
         ecosystem_id (str | Unset): Owning ecosystem (present on create only).
         community_id (str | Unset): The community instance (inherited from the topic; present on create only).
         content (None | str | Unset): Resolved markdown body (present on the list routes; null if the body doc was
@@ -36,9 +39,10 @@ class DiscussionPost:
     parent_post_id: None | str
     post_number: int
     body_document_id: None | str
-    created_at: str
-    updated_at: str
-    customer_id: str | Unset = UNSET
+    created: int
+    updated: int
+    author_kind: DiscussionPostAuthorKind | Unset = UNSET
+    author_id: None | str | Unset = UNSET
     ecosystem_id: str | Unset = UNSET
     community_id: str | Unset = UNSET
     content: None | str | Unset = UNSET
@@ -59,11 +63,19 @@ class DiscussionPost:
         body_document_id: None | str
         body_document_id = self.body_document_id
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
-        customer_id = self.customer_id
+        author_kind: str | Unset = UNSET
+        if not isinstance(self.author_kind, Unset):
+            author_kind = self.author_kind.value
+
+        author_id: None | str | Unset
+        if isinstance(self.author_id, Unset):
+            author_id = UNSET
+        else:
+            author_id = self.author_id
 
         ecosystem_id = self.ecosystem_id
 
@@ -88,26 +100,28 @@ class DiscussionPost:
         field_dict.update(
             {
                 "id": id,
-                "topicId": topic_id,
-                "parentPostId": parent_post_id,
-                "postNumber": post_number,
-                "bodyDocumentId": body_document_id,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
+                "topic_id": topic_id,
+                "parent_post_id": parent_post_id,
+                "post_number": post_number,
+                "body_document_id": body_document_id,
+                "created": created,
+                "updated": updated,
             }
         )
-        if customer_id is not UNSET:
-            field_dict["customerId"] = customer_id
+        if author_kind is not UNSET:
+            field_dict["author_kind"] = author_kind
+        if author_id is not UNSET:
+            field_dict["author_id"] = author_id
         if ecosystem_id is not UNSET:
-            field_dict["ecosystemId"] = ecosystem_id
+            field_dict["ecosystem_id"] = ecosystem_id
         if community_id is not UNSET:
-            field_dict["communityId"] = community_id
+            field_dict["community_id"] = community_id
         if content is not UNSET:
             field_dict["content"] = content
         if is_deleted is not UNSET:
-            field_dict["isDeleted"] = is_deleted
+            field_dict["is_deleted"] = is_deleted
         if deleted_at is not UNSET:
-            field_dict["deletedAt"] = deleted_at
+            field_dict["deleted_at"] = deleted_at
 
         return field_dict
 
@@ -116,33 +130,47 @@ class DiscussionPost:
         d = dict(src_dict)
         id = d.pop("id")
 
-        topic_id = d.pop("topicId")
+        topic_id = d.pop("topic_id")
 
         def _parse_parent_post_id(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        parent_post_id = _parse_parent_post_id(d.pop("parentPostId"))
+        parent_post_id = _parse_parent_post_id(d.pop("parent_post_id"))
 
-        post_number = d.pop("postNumber")
+        post_number = d.pop("post_number")
 
         def _parse_body_document_id(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        body_document_id = _parse_body_document_id(d.pop("bodyDocumentId"))
+        body_document_id = _parse_body_document_id(d.pop("body_document_id"))
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
-        customer_id = d.pop("customerId", UNSET)
+        _author_kind = d.pop("author_kind", UNSET)
+        author_kind: DiscussionPostAuthorKind | Unset
+        if isinstance(_author_kind, Unset):
+            author_kind = UNSET
+        else:
+            author_kind = DiscussionPostAuthorKind(_author_kind)
 
-        ecosystem_id = d.pop("ecosystemId", UNSET)
+        def _parse_author_id(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
 
-        community_id = d.pop("communityId", UNSET)
+        author_id = _parse_author_id(d.pop("author_id", UNSET))
+
+        ecosystem_id = d.pop("ecosystem_id", UNSET)
+
+        community_id = d.pop("community_id", UNSET)
 
         def _parse_content(data: object) -> None | str | Unset:
             if data is None:
@@ -153,7 +181,7 @@ class DiscussionPost:
 
         content = _parse_content(d.pop("content", UNSET))
 
-        is_deleted = d.pop("isDeleted", UNSET)
+        is_deleted = d.pop("is_deleted", UNSET)
 
         def _parse_deleted_at(data: object) -> None | str | Unset:
             if data is None:
@@ -162,7 +190,7 @@ class DiscussionPost:
                 return data
             return cast(None | str | Unset, data)
 
-        deleted_at = _parse_deleted_at(d.pop("deletedAt", UNSET))
+        deleted_at = _parse_deleted_at(d.pop("deleted_at", UNSET))
 
         discussion_post = cls(
             id=id,
@@ -170,9 +198,10 @@ class DiscussionPost:
             parent_post_id=parent_post_id,
             post_number=post_number,
             body_document_id=body_document_id,
-            created_at=created_at,
-            updated_at=updated_at,
-            customer_id=customer_id,
+            created=created,
+            updated=updated,
+            author_kind=author_kind,
+            author_id=author_id,
             ecosystem_id=ecosystem_id,
             community_id=community_id,
             content=content,

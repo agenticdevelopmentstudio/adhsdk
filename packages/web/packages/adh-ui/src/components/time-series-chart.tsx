@@ -50,6 +50,60 @@ const SERIES_COLORS = [
 const AXIS_TICK = { fill: "var(--color-apt-text-dim)", fontSize: 12 }
 const GRID_STROKE = "var(--color-apt-border)"
 
+interface SeriesTooltipProps {
+  active?: boolean
+  label?: unknown
+  point: TimeSeriesPoint | null
+  series: readonly TimeSeriesSeries[]
+  format: (value: number) => string
+}
+
+/**
+ * The crosshair tooltip. It reads every series from the hovered point itself, not
+ * from recharts' payload, because recharts leaves a series whose value is `null`
+ * out of the payload; reading the point keeps one row per series, and a gap shows
+ * an em dash rather than vanishing.
+ */
+function SeriesTooltip({ active, label, point, series, format }: SeriesTooltipProps) {
+  if (!active || !point) return null
+  return (
+    <div
+      className="recharts-default-tooltip"
+      style={{
+        background: "var(--color-apt-surface-2)",
+        border: "1px solid var(--color-apt-border)",
+        borderRadius: 8,
+        color: "var(--color-apt-text)",
+        padding: 10,
+        margin: 0,
+        whiteSpace: "nowrap",
+      }}
+    >
+      <p className="recharts-tooltip-label" style={{ color: "var(--color-apt-text-muted)", margin: 0 }}>
+        {String(label ?? point.x)}
+      </p>
+      <ul className="recharts-tooltip-item-list" style={{ listStyle: "none", padding: 0, margin: 0 }}>
+        {series.map((s, i) => {
+          const v = point[s.key]
+          return (
+            <li
+              key={s.key}
+              className="recharts-tooltip-item"
+              style={{ display: "block", paddingTop: 4, color: SERIES_COLORS[i] }}
+            >
+              <span className="recharts-tooltip-item-name">{s.label}</span>
+              <span className="recharts-tooltip-item-separator"> : </span>
+              <span className="recharts-tooltip-item-value" style={{ color: "var(--color-apt-text)" }}>
+                {typeof v === "number" ? format(v) : "—"}
+              </span>
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
+}
+
 /**
  * A thin line chart over time, for a handful of series on ONE y scale (two measures
  * of different scale belong in two charts, not a second axis). A crosshair tooltip
@@ -90,15 +144,18 @@ export function TimeSeriesChart({
         />
         <Tooltip
           cursor={{ stroke: GRID_STROKE }}
-          contentStyle={{
-            background: "var(--color-apt-surface-2)",
-            border: "1px solid var(--color-apt-border)",
-            borderRadius: 8,
-            color: "var(--color-apt-text)",
-          }}
-          labelStyle={{ color: "var(--color-apt-text-muted)" }}
-          itemStyle={{ color: "var(--color-apt-text)" }}
-          formatter={(value) => (typeof value === "number" ? format(value) : "—")}
+          // Recharts drops null entries by default, and hides the tooltip when none are left —
+          // at an x where every series has a gap. Keeping them lets SeriesTooltip draw its dashes.
+          filterNull={false}
+          content={(props) => (
+            <SeriesTooltip
+              active={props.active}
+              label={props.label}
+              point={(props.payload?.[0]?.payload as TimeSeriesPoint | undefined) ?? null}
+              series={series}
+              format={format}
+            />
+          )}
         />
         {series.length >= 2 && (
           <Legend

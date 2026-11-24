@@ -1,5 +1,6 @@
 'use client'
 
+import { listAllV1 } from '@adh-sdk/auth/client'
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 
 /**
@@ -10,7 +11,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
  * their own BFF route and their own context around the same three lines.
  *
  * Sources (union; a key absent from all of them ⇒ the flag is OFF):
- *   1. `GET /api/system/feature-flags` — the backend's PUBLIC, unauthenticated flag table, reached
+ *   1. `GET /api/v1/feature_flags` — the backend's PUBLIC, unauthenticated flag table, reached
  *      same-origin through the baseline BFF proxy every site gets from `withAdhConfig`
  *      (websites/next-config-base.mjs). Best-effort: any error leaves the set empty, so local dev
  *      without a backend — and a backend outage in production — simply mean "no flags on".
@@ -117,7 +118,7 @@ export function FeatureFlagsProvider({
   /**
    * Fetch the backend's public flag table (default true).
    *
-   * Pass `false` on a site whose backend serves no `/system/feature-flags` route — the builds and
+   * Pass `false` on a site whose backend serves no `/v1/feature_flags` route — the builds and
    * status boards proxy `/api/*` to their OWN Hono backends, which have no flag table, so the
    * request is a guaranteed 404 on every page load. It was silently swallowed, which made the miss
    * invisible: those boards can only ever be driven by the build-time/cookie overrides above, and
@@ -142,11 +143,9 @@ export function FeatureFlagsProvider({
       return
     }
     // `no-store`: the flag set is the live switchboard — a cached answer is a stale gate.
-    fetch('/api/system/feature-flags', { cache: 'no-store' })
-      .then((res) => (res.ok ? res.json() : Promise.reject(new Error(String(res.status)))))
-      .then((rows: Array<{ key: string; enabled?: boolean }>) =>
-        Array.isArray(rows) ? rows.filter((f) => f.enabled === true).map((f) => f.key) : [],
-      )
+    // The collection is paged (10 rows by default), so `listAllV1` walks it to the end.
+    listAllV1<{ key: string; enabled?: boolean }>('/api/v1/feature_flags', { cache: 'no-store' })
+      .then((rows) => rows.filter((f) => f.enabled === true).map((f) => f.key))
       .catch(() => [] as string[]) // backend down ⇒ no flags ⇒ everything gated stays off
       .then((backendKeys) => {
         if (!live) return

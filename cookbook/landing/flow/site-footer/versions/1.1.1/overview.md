@@ -1,0 +1,3 @@
+
+The Site Footer is a structural footer component that renders a semantic HTML `<footer>` landmark element containing page footer content. It applies a fixed CSS class and optional custom classes, and wraps its content in a layout column (Wrap) to constrain width and maintain consistency with other page sections. Unlike Band and Wrap, the footer owns its own visual chrome directly — background, text color, font size, and a top hairline border all live on `.lp-site-foot` itself. It reserves space for the dock clearance like other band components and is positioned as the last element beneath the dock.
+

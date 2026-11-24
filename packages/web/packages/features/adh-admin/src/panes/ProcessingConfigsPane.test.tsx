@@ -4,11 +4,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ConfigSet } from "../api/processing";
 
-const { authedJson, authedRequest } = vi.hoisted(() => ({
+const { authedJson, authedRequest, listAllV1 } = vi.hoisted(() => ({
   authedJson: vi.fn(),
   authedRequest: vi.fn(),
+  listAllV1: vi.fn(),
 }));
-vi.mock("../api/http", () => ({ authedJson, authedRequest }));
+vi.mock("../api/http", () => ({ authedJson, authedRequest, listAllV1 }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock("../processing/useConfigSetServices", () => ({
   useConfigSetServices: () => ({ items: [], isFetching: false, error: null }),
@@ -24,9 +25,9 @@ const set = (over: Partial<ConfigSet>): ConfigSet => ({
   provider: "local",
   model: "llama3.2",
   params: {},
-  isDefault: false,
-  createdAt: "2026-10-01T00:00:00Z",
-  updatedAt: "2026-10-01T00:00:00Z",
+  is_default: false,
+  created: 1790812800,
+  updated: 1790812800,
   ...over,
 });
 
@@ -40,15 +41,18 @@ beforeEach(() => {
       name: "Claude fast",
       provider: "anthropic",
       model: "claude-x",
-      service: { id: "svc", name: "My Claude", providerKind: "anthropic" },
-      isDefault: true,
+      service: { id: "svc", name: "My Claude", provider_kind: "anthropic" },
+      is_default: true,
     }),
   ];
   authedJson.mockReset();
   authedRequest.mockReset();
-  authedJson.mockImplementation(async (url: string) =>
-    url === "/api/processing/admin/config-sets" ? { configSets: sets } : {},
+  listAllV1.mockReset();
+  // The list walks the /v1 envelope in `listAllV1`; the writes go through `authedJson`.
+  listAllV1.mockImplementation(async (url: string) =>
+    url === "/api/v1/processing/config_sets" ? sets : [],
   );
+  authedJson.mockResolvedValue({});
   authedRequest.mockResolvedValue(undefined);
 });
 afterEach(cleanup);
@@ -91,7 +95,7 @@ describe("ProcessingConfigsPane", () => {
     await select("Local llama");
     fireEvent.click(screen.getByRole("button", { name: /make default/i }));
     await waitFor(() =>
-      expect(authedJson).toHaveBeenCalledWith("/api/processing/admin/config-sets/cs-1/default", {
+      expect(authedJson).toHaveBeenCalledWith("/api/v1/processing/config_sets/cs-1/make_default", {
         method: "POST",
       }),
     );
@@ -99,8 +103,8 @@ describe("ProcessingConfigsPane", () => {
 
   it("shows the server's message when Make default is refused", async () => {
     authedJson.mockImplementation(async (url: string) => {
-      if (url.endsWith("/default")) throw new Error("Config set is not usable as default");
-      return { configSets: sets };
+      if (url.endsWith("/make_default")) throw new Error("Config set is not usable as default");
+      return {};
     });
     mount();
     await select("Local llama");
@@ -110,11 +114,10 @@ describe("ProcessingConfigsPane", () => {
 
   it("moves the Default badge after Make default (the list refetches)", async () => {
     authedJson.mockImplementation(async (url: string, init?: { method?: string }) => {
-      if (url.endsWith("/default") && init?.method === "POST") {
-        sets = sets.map((x) => ({ ...x, isDefault: x.id === "cs-1" }));
-        return {};
+      if (url.endsWith("/make_default") && init?.method === "POST") {
+        sets = sets.map((x) => ({ ...x, is_default: x.id === "cs-1" }));
       }
-      return { configSets: sets };
+      return {};
     });
     mount();
     await select("Local llama");
@@ -137,7 +140,7 @@ describe("ProcessingConfigsPane", () => {
     await screen.findByText("Local llama");
     fireEvent.click(screen.getByRole("button", { name: /clear default/i }));
     await waitFor(() =>
-      expect(authedRequest).toHaveBeenCalledWith("/api/processing/admin/config-sets/default", {
+      expect(authedRequest).toHaveBeenCalledWith("/api/v1/processing/config_sets/default", {
         method: "DELETE",
       }),
     );
@@ -153,7 +156,7 @@ describe("ProcessingConfigsPane", () => {
     });
     fireEvent.click(screen.getAllByRole("button", { name: "Delete" }).at(-1)!);
     await waitFor(() =>
-      expect(authedRequest).toHaveBeenCalledWith("/api/processing/admin/config-sets/cs-1", {
+      expect(authedRequest).toHaveBeenCalledWith("/api/v1/processing/config_sets/cs-1", {
         method: "DELETE",
       }),
     );

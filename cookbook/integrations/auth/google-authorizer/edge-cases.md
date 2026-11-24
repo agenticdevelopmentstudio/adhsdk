@@ -1,0 +1,23 @@
+
+- **Empty or missing tokens at sign-in**: Empty-string tokens MUST be rejected the same as nil ones, with the access-token check first (the `credential` guards).
+- **Missing expiry at sign-in**: A missing expiry date MUST fall back to one hour from the injected clock rather than failing.
+- **Missing expiry at refresh**: A reply without `expires_in` MUST be treated as 3600 seconds.
+- **Exact margin boundary**: A credential expiring exactly 60 seconds from `now` MUST be treated as fresh, because the check is greater-than-or-equal.
+- **Corrupt stored credential**: Stored text that does not decode as `GoogleCredential` MUST read as absent and surface as `revoked`, prompting sign-in again; the decode failure is not logged or reported separately.
+- **Keychain read failure versus absence**: A throwing read MUST surface as `keychain` and never as `revoked`.
+- **Keychain write failure on refresh**: The refreshed credential MUST stay usable from memory; the in-memory copy is lost on restart, and the Keychain keeps the stale credential.
+- **Waiters on a refresh whose save failed**: See `provider-save-error-to-owner`: only the persisting caller sees the save error; the other callers return the refreshed access token.
+- **Concurrent access**: Same-connection refreshes MUST coalesce; different connections MUST refresh independently because the in-flight table and generation counters are keyed by `connectionId`.
+- **Re-entrancy after supersede**: A superseded refresh MUST re-read the current credential through `accessToken` rather than return its own result.
+- **Revoked grant**: `invalid_grant` on refresh MUST surface `revoked` but MUST NOT delete the stored credential; the caller decides whether to `forget`.
+- **Revoke with no credential or unreadable Keychain**: `revoke` MUST return silently when nothing is stored, and after logging when the Keychain cannot be read (see `provider-revoke-best-effort`).
+- **Timeout during browser wait**: Expiry of the 300-second default MUST cancel AppAuth's flow and the listener, and throw `signInFailed("Sign-in timed out")`.
+- **User closes the browser or denies consent**: AppAuth's user-canceled code maps to `signInCancelled`; whether AppAuth detects a closed browser tab is AppAuth's behavior, and the source adds no handling.
+- **Network unavailable**: A transport failure on refresh or revoke propagates as the URL session's error; there is no retry, backoff, timeout override or offline queue in this component, so `accessToken` fails and the next call refreshes again.
+- **Rate limiting and 5xx**: Any non-2xx other than `invalid_grant` surfaces as `tokenRefresh` with no `Retry-After` handling; Google owns throttling behavior.
+- **Non-JSON error body**: The status alone is reported, with error text `unknown`.
+- **Listener bind failure**: AppAuth's listener returns nil on failure but Swift imports it as non-null and would trap, so the code calls it through the Objective-C runtime to receive an optional; a port MUST check for a failed start.
+- **Cancelled before browser opens**: No browser opens and `signInCancelled` is thrown.
+- **Concurrent sign-ins**: The source defines no ordering between two concurrent `signIn` calls; each creates its own session box and listener and they do not share state.
+- **Revoke ordering with forget**: `revoke` and `forget` are independent operations; callers invoke `revoke` first, because `forget` removes the refresh token that `revoke` reads.
+

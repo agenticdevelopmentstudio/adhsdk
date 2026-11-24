@@ -58,7 +58,7 @@ class ProviderConnectionAuth:
         if region is not UNSET:
             field_dict["region"] = region
         if token_url is not UNSET:
-            field_dict["tokenUrl"] = token_url
+            field_dict["token_url"] = token_url
 
         return field_dict
 
@@ -78,7 +78,7 @@ class ProviderConnectionAuth:
 
         region = d.pop("region", UNSET)
 
-        token_url = d.pop("tokenUrl", UNSET)
+        token_url = d.pop("token_url", UNSET)
 
         provider_connection_auth = cls(
             type_=type_,

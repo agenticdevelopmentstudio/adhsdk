@@ -35,6 +35,7 @@ public final class NotesWindowController: WindowController<NotesSplitViewControl
             persistsFrame: true
         )
         self.windowTitle = "Notes"
+        self.windowTitleSymbolName = "note.text"
         self.windowStyleMask = [.titled, .closable, .miniaturizable, .resizable]
         self.minSize = NSSize(width: 640, height: 400)
     }

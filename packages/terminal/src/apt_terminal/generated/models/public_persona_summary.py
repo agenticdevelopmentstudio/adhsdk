@@ -23,7 +23,7 @@ class PublicPersonaSummary:
         name (str):
         description (None | str):
         visibility (PublicPersonaSummaryVisibility):
-        created_at (str):
+        created (int): Unix timestamp, in seconds.
         owner (None | PublicOwnerType0):
     """
 
@@ -31,7 +31,7 @@ class PublicPersonaSummary:
     name: str
     description: None | str
     visibility: PublicPersonaSummaryVisibility
-    created_at: str
+    created: int
     owner: None | PublicOwnerType0
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -47,7 +47,7 @@ class PublicPersonaSummary:
 
         visibility = self.visibility.value
 
-        created_at = self.created_at
+        created = self.created
 
         owner: dict[str, Any] | None
         if isinstance(self.owner, PublicOwnerType0):
@@ -63,7 +63,7 @@ class PublicPersonaSummary:
                 "name": name,
                 "description": description,
                 "visibility": visibility,
-                "createdAt": created_at,
+                "created": created,
                 "owner": owner,
             }
         )
@@ -88,7 +88,7 @@ class PublicPersonaSummary:
 
         visibility = PublicPersonaSummaryVisibility(d.pop("visibility"))
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
         def _parse_owner(data: object) -> None | PublicOwnerType0:
             if data is None:
@@ -110,7 +110,7 @@ class PublicPersonaSummary:
             name=name,
             description=description,
             visibility=visibility,
-            created_at=created_at,
+            created=created,
             owner=owner,
         )
 

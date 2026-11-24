@@ -1,0 +1,3 @@
+
+# Partner MCP Config
+

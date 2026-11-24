@@ -2,7 +2,7 @@
 - **Corner radius**: Not applicable - the component adds no custom layer or
   drawing code of its own; it only composes a label and a font chooser
   button into a row (see
-  `adhsdk://cookbook/ui/settings/rows/font-chooser-button` for the button's own
+  [adhsdk.ingredient.ui.settings.rows.font-chooser-button](cookbook:3e548aa3-1103-4b3f-96ff-d2e7ff564810) for the button's own
   corner treatment).
 - **Padding**: The row inserts a flexible spacer between the label and the
   button and sets the row's spacing to the button role's default row
@@ -17,7 +17,7 @@
   active theme's size scale and repainting on a theme change. The button's
   own font is dynamic and drawn at a fixed 12pt sample size regardless of
   the stored font's real size - see the sample-size requirement in
-  `adhsdk://cookbook/ui/settings/rows/font-chooser-button`.
+  [adhsdk.ingredient.ui.settings.rows.font-chooser-button](cookbook:3e548aa3-1103-4b3f-96ff-d2e7ff564810).
 - **Background**: None (transparent) for the label, and neither the
   component nor its row sets a background color of its own. The button's
   chrome is the font chooser button's own concern, not set here.
@@ -34,5 +34,5 @@
   constraint is set in source; sizing is governed entirely by the label
   and button's own intrinsic sizes inside the row (the button's own
   compression/hugging behavior when built without a fixed width is
-  documented in `adhsdk://cookbook/ui/settings/rows/font-chooser-button`).
+  documented in [adhsdk.ingredient.ui.settings.rows.font-chooser-button](cookbook:3e548aa3-1103-4b3f-96ff-d2e7ff564810)).
 

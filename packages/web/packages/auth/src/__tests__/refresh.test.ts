@@ -5,7 +5,7 @@ import { refreshAccessToken, invalidateRefresh } from '../refresh'
 
 beforeEach(() => {
   localStorage.clear()
-  configureAuth({ storageKey: 'test_tokens', refreshPath: '/api/auth/refresh' })
+  configureAuth({ storageKey: 'test_tokens', refreshPath: '/api/v1/auth/sessions/refresh' })
   invalidateRefresh()
 })
 
@@ -25,7 +25,7 @@ describe('refreshAccessToken', () => {
     const [a, b] = await Promise.all([refreshAccessToken(), refreshAccessToken()])
 
     expect(fetchMock).toHaveBeenCalledTimes(1)
-    expect(fetchMock).toHaveBeenCalledWith('/api/auth/refresh', expect.objectContaining({
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/auth/sessions/refresh', expect.objectContaining({
       method: 'POST',
       credentials: 'include',
       body: '{}',

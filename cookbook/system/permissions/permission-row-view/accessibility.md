@@ -22,5 +22,5 @@
   guidance does not apply here. The action button's compact sizing is the
   platform's own system-determined click target, not measured or floored
   by this component.
-- **contrast**: Title, description and status text sit over the card's near-transparent white overlay (3%/6% alpha), composited over whatever background the host window supplies. The component performs no contrast check of its own, and the effective background is not fixed, so whether the combination meets 4.5:1 (3:1 for large text) per `agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages` is unverified.
+- **contrast**: Title, description and status text sit over the card's near-transparent white overlay (3%/6% alpha), composited over whatever background the host window supplies. The component performs no contrast check of its own, and the effective background is not fixed, so whether the combination meets 4.5:1 (3:1 for large text) per [adc.guideline.cookbook.ui.platform-design-languages](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2) is unverified.
 

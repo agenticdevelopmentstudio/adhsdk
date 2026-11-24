@@ -58,12 +58,12 @@ class UsageRateCreate:
                 "category": category,
                 "provider": provider,
                 "sku": sku,
-                "quantityKey": quantity_key,
-                "microsPerUnit": micros_per_unit,
+                "quantity_key": quantity_key,
+                "micros_per_unit": micros_per_unit,
             }
         )
         if effective_from is not UNSET:
-            field_dict["effectiveFrom"] = effective_from
+            field_dict["effective_from"] = effective_from
         if note is not UNSET:
             field_dict["note"] = note
 
@@ -78,11 +78,11 @@ class UsageRateCreate:
 
         sku = d.pop("sku")
 
-        quantity_key = d.pop("quantityKey")
+        quantity_key = d.pop("quantity_key")
 
-        micros_per_unit = d.pop("microsPerUnit")
+        micros_per_unit = d.pop("micros_per_unit")
 
-        _effective_from = d.pop("effectiveFrom", UNSET)
+        _effective_from = d.pop("effective_from", UNSET)
         effective_from: datetime.date | Unset
         if isinstance(_effective_from, Unset):
             effective_from = UNSET

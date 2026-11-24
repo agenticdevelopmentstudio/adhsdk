@@ -1,0 +1,63 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "a8f66760-7db0-4a10-927e-856c2170dd4f",
+    "title": "ListHeader",
+    "type": "ingredient",
+    "version": "1.2.1",
+    "status": "review",
+    "language": "en",
+    "created": "2026-07-10",
+    "modified": "2026-09-25",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "The shared header above a list: title, filter text field, and right-aligned actions in the recessed ButtonBar strip.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "component",
+      "list",
+      "filter",
+      "toolbar",
+      "ui"
+    ],
+    "depends-on": [
+      "81db83fc-b30c-4ba3-b4d5-572dc8b4e335",
+      "0f5b7167-b375-4f44-977b-566f720a453d"
+    ],
+    "related": [
+      "6acd3c5f-7bb5-4d6d-8c8d-141e1909cf73",
+      "c57b1aed-ef38-4803-b38a-2d7e0aeced5f",
+      "0bba1f5b-bc8d-4f76-b1c9-329b627f7ee8"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "f72d20de1e80eb8c",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

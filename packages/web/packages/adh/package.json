@@ -180,6 +180,21 @@
       "development": "./src/help/HelpMasterDetail.tsx",
       "import": "./dist/help/HelpMasterDetail.js"
     },
+    "./help/document": {
+      "types": "./dist/help/document/index.d.ts",
+      "development": "./src/help/document/index.ts",
+      "import": "./dist/help/document/index.js"
+    },
+    "./help/document/TutorialSteps": {
+      "types": "./dist/help/document/TutorialSteps.d.ts",
+      "development": "./src/help/document/TutorialSteps.tsx",
+      "import": "./dist/help/document/TutorialSteps.js"
+    },
+    "./help/document/GlossarySearch": {
+      "types": "./dist/help/document/GlossarySearch.d.ts",
+      "development": "./src/help/document/GlossarySearch.tsx",
+      "import": "./dist/help/document/GlossarySearch.js"
+    },
     "./home": {
       "types": "./dist/home/index.d.ts",
       "development": "./src/home/index.ts",
@@ -322,6 +337,7 @@
     "./legal.css": "./dist/styles/adh-legal.css",
     "./debug.css": "./dist/styles/adh-debug.css",
     "./help.css": "./dist/styles/adh-help.css",
+    "./document.css": "./dist/styles/adh-document.css",
     "./docs.css": "./dist/styles/adh-docs.css",
     "./concepts.css": "./dist/styles/adh-concepts.css",
     "./landing-bridge.css": "./dist/styles/adh-landing-bridge.css",

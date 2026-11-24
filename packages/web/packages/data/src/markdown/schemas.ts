@@ -8,14 +8,14 @@
 //
 // A bucket DEFINITION is a parent row plus its child bucket-type rows, so this client
 // composes two endpoints:
-//   /api/bucket/buckets       — the definition (id, owner, name, metadata)
-//   /api/bucket/bucket-types  — one row per table (bucket-type) in the definition
+//   /api/v1/buckets       — the definition (id, owner, name, description)
+//   /api/v1/bucket_types  — one row per table (bucket-type) in the definition
 //
 // Field map:
 //   UI SchemaDefinition.id           <->  buckets.id              (the rdid, storage.<eco>.<slug>)
 //   UI SchemaDefinition.name         <->  buckets.name            (display name, unique per owner)
 //   UI SchemaDefinition.slug         <->  buckets.slug            (the rdid leaf, unique per parent)
-//   UI SchemaDefinition.description  <->  buckets.metadata.description
+//   UI SchemaDefinition.description  <->  buckets.description
 //   UI SchemaDefinition.ecosystemId  <->  buckets.ecosystem_id        (owner = the ecosystem)
 //   UI SchemaTable.id                <->  bucket_types.id         (opaque uuid)
 //   UI SchemaTable.name              <->  bucket_types.name       (alias, unique per bucket)
@@ -23,10 +23,10 @@
 //
 // `bucket.buckets` is RDID-addressed: the backend mints `storage.<eco path>.<slug>` on create and
 // every response's `id` IS that rdid. The slug is required and editable, and editing it MOVES the
-// rdid — so an update re-reads the tables under the id the PUT returned, never the one it was
+// rdid — so an update re-reads the tables under the id the update returned, never the one it was
 // called with ("buckets need unique slugs and rdids" (Mike, 2026-09-24)).
 //
-// NOTE: generic CRUD list has no server-side filter (it returns up to 500 rows),
+// NOTE: generic CRUD list has no server-side filter (it is paged by the /v1 list envelope),
 // so list()/get() fetch all bucket-types and group them client-side. Fine at
 // settings-page volume; revisit if a tenant ever exceeds ~500 bucket-types.
 //
@@ -38,7 +38,7 @@
 // default bucket went away, the `kind` doc was rewritten in that copy while this one went on
 // describing the auto-seeded bucket the backend no longer has.
 
-import { authedJson, authedRequest, rethrowConflict } from "../http";
+import { authedJson, authedRequest, listAllV1, rethrowConflict, unixToIso } from "../http";
 import { compact, enc, scopeByOwner, sortByText } from "../client-helpers";
 import type {
   BucketRow,
@@ -46,6 +46,8 @@ import type {
   BucketPutBody,
   BucketTypeRow,
   BucketTypeCreateBody,
+  BucketTypeWire,
+  BucketWire,
 } from "./wire";
 
 /** One ADH table within a schema definition. Structure only. */
@@ -82,8 +84,41 @@ export interface SchemaDefinitionInput {
   tables: SchemaTable[];
 }
 
-const SCHEMAS = "/api/bucket/buckets";
-const TABLES = "/api/bucket/bucket-types";
+const SCHEMAS = "/api/v1/buckets";
+const TABLES = "/api/v1/bucket_types";
+
+function toBucketRow(w: BucketWire): BucketRow {
+  // `description` is a column on /v1; older rows kept it in `metadata`. A row with neither stays
+  // `null` (the slugless-row fixture is one), and `descriptionOf` reads either.
+  const description = w.description ?? w.metadata?.description;
+  return {
+    id: w.id,
+    ecosystemId: w.ecosystem_id,
+    name: w.name,
+    // Required on the wire, defaulted anyway (see toDefinition).
+    slug: w.slug as string,
+    kind: w.kind as string,
+    metadata: description !== undefined ? { ...(w.metadata ?? {}), description } : (w.metadata ?? null),
+    createdAt: unixToIso(w.created),
+    updatedAt: unixToIso(w.updated),
+  };
+}
+
+const toBucketTypeRow = (w: BucketTypeWire): BucketTypeRow => ({
+  id: w.id,
+  bucketId: w.bucket_id,
+  sqlTableName: w.sql_table_name,
+  name: w.name,
+});
+
+const fetchBuckets = async (): Promise<BucketRow[]> =>
+  (await listAllV1<BucketWire>(SCHEMAS)).map(toBucketRow);
+
+/** The collection has no `bucket_id` filter in the spec, so narrow here when a bucket is named. */
+async function fetchTables(bucketId?: string): Promise<BucketTypeRow[]> {
+  const rows = (await listAllV1<BucketTypeWire>(TABLES)).map(toBucketTypeRow);
+  return bucketId === undefined ? rows : rows.filter((r) => r.bucketId === bucketId);
+}
 
 function descriptionOf(metadata: BucketRow["metadata"]): string {
   return metadata && typeof metadata.description === "string"
@@ -170,8 +205,8 @@ async function rollbackSchema(
 export const schemasApi = {
   async list(ecosystemId?: string): Promise<SchemaDefinition[]> {
     const [schemaRows, tableRows] = await Promise.all([
-      authedJson<BucketRow[]>(SCHEMAS),
-      authedJson<BucketTypeRow[]>(TABLES),
+      fetchBuckets(),
+      fetchTables(),
     ]);
     return sortByText(
       scopeByOwner(schemaRows, ecosystemId, (s) => s.ecosystemId).map((s) =>
@@ -184,8 +219,8 @@ export const schemasApi = {
   async get(id: string): Promise<SchemaDefinition | null> {
     try {
       const [s, tableRows] = await Promise.all([
-        authedJson<BucketRow>(`${SCHEMAS}/${enc(id)}`),
-        authedJson<BucketTypeRow[]>(`${TABLES}?bucketId=${enc(id)}`),
+        authedJson<BucketWire>(`${SCHEMAS}/${enc(id)}`).then(toBucketRow),
+        fetchTables(id),
       ]);
       return toDefinition(s, tableRows);
     } catch {
@@ -206,20 +241,22 @@ export const schemasApi = {
     const schemaBody: BucketCreateBody = {
       name,
       slug,
-      metadata: { description: input.description },
+      description: input.description,
     };
     // owner = the chosen ecosystem; absent, the backend defaults to the caller's.
-    if (ecosystemId) schemaBody.ecosystemId = ecosystemId;
+    if (ecosystemId) schemaBody.ecosystem_id = ecosystemId;
     // No pre-read for duplicates: the backend's unique (owner, name) index is the
     // real guard (and a pre-read can't see a soft-deleted row still holding the
     // name, plus it cost a full schemas+tables list()). Catch the 409 → friendly
     // message, consistent with the ecosystems/teams/applications clients.
     let schema: BucketRow;
     try {
-      schema = await authedJson<BucketRow>(SCHEMAS, {
-        method: "POST",
-        body: JSON.stringify(schemaBody),
-      });
+      schema = toBucketRow(
+        await authedJson<BucketWire>(SCHEMAS, {
+          method: "POST",
+          body: JSON.stringify(schemaBody),
+        }),
+      );
     } catch (err) {
       rethrowBucketConflict(err, name, slug);
     }
@@ -233,16 +270,18 @@ export const schemasApi = {
     try {
       for (const t of input.tables) {
         const tableBody: BucketTypeCreateBody = {
-          bucketId: schema.id,
-          ecosystemId: schema.ecosystemId,
-          sqlTableName: t.type,
+          bucket_id: schema.id,
+          ecosystem_id: schema.ecosystemId,
+          sql_table_name: t.type,
           name: t.name,
         };
         createdTables.push(
-          await authedJson<BucketTypeRow>(TABLES, {
-            method: "POST",
-            body: JSON.stringify(tableBody),
-          }),
+          toBucketTypeRow(
+            await authedJson<BucketTypeWire>(TABLES, {
+              method: "POST",
+              body: JSON.stringify(tableBody),
+            }),
+          ),
         );
       }
     } catch (err) {
@@ -259,18 +298,19 @@ export const schemasApi = {
     const patch = compact({
       name: input.name?.trim(),
       slug: input.slug?.trim(),
-      metadata:
-        input.description !== undefined ? { description: input.description } : undefined,
+      description: input.description,
     } satisfies BucketPutBody);
 
     let schema: BucketRow;
     try {
-      schema = Object.keys(patch).length
-        ? await authedJson<BucketRow>(`${SCHEMAS}/${enc(id)}`, {
-            method: "PUT",
-            body: JSON.stringify(patch),
-          })
-        : await authedJson<BucketRow>(`${SCHEMAS}/${enc(id)}`);
+      schema = toBucketRow(
+        Object.keys(patch).length
+          ? await authedJson<BucketWire>(`${SCHEMAS}/${enc(id)}`, {
+              method: "POST",
+              body: JSON.stringify(patch),
+            })
+          : await authedJson<BucketWire>(`${SCHEMAS}/${enc(id)}`),
+      );
     } catch (err) {
       rethrowBucketConflict(err, patch.name ?? "", patch.slug ?? "");
     }
@@ -279,8 +319,7 @@ export const schemasApi = {
 
     if (input.tables !== undefined) {
       assertUniqueTableNames(input.tables);
-      const allTables = await authedJson<BucketTypeRow[]>(`${TABLES}?bucketId=${enc(bucketId)}`);
-      const current = allTables.filter((t) => t.bucketId === bucketId);
+      const current = await fetchTables(bucketId);
       const currentById = new Map(current.map((t) => [t.id, t]));
       const desiredIds = new Set(input.tables.map((t) => t.id));
 
@@ -298,35 +337,34 @@ export const schemasApi = {
       for (const t of input.tables) {
         const existing = currentById.get(t.id);
         if (!existing) {
-          await authedJson<BucketTypeRow>(TABLES, {
+          await authedJson<BucketTypeWire>(TABLES, {
             method: "POST",
             body: JSON.stringify({
-              bucketId,
-              ecosystemId: schema.ecosystemId,
-              sqlTableName: t.type,
+              bucket_id: bucketId,
+              ecosystem_id: schema.ecosystemId,
+              sql_table_name: t.type,
               name: t.name,
             }),
           });
         } else if (existing.name !== t.name || existing.sqlTableName !== t.type) {
-          await authedJson<BucketTypeRow>(`${TABLES}/${enc(t.id)}`, {
-            method: "PUT",
-            body: JSON.stringify({ name: t.name, sqlTableName: t.type }),
+          await authedJson<BucketTypeWire>(`${TABLES}/${enc(t.id)}`, {
+            method: "POST",
+            body: JSON.stringify({ name: t.name, sql_table_name: t.type }),
           });
         }
       }
     }
 
     // Re-read so the response carries the backend's table ids (new rows got uuids).
-    const finalTables = await authedJson<BucketTypeRow[]>(`${TABLES}?bucketId=${enc(bucketId)}`);
+    const finalTables = await fetchTables(bucketId);
     return toDefinition(schema, finalTables);
   },
 
   async delete(id: string): Promise<void> {
     // No DB-level cascade from buckets to bucket_types, so remove children first.
-    const allTables = await authedJson<BucketTypeRow[]>(`${TABLES}?bucketId=${enc(id)}`);
+    const allTables = await fetchTables(id);
     await Promise.all(
       allTables
-        .filter((t) => t.bucketId === id)
         .map((t) => authedRequest(`${TABLES}/${enc(t.id)}`, { method: "DELETE" })),
     );
     await authedRequest(`${SCHEMAS}/${enc(id)}`, { method: "DELETE" });

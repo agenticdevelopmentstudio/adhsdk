@@ -1,0 +1,28 @@
+
+- **render-by-type**: Component MUST render different markup for each supported field type: text, date, select, email, phone, url, boolean, multi_select, image, address, markdown, textarea.
+- **empty-text-renders-nothing**: Component MUST render nothing when type is text, date, select, or the default case and the value is empty (after converting to a display string).
+- **empty-multi-select-renders-nothing**: Component MUST render nothing when type is multi_select and the value is not a non-empty list.
+- **empty-address-renders-nothing**: Component MUST render nothing when type is address and all address parts (line1, line2, city, region, postalCode, country) are empty or absent.
+- **url-as-link**: Component MUST render type url as an `<a>` element with href set to the value, with class rp-field__link.
+- **url-protocol-stripped**: Component MUST display the URL text with the leading protocol (http:// or https://) removed.
+- **url-security-attributes**: Component MUST set rel="noopener noreferrer nofollow" and target="_blank" on URL links.
+- **email-as-text**: Component MUST render type email as plain text in a span with class rp-field__text, never as a mailto link, regardless of value visibility settings.
+- **phone-as-text**: Component MUST render type phone as plain text in a span with class rp-field__text, never as a tel link.
+- **empty-email-or-phone-renders-empty-span**: Component MUST render an empty span with class rp-field__text (not nothing) when type is email or phone and the value is empty — unlike text/date/select/default, which render nothing for an empty value.
+- **boolean-as-yes-no**: Component MUST render type boolean as "Yes" when the value is truthy and "No" when it is falsy (including an absent value), in a span with class rp-field__text. This is a truthiness test, not a strict boolean check: a truthy non-boolean value such as the string "false" still renders "Yes".
+- **multi-select-as-list**: Component MUST render type multi_select as an unordered list with class rp-field__tags containing list items with class rp-field__tag.
+- **multi-select-items-stringified**: Component MUST convert each multi_select item to a display string before rendering.
+- **image-resolver-used**: Component MUST use the resolveImageUrl prop, when provided, to convert an image attachment ID into a URL.
+- **unresolvable-image-renders-nothing**: Component MUST render nothing (not a broken-image placeholder) when the image ID is empty, resolveImageUrl is absent, or resolveImageUrl returns null.
+- **image-alt-text**: Component MUST render type image as an img element with src from resolveImageUrl and alt set to field.label.
+- **image-class**: Component MUST render the image with class rp-field__image.
+- **address-comma-separated**: Component MUST render type address by joining all non-empty address parts (line1, line2, city, region, postalCode, country) with ", ".
+- **address-value-as-object**: Component MUST accept the address value as an object with keys line1, line2, city, region, postalCode, country, treating a non-object value as an empty object.
+- **markdown-as-text**: Component MUST render type markdown as pre-wrapped text in a paragraph with class rp-field__prose, never as HTML.
+- **textarea-as-text**: Component MUST render type textarea as pre-wrapped text in a paragraph with class rp-field__prose, never as HTML.
+- **delivery-label-lookup**: Component MUST apply the DELIVERY_LABEL mapping (in_person → "In person", virtual → "Virtual", hybrid → "In person or virtual") to text, date, select, and default types before rendering.
+- **unmapped-values-as-is**: Component MUST render the original value as display text if it is not found in the DELIVERY_LABEL mapping.
+- **rp-field-text-class**: Component MUST use class rp-field__text for text, email, phone, boolean, and address field types.
+- **value-stringified**: Component MUST convert all non-address values to a display string before rendering.
+- **nullish-values-as-empty-string**: Component MUST treat an absent (null or undefined) value as an empty string wherever a display string is produced (text, date, select, default, email, phone, url, image, markdown, textarea); boolean and multi_select have their own absent-value handling (see **boolean-as-yes-no** and **empty-multi-select-renders-nothing**).
+

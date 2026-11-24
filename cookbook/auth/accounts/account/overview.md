@@ -1,0 +1,3 @@
+
+`Account` is the contract for one sign-in-able account an app knows about. An accounts panel renders from the protocol's properties and calls its verbs. How an account actually signs in is the conformer's business, which is why login is "present your sign-in UI" and not a credentials method. The file also defines the value types the protocol speaks in: `AccountUser` (who is signed in), `AccountState` (where the account stands) and `AccountPresentationAnchor` (what a platform hands an account so it can present its own sign-in UI). The tier is Foundation-only: it imports neither AppKit nor UIKit.
+

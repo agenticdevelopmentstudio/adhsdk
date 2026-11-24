@@ -67,8 +67,8 @@ final class ProjectFooterStatusTests: XCTestCase {
         return loadedController()
     }
 
-    private func loadedController() -> ComposableTabsWindowController {
-        let controller = ComposableTabsWindowController(project: makeWorkspace())
+    private func loadedController(showsTabBars: Bool = true) -> ComposableTabsWindowController {
+        let controller = ComposableTabsWindowController(project: makeWorkspace(), showsTabBars: showsTabBars)
         controller.contentViewController?.loadViewIfNeeded()
         return controller
     }
@@ -117,6 +117,15 @@ final class ProjectFooterStatusTests: XCTestCase {
         let controller = makeController()
 
         XCTAssertEqual(controller.footerStatus, "api-server › Tab 1 › Alpha")
+    }
+
+    /// A window without tab bars (the Git window, the File Browser) has no tab
+    /// to name, so its default "Tab 1" stays out of the path.
+    func testAWindowWithoutTabBarsLeavesTheTabOutOfThePath() {
+        installLayout { NSViewController() }
+        let controller = loadedController(showsTabBars: false)
+
+        XCTAssertEqual(controller.footerStatus, "api-server › Alpha")
     }
 
     /// The bar shows what the computation produced — the two are not allowed to

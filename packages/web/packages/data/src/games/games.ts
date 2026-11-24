@@ -1,6 +1,6 @@
 // Games API client — the four OPERATOR-WRITABLE tables of the `game` schema
 // (`game.games`, `game.definitions`, `game.effects`, `game.mappings`), over adh's
-// generic CRUD routes. The schema's other eight tables are player state with no
+// `/v1/games` and `/v1/game/*` routes. The schema's other eight tables are player state with no
 // operator read path, and this client deliberately does not reach them.
 //
 // All four are at the 'owner' CRUD tier (backend crud/policy.ts CRUD_TIERS) and sit
@@ -30,11 +30,28 @@
 // direction never changed — but nothing here parses it; it is passed straight through,
 // same as every other id.
 //
-// PARENT SCOPING. The children are filtered by `?gameId=` on list and carry `gameId` in
+// PARENT SCOPING. The children are filtered by `?gameId=` on list and carry `game_id` in
 // the CREATE BODY — the same split as the ecosystem above, and for the same reason: the
 // generic POST reads no query params.
+//
+// THE LIST FILTERS KEEP THEIR COLUMN SPELLING (`ecosystemId`, `gameId`). `/v1/games` and
+// `/v1/game/*` declare no filter parameters, and the gateway passes an undeclared query
+// name through unchanged to the generic list, which matches it against the row's column
+// props. A snake_case `ecosystem_id` would match nothing and be ignored — an unfiltered
+// list that looks like a real answer.
+//
+// A /v1 update is a POST on the item path, and every response is snake_case with
+// `created`/`updated` as unix seconds; the mappers below translate field by field.
 
-import { authedJson, authedRequest, clientRefusal, rethrowConflict } from "../http";
+import {
+  authedJson,
+  authedRequest,
+  clientRefusal,
+  listAllV1,
+  rethrowConflict,
+  unixToIso,
+  withV1Query,
+} from "../http";
 import { enc, sortByText } from "../client-helpers";
 
 /** `game.games.character_names` — whether players get a per-game display name and
@@ -230,18 +247,68 @@ export interface GameMappingInput {
 //    OBJECT; `data` is nullable, so its empty is `null`. Posting `null` at the first would
 //    500; posting `{}` at the second would show two characters the operator never typed.
 
-/** The wire shape of a row: the client's, except the nullable text columns arrive as
- *  `null` and the `jsonb` columns arrive PARSED. Written as an intersection over the
- *  client type so the two cannot drift apart. */
-type GameWire = Omit<Game, "description" | "engineConfig"> & {
+/** `/v1/games` row: snake_case, `created`/`updated` in unix seconds, the nullable text column
+ *  as `null` and the `jsonb` column PARSED. */
+export interface GameWire {
+  id: string;
+  ecosystem_id?: string;
+  slug: string;
+  name: string;
   description: string | null;
-  engineConfig: unknown;
-};
+  engine: string;
+  engine_config: unknown;
+  character_names: GameCharacterNames;
+  status: GameStatus;
+  event_log: GameEventLog;
+  event_retention_days: number;
+  created: number;
+  updated: number;
+}
 
-type GameDefinitionWire = Omit<GameDefinition, "description" | "data"> & {
+/** `/v1/game/definitions` row. */
+export interface GameDefinitionWire {
+  id: string;
+  game_id: string;
+  author_customer_id: string;
+  kind: string;
+  key: string;
+  name: string;
   description: string | null;
+  status: GameDefinitionStatus;
+  sort_order: number;
   data: unknown;
-};
+  created: number;
+  updated: number;
+}
+
+/** `/v1/game/effects` row. */
+export interface GameEffectWire {
+  id: string;
+  game_id: string;
+  definition_id: string;
+  key: string;
+  trigger: GameEffectTrigger;
+  target: string;
+  operation: GameEffectOperation;
+  value: number;
+  duration: number | null;
+  sort_order: number;
+  created: number;
+  updated: number;
+}
+
+/** `/v1/game/mappings` row. */
+export interface GameMappingWire {
+  id: string;
+  game_id: string;
+  kind: string;
+  from_id: string;
+  to_id: string;
+  amount: number;
+  sort_order: number;
+  created: number;
+  updated: number;
+}
 
 /** An empty box means the column is empty, not that it holds an empty string. */
 function emptyToNull(text: string): string | null {
@@ -294,50 +361,131 @@ const DEFINITION_DATA_EMPTY: unknown = null;
  *  objects below, which apply these on the way past. */
 export function gameFromWire(row: GameWire): Game {
   return {
-    ...row,
+    id: row.id,
+    slug: row.slug,
+    name: row.name,
     description: row.description ?? "",
-    engineConfig: jsonToText(row.engineConfig, ENGINE_CONFIG_EMPTY),
+    engine: row.engine,
+    engineConfig: jsonToText(row.engine_config, ENGINE_CONFIG_EMPTY),
+    characterNames: row.character_names,
+    status: row.status,
+    eventLog: row.event_log,
+    eventRetentionDays: row.event_retention_days,
+    createdAt: unixToIso(row.created),
+    updatedAt: unixToIso(row.updated),
   };
 }
 
 export function gameToWire(input: GameInput): Record<string, unknown> {
   return {
-    ...input,
+    slug: input.slug,
+    name: input.name,
     description: emptyToNull(input.description),
-    engineConfig: textToJson(input.engineConfig, ENGINE_CONFIG_EMPTY, "Engine config"),
+    engine: input.engine,
+    engine_config: textToJson(input.engineConfig, ENGINE_CONFIG_EMPTY, "Engine config"),
+    character_names: input.characterNames,
+    status: input.status,
+    event_log: input.eventLog,
+    event_retention_days: input.eventRetentionDays,
   };
 }
 
 export function definitionFromWire(row: GameDefinitionWire): GameDefinition {
   return {
-    ...row,
+    id: row.id,
+    gameId: row.game_id,
+    authorCustomerId: row.author_customer_id,
+    kind: row.kind,
+    key: row.key,
+    name: row.name,
     description: row.description ?? "",
+    status: row.status,
+    sortOrder: row.sort_order,
     data: jsonToText(row.data, DEFINITION_DATA_EMPTY),
+    createdAt: unixToIso(row.created),
+    updatedAt: unixToIso(row.updated),
   };
 }
 
 export function definitionToWire(input: GameDefinitionInput): Record<string, unknown> {
   return {
-    ...input,
+    kind: input.kind,
+    key: input.key,
+    name: input.name,
     description: emptyToNull(input.description),
+    status: input.status,
+    sort_order: input.sortOrder,
     data: textToJson(input.data, DEFINITION_DATA_EMPTY, "Data"),
   };
 }
 
-// No `/api/game/…` prefix mystery: `/api` is a FRONTEND rewrite
-// (`adh-next-config` maps `/api/:path*` onto the backend's prefix-less `/:path*`), the
-// same shape `/api/team/teams` and `/api/bucket/buckets` use.
-const GAMES = "/api/game/games";
-const DEFINITIONS = "/api/game/definitions";
-const EFFECTS = "/api/game/effects";
-const MAPPINGS = "/api/game/mappings";
+export function effectFromWire(row: GameEffectWire): GameEffect {
+  return {
+    id: row.id,
+    gameId: row.game_id,
+    definitionId: row.definition_id,
+    key: row.key,
+    trigger: row.trigger,
+    target: row.target,
+    operation: row.operation,
+    value: row.value,
+    duration: row.duration,
+    sortOrder: row.sort_order,
+    createdAt: unixToIso(row.created),
+    updatedAt: unixToIso(row.updated),
+  };
+}
+
+export function effectToWire(input: GameEffectInput): Record<string, unknown> {
+  return {
+    definition_id: input.definitionId,
+    key: input.key,
+    trigger: input.trigger,
+    target: input.target,
+    operation: input.operation,
+    value: input.value,
+    duration: input.duration,
+    sort_order: input.sortOrder,
+  };
+}
+
+export function mappingFromWire(row: GameMappingWire): GameMapping {
+  return {
+    id: row.id,
+    gameId: row.game_id,
+    kind: row.kind,
+    fromId: row.from_id,
+    toId: row.to_id,
+    amount: row.amount,
+    sortOrder: row.sort_order,
+    createdAt: unixToIso(row.created),
+    updatedAt: unixToIso(row.updated),
+  };
+}
+
+export function mappingToWire(input: GameMappingInput): Record<string, unknown> {
+  return {
+    kind: input.kind,
+    from_id: input.fromId,
+    to_id: input.toId,
+    amount: input.amount,
+    sort_order: input.sortOrder,
+  };
+}
+
+// `/api` is a FRONTEND rewrite (`adh-next-config` maps `/api/:path*` onto the backend's
+// prefix-less `/:path*`), so these are the backend's `/v1/games` and `/v1/game/*`.
+const GAMES = "/api/v1/games";
+const DEFINITIONS = "/api/v1/game/definitions";
+const EFFECTS = "/api/v1/game/effects";
+const MAPPINGS = "/api/v1/game/mappings";
 
 export const gamesApi = {
   /** The workspace's catalog. `ecosystemId` is the ecosystem's rdid or uuid; see SCOPING
    *  above for why it is a column filter here and a body field on create. */
   async list(ecosystemId?: string): Promise<Game[]> {
-    const url = ecosystemId ? `${GAMES}?ecosystemId=${enc(ecosystemId)}` : GAMES;
-    const rows = await authedJson<GameWire[]>(url);
+    const url = ecosystemId ? withV1Query(GAMES, { ecosystemId }) : GAMES;
+    const rows = await listAllV1<GameWire>(url);
     // The generic list has no ORDER BY, so the order is the planner's. Sorted here, by the
     // name the rail actually shows.
     return sortByText(rows.map(gameFromWire), (g) => g.name);
@@ -364,7 +512,7 @@ export const gamesApi = {
           // Omitted, it would default to the CALLER's — the same ecosystem in the ordinary
           // case, and a silently misfiled game when it is not. Named, a foreign one is a
           // 403 rather than a wrong row.
-          body: JSON.stringify({ ...gameToWire(input), ecosystemId }),
+          body: JSON.stringify({ ...gameToWire(input), ecosystem_id: ecosystemId }),
         }),
       );
     } catch (err) {
@@ -373,12 +521,12 @@ export const gamesApi = {
   },
 
   /** `id` is the game's uuid. The ecosystem is NOT resent: a game does not move between
-   *  ecosystems, and a PUT that named one would be the only way to try. */
+   *  ecosystems, and an update that named one would be the only way to try. */
   async update(id: string, input: GameInput): Promise<Game> {
     try {
       return gameFromWire(
         await authedJson<GameWire>(`${GAMES}/${enc(id)}`, {
-          method: "PUT",
+          method: "POST",
           body: JSON.stringify(gameToWire(input)),
         }),
       );
@@ -398,34 +546,32 @@ export const gamesApi = {
  * The three per-game child collections share one shape, so they share one factory.
  *
  * `gameId` is the parent game's uuid: a LIST FILTER on the way in (`?gameId=`) and a BODY
- * field on create. The two spellings are not interchangeable — the generic POST reads no
+ * field (`game_id`) on create. The two spellings are not interchangeable — the generic POST reads no
  * query params, so a `?gameId=` create would insert with no parent and fail its NOT NULL.
  */
 function childApi<TRow, TWire, TInput>(
   base: string,
-  /** The column crossing for this collection (see THE TWO COLUMN CROSSINGS). `effects`
-   *  and `mappings` have neither a nullable TEXT nor a `jsonb` column — `duration` is
-   *  nullable but already typed `number | null`, so null needs no translation there —
-   *  and pass the identity pair rather than a special case in here. */
+  /** The wire crossing for this collection: snake_case/unix-seconds always, plus the two
+   *  column crossings (see THE TWO COLUMN CROSSINGS) where the table has such a column. */
   codec: { fromWire: (row: TWire) => TRow; toWire: (input: TInput) => Record<string, unknown> },
 ) {
   return {
     async list(gameId: string): Promise<TRow[]> {
-      const rows = await authedJson<TWire[]>(`${base}?gameId=${enc(gameId)}`);
+      const rows = await listAllV1<TWire>(withV1Query(base, { gameId }));
       return rows.map(codec.fromWire);
     },
     async create(gameId: string, input: TInput): Promise<TRow> {
       return codec.fromWire(
         await authedJson<TWire>(base, {
           method: "POST",
-          body: JSON.stringify({ ...codec.toWire(input), gameId }),
+          body: JSON.stringify({ ...codec.toWire(input), game_id: gameId }),
         }),
       );
     },
     async update(id: string, input: TInput): Promise<TRow> {
       return codec.fromWire(
         await authedJson<TWire>(`${base}/${enc(id)}`, {
-          method: "PUT",
+          method: "POST",
           body: JSON.stringify(codec.toWire(input)),
         }),
       );
@@ -436,27 +582,18 @@ function childApi<TRow, TWire, TInput>(
   };
 }
 
-/** Nothing to translate: this collection has neither a nullable text nor a jsonb column. */
-const identityCodec = <TRow, TInput extends object>() => ({
-  fromWire: (row: TRow) => row,
-  // The cast is the interface/index-signature gap, not a shape claim: an `interface` with
-  // no index signature is not assignable to `Record<string, unknown>` however plain its
-  // fields are, and every input type here is one.
-  toWire: (input: TInput): Record<string, unknown> => ({ ...input }) as Record<string, unknown>,
-});
-
 export const gameDefinitionsApi = childApi<
   GameDefinition,
   GameDefinitionWire,
   GameDefinitionInput
 >(DEFINITIONS, { fromWire: definitionFromWire, toWire: definitionToWire });
 
-export const gameEffectsApi = childApi<GameEffect, GameEffect, GameEffectInput>(
-  EFFECTS,
-  identityCodec<GameEffect, GameEffectInput>(),
-);
+export const gameEffectsApi = childApi<GameEffect, GameEffectWire, GameEffectInput>(EFFECTS, {
+  fromWire: effectFromWire,
+  toWire: effectToWire,
+});
 
-export const gameMappingsApi = childApi<GameMapping, GameMapping, GameMappingInput>(
-  MAPPINGS,
-  identityCodec<GameMapping, GameMappingInput>(),
-);
+export const gameMappingsApi = childApi<GameMapping, GameMappingWire, GameMappingInput>(MAPPINGS, {
+  fromWire: mappingFromWire,
+  toWire: mappingToWire,
+});

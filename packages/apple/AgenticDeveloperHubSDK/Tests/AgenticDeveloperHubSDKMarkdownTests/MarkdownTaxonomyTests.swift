@@ -468,7 +468,7 @@ struct MarkdownTaxonomyTests {
 
     // MARK: - Keyword uniqueness
 
-    /// adh's `UNIQUE (customer_id, ecosystem_id, label)` is unconditional, so
+    /// adh's `UNIQUE (owner_kind, owner_id, ecosystem_id, label)` is unconditional, so
     /// a live label is taken. The bare `INSERT` this replaces threw a raw
     /// `SQLITE_CONSTRAINT`, which the call site could not tell from a disk
     /// error.

@@ -43,7 +43,7 @@ function personaBackend(
     personaSlug: 'aria',
     authorize: async (path, init) => {
       calls.push({ path, init })
-      if (path.endsWith('/conversations')) {
+      if (path.endsWith('/v1/chats')) {
         return new Response(JSON.stringify({ id: 'conv-1' }), {
           status: 200,
           headers: { 'content-type': 'application/json' },
@@ -61,7 +61,7 @@ function personaBackend(
     calls,
     statuses,
     conversationPosts: () =>
-      calls.filter((c) => c.path.endsWith('/conversations') && c.init.method === 'POST').length,
+      calls.filter((c) => c.path.endsWith('/v1/chats') && c.init.method === 'POST').length,
   }
 }
 

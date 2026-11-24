@@ -1,6 +1,7 @@
 import AppKit
 import OSLog
 import AgenticDeveloperHubSDKCore
+import AgenticDeveloperHubSDKCoreUI
 import AgenticDeveloperHubSDKUI
 
 /// Owns the Notes feature stack — the storage-backed `NotesManager` plus the
@@ -139,7 +140,7 @@ public final class NotesCoordinator: AppFeature {
             MenuContribution(
                 slot: .notes, title: "Notes",
                 commandID: CommandID.showNotes, registry: registry,
-                order: 40, key: "4"
+                order: 0, key: "4"
             ),
             MenuContribution(
                 slot: .statusItem(section: 0), title: "Notes",
@@ -152,22 +153,22 @@ public final class NotesCoordinator: AppFeature {
                 order: 20
             ),
             MenuContribution(
-                slot: .file, title: "New Folder",
+                slot: .notes, title: "New Folder",
                 commandID: CommandID.newFolder, registry: registry,
                 order: 10, key: "n", modifiers: [.command, .shift]
             ),
             MenuContribution(
-                slot: .file, title: "Import Markdown File…",
+                slot: .notes, title: "Import Markdown File…",
                 commandID: CommandID.importMarkdownFile, registry: registry,
                 order: 20
             ),
             MenuContribution(
-                slot: .file, title: "Delete Note",
+                slot: .notes, title: "Delete Note",
                 commandID: CommandID.deleteNote, registry: registry,
                 order: 30
             ),
             MenuContribution(
-                slot: .file, title: "Delete Folder",
+                slot: .notes, title: "Delete Folder",
                 commandID: CommandID.deleteFolder, registry: registry,
                 order: 40
             )
@@ -214,7 +215,8 @@ public final class NotesCoordinator: AppFeature {
     /// search field), where "the notes view in this window" is still an
     /// unambiguous answer.
     private var activeNotesViewController: NotesSplitViewController? {
-        guard let window = NSApp.keyWindow else { return nil }
+        // A child window (a Chrome pane's page) is part of its parent.
+        guard let window = NSApp.keyWindow?.commandOwner else { return nil }
         if window === notesWindowController.window { return notesWindowController.viewController }
         var responder: NSResponder? = window.firstResponder
         while let current = responder {

@@ -1,0 +1,7 @@
+
+- **Null or undefined children**: The root element always renders regardless of `children`; there is no case where the component itself does not render. React renders `null`/`undefined` children as nothing, so the rendered output is the root element plus, if `glow: true`, the Glow component. See screen-014.
+- **Empty children array**: An empty array renders the same as `null` or `undefined` — nothing — so the root element renders with no additional content. See screen-015.
+- **Glow with no children**: Glow's presence depends only on the `glow` prop, not on `children` being null, undefined, or empty; see `#requirements/render-glow` and screen-011.
+- **Multiple class collisions**: If `className` contains `lp-screen` or `lp-screen--center`, the class list still contains every token (see `#requirements/merge-classname`); a DOM `classList` treats duplicate tokens as a no-op, so the rendered element is styled identically whether or not a port deduplicates. See screen-008.
+- **Viewport height on mobile browsers**: `min-height: 100vh` is deliberate. On mobile browsers whose toolbars resize the viewport, `100vh` is the toolbar-collapsed height, so the snap unit never changes while the reader scrolls; `100svh` is the toolbar-expanded height and would let the next screen peek in once the toolbar collapses. A host that wants `100dvh` or `100svh` overrides `min-height` on `.lp-screen` in its own stylesheet.
+

@@ -8,3 +8,5 @@
 | 1.1.3 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/layout/composable-tabs/. |
 | 1.3.0 | 2026-10-04 | Mike Fullerton | Resolved the contrast NEEDS REVIEW marker as current behavior (no contrast check) with a vector and a pending decision; added separation-of-concerns (passed) and unit-test-coverage compliance rows. Added the confines-to-ui-thread requirement and vector. Corrected unit-test-coverage to partial: the pane backdrop's fill and backdrop color are tested in ComposableTabsPaneChromeTests. |
+| 2.0.0 | 2026-11-15 | Mike Fullerton | The outline can be switched off for a single-pane window (the-backdrop-outline-is-optional); every-pane-is-always-outlined, CTA-33 and the constant-width Decision now hold only while it is on, and CTA-55 covers it switched off. |
+| 2.0.1 | 2026-11-16 | Mike Fullerton | Conformance tests added (ComposableTabsActivePaneConformanceTests.swift, 51 of 54 vectors); unit-test-coverage stays partial (039, 050, 054 skipped). |

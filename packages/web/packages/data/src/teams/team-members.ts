@@ -1,12 +1,12 @@
-// Team members API client — wired to the hand-written backend route /api/team/members
-// (src/routes/teamMembers.ts), which is OFF generic CRUD. A member is either an existing
+// Team members API client — wired to the backend route /api/v1/team_members. A member is either an existing
 // customer (added by EMAIL, resolved to a customer in the ecosystem — 404 if none) or one
 // of the caller's personas (added by key, gated on the persona's may_act 'team' grant).
 // The backend enforces the team owner/admin scope and guards duplicates (409). authedJson
 // throws an Error carrying the backend's message, so callers surface e.message inline.
 // Types are hand-declared: this route is off the generated OpenAPI surface.
 
-import { authedJson, authedRequest } from "../http";
+import { authedJson, authedRequest, listAllV1, withV1Query } from "../http";
+import type { TeamMemberRow } from "./wire";
 import { enc } from "../client-helpers";
 
 export interface TeamMember {
@@ -27,19 +27,30 @@ export interface TeamMember {
   personaName: string | null;
 }
 
-const BASE = "/api/team/members";
+const BASE = "/api/v1/team_members";
+
+export function toTeamMember(r: TeamMemberRow): TeamMember {
+  return {
+    id: r.id,
+    teamId: r.team_id,
+    userId: r.user_id,
+    role: r.role,
+    addedAt: r.added_at,
+    memberKind: r.member_kind === "persona" ? "persona" : "customer",
+    email: r.email ?? null,
+    displayName: r.display_name ?? null,
+    personaSlug: r.persona_slug ?? null,
+    personaName: r.persona_name ?? null,
+  };
+}
 
 export const teamMembersApi = {
   async list(teamId: string): Promise<TeamMember[]> {
-    // Tolerate a body without `members` (the route always sends it, but a proxy/error
-    // page might not) rather than letting the caller deref `undefined.length`.
-    const body = await authedJson<{ members?: TeamMember[] }>(
-      `${BASE}?teamId=${enc(teamId)}`,
-    );
-    return body.members ?? [];
+    const rows = await listAllV1<TeamMemberRow>(withV1Query(BASE, { team_id: teamId }));
+    return rows.map(toTeamMember);
   },
 
-  /** Member count per team in the caller's scope (`GET /team/members/counts`).
+  /** Member count per team in the caller's scope (`GET /v1/team_members?include[]=total_count`).
    *
    *  It was built for the All-teams landing cards, and **nothing in the fleet calls it now** —
    *  that landing is gone, and an unselected teams frontier is the select hint, which decorates
@@ -48,28 +59,29 @@ export const teamMembersApi = {
    *  backend's surface, not the current callers'; delete it with the route, not before. */
   async counts(): Promise<Map<string, number>> {
     const body = await authedJson<{
-      counts?: Array<{ teamId: string; count: number }>;
-    }>(`${BASE}/counts`);
-    return new Map((body.counts ?? []).map((c) => [c.teamId, c.count]));
+      total_count?: { counts?: Array<{ team_id: string; count: number }> };
+    }>(withV1Query(BASE, { "include[]": ["total_count"] }));
+    return new Map((body.total_count?.counts ?? []).map((c) => [c.team_id, c.count]));
   },
 
   /** Add an existing customer (by email) to the team. Throws the backend's message on
    *  404 (no such user) / 409 (already a member); the caller surfaces it inline. */
   add(teamId: string, email: string): Promise<TeamMember> {
-    return authedJson<TeamMember>(BASE, {
+    return authedJson<TeamMemberRow>(BASE, {
       method: "POST",
-      body: JSON.stringify({ teamId, email }),
-    });
+      body: JSON.stringify({ team_id: teamId, email }),
+    }).then(toTeamMember);
   },
 
   /** Add one of the caller's personas to the team. The backend enforces the persona has
    *  been granted may_act 'team' (403 otherwise) and 404s an unknown persona; the caller
    *  surfaces the thrown message inline. */
   async addPersona(teamId: string, personaKey: string): Promise<TeamMember> {
-    return authedJson<TeamMember>(`${BASE}/personas`, {
+    const row = await authedJson<TeamMemberRow>(BASE, {
       method: "POST",
-      body: JSON.stringify({ teamId, personaKey }),
+      body: JSON.stringify({ type: "persona", team_id: teamId, persona_key: personaKey }),
     });
+    return toTeamMember(row);
   },
 
   remove(memberId: string): Promise<void> {

@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "bc4c4fe9-aa33-47a7-94d2-fb688e70caec",
     "title": "OpenVSXClient",
-    "domain": "adhsdk://cookbook/workspace/extensions/registry/open-vsx-client",
     "type": "ingredient",
     "version": "1.0.4",
     "status": "review",
@@ -26,7 +25,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/workspace/extensions/manifest/extension-identity-component"
+      "5b0fea72-dbb8-4299-a54f-dc16486df1ae"
     ],
     "references": [
       "packages/apple/AgenticDeveloperHubSDK/Core/Extensions/OpenVSXClient.swift (adhsdk)",
@@ -38,7 +37,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "e997d806e3c898b4",
+  "synced": "3554820696e84577",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -57,7 +56,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

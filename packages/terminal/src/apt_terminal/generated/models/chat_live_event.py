@@ -67,32 +67,32 @@ class ChatLiveEvent:
         field_dict.update(self.additional_properties)
         field_dict.update({})
         if chat_id is not UNSET:
-            field_dict["chatId"] = chat_id
+            field_dict["chat_id"] = chat_id
         if seq is not UNSET:
             field_dict["seq"] = seq
         if participant_id is not UNSET:
-            field_dict["participantId"] = participant_id
+            field_dict["participant_id"] = participant_id
         if state is not UNSET:
             field_dict["state"] = state
         if expires_at is not UNSET:
-            field_dict["expiresAt"] = expires_at
+            field_dict["expires_at"] = expires_at
         if added is not UNSET:
             field_dict["added"] = added
         if removed is not UNSET:
             field_dict["removed"] = removed
         if chat_ids is not UNSET:
-            field_dict["chatIds"] = chat_ids
+            field_dict["chat_ids"] = chat_ids
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        chat_id = d.pop("chatId", UNSET)
+        chat_id = d.pop("chat_id", UNSET)
 
         seq = d.pop("seq", UNSET)
 
-        participant_id = d.pop("participantId", UNSET)
+        participant_id = d.pop("participant_id", UNSET)
 
         _state = d.pop("state", UNSET)
         state: ChatLiveEventState | Unset
@@ -101,13 +101,13 @@ class ChatLiveEvent:
         else:
             state = ChatLiveEventState(_state)
 
-        expires_at = d.pop("expiresAt", UNSET)
+        expires_at = d.pop("expires_at", UNSET)
 
         added = cast(list[str], d.pop("added", UNSET))
 
         removed = cast(list[str], d.pop("removed", UNSET))
 
-        chat_ids = cast(list[str], d.pop("chatIds", UNSET))
+        chat_ids = cast(list[str], d.pop("chat_ids", UNSET))
 
         chat_live_event = cls(
             chat_id=chat_id,

@@ -8,7 +8,10 @@
   `--color-apt-border`, `--color-apt-surface-2`, `--color-apt-text`,
   `--color-apt-text-muted`, `--color-apt-bg`), each series colour with a
   literal fallback. Lines use monotone interpolation with null gaps not
-  connected.
+  connected. The tooltip is a custom `content` renderer that reads every
+  series from the hovered point itself, because recharts leaves a series whose
+  value is `null` out of its tooltip payload; that keeps one row per series and
+  lets a gap show its em dash.
 - **SwiftUI**: Use Swift Charts: a `Chart` containing one `LineMark` per point
   per series, with `.foregroundStyle(by:)` bound to the series label for the
   automatic legend, `.interpolationMethod(.monotone)`, and `chartYAxis` with an

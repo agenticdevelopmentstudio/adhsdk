@@ -26,6 +26,11 @@ function RadioGroupItem({
 }: React.ComponentProps<typeof RadioPrimitive.Root>) {
   return (
     <RadioPrimitive.Root
+      // Base UI 1.5's span radio swallows Space inside a group (its composite
+      // Space handler prevents the keydown before RadioRoot's onClick, which
+      // bails on defaultPrevented). A native button takes the click() path.
+      nativeButton
+      render={<button type="button" />}
       data-slot="radio-group-item"
       className={cn(
         "flex size-4 shrink-0 items-center justify-center rounded-full border border-apt-border bg-apt-bg transition-colors outline-none",

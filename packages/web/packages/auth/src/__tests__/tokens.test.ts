@@ -12,14 +12,14 @@ import {
 
 beforeEach(() => {
   localStorage.clear()
-  configureAuth({ storageKey: 'test_tokens', refreshPath: '/api/auth/refresh' })
+  configureAuth({ storageKey: 'test_tokens', refreshPath: '/api/v1/auth/sessions/refresh' })
 })
 
 describe('tokensFromResponse', () => {
-  it('prefers accessToken, falls back to token, blanks refreshToken', () => {
+  it('prefers token (/v1), falls back to accessToken (legacy exchange), blanks refreshToken', () => {
     expect(tokensFromResponse({ accessToken: 'A' })).toEqual({ accessToken: 'A', refreshToken: '' })
     expect(tokensFromResponse({ token: 'T' })).toEqual({ accessToken: 'T', refreshToken: '' })
-    expect(tokensFromResponse({ accessToken: 'A', token: 'T' })).toEqual({ accessToken: 'A', refreshToken: '' })
+    expect(tokensFromResponse({ accessToken: 'A', token: 'T' })).toEqual({ accessToken: 'T', refreshToken: '' })
   })
 
   it('throws when neither field is present', () => {

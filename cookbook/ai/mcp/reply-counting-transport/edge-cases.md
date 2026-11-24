@@ -1,0 +1,11 @@
+
+- **Null and empty input**: A message that does not parse, or parses to something other than an object, MUST be ignored by the counter and still passed through (MUST). An `id` of null (or a missing `id`) is not an id and is not counted (MUST).
+- **Boundary values**: A zero or very short deadline MUST return promptly with whether anything is still owed (MUST). Number ids are keyed by their decimal string form, so `1` and `1.0` as JSON numbers share the key `n:1` (a consequence of `NSNumber.stringValue`; the source does not address fractions).
+- **Concurrent access**: The type is an actor, so the owed set and waiter list are never touched concurrently. The pump task runs on the actor and calls the counter synchronously, with no suspension, before it yields the message, so a request is always counted before the server can answer it (MUST). The deadline timer of any one waiter releases every waiter, so a waiter with a longer deadline resumes at the shortest one and returns whether anything is still owed (MUST, as written). A JSON boolean `id` is read as a number (`NSNumber`), so `true` is keyed `n:1` and `false` `n:0`; the source does not address booleans.
+- **Error states**: A throwing wrapped `send` still pays the debt for that response (MUST, per `pay-after-send`); a request whose reply the server could not write is therefore no longer waited for. A throwing wrapped stream ends the returned stream with the same error (MUST).
+- **Disconnect with debts**: `disconnect()` releases waiters but does not clear the owed set, so `owedCount` after a disconnect still reports the unanswered requests, and a waiter released that way gets false (MUST, as written).
+- **A response for a request never counted**: A response with an unknown id is a no-op (MUST).
+- **A duplicate request id**: Two requests received with the same id are one entry, so a single response pays both; the source does not distinguish them (a consequence of using a `Set`).
+- **Offline or disconnected state**: Not applicable — the wrapper has no network of its own; it relays whatever the wrapped transport does.
+- **Timeouts**: The deadline is the only timeout, and it bounds only the drain wait, not any individual request.
+

@@ -1,0 +1,23 @@
+
+- **protocol-surface**: `PartnerProcessing` MUST be `Sendable` and offer `start()` (async, throws), `send(_:)` (async, throws), `messages()`, `terminate()` (async), `isRunning` (async) and `standardErrorText()` (async).
+- **actor-isolation**: `PartnerProcess` MUST be an `actor`; its `start`, `send`, `terminate`, `isRunning` and `standardErrorText` run serialised on it, and `messages()` MUST be `nonisolated` so it can be called without awaiting.
+- **configured-init**: The public initializer MUST take a `PartnerProcessConfiguration` and an environment dictionary, and launch the configuration's `executable` with its `arguments` and its `workingDirectory` as the child's current directory.
+- **framing**: The channel MUST use newline-delimited framing, so each stdout line is one message and each input is one line.
+- **environment-replace**: The caller's environment MUST be handed over with the replace policy, so a variable the caller removed stays removed, because the caller hands over the child's whole environment; an empty dictionary inherits the parent's environment, which is the channel's documented behavior for that policy.
+- **start-launches**: `start()` MUST launch the channel, take its message stream and begin decoding stdout lines; a launch failure MUST propagate as the thrown error.
+- **start-once**: A second `start()` MUST throw, because the channel does not allow a second launch.
+- **send-user-message**: `send(_:)` MUST write one line made by `ClaudeStreamInput.userMessage(text)` (a JSON object of type `user` with the text as one text block, then a newline) to the process's stdin; a failed write MUST propagate as the thrown error.
+- **send-before-start**: `send(_:)` before `start()` MUST throw, because the channel is not launched.
+- **decode-each-line**: Each stdout line MUST be decoded with `ClaudeStreamMessage.decode` and yielded in order on the stream.
+- **undecodable-skipped**: A line that fails to decode MUST be skipped without ending the stream, and a debug log line `skipped an undecodable stdout line` MUST be written.
+- **stream-error-ends**: When reading stdout throws, the failure MUST be logged at debug level and the stream MUST finish; it is not rethrown, so an errored end looks like a clean end on the stream.
+- **stream-ends-with-process**: The stream MUST finish when stdout ends, so it ends when the process ends.
+- **single-consumer**: The first `messages()` call MUST return the live stream; every later call MUST return an already-finished stream that yields nothing.
+- **decode-off-actor**: The pump that decodes stdout MUST be a detached task capturing no actor state, so decoding stays off the actor's executor and the pump does not keep the process alive.
+- **terminate**: `terminate()` MUST terminate the channel, wait for the pump to finish, then finish the stream; it MUST leave `isRunning` false.
+- **terminate-unstarted**: `terminate()` before `start()` MUST complete without error, because the pump is absent and the channel's terminate is safe before launch.
+- **deinit-cleanup**: When the actor is released, it MUST cancel the pump and terminate the channel from a detached task.
+- **is-running**: `isRunning` MUST report the channel's state.
+- **stderr-text**: `standardErrorText()` MUST return what the process wrote to stderr so far, for telling a crash from a clean end; it returns the channel's stderr text, and the channel's own stderr requirement decides how much is kept and how it is decoded.
+- **buffering**: The stream MUST use the default unbounded buffer, so messages decoded before a consumer exists are kept until it reads them.
+

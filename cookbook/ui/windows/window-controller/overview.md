@@ -4,7 +4,7 @@ window's content instead of the untyped content controller that the
 single-instance window base's content accessor returns.
 
 The window controller is an open subclass of the single-instance window base
-(see `adhsdk://cookbook/ui/windows/single-window-controller`, which
+(see [adhsdk.ingredient.ui.windows.single-window-controller](cookbook:3f6268b8-410d-4d3c-979c-2a9f9f1534f3), which
 this recipe depends on and does not restate) that adds exactly one member: a
 computed typed accessor that downcasts the base's content to a
 caller-supplied content-controller type. It overrides nothing else and

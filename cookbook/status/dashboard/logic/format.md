@@ -1,13 +1,12 @@
 ---
 id: 564c6102-e100-41ad-9c92-14606a33c394
 title: "Display Format"
-domain: adhsdk://cookbook/status/dashboard/logic/format
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-09-27
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -179,9 +178,9 @@ Not applicable: the module contains no logging calls.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-web/src/lib/format.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-web/src/lib/format.ts` | confirmed (1.1.1) |
 
 ## Design Decisions
 
@@ -209,18 +208,19 @@ Not applicable: the module contains no logging calls.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | best-practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | best-practices |
-| [plural-forms](agenticdevelopercookbook://compliance/internationalization#plural-forms) | failed | internationalization |
-| [locale-aware-formatting](agenticdevelopercookbook://compliance/internationalization#locale-aware-formatting) | failed | internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | best-practices |
+| [adc.check.internationalization.plural-forms](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d24616b8-d1af-593d-ba01-f51ee4a91ea4) | failed | internationalization |
+| [adc.check.internationalization.locale-aware-formatting](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c87ff1f1-9d77-5167-b0c4-f13f2aae5acb) | failed | internationalization |
 
-The module is pure, import-free and separate from the components that display its output, so separation-of-concerns passes. Unit-test-coverage is partial: the test suite covers the short-sha and commit-first-line operations (null, empty, short, subject and cap cases) but has no test for the pluralization operation. Explicit-error-handling passes because nothing is caught or swallowed; every input of the declared shapes produces a defined string or no result. Plural-forms fails because the pluralization operation applies the English singular/plural rule rather than locale plural categories, and locale-aware-formatting fails because the count is rendered with default number conversion rather than a locale-aware number formatter; both follow from the dashboard being English-only.
+The module is pure, import-free and separate from the components that display its output, so separation-of-concerns passes. Unit-test-coverage passes: `format.test.ts` has a test for each of vectors format-001 to format-021, covering the short-sha, commit-first-line and pluralization operations. Explicit-error-handling passes because nothing is caught or swallowed; every input of the declared shapes produces a defined string or no result. Plural-forms fails because the pluralization operation applies the English singular/plural rule rather than locale plural categories, and locale-aware-formatting fails because the count is rendered with default number conversion rather than a locale-aware number formatter; both follow from the dashboard being English-only.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-11-14 | Mike Fullerton | Conformance tests added (format.test.ts, 21 of 21 vectors); unit-test-coverage now passed. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to status/dashboard/logic/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.0.0 | 2026-09-24 | Mike Fullerton | Initial creation from `packages/web/packages/status-web/src/lib/format.ts` |

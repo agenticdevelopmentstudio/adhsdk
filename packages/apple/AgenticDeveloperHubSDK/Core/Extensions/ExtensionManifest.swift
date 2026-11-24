@@ -262,6 +262,7 @@ extension ExtensionManifest {
         public let themes: [Theme]
         public let snippets: [Snippet]
         public let languages: [Language]
+        public let grammars: [Grammar]
         public let commands: [Command]
         public let keybindings: [Keybinding]
         public let menus: [String: [MenuItem]]
@@ -298,6 +299,7 @@ extension ExtensionManifest {
             themes = []
             snippets = []
             languages = []
+            grammars = []
             commands = []
             keybindings = []
             menus = [:]
@@ -309,7 +311,7 @@ extension ExtensionManifest {
         }
 
         private enum CodingKeys: String, CodingKey {
-            case themes, snippets, languages, commands, keybindings, menus
+            case themes, snippets, languages, grammars, commands, keybindings, menus
             case configuration, views, viewsContainers, languageModelTools
         }
 
@@ -328,6 +330,10 @@ extension ExtensionManifest {
             languages = LenientDecoding.array(
                 Language.self, from: container, key: .languages,
                 manifestKey: "contributes.languages", failures: &failures
+            )
+            grammars = LenientDecoding.array(
+                Grammar.self, from: container, key: .grammars,
+                manifestKey: "contributes.grammars", failures: &failures
             )
             commands = LenientDecoding.array(
                 Command.self, from: container, key: .commands,
@@ -383,6 +389,7 @@ extension ExtensionManifest {
             try container.encode(themes, forKey: .themes)
             try container.encode(snippets, forKey: .snippets)
             try container.encode(languages, forKey: .languages)
+            try container.encode(grammars, forKey: .grammars)
             try container.encode(commands, forKey: .commands)
             try container.encode(keybindings, forKey: .keybindings)
             try container.encode(menus, forKey: .menus)
@@ -664,6 +671,28 @@ extension ExtensionManifest {
         public struct LanguageIcon: Codable, Sendable, Equatable {
             public let light: String
             public let dark: String
+        }
+    }
+
+    /// One `contributes.grammars` entry: a TextMate grammar file and the scope
+    /// it defines.
+    ///
+    /// `language` is optional because an injection grammar — one that adds
+    /// patterns to other grammars' scopes — belongs to no language.
+    /// `embeddedLanguages`, `tokenTypes` and `injectTo` are not carried: the
+    /// highlighter resolves embedded scopes by name from its own registry, and
+    /// a field nothing in this host reads is a field whose malformed value
+    /// could only cost the entry.
+    public struct Grammar: Codable, Sendable, Equatable {
+        public let language: String?
+        public let scopeName: String
+        /// Relative to the extension's own folder, as every manifest path is.
+        public let path: String
+
+        public init(language: String?, scopeName: String, path: String) {
+            self.language = language
+            self.scopeName = scopeName
+            self.path = path
         }
     }
 

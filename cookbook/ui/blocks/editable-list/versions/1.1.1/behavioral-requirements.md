@@ -1,0 +1,41 @@
+
+- **render-search**: The component MUST render a search input in the bar, its value bound to `list.search`. Filtering is the controller's job — `useEditableList` matches `list.search` against every searchable column's `value` — not the component's; the component only renders whatever rows `list.rows` currently contains.
+- **update-search**: The component MUST call `list.setSearch()` with the input's new value on every keystroke; the controller applies the actual filtering.
+- **render-text-filters**: The component MUST render text filter inputs (from `list.textFilters`) in the bar, with placeholders and widths from filter metadata.
+- **update-text-filter-values**: The component MUST update filter values via `list.setTextFilterValue()` when the user types in a text filter input.
+- **render-facet-menus**: The component MUST render facet dropdown menus (from `list.facets`) in the bar with options and selected state from controller.
+- **update-facet-selection**: The component MUST update facet selection via `list.setFacetSelection()` when the user selects options in a facet menu.
+- **render-table**: The component MUST render a data table with rows from `list.rows` and columns from `list.columns`.
+- **render-column-headers**: Each column MUST render a header (from column metadata) and cell content (from `column.value` or `column.render`).
+- **support-sorting**: The component MUST render sortable columns and call `list.setSort()` when the user clicks a sortable header.
+- **preserve-sort-state**: The component MUST display the current sort state (from `list.sort`) on the active column header.
+- **support-column-resizing**: The component MUST allow users to resize columns and persist widths under the key provided by `columnWidthsKey`.
+- **render-selection-checkboxes**: When `selectable` is true, the component MUST render checkboxes for each row and a select-all header checkbox.
+- **select-all-scope**: The select-all header checkbox MUST select or deselect only the rows currently in `list.rows` (the visible/filtered set). It MUST NOT alter the selection state of any row hidden by the active filter — "all" means "all that is on screen," not "all that was ever selected."
+- **update-selection**: The component MUST update row selection via `list.setSelectedIds()` when the user checks or unchecks a row checkbox or the select-all header.
+- **show-selection-count**: When rows are selected and `selectable` is true, the component MUST display a count button showing the number of selected rows.
+- **show-hidden-selected-count**: When `selectable` is true and one or more selected rows are hidden by the active filter, the selection-count button MUST include the literal text "(N not shown)" naming how many. An accent color on that text is a supplementary visual cue, never the sole means of conveying it.
+- **provide-clear-selection-button**: The count button MUST be clickable and MUST call `list.clearSelection()` to deselect all rows.
+- **render-actions**: The component MUST render any action nodes passed via the `actions` prop in the bar to the right of filters.
+- **support-row-activation**: When `onRowActivate` is provided, the component MUST call it with the row's ID when the user double-clicks a row or presses Enter on a focused row.
+- **grid-role-and-focus**: When `selectable` is true, the table MUST use `role="grid"` on a single focusable container (`tabIndex=0`), track exactly one focused row in state rather than giving any row its own `tabIndex`, expose the focused row via `aria-activedescendant`, move it with ArrowUp/ArrowDown, toggle the focused row's selection with Space, and — only when `onRowActivate` is provided — activate the focused row on Enter. When `selectable` is false, the table MUST use `role="table"` instead and MUST claim none of those keys, so an in-cell control's own Space/Enter/Arrow handling is never intercepted.
+- **render-empty-state**: When the list is empty (no rows) and no filter is active, the component MUST display the text from `emptyLabel`.
+- **render-filtered-empty-state**: When the list is empty due to filtering, the component MUST display the text from `emptyFilteredLabel`.
+- **render-loading-state**: When `loading` is true, the component MUST display a loading indicator in the table.
+- **handle-error-no-rows**: When an error is present, no rows exist, and the list is not loading, the component MUST replace the entire list with an error alert (not render the bar or table).
+- **loading-preempts-error-replacement**: When an error is present, no rows exist, but `loading` is true, the component MUST NOT replace the whole list with the error alert. It MUST instead render the bar, the error alert above the table (see **handle-error-with-rows**), and the table's own loading indicator.
+- **handle-error-with-rows**: When an error is present but rows exist (e.g., a refetch failed) or the list is loading, the component MUST display an error alert above the table without removing the rows or the loading indicator.
+- **error-with-rows-suffix**: The error-with-rows alert's description MUST append the literal text " — showing the last rows that loaded." after the error's own message.
+- **default-error-title**: When `errorTitle` is omitted and `error` is present, the component MUST derive the alert title as "Couldn't load {ariaLabel}", with `ariaLabel` lowercased.
+- **render-truncation-notice**: When `truncationNotice` is provided, the component MUST display it as an alert above the table.
+- **render-details-pane**: When `details` is provided, the component MUST render a resizable split with the table on top and details pane on bottom.
+- **show-single-row-details**: The details pane MUST render the details for exactly one row when one row is selected, calling `details.render()` with that row.
+- **show-details-empty-message**: The details pane MUST display `details.emptyLabel` when no row is selected.
+- **show-details-many-message**: The details pane MUST display `details.manyLabel` when more than one row is selected.
+- **render-details-header**: The details pane's header bar MUST display, on its left side, the result of `describeRow(detailRow)` when exactly one row is selected and `describeRow` is provided and returns a non-empty value; otherwise it MUST fall back to `details.label` (default `"Details"`). Header actions (from `details.actions`) render on the right.
+- **render-details-actions**: Header actions MUST be called with the single selected row when one row is selected, or with `null` when zero or multiple rows are selected.
+- **render-footer**: When `footer` is provided, the component MUST render it below the table or details pane.
+- **render-null-values**: For a column defined with `value`, the component MUST render an em dash (—) in place of a null, undefined, or empty-string result, to distinguish "this row has no value here" from a failed load. A column defined with neither `value` nor `render` is not covered by this requirement — see the "Column with no render and no value" edge case.
+- **preserve-selection-across-filter-changes**: Row selection MUST persist when the filter changes, allowing the selection to contain rows not currently visible.
+- **describe-rows-for-accessibility**: When `describeRow` is provided, the component MUST use it to name each row's checkbox. If omitted, the component SHOULD guess the row name from the first non-empty string field that is not the row's ID.
+

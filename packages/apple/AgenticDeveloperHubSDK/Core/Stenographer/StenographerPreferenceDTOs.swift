@@ -52,12 +52,16 @@ public struct SummaryPreferenceRequest: Codable, Sendable {
     public var intervalMinutes: Int?
     public var maxPerRun: Int?
     public var timeoutSeconds: Int?
+    /// Overrides the selected configuration's model; "" keeps the configuration's own.
+    public var model: String?
 
     public init(
         enabled: Bool? = nil, selectedConfigId: String? = nil, prompt: String? = nil,
         maxWords: Int? = nil, activityLines: Int? = nil, detailChars: Int? = nil,
-        intervalMinutes: Int? = nil, maxPerRun: Int? = nil, timeoutSeconds: Int? = nil
+        intervalMinutes: Int? = nil, maxPerRun: Int? = nil, timeoutSeconds: Int? = nil,
+        model: String? = nil
     ) {
+        self.model = model
         self.enabled = enabled
         self.selectedConfigId = selectedConfigId
         self.prompt = prompt
@@ -85,11 +89,14 @@ public struct SummaryPreferenceResponse: Codable, Sendable, Equatable {
     public let intervalMinutes: Int
     public let maxPerRun: Int
     public let timeoutSeconds: Int
+    /// Nil on a daemon older than the summary model override.
+    public let model: String?
 
     public init(
         enabled: Bool?, selectedConfigId: String?, prompt: String, maxWords: Int, activityLines: Int,
-        detailChars: Int, intervalMinutes: Int, maxPerRun: Int, timeoutSeconds: Int
+        detailChars: Int, intervalMinutes: Int, maxPerRun: Int, timeoutSeconds: Int, model: String? = nil
     ) {
+        self.model = model
         self.enabled = enabled
         self.selectedConfigId = selectedConfigId
         self.prompt = prompt

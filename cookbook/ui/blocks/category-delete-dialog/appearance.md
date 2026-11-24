@@ -1,0 +1,2 @@
+
+The component delegates layout, corner radius, padding, font, borders, shadows and size to the `AlertModal` component, which owns those properties. What this component specifies is limited to the error-tone styling (#requirements/uses-error-tone-styling) and the bold emphasis on the "are not deleted" phrase and the orphaned names (#requirements/bolds-destructive-emphasis); the error text is styled by its error-text component.

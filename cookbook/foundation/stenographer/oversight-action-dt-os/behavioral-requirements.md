@@ -1,0 +1,22 @@
+
+- **target-fields**: An `OversightActionTargetDTO` MUST carry `findingId` (Int), `actionable` (Bool), `reason`, `sessionId`, `termProgram`, `termSessionId` and `injectText` (String), and `pid` (Int).
+- **target-actionable**: `actionable` MUST be true only when the session is live and at a safe breakpoint, meaning the last event was `Stop`: Claude finished a response and is waiting for the user.
+- **target-do-not-act**: A consumer MUST NOT act on a target whose `actionable` is false, and MUST read `reason`.
+- **target-reason**: `reason` MUST explain why the target is not actionable, and MUST be an empty string when `actionable` is true.
+- **target-terminal-and**: A client MUST combine `actionable` with its own injector's terminal support before enabling the control, because the daemon does not decide terminal capability.
+- **target-single-rule**: Autonomous action MUST gate on the same `actionable` value, so the safety rule is not duplicated.
+- **target-term-program**: `termProgram` MUST be the terminal app (for example `iTerm.app` or `Apple_Terminal`), from which the client picks the injection strategy.
+- **target-term-session-id**: `termSessionId` MUST be the pane identifier (`TERM_SESSION_ID`) for exact iTerm2 targeting, and MAY be empty.
+- **target-pid**: `pid` MUST be the session's `claude` PID, from which the client can resolve the pane's TTY.
+- **target-inject-text**: `injectText` MUST be the text to inject, for example `/compact`.
+- **target-blocked**: `OversightActionTargetDTO.blocked(findingId:reason:)` MUST return a target with the given `findingId` and `reason`, `actionable` false, empty `sessionId`, `termProgram`, `termSessionId` and `injectText`, and `pid` 0.
+- **target-blocked-use**: The `blocked` target MUST be used when the finding is missing, resolved, or its session is not at a safe breakpoint.
+- **target-memberwise-init**: `OversightActionTargetDTO.init` MUST take every field with no default.
+- **result-fields**: An `OversightActResultDTO` MUST carry `findingId` (Int), `succeeded` (Bool), `status` (String) and `reason` (String).
+- **result-succeeded**: `succeeded` MUST be true only when the finding transitioned to `acted`. The HTTP client instead sets it true for any 2xx reply, and reports `status` `acted` when it cannot decode the reply body.
+- **result-status**: On the XPC and daemon path, `status` MUST be the finding's status after the call: `acted` on success, the current status when it was already resolved, and empty when the finding was not found. Two exceptions send an empty `status` for a finding that exists: the daemon's `.failed` outcome, and every failure reply the HTTP client builds (it uses the route's `error` text as `reason`).
+- **result-reason**: `reason` MUST be a human-readable explanation when `succeeded` is false, and MUST be an empty string on success.
+- **result-after-injection**: The app MUST call the act route only after a successful injection, so a failure is a rare race: the finding was already resolved or vanished.
+- **conformance-protocols**: `OversightActionTargetDTO` and `OversightActResultDTO` MUST be `Codable`, `Sendable` and `Equatable`.
+- **no-validation**: The initializers MUST NOT validate: `actionable` true with a non-empty `reason`, or `succeeded` false with an empty `reason`, constructs without error.
+

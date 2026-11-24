@@ -20,7 +20,7 @@ class SyncEnrollmentRow:
         Attributes:
             resource (str): "<schema>.<table>", e.g. content.contacts
             scope (SyncEnrollmentRowScope): Which rows a caller syncs: 'owner' the rows whose owner pair names them,
-                'customer' the rows whose customer_id does, 'ecosystem' every row in their ecosystem
+                'author' the rows whose author pair does, 'ecosystem' every row in their ecosystem
             push_mode (SyncEnrollmentRowPushMode): 'route' means /sync/push refuses direct writes; the row's own route owns
                 them
             default_enabled (bool): What the shipped catalog says
@@ -55,8 +55,8 @@ class SyncEnrollmentRow:
             {
                 "resource": resource,
                 "scope": scope,
-                "pushMode": push_mode,
-                "defaultEnabled": default_enabled,
+                "push_mode": push_mode,
+                "default_enabled": default_enabled,
                 "enabled": enabled,
                 "overridden": overridden,
             }
@@ -71,9 +71,9 @@ class SyncEnrollmentRow:
 
         scope = SyncEnrollmentRowScope(d.pop("scope"))
 
-        push_mode = SyncEnrollmentRowPushMode(d.pop("pushMode"))
+        push_mode = SyncEnrollmentRowPushMode(d.pop("push_mode"))
 
-        default_enabled = d.pop("defaultEnabled")
+        default_enabled = d.pop("default_enabled")
 
         enabled = d.pop("enabled")
 

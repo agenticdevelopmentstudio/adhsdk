@@ -1,0 +1,67 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "e26e765d-2caa-40f8-a668-661ed2b0632c",
+    "title": "AlertModal",
+    "type": "ingredient",
+    "version": "1.1.1",
+    "status": "review",
+    "language": "en",
+    "created": "2026-09-22",
+    "modified": "2026-09-25",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Controlled alert/confirm modal on Dialog — tone icon, one- or two-button footer, busy spinner, configurable dismissal and keyboard policy, destructive mode.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "dialog",
+      "alert",
+      "confirm",
+      "modal",
+      "base-ui"
+    ],
+    "depends-on": [
+      "972be0d0-a9f5-45cd-a23b-c8329410b3d1",
+      "f679a77e-04f7-4e43-b898-6d78a637a760",
+      "f3c25236-d72f-4a7b-839a-b7f335b3acd0"
+    ],
+    "related": [
+      "972be0d0-a9f5-45cd-a23b-c8329410b3d1",
+      "f679a77e-04f7-4e43-b898-6d78a637a760",
+      "550f00f7-bfb2-415e-9b15-bd5dce015500"
+    ],
+    "references": [
+      "https://www.w3.org/TR/WCAG21/",
+      "https://base-ui.com/react/components/dialog"
+    ],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "8e01920af72f5c63",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

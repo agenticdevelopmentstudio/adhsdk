@@ -31,4 +31,7 @@
   another tab's content; callers MUST supply distinct content per tab, and
   the platform's own content-containment mechanism is the only thing that
   reacts to a violation.
-
+- Unchecking the last enabled edge, from settings or the View menu, is
+  refused and the control shows the edge as still enabled.
+- A view whose host stored its own edges (a project's tab bar choice) uses
+  those and ignores the app-wide setting until the stored choice is removed.

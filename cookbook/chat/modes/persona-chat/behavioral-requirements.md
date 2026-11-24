@@ -1,0 +1,14 @@
+
+- **accept-mode-prop**: Component MUST accept a `mode` prop with value `'inline'`, `'three-pane'`, or `'mobile'`.
+- **route-by-mode**: Component MUST render `InlineChat` when `mode` is `'inline'`, `ThreePaneChat` when `mode` is `'three-pane'`, and `MobileChat` when `mode` is `'mobile'`.
+- **accept-backend**: Component MUST accept and forward a `backend` prop (type `ChatBackend`) to the rendered chat layout.
+- **accept-persona**: Component MUST accept and forward a `persona` prop (type `ChatParticipant`) to the rendered chat layout.
+- **accept-user**: Component MUST accept an optional `user` prop (type `ChatParticipant`) and forward it to the rendered chat layout when provided.
+- **accept-welcome-message**: Component MUST accept an optional `welcomeMessage` prop (type `string`) and forward it to the rendered chat layout when provided.
+- **accept-class-name**: Component MUST accept an optional `className` prop (type `string`) and forward it to the rendered chat layout when `mode` is `'inline'` or `'three-pane'`. `MobileChat` does not accept a `className` prop, so it is not forwarded in `'mobile'` mode.
+- **accept-sizing-inline**: Component MUST accept an optional `sizing` prop (type `InlineChatSizing`) for `inline` mode, forwarding it only when `mode` is `'inline'`, controlling active/inactive sizing behavior and transitions.
+- **handle-mobile-open**: Component MUST accept an optional `open` prop (type `boolean`, default `false`) for `mobile` mode, forwarding it to control overlay visibility.
+- **handle-mobile-close**: Component MUST accept an optional `onClose` callback (type `() => void`, default no-op) for `mobile` mode, forwarding it to handle overlay dismissal.
+- **drop-mobile-only-props**: When `mode` is not `'mobile'`, component MUST NOT forward `open` or `onClose`, because `InlineChat` and `ThreePaneChat` do not accept them; the values are silently dropped.
+- **no-prop-validation**: Component MUST NOT validate `backend` or `persona` itself; an omitted value is forwarded as `undefined` and the child layout is responsible for handling it.
+- **mode-change-remounts**: When `mode` changes after mount, component MUST unmount the previously rendered layout and mount the new one; conversation state held by the old layout is not carried over.

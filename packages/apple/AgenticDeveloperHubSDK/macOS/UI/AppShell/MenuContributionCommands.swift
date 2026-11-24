@@ -1,4 +1,5 @@
 import AppKit
+import AgenticDeveloperHubSDKCoreUI
 import AgenticDeveloperHubSDKUI
 
 /// Turns features' `MenuContribution`s into the `MainMenuCommand`s that

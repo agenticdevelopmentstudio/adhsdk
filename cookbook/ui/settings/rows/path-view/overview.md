@@ -3,7 +3,7 @@ The Path View is a settings row: a single label showing one filesystem
 path "as a path rather than as prose." It conforms to the settings row
 interface every settings row implements, with no requirements of its own.
 The design rationale: the sibling row
-[Explanation View](adhsdk://cookbook/ui/settings/layout/explanation-view)
+Explanation View ([adhsdk.ingredient.ui.settings.layout.explanation-view](cookbook:25046f90-559d-4e32-8516-b5dae5f09c43))
 word-wraps, which is right for a sentence and wrong for a path — a real
 path wrapped inside a settings panel's ~134pt content column broke across
 nine hyphenated lines, long enough to push the group heading off the bottom

@@ -36,6 +36,14 @@ public final class IconTabBar: NSView, Themeable {
         }
     }
 
+    /// Whether the bar takes clicks. A disabled bar still draws its
+    /// selection, dimmed, so it keeps saying what is chosen while the choice
+    /// has nothing to act on.
+    public var isEnabled: Bool {
+        get { control.isEnabled }
+        set { control.isEnabled = newValue }
+    }
+
     private let items: [Item]
     private let control: NSSegmentedControl
     private var observer: ThemePaletteObserver?

@@ -1,0 +1,25 @@
+
+- **preferences-shape**: `WorkTrackingPreferences` MUST carry `enabled: Bool`, `addedBundleIds: [String]`, `removedBundleIds: [String]` and `retentionDays: Int`, and MUST be `Codable`, `Sendable` and `Equatable`.
+- **preferences-default**: `WorkTrackingPreferences.default` MUST be disabled, with empty `addedBundleIds` and `removedBundleIds`, and `retentionDays` equal to `defaultRetentionDays`.
+- **default-retention-days**: `WorkTrackingPreferences.defaultRetentionDays` MUST be 90.
+- **retention-range**: `WorkTrackingPreferences.retentionDaysRange` MUST be 7 through 3650 inclusive.
+- **normalized-id-order**: `normalized()` MUST return `addedBundleIds` and `removedBundleIds` each de-duplicated and sorted ascending.
+- **normalized-retention-clamp**: `normalized()` MUST clamp `retentionDays` into `retentionDaysRange`, using `BillingLimits.clamp`.
+- **normalized-enabled-unchanged**: `normalized()` MUST return `enabled` unchanged.
+- **normalized-pure**: `normalized()` MUST return a new value and MUST NOT mutate the receiver.
+- **init-no-validation**: The `WorkTrackingPreferences` initializer MUST store its arguments as given and MUST NOT sort, de-duplicate or clamp. Only `normalized()` does.
+- **accessibility-cases**: `WorkTrackingAccessibility` MUST have exactly the cases `granted`, `denied` and `unknown`, with `String` raw values equal to the case names.
+- **status-shape**: `WorkTrackingStatus` MUST carry `enabled`, `accessibility`, `currentSpan: ActivitySpanDTO?`, `writeFailures: Int` and `lastError: String?`, and MUST be `Codable`, `Sendable` and `Equatable`.
+- **status-defaults**: The `WorkTrackingStatus` initializer MUST default to `enabled` false, `accessibility` `.unknown`, `currentSpan` nil, `writeFailures` 0 and `lastError` nil.
+- **status-degraded**: `isDegraded` MUST be true exactly when `enabled` is true and `accessibility` is not `.granted`.
+- **degraded-notice**: `WorkTrackingStatus.degradedNotice` MUST be the string `Tracking without Accessibility — time is unassigned.`.
+- **wire-read-failed-key**: `WorkTrackingWire.readFailedKey` MUST be `work_tracking_read_failed`.
+- **wire-read-failed-row**: `WorkTrackingWire.readFailedRow` MUST be the UTF-8 bytes of `{"work_tracking_read_failed":true}`. A failed list read replies with a one-element list holding this row, the same convention as `BillingWire.readFailedRow`.
+- **settings-keys**: `WorkTrackingSettingsKeys` MUST name the daemon settings keys `activity_enabled`, `activity_added_bundle_ids`, `activity_removed_bundle_ids`, `activity_retention_days`, `activity_ax_last_status` and `activity_ax_signer`. The two bundle-id keys hold JSON arrays. Each is a static member of `WorkTrackingSettingsKeys`: `enabled` is `activity_enabled`, `addedBundleIds` is `activity_added_bundle_ids`, `removedBundleIds` is `activity_removed_bundle_ids`, `retentionDays` is `activity_retention_days`, `accessibilityLastStatus` is `activity_ax_last_status` and `accessibilitySigner` is `activity_ax_signer`. `activity_ax_signer` holds the designated requirement that `activity_ax_last_status` was answered under.
+- **session-prefix**: `ActivitySpanSession.prefix` MUST be `app:`.
+- **session-id-from-span**: `ActivitySpanSession.sessionId(spanId:)` MUST return the prefix followed by the span id.
+- **span-id-from-session**: `ActivitySpanSession.spanId(sessionId:)` MUST return the text after the prefix when the session id starts with `app:`, and nil otherwise.
+- **concurrency**: Every type in the file is a value type or a namespace enum. The structs and `WorkTrackingAccessibility` are `Sendable`. The namespace enums hold only constants and pure functions, so there is no shared mutable state.
+- **errors**: No operation in the file throws. A failed list read is expressed as data through `WorkTrackingWire`, not as an error.
+- **side-effects**: The file performs no file, network, process or notification effect.
+

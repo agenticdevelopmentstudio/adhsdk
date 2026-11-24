@@ -27,7 +27,7 @@
   project directories from one instance are not serialized against
   calls from another — but ordering that race, when it matters, is the
   project controller's job (see
-  `adhsdk://cookbook/workspace/projects/project-controller`),
+  [adhsdk.ingredient.workspace.projects.project-controller](cookbook:5bfadad5-c93b-432a-807e-04be57ff16b4)),
   not this file's; the workspace itself makes no ordering claim across
   instances.
 - **Error states**: Every database-backed operation except reading
@@ -45,7 +45,7 @@
   git-status-provider lookup hands out an object built on the project's
   git client, but the git subprocess calls that object goes on to make
   are that object's own concern, not this file's (see
-  `adhsdk://cookbook/foundation/git/git-client`).
+  [adhsdk.ingredient.foundation.git.git-client](cookbook:779ac6ea-9ef5-4fb0-8ed9-dc6b9d617344)).
 - **Cancellation and timeouts**: No operation on the workspace is
   asynchronous; every operation here is a synchronous database call, a
   synchronous cache lookup, or a pure computation, so there is no

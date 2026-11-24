@@ -21,17 +21,17 @@ type Point = InsightOverview["points"][number];
 const point = (over: Partial<Point> = {}): Point => ({
   start: "2026-09-01",
   requests: 100,
-  bytesIn: 1024,
-  bytesOut: 2048,
-  serverMs: 1_000,
-  dbMs: 500,
-  llmTokens: { input: 10, output: 20, cacheRead: 5, cacheWrite: 1, reasoning: 4 },
+  bytes_in: 1024,
+  bytes_out: 2048,
+  server_ms: 1_000,
+  db_ms: 500,
+  llm_tokens: { input: 10, output: 20, cache_read: 5, cache_write: 1, reasoning: 4 },
   embeddings: 0,
   emails: 2,
-  smsSegments: 1,
-  storageOps: 0,
-  directMicros: 1_000_000,
-  unpricedLines: 0,
+  sms_segments: 1,
+  storage_ops: 0,
+  direct_micros: 1_000_000,
+  unpriced_lines: 0,
   ...over,
 });
 
@@ -54,7 +54,7 @@ describe("overviewTotals", () => {
   });
 
   it("is Unpriced when every bucket is, and a floor when only some are", () => {
-    const unpriced = point({ directMicros: null, unpricedLines: 1 });
+    const unpriced = point({ direct_micros: null, unpriced_lines: 1 });
     expect(overviewTotals([unpriced]).directMicros).toBeNull();
     expect(overviewTotals([point(), unpriced])).toMatchObject({
       directMicros: 1_000_000,
@@ -63,7 +63,7 @@ describe("overviewTotals", () => {
   });
 
   it("is a floor when a priced bucket still has unpriced lines", () => {
-    expect(overviewTotals([point(), point({ unpricedLines: 2 })])).toMatchObject({
+    expect(overviewTotals([point(), point({ unpriced_lines: 2 })])).toMatchObject({
       directMicros: 2_000_000,
       directIsFloor: true,
     });
@@ -88,7 +88,7 @@ describe("UsageOverviewPane", () => {
 
   it("reads Unpriced, never $0.00, when every bucket is unpriced", () => {
     useInsightOverview.mockReturnValue({
-      data: { interval: "day", points: [point({ directMicros: null, unpricedLines: 1 })] },
+      data: { interval: "day", points: [point({ direct_micros: null, unpriced_lines: 1 })] },
       isLoading: false,
       error: null,
     });
@@ -100,7 +100,7 @@ describe("UsageOverviewPane", () => {
 
   it("marks the direct total a floor when a priced bucket has unpriced lines", () => {
     useInsightOverview.mockReturnValue({
-      data: { interval: "day", points: [point(), point({ unpricedLines: 3 })] },
+      data: { interval: "day", points: [point(), point({ unpriced_lines: 3 })] },
       isLoading: false,
       error: null,
     });

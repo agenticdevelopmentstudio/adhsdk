@@ -26,7 +26,7 @@ class CustomerResolveResult:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "customerId": customer_id,
+                "customer_id": customer_id,
             }
         )
 
@@ -35,7 +35,7 @@ class CustomerResolveResult:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        customer_id = d.pop("customerId")
+        customer_id = d.pop("customer_id")
 
         customer_resolve_result = cls(
             customer_id=customer_id,

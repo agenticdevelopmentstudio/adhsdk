@@ -25,6 +25,8 @@ export interface ApiButtonProps extends ApiBrowserProps {
   buttonClassName?: string
   /** Dialog heading; defaults to "API reference". */
   title?: string
+  /** What the host page says about these endpoints, shown under the heading, above the browser. */
+  intro?: React.ReactNode
 }
 
 /**
@@ -38,6 +40,7 @@ export function ApiButton({
   size = 'xs',
   buttonClassName,
   title,
+  intro,
   ...browserProps
 }: ApiButtonProps) {
   const [open, setOpen] = useState(false)
@@ -53,7 +56,16 @@ export function ApiButton({
       <DialogContent className="flex h-[96vh] w-[98vw] max-w-none flex-col gap-0 overflow-hidden p-0">
         <DialogHeader className="shrink-0 border-b border-apt-border px-5 py-4">
           <DialogTitle>{title ?? 'API reference'}</DialogTitle>
-          <DialogDescription>Browse the API and try any endpoint, authenticated as you.</DialogDescription>
+          <DialogDescription>
+            {/* Nothing here about highlighted endpoints: only the browser knows whether any matched,
+                and it says so itself. */}
+            {browserProps.readOnly ? 'Browse the API.' : 'Browse the API and try any endpoint, authenticated as you.'}
+          </DialogDescription>
+          {intro ? (
+            <div className="mt-2 flex max-h-40 flex-col gap-2 overflow-y-auto text-sm text-apt-text" data-testid="api-intro">
+              {intro}
+            </div>
+          ) : null}
         </DialogHeader>
         <div className="min-h-0 flex-1 overflow-hidden">
           {open && (

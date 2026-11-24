@@ -6,6 +6,6 @@ one can sign in to this ecosystem."; the sign-up-mode help text's three case
 strings; the feature-flags and server-bags removal messages; the origin-validation
 step's four rejection messages; the storage-tokens rail's name-taken, create-failed,
 and about-text messages. This is a fact of the current implementation, not a gap
-this recipe marks — nothing in the source suggests localization is planned or
+this ingredient marks — nothing in the source suggests localization is planned or
 partially wired.
 

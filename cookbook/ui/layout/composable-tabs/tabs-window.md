@@ -1,13 +1,12 @@
 ---
 id: 55a394e6-9934-404b-941d-25bebbf71378
 title: "Composable Tabs Window"
-domain: adhsdk://cookbook/ui/layout/composable-tabs/tabs-window
 type: ingredient
-version: 1.2.1
+version: 1.5.0
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-17
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -20,8 +19,8 @@ tags:
   - window-controller
   - multi-tab
 depends-on:
-  - adhsdk://cookbook/ui/layout/tabbed-view
-  - adhsdk://cookbook/ui/layout/composable-tabs
+  - d1257c76-fb28-47a5-bc2b-d4fb1ef87b53
+  - 0640ca96-95c5-4234-925e-386425cc4435
 related: []
 references: []
 approved-by: ""
@@ -60,6 +59,11 @@ address directly.
 - **window-title**: The window title MUST be the project's display name.
 - **unified-toolbar**: The window MUST install a unified toolbar containing,
   in order, a flexible space, a search field, and a help button.
+- **extra-toolbar-items**: The items the window is made with
+  (`extraToolbarItems`, none by default) MUST come after the shelf's items
+  and before the flexible space, in the order given; each `.targetedButton`
+  among them MUST send its action to the object its `WindowToolbarTarget`
+  names (held weakly), not to the window.
 - **tab-group-creation**: Creating a project tab MUST create one member tab
   on every currently enabled edge, all sharing one title and one working
   directory, and MUST select the first member created.
@@ -81,8 +85,10 @@ address directly.
   sizes — never the same node ids — to every other tab in the project.
 - **structural-change-persistence**: A split, pane close, tab
   add/remove/reorder/select, or edge toggle MUST synchronously persist every
-  tab's current layout tree, the active tab id, and the enabled-edge set to
-  the project. A divider-thickness change is the one exception to that
+  tab's current layout tree, the active tab id, and — only once the user
+  has made an explicit edge choice (see **edge-choice-explicit-only**) —
+  the enabled-edge set to the project; before that, the write carries no
+  edges. A divider-thickness change is the one exception to that
   synchronous path: the tabbed content debounces it 300ms before the
   resulting layout change reaches this persist, and that pending write is
   flushed explicitly when the window closes (see **divider-flush-on-close**).
@@ -155,8 +161,56 @@ address directly.
   every named edge before disabling any edge that is not named, so that
   reassigning the enabled-edge set never fails the last-enabled-edge
   refusal on an intermediate step.
+- **title-sits-in-the-toolbar**: The window MUST show its title as a
+  toolbar item, after the shelf toggle when there is a shelf and first
+  when there is none, with the window's icon, on the same line as the
+  toolbar's other items, and MUST hide the system-drawn title; the
+  window's own title string MUST still be set, for the Window menu,
+  Mission Control and accessibility.
+- **title-follows-the-focused-document**: In a window of a Document kind,
+  while the owner has supplied a focused-document URL the title MUST be
+  that file's name and the title breadcrumb's file MUST be that URL; the
+  title MUST return to the project's display name when the URL is
+  cleared.
+- **pane-chrome-is-optional**: A window created without pane chrome MUST
+  show no pane header (title, window controls, gear) above its panes;
+  with it, the default, every pane keeps its header.
+- **edges-follow-global-until-chosen**: A project with no stored edge
+  choice MUST open on the app-wide tab positions and MUST follow that
+  setting live — applying each change with every enable before any
+  disable, topping up newly enabled edges, and persisting the tabs without
+  edges — until the user makes an explicit edge choice. A project with a
+  stored choice MUST open on it and MUST NOT follow the setting.
+- **edge-choice-explicit-only**: Only a user edge toggle (project settings'
+  Tab Bars or the scripting edge setters) that actually changes an edge
+  MUST count as an explicit edge choice; from then on the window persists
+  its enabled-edge set and stops following the app-wide setting. Opening,
+  following the global, topping up, and adopting another window's
+  configuration MUST NOT make or persist a choice.
+- **use-global-tab-positions**: Using the global tab positions (project
+  settings' Use Global Setting) MUST drop the project's explicit edge
+  choice: it MUST persist the tabs with an empty edge list, which stores no
+  choice, and then follow the app-wide tab positions live, as a project
+  that never chose does. It MUST do nothing while the window is reloading
+  its tabs or closing.
+- **shared-configuration-arrangement-only**: The configuration the window
+  reports for another project window to adopt, and the configuration it
+  adopts, MUST carry only the pane arrangement (shape and sizes), never
+  the enabled edges.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
-
+- **title-document-kinds**: For a repository of a Document kind, while the
+  owner has supplied no focused-document URL (see
+  **title-follows-the-focused-document**, which takes precedence), the
+  window title MUST be the project's display name (the file's name for a
+  single-file Document window, the row's name for the Document tabs
+  window), never the directory-derived `"Files: <directory>"` title, and it
+  MUST be set once per root directory like every other title.
+- **title-breadcrumb-document-file**: While the owner has supplied no
+  focused-document URL (see **title-follows-the-focused-document**), the
+  title breadcrumb's file URL MUST be the repository's path for a
+  single-file Document window, which is the file itself, and the root
+  directory for every other kind.
+- **footer-is-optional**: The window MUST be creatable without its footer bar, in which case the footer is hidden and the content runs to the window's bottom edge; the footer MUST be shown by default.
 ## Appearance
 
 - **Corner radius**: Not applicable — a standard window; the window draws
@@ -231,7 +285,7 @@ address directly.
 - Color/contrast: chrome colors are read from the shared theme palette;
   contrast is a design-system-level concern outside this window's own
   decisions, per
-  `agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages`.
+  [adc.guideline.cookbook.ui.platform-design-languages](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2).
 
 ## Conformance Test Vectors
 
@@ -272,10 +326,15 @@ address directly.
 | composable-tabs-window-controller-033 | scripting-tab-selection | Set the active tab to an existing group's id, enabled only on the bottom edge | That group's bottom-edge member becomes active. |
 | composable-tabs-window-controller-034 | redundant-tab-selection-guard | Tab T is already active; select tab T again | No additional persist, focus-restore, or chrome refresh occurs. |
 | composable-tabs-window-controller-035 | edge-set-assignment-order | Only the top edge enabled; assign the enabled-edge set to `["bottom"]` | The bottom edge becomes enabled before the top edge is disabled; final state is the bottom edge only. |
+| composable-tabs-window-controller-041 | edges-follow-global-until-chosen | A project with no stored edge choice is open; change the app-wide tab positions from top to left | The window's enabled edges become the left edge alone, the left edge is topped up, and the stored edge choice stays absent. |
+| composable-tabs-window-controller-042 | edge-choice-explicit-only | A project with no stored edge choice; enable the right edge through the window's edge setter, then change the app-wide tab positions | The right edge stays enabled, the window ignores the setting change, and the stored edge choice includes the right edge. |
+| composable-tabs-window-controller-043 | shared-configuration-arrangement-only | Two project windows on different edges; the second adopts the first's configuration | The second window's panes take the first's shape and sizes; its enabled edges are unchanged. |
 | composable-tabs-window-controller-036 | minimum-size | Inspect the window's configured geometry before the window is ever shown | The configured minimum size is 400×300pt, matching what the window itself enforces. |
 | composable-tabs-window-controller-037 | status-footer-content | Project `"Zork"`, active tab's title is `""` (empty), pane title `"main.swift"`, no selection description | Footer reads `"Zork › main.swift"` — the empty tab title contributes no leading `" › "`. |
 | composable-tabs-window-controller-038 | search-target | The active pane changes from pane A to pane B, triggering a recomputation of search availability | The search target becomes pane B, matching the field's newly computed enabled state/placeholder. |
 | composable-tabs-window-controller-039 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
+| composable-tabs-window-controller-040 | extra-toolbar-items | A window with no shelf made with two targeted buttons `first`, `second` aimed at a receiver | Item order is `first`, `second`, flexible space, search, help; `first`'s button targets the receiver. |
+| composable-tabs-window-controller-044 | use-global-tab-positions | A project whose stored edge choice is Top and Left, with the app-wide tab position Bottom; call `useGlobalTabPositions()` | The stored edge choice is cleared (loads as absent), the window shows the Bottom edge, and a later change of the app-wide position is followed |
 
 ## Edge Cases
 
@@ -469,9 +528,10 @@ Not applicable: no logging calls appear anywhere in this component.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsWindowController.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsWindowController.swift` | confirmed (1.3.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsWindowController.swift` | confirmed (1.3.0) |
 
 ## Design Decisions
 
@@ -560,15 +620,15 @@ neither has occurred yet.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | passed | accessibility |
-| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | accessibility |
-| [focus-management](agenticdevelopercookbook://compliance/accessibility#focus-management) | passed | accessibility |
-| [data-minimization](agenticdevelopercookbook://compliance/privacy-and-data#data-minimization) | passed | privacy-and-data |
-| [data-retention-policy](agenticdevelopercookbook://compliance/privacy-and-data#data-retention-policy) | passed | privacy-and-data |
-| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | internationalization |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | internationalization |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | best-practices |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | passed | accessibility |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | accessibility |
+| [adc.check.accessibility.focus-management](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/eec52703-a32a-5dee-b763-59a3bac826ea) | passed | accessibility |
+| [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | privacy-and-data |
+| [adc.check.privacy-and-data.data-retention-policy](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0c9cc813-244a-5dc1-8914-fd4710bb4943) | passed | privacy-and-data |
+| [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | failed | internationalization |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
 
 The accessibility passes rest on the explicit accessibility
 descriptions, keyboard-focusable controls, and deliberate focus restoration
@@ -588,3 +648,6 @@ hardcoded-literal inventory in Localization.
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/layout/composable-tabs/. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added separation-of-concerns and unit-test-coverage compliance rows. Added the confines-to-ui-thread requirement and vector. |
+| 1.3.0 | 2026-11-14 | Mike Fullerton | Document windows: title-document-kinds and title-breadcrumb-document-file, then title-sits-in-the-toolbar, title-follows-the-focused-document and pane-chrome-is-optional, then footer-is-optional; the Document-kind title and title-breadcrumb rules apply only while no focused document is supplied. |
+| 1.4.0 | 2026-11-16 | Mike Fullerton | Extra toolbar items: the window's own items after the shelf's and before the flexible space, a targeted button sending to the object its WindowToolbarTarget names |
+| 1.5.0 | 2026-11-17 | Mike Fullerton | Tab edges are an explicit per-project Tab Bars choice: no stored edges means follow the app-wide tab positions live, an empty enabled_edges value means no choice, and the shared tab configuration carries only the pane arrangement. |

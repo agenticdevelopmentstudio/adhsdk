@@ -66,18 +66,13 @@
 - **text-field-escaping**: Row text MUST be produced with the same number of tab-separated fields on every row, taking `name`, `detail`, `statusWord`, `environment` and the URLs as given. The serializer neither escapes nor strips tab or newline characters inside a field, so such a character adds a column or splits the row; callers rely on the server supplying tab-free values.
 - **rows-text**: The rows-text function MUST return each row's row-text joined by a single line feed, in input order, with no trailing line feed; an empty list MUST yield the empty string.
 
-### Deploy demotion clock
+### Unconfirmed phases
 
-- **unconfirmed-floor**: The unconfirmed floor MUST equal 600000 milliseconds (10 minutes).
-- **unconfirmed-window**: The unconfirmed-window function MUST return the larger of the unconfirmed floor and five times the probe interval, treating an absent interval as 0.
-- **dto-terminal-never-demoted**: The deploy-unconfirmed function MUST return `false` when the deploy's `status` is not in flight; only `"building"` and `"queued"` are in flight.
-- **dto-clock-source**: The deploy-unconfirmed function MUST measure from the deploy's `phaseConfirmedAt`, falling back to `createdAt` when `phaseConfirmedAt` is null or absent.
-- **dto-fail-closed**: The deploy-unconfirmed function MUST return `true` for an in-flight deploy whose clock string does not parse to a finite time.
-- **dto-threshold**: The deploy-unconfirmed function MUST return `true` for an in-flight deploy when the current time minus the confirmed time is strictly greater than the unconfirmed window, and `false` when it is less than or equal.
-- **row-never-clocked**: This logic MUST NOT apply a freshness clock to a row; an unconfirmed activity phase arrives already expired by the server (outside this logic) as verb `"unknown"`, tone `"stale"`.
+- **row-never-clocked**: This logic MUST NOT apply a freshness clock to a row: the builders and the display adapter render `statusWord` and `tone` as given, and `nowMs` is used for the time label alone. An unconfirmed activity phase arrives already expired by the server (outside this logic) as verb `"unknown"`, tone `"stale"`; it passes through the activity-to-row builder verbatim and the display adapter renders it in the muted stale color.
+- **no-deploy-demotion**: This logic MUST NOT export a function that judges a deploy record's freshness. The server supplies each deploy's `unconfirmedAt` deadline, and the deploy view logic (outside this logic) reads it.
 
 ### Module-wide
 
-- **pure-synchronous**: Every exported function MUST be pure and synchronous: it MUST NOT read a clock (time is passed in as `nowMs`), perform I/O or mutate its inputs.
+- **pure-synchronous**: Every exported function MUST be pure and synchronous: it MUST NOT read a clock (time is passed in as `nowMs`, used only for time labels), perform I/O or mutate its inputs.
 - **single-threaded**: This logic MUST run synchronously to completion; each call completes before another starts, so there is no ordering or locking contract.
 

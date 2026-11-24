@@ -1,7 +1,6 @@
 ---
 id: 9069ccf9-0357-4311-9671-91ee2793adae
 title: "Site Registry"
-domain: adhsdk://cookbook/adh/sites/site-registry
 type: ingredient
 version: 1.1.1
 status: review
@@ -595,9 +594,9 @@ an empty result, or the input path unchanged) with no side channel.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/adh-registry/src/sites/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/adh-registry/src/sites/` | unverified |
 
 ## Design Decisions
 
@@ -669,9 +668,9 @@ second copy that could drift.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 
 `separation-of-concerns` passes because this component keeps its five concerns in five separately-owned files (site identity and routing in `registry.ts`, slug reservation in `reserved-slugs.ts`, the generated per-repo route map in the thirteen `routes.*.generated.ts` shares plus the hand-written merge in `routes.generated.ts`, and brand-story/tour data in `story.ts`), with per-site build-only data deliberately isolated in its own `SITE_BUILD` side table outside the scaffolded region so scaffolding, build configuration, and routing data cannot be clobbered by each other's regeneration. `unit-test-coverage` passes: `registry.test.ts`, `registry-characterisation.test.ts`, `siteRoutes.test.ts`, `story.test.ts`, `tour-region.test.ts`, `sites/__tests__/reserved-slugs.test.ts`, and `sites/__tests__/build-fields.test.ts` together exercise every exported function's branches, including environment classification and fallback, the workspace-slug round trip in both directions, the additive SSO allowlist's per-environment partitioning, the scaffold-region isolation invariant, the reserved-slug fail-open contract, the route-share disjointness and normalization invariants, and the brand-story/tour-graph convergence and disjointness invariants. `no-hardcoded-strings` fails: every `SiteDef`'s `label`, `fullLabel`, `shortLabel`, and `description` is a literal English string with no localization or string-catalog indirection (see Localization above), and `siteHeaderTitle`'s `"Agentic Developer <X>"` derivation is built from the same hardcoded convention; a translated presentation of the switcher, footer, or header cannot be produced from this file alone.
 

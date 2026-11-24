@@ -6,8 +6,11 @@
   accessibility identifier (a slugified form of the item's title,
   prefixed for this component - see **item-accessibility-id-from-title**),
   and its accessible name is its own displayed text (the item's title) -
-  no separate accessibility-label override is set. Group header, title,
-  and footer/accessory views carry no accessibility identifier in this
+  no separate accessibility-label override is set. A group header's
+  label carries the identifier its section supplies
+  (`TopicListSection.accessibilityIdentifier`), set on every use of the
+  pooled cell and cleared when the section supplies none; title and
+  footer/accessory views carry no accessibility identifier in this
   component.
 - **Announce state changes**: Not implemented. When the grouped setter
   reloads the list with a different row count, no accessibility change

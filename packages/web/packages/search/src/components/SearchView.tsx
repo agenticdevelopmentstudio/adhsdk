@@ -61,8 +61,10 @@ function cx(...parts: Array<string | false | null | undefined>): string {
 }
 
 /** Visible, screen-reader-announced result count. Handles singular/plural + zero. */
-function resultCountLabel(total: number): string {
+function resultCountLabel(total: number, hasMore: boolean): string {
   if (total <= 0) return 'No results'
+  // /v1 carries no total: when more rows follow the page the count is a floor, so it says so.
+  if (hasMore) return `${total.toLocaleString()}+ results`
   return `${total.toLocaleString()} result${total === 1 ? '' : 's'}`
 }
 
@@ -116,7 +118,11 @@ export function SearchView<Hit>({
   const [activeIndex, setActiveIndex] = useState(0)
 
   const { tags, categories } = useFacets(source, timeoutMs)
-  const search = useDocumentSearch<Hit>(source, filters, { debounceMs, timeoutMs })
+  const search = useDocumentSearch<Hit>(source, filters, {
+    debounceMs,
+    timeoutMs,
+    toHit: documentType.fromWire,
+  })
 
   const { ResultRow, Preview, PreviewHeader, getId, getTitle } = documentType
   const selectedHit = search.items.find((hit) => getId(hit) === selectedId) ?? null
@@ -313,7 +319,7 @@ export function SearchView<Hit>({
           >
             {search.settled && !hardError && (
               <p className="text-xs text-apt-text-dim" role="status" aria-live="polite">
-                {resultCountLabel(search.total)}
+                {resultCountLabel(search.total, search.hasMore)}
               </p>
             )}
 

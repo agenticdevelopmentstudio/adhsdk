@@ -30,88 +30,96 @@ final class EcosystemConfigAdaptersTests: XCTestCase {
 
     func testAuthSettingsGet() async throws {
         stub.on(
-            .get, "/ecosystem/auth-settings/\(eco)",
-            json: #"{"signupMode":"open","loginEnabled":false,"allowedProviders":["github"]}"#
+            .get, "/v1/ecosystems/\(eco)",
+            json: #"""
+            {"id":"\#(eco)","object":"ecosystem","auth_settings":
+            {"signup_mode":"open","login_enabled":false,"allowed_providers":["github"]}}
+            """#
         )
         let settings = try await AuthSettingsAdapter(environment: environment, workspace: workspace)
             .get(ecosystemID: eco)
         XCTAssertEqual(settings, AuthSettings(signupMode: .open, loginEnabled: false, allowedProviders: ["github"]))
         XCTAssertEqual(
-            stub.lastRequest(.get, "/ecosystem/auth-settings/\(eco)")?.path,
-            "/ecosystem/auth-settings/\(eco)?workspace=acme"
+            stub.lastRequest(.get, "/v1/ecosystems/\(eco)")?.path,
+            "/v1/ecosystems/\(eco)?include%5B%5D=auth_settings&workspace=acme"
         )
     }
 
     func testAuthSettingsUpdateSendsCompactBody() async throws {
-        stub.on(.put, "/ecosystem/auth-settings/\(eco)", json: #"{"signupMode":"closed","loginEnabled":true}"#)
+        stub.on(
+            .post, "/v1/ecosystems/\(eco)",
+            json: #"""
+            {"id":"\#(eco)","object":"ecosystem","auth_settings":{"signup_mode":"closed","login_enabled":true}}
+            """#
+        )
         let settings = try await AuthSettingsAdapter(environment: environment, workspace: workspace)
             .update(ecosystemID: eco, AuthSettingsUpdate(signupMode: .closed, loginEnabled: nil))
         XCTAssertEqual(settings.signupMode, .closed)
-        let body = stub.lastBody(.put, "/ecosystem/auth-settings/\(eco)")
+        let body = stub.lastBody(.post, "/v1/ecosystems/\(eco)")?["auth_settings"] as? [String: Any]
         XCTAssertEqual(body?["signupMode"] as? String, "closed")
         XCTAssertNil(body?["loginEnabled"] ?? nil)
         XCTAssertEqual(
-            stub.lastRequest(.put, "/ecosystem/auth-settings/\(eco)")?.path,
-            "/ecosystem/auth-settings/\(eco)?workspace=acme"
+            stub.lastRequest(.post, "/v1/ecosystems/\(eco)")?.path,
+            "/v1/ecosystems/\(eco)?workspace=acme"
         )
     }
 
     // MARK: Sign-in apps
 
     private let appJSON = #"""
-    {"id":"app-1","slug":"shop.web","name":"Web","allowedReturnOrigins":["https://shop.acme.test"],
-    "defaultEcosystemId":"org.acme.shop","githubEnabled":true}
+    {"id":"app-1","slug":"shop.web","name":"Web","allowed_return_origins":["https://shop.acme.test"],
+    "default_ecosystem_id":"org.acme.shop","github_enabled":true}
     """#
 
     func testSigninAppsListCreateUpdateDelete() async throws {
         let adapter = SigninAppsAdapter(environment: environment, workspace: workspace)
-        stub.on(.get, "/ecosystem/signin-apps/\(eco)", json: "[\(appJSON)]")
-        stub.on(.post, "/ecosystem/signin-apps/\(eco)", status: 201, json: appJSON)
-        stub.on(.patch, "/ecosystem/signin-apps/\(eco)/app-1", json: appJSON)
-        stub.on(.delete, "/ecosystem/signin-apps/\(eco)/app-1", status: 204, json: "")
+        stub.on(.get, "/v1/ecosystems/\(eco)/signin_apps", json: StubClientTransport.list([appJSON]))
+        stub.on(.post, "/v1/ecosystems/\(eco)/signin_apps", status: 201, json: appJSON)
+        stub.on(.post, "/v1/ecosystems/\(eco)/signin_apps/app-1", json: appJSON)
+        stub.on(.delete, "/v1/ecosystems/\(eco)/signin_apps/app-1", status: 204, json: "")
 
         let apps = try await adapter.list(ecosystemID: eco)
         XCTAssertEqual(apps.map(\.slug), ["shop.web"])
         XCTAssertEqual(
-            stub.lastRequest(.get, "/ecosystem/signin-apps/\(eco)")?.path,
-            "/ecosystem/signin-apps/\(eco)?workspace=acme"
+            stub.lastRequest(.get, "/v1/ecosystems/\(eco)/signin_apps")?.path,
+            "/v1/ecosystems/\(eco)/signin_apps?limit=100&workspace=acme"
         )
 
         _ = try await adapter.create(
             ecosystemID: eco,
             SigninAppCreate(slug: "web", name: "Web", allowedReturnOrigins: [], enableGithub: true)
         )
-        let created = stub.lastBody(.post, "/ecosystem/signin-apps/\(eco)")
+        let created = stub.lastBody(.post, "/v1/ecosystems/\(eco)/signin_apps")
         XCTAssertEqual(created?["slug"] as? String, "web")
         XCTAssertEqual(created?["enableGithub"] as? Bool, true)
         XCTAssertEqual((created?["allowedReturnOrigins"] as? [String])?.count, 0)
         XCTAssertEqual(
-            stub.lastRequest(.post, "/ecosystem/signin-apps/\(eco)")?.path,
-            "/ecosystem/signin-apps/\(eco)?workspace=acme"
+            stub.lastRequest(.post, "/v1/ecosystems/\(eco)/signin_apps")?.path,
+            "/v1/ecosystems/\(eco)/signin_apps?workspace=acme"
         )
 
         _ = try await adapter.update(
             ecosystemID: eco, id: "app-1",
             SigninAppUpdate(name: nil, allowedReturnOrigins: ["https://shop.acme.test"], githubEnabled: false)
         )
-        let patched = stub.lastBody(.patch, "/ecosystem/signin-apps/\(eco)/app-1")
+        let patched = stub.lastBody(.post, "/v1/ecosystems/\(eco)/signin_apps/app-1")
         XCTAssertNil(patched?["name"] ?? nil)
         XCTAssertEqual(patched?["githubEnabled"] as? Bool, false)
         XCTAssertEqual(patched?["allowedReturnOrigins"] as? [String], ["https://shop.acme.test"])
         XCTAssertEqual(
-            stub.lastRequest(.patch, "/ecosystem/signin-apps/\(eco)/app-1")?.path,
-            "/ecosystem/signin-apps/\(eco)/app-1?workspace=acme"
+            stub.lastRequest(.post, "/v1/ecosystems/\(eco)/signin_apps/app-1")?.path,
+            "/v1/ecosystems/\(eco)/signin_apps/app-1?workspace=acme"
         )
 
         try await adapter.delete(ecosystemID: eco, id: "app-1")
         XCTAssertEqual(
-            stub.lastRequest(.delete, "/ecosystem/signin-apps/\(eco)/app-1")?.path,
-            "/ecosystem/signin-apps/\(eco)/app-1?workspace=acme"
+            stub.lastRequest(.delete, "/v1/ecosystems/\(eco)/signin_apps/app-1")?.path,
+            "/v1/ecosystems/\(eco)/signin_apps/app-1?workspace=acme"
         )
     }
 
     func testSigninAppConflictIsHubConflict() async throws {
-        stub.on(.post, "/ecosystem/signin-apps/\(eco)", status: 409, json: #"{"detail":"duplicate"}"#)
+        stub.on(.post, "/v1/ecosystems/\(eco)/signin_apps", status: 409, json: StubClientTransport.error("duplicate"))
         do {
             _ = try await SigninAppsAdapter(environment: environment, workspace: workspace)
                 .create(ecosystemID: eco, SigninAppCreate(slug: "web", name: "Web"))
@@ -120,24 +128,24 @@ final class EcosystemConfigAdaptersTests: XCTestCase {
             guard case .conflict = error else { return XCTFail("expected .conflict, got \(error)") }
         }
         XCTAssertEqual(
-            stub.lastRequest(.post, "/ecosystem/signin-apps/\(eco)")?.path,
-            "/ecosystem/signin-apps/\(eco)?workspace=acme"
+            stub.lastRequest(.post, "/v1/ecosystems/\(eco)/signin_apps")?.path,
+            "/v1/ecosystems/\(eco)/signin_apps?workspace=acme"
         )
     }
 
     // MARK: Feature flags
 
     private let flagJSON = #"""
-    {"key":"dark_mode","enabled":true,"description":"Dark theme",
-    "createdAt":"2026-09-01T00:00:00.000Z","updatedAt":"2026-09-01T00:00:00.000Z"}
+    {"object":"feature_flag","key":"dark_mode","enabled":true,"description":"Dark theme",
+    "created":1788220800,"updated":1788220800}
     """#
 
     func testFeatureFlagsUnwrapAndRoundTrip() async throws {
         let adapter = FeatureFlagsAdapter(environment: environment, workspace: workspace)
-        stub.on(.get, "/ecosystem/feature-flags/\(eco)", json: #"{"flags":[\#(flagJSON)]}"#)
-        stub.on(.post, "/ecosystem/feature-flags/\(eco)", status: 201, json: flagJSON)
-        stub.on(.put, "/ecosystem/feature-flags/\(eco)/dark_mode", json: flagJSON)
-        stub.on(.delete, "/ecosystem/feature-flags/\(eco)/dark_mode", status: 204, json: "")
+        stub.on(.get, "/v1/feature_flags", json: StubClientTransport.list([flagJSON]))
+        stub.on(.post, "/v1/feature_flags", status: 201, json: flagJSON)
+        stub.on(.post, "/v1/feature_flags/dark_mode", json: flagJSON)
+        stub.on(.delete, "/v1/feature_flags/dark_mode", status: 204, json: "")
 
         let flags = try await adapter.list(ecosystemID: eco)
         XCTAssertEqual(flags, [
@@ -147,87 +155,87 @@ final class EcosystemConfigAdaptersTests: XCTestCase {
             )
         ])
         XCTAssertEqual(
-            stub.lastRequest(.get, "/ecosystem/feature-flags/\(eco)")?.path,
-            "/ecosystem/feature-flags/\(eco)?workspace=acme"
+            stub.lastRequest(.get, "/v1/feature_flags")?.path,
+            "/v1/feature_flags?ecosystem=\(eco)&limit=100&workspace=acme"
         )
 
         _ = try await adapter.create(
             ecosystemID: eco, FeatureFlagCreate(key: "dark_mode", enabled: true, description: "Dark theme")
         )
-        XCTAssertEqual(stub.lastBody(.post, "/ecosystem/feature-flags/\(eco)")?["key"] as? String, "dark_mode")
+        XCTAssertEqual(stub.lastBody(.post, "/v1/feature_flags")?["key"] as? String, "dark_mode")
         XCTAssertEqual(
-            stub.lastRequest(.post, "/ecosystem/feature-flags/\(eco)")?.path,
-            "/ecosystem/feature-flags/\(eco)?workspace=acme"
+            stub.lastRequest(.post, "/v1/feature_flags")?.path,
+            "/v1/feature_flags?workspace=acme"
         )
 
         _ = try await adapter.update(
             ecosystemID: eco, key: "dark_mode", FeatureFlagUpdate(enabled: false, description: nil)
         )
-        let body = stub.lastBody(.put, "/ecosystem/feature-flags/\(eco)/dark_mode")
+        let body = stub.lastBody(.post, "/v1/feature_flags/dark_mode")
         XCTAssertEqual(body?["enabled"] as? Bool, false)
         XCTAssertNil(body?["description"] ?? nil)
         XCTAssertEqual(
-            stub.lastRequest(.put, "/ecosystem/feature-flags/\(eco)/dark_mode")?.path,
-            "/ecosystem/feature-flags/\(eco)/dark_mode?workspace=acme"
+            stub.lastRequest(.post, "/v1/feature_flags/dark_mode")?.path,
+            "/v1/feature_flags/dark_mode?workspace=acme"
         )
 
         try await adapter.delete(ecosystemID: eco, key: "dark_mode")
-        XCTAssertEqual(stub.requestCount(.delete, "/ecosystem/feature-flags/\(eco)/dark_mode"), 1)
+        XCTAssertEqual(stub.requestCount(.delete, "/v1/feature_flags/dark_mode"), 1)
         XCTAssertEqual(
-            stub.lastRequest(.delete, "/ecosystem/feature-flags/\(eco)/dark_mode")?.path,
-            "/ecosystem/feature-flags/\(eco)/dark_mode?workspace=acme"
+            stub.lastRequest(.delete, "/v1/feature_flags/dark_mode")?.path,
+            "/v1/feature_flags/dark_mode?ecosystem=\(eco)&workspace=acme"
         )
     }
 
     // MARK: Server bags
 
     private let bagJSON = #"""
-    {"key":"limits","value":{"maxItems":20},"description":"Limits",
-    "createdAt":"2026-09-01T00:00:00.000Z","updatedAt":"2026-09-01T00:00:00.000Z"}
+    {"object":"server_bag","key":"limits","value":{"maxItems":20},"description":"Limits",
+    "created":1788220800,"updated":1788220800}
     """#
 
     func testServerBagsUnwrapAndRoundTrip() async throws {
         let adapter = ServerBagsAdapter(environment: environment, workspace: workspace)
-        stub.on(.get, "/ecosystem/server-bag/\(eco)", json: #"{"bags":[\#(bagJSON)]}"#)
-        stub.on(.post, "/ecosystem/server-bag/\(eco)", status: 201, json: bagJSON)
-        stub.on(.put, "/ecosystem/server-bag/\(eco)/limits", json: bagJSON)
-        stub.on(.delete, "/ecosystem/server-bag/\(eco)/limits", status: 204, json: "")
+        stub.on(.get, "/v1/server_bag", json: StubClientTransport.list([bagJSON]))
+        stub.on(.post, "/v1/server_bag", status: 201, json: bagJSON)
+        stub.on(.post, "/v1/server_bag/limits", json: bagJSON)
+        stub.on(.delete, "/v1/server_bag/limits", status: 204, json: "")
 
         let bags = try await adapter.list(ecosystemID: eco)
         XCTAssertEqual(bags.map(\.key), ["limits"])
         XCTAssertEqual(bags.first?.value, .object(["maxItems": .int(20)]))
         XCTAssertEqual(
-            stub.lastRequest(.get, "/ecosystem/server-bag/\(eco)")?.path,
-            "/ecosystem/server-bag/\(eco)?workspace=acme"
+            stub.lastRequest(.get, "/v1/server_bag")?.path,
+            "/v1/server_bag?ecosystem=\(eco)&limit=100&workspace=acme"
         )
 
         _ = try await adapter.create(
             ecosystemID: eco,
             ServerBagCreate(key: "limits", value: .object(["maxItems": .number(20)]), description: "Limits")
         )
-        let created = stub.lastBody(.post, "/ecosystem/server-bag/\(eco)")
+        let created = stub.lastBody(.post, "/v1/server_bag")
         XCTAssertEqual((created?["value"] as? [String: Any])?["maxItems"] as? Double, 20)
         XCTAssertEqual(
-            stub.lastRequest(.post, "/ecosystem/server-bag/\(eco)")?.path,
-            "/ecosystem/server-bag/\(eco)?workspace=acme"
+            stub.lastRequest(.post, "/v1/server_bag")?.path,
+            "/v1/server_bag?workspace=acme"
         )
 
         _ = try await adapter.update(
             ecosystemID: eco, key: "limits", ServerBagUpdate(value: .bool(true), description: nil)
         )
-        let updated = stub.lastBody(.put, "/ecosystem/server-bag/\(eco)/limits")
+        let updated = stub.lastBody(.post, "/v1/server_bag/limits")
         XCTAssertEqual(updated?["value"] as? Bool, true)
         XCTAssertNil(updated?["description"] ?? nil)
         XCTAssertEqual(
-            stub.lastRequest(.put, "/ecosystem/server-bag/\(eco)/limits")?.path,
-            "/ecosystem/server-bag/\(eco)/limits?workspace=acme"
+            stub.lastRequest(.post, "/v1/server_bag/limits")?.path,
+            "/v1/server_bag/limits?workspace=acme"
         )
 
         try await adapter.delete(ecosystemID: eco, key: "limits")
-        XCTAssertEqual(stub.requestCount(.delete, "/ecosystem/server-bag/\(eco)/limits"), 1)
+        XCTAssertEqual(stub.requestCount(.delete, "/v1/server_bag/limits"), 1)
         XCTAssertEqual(
-            stub.lastRequest(.delete, "/ecosystem/server-bag/\(eco)/limits")?.path,
-            "/ecosystem/server-bag/\(eco)/limits?workspace=acme"
+            stub.lastRequest(.delete, "/v1/server_bag/limits")?.path,
+            "/v1/server_bag/limits?ecosystem=\(eco)&workspace=acme"
         )
     }
 
@@ -258,7 +266,7 @@ final class EcosystemConfigAdaptersTests: XCTestCase {
             "prefix":"adh_cd34","bucketRdid":"storage.acme.nightly","token":"adh_cd34ef56"}
             """#
         )
-        stub.on(.delete, "/tokens/tok-2", status: 204, json: "")
+        stub.on(.delete, "/v1/api_keys/tok-2", status: 204, json: "")
 
         let created = try await adapter.create(
             ecosystemID: eco, StorageTokenCreate(name: "nightly", description: nil, expiresAt: nil, ecosystemId: nil)
@@ -273,7 +281,7 @@ final class EcosystemConfigAdaptersTests: XCTestCase {
         // The token id in the path identifies the row; `ecosystemId` is a list filter and has no
         // business on a DELETE — even when the caller is scoped to an ecosystem.
         try await adapter.revoke(ecosystemID: eco, id: "tok-2")
-        XCTAssertEqual(stub.lastRequest(.delete, "/tokens/tok-2")?.path, "/tokens/tok-2?workspace=acme")
+        XCTAssertEqual(stub.lastRequest(.delete, "/v1/api_keys/tok-2")?.path, "/v1/api_keys/tok-2?workspace=acme")
     }
 
     func testStorageTokenConflictIsHubConflict() async throws {

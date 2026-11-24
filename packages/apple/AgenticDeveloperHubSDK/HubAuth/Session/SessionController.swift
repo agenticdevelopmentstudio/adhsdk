@@ -21,7 +21,7 @@ public enum MfaChallengeMethod: String, Sendable, CaseIterable {
         }
     }
 
-    init(_ generated: Components.Schemas.MfaChallenge.MethodsPayloadPayload) {
+    init(_ generated: HubMfaChallenge.Method) {
         switch generated {
         case .sms: self = .sms
         case .totp: self = .totp
@@ -40,7 +40,7 @@ public struct MfaChallengeInfo: Equatable, Sendable {
         self.methods = methods
     }
 
-    init(_ challenge: Components.Schemas.MfaChallenge) {
+    init(_ challenge: HubMfaChallenge) {
         self.init(token: challenge.token, methods: challenge.methods.map(MfaChallengeMethod.init))
     }
 }

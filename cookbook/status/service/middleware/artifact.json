@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "d1098650-e0d0-4d4b-9bbc-3ceeac8635fe",
     "title": "Status Server Middleware",
-    "domain": "adhsdk://cookbook/status/service/middleware",
     "type": "ingredient",
     "version": "1.0.3",
     "status": "review",
@@ -25,13 +24,13 @@
       "middleware"
     ],
     "depends-on": [
-      "agenticdevelopercookbook://guidelines/implementing/security/authentication",
-      "agenticdevelopercookbook://guidelines/implementing/security/authorization",
-      "agenticdevelopercookbook://guidelines/implementing/networking/rate-limiting",
-      "agenticdevelopercookbook://guidelines/implementing/networking/error-responses"
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/aec38334-67fa-4c7e-bca2-607932af3f22",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/2609037a-fb89-4b49-88b0-7e4295e5d6f6",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c84400d9-83b3-4c4c-83d4-325dfa989202",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/631b7b61-985a-4f5d-9c44-2cfbfdb9091b"
     ],
     "related": [
-      "adhsdk://cookbook/status/service/auth"
+      "735b4e58-bce9-4754-ad3f-bf0344fd4b32"
     ],
     "references": [
       "packages/web/packages/status-server/src/middleware/auth.ts (adhsdk)",
@@ -45,7 +44,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "142db830f54e042e",
+  "synced": "699c29ad0966b54f",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -64,7 +63,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

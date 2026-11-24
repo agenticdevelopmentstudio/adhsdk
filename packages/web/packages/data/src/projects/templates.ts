@@ -1,4 +1,4 @@
-// Project templates API client — the "stamp this shape out again" side of `/api/project/*`.
+// Project templates API client — the "stamp this shape out again" side of `/api/v1/*`.
 //
 // Its own file and its own route stem for the reason `programs.ts` has one: a template belongs to
 // the WORKSPACE, not to a board. That is not a filing decision, it is the whole point — a template
@@ -15,8 +15,9 @@
 // stopped being related to it the moment they were written — a board does not become invalid
 // because the shape it was stamped from was retired.
 
-import { authedJson, authedRequest } from "../http";
-import { compact, enc, workspaceQuery } from "../client-helpers";
+import { authedRequest, withV1Query } from "../http";
+import { compact, enc } from "../client-helpers";
+import { v1Json, v1List, v1Write } from "../v1-case";
 import { toProject, type Project } from "./projects";
 import { toMilestone, type Milestone } from "./milestones";
 import { toWorkItem, type WorkItem } from "./work-items";
@@ -33,7 +34,11 @@ import type {
   TemplateInstantiateProjectResult,
 } from "./wire";
 
-const BASE = "/api/project/templates";
+const BASE = "/api/v1/project_templates";
+
+/** `url` with the optional `?workspace=` pin. */
+const scoped = (url: string, opts?: { workspace?: string }): string =>
+  withV1Query(url, { workspace: opts?.workspace || undefined });
 
 /* ── Template ─────────────────────────────────────────────────────────── */
 
@@ -107,15 +112,14 @@ export const projectTemplatesApi = {
    * rows that will 400 the moment one is chosen.
    */
   async list(opts?: { workspace?: string; kind?: TemplateKind }): Promise<Template[]> {
-    const ws = workspaceQuery(opts);
-    const kind = opts?.kind ? `${ws ? "&" : "?"}kind=${enc(opts.kind)}` : "";
-    const rows = await authedJson<TemplateRow[]>(`${BASE}${ws}${kind}`);
-    return rows.map(toTemplate);
+    const rows = await v1List<TemplateRow>(scoped(BASE, opts));
+    // The /v1 collection declares no `kind` filter, so the narrowing is done here.
+    return rows.filter((r) => !opts?.kind || r.kind === opts.kind).map(toTemplate);
   },
 
   async get(id: string): Promise<Template | null> {
     try {
-      return toTemplate(await authedJson<TemplateRow>(`${BASE}/${enc(id)}`));
+      return toTemplate(await v1Json<TemplateRow>(`${BASE}/${enc(id)}`));
     } catch {
       // Backend 404s with a thrown error; the UI contract is null-for-missing.
       return null;
@@ -145,10 +149,7 @@ export const projectTemplatesApi = {
       ...compact({ description: input.description }),
     };
     return toTemplate(
-      await authedJson<TemplateRow>(`${BASE}${workspaceQuery(opts)}`, {
-        method: "POST",
-        body: JSON.stringify(body),
-      }),
+      await v1Json<TemplateRow>(scoped(BASE, opts), v1Write("POST", body)),
     );
   },
 
@@ -163,10 +164,7 @@ export const projectTemplatesApi = {
   async update(id: string, patch: TemplatePatchBody): Promise<Template> {
     const body: TemplatePatchBody = compact(patch);
     return toTemplate(
-      await authedJson<TemplateRow>(`${BASE}/${enc(id)}`, {
-        method: "PATCH",
-        body: JSON.stringify(body),
-      }),
+      await v1Json<TemplateRow>(`${BASE}/${enc(id)}`, v1Write("POST", body)),
     );
   },
 
@@ -190,7 +188,10 @@ export const projectTemplatesApi = {
     id: string,
     input: TemplateInstantiateWorkItemBody,
   ): Promise<{ item: WorkItem; children: WorkItem[] }> {
-    const body: TemplateInstantiateWorkItemBody = {
+    // `POST /v1/work_items` with a `template` is the instantiate; the gateway drops that key
+    // from the request it forwards.
+    const body: TemplateInstantiateWorkItemBody & { template: string } = {
+      template: id,
       projectId: input.projectId,
       ...compact({
         title: input.title,
@@ -199,9 +200,9 @@ export const projectTemplatesApi = {
         iterationId: input.iterationId,
       }),
     };
-    const res = await authedJson<TemplateInstantiateWorkItemResult>(
-      `${BASE}/${enc(id)}/work-items`,
-      { method: "POST", body: JSON.stringify(body) },
+    const res = await v1Json<TemplateInstantiateWorkItemResult>(
+      "/api/v1/work_items",
+      v1Write("POST", body),
     );
     return { item: toWorkItem(res.item), children: res.children.map(toWorkItem) };
   },
@@ -221,13 +222,14 @@ export const projectTemplatesApi = {
     input: { name: string; description?: string },
     opts?: { workspace?: string },
   ): Promise<{ project: Project; milestones: Milestone[] }> {
-    const body: TemplateInstantiateProjectBody = {
+    const body: TemplateInstantiateProjectBody & { template: string } = {
+      template: id,
       name: input.name,
       ...compact({ description: input.description }),
     };
-    const res = await authedJson<TemplateInstantiateProjectResult>(
-      `${BASE}/${enc(id)}/projects${workspaceQuery(opts)}`,
-      { method: "POST", body: JSON.stringify(body) },
+    const res = await v1Json<TemplateInstantiateProjectResult>(
+      scoped("/api/v1/projects", opts),
+      v1Write("POST", body),
     );
     return {
       project: toProject(res.project),

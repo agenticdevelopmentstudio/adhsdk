@@ -8,7 +8,7 @@ import type { Team } from "./fixtures"
 const context = { orgSlug: "adh" }
 
 describe("planRepairs", () => {
-  it("finds nothing to do for a record every rule already accepts", () => {
+  it("content-editing-032 finds nothing to do for a record every rule already accepts", () => {
     const record: Team = {
       displayName: "Participants",
       identifier: "adh.participants",
@@ -22,7 +22,7 @@ describe("planRepairs", () => {
     expect(plan.repaired).toBe(record)
   })
 
-  it("repairs the stored value that made Save unreachable", () => {
+  it("content-editing-033 repairs the stored value that made Save unreachable", () => {
     const record: Team = { displayName: "Participants", identifier: "participants", archived: false }
     const plan = planRepairs(record, teamFields, context)
     expect(plan.broken).toEqual([{ key: "identifier", message: RDID_MESSAGE }])
@@ -37,7 +37,7 @@ describe("planRepairs", () => {
     expect(record.identifier).toBe("participants")
   })
 
-  it("reports a repair that produces another invalid value instead of accepting it", () => {
+  it("content-editing-036 reports a repair that produces another invalid value instead of accepting it", () => {
     // Saving the output of a broken repair would write a second bad row over the
     // first — the one outcome worse than leaving the original alone.
     const fields = {
@@ -52,7 +52,7 @@ describe("planRepairs", () => {
     expect(plan.unrepaired).toEqual([{ key: "identifier", message: "needs a dot" }])
   })
 
-  it("never repairs an empty value into an invented one", () => {
+  it("content-editing-034 never repairs an empty value into an invented one", () => {
     const fields = {
       identifier: rdid<typeof context>({
         label: "Identifier",
@@ -65,7 +65,7 @@ describe("planRepairs", () => {
     expect(plan.changed).toBe(false)
   })
 
-  it("ignores a required field left blank — that is the user's to fill in", () => {
+  it("content-editing-035 ignores a required field left blank — that is the user's to fill in", () => {
     const fields = { displayName: text({ label: "Display name", required: true }) }
     const plan = planRepairs({ displayName: "" }, fields, context)
     expect(plan.broken).toEqual([])

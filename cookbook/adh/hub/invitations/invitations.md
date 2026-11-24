@@ -1,13 +1,12 @@
 ---
 id: 7e0508b5-cf96-42da-9902-51fbe31b432f
 title: "Hub Domain: Invitations"
-domain: adhsdk://cookbook/adh/hub/invitations/invitations
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -27,10 +26,10 @@ tags:
   - notes
 depends-on: []
 related:
-  - adhsdk://cookbook/ui/navigation/htdv
-  - adhsdk://cookbook/adh/hub/ecosystems/ecosystems
-  - adhsdk://cookbook/adh/hub/customers
-  - adhsdk://cookbook/adh/hub/security/authentication-client
+  - faa2c3f3-1ff7-45fb-b6da-efed3cc1d451
+  - 201572ee-2e0f-4839-94f5-252f8044c4bf
+  - f81157d7-766f-42c9-a98a-44df19698bea
+  - 65fbb2b1-ca41-499f-ac03-7ecc0e206dcc
 references:
   - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Invitations/AdminNotesRail.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Invitations/InvitationsModels.swift (adhsdk)
@@ -312,7 +311,7 @@ looking at the same domain, not two ports of one feature:
 - **accept-is-authenticated**: `accept` calls `authedJson` to POST `{
   token }` to an accept route as the signed-in caller, so its authentication,
   one-refresh-then-retry-on-401, and `AuthHttpError` behavior on failure are
-  entirely `authedJson`'s (documented in `adhsdk://cookbook/adh/hub/security/authentication-client`),
+  entirely `authedJson`'s (documented in [adhsdk.ingredient.adh.hub.security.authentication-client](cookbook:65fbb2b1-ca41-499f-ac03-7ecc0e206dcc)),
   not redefined here.
 - **register-with-invite-extracts-message**: `registerWithInvite` issues an
   unauthenticated `fetch` POSTing the full `RegisterWithInviteInput` (`email`,
@@ -383,9 +382,9 @@ a shared notes sub-rail, and a web HTTP client, not a visual component.
 | invitations-019 | invite-channel-title-derivation | `Invite.channel == "push"` | `channelTitle` returns the raw string `"push"` unchanged (traced to `Invite.channelTitle`'s default case; no test covers an unrecognized channel) |
 | invitations-020 | preview-is-anonymous-and-folds-failure | `preview(token)` where the backend responds non-2xx | Promise resolves to `{ state: "invalid", ecosystemName: null, maskedDestination: null }`, does not reject (traced to `invitations.ts`; no test file exists for this component) |
 | invitations-021 | preview-network-failure-rejects | `preview(token)` where the underlying `fetch` call itself rejects (e.g. offline) | Promise rejects with the network error rather than resolving to `{ state: "invalid", ... }` — the gap this recipe records (traced to `invitations.ts`) |
-| invitations-022 | verify-is-anonymous-and-throws-status-code | `verify(token, code)` where the backend responds `410` | Throws `Error("410")` (traced to `invitations.ts`) |
-| invitations-023 | register-with-invite-extracts-message | `registerWithInvite(token, input)` where the backend responds `403` with a body containing no recognizable `error`/`message`/`detail` field | Throws `Error("Registration failed (403)")` (traced to `invitations.ts`) |
-| invitations-024 | register-with-invite-extracts-message | `registerWithInvite(token, input)` where the backend responds `409` with body `{ "error": "Email already registered" }` | Throws `Error("Email already registered")` (traced to `extractErrorMessage` in `client.ts`, applied by `invitations.ts`) |
+| invitations-022 | verify-is-anonymous-and-throws-status-code | `verify(code)` where the backend responds `410` | Throws `Error("410")` (traced to `invitations.ts`) |
+| invitations-023 | register-with-invite-extracts-message | `registerWithInvite(input)` (the invite token travels in `input.invite`) where the backend responds `403` with a body containing no recognizable `error`/`message`/`detail` field | Throws `Error("Registration failed (403)")` (traced to `invitations.ts`) |
+| invitations-024 | register-with-invite-extracts-message | `registerWithInvite(input)` (the invite token travels in `input.invite`) where the backend responds `409` with body `{ "error": "Email already registered" }` | Throws `Error("Email already registered")` (traced to `extractErrorMessage` (from `@adh-sdk/auth/client`), applied by `invitations.ts`) |
 
 ## Edge Cases
 
@@ -453,7 +452,7 @@ a shared notes sub-rail, and a web HTTP client, not a visual component.
   `registerWithInvite` each make exactly one unauthenticated `fetch` call
   with no retry; `accept` inherits `authedJson`'s one-refresh-then-retry
   behavior on a `401` only (documented in
-  `adhsdk://cookbook/adh/hub/security/authentication-client`), not a general
+  [adhsdk.ingredient.adh.hub.security.authentication-client](cookbook:65fbb2b1-ca41-499f-ac03-7ecc0e206dcc)), not a general
   offline retry. `preview`'s specific gap for a raw network failure (as
   opposed to an HTTP-status failure) is recorded under
   **preview-network-failure-rejects**.
@@ -607,10 +606,10 @@ Not applicable: none of the seven given sources contains a logging,
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Invitations/` |
-| web | `packages/web/packages/data/src/invitations/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Invitations/` | confirmed (1.1.2) |
+| web | `packages/web/packages/data/src/invitations/` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -669,26 +668,21 @@ product/API decision outside the scope of describing the code as it is.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | best-practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | best-practices |
-| [secure-storage](agenticdevelopercookbook://compliance/security#secure-storage) | passed | security |
-| [token-lifecycle](agenticdevelopercookbook://compliance/security#token-lifecycle) | partial | security |
-| [no-pii-in-logs](agenticdevelopercookbook://compliance/privacy-and-data#no-pii-in-logs) | passed | privacy-and-data |
-| [data-minimization](agenticdevelopercookbook://compliance/privacy-and-data#data-minimization) | passed | privacy-and-data |
-| [error-response-handling](agenticdevelopercookbook://compliance/access-patterns#error-response-handling) | partial | access-patterns |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | best-practices |
+| [adc.check.security.secure-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bb5dfc9b-c5b0-54fa-882f-007ae7dad0e9) | passed | security |
+| [adc.check.security.token-lifecycle](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/61edfc73-f26a-5cfa-8c09-d1011eb8b7cd) | partial | security |
+| [adc.check.privacy-and-data.no-pii-in-logs](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/23bca2e1-dc0f-5ff4-beaf-03891ad48e6b) | passed | privacy-and-data |
+| [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | privacy-and-data |
+| [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | partial | access-patterns |
 
 Each of the five Apple files has one clear responsibility (data shapes,
 shared notes sub-rail, and three thin per-collection topic providers that
 each only render/dispatch and delegate persistence to the injected
 `InvitationsDataSource`), and the web side splits wire types from the
 request-shaping client the same way — **separation-of-concerns** passes.
-**unit-test-coverage** is partial: `InvitationsTopicsTests.swift` exercises
-all three Apple topics and the shared notes rail with twelve test methods,
-but no test file exists anywhere in this repo for `invitations.ts`/`wire.ts`,
-and grepping the repo turns up no consumer of `invitationsApi` either — its
-own consumer, and any tests for it, live outside this repo.
-**explicit-error-handling** is partial: the Apple side wraps every error
+**unit-test-coverage** passes: `InvitationsTopicsTests.swift` exercises all three Apple topics and the shared notes rail (vectors 001-019), and `packages/web/packages/data/src/invitations/__tests__/invitations.test.ts` covers the web client (vectors 020-024) with a stubbed `fetch`. **explicit-error-handling** is partial: the Apple side wraps every error
 uniformly through `HubError.wrap`, and three of the web side's four methods
 handle their own failure path explicitly, but `preview`'s bare `fetch` call
 is not guarded against a network-level failure despite the source's own
@@ -717,6 +711,7 @@ four methods.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (invitations.test.ts, 5 of 5 web vectors 020-024; 001-019 are covered by the existing Apple tests; vector text for 022-024 corrected to the real signatures); unit-test-coverage now passed. |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Swift-only constructs in normative sections restated as platform-neutral behavior; the Apple mechanism is in Platform Notes. |
 | 1.1.0 | 2026-10-04 | Mike Fullerton | Resolve open-question markers against the code; restate unimplemented behavior as current behavior with pending Decisions; make normative text platform-neutral. |
 | 1.0.2 | 2026-09-27 | Mike Fullerton | Moved into the concept grouping. |

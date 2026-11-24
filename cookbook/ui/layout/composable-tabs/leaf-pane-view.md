@@ -1,13 +1,12 @@
 ---
 id: 4d75a371-181e-4d80-a16b-022d37dc0d48
 title: "Composable Tabs Leaf Pane"
-domain: adhsdk://cookbook/ui/layout/composable-tabs/leaf-pane-view
 type: ingredient
-version: 1.2.1
+version: 1.3.0
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -21,11 +20,11 @@ tags:
   - view-controller
   - accessibility
 depends-on:
-  - adhsdk://cookbook/ui/layout/pane-view
+  - 2b4d0f95-dbdf-48a9-8579-a3e5b7d488fe
 related:
-  - adhsdk://cookbook/ui/layout/composable-tabs/arrange-overlay-view
-  - adhsdk://cookbook/ui/layout/composable-tabs/active-pane
-  - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
+  - bfc2dcde-d905-4923-bff2-577c85f17d5f
+  - 08bfb299-851b-4b01-a84a-6a2a13e07c12
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2
 references: []
 approved-by: ""
 approved-date: ""
@@ -240,10 +239,15 @@ means.
 - **active-pane-cue-is-color-only**: As built, the pane's backdrop
   distinguishes the active pane from an inactive one by border color alone
   (`projectActivePaneOutline` vs. `projectPaneOutline`), with a constant
-  2pt border width in both states. This describes the current
+  2pt border width in both states while pane outlines are on (see
+  **outline-follows-the-owner** for when they are off). This describes the current
   implementation; it is not a constraint against adding a secondary cue —
   see Differentiate Without Color in Accessibility Options, which records
   that no such cue is implemented.
+- **outline-follows-the-owner**: A leaf pane MUST draw no outline, active
+  or inactive, while the split that owns it has pane outlines switched
+  off (a window that is one pane and has nothing to tell it from), and
+  MUST pick the setting up when it is created as well as when it changes.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
 
 ## Appearance
@@ -384,8 +388,9 @@ means.
 | ctpvc-050 | focus-check-walks-hierarchy | View loaded; the window's focused element is nested inside this pane's view | The focus-containment check returns true |
 | ctpvc-050b | focus-check-walks-hierarchy | View loaded; the window's focused element belongs to a different pane | The focus-containment check returns false |
 | ctpvc-051 | title-bar-bottom-constant | Read `titleBarBottom` | Equals 28 (2pt border inset + 26pt title bar height) |
-| ctpvc-052 | active-pane-cue-is-color-only | Compare the backdrop's drawn border for the active pane vs. an inactive one | `borderWidth` is 2 in both; only `borderColor` differs |
+| ctpvc-052 | active-pane-cue-is-color-only | With pane outlines on, compare the backdrop's drawn border for the active pane vs. an inactive one | `borderWidth` is 2 in both; only `borderColor` differs |
 | ctpvc-053 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
+| ctpvc-054 | outline-follows-the-owner | Create a leaf pane in a split whose pane outlines are switched off, then switch them on | While off, `borderWidth` is 0 for the pane, active or not; once on, it is 2 |
 
 ## Edge Cases
 
@@ -513,9 +518,9 @@ or its immediate collaborators (the move menu, the arrange overlay).
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsPaneViewController.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsPaneViewController.swift` | confirmed (1.3.0) |
 
 ## Design Decisions
 
@@ -539,16 +544,16 @@ or its immediate collaborators (the move menu, the arrange overlay).
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | Accessibility |
-| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | Accessibility |
-| [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
-| [dynamic-type-support](agenticdevelopercookbook://compliance/accessibility#dynamic-type-support) | partial | Accessibility |
-| [focus-management](agenticdevelopercookbook://compliance/accessibility#focus-management) | passed | Accessibility |
-| [string-externalization](agenticdevelopercookbook://compliance/internationalization#string-externalization) | failed | Internationalization |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
-| [rtl-layout-support](agenticdevelopercookbook://compliance/internationalization#rtl-layout-support) | passed | Internationalization |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
+| [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
+| [adc.check.accessibility.dynamic-type-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f3dbcab7-ac3d-5043-9379-0da07ceaa32b) | partial | Accessibility |
+| [adc.check.accessibility.focus-management](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/eec52703-a32a-5dee-b763-59a3bac826ea) | passed | Accessibility |
+| [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | failed | Internationalization |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
+| [adc.check.internationalization.rtl-layout-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f81d57a5-fd2a-5088-9fea-37703287698d) | passed | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 Accessibility statuses rest on the explicit `accessibilityDescription` labels alongside the unaddressed VoiceOver-notification and Differentiate-Without-Color gaps recorded in Accessibility and Accessibility Options, the theme-delegated colors and heading-style label recorded in Appearance, and the native `NSAlert` modal/sheet handling in `confirmAndRemove()`; internationalization statuses rest on the hardcoded literals listed in Localization and the `leadingAnchor`/`trailingAnchor` overlay constraints in `installArrangeOverlay()`.
 
@@ -558,6 +563,7 @@ Accessibility statuses rest on the explicit `accessibilityDescription` labels al
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.3.0 | 2026-11-14 | Mike Fullerton | Pane outline follows the split's outline setting (outline-follows-the-owner, vector ctpvc-054); active-pane-cue-is-color-only and ctpvc-052 hold while outlines are on. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added separation-of-concerns and unit-test-coverage compliance rows. Added the confines-to-ui-thread requirement and vector. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/layout/composable-tabs/. |
 | 1.1.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

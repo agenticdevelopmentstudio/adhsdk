@@ -48,6 +48,52 @@ final class TabBarView: NSView {
         didSet { applyEdgeInsets() }
     }
 
+    /// Whether title tabs carry a close button. Off for a bar whose tabs are
+    /// fixed views of one thing (a source and its preview) rather than
+    /// documents that come and go.
+    var showsCloseButtons = true {
+        didSet {
+            guard showsCloseButtons != oldValue else { return }
+            rebuildButtons()
+        }
+    }
+
+    /// A control in front of the first tab — a + for a new tab, say — at
+    /// `startInset`, centred on the tabs across the bar, with the tabs
+    /// starting `itemSpacing` after it. Top and bottom bars only.
+    var leadingAccessory: NSView? {
+        didSet {
+            guard leadingAccessory !== oldValue else { return }
+            precondition(leadingAccessory == nil || !edge.isVertical, "a leading accessory needs a horizontal bar")
+            oldValue?.removeFromSuperview()
+            installLeadingAccessory()
+        }
+    }
+
+    /// A control right after the last tab — a browser's + — centred on the
+    /// tabs across the bar and following the row as tabs come and go. Top and
+    /// bottom bars only. The tabs stop short of the bar's end by its width, so
+    /// a crowded row never runs underneath it.
+    var trailingAccessory: NSView? {
+        didSet {
+            guard trailingAccessory !== oldValue else { return }
+            precondition(trailingAccessory == nil || !edge.isVertical, "a trailing accessory needs a horizontal bar")
+            oldValue?.removeFromSuperview()
+            if let accessory = trailingAccessory {
+                accessory.translatesAutoresizingMaskIntoConstraints = false
+                addSubview(accessory)
+            }
+            pinTrailingAccessory()
+            applyEdgeInsets()
+        }
+    }
+
+    private var trailingAccessoryConstraints: [NSLayoutConstraint] = []
+
+    private var stackLeading: NSLayoutConstraint?
+    private var accessoryConstraints: [NSLayoutConstraint] = []
+    private var accessoryLeading: NSLayoutConstraint?
+
     let edge: Edge
 
     // MARK: - Tab metadata
@@ -116,7 +162,7 @@ final class TabBarView: NSView {
             stack.alignment = .leading
         }
         applyEdgeInsets()
-        stack.spacing = edge.isVertical ? -Self.cardOverlap : Self.itemSpacing
+        stack.spacing = Self.itemSpacing
         stack.translatesAutoresizingMaskIntoConstraints = false
 
         wantsLayer = true
@@ -136,10 +182,12 @@ final class TabBarView: NSView {
 
         switch edge {
         case .top, .bottom:
+            let leading = stack.leadingAnchor.constraint(equalTo: leadingAnchor)
+            stackLeading = leading
             NSLayoutConstraint.activate([
                 makeThicknessConstraint(thickness),
                 stack.topAnchor.constraint(equalTo: topAnchor),
-                stack.leadingAnchor.constraint(equalTo: leadingAnchor),
+                leading,
                 stack.trailingAnchor.constraint(equalTo: trailingAnchor),
                 stack.bottomAnchor.constraint(equalTo: bottomAnchor)
             ])
@@ -274,7 +322,7 @@ final class TabBarView: NSView {
             let view: NSView
             switch item.item {
             case let .title(title):
-                let button = TabButton(id: item.id, title: title)
+                let button = TabButton(id: item.id, title: title, showsCloseButton: showsCloseButtons)
                 button.isHighlighted = (item.id == selectedID)
                 button.onSelect = { [weak self] id in self?.onSelect?(id) }
                 button.onClose = { [weak self] id in self?.onClose?(id) }
@@ -312,15 +360,75 @@ final class TabBarView: NSView {
         }
         applyStackOrder()
         updateThickness()
+        pinTrailingAccessory()
+    }
+
+    /// Hangs the trailing accessory off the last tab, or off the start of
+    /// the row when there are no tabs. Re-run after every rebuild, because the
+    /// last tab is a different view each time.
+    private func pinTrailingAccessory() {
+        NSLayoutConstraint.deactivate(trailingAccessoryConstraints)
+        trailingAccessoryConstraints = []
+        guard let accessory = trailingAccessory else { return }
+        let offset = edge == .top ? Self.outerPadding / 2 : -Self.outerPadding / 2
+        let leading: NSLayoutConstraint
+        if let last = stack.arrangedSubviews.last {
+            leading = accessory.leadingAnchor.constraint(equalTo: last.trailingAnchor, constant: Self.itemSpacing)
+        } else if let lead = leadingAccessory {
+            leading = accessory.leadingAnchor.constraint(equalTo: lead.trailingAnchor, constant: Self.itemSpacing)
+        } else {
+            leading = accessory.leadingAnchor.constraint(equalTo: leadingAnchor, constant: startInset)
+        }
+        trailingAccessoryConstraints = [
+            leading,
+            accessory.centerYAnchor.constraint(equalTo: centerYAnchor, constant: offset),
+            accessory.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -Self.endPadding)
+        ]
+        NSLayoutConstraint.activate(trailingAccessoryConstraints)
     }
 
     /// The stack's padding: `outerPadding` on the window side and none on the
     /// workspace side, `startInset` where the items begin and `endPadding`
     /// where they run out.
+    /// Puts the accessory at `startInset` and starts the tabs after it, or
+    /// gives the stack back the whole bar when there is none. The stack's
+    /// own start inset drops to zero while an accessory leads, since the
+    /// accessory has already taken that space.
+    private func installLeadingAccessory() {
+        NSLayoutConstraint.deactivate(accessoryConstraints)
+        accessoryConstraints = []
+        accessoryLeading = nil
+        stackLeading?.isActive = false
+        guard let accessory = leadingAccessory else {
+            stackLeading = stack.leadingAnchor.constraint(equalTo: leadingAnchor)
+            stackLeading?.isActive = true
+            applyEdgeInsets()
+            return
+        }
+        accessory.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(accessory)
+        // A tab spans the bar from its outer padding to the workspace side,
+        // so its centre sits half that padding off the bar's.
+        let offset = edge == .top ? Self.outerPadding / 2 : -Self.outerPadding / 2
+        let leading = stack.leadingAnchor.constraint(equalTo: accessory.trailingAnchor, constant: Self.itemSpacing)
+        stackLeading = leading
+        let pin = accessory.leadingAnchor.constraint(equalTo: leadingAnchor, constant: startInset)
+        accessoryLeading = pin
+        accessoryConstraints = [
+            pin,
+            accessory.centerYAnchor.constraint(equalTo: centerYAnchor, constant: offset),
+            leading
+        ]
+        NSLayoutConstraint.activate(accessoryConstraints)
+        applyEdgeInsets()
+    }
+
     private func applyEdgeInsets() {
+        accessoryLeading?.constant = startInset
         let outer = Self.outerPadding
-        let start = startInset
-        let end = Self.endPadding
+        let start: CGFloat = leadingAccessory == nil ? startInset : 0
+        let accessoryRoom = trailingAccessory.map { $0.fittingSize.width + Self.itemSpacing } ?? 0
+        let end = Self.endPadding + accessoryRoom
         switch edge {
         case .top:
             stack.edgeInsets = NSEdgeInsets(top: outer, left: start, bottom: 0, right: end)
@@ -452,8 +560,18 @@ private final class TabButton: NSView {
     private let closeButton = NSButton()
     private let backgroundView = NSView()
 
-    init(id: UUID, title: String) {
+    private let showsCloseButton: Bool
+    private var cornerObserver: UserSettingObserver<Bool>?
+
+    /// A title tab's own slight rounding, or the app's tab radius when
+    /// Appearance > General prefers rounded corners.
+    private static var cornerRadius: CGFloat {
+        CornerStyle.prefersRounded ? CornerStyle.tabRadius : 4
+    }
+
+    init(id: UUID, title: String, showsCloseButton: Bool = true) {
         self.id = id
+        self.showsCloseButton = showsCloseButton
         self.title = title
         super.init(frame: .zero)
 
@@ -461,7 +579,11 @@ private final class TabButton: NSView {
         wantsLayer = true
 
         backgroundView.wantsLayer = true
-        backgroundView.layer?.cornerRadius = 4
+        backgroundView.layer?.cornerRadius = Self.cornerRadius
+        backgroundView.layer?.cornerCurve = .continuous
+        cornerObserver = UserSettingObserver(UserSettings.preferRoundedCorners) { [weak self] _ in
+            self?.backgroundView.layer?.cornerRadius = Self.cornerRadius
+        }
         backgroundView.translatesAutoresizingMaskIntoConstraints = false
 
         titleLabel.stringValue = title
@@ -488,6 +610,7 @@ private final class TabButton: NSView {
         closeButton.bezelStyle = .inline
         closeButton.isBordered = false
         closeButton.image = NSImage(systemSymbolName: "xmark.circle.fill", accessibilityDescription: "Close Tab")
+        closeButton.toolTip = "Close Tab"
         // Per tab: several bars can be on screen at once, so "the close button"
         // is only an address if it names which tab it closes.
         closeButton.accessibilityID("tab-bar.close.\(id.uuidString)")
@@ -499,7 +622,7 @@ private final class TabButton: NSView {
 
         addSubview(backgroundView)
         backgroundView.addSubview(titleLabel)
-        backgroundView.addSubview(closeButton)
+        if showsCloseButton { backgroundView.addSubview(closeButton) }
 
         NSLayoutConstraint.activate([
             backgroundView.topAnchor.constraint(equalTo: topAnchor, constant: 2),
@@ -512,14 +635,19 @@ private final class TabButton: NSView {
             // collapse buttons on the vertical bars.
             titleLabel.leadingAnchor.constraint(equalTo: backgroundView.leadingAnchor, constant: 10),
             titleLabel.topAnchor.constraint(equalTo: backgroundView.topAnchor, constant: 4),
-            titleLabel.bottomAnchor.constraint(equalTo: backgroundView.bottomAnchor, constant: -4),
-
-            closeButton.leadingAnchor.constraint(equalTo: titleLabel.trailingAnchor, constant: 6),
-            closeButton.trailingAnchor.constraint(equalTo: backgroundView.trailingAnchor, constant: -6),
-            closeButton.centerYAnchor.constraint(equalTo: backgroundView.centerYAnchor),
-            closeButton.widthAnchor.constraint(equalToConstant: 14),
-            closeButton.heightAnchor.constraint(equalToConstant: 14)
+            titleLabel.bottomAnchor.constraint(equalTo: backgroundView.bottomAnchor, constant: -4)
         ])
+        if showsCloseButton {
+            NSLayoutConstraint.activate([
+                closeButton.leadingAnchor.constraint(equalTo: titleLabel.trailingAnchor, constant: 6),
+                closeButton.trailingAnchor.constraint(equalTo: backgroundView.trailingAnchor, constant: -6),
+                closeButton.centerYAnchor.constraint(equalTo: backgroundView.centerYAnchor),
+                closeButton.widthAnchor.constraint(equalToConstant: 14),
+                closeButton.heightAnchor.constraint(equalToConstant: 14)
+            ])
+        } else {
+            titleLabel.trailingAnchor.constraint(equalTo: backgroundView.trailingAnchor, constant: -10).isActive = true
+        }
 
         observeTheme { tab, _ in tab.updateAppearance() }
     }
@@ -528,7 +656,7 @@ private final class TabButton: NSView {
 
     override func mouseDown(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
-        if closeButton.frame.contains(convert(point, to: backgroundView)) {
+        if showsCloseButton, closeButton.frame.contains(convert(point, to: backgroundView)) {
             super.mouseDown(with: event)
             return
         }
@@ -546,7 +674,7 @@ private final class TabButton: NSView {
     /// this view became an element of its own. `tab-bar.close.<id>` is an
     /// address other code already uses; becoming addressable must not cost it.
     override func accessibilityChildren() -> [Any]? {
-        [closeButton]
+        showsCloseButton ? [closeButton] : []
     }
 
     @objc private func closeAction(_ sender: NSButton) {

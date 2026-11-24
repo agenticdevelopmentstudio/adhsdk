@@ -22,13 +22,14 @@
   secret — the secret-expiry check's same-detail guard leaves it untouched; only
   navigating to a *different* destination drops it.
 - **A value outside the shared error taxonomy thrown during storage-token create**:
-  MUST be converted to a generic unexpected error with a fixed message, discarding
-  the original error's own message text — a deliberate divergence from the shared
+  MUST be converted to a generic unexpected error reading "Couldn't create the
+  token. Please try again.", discarding the original error's own message text — a deliberate divergence from the shared
   error-wrapping step's usual behavior of preserving as much detail as possible (see
   Design Decisions).
-- **A feature-flag key containing a reserved character (e.g. `:`)**: see the open
-  question on **flags-key-charset-unrestricted** — no given implementation rejects it, but it is
-  later embedded unescaped in a colon-delimited composite id.
+- **A feature-flag key containing a reserved character (e.g. `:`)**: see
+  **flags-key-charset-unrestricted** — it SHOULD be rejected, but no given
+  implementation rejects it yet, and it is later embedded unescaped in a
+  colon-delimited composite id.
 - **Path segments containing special characters**: the alternate client's
   path-encoding step MUST percent-encode every ecosystem id, flag key, bag key, and
   sign-in-app id interpolated into a request path, so a key/id with `/`, `?`, or
@@ -38,4 +39,11 @@
   also given**: neither implementation reconciles the two channels;
   **dual-scoping-channels** documents that the rail always leaves the body field
   unset and relies on the parameter/query channel exclusively.
+
+- **A follower turned on while its parent is off**: the sync-tables write succeeds
+  and the row comes back `overridden` but not `enabled`. The pane shows the server's
+  answer rather than the requested state.
+- **Switching ecosystems with rows selected**: the admin console clears the
+  selection with the ecosystem, because resource ids are the same in every
+  ecosystem and a kept selection would write to one the user has not looked at.
 

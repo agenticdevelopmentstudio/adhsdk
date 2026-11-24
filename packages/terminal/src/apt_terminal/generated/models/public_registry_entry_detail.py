@@ -137,24 +137,24 @@ class PublicRegistryEntryDetail:
         field_dict.update(
             {
                 "slug": slug,
-                "displayName": display_name,
+                "display_name": display_name,
                 "summary": summary,
-                "photoAttachmentId": photo_attachment_id,
-                "providerType": provider_type,
+                "photo_attachment_id": photo_attachment_id,
+                "provider_type": provider_type,
                 "category": category,
                 "keywords": keywords,
-                "locationText": location_text,
-                "countryCode": country_code,
-                "regionCode": region_code,
+                "location_text": location_text,
+                "country_code": country_code,
+                "region_code": region_code,
                 "geo": geo,
-                "areaServed": area_served,
-                "deliveryMode": delivery_mode,
+                "area_served": area_served,
+                "delivery_mode": delivery_mode,
                 "links": links,
-                "contactMode": contact_mode,
+                "contact_mode": contact_mode,
                 "languages": languages,
                 "fields": fields,
                 "services": services,
-                "imageUrls": image_urls,
+                "image_urls": image_urls,
             }
         )
 
@@ -180,7 +180,7 @@ class PublicRegistryEntryDetail:
         d = dict(src_dict)
         slug = d.pop("slug")
 
-        display_name = d.pop("displayName")
+        display_name = d.pop("display_name")
 
         summary = d.pop("summary")
 
@@ -189,19 +189,19 @@ class PublicRegistryEntryDetail:
                 return data
             return cast(None | str, data)
 
-        photo_attachment_id = _parse_photo_attachment_id(d.pop("photoAttachmentId"))
+        photo_attachment_id = _parse_photo_attachment_id(d.pop("photo_attachment_id"))
 
-        provider_type = PublicRegistryEntryDetailProviderType(d.pop("providerType"))
+        provider_type = PublicRegistryEntryDetailProviderType(d.pop("provider_type"))
 
         category = d.pop("category")
 
         keywords = cast(list[str], d.pop("keywords"))
 
-        location_text = d.pop("locationText")
+        location_text = d.pop("location_text")
 
-        country_code = d.pop("countryCode")
+        country_code = d.pop("country_code")
 
-        region_code = d.pop("regionCode")
+        region_code = d.pop("region_code")
 
         def _parse_geo(data: object) -> None | PublicRegistryEntryDetailGeoType0:
             if data is None:
@@ -218,9 +218,9 @@ class PublicRegistryEntryDetail:
 
         geo = _parse_geo(d.pop("geo"))
 
-        area_served = PublicRegistryEntryDetailAreaServed.from_dict(d.pop("areaServed"))
+        area_served = PublicRegistryEntryDetailAreaServed.from_dict(d.pop("area_served"))
 
-        delivery_mode = PublicRegistryEntryDetailDeliveryMode(d.pop("deliveryMode"))
+        delivery_mode = PublicRegistryEntryDetailDeliveryMode(d.pop("delivery_mode"))
 
         links = []
         _links = d.pop("links")
@@ -229,7 +229,7 @@ class PublicRegistryEntryDetail:
 
             links.append(links_item)
 
-        contact_mode = PublicRegistryEntryDetailContactMode(d.pop("contactMode"))
+        contact_mode = PublicRegistryEntryDetailContactMode(d.pop("contact_mode"))
 
         languages = cast(list[str], d.pop("languages"))
 
@@ -247,7 +247,7 @@ class PublicRegistryEntryDetail:
 
             services.append(services_item)
 
-        image_urls = PublicRegistryEntryDetailImageUrls.from_dict(d.pop("imageUrls"))
+        image_urls = PublicRegistryEntryDetailImageUrls.from_dict(d.pop("image_urls"))
 
         public_registry_entry_detail = cls(
             slug=slug,

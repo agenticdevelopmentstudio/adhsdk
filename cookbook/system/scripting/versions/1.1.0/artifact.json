@@ -1,0 +1,63 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "d5812249-f235-43df-9cd7-504220da1a7d",
+    "title": "Scripting Support",
+    "type": "ingredient",
+    "version": "1.1.0",
+    "status": "review",
+    "language": "en",
+    "created": "2026-09-24",
+    "modified": "2026-09-27",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Three primitives that add AppleScript execution and Cocoa Scripting command support to a macOS app — a script runner that returns a structured result, a command base that serializes command handling onto one execution context, and a helper that builds a scripting locator for an application-level element.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "scripting",
+      "applescript",
+      "cocoa-scripting"
+    ],
+    "depends-on": [
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/6302654b-8200-4e03-862d-4734d4960d19",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/425271ea-92b6-4df6-9a83-94795f1be377"
+    ],
+    "related": [],
+    "references": [
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Scripting/AppleScriptRunner.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Scripting/MainActorScriptCommand.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ScriptingReExports.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Scripting/AppleScriptRunnerTests.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Scripting/MainActorScriptCommandTests.swift (adhsdk)"
+    ],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "9238df7e72c7a010",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

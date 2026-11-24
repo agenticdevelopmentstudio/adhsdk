@@ -1,0 +1,63 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "39f26055-c002-40fe-81e2-74c0f9c9311d",
+    "title": "Avatar Engine Render",
+    "type": "ingredient",
+    "version": "1.0.3",
+    "status": "review",
+    "language": "en",
+    "created": "2026-09-23",
+    "modified": "2026-11-14",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Bridges the avatar engine's per-frame DisplayList to CoreAnimation/CoreGraphics (Apple) and SVG (web) drawing primitives.",
+    "platforms": [
+      "swift",
+      "macos",
+      "ios",
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "avatar-engine",
+      "rendering",
+      "cross-platform",
+      "logic"
+    ],
+    "depends-on": [
+      "471eb7b8-6821-4fd3-ab89-022c56757421",
+      "c708a65f-4d6c-40e4-b1b8-a24584cd45a1",
+      "81f8c0bd-ce00-43b3-816e-b63e96baeacc",
+      "d3e1f776-8ad1-431f-9485-386ac285a039"
+    ],
+    "related": [],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "a72743a6b304699f",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

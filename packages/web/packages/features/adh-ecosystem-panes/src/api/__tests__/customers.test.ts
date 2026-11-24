@@ -5,26 +5,30 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const authedJson = vi.fn();
+const listAllV1 = vi.fn();
 vi.mock("@adh-sdk/auth/client", () => ({
   authedJson: (...args: unknown[]) => authedJson(...args),
-  authedRequest: vi.fn(),
+  listAllV1: (...args: unknown[]) => listAllV1(...args),
+  unixToIso: (n: number) => new Date(n * 1000).toISOString(),
+  withV1Query: (u: string, params: Record<string, string>) =>
+    `${u}?${new URLSearchParams(params).toString()}`,
 }));
 
 import { ecosystemUsersApi } from "../customers";
 
 const ROW = {
   id: "u1",
-  ecosystemId: "e1",
-  externalId: null,
+  ecosystem_id: "e1",
+  external_id: null,
   email: null,
-  displayName: "Ada",
+  display_name: "Ada",
   slug: "ada",
-  avatarUrl: "",
-  createdAt: "c",
-  updatedAt: "u",
+  avatar_url: "",
+  created: 1_700_000_000,
+  updated: 1_700_000_060,
 };
 
-/** The JSON body of the one PUT the call made. */
+/** The JSON body of the one POST the call made. */
 function sentBody(): Record<string, unknown> {
   const [, init] = authedJson.mock.calls[0] as [string, RequestInit];
   return JSON.parse(init.body as string) as Record<string, unknown>;
@@ -32,6 +36,7 @@ function sentBody(): Record<string, unknown> {
 
 beforeEach(() => {
   authedJson.mockReset();
+  listAllV1.mockReset();
   authedJson.mockResolvedValue(ROW);
 });
 
@@ -46,18 +51,18 @@ describe("ecosystemUsersApi.update", () => {
       avatarUrl: "",
     });
     expect(authedJson).toHaveBeenCalledWith(
-      "/api/customer/customers/u1",
-      expect.objectContaining({ method: "PUT" }),
+      "/api/v1/customers/u1",
+      expect.objectContaining({ method: "POST" }),
     );
     const body = sentBody();
     expect(body.email).toBeNull();
-    expect(body.externalId).toBeNull();
+    expect(body.external_id).toBeNull();
   });
 
   it("leaves the NOT NULL columns as '' — null there would be refused", async () => {
     await ecosystemUsersApi.update("u1", { email: "", avatarUrl: "", slug: "ada" });
     const body = sentBody();
-    expect(body.avatarUrl).toBe("");
+    expect(body.avatar_url).toBe("");
     expect(body.slug).toBe("ada");
   });
 
@@ -65,7 +70,7 @@ describe("ecosystemUsersApi.update", () => {
     await ecosystemUsersApi.update("u1", { email: "ada@example.com", externalId: "sso|42" });
     const body = sentBody();
     expect(body.email).toBe("ada@example.com");
-    expect(body.externalId).toBe("sso|42");
+    expect(body.external_id).toBe("sso|42");
   });
 
   it("still omits a field the caller did not send", async () => {
@@ -73,7 +78,7 @@ describe("ecosystemUsersApi.update", () => {
     const body = sentBody();
     // `compact` drops undefined, so an absent field stays absent — NOT null, which would clear it.
     expect("email" in body).toBe(false);
-    expect("externalId" in body).toBe(false);
+    expect("external_id" in body).toBe(false);
   });
 
   it("reads a NULL email back as the form's empty string", async () => {
@@ -88,18 +93,18 @@ describe("ecosystemUsersApi.list", () => {
   // browser matched nothing and every Users pane read "No users yet." The server filters, and it
   // resolves the rdid itself — the client sends the id exactly as the pane holds it.
   it("asks the server for the ecosystem's rows, by the id the pane holds", async () => {
-    authedJson.mockResolvedValue([ROW]);
+    listAllV1.mockResolvedValue([ROW]);
     const users = await ecosystemUsersApi.list("ecosystem.ads.agenticdeveloperhub");
-    expect(authedJson).toHaveBeenCalledWith(
-      "/api/customer/customers?ecosystemId=ecosystem.ads.agenticdeveloperhub",
+    expect(listAllV1).toHaveBeenCalledWith(
+      "/api/v1/customers?ecosystem_id=ecosystem.ads.agenticdeveloperhub",
     );
     // A row whose stored ecosystemId is a uuid is NOT dropped by a second, client-side comparison.
     expect(users.map((u) => u.id)).toEqual(["u1"]);
   });
 
   it("sends no filter when no ecosystem is selected", async () => {
-    authedJson.mockResolvedValue([]);
+    listAllV1.mockResolvedValue([]);
     await ecosystemUsersApi.list(undefined);
-    expect(authedJson).toHaveBeenCalledWith("/api/customer/customers");
+    expect(listAllV1).toHaveBeenCalledWith("/api/v1/customers");
   });
 });

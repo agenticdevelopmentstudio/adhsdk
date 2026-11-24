@@ -8,7 +8,7 @@
   asynchronously-delivered change notification arrives, and avoids firing
   `onVisibilityChange` for a hosting `GroupView` before that view has even
   finished adding this row — the same reasoning the sibling `ConditionalView`
-  recipe (`adhsdk://cookbook/ui/settings/layout/conditional-view`) documents for its own
+  recipe ([adhsdk.ingredient.ui.settings.layout.conditional-view](cookbook:537cf2a7-6be6-4a09-9a6c-8f8ecc6012da)) documents for its own
   initial-visibility evaluation.
   **Approved**: pending
 - **Decision**: Guard the `onChange` handler with `dismissed != self.isHidden`

@@ -116,9 +116,10 @@ export function RecipientInput({
     })
   }
 
+  const defaultPlaceholder =
+    kind === "email" ? "Add email…" : kind === "phone" ? "Add phone…" : "Add…"
+
   if (separateInput) {
-    const defaultPlaceholder =
-      kind === "email" ? "Add email…" : kind === "phone" ? "Add phone…" : "Add…"
     return (
       <div
         role="group"
@@ -184,7 +185,7 @@ export function RecipientInput({
             add(text)
             setText("")
           }}
-          placeholder={value.length === 0 ? placeholder : undefined}
+          placeholder={value.length === 0 ? (placeholder ?? defaultPlaceholder) : undefined}
           disabled={disabled}
           aria-label={`Add to ${ariaLabel}`}
           inputMode={kind === "email" ? "email" : kind === "phone" ? "tel" : "text"}

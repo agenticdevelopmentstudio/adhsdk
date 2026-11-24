@@ -52,4 +52,5 @@
 | tab-pane-049 | context-menu-provider-is-optional | Leave the context-menu provider unset; request a context menu | Returns the platform's default context menu |
 | tab-pane-050 | status-symbols-replace-existing | On a freshly constructed card with no prior status symbols, replace the status symbols with none | No status icons remain |
 | tab-pane-051 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
+| tab-pane-052 | close-button-has-tooltip | Construct the card | The close control's tooltip reads "Close Tab" |
 

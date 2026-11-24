@@ -86,6 +86,10 @@ public final class ScriptingRouter: NSObject {
         uniqueIDLookups["terminalSessions"]?(uniqueID)
     }
 
+    @objc public func valueInNotationsWithUniqueID(_ uniqueID: String) -> Any? {
+        uniqueIDLookups["notations"]?(uniqueID)
+    }
+
     @objc public func valueInScriptingSettingsWithName(_ name: String) -> Any? {
         nameLookups["scriptingSettings"]?(name)
     }

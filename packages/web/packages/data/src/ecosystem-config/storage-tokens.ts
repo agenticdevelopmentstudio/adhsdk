@@ -6,12 +6,18 @@
 //
 // Hand-written wire types in ./wire, for the reason feature-flags.ts states.
 
-import { authedJson, authedRequest } from "../http";
-import type { MintTokenPrincipalBody, TokenPrincipal, TokenPrincipalCreated } from "./wire";
+import { authedJson, authedRequest, listAllV1, unixToIso, withV1Query } from "../http";
+import type {
+  MintTokenPrincipalBody,
+  TokenPrincipal,
+  TokenPrincipalCreated,
+  TokenPrincipalCreatedRow,
+  TokenPrincipalRow,
+} from "./wire";
 
 export type { MintTokenPrincipalBody, TokenPrincipal, TokenPrincipalCreated } from "./wire";
 
-const BASE = "/api/tokens";
+const BASE = "/api/v1/api_keys";
 
 /** Owner/bucket scoping shared by every op: `workspace` (a verified slug) pins the op
  *  to the WORKSPACE'S owning principal — the caller's own customer or an org they
@@ -23,26 +29,51 @@ export interface TokenScope {
   workspace?: string;
 }
 
-function scopeQuery(scope?: TokenScope): string {
-  const qs = new URLSearchParams();
-  if (scope?.ecosystemId) qs.set("ecosystemId", scope.ecosystemId);
-  if (scope?.workspace) qs.set("workspace", scope.workspace);
-  const s = qs.toString();
-  return s ? `?${s}` : "";
+function scoped(path: string, scope?: TokenScope): string {
+  return withV1Query(path, { ecosystem_id: scope?.ecosystemId, workspace: scope?.workspace });
 }
 
+const toPrincipal = (r: TokenPrincipalRow): TokenPrincipal => ({
+  id: r.id,
+  slug: r.slug,
+  description: r.description,
+  prefix: r.prefix,
+  rdid: r.rdid ?? null,
+  bucketRdid: r.bucket_rdid ?? null,
+  expiresAt: r.expires_at ?? null,
+  lastUsedAt: r.last_used_at ?? null,
+  createdAt: unixToIso(r.created),
+});
+
+const toCreated = (r: TokenPrincipalCreatedRow): TokenPrincipalCreated => ({
+  id: r.id,
+  rdid: r.rdid,
+  slug: r.slug,
+  description: r.description,
+  prefix: r.prefix,
+  bucketRdid: r.bucket_rdid,
+  token: r.token,
+});
+
 export const tokenPrincipalsApi = {
-  list(scope?: TokenScope): Promise<TokenPrincipal[]> {
-    return authedJson<TokenPrincipal[]>(`${BASE}${scopeQuery(scope)}`);
+  async list(scope?: TokenScope): Promise<TokenPrincipal[]> {
+    const rows = await listAllV1<TokenPrincipalRow>(scoped(BASE, scope));
+    return rows.map(toPrincipal);
   },
-  mint(body: MintTokenPrincipalBody, scope?: TokenScope): Promise<TokenPrincipalCreated> {
-    return authedJson<TokenPrincipalCreated>(`${BASE}${scopeQuery(scope)}`, {
+  async mint(body: MintTokenPrincipalBody, scope?: TokenScope): Promise<TokenPrincipalCreated> {
+    const row = await authedJson<TokenPrincipalCreatedRow>(scoped(BASE, scope), {
       method: "POST",
-      body: JSON.stringify(body),
+      body: JSON.stringify({
+        name: body.name,
+        ...(body.description !== undefined ? { description: body.description } : {}),
+        ...(body.expiresAt !== undefined ? { expires_at: body.expiresAt } : {}),
+        ...(body.ecosystemId !== undefined ? { ecosystem_id: body.ecosystemId } : {}),
+      }),
     });
+    return toCreated(row);
   },
   revoke(id: string, scope?: TokenScope): Promise<void> {
-    return authedRequest(`${BASE}/${encodeURIComponent(id)}${scopeQuery(scope)}`, {
+    return authedRequest(scoped(`${BASE}/${encodeURIComponent(id)}`, scope), {
       method: "DELETE",
     });
   },

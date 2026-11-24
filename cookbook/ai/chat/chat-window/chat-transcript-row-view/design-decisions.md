@@ -24,7 +24,7 @@
 **Approved**: pending**
 
 **Decision**: `showsInlineTimestamp: false` is passed to the embedded bubble, and the row draws its own timestamp label on its own line instead.
-**Rationale**: The row's own timestamp is anchored to the same edge as the header's breadcrumb trail — the speaker's column — so it has to be a label this row positions itself; a timestamp the bubble drew inline would be part of the bubble's own shape and could not be pinned independently to that column (see `adhsdk://cookbook/ai/chat/chat-window/chat-bubble-view`).
+**Rationale**: The row's own timestamp is anchored to the same edge as the header's breadcrumb trail — the speaker's column — so it has to be a label this row positions itself; a timestamp the bubble drew inline would be part of the bubble's own shape and could not be pinned independently to that column (see [adhsdk.ingredient.ai.chat.chat-window.chat-bubble-view](cookbook:24199c9b-53ce-41a7-9cce-3b914f0a424a)).
 **Approved**: pending**
 
 **Decision**: The app icon's 28x28pt hit area is not padded to 44x44pt.

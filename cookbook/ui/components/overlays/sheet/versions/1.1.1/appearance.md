@@ -1,0 +1,22 @@
+
+- **Corner radius**: None (sharp edges, matching popover design token).
+- **Padding**: 
+  - SheetHeader: 1rem (16px) all sides, with 4px gap between children.
+  - SheetFooter: 1rem (16px) all sides, with 8px gap between children.
+  - SheetContent: 1rem (16px) gap between top-level children.
+- **Font**: 
+  - SheetTitle: font-weight 500, size 1rem (16px).
+  - SheetDescription: size 0.875rem (14px).
+- **Background**: Popover background color (via `bg-popover` token).
+- **Foreground/Text**: 
+  - Popover foreground for default text (via `text-popover-foreground` token).
+  - Muted foreground for SheetDescription (via `text-muted-foreground` token).
+  - Foreground color for SheetTitle (via `text-foreground` token).
+- **Border**: 1px border using `border-apt-border` token, position varies by side (top, right, bottom, or left as appropriate).
+- **Shadow**: Box shadow applied to drawer panel (via `shadow-lg` token).
+- **Overlay appearance**: Black with 20% opacity (`bg-black/20`), semi-transparent with backdrop blur.
+- **Close button position**: Absolute, top-right corner (16px from edges), size `icon-sm` (smaller than default button).
+- **Width constraints**: 
+  - Left/right positioning: 75% of viewport width, capped at 24rem on small and larger screens (`sm:max-w-sm`).
+  - Top/bottom positioning: full width, height auto.
+

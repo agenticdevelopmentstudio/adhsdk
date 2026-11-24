@@ -1,0 +1,67 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "213f008f-6e11-4d6d-ba91-dbcd7e9330cc",
+    "title": "Extensions Settings Topic",
+    "type": "ingredient",
+    "version": "0.2.2",
+    "status": "draft",
+    "language": "en",
+    "created": "2026-11-15",
+    "modified": "2026-11-16",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "The web browser's Extensions settings topic: a table of installed extensions with an on checkbox, icon, name, version, description and gear, a header Add Extension menu and refresh button, and each extension's details in a popover from its gear.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "browser",
+      "settings",
+      "extensions",
+      "web-extensions",
+      "table"
+    ],
+    "depends-on": [],
+    "related": [],
+    "references": [
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/SafariExtensionsTopicPanel.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/SafariExtensionDetailsView.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/ExtensionURLPromptController.swift (adhsdk, planned)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/SafariExtensions/SafariExtensionHost.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/SafariExtensions/SafariExtensionLibrary.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/SafariExtensions/SafariAppExtension.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/SafariExtensions/WebStoreExtension.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/BrowserExtension.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/WebBrowserWindowController.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/BrowserPane/SafariExtensionsTopicTests.swift (adhsdk, planned)"
+    ],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "6c65144b2af52761",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

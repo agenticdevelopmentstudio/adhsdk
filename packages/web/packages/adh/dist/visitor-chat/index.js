@@ -168,7 +168,7 @@ var AdhChatBackend = class {
    *  404 on the next turn. See backend routes/visitor.ts + llm/persistence.ts. */
   async mintToken() {
     const res = await this.fetchImpl(
-      `${this.apiBase}/public/personas/${encodeURIComponent(this.slug)}/visitor-tokens`,
+      `${this.apiBase}/v1/personas/${encodeURIComponent(this.slug)}/visitor_tokens`,
       { method: "POST", headers: { Accept: "application/json" } }
     );
     if (!res.ok) throw new VisitorGateError(`mint failed (${res.status})`, res.status);
@@ -176,8 +176,8 @@ var AdhChatBackend = class {
     if (!body || !body.token) throw new VisitorGateError("mint returned no token", res.status);
     const rec = {
       token: body.token,
-      expiresAt: body.expiresAt ?? null,
-      personaId: body.personaId
+      expiresAt: body.expires_at ?? null,
+      personaId: body.persona_id ?? ""
     };
     this.store.set(tokenKey(this.slug), JSON.stringify(rec));
     this.store.remove(convoKey(this.slug));
@@ -203,12 +203,12 @@ var AdhChatBackend = class {
     return this.fetchImpl(`${this.apiBase}${path}`, withAuth(fresh.token));
   }
   // --- bootstrap -----------------------------------------------------------
-  /** Read GET /persona/bootstrap once (best-effort). Surfaces the persona's name +
+  /** Read GET /v1/personas/bootstrap once (best-effort). Surfaces the persona's name +
    *  advisory limits; a failure never blocks chatting. */
   async ensureBootstrap() {
     if (this.bootstrapDone) return;
     try {
-      const res = await this.authedFetch("/persona/bootstrap", { headers: { Accept: "application/json" } });
+      const res = await this.authedFetch("/v1/personas/bootstrap", { headers: { Accept: "application/json" } });
       if (!res.ok) return;
       const payload = parseData(await res.text());
       if (!payload) return;
@@ -216,7 +216,7 @@ var AdhChatBackend = class {
       this.bootstrapName = name ? name : null;
       this.bootstrap = {
         personaName: name ? name : this.slug,
-        maxConversationLength: payload.chat?.limits?.maxConversationLength ?? null
+        maxConversationLength: payload.chat?.limits?.max_conversation_length ?? null
       };
       this.onBootstrap?.(this.bootstrap);
       this.bootstrapDone = true;
@@ -228,7 +228,7 @@ var AdhChatBackend = class {
   async ensureConversation() {
     const existing = this.store.get(convoKey(this.slug));
     if (existing) return existing;
-    const res = await this.authedFetch("/public/visitor-chat/conversations", {
+    const res = await this.authedFetch("/v1/visitor_chats", {
       method: "POST",
       headers: { Accept: "application/json", "Content-Type": "application/json" },
       body: "{}"
@@ -243,7 +243,7 @@ var AdhChatBackend = class {
   // --- turn ----------------------------------------------------------------
   turnFetch(id, token, body, signal) {
     return this.fetchImpl(
-      `${this.apiBase}/public/visitor-chat/conversations/${encodeURIComponent(id)}/turns`,
+      `${this.apiBase}/v1/visitor_chats/${encodeURIComponent(id)}/turns`,
       {
         method: "POST",
         headers: {

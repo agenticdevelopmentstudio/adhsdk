@@ -45,11 +45,38 @@
   `auth-settings:<ecosystem.id>`.
 - **auth-no-delete-action**: the detail's delete action MUST be absent — auth
   settings can be edited but never removed.
-- **auth-allowed-providers-not-editable**: the user-auth record's `allowedProviders`
-  list decodes from the read operation's response, but the detail's form
-  specification never reads, displays, or edits it, and the update shape has no
-  field to write it back; this component offers no way to view or change the
-  allowed providers.
+- **auth-allowed-providers-not-editable**: the Swift user-auth detail's form
+  specification MAY leave the record's `allowedProviders` list out. Today the list
+  decodes from the read operation's response, but the form never reads, displays, or
+  edits it, and the update shape has no field to write it back, so the Swift topic
+  offers no way to view or change the allowed providers.
+- **auth-login-allow-list-wire**: the web data layer's `AuthSettings` (and so
+  `ClientAuthPolicy`) MUST carry `loginAllowedEmails: string[] | null`, read
+  from the wire's `login_allowed_emails`. `null` means every customer may
+  sign in and `[]` means nobody; a response that omits the field (an older
+  backend) MUST read as `null`. A patch that sets it to `null` MUST send the
+  explicit `null`, never drop it, so "every customer" can be restored.
+- **auth-login-allow-list-edit**: the web ecosystem client-auth pane MUST draw a
+  "Who can sign in" section with an "Only listed people" switch. Off is `null`;
+  turning it on starts one blank email row, which saves as `[]` (nobody) if left
+  blank. A save MUST send each email trimmed and lowercased, with blank rows and
+  duplicates dropped and the first occurrence's order kept; a blank row added to
+  a saved list, or an entry whose only change is letter case, MUST NOT count as
+  an edit.
+- **auth-login-allow-list-bounds**: Save MUST be blocked, with the reason shown,
+  when the cleaned list holds more than 500 emails, or any entry longer than 254
+  characters or not shaped as an email address (exactly one `@`, a non-empty
+  local part with no whitespace and no quote, and a domain of at least two
+  non-empty dot-separated labels) — the backend's own bounds, mirrored so the
+  refusal comes before the round trip. The backend stays authoritative.
+- **auth-login-allow-list-dropped**: when a save sent `loginAllowedEmails` and
+  the saved policy comes back without that list (a backend that predates the
+  allow-list strips the unknown field and still answers 200), the save MUST fail
+  with "The sign-in list was not saved, so everyone can still sign in. This
+  backend does not support the list yet." The draft MUST keep the owner's list and
+  the switch, rather than re-seeding them off. The cache still takes the answer,
+  because the other fields did save. An absent list reads as `null`, so sending
+  `null` to such a backend is not a failure.
 
 ### Sign-in Apps
 
@@ -114,9 +141,10 @@
   **signinapps-origin-validation**) live in a separate presentation-layer file
   outside this component's given sources, not in the data-client layer itself (see
   Design Decisions).
-- **leaf-helper-absent**: the alternate client's own data shape has no equivalent of
-  the leaf-computation step; a caller on that side that needs the ecosystem-stripped
-  leaf must recompute it from `slug` and the ecosystem's own slug itself.
+- **leaf-helper-absent**: the alternate client's own data shape MAY omit an
+  equivalent of the leaf-computation step. A caller on that side that needs the
+  ecosystem-stripped leaf MUST recompute it from `slug` and the ecosystem's own slug
+  itself.
 
 ### Feature Flags
 
@@ -142,12 +170,14 @@
   falls back to its default.`.
 - **flags-detail-id-format**: the detail id MUST be
   `feature-flag:<ecosystem.id>:<flag.key>`.
-- **flags-key-charset-unrestricted**: neither the create form's `key` field in the primary
-  implementation nor the alternate client's create operation/dialog state enforces any
-  character-set restriction on a feature-flag key — only non-blank and non-duplicate are checked —
-  yet the key is later embedded unescaped in the colon-delimited composite id
-  `feature-flag:<ecosystem.id>:<flag.key>` and used directly as a navigation-item id, so a key
-  containing a colon could collide with another item's composite id.
+- **flags-key-charset-unrestricted**: a feature-flag key SHOULD NOT contain a colon,
+  because the key is embedded unescaped in the colon-delimited composite id
+  `feature-flag:<ecosystem.id>:<flag.key>` and used directly as a navigation-item id,
+  so a key containing a colon could collide with another item's composite id. A port
+  SHOULD reject such a key on the create form's `key` field. Today neither the primary
+  implementation's create form nor the alternate client's create operation and dialog
+  state enforces any character-set restriction: only non-blank and non-duplicate are
+  checked.
 - **flag-key-immutable-in-path**: the alternate client's update/delete operations
   MUST address a flag by embedding its `key` in the request path, never in the
   body — the key is immutable once created, matching the primary implementation's
@@ -213,10 +243,11 @@
 - **tokens-name-pattern**: the create form's `name` field MUST validate against the
   shared slug-format rule ("Use lowercase letters, numbers and hyphens.").
 - **tokens-create-three-way-catch**: the create form's save action MUST catch
-  errors in three tiers: a conflict error becomes a validation error with a fixed
-  "name taken" message; any other shared error kind MUST be re-thrown unchanged;
-  any error outside that shared taxonomy MUST become a generic unexpected error
-  with a fixed message, discarding the original error's own message. This is an
+  errors in three tiers: a conflict error becomes a validation error reading `That name is already in use.
+  Token names stay reserved even after revoke — pick a different one.`; any other
+  shared error kind MUST be re-thrown unchanged; any error outside that shared
+  taxonomy MUST become a generic unexpected error reading `Couldn't create the
+  token. Please try again.`, discarding the original error's own message. This is an
   explicitly different pattern from the shared error-wrapping convention used
   everywhere else in this component (see Design Decisions).
 - **tokens-reveal-once-on-create**: on a successful create, the raw secret MUST be
@@ -254,4 +285,44 @@
   plaintext secret) MUST be a distinct shape from the token list-row shape (which
   carries only a `prefix`); the alternate client gives no other route through which
   the raw secret can be retrieved again.
+
+### Sync tables (web)
+
+Which catalog resources one ecosystem syncs to offline clients. The backend
+contract is adhbackend's sync-table-enrollment recipe; this topic is its client
+and pane. It is web-only for now.
+
+- **sync-tables-two-families**: the sync-tables client MUST be built for one of two
+  route families. `"admin"` addresses `/api/v1/sync/tables/{id}`, with one resource
+  at `/api/v1/sync/tables/{id}/resources/{resource}`, for platform staff.
+  `"ecosystem"` addresses `/api/v1/ecosystems/{id}/sync_tables`, with one resource
+  at `/api/v1/ecosystems/{id}/sync_tables/{resource}`, for the ecosystem's
+  managers. The ecosystem id and the resource MUST be URL-encoded in both.
+- **sync-tables-camel-rows**: each catalog row MUST be mapped from the wire's
+  snake_case (`push_mode`, `default_enabled`) to `pushMode` and `defaultEnabled`,
+  keeping `resource`, `scope`, `enabled` and `overridden` as they are.
+- **sync-tables-read-drains-list**: reading the catalog MUST drain the /v1 list
+  envelope, so every resource is returned however the server pages it. It pages
+  by each row's `id`, which the backend sets to the row's resource, because the
+  /v1 gateway pages only by `id`.
+- **sync-tables-set-returns-catalog**: setting a resource MUST POST
+  `{ enabled }` to its resource path and return the full refreshed catalog from the
+  response's `tables`.
+- **sync-tables-clear-rereads**: clearing a resource's override MUST DELETE its
+  resource path and then re-read the catalog, because /v1 answers a DELETE with a
+  tombstone, not the catalog.
+- **sync-tables-schema-of**: a row's schema MUST be the part of its resource before
+  the first dot.
+- **sync-tables-pane-family**: the pane MUST take the family as a prop, defaulting
+  to `"ecosystem"`, and MUST key its cached catalog by family and ecosystem id, so
+  the admin console and the hub never share a cache entry.
+- **sync-tables-pane-skips-noops**: Sync and Don't sync MUST act only on selected
+  rows not already in that state, and Reset to default only on selected rows that
+  are overridden. A no-op set would store an override that pins the resource
+  against a later change to its default.
+- **sync-tables-pane-sequential**: the pane's bulk actions MUST run one resource at
+  a time through the shared batch runner, halting on the first failure until the
+  user continues or stops, and leaving earlier saves in place.
+- **sync-tables-pane-reseed**: after each write the pane MUST replace its cached
+  catalog with the catalog the write returned, then refetch once the write settles.
 

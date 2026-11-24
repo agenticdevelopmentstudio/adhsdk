@@ -1,6 +1,6 @@
-// Teams API client — wired to the real backend (generic CRUD over `team.teams`).
+// Teams API client — wired to the real backend (`/v1/teams`).
 //
-// Route: /api/team/teams (list/create), /api/team/teams/{id} (get/update/delete).
+// Route: /api/v1/teams (list/create), /api/v1/teams/{id} (get/update/delete); update is POST.
 // The backend column names differ from the UI's vocabulary, so this client maps
 // between them in one place and the components keep using {displayName, identifier}:
 //   UI displayName  <->  backend `name`
@@ -8,12 +8,19 @@
 //   UI id           <->  backend `id`     (opaque server-generated UUID)
 //
 // Scoping: a team's `owner_id` is its owning ecosystem, and every request here names the
-// workspace's ecosystem via `?ecosystemId=` (backend crud/policy.ts ECOSYSTEM_PARAM_SCOPED_TABLES).
+// workspace's ecosystem via `?ecosystem_id=` (backend crud/policy.ts ECOSYSTEM_PARAM_SCOPED_TABLES).
 // `list` then returns ONLY that ecosystem's teams (enforced for admins too), and `create`
 // stamps the new team into it — so the Teams feature shows the workspace's teams, not the
 // whole tenant. The caller resolves the id with `ecosystemsApi.ecosystemIdForSlug(slug)`.
 
-import { authedJson, authedRequest, rethrowConflict } from "../http";
+import {
+  authedJson,
+  authedRequest,
+  listAllV1,
+  rethrowConflict,
+  unixToIso,
+  withV1Query,
+} from "../http";
 import { compact, enc, sortByText } from "../client-helpers";
 import type { TeamRow, TeamCreateBody, TeamPutBody } from "./wire";
 
@@ -31,15 +38,15 @@ export interface TeamInput {
   identifier: string;
 }
 
-const BASE = "/api/team/teams";
+const BASE = "/api/v1/teams";
 
 export function toTeam(r: TeamRow): Team {
   return {
     id: r.id,
     displayName: r.name,
     identifier: r.slug,
-    createdAt: r.createdAt,
-    updatedAt: r.updatedAt,
+    createdAt: unixToIso(r.created),
+    updatedAt: unixToIso(r.updated),
   };
 }
 
@@ -65,7 +72,7 @@ export function validateTeamIdentifier(identifier: string): string | null {
 
 export const teamsApi = {
   async list(ecosystemId: string): Promise<Team[]> {
-    const rows = await authedJson<TeamRow[]>(`${BASE}?ecosystemId=${enc(ecosystemId)}`);
+    const rows = await listAllV1<TeamRow>(withV1Query(BASE, { ecosystem_id: ecosystemId }));
     return sortByText(rows.map(toTeam), (t) => t.displayName);
   },
 
@@ -89,7 +96,7 @@ export const teamsApi = {
         name: input.displayName,
         slug: input.identifier,
       };
-      const row = await authedJson<TeamRow>(`${BASE}?ecosystemId=${enc(ecosystemId)}`, {
+      const row = await authedJson<TeamRow>(withV1Query(BASE, { ecosystem_id: ecosystemId }), {
         method: "POST",
         body: JSON.stringify(body),
       });
@@ -112,7 +119,7 @@ export const teamsApi = {
     // backend be the guard and translate its 409, rather than pre-reading.
     try {
       const row = await authedJson<TeamRow>(`${BASE}/${enc(id)}`, {
-        method: "PUT",
+        method: "POST",
         body: JSON.stringify(patch),
       });
       return toTeam(row);

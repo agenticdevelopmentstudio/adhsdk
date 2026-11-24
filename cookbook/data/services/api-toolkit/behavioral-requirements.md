@@ -218,10 +218,10 @@
 - **mutation-relist**: create, update, and remove MUST re-issue the list call
   after their underlying mutation succeeds; the raw create/update/remove
   mutators they call MUST NOT re-list on their own.
-- **delete-uses-authed-request**: row removal MUST call the
-  response-body-discarding authenticated request helper, not the
-  JSON-parsing authenticated request helper, because the delete endpoint
-  answers `204 No Content` and the JSON-parsing helper throws on a `204`.
+- **delete-uses-authed-request**: row removal MUST call the JSON-parsing
+  authenticated request helper with the `DELETE` method, because the delete
+  endpoint answers `200` with a `{id, object, deleted: true}` tombstone; the
+  tombstone is not read.
 - **mutation-error-not-hook-state**: a failure from create, update, or remove
   MUST propagate to the caller as a rejected promise, and MUST NOT be written
   into the state's own error field.

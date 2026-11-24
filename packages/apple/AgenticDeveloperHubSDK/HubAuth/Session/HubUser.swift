@@ -1,4 +1,5 @@
 import AgenticDeveloperHubAuth
+import AgenticDeveloperHubSDK
 import Foundation
 
 /// The app-facing user. Deliberately narrower than the generated schema:
@@ -35,12 +36,7 @@ public struct HubUser: Sendable, Equatable, Codable {
         return trimmed.isEmpty ? email : trimmed
     }
 
-    /// Spec §5.5 avatar fallback: up to two initials from the name's first
-    /// two words, else the first letter of the email.
-    public var initials: String {
-        let words = name.split(whereSeparator: { $0.isWhitespace }).prefix(2)
-        let letters = words.compactMap { $0.first.map { String($0).uppercased() } }
-        if !letters.isEmpty { return letters.joined() }
-        return email.first.map { String($0).uppercased() } ?? "?"
-    }
+    /// Spec §5.5 avatar fallback: `PersonInitials` of the name, with the
+    /// email as the fallback.
+    public var initials: String { PersonInitials.of(name: name, fallback: email) }
 }

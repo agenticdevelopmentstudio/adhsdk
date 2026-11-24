@@ -1,0 +1,63 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "d8f2a4c1-9e5b-4a2f-b8c9-e7f3a2d5c1b6",
+    "title": "Markdown Document Editor",
+    "type": "ingredient",
+    "version": "1.1.1",
+    "status": "review",
+    "language": "en",
+    "created": "2026-09-22",
+    "modified": "2026-09-25",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "A markdown source editor with live preview, responsive layout toggling between split and tabbed views, and debounced rendering.",
+    "platforms": [
+      "typescript",
+      "web",
+      "swift",
+      "macos",
+      "ios"
+    ],
+    "tags": [
+      "markdown",
+      "editor",
+      "form-input",
+      "live-preview"
+    ],
+    "depends-on": [
+      "b118c7bc-e163-40f0-bcc8-eb079e835794",
+      "3600088a-a9f6-42ca-81db-43f0eb6ddd79",
+      "ee901ea5-cf3e-4276-8367-0693911bc02e",
+      "6e0e27bf-5f7d-46bf-85d0-fb5bdf5dab8a"
+    ],
+    "related": [],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "15f38b7b6d8c8969",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

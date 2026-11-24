@@ -94,13 +94,13 @@ class GamePublicProfile:
         if name is not UNSET:
             field_dict["name"] = name
         if character_name is not UNSET:
-            field_dict["characterName"] = character_name
+            field_dict["character_name"] = character_name
         if character_avatar_url is not UNSET:
-            field_dict["characterAvatarUrl"] = character_avatar_url
+            field_dict["character_avatar_url"] = character_avatar_url
         if first_played_at is not UNSET:
-            field_dict["firstPlayedAt"] = first_played_at
+            field_dict["first_played_at"] = first_played_at
         if last_played_at is not UNSET:
-            field_dict["lastPlayedAt"] = last_played_at
+            field_dict["last_played_at"] = last_played_at
 
         return field_dict
 
@@ -139,7 +139,7 @@ class GamePublicProfile:
                 return data
             return cast(None | str | Unset, data)
 
-        character_name = _parse_character_name(d.pop("characterName", UNSET))
+        character_name = _parse_character_name(d.pop("character_name", UNSET))
 
         def _parse_character_avatar_url(data: object) -> None | str | Unset:
             if data is None:
@@ -148,9 +148,9 @@ class GamePublicProfile:
                 return data
             return cast(None | str | Unset, data)
 
-        character_avatar_url = _parse_character_avatar_url(d.pop("characterAvatarUrl", UNSET))
+        character_avatar_url = _parse_character_avatar_url(d.pop("character_avatar_url", UNSET))
 
-        first_played_at = d.pop("firstPlayedAt", UNSET)
+        first_played_at = d.pop("first_played_at", UNSET)
 
         def _parse_last_played_at(data: object) -> None | str | Unset:
             if data is None:
@@ -159,7 +159,7 @@ class GamePublicProfile:
                 return data
             return cast(None | str | Unset, data)
 
-        last_played_at = _parse_last_played_at(d.pop("lastPlayedAt", UNSET))
+        last_played_at = _parse_last_played_at(d.pop("last_played_at", UNSET))
 
         game_public_profile = cls(
             game=game,

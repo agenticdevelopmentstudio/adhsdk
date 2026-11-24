@@ -45,6 +45,9 @@ extension ComposableSettings {
             if let section = panel.descriptor.section {
                 terms.append(section)
             }
+            if let heading = panel.descriptor.heading {
+                terms.append(heading)
+            }
             terms.append(contentsOf: panel.searchKeywords)
             for topic in panel.helpContent?.topics ?? [] {
                 terms.append(topic.title)

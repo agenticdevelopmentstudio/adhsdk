@@ -1,7 +1,7 @@
 'use client'
 
 // Self-serve account-security API: second-factor management (TOTP, WebAuthn,
-// recovery codes) + preferred method, over /account/mfa/*. Backs the Security
+// recovery codes) + preferred method, over /v1/account/mfa/*. Backs the Security
 // settings workspace. Lives in this package (not @adh-sdk/data)
 // because the WebAuthn registration ceremony shares @simplewebauthn/browser
 // with the login-time MFA completion in ./mfa.ts — enrollment and challenge
@@ -13,8 +13,9 @@
 import { startRegistration } from '@simplewebauthn/browser'
 import type { PublicKeyCredentialCreationOptionsJSON } from '@simplewebauthn/browser'
 import { authedJson, authedRequest } from './client'
+import { listAllV1, unixToIso } from './v1'
 
-/** Factor status — mirrors `GET /account/mfa`. */
+/** Factor status — maps `GET /v1/account/mfa`. */
 export interface MfaStatus {
   sms: boolean
   totp: boolean
@@ -26,7 +27,7 @@ export interface MfaStatus {
   preferredMethod: 'sms' | 'totp' | 'webauthn' | null
 }
 
-/** One registered credential — mirrors `GET /account/mfa/webauthn` items. */
+/** One registered credential — maps `GET /v1/account/mfa/passkeys` rows. */
 export interface WebauthnCredential {
   id: string
   name: string
@@ -37,13 +38,30 @@ export interface WebauthnCredential {
 
 export type PreferredMethod = 'sms' | 'totp' | 'webauthn'
 
-export function getMfaStatus(): Promise<MfaStatus> {
-  return authedJson<MfaStatus>('/api/account/mfa')
+interface V1MfaStatus {
+  sms: boolean
+  totp: boolean
+  webauthn: boolean
+  totp_pending: boolean
+  recovery_remaining: number
+  preferred_method: PreferredMethod | null
+}
+
+export async function getMfaStatus(): Promise<MfaStatus> {
+  const raw = await authedJson<V1MfaStatus>('/api/v1/account/mfa')
+  return {
+    sms: raw.sms,
+    totp: raw.totp,
+    webauthn: raw.webauthn,
+    totpPending: raw.totp_pending,
+    recoveryRemaining: raw.recovery_remaining,
+    preferredMethod: raw.preferred_method,
+  }
 }
 
 // --- TOTP -------------------------------------------------------------------
 
-/** Mirrors `POST /account/mfa/totp/enroll`. */
+/** Maps `POST /v1/account/mfa/totp`. */
 export interface TotpEnrollment {
   /** Base32 secret (for manual entry). */
   secret: string
@@ -51,23 +69,43 @@ export interface TotpEnrollment {
   otpauthUri: string
 }
 
-export function enrollTotp(): Promise<TotpEnrollment> {
-  return authedJson<TotpEnrollment>('/api/account/mfa/totp/enroll', { method: 'POST' })
+export async function enrollTotp(): Promise<TotpEnrollment> {
+  const raw = await authedJson<{ secret: string; otpauth_uri: string }>('/api/v1/account/mfa/totp', {
+    method: 'POST',
+  })
+  return { secret: raw.secret, otpauthUri: raw.otpauth_uri }
 }
-export function confirmTotp(code: string): Promise<void> {
-  return authedJson('/api/account/mfa/totp/confirm', {
+export async function confirmTotp(code: string): Promise<void> {
+  await authedJson('/api/v1/account/mfa/totp/confirm', {
     method: 'POST',
     body: JSON.stringify({ code }),
   })
 }
 export async function removeTotp(): Promise<void> {
-  await authedRequest('/api/account/mfa/totp', { method: 'DELETE' })
+  await authedRequest('/api/v1/account/mfa/totp', { method: 'DELETE' })
 }
 
 // --- WebAuthn (passkeys / security keys) ------------------------------------
 
-export function listWebauthn(): Promise<{ items: WebauthnCredential[] }> {
-  return authedJson<{ items: WebauthnCredential[] }>('/api/account/mfa/webauthn')
+interface V1Passkey {
+  id: string
+  name: string
+  kind: 'passkey' | 'security_key'
+  created: number
+  last_used_at?: string | null
+}
+
+export async function listWebauthn(): Promise<{ items: WebauthnCredential[] }> {
+  const rows = await listAllV1<V1Passkey>('/api/v1/account/mfa/passkeys')
+  return {
+    items: rows.map((r) => ({
+      id: r.id,
+      name: r.name,
+      kind: r.kind,
+      createdAt: unixToIso(r.created),
+      lastUsedAt: r.last_used_at ?? null,
+    })),
+  }
 }
 
 /** Run the full browser registration ceremony for a passkey or security key. */
@@ -75,28 +113,29 @@ export async function registerWebauthn(kind: 'passkey' | 'security_key', name: s
   const { options, token } = await authedJson<{
     options: PublicKeyCredentialCreationOptionsJSON
     token: string
-  }>('/api/account/mfa/webauthn/register/options', {
+  }>('/api/v1/account/mfa/passkeys/registration_options', {
     method: 'POST',
     body: JSON.stringify({ kind }),
   })
   const response = await startRegistration({ optionsJSON: options })
-  await authedJson('/api/account/mfa/webauthn/register/verify', {
+  await authedJson('/api/v1/account/mfa/passkeys', {
     method: 'POST',
     body: JSON.stringify({ token, response, name }),
   })
 }
 export async function removeWebauthn(id: string): Promise<void> {
-  await authedRequest(`/api/account/mfa/webauthn/${encodeURIComponent(id)}`, { method: 'DELETE' })
+  await authedRequest(`/api/v1/account/mfa/passkeys/${encodeURIComponent(id)}`, { method: 'DELETE' })
 }
 
 // --- Recovery codes + preference --------------------------------------------
 
 export function regenerateRecoveryCodes(): Promise<{ codes: string[] }> {
-  return authedJson<{ codes: string[] }>('/api/account/mfa/recovery/regenerate', { method: 'POST' })
+  return authedJson<{ codes: string[] }>('/api/v1/account/mfa/recovery_codes/regenerate', { method: 'POST' })
 }
-export function setPreferredMethod(method: PreferredMethod): Promise<{ preferredMethod: PreferredMethod }> {
-  return authedJson<{ preferredMethod: PreferredMethod }>('/api/account/mfa/preference', {
-    method: 'PUT',
-    body: JSON.stringify({ method }),
+export async function setPreferredMethod(method: PreferredMethod): Promise<{ preferredMethod: PreferredMethod }> {
+  const raw = await authedJson<{ preferred_method: PreferredMethod }>('/api/v1/account/mfa', {
+    method: 'POST',
+    body: JSON.stringify({ preference: { method } }),
   })
+  return { preferredMethod: raw.preferred_method }
 }

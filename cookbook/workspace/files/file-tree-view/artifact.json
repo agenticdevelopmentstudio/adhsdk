@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "b307116d-3ab8-422a-b031-885710e11e70",
     "title": "File Tree View",
-    "domain": "adhsdk://cookbook/workspace/files/file-tree-view",
     "type": "ingredient",
     "version": "1.2.3",
     "status": "review",
@@ -24,8 +23,8 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/workspace/files/file-browser-view",
-      "agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages"
+      "ab6d7655-9476-4318-8c36-f431686e2d23",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2"
     ],
     "references": [
       "https://developer.apple.com/documentation/appkit/nsoutlineview",
@@ -35,7 +34,7 @@
     "approved-date": ""
   },
   "names_hosts": "`.claude` is a literal directory name the view gives a dedicated icon.",
-  "synced": "dac2ee44b3260229",
+  "synced": "5dca12bc3ae03ddf",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -54,7 +53,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

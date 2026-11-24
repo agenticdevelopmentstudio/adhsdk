@@ -1,13 +1,12 @@
 ---
 id: a11f34ff-116c-47d6-bffa-edd0799cbcb2
 title: "Settings Split View"
-domain: adhsdk://cookbook/ui/settings/settings-split-view
 type: ingredient
-version: 1.2.2
+version: 1.3.0
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -22,13 +21,13 @@ tags:
   - navigation
   - search
 depends-on:
-  - adhsdk://cookbook/ui/settings/settings-panel-list
-  - adhsdk://cookbook/ui/settings/layout/panel-host-view
-  - adhsdk://cookbook/ui/settings/layout/panel-scroll-view
+  - a41760b2-4ffd-413b-970f-c0373c9bd3b6
+  - faf4ec69-7b5c-44c2-a8c2-d7e81dc94ea8
+  - 45b6d470-4e58-4035-b1c7-e65dbe7716b9
 related:
-  - adhsdk://cookbook/ui/settings/settings-panel-split
-  - adhsdk://cookbook/ui/settings/settings-window
-  - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
+  - ba8d9517-2528-4ae9-bc52-16046d68b126
+  - 7cac2263-94fe-47ec-ab1d-6cf5a12baf14
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2
 references:
   - https://developer.apple.com/design/human-interface-guidelines/split-views
 approved-by: ""
@@ -205,6 +204,18 @@ This recipe documents only what this component itself declares.
 - **clears-all-panels**: Clearing the panel list MUST empty the stored
   panels, reset navigation history, empty the sidebar, empty the detail
   pane, and invoke navigation change notification.
+- **panel-accessibility-identifier**: When the component hosts a panel
+  whose view has no accessibility identifier, it MUST give the view the
+  identifier `settings.panel.<slug of the panel title>` (lowercase, every
+  run of characters other than letters and digits one `-`), and, when the
+  view is not already an accessibility element, MUST make it one with the
+  group role and the panel title as its label, so the identifier reaches
+  the accessibility tree. A view that already has an identifier MUST keep
+  it unchanged.
+- **selects-panel-by-name**: Selecting a panel by name MUST select the
+  first panel whose title equals the name ignoring case, or whose title
+  slug equals the name lowercased, and report true; when none matches it
+  MUST change nothing and report false.
 - **records-explicit-selection**: Selecting a panel, by reference or by
   index, MUST record the target index in navigation history before
   showing it.
@@ -327,6 +338,11 @@ This recipe documents only what this component itself declares.
   container; no touch-target constant is set anywhere in this component.
   Hit sizing for the search field and split divider is standard platform
   sizing, not a value this component chooses.
+- **Identifiers**: Each hosted panel without an identifier of its own is
+  exposed as `settings.panel.<slug of its title>`
+  (**panel-accessibility-identifier**), so UI tests and scripts find the
+  panel on screen; scripts select one by title or slug
+  (**selects-panel-by-name**).
 
 ## Conformance Test Vectors
 
@@ -391,6 +407,9 @@ This recipe documents only what this component itself declares.
 | split-view-controller-053 | (edge case: removing a non-member panel) | Panels `[a, b]`, remove `z` where `z` is not in the panel list | The stored panels are unchanged (`[a, b]`); navigation history is still reset, the sidebar's panel list is still re-set, and the navigation-change notification still fires |
 | split-view-controller-054 | (edge case: stale nested-detail floor) | Two nested settings-split-view siblings raise the nested-detail floor to `420`; removing a panel drops the nested count to one | The nested-detail floor remains `420` (not reset toward `0`), because the unification step's early exit returns before recomputing it |
 | split-view-controller-055 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
+| split-view-controller-056 | panel-accessibility-identifier | Show a panel titled `Mail Source` whose view is a plain view with no identifier | The view's identifier is `settings.panel.mail-source`; it is an accessibility element with the group role and the label `Mail Source` |
+| split-view-controller-057 | panel-accessibility-identifier | Show a panel whose view already has the identifier `custom.panel` | The identifier stays `custom.panel` |
+| split-view-controller-058 | selects-panel-by-name | Panels titled `General` and `Mail Source`; select by name `mail-source`, then `GENERAL`, then `nope` | First selects `Mail Source` and reports true; then `General`, true; then the selection is unchanged and it reports false |
 
 ## Edge Cases
 
@@ -606,9 +625,9 @@ Not applicable: no logging call appears anywhere in this component.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SplitViewController/SplitViewController.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SplitViewController/SplitViewController.swift` | confirmed (1.3.0) |
 
 ## Design Decisions
 
@@ -680,11 +699,11 @@ tradeoff.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | passed | accessibility |
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | partial | accessibility |
-| [native-controls-preference](agenticdevelopercookbook://compliance/platform-compliance#native-controls-preference) | passed | platform-compliance |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | best-practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | accessibility |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | accessibility |
+| [adc.check.platform-compliance.native-controls-preference](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d49de883-3811-54ed-b227-c2d807cac551) | passed | platform-compliance |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
 
 Statuses rest on: this file delegating row
 rendering to `PanelListViewController`, help chrome to `PanelHostView`, and
@@ -705,6 +724,7 @@ regardless of the app's language.
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.3.0 | 2026-11-15 | Mike Fullerton | Hosted panels get a settings.panel.<slug> accessibility identifier and group role; panels can be selected by title or slug. |
 | 1.2.2 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added unit-test-coverage compliance row (partial: orientation test only). |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/settings/. |

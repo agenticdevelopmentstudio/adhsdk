@@ -21,6 +21,7 @@ extension ComposableSettings {
 
         /// One topic per section, kept across `addPanel` so the row a reader
         /// is on survives a panel arriving late.
+        /// Keyed by `topicKey`, so two headings can each hold a topic of the same name.
         private var sectionTopics: [String: SectionTopicsPanel] = [:]
 
         /// The ids this feature's actions answer to.
@@ -110,17 +111,20 @@ extension ComposableSettings {
                     topics.append(panel)
                     continue
                 }
-                if members[section] == nil {
-                    let topic = sectionTopics[section]
+                let heading = panel.descriptor.heading
+                let key = Self.topicKey(heading: heading, section: section)
+                if members[key] == nil {
+                    let topic = sectionTopics[key]
                         ?? SectionTopicsPanel(section: section, icon: sectionIcons[section] ?? panel.descriptor.icon)
-                    sectionTopics[section] = topic
+                    topic.descriptor.heading = heading
+                    sectionTopics[key] = topic
                     topics.append(topic)
                 }
-                members[section, default: []].append(panel)
+                members[key, default: []].append(panel)
             }
             sectionTopics = sectionTopics.filter { members[$0.key] != nil }
-            for (section, topic) in sectionTopics {
-                topic.setSectionPanels(members[section] ?? [])
+            for (key, topic) in sectionTopics {
+                topic.setSectionPanels(members[key] ?? [])
             }
             settingsWindow.settingPanels = topics
         }
@@ -145,12 +149,32 @@ extension ComposableSettings {
                 if let index = sectionOrder.firstIndex(of: section) { return (1 + index, "") }
                 return (1 + sectionOrder.count, section)
             }
+            // Within a heading, topics by name and a topic's panels by title, each
+            // with "General" first: the general settings of a thing come before
+            // its particulars.
+            func before(_ lhs: String, _ rhs: String) -> Bool? {
+                if lhs == rhs { return nil }
+                if lhs == generalTitle { return true }
+                if rhs == generalTitle { return false }
+                return lhs.localizedStandardCompare(rhs) == .orderedAscending
+            }
             return panels.sorted {
-                let lhs = rank($0.descriptor.section), rhs = rank($1.descriptor.section)
+                let lhs = rank($0.descriptor.heading ?? $0.descriptor.section)
+                let rhs = rank($1.descriptor.heading ?? $1.descriptor.section)
                 if lhs.0 != rhs.0 { return lhs.0 < rhs.0 }
                 if lhs.1 != rhs.1 { return lhs.1.localizedStandardCompare(rhs.1) == .orderedAscending }
-                return $0.descriptor.title.localizedStandardCompare($1.descriptor.title) == .orderedAscending
+                let lhsTopic = $0.descriptor.section ?? $0.descriptor.title
+                let rhsTopic = $1.descriptor.section ?? $1.descriptor.title
+                if let order = before(lhsTopic, rhsTopic) { return order }
+                return before($0.descriptor.title, $1.descriptor.title) ?? false
             }
+        }
+
+        /// The title sorted first wherever it appears.
+        static let generalTitle = "General"
+
+        static func topicKey(heading: String?, section: String) -> String {
+            "\(heading ?? "")\u{1F}\(section)"
         }
 
         public override func value(forScriptingKey key: String) -> Any? {

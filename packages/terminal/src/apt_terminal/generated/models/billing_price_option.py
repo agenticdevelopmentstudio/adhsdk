@@ -61,14 +61,14 @@ class BillingPriceOption:
         field_dict.update(
             {
                 "id": id,
-                "productId": product_id,
+                "product_id": product_id,
                 "currency": currency,
             }
         )
         if product_name is not UNSET:
-            field_dict["productName"] = product_name
+            field_dict["product_name"] = product_name
         if unit_amount is not UNSET:
-            field_dict["unitAmount"] = unit_amount
+            field_dict["unit_amount"] = unit_amount
         if interval is not UNSET:
             field_dict["interval"] = interval
 
@@ -79,7 +79,7 @@ class BillingPriceOption:
         d = dict(src_dict)
         id = d.pop("id")
 
-        product_id = d.pop("productId")
+        product_id = d.pop("product_id")
 
         currency = d.pop("currency")
 
@@ -90,7 +90,7 @@ class BillingPriceOption:
                 return data
             return cast(None | str | Unset, data)
 
-        product_name = _parse_product_name(d.pop("productName", UNSET))
+        product_name = _parse_product_name(d.pop("product_name", UNSET))
 
         def _parse_unit_amount(data: object) -> int | None | Unset:
             if data is None:
@@ -99,7 +99,7 @@ class BillingPriceOption:
                 return data
             return cast(int | None | Unset, data)
 
-        unit_amount = _parse_unit_amount(d.pop("unitAmount", UNSET))
+        unit_amount = _parse_unit_amount(d.pop("unit_amount", UNSET))
 
         def _parse_interval(data: object) -> None | str | Unset:
             if data is None:

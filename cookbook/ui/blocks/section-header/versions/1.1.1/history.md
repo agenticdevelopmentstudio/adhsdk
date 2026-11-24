@@ -1,0 +1,6 @@
+
+| Version | Date | Author | Summary |
+|---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Qualified bare #accessibility fragments to popover's full agenticdeveloperkit URI; fixed 6 refs. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; cited the popover ingredient by requirement fragment instead of crediting behavior to "the Popover component" and added it to depends-on/related; reformatted Design Decisions into Decision/Rationale/Approved triplets and added one for the fixed h2 heading level; rewrote Compliance from "Not applicable" into a real table; fixed the flex-shrink/wrap contradiction between Appearance and Edge Cases; expanded help-popover keyboard coverage (Space, Escape, focus return, toggle) with new test vectors; corrected nonexistent APIs in the SwiftUI, Compose, AppKit/UIKit, and WinUI 3 platform notes; rewrote Localization to name the hardcoded aria-label and the locale-sensitive uppercase transform; defined "empty" once for the optional ReactNode props and reused it in Configuration; clarified how an empty title is actually handled. |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

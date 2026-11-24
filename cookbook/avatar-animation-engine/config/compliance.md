@@ -1,0 +1,10 @@
+
+| Check | Status | Category |
+|---|---|---|
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | Reliability |
+
+`separation-of-concerns` is passed: the loader lives in its own `Config` module on both platforms (`Sources/Config/` alongside the sibling `Anim`, `Math`, `Path`, `Render`, `Runtime`, and `Scene` modules on Apple; `src/config/` on web), and it is a pure function with no view, window, or per-frame rendering concern of its own. `unit-test-coverage` is partial: `conformance.test.ts` covers vectors 1 to 19 on the web loader (alongside `load.test.ts`), and `ConfigTests.swift` covers the Apple loader for most of them, but vector 20 (Apple raw-file read errors passing through unwrapped) has no test, since it is Swift-only and the web suite cannot reach it. `explicit-error-handling` is passed: every rejection surfaces as a typed, attributable error (`ConfigError` on Apple, a prefixed `Error` on web) naming the offending file, key, or reference, and a rejection MUST NOT return a partial `CharacterConfig` — nothing is silently swallowed. `data-integrity` is partial: the loader validates roughly sixty distinct invariants across the six files (references, pair shapes, value types, path syntax), but this ingredient itself flags an unresolved gap (`points-count`) under Behavioral Requirements → Rig and channels — neither loader validates that a shape's `points` array has a count consistent with its declared path-builder kind — so a geometrically-malformed but structurally-present `points` array is accepted at load with undefined downstream behavior.
+

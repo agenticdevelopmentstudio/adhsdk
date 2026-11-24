@@ -1,0 +1,21 @@
+
+- **shape-handshake**: `serve(port)` MUST send one `{ shape }` message on the port, where `shape` is the method tree of the served `Storage`: `true` for a callable and a nested object for a nested store such as `telemetry.errors`.
+- **shape-walk**: The shape MUST include a method defined on the object's own keys or on its prototype (excluding `constructor`), MUST nest any object-valued property, and MUST omit every other property.
+- **stub-build**: `connectStorage` MUST resolve only after it receives the shape, and MUST build plain stub functions from it, not a catch-all Proxy, because `await` on a Proxy would mistake it for a thenable.
+- **call-wire**: Each stub call MUST post `{ id, path, args }` with a fresh numeric id per call and MUST return a promise that settles from the matching reply.
+- **reply-match**: A reply MUST settle the pending call with the same id and remove it. A reply for an unknown id MUST be ignored.
+- **single-queue**: The server MUST run calls one at a time in arrival order, across every served port, through one queue, so one call's statements never interleave with another's on the shared connection.
+- **queue-survives-errors**: A call that throws MUST NOT stop the queue; the next call still runs.
+- **value-roundtrip**: Arguments and results MUST pass through structured clone, so values such as `Date` survive the round trip as the same type.
+- **nested-dispatch**: The server MUST resolve `path` from the storage root, apply the final key as a method on its parent object (so `this` is the parent), and await its result.
+- **error-flatten**: A call that throws MUST reply `{ ok: false, error }` with `name`, `message`, optional `stack` and optional `code` (converted to a string), plus the `cause` chain flattened to at most four causes below the error itself (five errors in all). This is the cause cap, a literal 4 in the source; the Design Decisions and Edge Cases refer to it and do not restate the number.
+- **error-rebuild**: The client MUST reject with an `Error` rebuilt from the wire form: same `name`, `message`, `stack` and `code`, with a rebuilt `cause` chain, so callers that match on message, code or cause (such as `isUniqueViolation`) keep working.
+- **non-error-throw**: A thrown value that is not an `Error` MUST reach the caller as an `Error` named `Error` whose message is `String(value)`.
+- **unclonable-args**: When the arguments cannot be structured-cloned (such as a function among them), the client MUST reject that call with the clone error and MUST NOT leave an entry pending.
+- **unclonable-result**: When the server cannot post a result, it MUST post an error reply for that id instead, so the caller is never left waiting on that result. The reply is the wire form of the clone error the failed post threw: its `name` (a `DataCloneError`) and its `message`.
+- **slow-call-log**: The server MUST log a `console.warn` line `[storage] slow call <path> <ms>ms` for any call that took 2,000 ms or more, where `<path>` is the call's path segments joined with `.` and `<ms>` is the elapsed whole milliseconds, because one slow call holds up the whole queue.
+- **closed-port-server**: The server detects a close only through the port's `close` event. When a served port closes, the server MUST remove its message listener; replies to a closed port are dropped, and other ports keep being served.
+- **closed-port-client**: The client detects a close only through the port's `close` event; it does not listen for `messageerror`, and an owning thread that exits is seen only because Node closes its port. When the client's port closes, every pending call MUST reject with `storage connection closed`, and every later call MUST reject with the same error without posting.
+- **connect-failure**: When the port closes before the shape arrives, the promise from `connectStorage` MUST reject with `storage connection closed`.
+- **driver-agnostic**: The module MUST NOT import or name any database driver; it MUST depend only on the `Storage` type and `node:worker_threads` types.
+

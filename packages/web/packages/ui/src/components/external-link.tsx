@@ -27,7 +27,7 @@ export function ExternalLink({
       rel="noopener noreferrer"
     >
       {children}
-      {glyph && <span aria-hidden="true">↗</span>}
+      {glyph && <span aria-hidden="true" className="inline-block rtl:-scale-x-100">↗</span>}
     </a>
   )
 }

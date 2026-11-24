@@ -1,0 +1,3 @@
+
+StatusPill has no interactive behavior of its own, so `screen-reader-support`, `keyboard-navigable`, and `focus-management` do not apply. It renders as a `<p>` element, which carries paragraph (block-level) semantics rather than being semantically neutral, so it MUST NOT be nested inside another `<p>`, inside a `<button>`, or inside other inline-only content (see the nesting edge case in **Edge Cases**); doing so produces invalid HTML. The status itself MUST be legible from the children text alone (see **status-conveyed-by-text**): the accented border and background are supplementary. The containing context remains responsible for heading hierarchy or ARIA roles if the status conveys structural meaning.
+

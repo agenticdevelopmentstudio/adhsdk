@@ -1,13 +1,12 @@
 ---
 id: e322fd0c-1552-4bd9-b129-3c809af3a972
 title: "Uptime State"
-domain: adhsdk://cookbook/status/dashboard/state/uptime
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -17,10 +16,10 @@ platforms:
   - web
 tags: []
 depends-on:
-  - adhsdk://cookbook/status/dashboard/api
+  - eb7e9eeb-86f3-4053-827a-ea259833c6ad
 related:
-  - adhsdk://cookbook/status/dashboard/state/response-history
-  - adhsdk://cookbook/status/service/monitor/uptime
+  - f5f0f19f-065e-4484-8c81-e591eee6db3c
+  - 88dabdf6-14a3-44eb-ab0d-ae18007c683e
 references: []
 approved-by: ""
 approved-date: ""
@@ -30,7 +29,7 @@ approved-date: ""
 
 ## Overview
 
-The uptime state loads per-service daily uptime over the last `days` days. It wraps one shared read keyed by the window length, requests `/uptime?days=<days>` through the dashboard's injected API client (see [status-web-api](adhsdk://cookbook/status/dashboard/api)), and returns the read result typed as the uptime response. Unlike its sibling [status-web-hooks-use-response-history](adhsdk://cookbook/status/dashboard/state/response-history), it sets no polling interval, so it does not poll. It has two consumers in the dashboard, both passing `90`: the dashboard view, which builds a per-service map from `data.services` and picks the selected service's entry, and the overview tab, which reduces `data.services` to one portfolio percentage. The numbers themselves are computed by the backend `/uptime` route in the status service (see [status-server-monitor-uptime](adhsdk://cookbook/status/service/monitor/uptime)).
+The uptime state loads per-service daily uptime over the last `days` days. It wraps one shared read keyed by the window length, requests `/uptime?days=<days>` through the dashboard's injected API client (see status-web-api ([adhsdk.ingredient.status.dashboard.api](cookbook:eb7e9eeb-86f3-4053-827a-ea259833c6ad))), and returns the read result typed as the uptime response. Unlike its sibling status-web-hooks-use-response-history ([adhsdk.ingredient.status.dashboard.state.response-history](cookbook:f5f0f19f-065e-4484-8c81-e591eee6db3c)), it sets no polling interval, so it does not poll. It has two consumers in the dashboard, both passing `90`: the dashboard view, which builds a per-service map from `data.services` and picks the selected service's entry, and the overview tab, which reduces `data.services` to one portfolio percentage. The numbers themselves are computed by the backend `/uptime` route in the status service (see status-server-monitor-uptime ([adhsdk.ingredient.status.service.monitor.uptime](cookbook:88dabdf6-14a3-44eb-ab0d-ae18007c683e))).
 
 ## Behavioral Requirements
 
@@ -74,7 +73,7 @@ Not applicable — this is a data-fetching state, not a visual component.
 
 ## Conformance Test Vectors
 
-No dedicated test exists for this state; the consuming views' tests mock it out entirely (returning a result with `data: undefined, isLoading: false`), so these vectors are derived from the source. Wrap the state in a shared cache provider configured with retries disabled and an overriding client with a stubbed transport.
+`use-uptime.dom.test.tsx` beside the hook exercises these vectors (the consuming views' tests mock the state out). Wrap the state in a shared cache provider configured with retries disabled and an overriding client with a stubbed transport.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -86,7 +85,7 @@ No dedicated test exists for this state; the consuming views' tests mock it out 
 | use-uptime-006 | parse-failure | This state called with `90`; stub returns `200` with body `not json` | `isError` is true; `error` is the JSON parse error thrown while parsing the body |
 | use-uptime-007 | network-failure | This state called with `90`; stub rejects with a network-level error | `isError` is true; `error` is that same failure |
 | use-uptime-008 | no-polling | This state called with `90`, with fake timers; first fetch succeeds; the application keeps focus | Advancing time by 600,000 ms triggers no second fetch |
-| use-uptime-009 | query-key | Render this state with `90`, then rerender with `30` | Two fetches, one per window; returning to `90` within the cache's lifetime serves the cached 90-day data |
+| use-uptime-009 | query-key | Render this state with `90`, then rerender with `30` | One fetch per window on first visit (two in all); returning to `90` within the cache's lifetime serves the cached 90-day data at once, with no loading state (the default zero staleness then refetches it in the background) |
 | use-uptime-010 | raw-fetch-not-json-helper | This state called with `90`; inspect the request | No `Content-Type` header is added by the state |
 | use-uptime-011 | single-threaded-ordering | Two consumers both use this state with `90` under one shared cache | One fetch is made; both receive the same `data` |
 | use-uptime-012 | return-value | This state called with `90`, before the stub resolves | The result has `isLoading` true and `data` undefined, and exposes no keys beyond the read result's own |
@@ -162,9 +161,9 @@ Not applicable: the state makes no log calls; failures reach the caller only thr
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-web/src/hooks/use-uptime.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-web/src/hooks/use-uptime.ts` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -194,15 +193,15 @@ Not applicable: the state makes no log calls; failures reach the caller only thr
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | best-practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | best-practices |
-| [timeout-handling](agenticdevelopercookbook://compliance/reliability#timeout-handling) | partial | reliability |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | best-practices |
+| [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | partial | reliability |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | reliability |
 
 **Separation of Concerns**: The hook contains no presentation or computation. The base path and transport live in `StatusApiClient`, caching and the state machine in React Query, the uptime arithmetic in the backend and `lib/uptime.ts`, and the rendering in `Dashboard` and `OverviewTab`.
 
-**Unit Test Coverage**: There is no `use-uptime.test.ts` or `use-uptime.dom.test.tsx` beside the hook, and the component tests that reach it mock it out, so the hook's fetch, key and error path are not exercised by any test.
+**Unit Test Coverage**: `use-uptime.dom.test.tsx` beside the hook covers every conformance vector (use-uptime-001 to 013) against the real hook with a stubbed `fetch`: the request, the key, the error paths, the absence of polling and sharing.
 
 **Explicit Error Handling**: A non-ok status, a network rejection, and a JSON parse failure all reject the query function and surface through the query's `error`, so none is swallowed. The server's error-body detail is not read.
 
@@ -214,6 +213,7 @@ Not applicable: the state makes no log calls; failures reach the caller only thr
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (use-uptime.dom.test.tsx, 13 of 13 vectors); unit-test-coverage now passed. |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | One client-only requirement, worded the same across the dashboard state specs, with a test vector; the web module's "use client" directive is noted in Platform Notes. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to status/dashboard/state/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

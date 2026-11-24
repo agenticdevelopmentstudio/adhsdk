@@ -1,7 +1,7 @@
 import { API_ENDPOINTS } from '../generated/endpoints.generated'
 import type { EndpointMeta, EndpointRef } from '../types'
 
-/** The map key for a method+path reference (`"GET /persona/personas/{id}"`). */
+/** The map key for a method+path reference (`"GET /v1/personas/{id}"`). */
 export function endpointKey(ref: EndpointRef | string): string {
   if (typeof ref === 'string') return ref
   return `${ref.method.toUpperCase()} ${ref.path}`
@@ -45,4 +45,58 @@ export function allTags(): string[] {
 /** Endpoints under a tag, sorted by path then method (collection before item). */
 export function endpointsForTag(tag: string): EndpointMeta[] {
   return index().get(tag) ?? []
+}
+
+/**
+ * A route as a page names it: a path, with or without a method. Its placeholders may be named
+ * differently from the spec's (`{ecosystem id}` for `{ecosystemId}`); only where they are counts.
+ */
+export interface EndpointMatch {
+  method?: string
+  path: string
+}
+
+/** A path with every `{placeholder}` emptied, so two namings of one route compare equal. */
+function shapeOf(path: string): string {
+  return path.replace(/\{[^}]*\}/g, '{}')
+}
+
+// The endpoints on each path shape, in method order. Computed once, like the tag index.
+let _byShape: Map<string, EndpointMeta[]> | null = null
+
+function shapeIndex(): Map<string, EndpointMeta[]> {
+  if (!_byShape) {
+    _byShape = new Map()
+    for (const meta of Object.values(API_ENDPOINTS)) {
+      const shape = shapeOf(meta.path)
+      const list = _byShape.get(shape) ?? []
+      list.push(meta)
+      _byShape.set(shape, list)
+    }
+    for (const list of _byShape.values()) {
+      list.sort((a, b) => (METHOD_ORDER[a.method] ?? 9) - (METHOD_ORDER[b.method] ?? 9))
+    }
+  }
+  return _byShape
+}
+
+/**
+ * The endpoints `matches` name, in the order they name them, each once. A match with a method is
+ * that one endpoint; a match with no method is every endpoint on its path. A match the spec has
+ * no endpoint for is left out.
+ */
+export function matchEndpoints(matches: readonly EndpointMatch[]): EndpointMeta[] {
+  const out: EndpointMeta[] = []
+  const seen = new Set<string>()
+  for (const match of matches) {
+    const method = match.method?.toUpperCase()
+    const onPath = shapeIndex().get(shapeOf(match.path)) ?? []
+    const hits = method ? onPath.filter((meta) => meta.method === method) : onPath
+    for (const meta of hits) {
+      if (seen.has(meta.key)) continue
+      seen.add(meta.key)
+      out.push(meta)
+    }
+  }
+  return out
 }

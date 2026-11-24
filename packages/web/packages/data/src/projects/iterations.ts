@@ -1,4 +1,4 @@
-// Project iterations API client — the time-box side of the `/api/project/*` surface.
+// Project iterations API client — the time-box side of the `/api/v1/*` surface.
 //
 // Its own file, and its own route stem, for the reason the backend gives at length: an
 // iteration belongs to a WORKSPACE, not to a project. There is no
@@ -12,8 +12,9 @@
 // sweep the whole box under a workspace-level verb, so returning the cards would report rows
 // the caller may not be allowed to read. Refetch the affected board to see the result.
 
-import { authedJson } from "../http";
-import { compact, enc, workspaceQuery } from "../client-helpers";
+import { authedRequest, withV1Query } from "../http";
+import { compact, enc } from "../client-helpers";
+import { v1Json, v1List, v1Write } from "../v1-case";
 import { toWorkItem, type WorkItem } from "./work-items";
 import type {
   EstimateScale,
@@ -27,7 +28,11 @@ import type {
   IterationRolloverBody,
 } from "./wire";
 
-const BASE = "/api/project/iterations";
+const BASE = "/api/v1/iterations";
+
+/** `url` with the optional `?workspace=` pin. */
+const scoped = (url: string, opts?: { workspace?: string }): string =>
+  withV1Query(url, { workspace: opts?.workspace || undefined });
 
 /* ── Iteration ────────────────────────────────────────────────────────── */
 
@@ -108,13 +113,13 @@ export const projectIterationsApi = {
    *  the list to that workspace's owning principal, exactly as `projectsApi.list` does; without
    *  it the caller sees every box their reach admits. */
   async list(opts?: { workspace?: string }): Promise<Iteration[]> {
-    const rows = await authedJson<IterationRow[]>(`${BASE}${workspaceQuery(opts)}`);
+    const rows = await v1List<IterationRow>(scoped(BASE, opts));
     return rows.map(toIteration); // server orders by startDate, then id
   },
 
   async get(id: string): Promise<Iteration | null> {
     try {
-      return toIteration(await authedJson<IterationRow>(`${BASE}/${enc(id)}`));
+      return toIteration(await v1Json<IterationRow>(`${BASE}/${enc(id)}`));
     } catch {
       // Backend 404s with a thrown error; the UI contract is null-for-missing.
       return null;
@@ -140,10 +145,7 @@ export const projectIterationsApi = {
       ...compact({ description: input.description }),
     };
     return toIteration(
-      await authedJson<IterationRow>(`${BASE}${workspaceQuery(opts)}`, {
-        method: "POST",
-        body: JSON.stringify(body),
-      }),
+      await v1Json<IterationRow>(scoped(BASE, opts), v1Write("POST", body)),
     );
   },
 
@@ -153,32 +155,30 @@ export const projectIterationsApi = {
   async update(id: string, patch: IterationPatchBody): Promise<Iteration> {
     const body: IterationPatchBody = compact(patch);
     return toIteration(
-      await authedJson<IterationRow>(`${BASE}/${enc(id)}`, {
-        method: "PATCH",
-        body: JSON.stringify(body),
-      }),
+      await v1Json<IterationRow>(`${BASE}/${enc(id)}`, v1Write("POST", body)),
     );
   },
 
   /**
-   * Delete a box, UN-ASSIGNING every card in it — the count of those cards is what comes back.
+   * Delete a box, UN-ASSIGNING every card in it. The legacy route counted those cards; /v1 answers a delete with a tombstone, so the count is no longer reported (`unassigned` is absent).
    *
    * It never refuses, which is the deliberate difference from deleting a board COLUMN: a card
    * must have a status, so a column with cards in it has no defined outcome, whereas "no
    * iteration" is the backlog — an ordinary state a card is allowed to be in.
    */
-  async remove(id: string): Promise<{ unassigned: number }> {
-    return authedJson<{ unassigned: number }>(`${BASE}/${enc(id)}`, {
-      method: "DELETE",
-    });
+  async remove(id: string): Promise<{ unassigned?: number }> {
+    // /v1 answers a delete with a tombstone `{id, object, deleted}`; the legacy count of
+    // un-assigned cards is not carried, so `unassigned` is absent rather than a guessed 0.
+    await authedRequest(`${BASE}/${enc(id)}`, { method: "DELETE" });
+    return {};
   },
 
   /** The box's cards, across every project in the workspace — the iteration board. Unlike the
    *  two sweeps this READS content, so it is reach-filtered: a card in a project the caller
    *  cannot open does not appear here just because they can see the cycle. */
   async workItems(id: string): Promise<IterationWorkItem[]> {
-    const rows = await authedJson<IterationWorkItemRow[]>(
-      `${BASE}/${enc(id)}/work-items`,
+    const rows = await v1List<IterationWorkItemRow>(
+      withV1Query("/api/v1/work_items", { iteration: id }),
     );
     return rows.map(toIterationWorkItem); // server orders by rank
   },
@@ -196,9 +196,9 @@ export const projectIterationsApi = {
     toIterationId: string | null,
   ): Promise<{ moved: number; toIterationId: string | null }> {
     const body: IterationRolloverBody = { toIterationId };
-    return authedJson<{ moved: number; toIterationId: string | null }>(
+    return v1Json<{ moved: number; toIterationId: string | null }>(
       `${BASE}/${enc(id)}/rollover`,
-      { method: "POST", body: JSON.stringify(body) },
+      v1Write("POST", body),
     );
   },
 };

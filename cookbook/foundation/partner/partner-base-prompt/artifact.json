@@ -1,0 +1,63 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "1abdd016-954c-4058-8db3-224c52712365",
+    "title": "Partner Base Prompt",
+    "type": "ingredient",
+    "version": "1.0.2",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-14",
+    "modified": "2026-11-14",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "The Coding Partner's fixed system prompt, the per-job sections appended for each enabled job, and the Claude Code skill file that carries a job's guidelines.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "foundation",
+      "partner",
+      "prompt"
+    ],
+    "depends-on": [
+      "79810488-c613-4f9b-af2a-4ba9d8ee1c26",
+      "294285ac-403a-44fe-9840-8ad9f3cf1eba"
+    ],
+    "related": [
+      "d6ff4cf9-05b9-43f0-96d2-b4c8454dd6d1",
+      "2a298bb0-d8af-40aa-8fec-42dd3b1d8f43",
+      "211ef664-01fc-45d5-996b-1a0a4167a748",
+      "a14bb137-868e-4e8b-827b-4ea0f5e45b81"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "names_hosts": "The partner drives the Claude CLI (its stream-json protocol, flags and model names); the host is its subject.",
+  "synced": "1760897a395e719c",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

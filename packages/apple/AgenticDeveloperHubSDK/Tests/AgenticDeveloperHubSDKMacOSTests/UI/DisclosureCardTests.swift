@@ -1,6 +1,15 @@
+import AgenticDeveloperHubSDKCore
+import AgenticDeveloperHubSDKCoreUI
+import AgenticDeveloperHubSDKUI
 import AppKit
 import XCTest
 @testable import AgenticDeveloperHubSDKMacOS
+
+private final class DisclosureCardThemeStorage: ThemeStorage {
+    var customThemes: [ColorTheme] = []
+    var activeThemeID: String?
+    var onExternalChange: (() -> Void)?
+}
 
 /// Pins the rules a stack of folding cards lives by: the arithmetic of the
 /// remembered set (`CardFoldMemory`); the one that a fold is a change of HEIGHT
@@ -296,7 +305,7 @@ final class DisclosureCardTests: XCTestCase {
         field(title, in: card)?.superview?.subviews.compactMap { $0 as? NSImageView }.first
     }
 
-    func testTheSymbolAfterTheNameStandsRightAgainstIt() {
+    func testDisclosureCard047_theSymbolAfterTheNameStandsRightAgainstIt() {
         // Against the name, not out at the line's far end by the toggle: it is
         // something said about the name, so it has to read as part of it.
         let card = bare(isCollapsed: false, titleTrailingStatus: Self.seal)
@@ -308,7 +317,7 @@ final class DisclosureCardTests: XCTestCase {
                           "the symbol drifted away from the name it is about")
     }
 
-    func testTheSymbolAfterTheNameIsSpokenAndTintedFromTheLivePalette() {
+    func testDisclosureCard048_theSymbolAfterTheNameIsSpokenAndTintedFromTheLivePalette() {
         // Drawn the way the corner badge is: its own accessibility element, its
         // label as the tooltip, and its colour asked of the palette rather than
         // fixed when the card was built.
@@ -327,7 +336,7 @@ final class DisclosureCardTests: XCTestCase {
         XCTAssertEqual(seal.contentTintColor, .systemPurple)
     }
 
-    func testAPlaceholderHoldsTheSymbolsRoomAndSaysNothing() {
+    func testDisclosureCard049_aPlaceholderHoldsTheSymbolsRoomAndSaysNothing() {
         // A stack that marks only some of its cards hands the rest a
         // placeholder. The room is identical, so a mark moving from one card to
         // another cannot widen or narrow a window that hugs its content — and
@@ -556,7 +565,7 @@ final class DisclosureCardTests: XCTestCase {
                                     "the address was squeezed by a card that could have grown")
     }
 
-    func testACardWithNoSummaryStillAsksForItsTitleWhole() {
+    func testDisclosureCard050_aCardWithNoSummaryStillAsksForItsTitleWhole() {
         // A card with nothing to summarise is still a card whose name is its
         // handle: the window grows for it rather than cutting it short.
         let title = "a-very-long-address@some-organisation.example.com"
@@ -699,5 +708,530 @@ final class DisclosureCardTests: XCTestCase {
         XCTAssertEqual(stacked(summary: Self.readings).fittingSize.width,
                        stacked(summary: [Self.readings[0]]).fittingSize.width,
                        accuracy: 0.5)
+    }
+
+    // MARK: - Conformance vectors disclosure-card-001 ... 051
+
+    private var palette: SemanticPalette { ThemePaletteObserver.currentPalette }
+
+    private func makeCard(
+        title: String = "mike@example.com",
+        titleIsAccent: Bool = true,
+        titleAccessory: NSView? = nil,
+        titlebarAccessory: NSView? = nil,
+        subtitle: String? = nil,
+        summary: [DisclosureCardView.SummaryPart] = [],
+        status: DisclosureCardView.StatusSymbol? = nil,
+        isCollapsed: Bool = false,
+        isDimmed: Bool = false,
+        scaledSize: CGFloat = 13,
+        onToggle: ((Bool) -> Void)? = nil
+    ) -> DisclosureCardView {
+        DisclosureCardView(
+            title: title, titleIsAccent: titleIsAccent, titleAccessory: titleAccessory,
+            titlebarAccessory: titlebarAccessory, subtitle: subtitle, summary: summary,
+            status: status, isCollapsed: isCollapsed, isDimmed: isDimmed,
+            scaledSize: scaledSize, onToggle: onToggle
+        )
+    }
+
+    private func descendants(of view: NSView) -> [NSView] {
+        view.subviews + view.subviews.flatMap { descendants(of: $0) }
+    }
+
+    private func surface(of card: DisclosureCardView) throws -> NSView {
+        try XCTUnwrap(card.subviews.first)
+    }
+
+    private func disclosure(of card: DisclosureCardView) throws -> NSButton {
+        try XCTUnwrap(descendants(of: card).compactMap { $0 as? NSButton }.first { $0.bezelStyle == .disclosure })
+    }
+
+    private func titleLine(of card: DisclosureCardView, title: String = "mike@example.com") throws -> NSStackView {
+        try XCTUnwrap(field(title, in: card)?.superview as? NSStackView)
+    }
+
+    private func trailingLine(of card: DisclosureCardView) throws -> NSStackView {
+        try XCTUnwrap(try disclosure(of: card).superview as? NSStackView)
+    }
+
+    private func summaryField(of card: DisclosureCardView) throws -> NSTextField {
+        try XCTUnwrap(descendants(of: card).compactMap { $0 as? NSTextField }.first {
+            $0.alignment == .right && $0.lineBreakMode == .byClipping
+        })
+    }
+
+    private func subtitleField(of card: DisclosureCardView) throws -> NSTextField {
+        try XCTUnwrap(descendants(of: card).compactMap { $0 as? NSTextField }.first {
+            $0.lineBreakMode == .byTruncatingTail && !($0 is WholePointLabel)
+        })
+    }
+
+    /// The stack the card's content is added to, and the body stack that holds it.
+    private func contentStack(holding view: NSView) throws -> NSStackView {
+        try XCTUnwrap(view.superview as? NSStackView)
+    }
+
+    private func bodyStack(holding view: NSView) throws -> NSStackView {
+        try XCTUnwrap(try contentStack(holding: view).superview as? NSStackView)
+    }
+
+    private func swatch(width: CGFloat = 40, height: CGFloat = 20) -> NSView {
+        let view = NSView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.widthAnchor.constraint(equalToConstant: width).isActive = true
+        view.heightAnchor.constraint(equalToConstant: height).isActive = true
+        return view
+    }
+
+    private func floorConstraint(of card: DisclosureCardView) throws -> NSLayoutConstraint {
+        try XCTUnwrap(card.constraints.first {
+            $0.firstItem === card && $0.firstAttribute == .width && $0.relation == .greaterThanOrEqual
+                && $0.priority.rawValue == 999
+        })
+    }
+
+    private func stackConstraint(_ attribute: NSLayoutConstraint.Attribute, in card: DisclosureCardView) throws
+        -> NSLayoutConstraint {
+        try XCTUnwrap(card.constraints.first {
+            $0.firstItem is NSStackView && $0.secondItem === card && $0.firstAttribute == attribute
+        })
+    }
+
+    private func scaled(_ inset: CGFloat, _ size: CGFloat) -> CGFloat {
+        ceil(inset * size / CGFloat(NSFont.systemFontSize))
+    }
+
+    func testDisclosureCard001_surfaceIsARoundedBorderedCard() throws {
+        let card = makeCard()
+        let layer = try XCTUnwrap(try surface(of: card).layer)
+        XCTAssertEqual(layer.cornerRadius, 10)
+        XCTAssertEqual(layer.borderWidth, 1)
+        XCTAssertEqual(layer.backgroundColor, palette.surfaceColor.cgColor)
+        XCTAssertEqual(layer.borderColor, palette.outlineColor.cgColor)
+    }
+
+    func testDisclosureCard002_surfaceClipsTheTitlebarToTheCardCorners() throws {
+        XCTAssertEqual(try surface(of: makeCard()).layer?.masksToBounds, true)
+    }
+
+    func testDisclosureCard003_titlebarIsAnElevatedStrip() throws {
+        let bar = try XCTUnwrap(titlebar(of: makeCard()))
+        XCTAssertEqual(bar.layer?.backgroundColor, palette.elevatedSurfaceColor.cgColor)
+    }
+
+    func testDisclosureCard004_titlebarRuleIsADividerAcrossTheBar() throws {
+        let card = makeCard()
+        host(card, width: 400)
+        let bar = try XCTUnwrap(titlebar(of: card))
+        let rule = try XCTUnwrap(bar.subviews.first)
+        XCTAssertEqual(rule.layer?.backgroundColor, palette.dividerColor.cgColor)
+        XCTAssertEqual(rule.frame.height, 1, accuracy: 0.01)
+        XCTAssertEqual(rule.frame.width, bar.frame.width, accuracy: 0.5)
+        // A size constraint names one view, so AppKit installs it on that view.
+        XCTAssertTrue(rule.constraints.contains { $0.firstItem === rule && $0.firstAttribute == .height
+            && $0.constant == 1 })
+    }
+
+    func testDisclosureCard005_titlebarIsTheHeaderPlusItsInsets() throws {
+        let card = makeCard()
+        host(card, width: 400)
+        let bar = try XCTUnwrap(titlebar(of: card))
+        let header = try XCTUnwrap(try titleLine(of: card).superview)
+        // The bar starts at the card's top and ends `padTitleY` under the header,
+        // and the header itself starts `padTitleY` under the top: two insets.
+        XCTAssertEqual(bar.frame.height, header.frame.height + 2 * scaled(6, 13), accuracy: 0.5)
+    }
+
+    func testDisclosureCard006_badgeIsDrawnAboveTheSurfaceBorder() throws {
+        let card = makeCard(status: .init(symbolName: "exclamationmark.triangle.fill", colorName: "yellow",
+                                          accessibilityLabel: "Warning"))
+        let surface = try surface(of: card)
+        let badge = try XCTUnwrap(card.subviews.compactMap { $0 as? NSImageView }.first)
+        let surfaceIndex = try XCTUnwrap(card.subviews.firstIndex(of: surface))
+        let badgeIndex = try XCTUnwrap(card.subviews.firstIndex(of: badge))
+        XCTAssertGreaterThan(badgeIndex, surfaceIndex)
+        // The border belongs to the surface's layer, which the badge is not inside,
+        // so nothing the surface draws lands on top of the badge.
+        XCTAssertEqual(card.layer?.borderWidth ?? 0, 0)
+        XCTAssertFalse(badge.isDescendant(of: surface))
+    }
+
+    func testDisclosureCard007_cardDoesNotClipItsOwnContents() {
+        XCTAssertFalse(makeCard().clipsToBounds)
+    }
+
+    func testDisclosureCard008_displaysTheTitleText() {
+        XCTAssertNotNil(field("mike@example.com", in: makeCard(title: "mike@example.com")))
+    }
+
+    func testDisclosureCard009_truncatesTheTitleInTheMiddle() throws {
+        let title = try XCTUnwrap(field("mike@example.com", in: makeCard()))
+        XCTAssertEqual(title.lineBreakMode, .byTruncatingMiddle)
+    }
+
+    func testDisclosureCard010_theTitleYieldsFirstAndTheTrailingRowHolds() throws {
+        let card = makeCard()
+        let title = try XCTUnwrap(field("mike@example.com", in: card))
+        let line = try titleLine(of: card)
+        let trailing = try trailingLine(of: card)
+        for view in [title, line] {
+            XCTAssertEqual(view.contentCompressionResistancePriority(for: .horizontal), .defaultLow)
+            XCTAssertEqual(view.contentHuggingPriority(for: .horizontal), .defaultLow)
+        }
+        XCTAssertEqual(trailing.contentCompressionResistancePriority(for: .horizontal), .required)
+        XCTAssertEqual(trailing.contentHuggingPriority(for: .horizontal), .required)
+    }
+
+    func testDisclosureCard011_titleColorFollowsTheAccentFlag() throws {
+        let accent = makeCard(titleIsAccent: true)
+        let plain = makeCard(titleIsAccent: false)
+        XCTAssertEqual(field("mike@example.com", in: accent)?.textColor, palette.accentColor)
+        XCTAssertEqual(field("mike@example.com", in: plain)?.textColor, palette.primaryTextColor)
+    }
+
+    func testDisclosureCard012_titleFontIsSemiboldBody() throws {
+        let card = makeCard(scaledSize: 16)
+        var style = palette.theme.typography.style(.body)
+        style.weight = .semibold
+        XCTAssertEqual(field("mike@example.com", in: card)?.font, style.nsFont(scaledSize: 16))
+    }
+
+    func testDisclosureCard013_titleAccessoryLeadsTheTitle() throws {
+        let accessory = NSImageView()
+        let card = makeCard(titleAccessory: accessory)
+        let title = try XCTUnwrap(field("mike@example.com", in: card))
+        let line = try titleLine(of: card)
+        XCTAssertEqual(line.arrangedSubviews, [accessory, title])
+        XCTAssertEqual(line.spacing, 6)
+        XCTAssertEqual(accessory.contentCompressionResistancePriority(for: .horizontal), .required)
+    }
+
+    func testDisclosureCard014_titlebarAccessorySitsBeforeTheDisclosure() throws {
+        let accessory = NSImageView()
+        let card = makeCard(titlebarAccessory: accessory)
+        let line = try trailingLine(of: card)
+        XCTAssertEqual(line.arrangedSubviews, [accessory, try disclosure(of: card)])
+        XCTAssertEqual(line.spacing, 6)
+    }
+
+    func testDisclosureCard015_trailingLineNeverShrinksOrGrows() throws {
+        let line = try trailingLine(of: makeCard())
+        XCTAssertEqual(line.contentCompressionResistancePriority(for: .horizontal), .required)
+        XCTAssertEqual(line.contentHuggingPriority(for: .horizontal), .required)
+    }
+
+    func testDisclosureCard016_keepsTheMinimumGapBetweenTitleAndTrailingRows() throws {
+        try XCTSkipUnless(NSFont.systemFontSize == 13, "the vector assumes a 13pt system font")
+        let card = makeCard(title: Self.longAddress, summary: Self.readings, isCollapsed: true, scaledSize: 16)
+        card.addContent(swatch())
+        card.translatesAutoresizingMaskIntoConstraints = false
+        let hosting = NSView(frame: NSRect(x: 0, y: 0, width: 260, height: 200))
+        hosting.addSubview(card)
+        NSLayoutConstraint.activate([
+            card.leadingAnchor.constraint(equalTo: hosting.leadingAnchor),
+            card.topAnchor.constraint(equalTo: hosting.topAnchor),
+            card.widthAnchor.constraint(equalToConstant: 260)
+        ])
+        hosting.layoutSubtreeIfNeeded()
+        let title = try titleLine(of: card, title: Self.longAddress)
+        let trailing = try trailingLine(of: card)
+        XCTAssertEqual(DisclosureCardView.mastheadGapFor(scaledSize: 16), 30)
+        XCTAssertGreaterThanOrEqual(trailing.frame.minX - title.frame.maxX, 30 - 0.5)
+        XCTAssertEqual(title.frame.midY, trailing.frame.midY, accuracy: 0.5)
+    }
+
+    func testDisclosureCard017_usesTheNativeDisclosureControl() throws {
+        let button = try disclosure(of: makeCard())
+        XCTAssertEqual(button.bezelStyle, .disclosure)
+    }
+
+    func testDisclosureCard018_disclosureStartsInTheCardsFoldState() throws {
+        XCTAssertEqual(try disclosure(of: makeCard(isCollapsed: true)).state, .off)
+        XCTAssertEqual(try disclosure(of: makeCard(isCollapsed: false)).state, .on)
+    }
+
+    func testDisclosureCard019_disclosureIsLabelledForItsAction() throws {
+        let folded = try disclosure(of: makeCard(isCollapsed: true))
+        let open = try disclosure(of: makeCard(isCollapsed: false))
+        XCTAssertEqual(folded.toolTip, "Show details")
+        XCTAssertEqual(folded.accessibilityLabel(), "Show details")
+        XCTAssertEqual(open.toolTip, "Hide details")
+        XCTAssertEqual(open.accessibilityLabel(), "Hide details")
+    }
+
+    func testDisclosureCard020_activatingTheDisclosureForwardsTheNewFoldState() throws {
+        var received: [Bool] = []
+        let card = makeCard(isCollapsed: false, onToggle: { received.append($0) })
+        let button = try disclosure(of: card)
+        button.performClick(nil)
+        XCTAssertEqual(received, [true])
+        XCTAssertEqual(button.state, .off)
+    }
+
+    func testDisclosureCard021_theCardDoesNotMutateItselfOnToggle() throws {
+        let card = makeCard(subtitle: "note", summary: Self.readings, isCollapsed: false)
+        let view = swatch()
+        card.addContent(view)
+        let content = try contentStack(holding: view)
+        let body = try bodyStack(holding: view)
+        let subtitle = try subtitleField(of: card)
+        let button = try disclosure(of: card)
+        let before = (content.isHidden, body.isHidden, subtitle.isHidden, button.toolTip)
+        button.performClick(nil)
+        XCTAssertEqual(content.isHidden, before.0)
+        XCTAssertEqual(body.isHidden, before.1)
+        XCTAssertEqual(subtitle.isHidden, before.2)
+        XCTAssertEqual(button.toolTip, before.3)
+    }
+
+    func testDisclosureCard022_contentIsHiddenWhenCollapsed() throws {
+        for collapsed in [true, false] {
+            let card = makeCard(isCollapsed: collapsed)
+            let view = swatch()
+            card.addContent(view)
+            XCTAssertEqual(try contentStack(holding: view).isHidden, collapsed)
+        }
+    }
+
+    func testDisclosureCard023_contentIsBuiltEvenWhileFolded() throws {
+        let card = makeCard(isCollapsed: true)
+        let view = swatch()
+        card.addContent(view)
+        let content = try contentStack(holding: view)
+        XCTAssertTrue(content.arrangedSubviews.contains(view))
+        XCTAssertTrue(content.isHidden)
+    }
+
+    func testDisclosureCard024_subtitleIsHiddenWhenCollapsed() throws {
+        XCTAssertTrue(try subtitleField(of: makeCard(subtitle: "note", isCollapsed: true)).isHidden)
+    }
+
+    func testDisclosureCard025_subtitleIsHiddenWhenAbsent() throws {
+        XCTAssertTrue(try subtitleField(of: makeCard(subtitle: nil, isCollapsed: false)).isHidden)
+    }
+
+    func testDisclosureCard026_anEmptyBodyIsDetached() throws {
+        let card = makeCard(subtitle: nil, summary: [], isCollapsed: true)
+        let view = swatch()
+        card.addContent(view)
+        XCTAssertTrue(try bodyStack(holding: view).isHidden)
+    }
+
+    func testDisclosureCard027_bottomInsetMatchesAnEmptyBody() throws {
+        let empty = makeCard(subtitle: nil, summary: [], isCollapsed: true)
+        XCTAssertEqual(try stackConstraint(.bottom, in: empty).constant, -scaled(6, 13))
+        let full = makeCard(subtitle: nil, summary: Self.readings, isCollapsed: true)
+        XCTAssertEqual(try stackConstraint(.bottom, in: full).constant, -scaled(12, 13))
+    }
+
+    func testDisclosureCard028_summaryShowsOnlyWhenCollapsedAndPresent() throws {
+        for collapsed in [true, false] {
+            for present in [true, false] {
+                let card = makeCard(summary: present ? Self.readings : [], isCollapsed: collapsed)
+                XCTAssertEqual(try summaryField(of: card).isHidden, !(collapsed && present),
+                               "collapsed \(collapsed), summary present \(present)")
+            }
+        }
+    }
+
+    func testDisclosureCard029_summaryIsRightAlignedAndClips() throws {
+        let field = try summaryField(of: makeCard(summary: Self.readings, isCollapsed: true))
+        XCTAssertEqual(field.alignment, .right)
+        XCTAssertEqual(field.lineBreakMode, .byClipping)
+        XCTAssertEqual(field.contentCompressionResistancePriority(for: .horizontal), .required)
+    }
+
+    func testDisclosureCard030_summaryPartsAreStyledNameThenValue() throws {
+        let card = makeCard(summary: [.init(name: "5H", value: "23%", colorName: "red")], isCollapsed: true)
+        let text = try summaryField(of: card).attributedStringValue
+        XCTAssertEqual(text.string, "5H: 23%")
+        let typography = palette.theme.typography
+        let nameAttributes = text.attributes(at: 0, effectiveRange: nil)
+        XCTAssertEqual(nameAttributes[.font] as? NSFont, typography.style(.caption).nsFont(scaledSize: 13 * 0.85))
+        XCTAssertEqual(nameAttributes[.foregroundColor] as? NSColor, palette.tertiaryTextColor)
+        let valueAttributes = text.attributes(at: 4, effectiveRange: nil)
+        XCTAssertEqual(valueAttributes[.font] as? NSFont, typography.style(.code).nsFont(scaledSize: 13 * 0.85))
+        XCTAssertEqual(valueAttributes[.foregroundColor] as? NSColor, palette.dangerColor)
+    }
+
+    func testDisclosureCard031_summaryPartsAreSeparatedByOneRun() throws {
+        let card = makeCard(summary: Self.readings, isCollapsed: true)
+        let text = try summaryField(of: card).attributedStringValue
+        XCTAssertEqual(text.string, "5H: 23%  |  7D: 12%")
+        XCTAssertEqual(text.string.components(separatedBy: "  |  ").count, 2)
+        let range = (text.string as NSString).range(of: "  |  ")
+        let attributes = text.attributes(at: range.location, effectiveRange: nil)
+        XCTAssertEqual(attributes[.foregroundColor] as? NSColor, palette.tertiaryTextColor)
+        XCTAssertEqual(attributes[.font] as? NSFont,
+                       palette.theme.typography.style(.caption).nsFont(scaledSize: 13 * 0.85))
+    }
+
+    private static let warning = DisclosureCardView.StatusSymbol(
+        symbolName: "exclamationmark.triangle.fill", colorName: "yellow", accessibilityLabel: "Warning"
+    )
+
+    private func badgeView(of card: DisclosureCardView) throws -> NSImageView {
+        try XCTUnwrap(card.subviews.compactMap { $0 as? NSImageView }.first)
+    }
+
+    func testDisclosureCard032_statusBadgeIsHiddenWhenAbsent() throws {
+        XCTAssertTrue(try badgeView(of: makeCard(status: nil)).isHidden)
+    }
+
+    func testDisclosureCard033_statusIsASemiboldSymbolIcon() throws {
+        let card = makeCard(status: Self.warning)
+        let badge = try badgeView(of: card)
+        let named = NSImage(systemSymbolName: "exclamationmark.triangle.fill", accessibilityDescription: nil)
+        XCTAssertNotNil(named)
+        XCTAssertEqual(badge.image?.tiffRepresentation, named?.tiffRepresentation)
+        let diameter = DisclosureCardView.cornerBadgeDiameter(scaledSize: 13)
+        XCTAssertEqual(badge.symbolConfiguration, NSImage.SymbolConfiguration(pointSize: diameter, weight: .semibold))
+    }
+
+    func testDisclosureCard034_statusIsItsOwnAccessibilityElement() throws {
+        let badge = try badgeView(of: makeCard(status: Self.warning))
+        XCTAssertTrue(badge.isAccessibilityElement())
+        XCTAssertEqual(badge.accessibilityRole(), .image)
+        XCTAssertEqual(badge.accessibilityLabel(), "Warning")
+        XCTAssertEqual(badge.toolTip, "Warning")
+    }
+
+    func testDisclosureCard035_statusTintComesFromThePalette() throws {
+        let plain = DisclosureCardView.StatusSymbol(symbolName: "circle.fill", colorName: nil, accessibilityLabel: "x")
+        let blue = DisclosureCardView.StatusSymbol(symbolName: "circle.fill", colorName: "blue",
+                                                   accessibilityLabel: "x")
+        XCTAssertEqual(try badgeView(of: makeCard(status: plain)).contentTintColor, palette.secondaryTextColor)
+        XCTAssertEqual(try badgeView(of: makeCard(status: blue)).contentTintColor, palette.accentColor)
+    }
+
+    func testDisclosureCard036_badgeSitsOnTheVisibleCorner() throws {
+        let card = makeCard(status: Self.warning)
+        card.addContent(swatch())
+        host(card, width: 400)
+        let badge = try badgeView(of: card)
+        let box = badge.alignmentRect(forFrame: badge.frame)
+        let peak = DisclosureCardView.cornerPeakInset
+        XCTAssertEqual(peak, 10 - 10 / 2.0.squareRoot(), accuracy: 0.001)
+        XCTAssertEqual(box.midX, card.bounds.maxX - peak, accuracy: 0.5)
+        XCTAssertEqual(box.midY, card.bounds.maxY - peak, accuracy: 0.5)
+    }
+
+    func testDisclosureCard037_badgeDiameterIsBoundedByTheGutter() throws {
+        let card = makeCard(status: Self.warning, scaledSize: 13)
+        let badge = try badgeView(of: card)
+        let expected = min(ceil(13 * 1.3), scaled(14, 13) * 1.5)
+        XCTAssertEqual(DisclosureCardView.cornerBadgeDiameter(scaledSize: 13), expected)
+        for attribute in [NSLayoutConstraint.Attribute.width, .height] {
+            let size = try XCTUnwrap(badge.constraints.first {
+                $0.firstItem === badge && $0.firstAttribute == attribute
+            })
+            XCTAssertEqual(size.constant, expected)
+        }
+    }
+
+    func testDisclosureCard038_dimmingFadesTheWholeCard() {
+        XCTAssertEqual(makeCard(isDimmed: true).alphaValue, 0.55, accuracy: 0.001)
+        XCTAssertEqual(makeCard(isDimmed: false).alphaValue, 1.0, accuracy: 0.001)
+    }
+
+    func testDisclosureCard039_insetsScaleWithTextSize() throws {
+        try XCTSkipUnless(NSFont.systemFontSize == 13, "the vector assumes a 13pt system font")
+        let card = makeCard(summary: Self.readings, isCollapsed: false, scaledSize: 26)
+        card.addContent(swatch())
+        XCTAssertEqual(try stackConstraint(.leading, in: card).constant, 14, "padMastheadX")
+        XCTAssertEqual(try stackConstraint(.trailing, in: card).constant, -28, "padX")
+        XCTAssertEqual(try stackConstraint(.top, in: card).constant, 12, "padTitleY")
+        XCTAssertEqual(try stackConstraint(.bottom, in: card).constant, -24, "padY")
+        XCTAssertEqual(DisclosureCardView.mastheadGapFor(scaledSize: 26), 48, "mastheadGap")
+    }
+
+    func testDisclosureCard040_widthFloorIsTheSameFoldedOrOpen() throws {
+        func floorConstant(collapsed: Bool) throws -> (CGFloat, CGFloat) {
+            let card = makeCard(summary: Self.readings, isCollapsed: collapsed)
+            let wide = swatch(width: 600, height: 60)
+            card.addContent(wide)
+            host(card, width: 700)
+            let content = try contentStack(holding: wide)
+            return (try floorConstraint(of: card).constant, ceil(content.fittingSize.width))
+        }
+        let folded = try floorConstant(collapsed: true)
+        let open = try floorConstant(collapsed: false)
+        XCTAssertEqual(folded.0, open.0, accuracy: 0.5)
+        // Content is the wider row here, so the floor is it plus both gutters.
+        XCTAssertEqual(open.0, open.1 + scaled(7, 13) + scaled(14, 13), accuracy: 0.5)
+    }
+
+    func testDisclosureCard040b_aWiderMastheadSetsTheFloorInsteadOfTheContent() throws {
+        let card = makeCard(title: Self.longAddress, summary: Self.readings, isCollapsed: false)
+        card.addContent(swatch())
+        host(card, width: 700)
+        let title = try titleLine(of: card, title: Self.longAddress)
+        let trailing = try trailingLine(of: card)
+        let titleRow = ceil(title.fittingSize.width) + DisclosureCardView.mastheadGapFor(scaledSize: 13)
+            + ceil(trailing.fittingSize.width)
+        XCTAssertEqual(try floorConstraint(of: card).constant, titleRow + scaled(7, 13) + scaled(14, 13),
+                       accuracy: 0.5)
+    }
+
+    func testDisclosureCard041_widthFloorSitsJustUnderRequired() throws {
+        XCTAssertEqual(try floorConstraint(of: makeCard()).priority.rawValue, 999)
+    }
+
+    func testDisclosureCard042_widthFloorIsRemeasuredOnLayout() throws {
+        let card = makeCard(isCollapsed: true)
+        let content = NSView()
+        content.translatesAutoresizingMaskIntoConstraints = false
+        let width = content.widthAnchor.constraint(equalToConstant: 300)
+        width.isActive = true
+        content.heightAnchor.constraint(equalToConstant: 20).isActive = true
+        card.addContent(content)
+        let hosting = host(card, width: 700)
+        let before = try floorConstraint(of: card).constant
+
+        width.constant = 900
+        card.needsLayout = true
+        hosting.layoutSubtreeIfNeeded()
+        let stack = try contentStack(holding: content)
+        let after = try floorConstraint(of: card).constant
+        XCTAssertGreaterThan(after, before)
+        XCTAssertEqual(after, ceil(stack.fittingSize.width) + scaled(7, 13) + scaled(14, 13), accuracy: 0.5)
+
+        card.needsLayout = true
+        hosting.layoutSubtreeIfNeeded()
+        XCTAssertEqual(try floorConstraint(of: card).constant, after, accuracy: 0.5)
+    }
+
+    func testDisclosureCard043_themeIsAppliedAtConstructionAndOnChange() throws {
+        let manager = ThemeManager(storage: DisclosureCardThemeStorage(), appearanceDriver: nil)
+        let card = makeCard()
+        let layer = try XCTUnwrap(try surface(of: card).layer)
+        let first = manager.currentPalette.surfaceColor.cgColor
+        XCTAssertEqual(layer.backgroundColor, first)
+
+        manager.selectTheme(id: BuiltInThemes.nord.id)
+
+        let second = manager.currentPalette.surfaceColor.cgColor
+        XCTAssertNotEqual(first, second)
+        XCTAssertEqual(layer.backgroundColor, second)
+        withExtendedLifetime(manager) {}
+    }
+
+    func testDisclosureCard046_contentSpacingIsExposedAndRemeasured() throws {
+        let card = makeCard(isCollapsed: false)
+        let view = swatch(width: 300, height: 20)
+        card.addContent(view)
+        card.addContent(swatch(width: 300, height: 20))
+        card.contentSpacing = 20
+        let content = try contentStack(holding: view)
+        XCTAssertEqual(content.spacing, 20)
+        XCTAssertEqual(card.contentSpacing, 20)
+        XCTAssertEqual(try floorConstraint(of: card).constant,
+                       max(ceil(content.fittingSize.width), 0) + scaled(7, 13) + scaled(14, 13), accuracy: 0.5)
+    }
+
+    func testDisclosureCard051_confinementToTheUIThread() throws {
+        throw XCTSkip("DisclosureCardView is @MainActor, so off-thread use is rejected at build time; "
+            + "no test can express it")
     }
 }

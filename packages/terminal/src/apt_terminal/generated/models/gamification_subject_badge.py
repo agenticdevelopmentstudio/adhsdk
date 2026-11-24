@@ -47,11 +47,11 @@ class GamificationSubjectBadge:
         field_dict.update(
             {
                 "id": id,
-                "badgeId": badge_id,
+                "badge_id": badge_id,
                 "name": name,
                 "description": description,
                 "icon": icon,
-                "awardedAt": awarded_at,
+                "awarded_at": awarded_at,
             }
         )
 
@@ -62,7 +62,7 @@ class GamificationSubjectBadge:
         d = dict(src_dict)
         id = d.pop("id")
 
-        badge_id = d.pop("badgeId")
+        badge_id = d.pop("badge_id")
 
         name = d.pop("name")
 
@@ -70,7 +70,7 @@ class GamificationSubjectBadge:
 
         icon = d.pop("icon")
 
-        awarded_at = d.pop("awardedAt")
+        awarded_at = d.pop("awarded_at")
 
         gamification_subject_badge = cls(
             id=id,

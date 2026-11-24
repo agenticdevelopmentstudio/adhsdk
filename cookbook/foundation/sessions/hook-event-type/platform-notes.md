@@ -1,0 +1,7 @@
+
+- **SwiftUI**: Not used; the enum has no view layer, though Settings views iterate `allCases` to drive hook install and uninstall.
+- **Compose**: Port as a Kotlin `enum class` with a `rawValue` property, and `companion object` sets as `Set<String>`; `Map<String, Any?>` for `hookData`, read with `as? String` safe casts.
+- **React/Web**: Port as a string-literal union plus a frozen `Set<string>` per constant; read `hookData` as `Record<string, unknown>` and test `typeof value === "string"`; build `tableName` with a replace on uppercase letters that skips index 0.
+- **AppKit / UIKit**: The enum is Foundation-only and uses no AppKit or UIKit type, so an app embeds it unchanged. `tableName` iterates `Character.isUppercase`, which is Unicode-aware, so a port on another platform should pick the matching character test.
+- **WinUI 3**: Use a C# `enum` with a `[JsonStringEnumMemberName]` or a static `Dictionary<HookEventType, string>` for the raw values (a C# enum has no raw strings), `Enum.GetValues<HookEventType>()` for `allCases`, `HashSet<string>` constants (`FrozenSet<string>` on .NET 8) and `IReadOnlyDictionary<string, object?>` or `JsonElement` for `hookData`, checking `JsonValueKind.String` instead of `as? String`. `tableName` maps to `char.IsUpper` over `string`; return the three clock signals as a small enum (or an `int` as the source does). All of it is pure, so `static` methods in a `static class` suffice.
+

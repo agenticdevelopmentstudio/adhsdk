@@ -5,7 +5,7 @@ import AIPluginKit
 @MainActor
 extension UserSettings {
 
-    /// The ordered list of configured LLM providers shown in the LLM Providers
+    /// The ordered list of configured LLM providers shown in the AI Connections
     /// settings topic. Routed to the regular (non-secret) store.
     public static let aiProviderConfigurations = UserSetting<[AIProviderConfiguration]>(
         "aiplugin.configurations",

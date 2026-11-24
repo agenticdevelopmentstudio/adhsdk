@@ -114,7 +114,7 @@ export function UsersPane({
           // "New user" opens the create MODAL, never the inline blank editor (`must-create-in-modal`).
           actions={{ ...form.actions, onCreate: () => setNewOpen(true) }}
           api={{
-            path: "/customer/customers/{id}",
+            path: "/v1/customers/{id}",
             pathValues: { id: form.selectedId },
             title: "User API",
           }}

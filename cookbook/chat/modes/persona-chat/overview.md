@@ -1,0 +1,3 @@
+
+PersonaChat is a routing container component that dispatches to one of three chat interface modes based on the `mode` prop: `inline` (embedded chat box with adaptive sizing), `three-pane` (side-by-side conversation and details), or `mobile` (full-screen overlay). It only forwards its props (`backend`, `persona`, an optional `user`, an optional `welcomeMessage`, and the mode-specific props) to the selected layout; the layout owns the backend communication, the persona display and the welcome message. The component is the entry point for integrating different chat UI layouts into applications.
+

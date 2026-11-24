@@ -1,10 +1,14 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 6.4
 //
 // The Apple side of the semantic search parity spike: the same bundle, run
 // with ONNX Runtime and the swift-transformers tokenizer, checked against the
 // bundle's golden set on macOS and in the iOS simulator.
 
 import PackageDescription
+
+// Every dependency comes from the machine's one shared package folder,
+// installed by externalpackages at the version its list names.
+let shared = (Context.environment["HOME"] ?? "") + "/Library/Developer/SharedPackages"
 
 let package = Package(
     name: "EmbeddingParity",
@@ -13,8 +17,8 @@ let package = Package(
         .library(name: "EmbeddingParity", targets: ["EmbeddingParity"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/microsoft/onnxruntime-swift-package-manager", exact: "1.24.2"),
-        .package(url: "https://github.com/huggingface/swift-transformers", exact: "1.3.5"),
+        .package(path: shared + "/onnxruntime-swift-package-manager"),
+        .package(path: shared + "/swift-transformers"),
     ],
     targets: [
         .target(

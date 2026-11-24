@@ -6,13 +6,13 @@ secure storage enabled and is therefore stored through a keychain-backed
 storage provider.
 
 It specializes the text edit row
-(adhsdk://cookbook/ui/settings/rows/text-edit-view), overriding
+([adhsdk.ingredient.ui.settings.rows.text-edit-view](cookbook:c1787e74-2485-4d7b-a219-feb4c07cf97c)), overriding
 exactly one thing — it constructs a masking (dot-obscured) secure field in
 place of the plain field its base row would otherwise construct — so the
 entry is dot-masked. The text edit row's own row layout, theme-driven
 font/color styling, commit path, and view-model sync are out of this
 recipe's scope; only the delta this specialization adds — the masked field
 type and the ban on further specialization — is documented here. See
-adhsdk://cookbook/ui/settings/rows/text-edit-view for everything a
+[adhsdk.ingredient.ui.settings.rows.text-edit-view](cookbook:c1787e74-2485-4d7b-a219-feb4c07cf97c) for everything a
 caller instantiating this component also gets.
 

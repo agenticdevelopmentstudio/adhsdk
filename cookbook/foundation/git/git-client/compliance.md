@@ -1,15 +1,15 @@
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [timeout-handling](agenticdevelopercookbook://compliance/reliability#timeout-handling) | passed | Reliability |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
-| [secure-log-output](agenticdevelopercookbook://compliance/security#secure-log-output) | passed | Security |
-| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | partial | Security |
-| [no-pii-in-logs](agenticdevelopercookbook://compliance/privacy-and-data#no-pii-in-logs) | passed | Privacy and Data |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | passed | Reliability |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
+| [adc.check.security.secure-log-output](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b258657f-bb73-5491-9c70-0d14afdfa6ce) | passed | Security |
+| [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | partial | Security |
+| [adc.check.privacy-and-data.no-pii-in-logs](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/23bca2e1-dc0f-5ff4-beaf-03891ad48e6b) | passed | Privacy and Data |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 
 `separation-of-concerns` **passed**: process-spawning and accounting
 (`GitClient.execute`) is separate from parsing (`GitStatus`, `GitBranch`,
@@ -29,7 +29,9 @@ doc comment, leaving no orphaned process behind. `fault-tolerance`
 malformed record exactly one dropped entry rather than trapping the process
 — demonstrated directly by `recordWithNoPathIsSkipped` and
 `pathOfSeparatorsOnlyIsSkipped`. `secure-log-output` **passed**:
-`GitCommandLog` never logs standard output or standard error, and
+`GitCommandLog` never logs standard output or standard error to OSLog
+(its in-memory ring keeps a failed call's standard error, cut and
+URL-redacted), and
 `redactedArguments` keeps a `config` value out of the `.public` log line
 entirely. `input-sanitization` **partial**: `GitConfigEntry.isWellFormedKey`
 classifies a key shape for *redaction* purposes, but neither
@@ -41,7 +43,7 @@ argument position capable of carrying personal data (a `config` value) is
 redacted before it reaches the log, and `GitClientError.logDescription`
 withholds `standardError`, the launch `reason`, and the configured
 executable `path` from ever reaching `OSLog`. `no-hardcoded-strings`
-**failed**: all four `GitClientError.errorDescription` strings are hardcoded
+**failed**: all five `GitClientError.errorDescription` strings are hardcoded
 English with no lookup table or locale parameter anywhere in this component
 (see Localization) — an honestly-reported gap in the source, not a hidden
 one.

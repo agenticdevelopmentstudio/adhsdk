@@ -1,5 +1,8 @@
 name: AgenticDeveloperHubSDK
 options:
+  # XcodeGen writes the shared package folder with the home folder spelled out;
+  # this turns it back into $(HOME) so the tracked project names no user.
+  postGenCommand: python3 "${HOME}/Library/Developer/SharedPackages/.tools/externalpackages.py" portable AgenticDeveloperHubSDK.xcodeproj
   bundleIdPrefix: com.mikefullerton.agenticdeveloperhubsdk
   developmentLanguage: en
   deploymentTarget:
@@ -11,7 +14,7 @@ options:
 
 settings:
   base:
-    SWIFT_VERSION: "6.3"
+    SWIFT_VERSION: "6.4"
     SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
     GCC_TREAT_WARNINGS_AS_ERRORS: YES
     SWIFT_STRICT_CONCURRENCY: complete
@@ -27,6 +30,9 @@ settings:
     MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS: "gnu11 gnu++14"
     STRING_CATALOG_GENERATE_SYMBOLS: YES
     SWIFT_ENABLE_EXPLICIT_MODULES: NO
+    # One clang module cache per machine, not one per DerivedData folder:
+    # implicit modules (above) are keyed by hash and lock-safe to share.
+    MODULE_CACHE_DIR: $(HOME)/Library/Developer/Xcode/SharedModuleCache
     LM_FILTER_WARNINGS: YES
     OTHER_LDFLAGS: "$(inherited) -weak_framework AppIntents"
     CODE_SIGNING_ALLOWED: NO
@@ -57,65 +63,60 @@ projectReferences:
     path: ../AgenticDeveloperHubClient/AgenticDeveloperHubClient.xcodeproj
 
 packages:
+  # Every package comes from the machine's one shared folder, installed by
+  # externalpackages. A local package of the same identity also replaces
+  # CodeEditSourceEditor's own dependency on CodeEditLanguages.
   CodeEditLanguages:
-    url: https://github.com/CodeEditApp/CodeEditLanguages.git
-    exactVersion: "0.1.20"
+    path: ${HOME}/Library/Developer/SharedPackages/CodeEditLanguages
   CodeEditSourceEditor:
-    url: https://github.com/CodeEditApp/CodeEditSourceEditor.git
-    minVersion: "0.15.2"
-    maxVersion: "1.0.0"
+    path: ${HOME}/Library/Developer/SharedPackages/CodeEditSourceEditor
   SwiftTerm:
-    url: https://github.com/migueldeicaza/SwiftTerm
+    path: ${HOME}/Library/Developer/SharedPackages/SwiftTerm
     # TerminalSession reads Terminal.totalLinesTrimmed, which 1.13 and 1.14 lack.
     # 1.99 is the 2.0 API (no getTerminal(), dataReceived(slice:) unavailable), which
     # the terminal views do not build against, so the range stops before it.
-    minVersion: "1.20.0"
-    maxVersion: "1.99.0"
-  ModelContextProtocol:
-    url: https://github.com/modelcontextprotocol/swift-sdk
-    minVersion: "0.11.0"
-    maxVersion: "1.0.0"
   FlyingFox:
-    url: https://github.com/swhitty/FlyingFox
-    from: "0.20.0"
+    path: ${HOME}/Library/Developer/SharedPackages/FlyingFox
   KeyboardShortcuts:
-    url: https://github.com/sindresorhus/KeyboardShortcuts
-    from: "2.0.0"
+    path: ${HOME}/Library/Developer/SharedPackages/KeyboardShortcuts
   GRDB:
-    url: https://github.com/groue/GRDB.swift
-    from: "7.0.0"
+    path: ${HOME}/Library/Developer/SharedPackages/GRDB.swift
+  # Semantic search on the device (SemanticSearchStore): the ONNX Runtime
+  # that runs the embedding model, and the tokenizer that reads the bundle's
+  # pinned tokenizer.json (reached through SharedRuntime). Both exact: the parity spike proved these
+  # versions against the golden set, and a change re-runs it.
+  onnxruntime:
+    path: ${HOME}/Library/Developer/SharedPackages/onnxruntime-swift-package-manager
+  # MCP (Core) and swift-transformers' Tokenizers (SemanticSearchStore) both reach
+  # EventSource and NIO. Linked straight into two frameworks, each carries its own
+  # copy and dyld reports the classes implemented in both. This local package is one
+  # dynamic library holding them, linked by both. See SharedRuntime/Package.swift.
+  SharedRuntime:
+    path: SharedRuntime
   JSONRPC:
-    url: https://github.com/ChimeHQ/JSONRPC
-    from: "0.9.2"
+    path: ${HOME}/Library/Developer/SharedPackages/JSONRPC
   LanguageServerProtocol:
-    url: https://github.com/ChimeHQ/LanguageServerProtocol
-    from: "0.14.1"
+    path: ${HOME}/Library/Developer/SharedPackages/LanguageServerProtocol
   LanguageClient:
-    url: https://github.com/ChimeHQ/LanguageClient
-    from: "0.8.2"
+    path: ${HOME}/Library/Developer/SharedPackages/LanguageClient
   swift-openapi-runtime:
-    url: https://github.com/apple/swift-openapi-runtime
-    minVersion: "1.12.0"
-    maxVersion: "2.0.0"
+    path: ${HOME}/Library/Developer/SharedPackages/swift-openapi-runtime
   swift-http-types:
-    url: https://github.com/apple/swift-http-types
-    minVersion: "1.0.0"
-    maxVersion: "2.0.0"
+    path: ${HOME}/Library/Developer/SharedPackages/swift-http-types
   swift-openapi-urlsession:
-    url: https://github.com/apple/swift-openapi-urlsession
-    minVersion: "1.3.0"
-    maxVersion: "2.0.0"
+    path: ${HOME}/Library/Developer/SharedPackages/swift-openapi-urlsession
   Sparkle:
-    url: https://github.com/sparkle-project/Sparkle
-    from: "2.10.0"
+    path: ${HOME}/Library/Developer/SharedPackages/Sparkle
+  AppAuth:
+    path: ${HOME}/Library/Developer/SharedPackages/AppAuth-iOS
 
 settingGroups:
   # The targets that were the AgenticDeveloperHubSDK project until Phase 5
-  # folded it in. They keep the settings they always built with: Swift 5.10,
-  # minimal concurrency checking, and warnings that stay warnings.
+  # folded it in. They build in Swift 6 language mode with complete
+  # concurrency checking like everything else; warnings stay warnings.
   PersonaSettings:
-    SWIFT_VERSION: "5.10"
-    SWIFT_STRICT_CONCURRENCY: minimal
+    SWIFT_VERSION: "6.4"
+    SWIFT_STRICT_CONCURRENCY: complete
     SWIFT_TREAT_WARNINGS_AS_ERRORS: NO
     GCC_TREAT_WARNINGS_AS_ERRORS: NO
     ENABLE_MODULE_VERIFIER: NO
@@ -145,8 +146,8 @@ targets:
       - path: macOS/Features/AIChatWindow/ChatBackend.swift
         group: Core
     dependencies:
-      - package: ModelContextProtocol
-        product: MCP
+      - package: SharedRuntime
+        product: ADHSharedRuntime
       - target: AgenticDeveloperHubSDK-macOS
 
   AgenticDeveloperHubSDKLanguage:
@@ -164,8 +165,10 @@ targets:
         product: LanguageServerProtocol
       - package: LanguageClient
         product: LanguageClient
-    # Daemon-safe: text documents and language-server plumbing. Foundation plus
-    # the ChimeHQ LSP stack only; no AppKit. The AppKit face of a TextDocument
+      - sdk: JavaScriptCore.framework
+    # Daemon-safe: text documents, language-server plumbing and the TextMate
+    # syntax highlighter. Foundation, JavaScriptCore and the ChimeHQ LSP stack
+    # only; no AppKit. The AppKit face of a TextDocument
     # is TextDocumentStorage in AgenticDeveloperHubSDKMacOS, mirroring the
     # SemanticPalette / SemanticPalette+NSColor split.
 
@@ -218,9 +221,26 @@ targets:
           - "UI/Settings"
           - "Scripting"
           - "Features/BrowserPane/Automation/BrowserSnapshot.js"
+          - "Features/BrowserPane/Automation/AgentPage/AgentPageWalker.js"
+          - "Features/BrowserPane/BrowserActivationShield.js"
+          - "Features/BrowserPane/BrowserPageWordFilter.js"
+          - "Features/BrowserPane/HiddenItems/BrowserElementPicker.js"
+          - "Features/BrowserPane/HiddenItems/vendor/finder.js"
       - path: macOS/Features/BrowserPane/Automation/BrowserSnapshot.js
         buildPhase: resources
+      - path: macOS/Features/BrowserPane/Automation/AgentPage/AgentPageWalker.js
+        buildPhase: resources
+      - path: macOS/Features/BrowserPane/BrowserActivationShield.js
+        buildPhase: resources
+      - path: macOS/Features/BrowserPane/BrowserPageWordFilter.js
+        buildPhase: resources
+      - path: macOS/Features/BrowserPane/HiddenItems/BrowserElementPicker.js
+        buildPhase: resources
+      - path: macOS/Features/BrowserPane/HiddenItems/vendor/finder.js
+        buildPhase: resources
     dependencies:
+      - package: SharedRuntime
+        product: ADHSharedRuntime
       - target: AgenticDeveloperHubSDKCore
       - target: AgenticDeveloperHubSDKCoreUI
       - target: AgenticDeveloperHubSDKCoreMacOS
@@ -233,6 +253,7 @@ targets:
       - target: AgenticDeveloperHubSDKUI-macOS
       - target: AgenticDeveloperHubSDKMarkdown-macOS
       - target: AgenticDeveloperHubSDKDatabase
+      - target: AgenticDeveloperHubSDKIntegrations
       # `BrowserHistoryStore` sits on `BoundedDatabase` and reads GRDB rows.
       - package: GRDB
         product: GRDB
@@ -292,6 +313,60 @@ targets:
       - sdk: ColorSync.framework
       - sdk: IOKit.framework
 
+  # The Chrome Web Browser pane, over the Chromium Embedded Framework. A mixed
+  # target: an Objective-C++ bridge (Chromium/Bridge, Chromium/Private) wraps
+  # CEF's C++ API so the Swift half (Chromium/Sources) sees plain
+  # Objective-C. `cef.py stage` puts CEF's headers and the
+  # libcef_dll_wrapper.a it compiles in $(BUILT_PRODUCTS_DIR)/CEF before the
+  # compile; CEF itself is loaded at runtime (cef_load_library), never linked,
+  # and a host embeds it and the helper bundles with `cef.py embed`.
+  AgenticDeveloperHubSDKChromium:
+    type: framework
+    platform: macOS
+    sources:
+      - path: Chromium/Bridge
+        headerVisibility: public
+      - path: Chromium/Private
+        headerVisibility: project
+      - Chromium/Sources
+    preBuildScripts:
+      - name: Stage CEF
+        basedOnDependencyAnalysis: false
+        script: |
+          exec /usr/bin/python3 "$SRCROOT/../../../tools/apple/cef.py" stage \
+            --dest "$BUILT_PRODUCTS_DIR/CEF" --archs "$ARCHS"
+      - name: SwiftLint
+        basedOnDependencyAnalysis: false
+        script: |
+          if [[ "$(uname -m)" == "arm64" ]]; then
+            export PATH="/opt/homebrew/bin:$PATH"
+          fi
+          if which swiftlint >/dev/null; then
+            swiftlint lint --quiet --strict
+          else
+            echo "warning: SwiftLint not installed; brew install swiftlint to enable"
+          fi
+    settings:
+      base:
+        DEFINES_MODULE: YES
+        CLANG_ENABLE_OBJC_ARC: YES
+        CLANG_CXX_LANGUAGE_STANDARD: c++20
+        GCC_ENABLE_CPP_RTTI: NO
+        GCC_ENABLE_CPP_EXCEPTIONS: NO
+        GCC_PREPROCESSOR_DEFINITIONS: "$(inherited) NDEBUG=1 CEF_USE_SANDBOX=1"
+        # A system path, so CEF's headers' warnings under Xcode's warning set
+        # stay CEF's and warnings-as-errors still holds for this target's own
+        # code. The module (the public headers) holds no C++.
+        SYSTEM_HEADER_SEARCH_PATHS: "$(inherited) $(BUILT_PRODUCTS_DIR)/CEF"
+        LIBRARY_SEARCH_PATHS: "$(inherited) $(BUILT_PRODUCTS_DIR)/CEF/lib"
+        OTHER_LDFLAGS: "$(inherited) -weak_framework AppIntents -lcef_dll_wrapper"
+    dependencies:
+      - target: AgenticDeveloperHubSDKCore
+      - target: AgenticDeveloperHubSDKCoreUI
+      - target: AgenticDeveloperHubSDKCoreMacOS
+      - target: AgenticDeveloperHubSDKDatabase
+      - target: AgenticDeveloperHubSDKMacOS
+
   AgenticDeveloperHubSDKPermissionsUI:
     type: framework
     platform: macOS
@@ -334,6 +409,20 @@ targets:
     # The themed System Status window. AgenticDeveloperHubSDKMacOS for the window
     # controllers and the settings scroll host it reuses.
 
+  AgenticDeveloperHubSDKMenuBar:
+    type: framework
+    platform: macOS
+    templates:
+      - SwiftLint
+    sources:
+      - MenuBar
+    dependencies:
+      - target: AgenticDeveloperHubSDKCore
+    # The status-bar app driver for a daemon's menu bar app (StatusBarAppDelegate,
+    # MenuComposer and the stock sections), formerly agenticdaemon's MenuBarKit.
+    # AppKit only. It reads a daemon's /health through Core's DaemonHealthReport
+    # and never links DaemonKit, so the daemon side stays free of UI.
+
   AgenticDeveloperHubSDKScripting:
     type: framework
     platform: macOS
@@ -344,6 +433,130 @@ targets:
     # AppKit + Foundation only: the NSScriptCommand main-actor base and the
     # AppleScript runner, so an app can be scriptable without linking the
     # whole of AgenticDeveloperHubSDKMacOS.
+
+  AgenticDeveloperHubSDKNotifications:
+    type: framework
+    supportedDestinations: [macOS, iOS]
+    templates:
+      - SwiftLint
+    sources:
+      - Notifications
+    settings:
+      base:
+        SDKROOT: auto
+        MACOSX_DEPLOYMENT_TARGET: "26.0"
+        IPHONEOS_DEPLOYMENT_TARGET: "26.0"
+    # Foundation only: the Notice model, its wire coding and filter predicate.
+    # A daemon, a CLI and an iOS app can all link it.
+
+  AgenticDeveloperHubSDKNotificationsTests:
+    type: bundle.unit-test
+    platform: macOS
+    templates:
+      - SwiftLint
+    sources:
+      - Tests/AgenticDeveloperHubSDKNotificationsTests
+    dependencies:
+      - target: AgenticDeveloperHubSDKNotifications
+        embed: true
+        codeSign: true
+
+  AgenticDeveloperHubSDKNotificationsUI:
+    type: framework
+    platform: macOS
+    templates:
+      - SwiftLint
+    sources:
+      - NotificationsUI
+    dependencies:
+      - target: AgenticDeveloperHubSDKNotifications
+      - target: AgenticDeveloperHubSDKCore
+      - target: AgenticDeveloperHubSDKCoreUI
+      - target: AgenticDeveloperHubSDKMacOS
+      - target: AgenticDeveloperHubSDKUI-macOS
+      - sdk: UserNotifications.framework
+      # `NoticeHotkeys` declares its chords as `KeyboardShortcuts.Shortcut`.
+      - package: KeyboardShortcuts
+    # AppKit: the presentation center that routes notices to presenters, the
+    # non-activating NoticePanel, the card, and the toast and alert presenters.
+    # AgenticDeveloperHubSDKMacOS for ComposableSettings and menu targets;
+    # AgenticDeveloperHubSDKUI-macOS for ThemeManager and the themed views.
+
+  AgenticDeveloperHubSDKNotificationsUITests:
+    type: bundle.unit-test
+    platform: macOS
+    templates:
+      - SwiftLint
+    sources:
+      - Tests/AgenticDeveloperHubSDKNotificationsUITests
+    dependencies:
+      - package: KeyboardShortcuts
+      - target: AgenticDeveloperHubSDKNotificationsUI
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKNotifications
+        embed: true
+        codeSign: true
+      # Closure completion -- see the note in AgenticDeveloperHubSDKLanguageTests.
+      - target: AgenticDeveloperHubSDKMacOS
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKScripting
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKCoreMacOS
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKCoreUI
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKCore
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDK-macOS
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKUI-macOS
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKMarkdown-macOS
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKPermissions
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKPermissionsUI
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKDisplays
+        embed: true
+        codeSign: true
+      - target: AIPluginKit
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKLanguage
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKDatabase
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKSync
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKSyncGRDB
+        embed: true
+        codeSign: true
+      - package: GRDB
+        product: GRDB
+      # AgenticDeveloperHubSDKMacOS links Sparkle (AppUpdater); the test bundle loads
+      # its frameworks out of its own Frameworks directory, so Sparkle has to
+      # be there too — same "closure completion" reason as GRDB above.
+      - package: Sparkle
+        product: Sparkle
+      # AgenticDeveloperHubSDKMacOS links FlyingFox (MCPHTTPEndpoint); same closure
+      # completion as Sparkle above.
+      - package: FlyingFox
+        product: FlyingFox
 
   AgenticDeveloperHubSDKDatabase:
     type: framework
@@ -491,6 +704,83 @@ targets:
         IPHONEOS_DEPLOYMENT_TARGET: "26.0"
     # Daemon-safe: SyncStore implementation on BoundedDatabase (WAL pool).
 
+  # Semantic search, the Foundation half: the embedder protocol, task
+  # prefixes, bundle manifest and stamp, vector maths (Accelerate), the
+  # half-float codec, the device chunker and result fusion. No package
+  # dependencies, so anything can depend on it. Spec:
+  # docs/specs/ingredients/semantic-search.md.
+  AgenticDeveloperHubSDKSemanticSearch:
+    type: framework
+    supportedDestinations: [macOS, iOS]
+    templates:
+      - SwiftLint
+    sources:
+      - SemanticSearch
+    settings:
+      base:
+        SDKROOT: auto
+        MACOSX_DEPLOYMENT_TARGET: "14.0"
+        IPHONEOS_DEPLOYMENT_TARGET: "26.0"
+
+  AgenticDeveloperHubSDKSemanticSearchTests:
+    type: bundle.unit-test
+    platform: macOS
+    templates:
+      - SwiftLint
+    sources:
+      - Tests/AgenticDeveloperHubSDKSemanticSearchTests
+    dependencies:
+      - target: AgenticDeveloperHubSDKSemanticSearch
+        embed: true
+        codeSign: true
+
+  # Semantic search, the storage and model half: the ONNX Runtime embedder
+  # (bundle in, never downloaded), the GRDB vector table and FTS5 keyword
+  # index, and SemanticSearchStore over BoundedDatabase.
+  AgenticDeveloperHubSDKSemanticSearchStore:
+    type: framework
+    supportedDestinations: [macOS, iOS]
+    templates:
+      - SwiftLint
+    sources:
+      - SemanticSearchStore
+    dependencies:
+      - target: AgenticDeveloperHubSDKSemanticSearch
+      - target: AgenticDeveloperHubSDKDatabase
+      - package: GRDB
+        product: GRDB
+      - package: onnxruntime
+        product: onnxruntime
+      - package: SharedRuntime
+        product: ADHSharedRuntime
+      - sdk: libsqlite3.tbd
+    settings:
+      base:
+        # macOS 26 for the same reason as SyncGRDB: Database links Core on macOS.
+        SDKROOT: auto
+        MACOSX_DEPLOYMENT_TARGET: "26.0"
+        IPHONEOS_DEPLOYMENT_TARGET: "26.0"
+
+  AgenticDeveloperHubSDKSemanticSearchStoreTests:
+    type: bundle.unit-test
+    platform: macOS
+    templates:
+      - SwiftLint
+    sources:
+      - Tests/AgenticDeveloperHubSDKSemanticSearchStoreTests
+    dependencies:
+      - target: AgenticDeveloperHubSDKSemanticSearchStore
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKSemanticSearch
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKDatabase
+        embed: true
+        codeSign: true
+      - package: GRDB
+        product: GRDB
+
   AgenticDeveloperHubSDKSyncGRDBTests:
     type: bundle.unit-test
     platform: macOS
@@ -510,6 +800,209 @@ targets:
         codeSign: true
       - package: GRDB
         product: GRDB
+
+  # Hub sync client: the engine's SyncTransport over the client's ADHSyncAPI.
+  # Spec: cookbook/data/sync/hub-sync-transport.md.
+  AgenticDeveloperHubSDKHubSync:
+    type: framework
+    supportedDestinations: [macOS, iOS]
+    templates:
+      - SwiftLint
+    sources:
+      - HubSync
+    dependencies:
+      - target: AgenticDeveloperHubSDKSync
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubClient
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubAuth
+      - package: swift-openapi-runtime
+        product: OpenAPIRuntime
+      - package: swift-http-types
+        product: HTTPTypes
+    settings:
+      base:
+        SDKROOT: auto
+        MACOSX_DEPLOYMENT_TARGET: "26.0"
+        IPHONEOS_DEPLOYMENT_TARGET: "26.0"
+
+  # Hub Mail: the hub's Gmail tables mirrored into a local GRDB store, typed
+  # reads over them, and send through the hub's `send` action. No Gmail code.
+  # Spec: cookbook/integrations/hub-mail.md.
+  AgenticDeveloperHubSDKHubMail:
+    type: framework
+    supportedDestinations: [macOS, iOS]
+    templates:
+      - SwiftLint
+    sources:
+      - HubMail
+    dependencies:
+      - target: AgenticDeveloperHubSDKHubSync
+      - target: AgenticDeveloperHubSDKSync
+      - target: AgenticDeveloperHubSDKSyncGRDB
+      - target: AgenticDeveloperHubSDKDatabase
+      - package: GRDB
+        product: GRDB
+      - sdk: libsqlite3.tbd
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubClient
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubAuth
+      - package: swift-openapi-runtime
+        product: OpenAPIRuntime
+      - package: swift-http-types
+        product: HTTPTypes
+    settings:
+      base:
+        SDKROOT: auto
+        MACOSX_DEPLOYMENT_TARGET: "26.0"
+        IPHONEOS_DEPLOYMENT_TARGET: "26.0"
+
+  AgenticDeveloperHubSDKHubMailTests:
+    type: bundle.unit-test
+    platform: macOS
+    templates:
+      - SwiftLint
+    sources:
+      - Tests/AgenticDeveloperHubSDKHubMailTests
+    dependencies:
+      - target: AgenticDeveloperHubSDKHubMail
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKHubSync
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKSyncGRDB
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKSync
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKDatabase
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubClient
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubAuth
+        embed: true
+        codeSign: true
+      - package: GRDB
+        product: GRDB
+      - package: swift-openapi-runtime
+        product: OpenAPIRuntime
+      - package: swift-http-types
+        product: HTTPTypes
+
+  # The mail vocabulary every platform shares: the RPC (MailRequest,
+  # MailResponse, MailClient, MailSource) and the records it carries. Foundation
+  # and GRDB only, so iOS reads mail through the same client the macOS mail
+  # browser uses. Integrations re-exports it.
+  AgenticDeveloperHubSDKMail:
+    type: framework
+    supportedDestinations:
+      - macOS
+      - iOS
+    templates:
+      - SwiftLint
+    sources:
+      - Mail
+    dependencies:
+      - package: GRDB
+        product: GRDB
+    settings:
+      base:
+        SDKROOT: auto
+        MACOSX_DEPLOYMENT_TARGET: "26.0"
+        IPHONEOS_DEPLOYMENT_TARGET: "26.0"
+
+  AgenticDeveloperHubSDKHubMailBridge:
+    type: framework
+    supportedDestinations:
+      - macOS
+      - iOS
+    templates:
+      - SwiftLint
+    sources:
+      - HubMailBridge
+    dependencies:
+      - target: AgenticDeveloperHubSDKMail
+      - target: AgenticDeveloperHubSDKHubMail
+      # HTMLText: snippets and HTML-only bodies read as text.
+      - target: AgenticDeveloperHubSDK-macOS
+        destinationFilters: [macOS]
+      - target: AgenticDeveloperHubSDK-iOS
+        destinationFilters: [iOS]
+      # HubMailService: sign-in drives the mirror, so it reaches the session
+      # (HubAuth, one target per platform), the sync engine and the hub
+      # client's sync API.
+      - target: AgenticDeveloperHubSDKHubAuth-macOS
+        destinationFilters: [macOS]
+      - target: AgenticDeveloperHubSDKHubAuth-iOS
+        destinationFilters: [iOS]
+      - target: AgenticDeveloperHubSDKHubSync
+      - target: AgenticDeveloperHubSDKSync
+      - target: AgenticDeveloperHubSDKDatabase
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubClient
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubAuth
+      - package: swift-openapi-runtime
+        product: OpenAPIRuntime
+      - package: swift-http-types
+        product: HTTPTypes
+    settings:
+      base:
+        SDKROOT: auto
+        MACOSX_DEPLOYMENT_TARGET: "26.0"
+        IPHONEOS_DEPLOYMENT_TARGET: "26.0"
+
+  AgenticDeveloperHubSDKHubMailBridgeTests:
+    type: bundle.unit-test
+    platform: macOS
+    templates:
+      - SwiftLint
+    sources:
+      - Tests/AgenticDeveloperHubSDKHubMailBridgeTests
+    dependencies:
+      - target: AgenticDeveloperHubSDKHubMailBridge
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKHubAuth-macOS
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDK-macOS
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKHubMail
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKMail
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKHubSync
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKSyncGRDB
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKSync
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKDatabase
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubClient
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubAuth
+        embed: true
+        codeSign: true
+      - package: GRDB
+        product: GRDB
+      - package: swift-openapi-runtime
+        product: OpenAPIRuntime
+      - package: swift-http-types
+        product: HTTPTypes
+      - package: swift-openapi-urlsession
+        product: OpenAPIURLSession
+    settings:
+      base:
+        MACOSX_DEPLOYMENT_TARGET: "26.0"
 
   # Two targets, not one `supportedDestinations: [macOS, iOS]` target: this
   # framework depends on AgenticDeveloperHubSDK, which exposes only
@@ -596,7 +1089,60 @@ targets:
       - package: GRDB
         product: GRDB
 
-  # Activity capture and tracking, moved verbatim from Olylo's OlyloCore:
+  # Third-party service integrations (Gmail first): models, store, client, sync.
+  AgenticDeveloperHubSDKIntegrations:
+    type: framework
+    platform: macOS
+    templates:
+      - SwiftLint
+    sources:
+      - Integrations
+    dependencies:
+      - target: AgenticDeveloperHubSDKMail
+      - target: AgenticDeveloperHubSDKCore
+      - target: AIPluginKit
+      - target: AgenticDeveloperHubSDKDatabase
+      - package: GRDB
+        product: GRDB
+      - package: AppAuth
+        product: AppAuth
+    settings:
+      base:
+        MACOSX_DEPLOYMENT_TARGET: "26.0"
+
+  AgenticDeveloperHubSDKIntegrationsTests:
+    type: bundle.unit-test
+    platform: macOS
+    templates:
+      - SwiftLint
+    sources:
+      - path: Tests/AgenticDeveloperHubSDKIntegrationsTests
+        excludes:
+          - "Fixtures/**"
+    dependencies:
+      - target: AgenticDeveloperHubSDKMail
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKIntegrations
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKDatabase
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKCore
+        embed: true
+        codeSign: true
+      - target: AIPluginKit
+        embed: true
+        codeSign: true
+      # Closure completion -- see the note in AgenticDeveloperHubSDKLanguageTests.
+      - target: AgenticDeveloperHubSDK-macOS
+        embed: true
+        codeSign: true
+      - package: GRDB
+        product: GRDB
+
+  # Activity capture and tracking, moved verbatim from Olylo's Timeline:
   # the usage-capture pipeline (FocusTracker, UsageCollector, UsageStore),
   # the context-event model/store/triggers, the capture permission gate, and
   # usage sync. Two targets for the same reason as AgenticDeveloperHubSDKMarkdown:
@@ -679,6 +1225,8 @@ targets:
       - path: Tests/AgenticDeveloperHubSDKCoreTests/Partner/Fixtures
         buildPhase: resources
     dependencies:
+      - package: SharedRuntime
+        product: ADHSharedRuntime
       - target: AgenticDeveloperHubSDKCore
         embed: true
         codeSign: true
@@ -849,6 +1397,24 @@ targets:
         embed: true
         codeSign: true
 
+  AgenticDeveloperHubSDKMenuBarTests:
+    type: bundle.unit-test
+    platform: macOS
+    templates:
+      - SwiftLint
+    sources:
+      - Tests/AgenticDeveloperHubSDKMenuBarTests
+    dependencies:
+      - target: AgenticDeveloperHubSDKMenuBar
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKCore
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDK-macOS
+        embed: true
+        codeSign: true
+
   AgenticDeveloperHubSDKSystemMonitorUITests:
     type: bundle.unit-test
     platform: macOS
@@ -936,16 +1502,23 @@ targets:
         buildPhase: resources
       # The in-memory billing service, shared with the Core billing tests.
       - path: Tests/AgenticDeveloperHubSDKCoreTests/Billing/FakeBillingClient.swift
+      # The throwaway git repository fixture, shared with the Core git tests.
+      - path: Tests/AgenticDeveloperHubSDKCoreTests/Git/GitTestRepository.swift
       # Real claude output, shared with the Core stream-json tests.
       - path: Tests/AgenticDeveloperHubSDKCoreTests/Partner/ClaudeStreamFixtures.swift
       - path: Tests/AgenticDeveloperHubSDKCoreTests/Partner/Fixtures
         buildPhase: resources
     dependencies:
+      - package: SharedRuntime
+        product: ADHSharedRuntime
       - target: AgenticDeveloperHubSDKMacOS
         embed: true
         codeSign: true
       # The scripting tests import it directly (`@testable`), not through the
       # AgenticDeveloperHubSDKMacOS re-export, so its internal `reset()` is reachable.
+      - target: AgenticDeveloperHubSDKIntegrations
+        embed: true
+        codeSign: true
       - target: AgenticDeveloperHubSDKScripting
         embed: true
         codeSign: true
@@ -1019,6 +1592,9 @@ targets:
       # completion as Sparkle above.
       - package: FlyingFox
         product: FlyingFox
+      # The key-command tests drive `KeyboardShortcuts` directly (chord
+      # recording, registration), so the bundle links it itself.
+      - package: KeyboardShortcuts
 
   # A per-platform pair rather than one `supportedDestinations: [macOS, iOS]`
   # target, for the reason spelled out above AgenticDeveloperHubSDKMarkdown: this
@@ -1575,12 +2151,22 @@ aggregateTargets:
       - AgenticDeveloperHubSDKDisplays
       - AgenticDeveloperHubSDKScripting
       - AgenticDeveloperHubSDKMacOS
+      - AgenticDeveloperHubSDKChromium
       - AgenticDeveloperHubSDKSystemMonitor
       - AgenticDeveloperHubSDKSystemMonitorUI
+      - AgenticDeveloperHubSDKMenuBar
       - AgenticDeveloperHubSDKDatabase
+      - AgenticDeveloperHubSDKNotifications
+      - AgenticDeveloperHubSDKNotificationsUI
       - AgenticDeveloperHubSDKLanguage
       - AgenticDeveloperHubSDKSync
       - AgenticDeveloperHubSDKSyncGRDB
+      - AgenticDeveloperHubSDKHubSync
+      - AgenticDeveloperHubSDKMail
+      - AgenticDeveloperHubSDKHubMail
+      - AgenticDeveloperHubSDKHubMailBridge
+      - AgenticDeveloperHubSDKSemanticSearch
+      - AgenticDeveloperHubSDKSemanticSearchStore
       - AgenticDeveloperHubSDKMarkdown-macOS
       - AgenticDeveloperHubSDKHTDV-macOS
       - AgenticDeveloperHubSDKHubAuth-macOS
@@ -1588,6 +2174,7 @@ aggregateTargets:
       - AgenticDeveloperHubSDKHubService-macOS
       - AgenticDeveloperHubSDKHubUI-macOS
       - AgenticDeveloperHubSDKActivity-macOS
+      - AgenticDeveloperHubSDKIntegrations
 
   # The spec files this store under "macOS, iOS", and `AgenticDeveloperHubSDKMarkdown-iOS`
   # existed but was reachable from no aggregate and no scheme — so nothing ever
@@ -1599,8 +2186,15 @@ aggregateTargets:
   AgenticDeveloperHubSDKiOSAll:
     targets:
       - AgenticDeveloperHubSDKDatabase
+      - AgenticDeveloperHubSDKNotifications
       - AgenticDeveloperHubSDKSync
       - AgenticDeveloperHubSDKSyncGRDB
+      - AgenticDeveloperHubSDKHubSync
+      - AgenticDeveloperHubSDKMail
+      - AgenticDeveloperHubSDKHubMail
+      - AgenticDeveloperHubSDKHubMailBridge
+      - AgenticDeveloperHubSDKSemanticSearch
+      - AgenticDeveloperHubSDKSemanticSearchStore
       - AgenticDeveloperHubSDKMarkdown-iOS
       - AgenticDeveloperHubSDKHTDV-iOS
       - AgenticDeveloperHubSDKHubAuth-iOS
@@ -1622,6 +2216,7 @@ aggregateTargets:
       - AgenticDeveloperHubSDKDisplays
       - AgenticDeveloperHubSDKScripting
       - AgenticDeveloperHubSDKMacOS
+      - AgenticDeveloperHubSDKChromium
       - AIPluginKitTests
       - AgenticDeveloperHubSDKCoreMacOSTests
       - AgenticDeveloperHubSDKCoreTests
@@ -1636,14 +2231,30 @@ aggregateTargets:
       - AgenticDeveloperHubSDKSystemMonitorTests
       - AgenticDeveloperHubSDKSystemMonitorUI
       - AgenticDeveloperHubSDKSystemMonitorUITests
+      - AgenticDeveloperHubSDKMenuBar
+      - AgenticDeveloperHubSDKMenuBarTests
       - AgenticDeveloperHubSDKDatabase
       - AgenticDeveloperHubSDKDatabaseTests
+      - AgenticDeveloperHubSDKNotifications
+      - AgenticDeveloperHubSDKNotificationsTests
+      - AgenticDeveloperHubSDKNotificationsUI
+      - AgenticDeveloperHubSDKNotificationsUITests
       - AgenticDeveloperHubSDKLanguage
       - AgenticDeveloperHubSDKLanguageTests
       - AgenticDeveloperHubSDKSync
       - AgenticDeveloperHubSDKSyncTests
       - AgenticDeveloperHubSDKSyncGRDB
       - AgenticDeveloperHubSDKSyncGRDBTests
+      - AgenticDeveloperHubSDKHubSync
+      - AgenticDeveloperHubSDKMail
+      - AgenticDeveloperHubSDKHubMail
+      - AgenticDeveloperHubSDKHubMailTests
+      - AgenticDeveloperHubSDKHubMailBridge
+      - AgenticDeveloperHubSDKHubMailBridgeTests
+      - AgenticDeveloperHubSDKSemanticSearch
+      - AgenticDeveloperHubSDKSemanticSearchTests
+      - AgenticDeveloperHubSDKSemanticSearchStore
+      - AgenticDeveloperHubSDKSemanticSearchStoreTests
       - AgenticDeveloperHubSDKMarkdown-macOS
       - AgenticDeveloperHubSDKMarkdownTests
       - AgenticDeveloperHubSDKHTDV-macOS
@@ -1656,8 +2267,57 @@ aggregateTargets:
       - AgenticDeveloperHubSDKHubUITests
       - AgenticDeveloperHubSDKActivity-macOS
       - AgenticDeveloperHubSDKActivityTests
+      - AgenticDeveloperHubSDKIntegrations
+      - AgenticDeveloperHubSDKIntegrationsTests
 
 schemes:
+  AgenticDeveloperHubSDKChromium:
+    build:
+      targets:
+        AgenticDeveloperHubSDKChromium: all
+    run:
+      config: Debug
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+  AgenticDeveloperHubSDKNotifications:
+    build:
+      targets:
+        AgenticDeveloperHubSDKNotifications: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - AgenticDeveloperHubSDKNotificationsTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+  AgenticDeveloperHubSDKNotificationsUI:
+    build:
+      targets:
+        AgenticDeveloperHubSDKNotificationsUI: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - AgenticDeveloperHubSDKNotificationsUITests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
   AgenticDeveloperHubSDKDatabase:
     build:
       targets:
@@ -1726,6 +2386,104 @@ schemes:
     archive:
       config: Release
 
+  AgenticDeveloperHubSDKHubSync:
+    build:
+      targets:
+        AgenticDeveloperHubSDKHubSync: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - AgenticDeveloperHubSDKHubMailTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+  AgenticDeveloperHubSDKHubMailBridge:
+    build:
+      targets:
+        AgenticDeveloperHubSDKHubMailBridge: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - AgenticDeveloperHubSDKHubMailBridgeTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+  AgenticDeveloperHubSDKMail:
+    build:
+      targets:
+        AgenticDeveloperHubSDKMail: all
+    run:
+      config: Debug
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+  AgenticDeveloperHubSDKHubMail:
+    build:
+      targets:
+        AgenticDeveloperHubSDKHubMail: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - AgenticDeveloperHubSDKHubMailTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+  AgenticDeveloperHubSDKSemanticSearch:
+    build:
+      targets:
+        AgenticDeveloperHubSDKSemanticSearch: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - AgenticDeveloperHubSDKSemanticSearchTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+  AgenticDeveloperHubSDKSemanticSearchStore:
+    build:
+      targets:
+        AgenticDeveloperHubSDKSemanticSearchStore: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - AgenticDeveloperHubSDKSemanticSearchStoreTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
   AgenticDeveloperHubSDKMarkdown:
     build:
       targets:
@@ -1736,6 +2494,25 @@ schemes:
       config: Debug
       targets:
         - AgenticDeveloperHubSDKMarkdownTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+
+
+  AgenticDeveloperHubSDKIntegrations:
+    build:
+      targets:
+        AgenticDeveloperHubSDKIntegrations: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - AgenticDeveloperHubSDKIntegrationsTests
     profile:
       config: Release
     analyze:
@@ -1898,6 +2675,23 @@ schemes:
       config: Debug
       targets:
         - AgenticDeveloperHubSDKSystemMonitorTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+  AgenticDeveloperHubSDKMenuBar:
+    build:
+      targets:
+        AgenticDeveloperHubSDKMenuBar: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - AgenticDeveloperHubSDKMenuBarTests
     profile:
       config: Release
     analyze:

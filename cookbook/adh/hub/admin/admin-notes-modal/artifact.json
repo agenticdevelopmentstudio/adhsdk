@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "589babce-b66e-447f-8049-f81af380bbef",
     "title": "Admin Notes Modal",
-    "domain": "adhsdk://cookbook/adh/hub/admin/admin-notes-modal",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -25,17 +24,17 @@
       "list-detail"
     ],
     "depends-on": [
-      "adhsdk://recipes/dialog",
-      "adhsdk://recipes/list-with-details-pane",
-      "adhsdk://recipes/button",
-      "adhsdk://recipes/textarea"
+      "972be0d0-a9f5-45cd-a23b-c8329410b3d1",
+      "6acd3c5f-7bb5-4d6d-8c8d-141e1909cf73",
+      "f3c25236-d72f-4a7b-839a-b7f335b3acd0",
+      "1e323e69-44d2-4a15-a11e-22a68e8e6a8c"
     ],
     "related": [],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "e356f6745b19a21e",
+  "synced": "549dcfdb1488724c",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -54,7 +53,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

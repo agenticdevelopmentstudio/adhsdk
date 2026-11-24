@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "1bbc9593-4064-4e79-8bce-08b3cf00c13d",
     "title": "Open VSX Catalog",
-    "domain": "adhsdk://cookbook/workspace/extensions/registry/open-vsx-catalog",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -36,7 +35,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "40fcbfc356a85da5",
+  "synced": "94764ca7f549971a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -55,7 +54,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

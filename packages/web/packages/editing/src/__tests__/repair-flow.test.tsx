@@ -66,7 +66,7 @@ function acknowledge(): void {
 afterEach(cleanup)
 
 describe("loading data that fails the pane's own rules", () => {
-  it("asks first, repairs, confirms, and leaves a pane that works", async () => {
+  it("content-editing-037 asks first, repairs, confirms, and leaves a pane that works", async () => {
     const onSave = vi.fn(async () => {})
     render(<Harness record={BROKEN} onSave={onSave} />)
 
@@ -102,7 +102,7 @@ describe("loading data that fails the pane's own rules", () => {
     expect(saveButton()).toBeEnabled()
   })
 
-  it("prompts once, not once per render", async () => {
+  it("content-editing-040 prompts once, not once per render", async () => {
     const onSave = vi.fn(async () => {})
     const { rerender } = render(<Harness record={BROKEN} onSave={onSave} />)
     acknowledge()
@@ -113,7 +113,7 @@ describe("loading data that fails the pane's own rules", () => {
     expect(onSave).toHaveBeenCalledTimes(1)
   })
 
-  it("cannot be acknowledged twice while the repairing write is running", async () => {
+  it("content-editing-041 cannot be acknowledged twice while the repairing write is running", async () => {
     const gate = deferred<void>()
     const onSave = vi.fn(() => gate.promise)
     render(<Harness record={BROKEN} onSave={onSave} />)
@@ -125,7 +125,7 @@ describe("loading data that fails the pane's own rules", () => {
     expect(onSave).toHaveBeenCalledTimes(1)
   })
 
-  it("keeps the repaired values in the draft when the write is refused", async () => {
+  it("content-editing-042 keeps the repaired values in the draft when the write is refused", async () => {
     const onSave = vi
       .fn<(values: Team) => Promise<void>>()
       .mockRejectedValueOnce(new Error("Backend said no."))
@@ -147,7 +147,7 @@ describe("loading data that fails the pane's own rules", () => {
     expect(onSave).toHaveBeenLastCalledWith({ ...BROKEN, identifier: "adh.participants" })
   })
 
-  it("refuses to save a repair that produced another invalid value", async () => {
+  it("content-editing-043 refuses to save a repair that produced another invalid value", async () => {
     const spy = vi.spyOn(console, "error").mockImplementation(() => {})
     const fields = {
       name: text({ label: "Name" }),
@@ -183,7 +183,7 @@ describe("loading data that fails the pane's own rules", () => {
     expect(screen.queryByTestId("alert")).not.toBeInTheDocument()
   })
 
-  it("sends the repair write to onRepair when the caller separates the two", async () => {
+  it("content-editing-044 sends the repair write to onRepair when the caller separates the two", async () => {
     // `onSave` on a real pane often does more than persist — closes the pane,
     // advances a wizard, toasts "Saved". None of that is right for a write the
     // user did not ask for, so a caller can hand the repair its own narrower
@@ -211,7 +211,7 @@ describe("loading data that fails the pane's own rules", () => {
 })
 
 describe("cancelling out of a repair", () => {
-  it("asks again rather than leaving the pane sitting on data it rejects", async () => {
+  it("content-editing-045 asks again rather than leaving the pane sitting on data it rejects", async () => {
     // Cancel puts the BASELINE back — and after a refused repair write the
     // baseline is still the broken row. With the prompt spent, the pane would sit
     // on data its own rules reject, Save grey, nothing on screen: the exact dead
@@ -264,7 +264,7 @@ describe("the repair prompt on the PLATFORM alert, not the test one", () => {
     )
   }
 
-  it("does not write when Escape is pressed on the prompt", async () => {
+  it("content-editing-038 does not write when Escape is pressed on the prompt", async () => {
     const onSave = vi.fn(async () => {})
     render(realHostPane(onSave))
 
@@ -276,7 +276,7 @@ describe("the repair prompt on the PLATFORM alert, not the test one", () => {
     expect(onSave).not.toHaveBeenCalled()
   })
 
-  it("offers no ✕ on the prompt, so there is no pointer dismissal either", async () => {
+  it("content-editing-039 offers no ✕ on the prompt, so there is no pointer dismissal either", async () => {
     render(realHostPane(vi.fn(async () => {})))
     await screen.findByText("This data needs some repair and will be saved.")
     expect(screen.queryByRole("button", { name: /^close$/i })).not.toBeInTheDocument()

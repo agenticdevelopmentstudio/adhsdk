@@ -1,0 +1,9 @@
+
+- **Empty HTML string**: If `html=""` is passed, the component renders an empty element with prose classes applied. Expected behavior: a visually empty container with no content.
+- **HTML without semantic structure**: If `html` contains only inline text with no paragraph or heading tags, the text is rendered directly. Expected behavior: text appears unstyled (prose classes only style semantic elements).
+- **Very large HTML documents**: Large documents with thousands of elements may impact rendering performance. No specific size limit is enforced; the browser's DOM rendering performance applies.
+- **HTML with event handlers**: If the rendered HTML includes inline event-handler attributes (e.g., `onclick`, `onerror`), they DO fire — inline handler attributes execute when the browser parses markup inserted this way, unlike `<script>` content. Expected behavior: hosts MUST sanitize any HTML that is not fully trusted before passing it to DocArticle; the component performs no sanitization itself (see **unescaped-html-rendering**).
+- **HTML with script tags**: If the rendered HTML includes `<script>` tags, they MUST NOT execute. Expected behavior: unescaped rendering inserts script tags as inert DOM elements without executing them.
+- **Missing html prop**: `html` is a required `string` prop, so TypeScript prevents omitting it at compile time. If the type system is bypassed and `html` is `undefined` or `null` at runtime, the component renders an empty element, since no `innerHTML` is set for a nullish value.
+- **HTML with inline styles conflicting with prose**: If rendered HTML includes inline `style` attributes that conflict with prose classes (e.g., `<p style="color: red;">`), inline styles take precedence in CSS specificity. Expected behavior: inline styles override prose classes.
+

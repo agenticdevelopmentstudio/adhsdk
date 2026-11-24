@@ -1,0 +1,41 @@
+
+- **prose-paragraphs**: `prose` MUST return one `<p>` element per entry of the list it is given, in the same order.
+- **prose-keys**: Each `<p>` that `prose` returns MUST carry its list index as its key.
+- **prose-empty**: `prose` MUST return an empty list when given an empty list.
+- **render-block-kind-dispatch**: `renderBlock` MUST select the component to render from the block's `kind`.
+- **render-block-key**: `renderBlock` MUST pass the `key` argument it is given as the key of the element it returns.
+- **render-lede**: For `Lede`, `renderBlock` MUST render a Lede whose children are the block's `children`.
+- **render-trust**: For `Trust`, `renderBlock` MUST render a Trust whose `items` are the block's `items`.
+- **render-cards-flags**: For `Cards`, `renderBlock` MUST pass the block's `pair`, `trio` and `wide` flags through to the Cards component.
+- **render-cards-card**: For `Cards`, `renderBlock` MUST render one Card per entry of `items`, passing the entry's `kicker` and `title` unchanged.
+- **render-cards-body**: For `Cards`, `renderBlock` MUST render each card body through `prose`.
+- **render-cards-icon**: For `Cards`, `renderBlock` MUST pass a card's `icon` to Card as the path `/icons/<icon>.svg`, and MUST pass no icon when the card has none.
+- **render-points**: For `Points`, `renderBlock` MUST pass the block's `entries` and `ordered` flag through to Points.
+- **render-code**: For `Code`, `renderBlock` MUST render a Code whose `text` is the block's `text`.
+- **render-shot-fields**: For `Shot`, `renderBlock` MUST pass the block's `title` and `caption` to Shot.
+- **render-shot-media**: For `Shot` with a `src`, `renderBlock` MUST pass Shot an `<img>` as `media`, whose source is `/screenshots/<src>.png` and whose `alt` text is the block's `caption`.
+- **render-shot-placeholder**: For `Shot` with no `src`, `renderBlock` MUST NOT pass `media`, so that Shot draws its own placeholder frame.
+- **render-shot-pending-label**: For `Shot`, `renderBlock` MUST pass the `pendingLabel` argument it is given to Shot as `pendingLabel`.
+- **render-shot-default-label**: When no `pendingLabel` argument is given, `renderBlock` MUST use the text `Screenshot coming soon`.
+- **render-table**: For `Table`, `renderBlock` MUST pass the block's `caption`, `columns` and `rows` through to Table.
+- **render-status-pill**: For `StatusPill`, `renderBlock` MUST render a StatusPill with the block's `free` flag and the block's `children` as its content.
+- **render-rule**: For `Rule`, `renderBlock` MUST pass the block's `steps` through to Rule.
+- **render-stats**: For `Stats`, `renderBlock` MUST pass the block's `entries` through to Stats.
+- **render-versus**: For `Versus`, `renderBlock` MUST pass the block's `them` and `us` sides through to Versus.
+- **render-chips**: For `Chips`, `renderBlock` MUST pass the block's `entries` and `soon` flag through to Chips.
+- **render-checklist**: For `Checklist`, `renderBlock` MUST pass the block's `groups` through to Checklist.
+- **render-faq-entries**: For `Faq`, `renderBlock` MUST pass each entry's `question` and `open` flag unchanged.
+- **render-faq-answer**: For `Faq`, `renderBlock` MUST render each entry's `answer` through `prose`.
+- **render-closer**: For `Closer`, `renderBlock` MUST render a Closer with the block's `title` and a body rendered through `prose`.
+- **render-cta-buttons**: For `Cta`, `renderBlock` MUST render one Btn per entry of `buttons`, with the entry's `href`, `variant` and `label` as its link target, variant and content.
+- **render-roadmap**: For `Roadmap`, `renderBlock` MUST render a Roadmap with the block's `eyebrow`, whose children are each child block rendered by `renderBlock`.
+- **render-roadmap-pending-label**: For `Roadmap`, `renderBlock` MUST hand the `pendingLabel` it was given to every nested `renderBlock` call, so a Shot nested in a Roadmap is worded the same as one outside it.
+- **render-roadmap-keys**: For `Roadmap`, `renderBlock` MUST key each nested child by its index in `children`.
+- **render-exhaustive**: `renderBlock` MUST be written so that a `kind` added to `LandingBlock` without a matching case is a compile-time type error at the point of the switch.
+- **render-unknown-kind**: For a block whose `kind` matches no case at runtime, `renderBlock` MUST return that block value itself, unrendered. This is the source's behavior: the exhaustiveness check is a type check, not a runtime guard.
+- **index-rows-shape**: `indexRows` MUST return one row per entry of `page.sections`, in section order, each row an `href` and a `label`.
+- **index-rows-href**: `indexRows` MUST set each row's `href` to `#` followed by the section's `id`.
+- **index-rows-label**: `indexRows` MUST set each row's `label` to the section's `eyebrow`.
+- **index-rows-no-hero**: `indexRows` MUST NOT return a row for the hero, because the browser's Home key already reaches the top of the page.
+- **server-only**: The module MUST NOT introduce a client-component boundary, so that it stays inside the server-safe barrel.
+

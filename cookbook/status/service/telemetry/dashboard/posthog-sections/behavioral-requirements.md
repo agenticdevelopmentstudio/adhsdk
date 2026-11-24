@@ -1,0 +1,26 @@
+
+- **query-per-section**: Each section loader MUST issue its queries through `hogqlRows` with a 45,000 ms timeout and no other transport.
+- **failure-throws**: When a query fails, the loader MUST throw an `Error` with the message `PostHog: <error>`, so a failed query fails the section instead of reading as no traffic.
+- **closed-inputs**: A query MUST interpolate only constants, a `Date`-derived time, or a name from a closed list, and MUST NOT interpolate any request string.
+- **named-properties**: A query MUST select named properties, never `properties` as a whole.
+- **production-hosts**: Every query MUST apply the `PRODUCTION_HOSTS` filter (see Configuration for its patterns).
+- **utc-only**: Every bucket expression (`toStartOfHour` or `toStartOfDay`) and the window lower bound (`toDateTime`) MUST name the `'UTC'` zone, so rows land in the window's buckets whatever zone the PostHog project uses.
+- **bucket-unit**: `bucketStart(unit)` MUST be `toStartOfHour(timestamp, 'UTC')` for `hour` and `toStartOfDay(timestamp, 'UTC')` otherwise.
+- **since-bound**: `since(window)` MUST be `timestamp >= toDateTime('<UTC instant as YYYY-MM-DD HH:MM:SS>', 'UTC')` from the window's `since` date.
+- **row-caps**: The traffic, dimension, path and error-detail queries MUST be limited to 5,000 rows, and the vitals and site-health queries to 200 rows.
+- **one-at-a-time**: The process MUST NOT have two HogQL queries in flight at once, including queries from different sections loading together and from the monitor worker thread that adopted the shared lock state, because the PostHog API returns 503 under concurrent load. The rule is kept by `hogqlRows` in the fetcher ([adhsdk.ingredient.status.service.telemetry.fetchers](cookbook:8648272e-2da3-46fc-b9e8-5148dacdbcff)) through a lease that lapses one second after its holder's timeout, so a holder that is terminated cannot block later queries.
+- **traffic-shape**: `shapeTraffic(rows, buckets)` MUST read rows as host, bucket, pageviews, sessions; return `totals`, `pageviews` and `sessions` series aligned to `buckets`; and return `sites` with per-host `series`, `pageviews` and `sessions`, ordered by `pageviews` descending then host name.
+- **traffic-alignment**: A point whose timestamp is not on the bucket axis, or unreadable, MUST be dropped, and a bucket with no point MUST be zero. `totals` and every per-site `pageviews` and `sessions` figure MUST be summed from the aligned series, so a dropped point is in no figure at all.
+- **dimension-shape**: `shapeDimensions` MUST read rows as host, device, browser, country, referrer, pageviews.
+- **dimension-blank-labels**: `shapeDimensions` MUST label a blank host `(unknown)`, a blank device, browser or country `Unknown`, and a blank referrer `$direct`.
+- **dimension-truncated**: `shapeDimensions` MUST set `truncated` when the row count reaches `DIMENSION_ROW_LIMIT`.
+- **paths-shape**: `loadPaths` MUST return rows of `host`, `path` and `pageviews`, with host `(unknown)` and path `/` for blanks.
+- **vitals-shape**: `shapeVitals` MUST read rows as host, samples, lcp, inp, cls, fcp (each the 75th percentile) and MUST keep a vital with no value as null, never zero.
+- **health-shape**: `shapeHealth` MUST read rows as host, errors, requests, failures, p95 milliseconds, with `p95Ms` null when absent.
+- **failure-definition**: A failed request MUST be an `http_request` whose status is 500 or above, or 0 (no response).
+- **site-detail-sequence**: `loadSiteErrorDetail` MUST run its three queries (days, errors, requests) one after another, so the first failure ends the section without spending the other scans.
+- **site-detail-shape**: It MUST return `buckets` (the window's), `days` (per host `errors` and `failures`, zero-filled and aligned), `errors` rows of host, name, feature, step, boundary, page, count, lastSeen, and `requests` rows of host, status, method, path, count, lastSeen. Fields the event did not report MUST be null; a missing host MUST read `(unknown)`, a missing error name `(unnamed)` and a missing request path `(unknown)`.
+- **site-detail-truncated**: `truncated` MUST be true when any of the three queries returned 5,000 rows.
+- **metric-coercion**: Counts MUST be read with `toMetricValue`, which accepts a finite number or a numeric string, and a non-numeric value MUST count as zero (or null for the nullable vitals and p95 fields).
+- **per-site-health-source**: Per-site health MUST come from PostHog's `error_reported` and `http_request` events and MUST NOT query GlitchTip for it.
+

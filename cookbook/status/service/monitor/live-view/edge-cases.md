@@ -1,0 +1,9 @@
+
+- **Null and empty input**: A null, undefined or empty clock in `snapshotFreshness` returns `"fresh"` — MUST. An empty `services` array returns `[]` monitors and `thresholdDays` `7` — MUST. An empty `phaseConfirmedAt` falls back to `createdAt` — MUST.
+- **Boundary values**: A freshness lag exactly equal to the window is `"fresh"`, and exactly three windows is `"stale"` (both comparisons are strict) — MUST. A deploy exactly one window past confirmation is still believed (`>` is strict) — MUST. A service down for exactly `thresholdMs` is selected (`<` skips, so equal is included) — MUST. A `probeIntervalMs` of `0`, null or undefined uses the floor — MUST.
+- **Concurrent access**: Not applicable — every function is pure over its arguments with no shared state, and the runtime is single-threaded JavaScript.
+- **Error states**: Not applicable — no function performs I/O, throws or catches. Unparseable dates are handled by value: `snapshotFreshness` reads fresh (a banner is never raised on NaN), `deployUnconfirmed` fails closed (not believed), and `selectStaleMonitors` skips the row.
+- **Offline or disconnected state**: Not applicable — the module touches no network. Its freshness verdict is the signal that the data has stopped moving when a poller or the SSE stream stops; the data clock lags the re-stamped read clock.
+- **Unparseable clock asymmetry**: An unparseable data or read clock reads fresh, yet an unparseable deploy clock reads unconfirmed; this opposite direction is deliberate in the source comments (a banner must not rise on NaN, a progress claim must not rest on one) — MUST.
+- **Display older than the snapshot**: A client may keep showing a snapshot after the stream stalls; `deployUnconfirmedAt` is the deadline it can age on; this module only publishes the deadline and places no requirement on the display.
+

@@ -12,6 +12,20 @@ enum AISummariesPluginControls {
     /// Empty selection == the daemon's zero-config claude_cli path.
     static let defaultProviderValue = ""
 
+    /// A group holding the summaries on/off switch alone, for the panels that
+    /// offer it beside their own settings (Coding Projects, Sessions,
+    /// Conversations). Every copy writes the one setting.
+    static func makeSummariesGroup() -> ComposableSettings.GroupView {
+        let group = ComposableSettings.GroupView(withTitle: "AI Summaries")
+        group.addSettingSubview(ComposableSettings.CheckboxView(
+            with: ComposableSettings.ViewModel<Bool>(
+                title: enableToggleTitle,
+                setting: UserSettings.stenographerAISummariesEnabled
+            )
+        ))
+        return group
+    }
+
     /// A picker bound to the summaries selection. The caller must retain it.
     static func makePicker(service: any StenographerDaemonService) -> DaemonProviderPickerView {
         DaemonProviderPickerView(

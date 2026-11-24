@@ -6,6 +6,7 @@ import AgenticDeveloperHubSDKUI
 import AgenticDeveloperHubSDKCore
 import AgenticDeveloperHubSDKCoreMacOS
 import AgenticDeveloperHubSDKLanguage
+import LanguageServerProtocol
 
 /// One editor inside one pane of one tab.
 ///
@@ -30,6 +31,19 @@ public final class DocumentEditorViewController: NSViewController {
     /// The project root the breadcrumb reads its crumbs relative to.
     private let rootURL: URL
     private let breadcrumb: BreadcrumbView
+
+    /// Every file this editor has shown, for the `‹ ›` before the breadcrumb.
+    /// Per editor, because an editor is its tab's document: each open pushes,
+    /// and stepping back or forward moves along the trail without pushing.
+    /// Capped: the trail's menu is rebuilt, one row per entry, on every click.
+    private var history = NavigationHistory<URL>(limit: DocumentEditorViewController.historyLimit)
+
+    /// The most files an editor's trail, and so its menu, holds.
+    static let historyLimit = 50
+
+    /// The `‹ ›` that walks `history`, first in the row above the editor.
+    /// Internal so a test can read its segments.
+    let backForward = BackForwardControl(showsHistoryMenu: true)
 
     /// Fires when the displayed file changes, so the tab bar can retitle.
     public var onTitleChange: (() -> Void)?
@@ -56,9 +70,45 @@ public final class DocumentEditorViewController: NSViewController {
     /// selection is the one place that decides what is open.
     public var onOpenRequest: ((URL) -> Void)?
 
+    /// The file shown, whichever editor shows it: the code editor reads
+    /// `selection`, the Markdown editor does not, so neither alone is the answer.
+    private var displayedURL: URL?
+
+    /// Markdown files open in the app's Markdown editor — the same one
+    /// Notations uses — rather than the code editor. Created on first use;
+    /// hidden while any other file is shown.
+    private var markdownEditor: MarkdownPaneViewController?
+    private var markdownDocument: TextDocument?
+    private var markdownLoad: Task<Void, Never>?
+    private weak var codeEditorView: NSView?
+    private weak var editorContainer: NSView?
+    /// The bar row; the Markdown editor's layout control joins it, at the end.
+    private weak var navigationRow: NSStackView?
+    /// Where the editors sit inside their slot: the pane's content spacing
+    /// off its edges. The bar above is not inside it, so it runs edge to edge.
+    private let editorContentGuide = NSLayoutGuide()
+    /// Top, leading, bottom, trailing of `editorContentGuide`.
+    private var editorSpacingConstraints: [NSLayoutConstraint] = []
+    private var paneSpacing = Spacing()
+
+    /// Opens Markdown files in one pane on the preview, whatever layout was
+    /// last chosen anywhere else and without changing that choice. Set by a
+    /// Document window, where a file opened from Finder is first of all read.
+    public var opensMarkdownOnSinglePreview = false {
+        didSet {
+            guard opensMarkdownOnSinglePreview, !oldValue else { return }
+            markdownEditor?.open(in: .singlePane, on: .preview)
+        }
+    }
+
     public var fileURL: URL? {
-        get { selection.selectedNode?.url }
+        get { displayedURL }
         set { show(newValue, persist: true) }
+    }
+
+    /// Keeps the breadcrumb inside `rootURL`, as a project's editor does.
+    public var confinesBreadcrumbToRoot = false {
+        didSet { breadcrumb.confiningRoots = confinesBreadcrumbToRoot ? [rootURL] : [] }
     }
 
     public init(
@@ -74,9 +124,14 @@ public final class DocumentEditorViewController: NSViewController {
         self.saveScheduler = saveScheduler
         self.languageServices = languageServices
         self.rootURL = rootURL
-        self.breadcrumb = BreadcrumbView(rootURL: rootURL)
+        self.breadcrumb = BreadcrumbView(rootURL: rootURL, style: .homeRelative)
         super.init(nibName: nil, bundle: nil)
         breadcrumb.onSelect = { [weak self] url in self?.onOpenRequest?(url) }
+        backForward.controlSize = .small
+        backForward.accessibilityID("document.back-forward")
+        backForward.onBack = { [weak self] in self?.goBack() }
+        backForward.onForward = { [weak self] in self?.goForward() }
+        backForward.historyMenu = { [weak self] in self?.makeHistoryMenu() }
         optionsObserver = options.objectWillChange.sink { [weak self] _ in
             self?.refreshOptionRows()
         }
@@ -100,7 +155,64 @@ public final class DocumentEditorViewController: NSViewController {
         show(url, persist: false)
     }
 
-    private func show(_ url: URL?, persist: Bool) {
+    /// Whether there is an earlier file in this editor's trail.
+    public var canGoBack: Bool { history.canGoBack }
+
+    /// Whether a back step has left a later file to return to.
+    public var canGoForward: Bool { history.canGoForward }
+
+    /// Shows the previous file in this editor's trail, without pushing it.
+    public func goBack() {
+        guard let url = history.goBack() else { return }
+        show(url, persist: true, recordsHistory: false)
+    }
+
+    /// Shows the next file in this editor's trail, without pushing it.
+    public func goForward() {
+        guard let url = history.goForward() else { return }
+        show(url, persist: true, recordsHistory: false)
+    }
+
+    /// The files in this editor's trail, oldest first, and which is showing.
+    public var historyURLs: [URL] { history.entries }
+    public var historyIndex: Int? { history.currentIndex }
+
+    /// Shows the file at `index` of the trail, without pushing it.
+    public func goToHistory(at index: Int) {
+        guard index != history.currentIndex, let url = history.go(to: index) else { return }
+        show(url, persist: true, recordsHistory: false)
+    }
+
+    /// The trail as a menu, most recent first, the file showing checked.
+    func makeHistoryMenu() -> NSMenu {
+        let menu = NSMenu()
+        let palette = view.resolvedThemeScope.palette
+        for (index, url) in history.entries.enumerated().reversed() {
+            let item = NSMenuItem(
+                title: url.lastPathComponent,
+                action: #selector(historyItemChosen(_:)),
+                keyEquivalent: "")
+            item.target = self
+            item.tag = index
+            item.state = index == history.currentIndex ? .on : .off
+            item.toolTip = url.path
+            // The breadcrumb's tinted symbol for the same file, and no disk
+            // read: `hasDirectoryPath` is the URL's own spelling.
+            item.image = BreadcrumbMenu.icon(for: url, isDirectory: url.hasDirectoryPath, palette: palette)
+            menu.addItem(item)
+        }
+        return menu
+    }
+
+    @objc private func historyItemChosen(_ sender: NSMenuItem) {
+        goToHistory(at: sender.tag)
+    }
+
+    /// `recordsHistory` is false only for a step along the trail itself; every
+    /// other way a file arrives — the tree, a breadcrumb, go-to-definition, a
+    /// restore — is a new place, and pushes. Emptying the editor pushes
+    /// nothing: there is nowhere to go back *to* in an empty editor.
+    private func show(_ url: URL?, persist: Bool, recordsHistory: Bool = true) {
         // Asked rather than asserted. Every caller here hands over a bare URL —
         // a restored path, a breadcrumb choice, a go-to-definition target, the
         // tree's own open request — and a directory is among the things they can
@@ -108,14 +220,110 @@ public final class DocumentEditorViewController: NSViewController {
         // item, and so is a folder chosen from a breadcrumb's popover. Told it
         // was a file, `FileEditorView.openableNode` let it through and the
         // editor read a directory off disk.
-        selection.selectedNode = url.map {
+        displayedURL = url
+        let isMarkdown = url.map { !Self.isDirectory($0) && Self.isMarkdown($0) } ?? false
+        selection.selectedNode = isMarkdown ? nil : url.map {
             FileTreeNode(url: $0, isDirectory: Self.isDirectory($0))
         }
+        showMarkdown(isMarkdown ? url : nil)
         breadcrumb.fileURL = url
+        if recordsHistory, let url {
+            history.record(url)
+        }
+        backForward.canGoBack = history.canGoBack
+        backForward.canGoForward = history.canGoForward
+        backForward.canShowHistory = !history.entries.isEmpty
         if persist {
             store.setPaneStateValue(url?.path, forKey: Self.fileURLKey)
         }
         onTitleChange?()
+    }
+
+    private static func isMarkdown(_ url: URL) -> Bool {
+        ["md", "markdown"].contains(url.pathExtension.lowercased())
+    }
+
+    /// Shows `url` in the Markdown editor, or hides it for nil. The outgoing
+    /// Markdown document's pending save is flushed before it is closed, the
+    /// same order `FileEditorState` keeps for the code editor.
+    private func showMarkdown(_ url: URL?) {
+        markdownLoad?.cancel()
+        let outgoing = markdownDocument
+        markdownDocument = nil
+        if let outgoing {
+            let scheduler = saveScheduler
+            let store = documentStore
+            let uri = outgoing.uri
+            Task { @MainActor in
+                await scheduler.flushPendingSave(uri: uri)
+                store.close(uri: uri)
+            }
+        }
+        // Before the view exists (a restore from init), `loadView` calls back.
+        guard isViewLoaded else { return }
+        codeEditorView?.isHidden = url != nil
+        guard let url else {
+            markdownEditor?.view.isHidden = true
+            markdownEditor?.layoutControl.isHidden = true
+            return
+        }
+        let editor = ensureMarkdownEditor()
+        editor.view.isHidden = false
+        editor.layoutControl.isHidden = false
+        editor.text = ""
+        markdownLoad = Task { @MainActor [weak self] in
+            let text = (try? String(contentsOf: url, encoding: .utf8)) ?? ""
+            guard let self, !Task.isCancelled, self.displayedURL == url else { return }
+            let language = LanguageDetection.language(for: url)
+            let document = self.documentStore.open(
+                uri: url.documentUri,
+                languageId: LanguageDetection.lspLanguageId(for: language),
+                text: text
+            )
+            self.markdownDocument = document
+            editor.text = document.text
+        }
+    }
+
+    private func ensureMarkdownEditor() -> MarkdownPaneViewController {
+        if let markdownEditor { return markdownEditor }
+        let editor = MarkdownPaneViewController(accessibilityID: "document.markdown-layout",
+                                                opensOn: .preview)
+        if opensMarkdownOnSinglePreview { editor.open(in: .singlePane, on: .preview) }
+        editor.onTextChange = { [weak self] text in
+            guard let self, let document = self.markdownDocument, document.text != text else { return }
+            // An edit, not a reload: `apply` marks the document dirty, which
+            // is what the save scheduler writes (`replaceAll` marks it clean).
+            let whole = document.range(for: NSRange(location: 0, length: (document.text as NSString).length))
+            document.apply([TextEdit(range: whole, newText: text)])
+            self.saveScheduler.schedule(document)
+        }
+        addChild(editor)
+        if let container = editorContainer {
+            let editorView = editor.view
+            editorView.translatesAutoresizingMaskIntoConstraints = false
+            container.addSubview(editorView)
+            NSLayoutConstraint.activate([
+                editorView.leadingAnchor.constraint(equalTo: editorContentGuide.leadingAnchor),
+                editorView.trailingAnchor.constraint(equalTo: editorContentGuide.trailingAnchor),
+                editorView.topAnchor.constraint(equalTo: editorContentGuide.topAnchor),
+                editorView.bottomAnchor.constraint(equalTo: editorContentGuide.bottomAnchor)
+            ])
+        }
+        if let navigationRow {
+            editor.layoutControl.setContentHuggingPriority(.required, for: .horizontal)
+            navigationRow.addArrangedSubview(editor.layoutControl)
+        }
+        markdownEditor = editor
+        return editor
+    }
+
+    private func applyEditorSpacing() {
+        guard editorSpacingConstraints.count == 4 else { return }
+        let constants = [paneSpacing.top, paneSpacing.leading, paneSpacing.bottom, paneSpacing.trailing]
+        for (constraint, constant) in zip(editorSpacingConstraints, constants) {
+            constraint.constant = CGFloat(constant)
+        }
     }
 
     private static func isDirectory(_ url: URL) -> Bool {
@@ -125,6 +333,9 @@ public final class DocumentEditorViewController: NSViewController {
     /// Empties the editor without taking the pane with it — what the close box
     /// does on the last pane of the last tab.
     public func clearDocument() {
+        // Off the trail, not out of it: the file just closed is then a
+        // choice in the trail's menu instead of the checked, inert row.
+        history.leave()
         show(nil, persist: true)
     }
 
@@ -143,17 +354,83 @@ public final class DocumentEditorViewController: NSViewController {
         // Held still while a shelf slides beside the pane: every new width
         // rewraps every line and rebuilds the find bar, which costs a slide
         // most of its frames.
-        let editor = FrameHoldingView(content: hosting)
-        let stack = NSStackView(views: [breadcrumb, editor])
+        let codeEditor = FrameHoldingView(content: hosting)
+        // The code editor and, for Markdown files, the Markdown editor share
+        // this one slot; exactly one of them is visible.
+        let editor = NSView()
+        codeEditor.translatesAutoresizingMaskIntoConstraints = false
+        editor.addSubview(codeEditor)
+        editor.addLayoutGuide(editorContentGuide)
+        editorSpacingConstraints = [
+            editorContentGuide.topAnchor.constraint(equalTo: editor.topAnchor),
+            editorContentGuide.leadingAnchor.constraint(equalTo: editor.leadingAnchor),
+            editor.bottomAnchor.constraint(equalTo: editorContentGuide.bottomAnchor),
+            editor.trailingAnchor.constraint(equalTo: editorContentGuide.trailingAnchor)
+        ]
+        NSLayoutConstraint.activate(editorSpacingConstraints + [
+            codeEditor.leadingAnchor.constraint(equalTo: editorContentGuide.leadingAnchor),
+            codeEditor.trailingAnchor.constraint(equalTo: editorContentGuide.trailingAnchor),
+            codeEditor.topAnchor.constraint(equalTo: editorContentGuide.topAnchor),
+            codeEditor.bottomAnchor.constraint(equalTo: editorContentGuide.bottomAnchor)
+        ])
+        applyEditorSpacing()
+        codeEditorView = codeEditor
+        editorContainer = editor
+        // Where a pane's title bar would be: back/forward, then the breadcrumb.
+        // The editor has no bar inside a Documents tab, so this row is its
+        // only chrome.
+        let navigationRow = NSStackView(views: [backForward, breadcrumb])
+        navigationRow.orientation = .horizontal
+        navigationRow.alignment = .centerY
+        navigationRow.spacing = 4
+        navigationRow.edgeInsets = NSEdgeInsets(top: 0, left: 6, bottom: 0, right: 6)
+        self.navigationRow = navigationRow
+        // One outline round all its segments: the control is a tool of its
+        // own in the bar, not three loose glyphs before the breadcrumb.
+        backForward.wantsLayer = true
+        backForward.layer?.cornerRadius = 6
+        backForward.layer?.borderWidth = 1
+        backForward.observeTheme { control, palette in
+            control.layer?.borderColor = palette.nsColor(.outline).cgColor
+        }
+        backForward.setContentHuggingPriority(.required, for: .horizontal)
+        backForward.setContentCompressionResistancePriority(.required, for: .horizontal)
+        breadcrumb.setContentHuggingPriority(.defaultLow, for: .horizontal)
+
+        // The bar the row sits in: the pane's full width, no fill of its own,
+        // and a one-point line under it where the editor starts.
+        let navigationBar = NSView()
+        let barBorder = NSView()
+        barBorder.wantsLayer = true
+        barBorder.observeTheme { border, palette in
+            border.layer?.backgroundColor = palette.nsColor(.outline).cgColor
+        }
+        for subview in [navigationRow, barBorder] {
+            subview.translatesAutoresizingMaskIntoConstraints = false
+            navigationBar.addSubview(subview)
+        }
+        navigationBar.setAccessibilityIdentifier("document-editor.navigation-bar")
+
+        let stack = NSStackView(views: [navigationBar, editor])
         stack.orientation = .vertical
         stack.spacing = 0
         stack.distribution = .fill
+        navigationBar.translatesAutoresizingMaskIntoConstraints = false
         breadcrumb.translatesAutoresizingMaskIntoConstraints = false
         editor.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            breadcrumb.heightAnchor.constraint(equalToConstant: 24),
-            breadcrumb.leadingAnchor.constraint(equalTo: stack.leadingAnchor),
-            breadcrumb.trailingAnchor.constraint(equalTo: stack.trailingAnchor),
+            navigationRow.topAnchor.constraint(equalTo: navigationBar.topAnchor),
+            navigationRow.leadingAnchor.constraint(equalTo: navigationBar.leadingAnchor),
+            navigationRow.trailingAnchor.constraint(equalTo: navigationBar.trailingAnchor),
+            navigationRow.heightAnchor.constraint(equalToConstant: 28),
+            barBorder.topAnchor.constraint(equalTo: navigationRow.bottomAnchor),
+            barBorder.leadingAnchor.constraint(equalTo: navigationBar.leadingAnchor),
+            barBorder.trailingAnchor.constraint(equalTo: navigationBar.trailingAnchor),
+            barBorder.bottomAnchor.constraint(equalTo: navigationBar.bottomAnchor),
+            barBorder.heightAnchor.constraint(equalToConstant: 1),
+            breadcrumb.heightAnchor.constraint(equalTo: navigationRow.heightAnchor),
+            navigationBar.leadingAnchor.constraint(equalTo: stack.leadingAnchor),
+            navigationBar.trailingAnchor.constraint(equalTo: stack.trailingAnchor),
             editor.leadingAnchor.constraint(equalTo: stack.leadingAnchor),
             editor.trailingAnchor.constraint(equalTo: stack.trailingAnchor)
         ])
@@ -168,6 +445,9 @@ public final class DocumentEditorViewController: NSViewController {
             stack.bottomAnchor.constraint(equalTo: root.bottomAnchor)
         ])
         view = root
+        if displayedURL.map(Self.isMarkdown) ?? false {
+            showMarkdown(displayedURL)
+        }
     }
 }
 
@@ -253,5 +533,15 @@ private struct DocumentEditorPaneView: View {
             options: options,
             openFile: openFile
         )
+    }
+}
+
+// The pane pins the editor flush and hands it the content spacing, so the
+// navigation bar spans the pane's full width at its very top and only the
+// text below it is held off the edges.
+extension DocumentEditorViewController: PaneContentSpacingConsuming {
+    public func applyPaneSpacing(_ spacing: Spacing) {
+        paneSpacing = spacing
+        applyEditorSpacing()
     }
 }

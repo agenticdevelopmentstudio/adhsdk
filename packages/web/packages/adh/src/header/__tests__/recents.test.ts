@@ -17,7 +17,7 @@ describe('recents store', () => {
     expect(readRecents().map((r) => r.url)).toEqual(['/b', '/a'])
   })
 
-  it('de-dupes by url, moving an existing place to the front with its new label (T9)', () => {
+  it('de-dupes by url, moving an existing place to the front with its new label', () => {
     recordRecent({ url: '/a', label: 'A' })
     recordRecent({ url: '/b', label: 'B' })
     recordRecent({ url: '/a', label: 'A (updated)' })
@@ -25,12 +25,25 @@ describe('recents store', () => {
     expect(readRecents()[0]?.label).toBe('A (updated)')
   })
 
-  it('caps at RECENTS_CAP, evicting the oldest (T9)', () => {
+  it('caps at RECENTS_CAP, evicting the oldest', () => {
     for (let i = 0; i < RECENTS_CAP + 3; i++) recordRecent({ url: `/p${i}`, label: `P${i}` })
     const list = readRecents()
     expect(list).toHaveLength(RECENTS_CAP)
     expect(list[0]?.url).toBe(`/p${RECENTS_CAP + 2}`) // newest kept
     expect(list.some((r) => r.url === '/p0')).toBe(false) // oldest evicted
+  })
+
+  it('T9: records 11 distinct places, keeps 10 evicting the oldest, and re-recording the oldest kept moves it to the front', () => {
+    for (let i = 1; i <= 11; i++) recordRecent({ url: `/p${i}`, label: `P${i}` })
+    let list = readRecents()
+    expect(list).toHaveLength(10)
+    expect(list.some((r) => r.url === '/p1')).toBe(false) // oldest evicted
+    expect(list[0]?.url).toBe('/p11')
+    recordRecent({ url: '/p2', label: 'P2' }) // the oldest now kept
+    list = readRecents()
+    expect(list).toHaveLength(10)
+    expect(list[0]?.url).toBe('/p2')
+    expect(list.filter((r) => r.url === '/p2')).toHaveLength(1)
   })
 
   it('stamps each entry with a numeric ts, and carries the row fields through', () => {
@@ -44,7 +57,7 @@ describe('recents store', () => {
     expect(first?.description).toBe('Personas · Bob')
   })
 
-  it('persists to localStorage and re-hydrates on a fresh load (T11)', async () => {
+  it('T11: persists to localStorage and re-hydrates on a fresh load', async () => {
     recordRecent({ url: '/a', label: 'A' })
     // A reload = a fresh module instance hydrating its snapshot from localStorage.
     vi.resetModules()

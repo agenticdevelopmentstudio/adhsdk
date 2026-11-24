@@ -13,7 +13,7 @@ import {
 
 beforeEach(() => {
   localStorage.clear()
-  configureAuth({ storageKey: 'test_tokens', refreshPath: '/api/auth/refresh' })
+  configureAuth({ storageKey: 'test_tokens', refreshPath: '/api/v1/auth/sessions/refresh' })
   invalidateRefresh()
 })
 
@@ -193,10 +193,16 @@ describe('linkProvider', () => {
 
     await linkProvider(input)
 
-    expect(fetchMock.mock.calls[0]?.[0]).toBe('https://api.example.com/auth/link-provider')
+    expect(fetchMock.mock.calls[0]?.[0]).toBe('https://api.example.com/v1/account/login_methods')
     // The body is the wire contract and carries no base — a base folded into it
     // would be POSTed to the server as an unknown field.
-    expect(JSON.parse((fetchMock.mock.calls[0]?.[1] as RequestInit).body as string)).toEqual(input)
+    expect(JSON.parse((fetchMock.mock.calls[0]?.[1] as RequestInit).body as string)).toEqual({
+      type: 'provider',
+      client_slug: 'adh',
+      provider_slug: 'github',
+      code: 'provider-code',
+      redirect_uri: 'https://as.example.com/oauth/signin/callback',
+    })
   })
 
   it('prefers an explicit base over the env one', async () => {
@@ -206,7 +212,7 @@ describe('linkProvider', () => {
 
     await linkProvider(input, { authApiBase: 'https://explicit.example.com/' })
 
-    expect(fetchMock.mock.calls[0]?.[0]).toBe('https://explicit.example.com/auth/link-provider')
+    expect(fetchMock.mock.calls[0]?.[0]).toBe('https://explicit.example.com/v1/account/login_methods')
   })
 
   // The historical shape, kept so an unconfigured build behaves exactly as it did
@@ -217,6 +223,6 @@ describe('linkProvider', () => {
 
     await linkProvider(input)
 
-    expect(fetchMock.mock.calls[0]?.[0]).toBe('/api/auth/link-provider')
+    expect(fetchMock.mock.calls[0]?.[0]).toBe('/api/v1/account/login_methods')
   })
 })

@@ -1,0 +1,7 @@
+- **Corner radius**: None
+- **Padding**: None (explicit padding not applied; a horizontal flex layout provides spacing)
+- **Font**: Medium weight (500), 14px size (0.875rem at the default root size), line-height 1 (no extra leading)
+- **Foreground/Text**: the primary text color token, mapped per theme (e.g. to a primary-text or on-surface color)
+- **Gap between children**: 8px
+- **User select**: None (text is not user-selectable)
+- **Child alignment**: Children laid out in a row, vertically centered on the cross-axis

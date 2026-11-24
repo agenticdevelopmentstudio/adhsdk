@@ -55,7 +55,7 @@ class TokenPrincipalCreated:
                 "slug": slug,
                 "description": description,
                 "prefix": prefix,
-                "bucketRdid": bucket_rdid,
+                "bucket_rdid": bucket_rdid,
                 "token": token,
             }
         )
@@ -75,7 +75,7 @@ class TokenPrincipalCreated:
 
         prefix = d.pop("prefix")
 
-        bucket_rdid = d.pop("bucketRdid")
+        bucket_rdid = d.pop("bucket_rdid")
 
         token = d.pop("token")
 

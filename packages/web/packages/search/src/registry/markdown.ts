@@ -1,13 +1,13 @@
 import type { DocumentSearchRegistry, DocumentTypeConfig } from '../types'
+import { unixToIso } from '../lib/format'
 import { MarkdownResultRow } from '../components/markdown/MarkdownResultRow'
 import { MarkdownPreview } from '../components/markdown/MarkdownPreview'
 import { MarkdownPreviewHeader } from '../components/markdown/MarkdownPreviewHeader'
 
 /**
- * A single cross-author search hit from `GET /public/papers`. Mirrors the backend's
- * `PublicPaperSearchHit` contract — defined locally rather than imported from the API's
- * shared types package, since this search endpoint post-dates the generated snapshot.
- * Matches the marketing convention (papers-api.ts defines its public shapes locally).
+ * A single cross-author search hit. Defined locally (not imported from the API's shared
+ * types package) because this package is self-contained for marketing sites; the wire it
+ * is read from is {@link PaperSearchHitWire}, mapped by {@link paperHitFromWire}.
  */
 /**
  * The document kind carried by each hit (read from frontmatter by the backend).
@@ -44,6 +44,41 @@ export interface PaperSearchHit {
   evaluation?: string | null
 }
 
+/** A hit as `GET /v1/papers` serves it: snake_case, with `created`/`updated` in unix seconds. */
+export interface PaperSearchHitWire {
+  id: string
+  title: string
+  public_route?: string | null
+  author?: { slug?: string | null; display_name?: string | null } | null
+  category?: string | null
+  tags?: string[] | null
+  snippet?: string | null
+  created: number
+  updated: number
+  kind?: string | null
+  summary?: string | null
+  evaluation?: string | null
+}
+
+/** The hit's wire row as the {@link PaperSearchHit} the view renders, field by field. */
+export function paperHitFromWire(wire: unknown): PaperSearchHit {
+  const w = wire as PaperSearchHitWire
+  return {
+    id: w.id,
+    title: w.title,
+    publicRoute: w.public_route ?? '',
+    author: { slug: w.author?.slug ?? '', displayName: w.author?.display_name ?? null },
+    category: w.category ?? null,
+    tags: w.tags ?? [],
+    snippet: w.snippet ?? '',
+    createdAt: unixToIso(w.created),
+    updatedAt: unixToIso(w.updated),
+    kind: w.kind ?? 'paper',
+    summary: w.summary ?? null,
+    evaluation: w.evaluation ?? null,
+  }
+}
+
 /**
  * The MARKDOWN document-type config — the single entry in the type registry today.
  * Binds the markdown result-row + preview renderers and identity. The core SearchView
@@ -54,6 +89,7 @@ export const markdownDocumentType: DocumentTypeConfig<PaperSearchHit> = {
   type: 'markdown',
   getId: (hit) => hit.id,
   getTitle: (hit) => hit.title?.trim() || 'Untitled',
+  fromWire: paperHitFromWire,
   ResultRow: MarkdownResultRow,
   // c14 — the SINGLE metadata header (title/badge/author/date/summary/evaluation/link),
   // rendered once by the preview dock; the Preview body renders content only.

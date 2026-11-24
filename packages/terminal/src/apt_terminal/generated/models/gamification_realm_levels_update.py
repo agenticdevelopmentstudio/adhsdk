@@ -38,7 +38,7 @@ class GamificationRealmLevelsUpdate:
         field_dict.update(
             {
                 "levels": levels,
-                "replayHint": replay_hint,
+                "replay_hint": replay_hint,
             }
         )
 
@@ -56,7 +56,7 @@ class GamificationRealmLevelsUpdate:
 
             levels.append(levels_item)
 
-        replay_hint = d.pop("replayHint")
+        replay_hint = d.pop("replay_hint")
 
         gamification_realm_levels_update = cls(
             levels=levels,

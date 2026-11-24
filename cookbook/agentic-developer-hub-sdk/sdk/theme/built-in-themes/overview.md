@@ -1,0 +1,7 @@
+
+`BuiltInThemes` is a caseless Swift `enum` that acts as a namespace and static catalogue of the color themes the toolkit ships. It is the single source of truth for the bundled schemes: its doc comment states that the terminal feature derives its built-in profiles from this list (through `ColorTheme.terminalPalette`), so a theme is defined exactly once.
+
+The catalogue has two parts. `handAuthored` is the original curated set of 15 themes. Each carries a 16-color terminal palette and explicit app-chrome role overrides (surface, elevated surface, control background, border, outline) taken from the scheme's own published panel and line colors. `all` is `handAuthored` followed by `webPortedNative`, the themes ported from the web catalogue with their native adjustments (specified in Built-In Themes (Web Catalogue) ([adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.built-in-themes-web](cookbook:4b0159a7-3ee0-44d7-bd43-8b7ae5d64e8d)) and in the Built-In Themes Native Adjustments ingredient (cookbook:fd1f8d3c-6110-4687-a715-c8fa7c7caa5b); this ingredient does not specify them beyond how `all` composes them).
+
+The type also exposes `defaultID` (Solarized Dark), `theme(withID:)` for lookup, and two private helpers: `chrome(...)`, which builds the five-role override dictionary, and `rgb(_:)`, which turns a hex literal into an opaque `RGBAColor`. Text, accent and status roles are not set here; they derive from the palette in `SemanticPalette`, which guarantees their contrast.
+

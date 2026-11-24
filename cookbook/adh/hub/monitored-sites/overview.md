@@ -1,12 +1,12 @@
 
 This is the client for the Status Sites monitoring domain: groups, sites, and endpoints, backed by
-generic CRUD over `/api/monitoring/site-groups`, `/api/monitoring/sites`, and
-`/api/monitoring/endpoints`. The model matches the database, not an earlier prototype: a site
+the /v1 monitoring surface: `/api/v1/monitoring/site_groups`, `/api/v1/monitoring/sites`, and
+`/api/v1/monitoring/endpoints`. The model matches the database, not an earlier prototype: a site
 belongs to exactly one group (`sites.site_group_id`, `NOT NULL`, FK `ON DELETE CASCADE`) and an
 endpoint belongs to exactly one site (same cascade) — a strict 1:M chain, not the prototype's
 many-to-many `groupIds[]`. The whole chain is owner-scoped server-side, with an optional
 `workspace` parameter on every operation that re-pins it to a workspace's owning principal. This
-logic holds the backend row and request-body shapes (a group row, a site row, an endpoint row, and
+logic holds the snake_case backend row and request-body shapes (a group row, a site row, an endpoint row, and
 their create/put bodies), three mappers from row to caller-facing view, the caller-facing create
 and update body shapes for each entity, the fixed set of valid endpoint kinds, and twelve
 operations — list/create/update/delete for each of the three entities — each a thin request

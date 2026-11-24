@@ -26,7 +26,7 @@ class RegistryContactResult:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "chatId": chat_id,
+                "chat_id": chat_id,
             }
         )
 
@@ -35,7 +35,7 @@ class RegistryContactResult:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        chat_id = d.pop("chatId")
+        chat_id = d.pop("chat_id")
 
         registry_contact_result = cls(
             chat_id=chat_id,

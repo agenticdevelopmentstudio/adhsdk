@@ -194,6 +194,12 @@
 - **auth-settings-bespoke-routes**: Reading and updating an ecosystem's auth
   settings MUST use their own dedicated route rather than the generic
   ecosystems create/read/update/delete base.
+- **auth-settings-login-allow-list-mapping**: Auth settings read from the
+  wire MUST carry `loginAllowedEmails` from `login_allowed_emails`,
+  reading an absent field as `null` (every customer may sign in) and keeping
+  `[]` (no customer may) distinct from it. An auth-settings patch that sets the
+  field MUST send it as `login_allowed_emails`, sending an explicit
+  `null` rather than omitting it.
 
 ### Child ecosystems
 
@@ -224,7 +230,7 @@
   entity-agnostic identifier-rename mechanism (shared across
   ecosystem/application/persona/namespace/organization) MUST NOT be used to
   rename an ecosystem's address — the ecosystem update call that carries
-  `slug` is the correct route for that, per **update-slug-sent-on-presence**.
+  `slug` is the correct route for that, per #requirements/update-slug-sent-on-presence.
 - **ecosystem-id-for-slug-ownership-first**: Resolving an ecosystem id for a
   slug MUST first try to resolve the caller's own workspace-scoped default
   for that slug; on any failure other than not-found, it MUST rethrow
@@ -377,8 +383,9 @@
   pass the add and remove lists through as given — it does not deduplicate
   keys or reject a key present in both; because adds run first, such a key
   is provisioned and then removed.
-- **features-mutation-null-id-unguarded**: the feature-provisioning mutations accept an
-  ecosystem id that may be absent and MUST proceed without a guard; a mutation fired before the id
-  resolves sends its request to a path segment holding a literal absent-marker rather than failing
-  fast on the client.
+- **features-mutation-null-id-unguarded**: the feature-provisioning mutations SHOULD
+  reject a call whose ecosystem id is absent before any request is sent, or take a
+  non-optional id. Today the id is optional and unguarded: a mutation fired before the id
+  resolves sends its request to a path segment holding a literal absent-marker rather than
+  failing fast on the client. A port SHOULD NOT copy that behavior.
 

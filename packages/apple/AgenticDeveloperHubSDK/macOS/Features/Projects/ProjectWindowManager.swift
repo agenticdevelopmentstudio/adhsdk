@@ -1,7 +1,9 @@
 import AppKit
 import Combine
 import os
+import QuartzCore
 import AgenticDeveloperHubSDKCore
+import AgenticDeveloperHubSDKCoreUI
 
 /// Keeps one window per project, keyed by `git_repo.id`.
 ///
@@ -24,6 +26,19 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
     static let openWindowKey = "window.open"
 
     private var controllers: [UUID: ComposableTabsWindowController] = [:]
+
+    /// The checkout scan each newly built project window starts, kept until it
+    /// finishes so `load` can show the window only once its branch tabs are in.
+    private var openTasks: [UUID: Task<Void, Never>] = [:]
+
+    /// Projects whose window is built and being readied by `load`. Asked for
+    /// again meanwhile, they are already on their way: the window belongs to
+    /// no group yet, and raising it as an ungrouped window would put it on
+    /// screen beside its group's.
+    private var pendingLoads: Set<UUID> = []
+    /// Projects a script asked for: they are opened and shown without
+    /// activating the app, all the way through the deferred build.
+    private var quietRequests: Set<UUID> = []
 
     /// Language-service shutdowns started by a window close, still running.
     /// The controller is out of `controllers` by then, so
@@ -69,7 +84,7 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
     /// persisted "reopen me" flag. Tearing the second one down through the
     /// undo of the first would leave the project reopening for ever.
     private var adoptedForScripting: Set<UUID> = []
-    private weak var coordinator: ProjectsCoordinator?
+    private(set) weak var coordinator: ProjectsCoordinator?
 
     /// A database handed over by `attach(database:)`, for a host with no
     /// project registry. Strong where `coordinator` is weak: nothing else in
@@ -209,7 +224,35 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
     /// answers only for a window adopted for scripting, which belongs to no
     /// group.
     public var frontWindowController: ComposableTabsWindowController? {
-        if let key = NSApp.keyWindow?.windowController as? ComposableTabsWindowController {
+        frontWindowController { _ in true }
+    }
+
+    /// The front window that can hold any pane and has a folder worth
+    /// rooting a workspace at: `frontWindowController` with Document windows
+    /// passed over. A Document window's spec has no room for a pane it did
+    /// not make — the next load turns one into a placeholder — and its row's
+    /// path is a file's folder or the home directory, never a project. What
+    /// splits a pane in, or roots extensions, asks this.
+    public var frontWorkspaceWindowController: ComposableTabsWindowController? {
+        frontWindowController { !isDocumentWindow($0) }
+    }
+
+    /// Whether `controller` is an open Document window's.
+    public func isDocumentWindow(_ controller: ComposableTabsWindowController) -> Bool {
+        repoID(of: controller).map(isDocumentWindow) ?? false
+    }
+
+    private func repoID(of controller: ComposableTabsWindowController) -> UUID? {
+        controllers.first { $0.value === controller }?.key
+    }
+
+    /// `frontWindowController`'s search, taking only the windows `accepts`
+    /// takes.
+    private func frontWindowController(
+        where accepts: (ComposableTabsWindowController) -> Bool
+    ) -> ComposableTabsWindowController? {
+        if let key = NSApp.keyWindow?.commandOwner.windowController as? ComposableTabsWindowController,
+           accepts(key) {
             return key
         }
         // Visible only: a project window group keeps its other active
@@ -217,15 +260,18 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         if let ordered = NSApp.orderedWindows
             .filter(\.isVisible)
             .compactMap({ $0.windowController as? ComposableTabsWindowController })
-            .first {
+            .first(where: accepts) {
             return ordered
         }
         for group in [frontGroup].compactMap({ $0 }) + groups.reversed() {
-            if let shown = shownWindows[group.id] as? ComposableTabsWindowController {
+            if let shown = shownWindows[group.id] as? ComposableTabsWindowController, accepts(shown) {
                 return shown
             }
         }
-        return openOrder.last { group(containing: $0) == nil }.flatMap { controllers[$0] }
+        return openOrder.reversed()
+            .filter { group(containing: $0) == nil }
+            .compactMap { controllers[$0] }
+            .first(where: accepts)
     }
 
     /// Every open project's workspace, in the order their projects were
@@ -331,13 +377,17 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
     /// Anything else becomes an active project of the frontmost window — or of
     /// a new one, when there is no project window at all.
     public func openProject(_ repo: GitRepo) {
-        if let group = group(containing: repo.id), let existing = controllers[repo.id] {
-            existing.project.update(repo: repo)
+        guard !pendingLoads.contains(repo.id) else { return }
+        if let group = group(containing: repo.id) {
+            // Built or deferred (a restored window builds only its selected
+            // project), a project active in a window is put on screen there:
+            // one project has one set of panes, in one window.
+            controllers[repo.id]?.project.update(repo: repo)
             present(repo.id, in: group)
             // Asking for a project that is already open is still the user
             // asking for it, and a window raised behind the app that is
             // actually frontmost reads as nothing having happened.
-            activateApp()
+            if !quietRequests.contains(repo.id) { activateApp() }
             return
         }
         if let existing = controllers[repo.id] {
@@ -346,7 +396,7 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
             existing.project.update(repo: repo)
             existing.showWindow(nil)
             existing.window?.makeKeyAndOrderFront(nil)
-            activateApp()
+            if !quietRequests.contains(repo.id) { activateApp() }
             return
         }
         load(repo, into: frontGroup ?? makeGroup())
@@ -358,15 +408,34 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
     /// put on screen there instead, since one project has one set of panes.
     public func loadProject(_ repo: GitRepo, into group: ProjectWindowGroup) {
         coordinator?.recordOpened(repo)
+        guard !pendingLoads.contains(repo.id) else { return }
         if group.contains(repo.id) {
             present(repo.id, in: group)
             return
         }
-        if controllers[repo.id] != nil {
+        if controllers[repo.id] != nil || self.group(containing: repo.id) != nil {
             openProject(repo)
             return
         }
         load(repo, into: group)
+    }
+
+    /// `open project` from a script: the same path as choosing the project in
+    /// the front window's Project Browser, so a script exercises exactly what
+    /// a click does. It never activates the app — a script runs while someone
+    /// may be typing in another app (quiet development).
+    public func openProjectForScripting(_ repo: GitRepo) {
+        quietRequests.insert(repo.id)
+        defer {
+            // Cleared at once unless a build is pending; `show` clears it then.
+            if !pendingLoads.contains(repo.id) { quietRequests.remove(repo.id) }
+        }
+        if let group = frontGroup {
+            loadProject(repo, into: group)
+        } else {
+            coordinator?.recordOpened(repo)
+            load(repo, into: makeGroup())
+        }
     }
 
     /// Opens a project window with no project in it, its shelf out on the
@@ -387,6 +456,159 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         persistGroups()
         activateApp()
     }
+
+    // MARK: - File Browser and Document windows
+
+    /// The standalone windows this manager opened — File Browser, Document
+    /// and Git windows — by row id, with the kind of each. A subset of `controllers`,
+    /// so scripting, the pane commands and the extension placer see one as
+    /// the composable-tabs window it is; this is what keeps it out of
+    /// everything that is a *project's*: groups, the shelf, the persisted
+    /// open flag and the arrangement the next new project copies.
+    private var standaloneWindowKinds: [UUID: GitRepo.Kind] = [:]
+
+    /// Whether `repoID` names an open File Browser window.
+    public func isFileBrowserWindow(_ repoID: UUID) -> Bool {
+        standaloneWindowKinds[repoID] == .fileBrowser
+    }
+
+    /// Whether `repoID` names an open Document window, of either sort.
+    public func isDocumentWindow(_ repoID: UUID) -> Bool {
+        standaloneWindowKinds[repoID]?.isDocument ?? false
+    }
+
+    /// Whether `repoID` names an open window that is not a project's: a File
+    /// Browser, Document or Git window.
+    public func isStandaloneWindow(_ repoID: UUID) -> Bool {
+        standaloneWindowKinds[repoID] != nil
+    }
+
+    /// Opens a File Browser window over `repo` — a `.fileBrowser` row — or
+    /// brings forward the one already open on it.
+    ///
+    /// A composable-tabs window like a project's, but with its own `layout`,
+    /// no tab bars, no shelf, no group, no project controller (no checkout
+    /// tabs, no branch commands), no persisted open flag — its owner keeps its
+    /// own list of what to reopen, told through `onClose` — and no part in
+    /// `UserSettings.lastActiveProjectWindow`, so a new project is never
+    /// arranged like one.
+    ///
+    /// - Parameter onClose: called when the user closes the window, never for
+    ///   the closes AppKit makes on the way out of the app (quitting with a
+    ///   window open means it reopens).
+    /// - Parameter activates: false for launch restore, which reopens what
+    ///   was open without taking the foreground.
+    @discardableResult
+    public func openFileBrowserWindow(
+        _ repo: GitRepo,
+        layout: ComposableTabsLayout,
+        activates: Bool = true,
+        onClose: @escaping @MainActor (GitRepo) -> Void
+    ) -> ComposableTabsWindowController? {
+        openStandaloneWindow(repo, layout: layout, activates: activates, onClose: onClose)
+    }
+
+    /// Opens a Document window over `repo` — a `.document` or `.documentTabs`
+    /// row — or brings forward the one already open on it. Standalone in
+    /// every way a File Browser window is (`openFileBrowserWindow`).
+    ///
+    /// No language services: a language server is rooted at a workspace, and
+    /// a single file has none — rooting one at the file's directory would
+    /// index a Downloads folder or a home directory.
+    @discardableResult
+    public func openDocumentWindow(
+        _ repo: GitRepo,
+        layout: ComposableTabsLayout,
+        activates: Bool = true,
+        onClose: @escaping @MainActor (GitRepo) -> Void
+    ) -> ComposableTabsWindowController? {
+        openStandaloneWindow(
+            repo, layout: layout, startsLanguageServices: false, activates: activates, onClose: onClose)
+    }
+
+    /// Opens a standalone window over `repo` — any row that is not a
+    /// `.project` — or returns the one already open on it, bringing that
+    /// forward only when `activates` is true (a quiet lookup leaves it where
+    /// it is). What
+    /// `openFileBrowserWindow` and `openDocumentWindow` call, and what the
+    /// Git window opens through. Its title follows the row's kind
+    /// (`ComposableTabsWindowController.title(kind:name:directory:branch:)`).
+    ///
+    /// - Parameter startsLanguageServices: false for a window with no
+    ///   workspace a language server could be rooted at (a Document window)
+    ///   or no documents to serve (the Git window).
+    /// - Parameter toolbarItems: the window's own toolbar items, before the
+    ///   flexible space; ignored when the window is already open.
+    @discardableResult
+    public func openStandaloneWindow(
+        _ repo: GitRepo,
+        layout: ComposableTabsLayout,
+        startsLanguageServices: Bool = true,
+        activates: Bool = true,
+        toolbarItems: [WindowToolbarItem] = [],
+        onClose: @escaping @MainActor (GitRepo) -> Void
+    ) -> ComposableTabsWindowController? {
+        precondition(repo.kind != .project, "a project opens through openProject(_:)")
+        if let existing = controllers[repo.id] {
+            // Found without activating (a launch restore, a quiet lookup): left where it is.
+            if activates {
+                existing.showWindow(nil)
+                existing.window?.makeKeyAndOrderFront(nil)
+                activateApp()
+            }
+            return existing
+        }
+        guard let database else {
+            Self.logger.error(
+                "Cannot open a window on \(repo.name, privacy: .public): no project database attached")
+            return nil
+        }
+        let languageServices = startsLanguageServices ? languageServicesFactory?(repo.url) : nil
+        let workspace = ProjectWorkspace(
+            repo: repo,
+            database: database,
+            layout: layout,
+            languageServices: languageServices,
+            gitClient: gitClient,
+            arrangementSourceID: nil
+        )
+        languageServices?.start()
+        // No top-level tabs: a standalone window is one fixed arrangement.
+        let controller = ComposableTabsWindowController(
+            project: workspace, showsTabBars: false,
+            showsPaneChrome: !repo.kind.isDocument, showsFooter: !repo.kind.isDocument,
+            extraToolbarItems: toolbarItems)
+        controllers[repo.id] = controller
+        openOrder.append(repo.id)
+        standaloneWindowKinds[repo.id] = repo.kind
+        controller.loadWindow()
+        observeClose(of: controller, repoID: repo.id, recordsOpenState: false)
+        if let window = controller.window {
+            standaloneCloseObservers[repo.id] = NotificationCenter.default.addObserver(
+                forName: NSWindow.willCloseNotification,
+                object: window,
+                queue: nil
+            ) { [weak self] _ in
+                MainActor.assumeIsolated {
+                    guard let self else { return }
+                    self.standaloneWindowKinds.removeValue(forKey: repo.id)
+                    if let observer = self.standaloneCloseObservers.removeValue(forKey: repo.id) {
+                        NotificationCenter.default.removeObserver(observer)
+                    }
+                    if !WindowManager.shared.isTerminating { onClose(repo) }
+                }
+            }
+        }
+        refreshOpenWorkspaceIDs()
+        controller.showWindow(nil)
+        if activates {
+            controller.window?.makeKeyAndOrderFront(nil)
+            activateApp()
+        }
+        return controller
+    }
+
+    private var standaloneCloseObservers: [UUID: NSObjectProtocol] = [:]
 
     /// Puts `repoID`'s window on screen in its group, without asking for the
     /// foreground — for automation about to drive a pane in a project its
@@ -431,6 +653,20 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
     /// half-built state is not written back over the state being read.
     private var isRestoring = false
 
+    /// Restored projects not yet built: each is built the first time its
+    /// group presents it, never all at launch.
+    private var deferredBuilds: [(repo: GitRepo, group: ProjectWindowGroup)] = []
+
+    /// The window for `repoID`, built now if restore deferred it.
+    private func ensureController(
+        _ repoID: UUID, in group: ProjectWindowGroup
+    ) -> ComposableTabsWindowController? {
+        if let existing = controllers[repoID] { return existing }
+        guard let index = deferredBuilds.firstIndex(where: { $0.repo.id == repoID }) else { return nil }
+        let repo = deferredBuilds.remove(at: index).repo
+        return makeProjectWindow(repo, in: group)
+    }
+
     /// Saved windows none of whose projects this registry knows, kept as they
     /// were and written back beside the live groups. The saved windows are an
     /// app preference and the registry is a database, and a launch can pair a
@@ -442,7 +678,7 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
 
     /// The group whose window is frontmost, or failing that the last made.
     private var frontGroup: ProjectWindowGroup? {
-        let windows = [NSApp.keyWindow].compactMap { $0 } + NSApp.orderedWindows.filter(\.isVisible)
+        let windows = [NSApp.keyWindow?.commandOwner].compactMap { $0 } + NSApp.orderedWindows.filter(\.isVisible)
         for window in windows {
             if let group = groups.first(where: { shownWindows[$0.id]?.window === window }) {
                 return group
@@ -498,12 +734,61 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
     }
 
     /// Builds `repo`'s window hidden, makes it one of `group`'s active
-    /// projects and puts it on screen.
+    /// projects and puts it on screen — once its checkout scan has put in the
+    /// branch tabs and the window has laid itself out, so it appears whole
+    /// instead of rebuilding its tabs and resizing its panes in front of the
+    /// user.
     private func load(_ repo: GitRepo, into group: ProjectWindowGroup) {
-        guard makeProjectWindow(repo, in: group) != nil else { return }
+        let timing = ProjectLoadTiming(name: repo.name)
+        // The window on screen dims and spins until the new one replaces it,
+        // so a click is answered at once even when the load takes a moment.
+        let busyWindow = shownWindows[group.id]
+        busyWindow?.setProjectAreaBusy(true)
+        pendingLoads.insert(repo.id)
+        // Laid out, drawn and committed before the build: building the window
+        // holds the main thread, and an overlay only added (zero-sized until
+        // layout) would appear after it, if at all. The build waits one turn
+        // of the run loop so the window server shows that frame first.
+        busyWindow?.window?.layoutIfNeeded()
+        busyWindow?.window?.displayIfNeeded()
+        CATransaction.flush()
+        DispatchQueue.main.async { [weak self, weak group] in
+            guard let self, let group else {
+                busyWindow?.setProjectAreaBusy(false)
+                return
+            }
+            self.pendingLoads.remove(repo.id)
+            self.build(repo, into: group, busyWindow: busyWindow, timing: timing)
+        }
+    }
+
+    private func build(
+        _ repo: GitRepo, into group: ProjectWindowGroup,
+        busyWindow: (NSWindowController & ProjectShelfWindow)?, timing: ProjectLoadTiming
+    ) {
+        guard let controller = makeProjectWindow(repo, in: group) else {
+            busyWindow?.setProjectAreaBusy(false)
+            return
+        }
+        timing.mark("window built")
+        // Shown at once, from the stored tabs and the cached checkouts the
+        // window was seeded with (`makeProjectWindow`). The checkout scan
+        // started there runs on behind it and corrects the tabs and title
+        // when git answers — a switch is never kept waiting on git.
+        let cached = database?.cachedRepoState(forRepo: repo.id)
+        controller.prepareForDisplay { cached?.branch(at: $0) }
+        timing.mark("prepared for display")
+        busyWindow?.setProjectAreaBusy(false)
+        show(repo, in: group)
+        timing.mark("shown")
+        timing.finish()
+    }
+
+    private func show(_ repo: GitRepo, in group: ProjectWindowGroup) {
+        adoptSharedTabConfiguration(into: repo.id)
         group.activate(repo.id)
         present(repo.id, in: group)
-        activateApp()
+        if quietRequests.remove(repo.id) == nil { activateApp() }
         // After the window is on screen and the app offered activation, not
         // at registration: every consumer of `onOpenProjectsChanged` asks a
         // question about the window that just opened, and two of them read
@@ -516,7 +801,7 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
 
     /// Puts `repoID`'s window on screen in place of whatever `group` shows.
     private func present(_ repoID: UUID, in group: ProjectWindowGroup) {
-        guard let incoming = controllers[repoID] else { return }
+        guard let incoming = ensureController(repoID, in: group) else { return }
         group.select(repoID)
         persistGroups()
         swap(to: incoming, in: group)
@@ -552,9 +837,6 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         let focus = outgoing?.projectShelf?.focus ?? .elsewhere
         if incoming.window == nil { incoming.loadWindow() }
         let outgoingFrame = outgoing?.window?.frame
-        if let outgoing {
-            incoming.adoptShelfLayout(outgoing.shelfLayout)
-        }
         incoming.window?.isExcludedFromWindowsMenu = false
         // Two windows standing in for one: neither may play AppKit's order-in
         // or order-out animation, which scales a document window down and
@@ -563,9 +845,17 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         outgoing?.window?.animationBehavior = .none
         // Before showing as well as after: a window ordered in at its own
         // stale frame and then resized is the same bounce by another route.
-        if let outgoingFrame {
+        if let outgoingFrame, incoming.window?.frame != outgoingFrame {
             incoming.window?.setFrame(outgoingFrame, display: false)
         }
+        // The shelf after the frame: a frame change after it would share the
+        // room out again and move the divider the reader sees.
+        if let outgoing {
+            incoming.adoptShelfLayout(outgoing.shelfLayout)
+        }
+        // Laid out at that frame while still off screen, so the panes are
+        // already their final sizes on the first frame drawn.
+        incoming.window?.contentView?.layoutSubtreeIfNeeded()
         incoming.showWindow(nil)
         // After `showWindow` too: showing restores the window's own saved
         // frame, which would undo the hand-off and make the group jump.
@@ -666,6 +956,13 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
             commandRegistry: commandRegistry
         )
         projectControllers[repo.id] = projectController
+        // Before the window is built, which asks this controller for its tab
+        // items: the last known checkouts, else the project directory as its
+        // main checkout, so the window opens whole and the scan only corrects.
+        projectController.seed(
+            database.cachedRepoState(forRepo: repo.id)?.projectCheckouts
+                ?? [ProjectCheckout(directory: repo.url, branch: nil, isMain: true)]
+        )
         // The data source is passed to the initializer, not assigned after it:
         // the window installs its stored tabs while initializing, and a tab
         // whose item is built before the data source arrives falls back to a
@@ -707,6 +1004,8 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         // its window, its panes and its sessions, so switching to it is an
         // order-in rather than a build. Out of the Window menu until it is the
         // one on screen — there, the group is one window.
+        // Built at the frame it will be swapped in at, laid out once.
+        controller.preferredInitialFrame = shownWindows[group.id]?.window?.frame
         controller.loadWindow()
         controller.window?.isExcludedFromWindowsMenu = true
         observeClose(of: controller, repoID: repo.id, recordsOpenState: true)
@@ -718,7 +1017,13 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         // is a project whose checkouts have not changed since last time, and
         // it threw away the pane tree the window had just built, and every
         // shell and file-system watcher living in it, to build an identical one.
-        Task { await projectController.open() }
+        openTasks[repo.id] = Task { [weak self] in
+            await projectController.open()
+            self?.openTasks[repo.id] = nil
+            // The window's scan has just read git; the cache follows, so the
+            // next switch to this project starts from what is on disk now.
+            await self?.coordinator?.repoState.refresh(repo.id, at: repo.url)
+        }
         setWindowOpen(true, repoID: repo.id)
         return controller
     }
@@ -837,7 +1142,14 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         removeGroup(group)
         persistGroups()
         for repoID in group.activeRepoIDs where repoID != closing {
-            controllers[repoID]?.close()
+            if let controller = controllers[repoID] {
+                controller.close()
+            } else {
+                // A deferred project has no window to fire the close
+                // observer, so its open flag is cleared here or it reopens
+                // next launch.
+                setWindowOpen(false, repoID: repoID)
+            }
         }
         if let empty = emptyWindows.removeValue(forKey: group.id) {
             if let observer = emptyCloseObservers.removeValue(forKey: group.id) {
@@ -950,8 +1262,15 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
             // every launch after.
             guard wasEmpty || !state.activeRepoIDs.isEmpty else { continue }
             let group = makeGroup(state: state)
-            for id in state.activeRepoIDs {
-                if let repo = repos[id] { makeProjectWindow(repo, in: group) }
+            // Only the project the group shows is built now. Building every
+            // restored project here held the main thread for ~13 s at launch
+            // with 23 of them, and draining them later still stalled ~1 s per
+            // project; the rest are built when first presented (`ensureController`).
+            if let selected = state.selectedRepoID, let repo = repos[selected] {
+                makeProjectWindow(repo, in: group)
+            }
+            for id in state.activeRepoIDs where id != state.selectedRepoID {
+                if let repo = repos[id] { deferredBuilds.append((repo, group)) }
             }
             if let selected = state.selectedRepoID, controllers[selected] != nil {
                 present(selected, in: group)
@@ -1017,6 +1336,7 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
             queue: nil
         ) { [weak self] _ in
             MainActor.assumeIsolated {
+                self?.adoptSharedTabConfiguration(into: repoID)
                 if UserSettings.lastActiveProjectWindow.currentValue != repoID.uuidString {
                     UserSettings.lastActiveProjectWindow.value = repoID.uuidString
                 }
@@ -1024,6 +1344,26 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
                 Task { await projectController.refreshCheckouts() }
             }
         }
+    }
+
+    /// Every project window shares one tab configuration — the panes' shape
+    /// and sizes — and it is the one the user last worked in, so switching
+    /// projects never changes the panels' sizes. Put on
+    /// `repoID`'s window as it comes forward.
+    private func adoptSharedTabConfiguration(into repoID: UUID) {
+        guard let controller = controllers[repoID],
+              let sourceID = UUID(uuidString: UserSettings.lastActiveProjectWindow.currentValue),
+              sourceID != repoID,
+              let configuration = tabConfiguration(of: sourceID) else { return }
+        controller.adopt(configuration)
+    }
+
+    /// The live window's configuration when it is open, else what it saved.
+    private func tabConfiguration(of repoID: UUID) -> ProjectTabConfiguration? {
+        if let live = controllers[repoID] { return live.tabConfiguration }
+        guard let loaded = try? database?.loadTabs(repoID: repoID), !loaded.tabs.isEmpty else { return nil }
+        return ProjectTabConfiguration(
+            arrangement: ProjectTabReconciler.arrangement(of: loaded.tabs, activeTabID: loaded.activeTabID))
     }
 
     /// Drops the controller when its window closes, so reopening the project
@@ -1125,4 +1465,43 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
 
 extension ProjectWindowManager: Loggable {
     public static nonisolated let logger = makeLogger()
+}
+
+/// How long one project load spends in each phase, as signpost intervals for
+/// Instruments (category "ProjectLoad") and one log line with the phase
+/// times, so a slow switch says where the time went.
+@MainActor
+final class ProjectLoadTiming {
+    private static let signposts = OSLog(subsystem: "com.agenticdevelopmentstudio.toolkit", category: "ProjectLoad")
+    private static let logger = Logger(subsystem: "com.agenticdevelopmentstudio.toolkit", category: "ProjectLoad")
+
+    private let name: String
+    private let start = ContinuousClock.now
+    private var last = ContinuousClock.now
+    private var phases: [String] = []
+    private let signpostID: OSSignpostID
+
+    init(name: String) {
+        self.name = name
+        signpostID = OSSignpostID(log: Self.signposts)
+        os_signpost(.begin, log: Self.signposts, name: "Load Project", signpostID: signpostID, "%{public}s", name)
+    }
+
+    func mark(_ phase: String) {
+        let now = ContinuousClock.now
+        phases.append("\(phase) \(Self.milliseconds(now - last))ms")
+        os_signpost(.event, log: Self.signposts, name: "Load Project", signpostID: signpostID, "%{public}s", phase)
+        last = now
+    }
+
+    func finish() {
+        os_signpost(.end, log: Self.signposts, name: "Load Project", signpostID: signpostID)
+        let total = Self.milliseconds(ContinuousClock.now - start)
+        let summary = phases.joined(separator: ", ")
+        Self.logger.info("Loaded \(self.name, privacy: .public) in \(total)ms: \(summary, privacy: .public)")
+    }
+
+    private static func milliseconds(_ duration: Duration) -> Int {
+        Int(duration.components.seconds * 1000 + duration.components.attoseconds / 1_000_000_000_000_000)
+    }
 }

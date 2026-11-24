@@ -85,7 +85,7 @@
 - **result-snapshot**: `snapshot` MUST be the store view's last ingested snapshot, or null before any ingestion.
 - **result-offline**: `offline` MUST be true exactly when `liveError` is non-null, `streamConnected` is false, and the poll read is not in flight.
 - **result-disconnected**: `disconnected` MUST be true exactly when `liveError` is non-null and `streamConnected` is false, regardless of whether a read is in flight.
-- **result-blind**: `blind` MUST be true exactly when `snapshot` is non-null and `snapshot.services` is empty.
+- **result-blind**: `blind` MUST equal the ingested snapshot's own `blind` flag (the server's verdict, not derived here), and be false before any snapshot.
 - **result-offline-detail**: `offlineDetail` MUST equal `liveError` when `disconnected` is true and null otherwise.
 - **result-polling**: `polling` MUST be true when a poll read is in flight or `awaitingCheck` is true.
 - **result-next-poll-streaming**: While `streamConnected` is true, `nextPollAt` MUST be `nextCheckAt` when it is non-null, and the client estimate otherwise.

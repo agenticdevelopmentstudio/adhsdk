@@ -60,16 +60,16 @@ class AiProcessingWorkerUsage:
             {
                 "provider": provider,
                 "model": model,
-                "inputTokens": input_tokens,
-                "outputTokens": output_tokens,
+                "input_tokens": input_tokens,
+                "output_tokens": output_tokens,
             }
         )
         if cache_read_tokens is not UNSET:
-            field_dict["cacheReadTokens"] = cache_read_tokens
+            field_dict["cache_read_tokens"] = cache_read_tokens
         if cache_write_tokens is not UNSET:
-            field_dict["cacheWriteTokens"] = cache_write_tokens
+            field_dict["cache_write_tokens"] = cache_write_tokens
         if reasoning_tokens is not UNSET:
-            field_dict["reasoningTokens"] = reasoning_tokens
+            field_dict["reasoning_tokens"] = reasoning_tokens
         if attempt is not UNSET:
             field_dict["attempt"] = attempt
         if partial is not UNSET:
@@ -84,15 +84,15 @@ class AiProcessingWorkerUsage:
 
         model = d.pop("model")
 
-        input_tokens = d.pop("inputTokens")
+        input_tokens = d.pop("input_tokens")
 
-        output_tokens = d.pop("outputTokens")
+        output_tokens = d.pop("output_tokens")
 
-        cache_read_tokens = d.pop("cacheReadTokens", UNSET)
+        cache_read_tokens = d.pop("cache_read_tokens", UNSET)
 
-        cache_write_tokens = d.pop("cacheWriteTokens", UNSET)
+        cache_write_tokens = d.pop("cache_write_tokens", UNSET)
 
-        reasoning_tokens = d.pop("reasoningTokens", UNSET)
+        reasoning_tokens = d.pop("reasoning_tokens", UNSET)
 
         attempt = d.pop("attempt", UNSET)
 

@@ -40,9 +40,9 @@ class RegistryIdentifier:
         field_dict.update(
             {
                 "rdid": rdid,
-                "entityType": entity_type,
-                "entityId": entity_id,
-                "createdBy": created_by,
+                "entity_type": entity_type,
+                "entity_id": entity_id,
+                "created_by": created_by,
             }
         )
 
@@ -53,16 +53,16 @@ class RegistryIdentifier:
         d = dict(src_dict)
         rdid = d.pop("rdid")
 
-        entity_type = d.pop("entityType")
+        entity_type = d.pop("entity_type")
 
-        entity_id = d.pop("entityId")
+        entity_id = d.pop("entity_id")
 
         def _parse_created_by(data: object) -> None | str:
             if data is None:
                 return data
             return cast(None | str, data)
 
-        created_by = _parse_created_by(d.pop("createdBy"))
+        created_by = _parse_created_by(d.pop("created_by"))
 
         registry_identifier = cls(
             rdid=rdid,

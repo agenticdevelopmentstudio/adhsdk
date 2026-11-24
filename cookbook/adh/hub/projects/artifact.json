@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "6263d5af-d0c7-456b-903a-762581ae5dbb",
     "title": "Projects",
-    "domain": "adhsdk://cookbook/adh/hub/projects",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -31,7 +30,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/adh/hub/ecosystems/ecosystems"
+      "201572ee-2e0f-4839-94f5-252f8044c4bf"
     ],
     "references": [
       "packages/web/packages/data/src/projects/activity.ts (adhsdk)",
@@ -60,7 +59,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "b506b94287444a8f",
+  "synced": "645553edaf99dd3e",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -79,7 +78,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

@@ -1,13 +1,12 @@
 ---
 id: 6b796310-ff12-4d38-a1a9-1d3af3f1e87f
 title: "Media Query"
-domain: adhsdk://cookbook/status/dashboard/state/media-query
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -133,9 +132,9 @@ Not applicable: Media Query makes no logging calls.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-web/src/hooks/use-media-query.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-web/src/hooks/use-media-query.ts` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -165,17 +164,18 @@ Not applicable: Media Query makes no logging calls.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | best-practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | best-practices |
-| [main-thread-freedom](agenticdevelopercookbook://compliance/performance#main-thread-freedom) | passed | performance |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | best-practices |
+| [adc.check.performance.main-thread-freedom](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/86dd71d6-1ab1-5d59-8c85-b9d469fbae0d) | passed | performance |
 
-The hook isolates viewport measurement from the components that consume it, returning only a boolean, so layout components hold no media-query plumbing. There is no dedicated test file for the hook: it is exercised only indirectly through `OverviewTab.dom.test.tsx`, which stubs the media-query API with a fixed `matches` value and no-op listener methods, so mount sync is covered but change delivery, cleanup and query-change resubscription are not asserted. The hook swallows no errors; a missing API surfaces as a thrown exception. Its work is a single synchronous query evaluation per mount or query change plus an event callback, which does not block the main thread.
+The hook isolates viewport measurement from the components that consume it, returning only a boolean, so layout components hold no media-query plumbing. `use-media-query.dom.test.tsx` covers vectors media-query-001 to media-query-010 against a controllable media-query stub (initial and server values, mount sync, change delivery, cleanup, query-change resubscription, stable query, stale value, missing environment). Partial: media-query-011 (client-only module boundary) is skipped because jsdom cannot exercise a server-components bundler boundary. The hook swallows no errors; a missing API surfaces as a thrown exception. Its work is a single synchronous query evaluation per mount or query change plus an event callback, which does not block the main thread.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (use-media-query.dom.test.tsx, 10 of 11 vectors); unit-test-coverage now partial (media-query-011 skipped: jsdom cannot exercise a server-only bundler boundary). |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | One client-only requirement, worded the same across the dashboard state specs, with a test vector; the web module's "use client" directive is noted in Platform Notes. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to status/dashboard/state/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

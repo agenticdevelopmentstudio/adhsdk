@@ -1,0 +1,2 @@
+
+Not applicable: The component does not respond to platform accessibility display options (reduce motion, increase contrast, differentiate without color). It has no reduced-motion handling: the dot pulse, the glyph animation and web's `colorful` hue cycle all run regardless of the reduce-motion setting (see the failed `reduced-motion` check in Compliance). It renders status text in semantic palette colors and announces phase changes via live regions/announcements.

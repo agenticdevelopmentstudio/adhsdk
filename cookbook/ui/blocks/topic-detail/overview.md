@@ -1,0 +1,7 @@
+
+**TopicDetail** is the reusable two-pane primitive: a selectable topic list (the rail) on the left beside a bare detail pane on the right. The pane has no title row and no action bar of its own. All list chrome (a titled header, a list toolbar with a filter, the create `+`, a footer, a close button) belongs to the rail, which the same file exports as **TopicRail**. `TopicDetail` composes one `TopicRail` with a `<section>` pane and passes the rail no `title`, so the standalone primitive shows the bare control strip and no toolbar; the hierarchical stack (adhsdk.ingredient.ui.blocks.hierarchical-topic-detail ([adhsdk.recipe.ui.blocks.hierarchical-topic-detail](cookbook:0bba1f5b-bc8d-4f76-b1c9-329b627f7ee8))) composes `TopicRail` directly for its titled, filterable columns. The file is the source of truth: it began as a port of the adh.com/home settings rail, and that original is gone.
+
+The rail is always collapsible. A desktop toggle shrinks it to an icon-only strip of 48px; each topic stays clickable as its icon. Below the `md` breakpoint the grid is a single column and the rail stacks above the pane as the same vertical list; only the collapse toggle and the drag handle are hidden. The component fills its container, so give it a height.
+
+The file also exports small shared pieces: `ListToolButton` (one icon tool on a list toolbar), `filterTopicItems`, `underlineMatch`, `topicLinkOf`, `LINK_FLASH_MS`, `rowExitEl`, the width constants and `rootFontPx` / `railPx`.
+

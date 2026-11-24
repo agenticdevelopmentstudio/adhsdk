@@ -3,9 +3,10 @@ import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { render } from '@testing-library/react'
 
-const lens = vi.hoisted(() => ({ calls: [] as { selector: string; fromColor?: string; toColor?: string }[] }))
+type LensCall = { selector: string; fromColor?: string; toColor?: string; startDelay?: number; duration?: number; dwell?: number; easing?: string }
+const lens = vi.hoisted(() => ({ calls: [] as LensCall[] }))
 vi.mock('@adh-sdk/textlens', () => ({
-  useTextLens: (_ref: unknown, options: { selector: string; fromColor?: string; toColor?: string }): void => {
+  useTextLens: (_ref: unknown, options: LensCall): void => {
     lens.calls.push(options)
   },
 }))
@@ -56,6 +57,23 @@ describe('HeroNav', () => {
     })
   })
 
+  it('waits 2s before the first sweep and leaves the rest of the timing to the lens by default', () => {
+    render(<HeroNav rows={rows} label="Sections" />)
+    expect(lens.calls.at(-1)).toMatchObject({ startDelay: 2000, duration: undefined, dwell: undefined })
+  })
+
+  it("hands a host's lens timing through, keeping its own colours", () => {
+    render(<HeroNav rows={rows} label="Sections" lens={{ startDelay: 0, duration: 5000, dwell: 1000, easing: 'linear' }} />)
+    expect(lens.calls.at(-1)).toMatchObject({
+      startDelay: 0,
+      duration: 5000,
+      dwell: 1000,
+      easing: 'linear',
+      fromColor: '--lp-ink-dim',
+      toColor: '--lp-accent-bright',
+    })
+  })
+
   it('ships from the client barrel only', () => {
     expect(client.HeroNav).toBe(HeroNav)
     expect('HeroNav' in server).toBe(false)
@@ -90,22 +108,57 @@ describe('HeroNav', () => {
 })
 
 describe('PulseRule', () => {
-  it('is an <hr> with the kit class, the caller\'s appended', () => {
+  it('pulse-rule-001, pulse-rule-002 is an <hr> with the kit class, the caller\'s appended', () => {
     const { container, rerender } = render(<server.PulseRule />)
     expect(container.querySelector('hr')?.className).toBe('lp-pulse-rule')
     rerender(<server.PulseRule className="ad-hero-rule" />)
     expect(container.querySelector('hr')?.className).toBe('lp-pulse-rule ad-hero-rule')
   })
 
-  it('ships from the server barrel, a server component, and the client barrel re-exports nothing of it', () => {
+  it('pulse-rule-003 ships from the server barrel, a server component, and the client barrel re-exports nothing of it', () => {
     expect(typeof server.PulseRule).toBe('function')
     expect('PulseRule' in client).toBe(false)
   })
 
-  it('breathes in the accent, and rests at full strength for reduced motion', () => {
+  it('pulse-rule-007, pulse-rule-008 breathes in the accent, and rests at full strength for reduced motion', () => {
     const css = readFileSync(join(CSS_DIR, 'blocks.css'), 'utf8')
     expect(css).toContain('.lp-pulse-rule {')
     expect(css).toMatch(/@keyframes lp-pulse-rule-breathe/)
     expect(css).toMatch(/prefers-reduced-motion: reduce\)\s*\{\s*\.lp-pulse-rule\s*\{\s*animation: none;\s*opacity: 1;/)
+  })
+
+  describe('conformance vectors', () => {
+    const css = (): string => readFileSync(join(CSS_DIR, 'blocks.css'), 'utf8')
+    const rule = (): string => css().match(/\.lp-pulse-rule \{([^}]*)\}/)![1]
+
+    it('pulse-rule-004 adds no trailing space for an empty className', () => {
+      const { container } = render(<server.PulseRule className="" />)
+      expect(container.querySelector('hr')!.getAttribute('class')).toBe('lp-pulse-rule')
+    })
+
+    it('pulse-rule-005 renders exactly one child, an hr', () => {
+      const { container } = render(<server.PulseRule />)
+      expect(container.children).toHaveLength(1)
+      expect(container.firstElementChild!.tagName).toBe('HR')
+    })
+
+    it('pulse-rule-006 draws a 1px borderless accent gradient with an infinite ease-in-out animation', () => {
+      const body = rule()
+      expect(body).toMatch(/height:\s*1px;/)
+      expect(body).toMatch(/border:\s*0;/)
+      expect(body).toMatch(/linear-gradient\(90deg, transparent, var\(--lp-accent, #9a9a9a\) 50%, transparent\)/)
+      expect(body).toMatch(/animation:\s*lp-pulse-rule-breathe [^;]*ease-in-out infinite;/)
+    })
+
+    it('pulse-rule-009 reads period and floor from custom properties, defaulting to 6s and 0.35', () => {
+      expect(rule()).toContain('var(--lp-pulse-rule-period, 6s)')
+      const keyframes = css().match(/@keyframes lp-pulse-rule-breathe \{[\s\S]*?\n\}/)![0]
+      expect(keyframes).toContain('opacity: var(--lp-pulse-rule-floor, 0.35);')
+      expect(keyframes).toMatch(/50% \{\s*opacity: 1;/)
+    })
+
+    it('pulse-rule-010 falls back to #9a9a9a when --lp-accent is undefined', () => {
+      expect(rule()).toContain('var(--lp-accent, #9a9a9a) 50%')
+    })
   })
 })

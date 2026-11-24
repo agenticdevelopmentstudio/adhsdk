@@ -65,7 +65,7 @@ class AiProcessingConfigSetInput:
         if description is not UNSET:
             field_dict["description"] = description
         if service_id is not UNSET:
-            field_dict["serviceId"] = service_id
+            field_dict["service_id"] = service_id
         if params is not UNSET:
             field_dict["params"] = params
 
@@ -98,7 +98,7 @@ class AiProcessingConfigSetInput:
                 return data
             return cast(None | str | Unset, data)
 
-        service_id = _parse_service_id(d.pop("serviceId", UNSET))
+        service_id = _parse_service_id(d.pop("service_id", UNSET))
 
         _params = d.pop("params", UNSET)
         params: AiProcessingConfigSetParams | Unset

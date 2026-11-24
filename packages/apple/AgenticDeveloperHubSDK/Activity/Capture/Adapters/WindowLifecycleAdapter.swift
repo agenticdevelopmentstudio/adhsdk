@@ -18,7 +18,7 @@ import AgenticDeveloperHubSDKCoreMacOS   // SystemWindowObserver / SystemWindowO
 /// isolation with `MainActor.assumeIsolated`, matching the main-thread
 /// guarantee documented above.
 // Public, and its `WindowLifecycleSource`/`SystemWindowObserverDelegate`
-// witnesses are public too: `olylod` constructs this directly and hands it
+// witnesses are public too: `temporald` constructs this directly and hands it
 // to `UsageCollector`'s public initializer as a `WindowLifecycleSource`, and
 // also assigns `onTitleChange` directly — a public type's public conformance
 // to a public protocol requires its witnesses be public as well.

@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "ea580796-8b16-4832-b11d-ad3cae991ecd",
     "title": "Database",
-    "domain": "adhsdk://cookbook/data/storage/database",
     "type": "ingredient",
     "version": "1.2.0",
     "status": "review",
@@ -26,10 +25,10 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/data/sync/sync-engine",
-      "adhsdk://cookbook/data/sync/offline-sync-client",
-      "adhsdk://cookbook/adh/hub/content/markdown-store",
-      "adhsdk://cookbook/workspace/projects/project-database"
+      "355a8f54-aee5-45cd-a28d-12c3b7a3085c",
+      "d3a0b65f-92c0-43c1-b04c-77638eb72044",
+      "11f7a665-60e9-42df-853c-fe4de3af0fd8",
+      "c212ea39-10e7-4146-89dd-36edb3b3455a"
     ],
     "references": [
       "packages/apple/AgenticDeveloperHubSDK/Database/BoundedDatabase.swift",
@@ -40,7 +39,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "d380f60352e73bc6",
+  "synced": "7cc87e1eb4971588",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -59,7 +58,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

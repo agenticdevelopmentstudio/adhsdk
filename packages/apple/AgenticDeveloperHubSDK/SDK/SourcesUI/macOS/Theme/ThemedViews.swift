@@ -105,6 +105,75 @@ public final class ThemedLabel: NSTextField, Themeable {
         label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         return label
     }
+
+    /// An error label's one state change: shows `error`'s description, or empties and
+    /// hides the label for nil.
+    public func show(error: Error?) {
+        stringValue = error?.localizedDescription ?? ""
+        isHidden = error == nil
+    }
+}
+
+/// An SF Symbol tinted with a `ThemeRole`, the icon that goes in front of a
+/// title (a window's name in its title bar or toolbar). Repaints live on theme
+/// change, so it always matches the `ThemedLabel` beside it.
+@MainActor
+public final class ThemedSymbolImageView: NSImageView, Themeable {
+    public var role: ThemeRole { didSet { applyTheme(resolvedThemeScope.palette) } }
+    private var observer: ThemePaletteObserver?
+
+    /// - Parameters:
+    ///   - symbolName: the SF Symbol; `nil` shows nothing and hides the view.
+    ///   - pointSize: the symbol's size, and the view's side.
+    public init(symbolName: String?, role: ThemeRole = .primaryText, pointSize: CGFloat = 13) {
+        self.role = role
+        super.init(frame: .zero)
+        imageScaling = .scaleProportionallyUpOrDown
+        setAccessibilityElement(false)
+        translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            widthAnchor.constraint(equalToConstant: pointSize + 2),
+            heightAnchor.constraint(equalToConstant: pointSize + 2)
+        ])
+        setContentHuggingPriority(.required, for: .horizontal)
+        setContentCompressionResistancePriority(.required, for: .horizontal)
+        self.symbolName = symbolName
+        self.pointSize = pointSize
+        // Set in the initializer, so neither `didSet` above ran.
+        reloadImage()
+        observer = ThemePaletteObserver(host: self) { [weak self] palette in self?.applyTheme(palette) }
+    }
+
+    @available(*, unavailable)
+    public required init?(coder: NSCoder) { fatalError() }
+
+    private var pointSize: CGFloat = 13 { didSet { reloadImage() } }
+
+    /// The SF Symbol shown.
+    public var symbolName: String? { didSet { reloadImage() } }
+
+    private func reloadImage() {
+        image = symbolName.flatMap {
+            NSImage(systemSymbolName: $0, accessibilityDescription: nil)?
+                .withSymbolConfiguration(.init(pointSize: pointSize, weight: .regular))
+        }
+        isHidden = image == nil
+    }
+
+    public func applyTheme(_ palette: SemanticPalette) {
+        contentTintColor = palette.nsColor(role)
+    }
+
+    /// `view` with a symbol before it — or `view` alone when there is no symbol.
+    public static func leading(_ symbolName: String?, before view: NSView,
+                               role: ThemeRole = .primaryText) -> NSView {
+        guard let symbolName else { return view }
+        let stack = NSStackView(views: [ThemedSymbolImageView(symbolName: symbolName, role: role), view])
+        stack.orientation = .horizontal
+        stack.alignment = .centerY
+        stack.spacing = 5
+        return stack
+    }
 }
 
 /// A label that emphasises the characters a filter matched.
@@ -164,7 +233,7 @@ public final class ThemedHighlightLabel: NSTextField, Themeable {
 /// An editable text field themed from the palette: control-background fill,
 /// primary text, body font, and a placeholder in the placeholder-text role.
 @MainActor
-public final class ThemedTextField: NSTextField, Themeable {
+open class ThemedTextField: NSTextField, Themeable {
     private var observer: ThemePaletteObserver?
 
     public init(string: String = "") {
@@ -184,7 +253,9 @@ public final class ThemedTextField: NSTextField, Themeable {
         backgroundColor = palette.controlBackgroundColor
         textColor = palette.primaryTextColor
         font = palette.font(.body)
-        if let placeholder = placeholderString {
+        // Setting the attributed placeholder clears `placeholderString`, so a
+        // second pass reads the text back from the attributed one.
+        if let placeholder = placeholderString ?? placeholderAttributedString?.string {
             placeholderAttributedString = NSAttributedString(string: placeholder, attributes: [
                 .foregroundColor: palette.placeholderTextColor,
                 .font: palette.font(.body)
@@ -212,7 +283,9 @@ public final class ThemedSearchField: NSSearchField, Themeable {
     public func applyTheme(_ palette: SemanticPalette) {
         textColor = palette.primaryTextColor
         font = palette.font(.body)
-        if let placeholder = placeholderString {
+        // Setting the attributed placeholder clears `placeholderString`, so a
+        // second pass reads the text back from the attributed one.
+        if let placeholder = placeholderString ?? placeholderAttributedString?.string {
             placeholderAttributedString = NSAttributedString(string: placeholder, attributes: [
                 .foregroundColor: palette.placeholderTextColor,
                 .font: palette.font(.body)
@@ -369,6 +442,14 @@ public final class ThemedActionButton: FadingPushButton, Themeable {
     private static let padding = NSSize(width: 20, height: 8)
 
     private var observer: ThemePaletteObserver?
+
+    /// Whether a click into an inactive window both activates and presses the
+    /// button. Off by default, as for any `NSButton`; a button in a window that
+    /// never becomes key (a non-activating panel) turns it on, or every press
+    /// takes two clicks.
+    public var acceptsFirstClick = false
+
+    public override func acceptsFirstMouse(for event: NSEvent?) -> Bool { acceptsFirstClick }
 
     public init(title: String, style: Style = .secondary, target: AnyObject? = nil, action: Selector? = nil) {
         self.style = style
@@ -742,8 +823,11 @@ public final class ThemedTableHeaderCell: NSTableHeaderCell {
 /// The outline counterpart of `ThemedTableView`, for the same reason it exists:
 /// an untinted outline paints the system's table background through whatever
 /// the theme put behind it.
+///
+/// Open so a list that needs its own key handling (the file browser's Return
+/// and Option-Return) can subclass it rather than rebuild the theming.
 @MainActor
-public final class ThemedOutlineView: NSOutlineView, Themeable {
+open class ThemedOutlineView: NSOutlineView, Themeable {
     public let role: ThemeRole
     private var observer: ThemePaletteObserver?
 
@@ -840,7 +924,9 @@ public extension NSTextField {
         backgroundColor = palette.controlBackgroundColor
         textColor = palette.primaryTextColor
         font = palette.font(.body)
-        if let placeholder = placeholderString {
+        // Setting the attributed placeholder clears `placeholderString`, so a
+        // second pass reads the text back from the attributed one.
+        if let placeholder = placeholderString ?? placeholderAttributedString?.string {
             placeholderAttributedString = NSAttributedString(string: placeholder, attributes: [
                 .foregroundColor: palette.placeholderTextColor,
                 .font: palette.font(.body)

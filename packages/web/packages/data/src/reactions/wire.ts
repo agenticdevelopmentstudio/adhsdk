@@ -7,8 +7,11 @@
 /** Backend row for `/content/reactions` (list, create) — one actor's one emoji on one subject. */
 export interface ReactionRow {
   id: string;
-  /** the user who reacted (server-stamped from the caller — never sent). */
-  customerId: string;
+  ownerKind: string;
+  ownerId: string;
+  /** the actor who reacted (server-stamped from the caller — never sent). */
+  authorKind: string | null;
+  authorId: string | null;
   ecosystemId: string;
   targetKind: string;
   targetId: string;
@@ -20,7 +23,23 @@ export interface ReactionRow {
 
 /** `POST /content/reactions` body. */
 export interface ReactionCreateBody {
-  targetKind: string;
-  targetId: string;
+  target_kind: string;
+  target_id: string;
   emoji: string;
+}
+
+/** `/v1/content/reactions` row as it crosses the wire (snake_case, unix-second `created`). */
+export interface ReactionWire {
+  object?: string;
+  id: string;
+  owner_kind?: string | null;
+  owner_id?: string | null;
+  author_kind?: string | null;
+  author_id?: string | null;
+  ecosystem_id: string;
+  target_kind: string;
+  target_id: string;
+  emoji: string;
+  created: number;
+  deleted_at?: string | null;
 }

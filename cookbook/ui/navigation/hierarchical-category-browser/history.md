@@ -10,3 +10,4 @@
 | 1.3.3 | 2026-10-04 | Mike Fullerton | Filled Reference Implementations, WinUI 3 translation guidance and Compliance rows |
 | 1.3.4 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own adhsdk://recipes/ domains; the adhsdk://recipes/ form named nothing. |
 | 1.3.5 | 2026-10-04 | Mike Fullerton | Matches its type's shape: required fields, title heading, and only the type's own sections. |
+| 1.4.0 | 2026-11-14 | Mike Fullerton | Verified against source: corrected behavior, states and platform notes |

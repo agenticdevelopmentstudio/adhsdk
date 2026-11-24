@@ -1,6 +1,5 @@
-
-**Decision**: The client mirrors the server's indicator rule instead of computing its own.
-**Rationale**: The doc comment calls `indicatorFromProblems` a rendering projection, "not a second opinion about what a problem is". It exists only because a filtered pane needs the rule over a subset; `board-types-parity.test.ts` pins it to the server's `indicatorFor` so it cannot drift again.
+**Decision**: The client no longer derives the indicator; the server ships it.
+**Rationale**: The module once held a problems-to-indicator operation that mirrored the server's indicator rule for filtered panes, pinned by a parity test. The server now ships the indicator and its environment-scoped twin (`scope`), so the client keeps only the wire-to-sign translation, and `board-types-parity.test.ts` still pins that map's keys to the server's indicator union.
 **Approved**: pending
 
 **Decision**: `INDICATOR_STATE` is the single wire-to-sign translation.
@@ -11,15 +10,14 @@
 **Rationale**: The server owns `ACTIVITY_WINDOW_MS`; a hardcoded caption would keep stating the old figure after a server change, "a label that lies without anything failing". Days are used only for whole-day windows of 48h or more, so 47h is never rounded to a window nobody configured.
 **Approved**: pending
 
-**Decision**: Tally deploy counts on the client.
-**Rationale**: The doc comment allows it because the counts are a tally of rows the server already judged: `step` and `tone` arrive on the wire and the window start is the board's `activityFromMs`.
+**Decision**: Judge no row-level verdict on the client beyond the held-open lookup.
+**Rationale**: Deploy counts were once tallied here; the server now ships `deployCounts`, the row `environment` and the `unresolved` verdict. The one remaining row helper, `stillUnresolved`, only looks up the problems the server named in `heldOpenBy` against the current board, because a paged-in or retained history row outlives the read that judged it.
 **Approved**: pending
 
 **Decision**: One `headlineFor` shared by the hero sign and the top-bar pill.
 **Rationale**: Sharing the function makes it impossible for the two surfaces to word the same state differently.
 **Approved**: pending
 
-**Decision**: Treat Vercel deploys with no environment target as preview builds and exclude them.
-**Rationale**: Vercel previews report `environment=null`; they are CI artifacts, and counting a failed preview as "deploy failed" under the project's prod/staging label was a real false positive. The duplicated server copy is described under real-env-server-agreement.
+**Decision**: The real-environment deploy predicate was removed from the client.
+**Rationale**: It excluded Vercel preview builds (which report `environment=null`) from the deploy tally, and had no client caller outside its own test while the server carried its own copy. The server now judges the rule and ships the row `environment`, so the duplicate is gone.
 **Approved**: pending
-

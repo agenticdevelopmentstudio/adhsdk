@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "85301350-d3d3-4b0d-a2f7-b13936d9ddf6",
     "title": "Self-Check View Model",
-    "domain": "adhsdk://cookbook/status/dashboard/logic/self-check",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -21,14 +20,14 @@
     "tags": [],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/status/dashboard/state/integrations",
-      "adhsdk://cookbook/status/service/monitor/integrations"
+      "e6326b0e-cba1-44ee-bf1d-7b033e25e39a",
+      "da0c6c07-d0f4-4c6c-a1ef-51b696910c72"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "fb725b15aa6ba50c",
+  "synced": "209e6d3b0ef5f022",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -47,7 +46,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

@@ -1,0 +1,22 @@
+
+| ID | Requirements | Input | Expected |
+|----|-------------|-------|----------|
+| mcphttp-endpoint-001 | start-returns-bound-port, route-post-only | Start with preferred port 0, then `POST /mcp` with a valid bearer and `tools/list` | Status 200 and the registered tool names in order (`MCPHTTPEndpointTests.testToolsListRoundTrip`) |
+| mcphttp-endpoint-002 | auth-bearer-required | `POST /mcp` with bearer `nope` | Status 401 (`testWrongBearerIs401`) |
+| mcphttp-endpoint-003 | auth-bearer-required | `POST /mcp` with no Authorization header | Status 401 (`testMissingBearerIs401`) |
+| mcphttp-endpoint-004 | route-wrong-path-404 | `POST /other` with a valid bearer | Status 404 (`testOtherPathIs404`) |
+| mcphttp-endpoint-005 | route-wrong-method-405 | `GET /mcp` with a valid bearer | Status 405 (`testGetIs405`) |
+| mcphttp-endpoint-006 | rewrite-restore-response | Two concurrent `tools/call` requests, both `"id": 1`, from panes `pane-A` and `pane-B` | Each answer carries id 1 and text `caller:<its pane>`, and the source saw both panes (`testConcurrentCallsWithTheSameIdKeepTheirOwnCaller`) |
+| mcphttp-endpoint-007 | rewrite-restore-response | `tools/list` with `"id": "abc"` | Status 200 and the response id is the string `abc` (`testStringIdsRoundTripToo`) |
+| mcphttp-endpoint-008 | rewrite-passthrough | `tools/list` with `"id": null` | Status 202 and no body (`testNullIdIsStillANotification`) |
+| mcphttp-endpoint-009 | caller-header-forwarded | `tools/call whoami` with header `X-ADKitchen-Pane: pane-7`; then the same with no header | Text `caller:pane-7`; then `caller:none` (`testCallerHeaderReachesTheSource`, `testMissingCallerHeaderIsNone`) |
+| mcphttp-endpoint-010 | cancel-recognise, cancel-translate, cancel-release | A 2 second `sleep` call with id 5 from pane-C; after 0.3 seconds a `notifications/cancelled` for id 5 from pane-C | The cancel POST answers 202 with no body; the call answers 200 in under 1.5 seconds with id 5 and an `error`; the tool recorded `cancelled` (`testCallerCancellationReachesTheTool`) |
+| mcphttp-endpoint-011 | cancel-keyed-by-caller | The same `sleep` call from pane-C and a cancellation for id 5 from pane-D | The cancel answers 202; the sleep call finishes with a `result`; the tool recorded `finished` (`testCancellationFromAnotherCallerCancelsNothing`) |
+| mcphttp-endpoint-012 | cancel-timeout-forwarded | An endpoint with `requestTimeout` 0.5 and a 2 second `sleep` call | Status 500 in under 1.5 seconds and the tool recorded `cancelled` (`testHTTPTimeoutCancelsTheTool`) |
+| mcphttp-endpoint-013 | start-idempotent-when-running | `start()` on a running endpoint | Returns the same port (`testStartWhileRunningReturnsTheSamePort`) |
+| mcphttp-endpoint-014 | start-falls-back-to-ephemeral | A second endpoint whose preferred port is the first endpoint's port | `start()` returns a different, non-zero port (`testSecondEndpointFallsBackToAnotherPort`) |
+| mcphttp-endpoint-015 | route-post-only | `POST /mcp` with `Origin: https://evil.example` | Status is not 200; it is 400, 403 or 421 from the SDK pipeline (`testForeignOriginIsRefused`) |
+| mcphttp-endpoint-016 | stop-while-starting, start-while-starting-or-stopping | `stop()` called while `start()` is binding; then a second `start()` during a stop | The first `start()` throws `stoppedWhileStarting`; the second throws `alreadyStarting` (derived from the phase switch; no test) |
+| mcphttp-endpoint-017 | rewrite-passthrough | Bodies `[{"id":1}]`, `{"id":1.5,"method":"x"}`, `{"id":true}` and `not json` | Each is forwarded unchanged (derived from `rewriteID`; no test) |
+| mcphttp-endpoint-018 | cancel-unknown-passes | A cancellation for id 99 when nothing is in flight | Status 202 with no body and no other request disturbed (derived from the cancel branch; no test) |
+

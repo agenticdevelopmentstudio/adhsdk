@@ -1,13 +1,12 @@
 ---
 id: 0679e232-f536-4d02-b3f0-592d52d44582
 title: "Status Server OpenAPI"
-domain: adhsdk://cookbook/status/service/openapi
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-09-27
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -21,10 +20,10 @@ tags:
   - pure-function
   - server
 depends-on:
-  - agenticdevelopercookbook://guidelines/implementing/networking/api-design
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/49399746-a81f-4163-8b07-0cfa11d87c2e
 related:
-  - adhsdk://cookbook/status/service/auth
-  - adhsdk://cookbook/status/service/telemetry/fetchers
+  - 735b4e58-bce9-4754-ad3f-bf0344fd4b32
+  - 8648272e-2da3-46fc-b9e8-5148dacdbcff
 references:
   - packages/web/packages/status-server/src/openapi/build.ts (adhsdk)
   - packages/web/packages/status-server/src/openapi/route-key.ts (adhsdk)
@@ -103,7 +102,7 @@ Not applicable — this is a build-time OpenAPI document assembler, not a visual
 |----|-------------|-------|----------|
 | status-server-openapi-001 | base-document-from-hono | `buildOpenApiSpec(app, '1.2.3')` where `app = createApp({ storage, scheduler, config, auth })` | `spec.openapi === '3.1.0'`; `spec.info` deep-equals `{ title: 'status-backend', version: '1.2.3' }` — `openapi.test.ts` › "is OpenAPI 3.1 with bearer security" (first assertion) |
 | status-server-openapi-002 | bearer-scheme-fixed | Same `spec` as vector 001 | `spec.components.securitySchemes.bearerAuth` deep-equals `{ type: 'http', scheme: 'bearer' }` — same test, second assertion |
-| status-server-openapi-003 | native-routes-excluded-from-modules, module-list-is-documented-surface | `buildOpenApiSpec(createApp({ storage, scheduler, config, auth }), version)` with a truthy `scheduler` stub, so `/cron/*` is mounted | `spec.paths` has entries for `/health`, `/version`, `/public/status-summary`, `/cron/refresh`, and `/cron/maintenance`, none of which is contributed by any of the fourteen `MODULES` entries — `openapi.test.ts`'s drift guard computes zero `phantom` and zero `undocumented` entries including these five |
+| status-server-openapi-003 | native-routes-excluded-from-modules, module-list-is-documented-surface | `buildOpenApiSpec(createApp({ storage, scheduler, config, auth }), version)` with a truthy `scheduler` stub, so `/cron/*` is mounted | `spec.paths` has entries for `/health`, `/version`, `/public/status-summary`, `/cron/refresh`, and `/cron/maintenance`, none of which is contributed by any of the sixteen `MODULES` entries — `openapi.test.ts`'s drift guard computes zero `phantom` and zero `undocumented` entries including these five |
 | status-server-openapi-004 | hand-written-paths-merge | Every plain `app.get`/`post`/`patch`/`delete` route `createApp()` registers, e.g. `GET /tokens`, `POST /tokens`, `DELETE /tokens/{id}` | `spec.paths['/tokens'].get`, `.post`, and `spec.paths['/tokens/{id}'].delete` all exist, sourced from `tokensPaths` — `openapi.test.ts` › "every registered route is documented or permanently excluded" passes with an empty `undocumented` array |
 | status-server-openapi-005 | auto-generated-paths-win-collision | `buildOpenApiSpec(stubApp, version)` where `stubApp.getOpenAPI31Document()` returns a document whose `paths` already contains `'/tokens': { get: { summary: 'AUTO' } }` (a fabricated collision with `tokensPaths`' hand-written `/tokens` `GET`) | `spec.paths['/tokens']` deep-equals exactly `{ get: { summary: 'AUTO' } }` — the auto-generated path-item object replaces the hand-written one wholesale for that key, including silently dropping the hand-written `POST /tokens` operation that the auto-generated path-item never defined |
 | status-server-openapi-006 | components-defaulted-when-absent | `buildOpenApiSpec(stubApp, version)` where `stubApp.getOpenAPI31Document()` returns a document with no `components` key at all | Does not throw; the returned `spec.components` is an object containing `schemas` and `securitySchemes`, built from `COMPONENT_SCHEMAS`/`HAND_WRITTEN_SCHEMAS` and the forced `bearerAuth` entry |
@@ -127,7 +126,7 @@ Not applicable — this is a build-time OpenAPI document assembler, not a visual
 | status-server-openapi-024 | zod-json-conversion | `zodJson(z.object({ id: z.string() }))` | Returns the draft-2020-12 JSON Schema `z.toJSONSchema` produces for that shape (an object schema whose `properties.id` is `{ type: 'string' }`), not a hand-transcribed equivalent |
 | status-server-openapi-025 | zod-json-fallback-on-throw | `zodJson(schema)` for a zod value `z.toJSONSchema` throws on for the `draft-2020-12` target — the function's own comment cites a raw `z.date()` as the example | Returns `{ type: 'object', additionalProperties: true }`; the call does not throw and makes no logging call |
 | status-server-openapi-026 | path-collision-caught-by-drift-guard | The stub-collision scenario from vector 005, but where `createApp()` also registers a real route on a method (e.g. `POST /tokens`) that the surviving auto-generated path-item never defines | `openapi.test.ts`'s "every registered route is documented or permanently excluded" assertion's `undocumented` array now contains `POST /tokens`, failing the test — demonstrating the guard that keeps a real collision from shipping silently |
-| status-server-openapi-027 | schema-name-collision-unguarded | Two `MODULES` entries hypothetically both exported a `Schemas` entry under the same component-schema name with different shapes | No test in `test/openapi.test.ts` or elsewhere under `test/` fails; this row records the unguarded case described in `schema-name-collision-unguarded` rather than a demonstrable current-repo failure, since none of the fourteen given `MODULES` entries currently collides |
+| status-server-openapi-027 | schema-name-collision-unguarded | Two `MODULES` entries hypothetically both exported a `Schemas` entry under the same component-schema name with different shapes | No test in `test/openapi.test.ts` or elsewhere under `test/` fails; this row records the unguarded case described in `schema-name-collision-unguarded` rather than a demonstrable current-repo failure, since none of the sixteen given `MODULES` entries currently collides — `openapi.test.ts` pins that convention by asserting the nine exported `*Schemas` maps share no schema name |
 
 ## Edge Cases
 
@@ -186,11 +185,11 @@ Not applicable: none of `build.ts`, `route-key.ts`, or `shared.ts` contains a lo
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/openapi/build.ts` |
-| web | `packages/web/packages/status-server/src/openapi/route-key.ts` |
-| web | `packages/web/packages/status-server/src/openapi/shared.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/openapi/build.ts` | confirmed (1.0.3) |
+| web | `packages/web/packages/status-server/src/openapi/route-key.ts` | confirmed (1.0.3) |
+| web | `packages/web/packages/status-server/src/openapi/shared.ts` | confirmed (1.0.3) |
 
 ## Design Decisions
 
@@ -211,17 +210,18 @@ Not applicable: none of `build.ts`, `route-key.ts`, or `shared.ts` contains a lo
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [api-design-conventions](agenticdevelopercookbook://compliance/access-patterns#api-design-conventions) | passed | Access Patterns |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.access-patterns.api-design-conventions](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b6745c95-4ef2-5ab4-8791-00ffc1d7b82d) | passed | Access Patterns |
 
-`separation-of-concerns` passes: `build.ts` assembles the document, `route-key.ts` normalizes a route key, and `shared.ts` provides fragment builders — three single-purpose files with no duplicated logic between them, and the fourteen `paths/*.ts` modules each own their own route family's documentation, external to all three. `unit-test-coverage` is `partial`: `buildOpenApiSpec`'s overall document shape and its parity against `app.routes` is exercised thoroughly by `test/openapi.test.ts` (the 3.1/bearer-shape assertion, the phantom-route and undocumented-route drift-guard assertions, and the committed-`openapi.json` snapshot assertion), but none of `route-key.ts`'s `normHonoPath` edge cases (duplicate-slash collapse, the root-path fallback) or any of `shared.ts`'s nine individual helper functions (`jsonBody`, `ref`, `errorResponse`, `errors`, `okJson`, `okFlag`, `pathParam`, `queryParam`, `zodJson` including its catch branch) has a dedicated unit test — each is exercised only indirectly, as a value baked into the fourteen `paths/*.ts` modules that the drift-guard and snapshot tests check as a whole; this also leaves the collision case in `schema-name-collision-unguarded` without any regression test that would catch it. `explicit-error-handling` is `partial`: the one error path across these three files, `zodJson`'s `try`/`catch`, is a deliberate, documented fallback rather than an oversight, but it is nonetheless silently swallowed — a successful conversion and a caught exception that happens to produce the same permissive `{ type: 'object', additionalProperties: true }` shape are indistinguishable from outside the function, with no log or return value marking which branch ran. `api-design-conventions` passes: the OpenAPI paths these files assemble consistently use plural resource nouns, brace-style path parameters (via `pathParam` and, for the drift guard's own recomputation, `normHonoPath`'s `:name`-to-`{name}` rewrite), and one shared bearer/error/success-envelope vocabulary (`BEARER`, `errorResponse`, `okFlag`) reused by construction across all fourteen hand-written modules, rather than left to per-module hand-checking.
+`separation-of-concerns` passes: `build.ts` assembles the document, `route-key.ts` normalizes a route key, and `shared.ts` provides fragment builders — three single-purpose files with no duplicated logic between them, and the fourteen `paths/*.ts` modules each own their own route family's documentation, external to all three. `unit-test-coverage` is `passed`: every one of the 27 conformance vectors has a passing test in `test/openapi.test.ts` — the document assembly (vectors 001-010, including the stubbed path-collision and missing-`components` cases and the drift-guard collision in 026), every `normHonoPath` edge case (011-016, duplicate-slash collapse and the root-path fallback included), and each of `shared.ts`'s helpers (017-025, `zodJson`'s catch branch included). Vector 027 is covered by a test that pins today's convention that no two `*Schemas` maps share a schema name; the merge itself still has no collision detection. `explicit-error-handling` is `partial`: the one error path across these three files, `zodJson`'s `try`/`catch`, is a deliberate, documented fallback rather than an oversight, but it is nonetheless silently swallowed — a successful conversion and a caught exception that happens to produce the same permissive `{ type: 'object', additionalProperties: true }` shape are indistinguishable from outside the function, with no log or return value marking which branch ran. `api-design-conventions` passes: the OpenAPI paths these files assemble consistently use plural resource nouns, brace-style path parameters (via `pathParam` and, for the drift guard's own recomputation, `normHonoPath`'s `:name`-to-`{name}` rewrite), and one shared bearer/error/success-envelope vocabulary (`BEARER`, `errorResponse`, `okFlag`) reused by construction across all fourteen hand-written modules, rather than left to per-module hand-checking.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (openapi.test.ts, 27 of 27 vectors); unit-test-coverage now passed. |
 | 1.0.2 | 2026-09-27 | Mike Fullerton | Moved into the concept grouping. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.0.0 | 2026-09-24 | Mike Fullerton | Initial creation |

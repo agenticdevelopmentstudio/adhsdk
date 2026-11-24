@@ -1,0 +1,16 @@
+{
+ "id": "m3",
+ "threadId": "tm3",
+ "payload": {
+  "mimeType": "text/plain",
+  "headers": [
+   {
+    "name": "Content-Type",
+    "value": "text/plain; charset=ISO-8859-1"
+   }
+  ],
+  "body": {
+   "data": "w6k"
+  }
+ }
+}

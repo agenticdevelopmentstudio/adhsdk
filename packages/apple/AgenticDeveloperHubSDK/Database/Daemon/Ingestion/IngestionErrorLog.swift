@@ -84,13 +84,18 @@ extension DaemonDatabase {
 
     /// Marks every still-active (failing/exhausted) ingestion error as cleared —
     /// called when the user clears the quarantine directory, so the log keeps the
-    /// history (for tracking) without reporting them as live failures.
-    public func clearActiveIngestionErrors() throws {
+    /// history (for tracking) without reporting them as live failures. The rows
+    /// of `keeping` (files the clear could not remove) stay active, so the badge
+    /// still counts them and a later retry can resolve them.
+    public func clearActiveIngestionErrors(keeping: [String] = []) throws {
+        let kept = (try? JSONSerialization.data(withJSONObject: keeping))
+            .flatMap { String(bytes: $0, encoding: .utf8) } ?? "[]"
         try migrationExecute("""
             UPDATE ingestion_errors
             SET status = 'cleared', resolved_at = datetime('now'), updated_at = datetime('now')
             WHERE status IN ('failing', 'exhausted')
-        """)
+              AND filename NOT IN (SELECT value FROM json_each(?))
+        """, params: [kept])
     }
 
     /// Most-recently-touched ingestion-error log rows (any status), newest first.

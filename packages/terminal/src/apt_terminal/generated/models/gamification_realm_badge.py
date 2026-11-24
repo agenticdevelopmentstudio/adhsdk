@@ -154,17 +154,17 @@ class GamificationRealmBadge:
                 "name": name,
                 "description": description,
                 "icon": icon,
-                "pointValue": point_value,
+                "point_value": point_value,
             }
         )
         if stat_key is not UNSET:
-            field_dict["statKey"] = stat_key
+            field_dict["stat_key"] = stat_key
         if comparator is not UNSET:
             field_dict["comparator"] = comparator
         if threshold is not UNSET:
             field_dict["threshold"] = threshold
         if badge_line is not UNSET:
-            field_dict["badgeLine"] = badge_line
+            field_dict["badge_line"] = badge_line
         if tier is not UNSET:
             field_dict["tier"] = tier
         if hidden is not UNSET:
@@ -172,9 +172,9 @@ class GamificationRealmBadge:
         if active is not UNSET:
             field_dict["active"] = active
         if subject_type is not UNSET:
-            field_dict["subjectType"] = subject_type
+            field_dict["subject_type"] = subject_type
         if ecosystem_id is not UNSET:
-            field_dict["ecosystemId"] = ecosystem_id
+            field_dict["ecosystem_id"] = ecosystem_id
 
         return field_dict
 
@@ -189,7 +189,7 @@ class GamificationRealmBadge:
 
         icon = d.pop("icon")
 
-        point_value = d.pop("pointValue")
+        point_value = d.pop("point_value")
 
         def _parse_stat_key(data: object) -> None | str | Unset:
             if data is None:
@@ -198,7 +198,7 @@ class GamificationRealmBadge:
                 return data
             return cast(None | str | Unset, data)
 
-        stat_key = _parse_stat_key(d.pop("statKey", UNSET))
+        stat_key = _parse_stat_key(d.pop("stat_key", UNSET))
 
         def _parse_comparator(
             data: object,
@@ -264,7 +264,7 @@ class GamificationRealmBadge:
                 return data
             return cast(None | str | Unset, data)
 
-        badge_line = _parse_badge_line(d.pop("badgeLine", UNSET))
+        badge_line = _parse_badge_line(d.pop("badge_line", UNSET))
 
         def _parse_tier(
             data: object,
@@ -325,7 +325,7 @@ class GamificationRealmBadge:
                 return data
             return cast(None | str | Unset, data)
 
-        subject_type = _parse_subject_type(d.pop("subjectType", UNSET))
+        subject_type = _parse_subject_type(d.pop("subject_type", UNSET))
 
         def _parse_ecosystem_id(data: object) -> None | str | Unset:
             if data is None:
@@ -334,7 +334,7 @@ class GamificationRealmBadge:
                 return data
             return cast(None | str | Unset, data)
 
-        ecosystem_id = _parse_ecosystem_id(d.pop("ecosystemId", UNSET))
+        ecosystem_id = _parse_ecosystem_id(d.pop("ecosystem_id", UNSET))
 
         gamification_realm_badge = cls(
             id=id,

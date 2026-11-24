@@ -114,26 +114,26 @@ class PersonaService:
         field_dict.update(
             {
                 "id": id,
-                "providerKind": provider_kind,
+                "provider_kind": provider_kind,
                 "name": name,
-                "baseUrl": base_url,
-                "hasApiKey": has_api_key,
-                "connectStatus": connect_status,
+                "base_url": base_url,
+                "has_api_key": has_api_key,
+                "connect_status": connect_status,
                 "models": models,
             }
         )
         if template_id is not UNSET:
-            field_dict["templateId"] = template_id
+            field_dict["template_id"] = template_id
         if connect_error is not UNSET:
-            field_dict["connectError"] = connect_error
+            field_dict["connect_error"] = connect_error
         if last_connected_at is not UNSET:
-            field_dict["lastConnectedAt"] = last_connected_at
+            field_dict["last_connected_at"] = last_connected_at
         if documentation_url is not UNSET:
-            field_dict["documentationUrl"] = documentation_url
+            field_dict["documentation_url"] = documentation_url
         if status_url is not UNSET:
-            field_dict["statusUrl"] = status_url
+            field_dict["status_url"] = status_url
         if models_fetched_at is not UNSET:
-            field_dict["modelsFetchedAt"] = models_fetched_at
+            field_dict["models_fetched_at"] = models_fetched_at
 
         return field_dict
 
@@ -144,15 +144,15 @@ class PersonaService:
         d = dict(src_dict)
         id = d.pop("id")
 
-        provider_kind = d.pop("providerKind")
+        provider_kind = d.pop("provider_kind")
 
         name = d.pop("name")
 
-        base_url = d.pop("baseUrl")
+        base_url = d.pop("base_url")
 
-        has_api_key = d.pop("hasApiKey")
+        has_api_key = d.pop("has_api_key")
 
-        connect_status = d.pop("connectStatus")
+        connect_status = d.pop("connect_status")
 
         models = []
         _models = d.pop("models")
@@ -182,7 +182,7 @@ class PersonaService:
                 return data
             return cast(None | str | Unset, data)
 
-        template_id = _parse_template_id(d.pop("templateId", UNSET))
+        template_id = _parse_template_id(d.pop("template_id", UNSET))
 
         def _parse_connect_error(data: object) -> None | str | Unset:
             if data is None:
@@ -191,7 +191,7 @@ class PersonaService:
                 return data
             return cast(None | str | Unset, data)
 
-        connect_error = _parse_connect_error(d.pop("connectError", UNSET))
+        connect_error = _parse_connect_error(d.pop("connect_error", UNSET))
 
         def _parse_last_connected_at(data: object) -> None | str | Unset:
             if data is None:
@@ -200,7 +200,7 @@ class PersonaService:
                 return data
             return cast(None | str | Unset, data)
 
-        last_connected_at = _parse_last_connected_at(d.pop("lastConnectedAt", UNSET))
+        last_connected_at = _parse_last_connected_at(d.pop("last_connected_at", UNSET))
 
         def _parse_documentation_url(data: object) -> None | str | Unset:
             if data is None:
@@ -209,7 +209,7 @@ class PersonaService:
                 return data
             return cast(None | str | Unset, data)
 
-        documentation_url = _parse_documentation_url(d.pop("documentationUrl", UNSET))
+        documentation_url = _parse_documentation_url(d.pop("documentation_url", UNSET))
 
         def _parse_status_url(data: object) -> None | str | Unset:
             if data is None:
@@ -218,7 +218,7 @@ class PersonaService:
                 return data
             return cast(None | str | Unset, data)
 
-        status_url = _parse_status_url(d.pop("statusUrl", UNSET))
+        status_url = _parse_status_url(d.pop("status_url", UNSET))
 
         def _parse_models_fetched_at(data: object) -> None | str | Unset:
             if data is None:
@@ -227,7 +227,7 @@ class PersonaService:
                 return data
             return cast(None | str | Unset, data)
 
-        models_fetched_at = _parse_models_fetched_at(d.pop("modelsFetchedAt", UNSET))
+        models_fetched_at = _parse_models_fetched_at(d.pop("models_fetched_at", UNSET))
 
         persona_service = cls(
             id=id,

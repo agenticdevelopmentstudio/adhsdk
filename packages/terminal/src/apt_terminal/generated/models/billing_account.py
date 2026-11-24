@@ -18,7 +18,7 @@ class BillingAccount:
         id (str):
         offer_id (str):
         status (str):
-        created_at (str):
+        created (int): Unix timestamp, in seconds.
         stripe_customer_id (None | str | Unset):
         stripe_checkout_session_id (None | str | Unset):
         stripe_subscription_id (None | str | Unset):
@@ -32,7 +32,7 @@ class BillingAccount:
     id: str
     offer_id: str
     status: str
-    created_at: str
+    created: int
     stripe_customer_id: None | str | Unset = UNSET
     stripe_checkout_session_id: None | str | Unset = UNSET
     stripe_subscription_id: None | str | Unset = UNSET
@@ -50,7 +50,7 @@ class BillingAccount:
 
         status = self.status
 
-        created_at = self.created_at
+        created = self.created
 
         stripe_customer_id: None | str | Unset
         if isinstance(self.stripe_customer_id, Unset):
@@ -105,27 +105,27 @@ class BillingAccount:
         field_dict.update(
             {
                 "id": id,
-                "offerId": offer_id,
+                "offer_id": offer_id,
                 "status": status,
-                "createdAt": created_at,
+                "created": created,
             }
         )
         if stripe_customer_id is not UNSET:
-            field_dict["stripeCustomerId"] = stripe_customer_id
+            field_dict["stripe_customer_id"] = stripe_customer_id
         if stripe_checkout_session_id is not UNSET:
-            field_dict["stripeCheckoutSessionId"] = stripe_checkout_session_id
+            field_dict["stripe_checkout_session_id"] = stripe_checkout_session_id
         if stripe_subscription_id is not UNSET:
-            field_dict["stripeSubscriptionId"] = stripe_subscription_id
+            field_dict["stripe_subscription_id"] = stripe_subscription_id
         if payer_email is not UNSET:
-            field_dict["payerEmail"] = payer_email
+            field_dict["payer_email"] = payer_email
         if current_period_end is not UNSET:
-            field_dict["currentPeriodEnd"] = current_period_end
+            field_dict["current_period_end"] = current_period_end
         if lapsed_at is not UNSET:
-            field_dict["lapsedAt"] = lapsed_at
+            field_dict["lapsed_at"] = lapsed_at
         if claimed_customer_id is not UNSET:
-            field_dict["claimedCustomerId"] = claimed_customer_id
+            field_dict["claimed_customer_id"] = claimed_customer_id
         if claimed_at is not UNSET:
-            field_dict["claimedAt"] = claimed_at
+            field_dict["claimed_at"] = claimed_at
 
         return field_dict
 
@@ -134,11 +134,11 @@ class BillingAccount:
         d = dict(src_dict)
         id = d.pop("id")
 
-        offer_id = d.pop("offerId")
+        offer_id = d.pop("offer_id")
 
         status = d.pop("status")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
         def _parse_stripe_customer_id(data: object) -> None | str | Unset:
             if data is None:
@@ -147,7 +147,7 @@ class BillingAccount:
                 return data
             return cast(None | str | Unset, data)
 
-        stripe_customer_id = _parse_stripe_customer_id(d.pop("stripeCustomerId", UNSET))
+        stripe_customer_id = _parse_stripe_customer_id(d.pop("stripe_customer_id", UNSET))
 
         def _parse_stripe_checkout_session_id(data: object) -> None | str | Unset:
             if data is None:
@@ -157,7 +157,7 @@ class BillingAccount:
             return cast(None | str | Unset, data)
 
         stripe_checkout_session_id = _parse_stripe_checkout_session_id(
-            d.pop("stripeCheckoutSessionId", UNSET)
+            d.pop("stripe_checkout_session_id", UNSET)
         )
 
         def _parse_stripe_subscription_id(data: object) -> None | str | Unset:
@@ -167,7 +167,9 @@ class BillingAccount:
                 return data
             return cast(None | str | Unset, data)
 
-        stripe_subscription_id = _parse_stripe_subscription_id(d.pop("stripeSubscriptionId", UNSET))
+        stripe_subscription_id = _parse_stripe_subscription_id(
+            d.pop("stripe_subscription_id", UNSET)
+        )
 
         def _parse_payer_email(data: object) -> None | str | Unset:
             if data is None:
@@ -176,7 +178,7 @@ class BillingAccount:
                 return data
             return cast(None | str | Unset, data)
 
-        payer_email = _parse_payer_email(d.pop("payerEmail", UNSET))
+        payer_email = _parse_payer_email(d.pop("payer_email", UNSET))
 
         def _parse_current_period_end(data: object) -> None | str | Unset:
             if data is None:
@@ -185,7 +187,7 @@ class BillingAccount:
                 return data
             return cast(None | str | Unset, data)
 
-        current_period_end = _parse_current_period_end(d.pop("currentPeriodEnd", UNSET))
+        current_period_end = _parse_current_period_end(d.pop("current_period_end", UNSET))
 
         def _parse_lapsed_at(data: object) -> None | str | Unset:
             if data is None:
@@ -194,7 +196,7 @@ class BillingAccount:
                 return data
             return cast(None | str | Unset, data)
 
-        lapsed_at = _parse_lapsed_at(d.pop("lapsedAt", UNSET))
+        lapsed_at = _parse_lapsed_at(d.pop("lapsed_at", UNSET))
 
         def _parse_claimed_customer_id(data: object) -> None | str | Unset:
             if data is None:
@@ -203,7 +205,7 @@ class BillingAccount:
                 return data
             return cast(None | str | Unset, data)
 
-        claimed_customer_id = _parse_claimed_customer_id(d.pop("claimedCustomerId", UNSET))
+        claimed_customer_id = _parse_claimed_customer_id(d.pop("claimed_customer_id", UNSET))
 
         def _parse_claimed_at(data: object) -> None | str | Unset:
             if data is None:
@@ -212,13 +214,13 @@ class BillingAccount:
                 return data
             return cast(None | str | Unset, data)
 
-        claimed_at = _parse_claimed_at(d.pop("claimedAt", UNSET))
+        claimed_at = _parse_claimed_at(d.pop("claimed_at", UNSET))
 
         billing_account = cls(
             id=id,
             offer_id=offer_id,
             status=status,
-            created_at=created_at,
+            created=created,
             stripe_customer_id=stripe_customer_id,
             stripe_checkout_session_id=stripe_checkout_session_id,
             stripe_subscription_id=stripe_subscription_id,

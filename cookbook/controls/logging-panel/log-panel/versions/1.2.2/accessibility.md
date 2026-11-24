@@ -1,0 +1,9 @@
+
+- **Role**: The root container is a grid-based table-like structure; ARIA roles are applied: `row` for header and data rows, `columnheader` for header cells, `cell` for body cells, `rowgroup` for the rows list. The root container itself does not carry a `table` or `grid` role, so the ARIA structure implied by these child roles is incomplete (see Compliance: semantic-markup).
+- **Labels**: Column headers serve as labels for columns; each header cell has role `columnheader` and displays the column title text.
+- **Interactive cells**: Cells with click handlers or the `isClickable` flag receive the CSS class `lp-cell--interactive`. This class is a styling hook only — it carries no ARIA semantics and does not by itself communicate interactivity to assistive technology. See **Keyboard navigation** below.
+- **Title attribute**: Each cell sets the HTML `title` attribute to the cell's text content, which shows a hover tooltip in most browsers. Screen reader support for `title` is inconsistent, so it is not a reliable accessible name for interactive cells.
+- **Text alternatives**: Text content is displayed directly; no icons or images require alt text in the component itself.
+- **Keyboard navigation**: Not implemented in source. Cells have no `tabIndex`, no `onKeyDown` handler, and no focus management; `onClick`/`onDoubleClick` are the only interaction handlers wired to a cell, so interactive cells (marked by `column.isClickable`, `cell.link`, or `column.onCellClick`) are reachable only by mouse.
+- **Minimum tap target**: Not applicable: Cell dimensions and tap target sizes are controlled by CSS styling, not by the component; consumers must ensure minimum tap/click targets via stylesheet implementation. WCAG 2.5.8 (Target Size Minimum, Level AA) requires at least 24×24 CSS px; WCAG 2.5.5 (Target Size Enhanced, Level AAA) and platform HIG guidance recommend 44×44pt.
+

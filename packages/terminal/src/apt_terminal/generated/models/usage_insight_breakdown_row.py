@@ -72,13 +72,13 @@ class UsageInsightBreakdownRow:
                 "key": key,
                 "label": label,
                 "requests": requests,
-                "serverMs": server_ms,
-                "dbMs": db_ms,
-                "llmTokens": llm_tokens,
-                "directMicros": direct_micros,
-                "hostingShareMicros": hosting_share_micros,
-                "estimatedMicros": estimated_micros,
-                "unpricedLines": unpriced_lines,
+                "server_ms": server_ms,
+                "db_ms": db_ms,
+                "llm_tokens": llm_tokens,
+                "direct_micros": direct_micros,
+                "hosting_share_micros": hosting_share_micros,
+                "estimated_micros": estimated_micros,
+                "unpriced_lines": unpriced_lines,
             }
         )
 
@@ -95,24 +95,24 @@ class UsageInsightBreakdownRow:
 
         requests = d.pop("requests")
 
-        server_ms = d.pop("serverMs")
+        server_ms = d.pop("server_ms")
 
-        db_ms = d.pop("dbMs")
+        db_ms = d.pop("db_ms")
 
-        llm_tokens = UsageLlmTokens.from_dict(d.pop("llmTokens"))
+        llm_tokens = UsageLlmTokens.from_dict(d.pop("llm_tokens"))
 
         def _parse_direct_micros(data: object) -> int | None:
             if data is None:
                 return data
             return cast(int | None, data)
 
-        direct_micros = _parse_direct_micros(d.pop("directMicros"))
+        direct_micros = _parse_direct_micros(d.pop("direct_micros"))
 
-        hosting_share_micros = d.pop("hostingShareMicros")
+        hosting_share_micros = d.pop("hosting_share_micros")
 
-        estimated_micros = d.pop("estimatedMicros")
+        estimated_micros = d.pop("estimated_micros")
 
-        unpriced_lines = d.pop("unpricedLines")
+        unpriced_lines = d.pop("unpriced_lines")
 
         usage_insight_breakdown_row = cls(
             key=key,

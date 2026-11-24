@@ -31,7 +31,7 @@ comment states this is deliberate: a caller with no branch controller "passes
 `{ _ in nil }`, which `ScriptableProjectTab` reports as an empty string"
 (`ComposableTabsWindowController.swift`) — matching
 `BranchController`'s own policy that a detached HEAD is "an answer,"
-documented in `adhsdk://cookbook/workspace/projects/branch-controller`.
+documented in [adhsdk.ingredient.workspace.projects.branch-controller](cookbook:92f11498-2cb2-4b04-92b9-560d9f2de6ee).
 **Approved**: pending
 
 **Decision**: `ScriptableProjectTab.uniqueID` is the tab *group's* id, not

@@ -21,9 +21,9 @@ export function paperSearchSource(opts?: { baseUrl?: string; authorSlug?: string
   return {
     baseUrl: opts?.baseUrl ?? '/api',
     endpoints: {
-      results: '/public/papers',
-      tags: '/public/papers/tags',
-      categories: '/public/papers/categories',
+      results: '/v1/papers',
+      tags: '/v1/paper_tags',
+      categories: '/v1/paper_categories',
     },
     // The corpus is edited continuously and the search page is the only way to see that a
     // paper exists, so a cached answer is a paper the reader is told is not there.

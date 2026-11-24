@@ -1,0 +1,25 @@
+
+- **field-set**: The DTO MUST carry `id` (`Int`), `sessionId`, `kind`, `text`, `timestamp`, `projectName`, `gitBranch`, `sessionName` and `termProgram` (all `String` except `id`).
+- **immutable**: Every field MUST be a constant set once by the initializer or decoder.
+- **row-identity**: `id` MUST be the row's stable identity: the `transcript_lines` row id times 1000 plus the block's index within that entry, because one captured entry can yield more than one line.
+- **row-identity-unfiltered-index**: The block index MUST be the block's position in the unfiltered entry, so `id` does not change when the caller changes what it asks to see.
+- **identity-not-paging**: `id` MUST be used for identity only; pages are cut on `timestamp`, not on `id`.
+- **kind-vocabulary**: `kind` is documented as `prompt` (the human typed it), `reply` (the agent addressed the human), `progress` (the agent narrating its own work mid-turn), `thinking` (extended thinking) or `notice` (an interruption or other transcript event worth showing); the type MUST NOT reject any other string.
+- **kind-single-field**: The line's role MUST be carried in the single `kind` field, not in boolean flags, because the combinations are mutually exclusive.
+- **timestamp-iso**: `timestamp` MUST be the ISO-8601 text as written in the transcript, with no reformatting by the DTO.
+- **project-name**: `projectName` MUST be the last path component of the session's project root, or the empty string when unknown.
+- **git-branch**: `gitBranch` MUST be the session's git branch, or the empty string when not in a repository.
+- **session-name**: `sessionName` MUST be the session's title, or the empty string when it has none, and MUST NOT be its summary.
+- **term-program**: `termProgram` MUST be the session's `TERM_PROGRAM`, or the empty string when unknown, so a row can be headed with that application's icon.
+- **initializer-default**: The public initializer MUST take every field, with `termProgram` defaulting to the empty string.
+- **is-from-user**: `isFromUser` MUST be true exactly when `kind` is `prompt`.
+- **work-output-kinds**: `workOutputKinds` MUST be the set of `progress` and `thinking`.
+- **is-work-output**: `isWorkOutput` MUST be true exactly when `kind` is a member of `workOutputKinds`.
+- **shared-work-list**: The daemon's filter and the app's mapping MUST both read `workOutputKinds`, so a kind added to one cannot be missed by the other. The daemon's `ConversationExtractor.Kind.isWorkOutput` reads it.
+- **work-output-default-hidden**: The Conversations window hides work output by default, because it outnumbers replies roughly three to one; the DTO itself filters nothing.
+- **tolerant-decode-required-keys**: Decoding MUST fail with `keyNotFound` when `id`, `sessionId`, `kind`, `text`, `timestamp`, `projectName`, `gitBranch` or `sessionName` is missing; these are the fields that have always been there.
+- **tolerant-decode-term-program**: Decoding MUST treat a missing or null `termProgram` as the empty string, which is the same value the daemon sends when it has nothing to say.
+- **tolerant-decode-reason**: Fields added later MUST decode to their absence rather than throw, so one missing field cannot blank the whole feed.
+- **coding-keys**: The wire keys MUST be the property names `id`, `sessionId`, `kind`, `text`, `timestamp`, `projectName`, `gitBranch`, `sessionName` and `termProgram`.
+- **encode-synthesized**: Encoding MUST write all nine keys, using the synthesized `Encodable` conformance with the declared coding keys.
+

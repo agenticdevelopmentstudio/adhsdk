@@ -1,0 +1,20 @@
+
+- **Omitted `className`**: `Avatar`, `AvatarImage`, and `AvatarFallback` MUST still render when `className` is omitted (`undefined`), passing `undefined` as the second argument to `cn`; the wrapper performs no validation of `className` before doing so.
+- **No other props supplied**: `Avatar` MUST render correctly when called
+  with no props beyond (or including) `className`, since `{...props}` is
+  spread unconditionally and the wrapper performs no required-prop checking
+  of its own. `AvatarImage` and `AvatarFallback` MUST likewise render
+  correctly with no props beyond `className`, but only when nested inside
+  `<Avatar>`: both delegate to a Base UI part that reads `Avatar`'s root
+  context, so either one MUST throw when
+  rendered standalone (outside `<Avatar>`), regardless of what other props it receives.
+- **Boundary values** (web): Not applicable: the React wrapper defines no numeric, length, or size-constrained props of its own (e.g. no `size`, `min`, `max`); any such constraints belong to the underlying Base UI `Avatar.Root`/`Image`/`Fallback` API.
+- **Concurrent access** (web): Not applicable: `Avatar`, `AvatarImage`, and `AvatarFallback` are stateless functional components with no internal state, refs, or module-level mutable data; each render is an independent, pure function call.
+- **Error states**: When its underlying image fails to load, Base UI's `Avatar.Image` renders nothing and `Avatar.Fallback` is revealed; this load-failure-to-fallback handoff is Base UI's behavior (`@base-ui/react/avatar`), not logic this wrapper adds.
+- **Offline or disconnected state**: Base UI's Avatar falls back the same way whether a load failure is caused by an offline network or any other image-load error, because it has no separate retry or timeout path for network failures — a failed load leaves `Avatar.Image` unrendered and reveals `Avatar.Fallback` exactly as in Error states above.
+
+<!-- appkit-avatar -->
+- **AppKit — replaced content mid-load**: setting new content cancels the old load, and a cancelled load never writes its picture or clears the new load's task.
+- **AppKit — boundary values**: the initials are sized at `side × 0.4` points, so two wide capitals (`MW`) fit a 20 pt circle; a smaller side shrinks them with it.
+- **AppKit — concurrent access**: `AvatarView` is `@MainActor`; only its fetch runs off the main actor, and its result is applied back on it.
+

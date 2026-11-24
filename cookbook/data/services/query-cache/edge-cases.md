@@ -29,12 +29,12 @@
   database dependency of its own — its only external calls are reading the
   token's subject claim, session-change subscription, registering the
   cross-tab storage-change listener, and cache-client construction, none of
-  which this component's tests or the authentication client's own
+  which this component's tests or the authentication client's ([adhsdk.ingredient.data.services.auth.auth-client](cookbook:3ea9329e-5acc-4c43-b5ce-bb8c50570104)) own
   documented contract for reading the token's subject claim (guaranteed to
   return nothing rather than throw on a malformed token) show as failing.
   This component therefore defines no dependency-failure path of its own; a
-  downstream query's network failure is documented by the recipe for that
-  query (e.g. the resource-data recipe), not here.
+  downstream query's network failure is documented by the spec for that
+  query (e.g. [adhsdk.ingredient.data.services.resource-data](cookbook:ec6e6ca5-8780-4ce2-8b3a-087adc50ed35)), not here.
 - **Offline/disconnected state**: the cache-client factory sets one default
   retry policy (a single retry) applied to every query built on the
   singleton cache accessor, but this component implements no

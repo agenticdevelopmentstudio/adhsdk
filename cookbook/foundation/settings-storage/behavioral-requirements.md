@@ -7,7 +7,7 @@
 
 ### Storage provider contract
 
-- **provider-get-fallback**: get MUST return the key's default value when the backend holds no value, or holds a value that cannot be decoded as the key's value type, for that key's name.
+- **provider-get-fallback**: get MUST return the key's default value in the cases `key-default-value` names (no stored value, or a stored value that cannot be decoded as the key's value type).
 - **provider-set-persists**: set MUST make the new value readable by a subsequent get for the same key on the same provider instance once set returns.
 - **provider-remove-restores-default**: remove MUST cause a subsequent get for that key to return the default value and contains to return false.
 - **provider-contains**: contains MUST return true only when a value has been explicitly stored for that key's name and has not since been removed.
@@ -21,8 +21,8 @@
 
 ### In-memory provider / in-memory secure provider
 
-- **inmemory-concurrent-access**: The in-memory provider MUST serialize set/remove against every get/contains, so a concurrent read never observes a partially-written value.
-- **inmemory-seeded-initial-values**: The in-memory provider's seed-values constructor MUST seed its backing storage directly from the untyped initial-values argument, without validating that a seeded value matches the value type of any key that will later read it.
+- **inmemory-concurrent-access**: The in-memory provider MUST serialize set/remove against every get/contains, so a concurrent read never observes a partially-written value (defense in depth; see `confines-to-ui-thread`). Reads run without exclusive access and writes run with it, so readers see a consistent snapshot against any single writer.
+- **inmemory-seeded-initial-values**: The in-memory provider's seed-values constructor MUST seed its backing storage directly from the untyped initial-values argument, and MAY skip validating that a seeded value matches the value type of any key that will later read it; see `inmemory-untyped-seed` in Edge Cases for what a type mismatch does.
 - **inmemory-secure-delegates**: The in-memory secure provider MUST delegate every operation and its change stream to an internally-held, private in-memory provider, differing from it only in also identifying itself as a secure storage provider.
 
 ### Plain persistent provider
@@ -30,7 +30,7 @@
 - **plain-provider-native-fast-path**: The plain persistent provider MUST store and read integer, floating-point, boolean, string, binary, URL, and date values through the backing store's native object storage rather than JSON encoding.
 - **plain-provider-json-fallback**: For any value type outside that native set — arrays, dictionaries, and other structured values — the plain persistent provider MUST JSON-encode the value and store it as binary data.
 - **plain-provider-corrupted-decode-fallback**: When previously-stored data for a key fails to decode as the key's value type, get MUST return the default value rather than throwing or crashing.
-- **plain-provider-encode-failure**: When JSON encoding fails for a value with no native representation, the plain persistent provider's set MUST return without writing, without logging, and without publishing on the change stream, so the caller cannot learn the write did not happen.
+- **plain-provider-encode-failure**: When JSON encoding fails for a value with no native representation, the plain persistent provider's set MUST return without writing and without publishing on the change stream, and SHOULD log an error naming the key. Current Apple behavior is a known limitation: it does not log either, so the caller cannot learn the write did not happen (see the pending encode-failure Design Decision).
 
 ### Secure persistent provider
 
@@ -42,13 +42,13 @@
 - **secure-provider-read-memoization**: get MUST memoize the raw secure-store string for a key — including a confirmed absence — the first time it is read, and MUST answer every subsequent get for that key from the memo rather than re-querying the secure store, until set or remove updates the memo.
 - **secure-provider-memo-per-instance**: The read memo MUST be private, per-instance state; a second secure persistent provider constructed for the same service MUST start with an empty memo.
 - **secure-provider-contains-bypasses-memo**: contains MUST query the secure store directly, never through the read memo.
-- **secure-provider-global-service-override**: Constructing a secure persistent provider with a non-nil service argument MUST assign it to the process-wide secure-store service identifier, and MUST unconditionally assign its access-group argument — including "none" — to the process-wide secure-store access group, so constructing an instance changes secure-store routing for every secure-store-backed caller in the process, not only for the new instance.
+- **secure-provider-global-service-override**: A secure persistent provider's service and access-group arguments SHOULD apply to that instance's secure-store calls only. Current Apple behavior (a known gap, see the pending Design Decision): constructing a provider with a non-nil service argument assigns it to the process-wide secure-store service identifier, and unconditionally assigns its access-group argument — including "none" — to the process-wide secure-store access group, so constructing an instance changes secure-store routing for every secure-store-backed caller in the process, not only for the new instance.
 
 ### Embedded-database provider
 
 - **sqlite-schema-creation**: Constructing the embedded-database provider with a path MUST open, creating if absent, a database at that path, and MUST create a `settings_kv` table (`key TEXT PRIMARY KEY, value BLOB NOT NULL`) if it does not already exist, throwing an open error or a schema error if either step fails.
 - **sqlite-json-storage**: set MUST JSON-encode every value and store it as the row's value blob via an upsert statement, so a key never occupies more than one row.
-- **sqlite-serialized-access**: Every get, set, remove, and contains MUST run serialized against the same database handle, so concurrent calls on one instance are never interleaved.
+- **sqlite-serialized-access**: Every get, set, remove, and contains MUST run serialized against the same database handle, so concurrent calls on one instance are never interleaved; two `set` calls for different keys never interleave their SQL statements.
 - **sqlite-transient-binding**: Bound text and binary parameters MUST be copied by the database engine rather than referenced from caller-owned memory that may be freed before the statement executes.
 - **sqlite-close-on-deinit**: The instance MUST close its database handle when it is deallocated.
 - **sqlite-encode-failure-logged**: When JSON encoding fails, set MUST log an error and return without writing a row or publishing on the change stream.
@@ -60,7 +60,7 @@
 - **cloudsync-provider-int-promotion**: For a plain-integer-valued key, set MUST store the value as a 64-bit integer (the backing store has no native plain-integer accessor), and get MUST bridge a stored 64-bit integer back to a plain integer.
 - **cloudsync-provider-explicit-synchronize**: set and remove MUST call the backing store's synchronize operation after mutating it, in addition to publishing on the change stream.
 - **cloudsync-provider-external-change-forwarding**: The provider MUST forward every key named in the backing store's external-change notification payload onto its own change stream, so a change made on another device is observable through the same stream as a local set.
-- **cloudsync-provider-encode-failure**: When JSON encoding fails for a value with no native representation, the cloud-sync provider's set MUST return without writing, without logging, and without publishing on the change stream, so the caller cannot learn the write did not happen.
+- **cloudsync-provider-encode-failure**: When JSON encoding fails for a value with no native representation, the cloud-sync provider's set MUST return without writing and without publishing on the change stream, and SHOULD log an error naming the key. Current Apple behavior is a known limitation: it does not log either, so the caller cannot learn the write did not happen (see the pending encode-failure Design Decision).
 
 ### Settings store / shared instance
 
@@ -82,5 +82,5 @@
 
 ### Threading
 
-- **confines-to-ui-thread**: The component MUST be usable only on the UI thread. This covers the settings store, every setting and observer, every storage provider (including the in-memory, plain persistent, secure persistent, embedded-database, and cloud-synced backends), and the settings-window models, appearance manager, launch-at-login manager, and command-palette types built on them; only the launch-at-login service abstraction (a thin wrapper over the operating system's registration service) and plain value types such as colors and choice descriptors are not confined.
+- **confines-to-ui-thread**: The component MUST be usable only on the UI thread. This covers the settings store, every setting and observer, and every storage provider (including the in-memory, plain persistent, secure persistent, embedded-database, and cloud-synced backends); plain value types such as colors are not confined. Consumers built on these types, such as settings-window models, are specified in their own ingredients.
 

@@ -1,3 +1,4 @@
+import AgenticDeveloperHubSDKCoreUI
 @testable import AgenticDeveloperHubSDKMacOS
 import XCTest
 

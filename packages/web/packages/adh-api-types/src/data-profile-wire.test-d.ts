@@ -25,12 +25,18 @@
 // literally `true`, or `Expect<… extends true>` fails and the package stops type-checking.
 import type { RequestBody, SuccessBody } from "./index";
 import type {
+  SocialLinkWire,
+  SocialLinkWriteWire,
   SocialLink,
   SocialLinkWrite,
+  AddressWire,
+  AddressWriteWire,
   Address,
   AddressWrite,
+  PrivacyGrantWire,
   PrivacyGrant,
   PrivacyTargetTable,
+  UsageRowWire,
   UsageRow,
 } from "@adh-sdk/data/profile";
 
@@ -47,13 +53,26 @@ type IsAny<T> = 0 extends 1 & T ? true : false;
  *  literals, not to one declared type measured against another. */
 type UnknownKeys<Written, Wire> = Exclude<keyof Written, keyof Wire>;
 
+/** A type with intersections flattened, so two structurally identical shapes compare `Equal`. */
+type Flat<T> = { [K in keyof T]: T[K] };
+/** The generated list row carries a per-resource `object` discriminator the wire types omit. */
+type NoObject<T> = Flat<Omit<T, "object">>;
+
 // ── what the backend actually declares ───────────────────────────────────────────────────
-type WireSocialLink = SuccessBody<"/content/social-links", "get">[number];
-type WireAddress = SuccessBody<"/content/addresses", "get">[number];
-type WirePrivacyGrant = SuccessBody<"/account/privacy", "get">["items"][number];
-type WireUsageRow = SuccessBody<"/usage/summary", "get">["rows"][number];
-type WireSocialLinkCreate = RequestBody<"/content/social-links", "post">;
-type WireAddressCreate = RequestBody<"/content/addresses", "post">;
+// `/v1` collections answer `{object: 'list', data: [...]}`, so a row is `["data"][number]`.
+type WireSocialLink = SuccessBody<"/v1/content/social_links", "get">["data"][number];
+type WireAddress = SuccessBody<"/v1/content/addresses", "get">["data"][number];
+// There is no standalone privacy route in /v1: the grants are the `privacy` include of
+// `GET /v1/account` (optional there, since it only appears when asked for) and are written by
+// the `privacy` member of the `POST /v1/account` body.
+type WirePrivacyGrant = NonNullable<
+  SuccessBody<"/v1/account", "get">["privacy"]
+>["items"][number];
+type WirePrivacyWrite = NonNullable<RequestBody<"/v1/account", "post">["privacy"]>;
+type WirePrivacyEcho = NonNullable<SuccessBody<"/v1/account", "post">["privacy"]>;
+type WireUsageRow = SuccessBody<"/v1/usage/summary", "get">["data"][number];
+type WireSocialLinkCreate = RequestBody<"/v1/content/social_links", "post">;
+type WireAddressCreate = RequestBody<"/v1/content/addresses", "post">;
 
 // Exported so every assertion is referenced and none can be dead-stripped.
 export type Checks = [
@@ -65,10 +84,13 @@ export type Checks = [
   Expect<Equal<IsNever<WireSocialLink>, false>>,
   Expect<Equal<IsNever<WireAddress>, false>>,
   Expect<Equal<IsNever<WirePrivacyGrant>, false>>,
+  Expect<Equal<IsNever<WirePrivacyWrite>, false>>,
+  Expect<Equal<IsNever<WirePrivacyEcho>, false>>,
   Expect<Equal<IsNever<WireUsageRow>, false>>,
   Expect<Equal<IsNever<WireSocialLinkCreate>, false>>,
   Expect<Equal<IsNever<WireAddressCreate>, false>>,
   Expect<Equal<IsAny<WireSocialLink>, false>>,
+  Expect<Equal<IsAny<WirePrivacyGrant>, false>>,
   Expect<Equal<IsAny<WireUsageRow>, false>>,
 
   // ── READ SIDE ───────────────────────────────────────────────────────────────────────
@@ -79,14 +101,16 @@ export type Checks = [
   // column — would fail on a purely ADDITIVE backend change, which is not a client defect:
   // this file is a narrowing VIEW of the row, and a field it does not read cannot come out
   // `undefined` anywhere.
-  Expect<Extends<WireSocialLink, SocialLink>>,
-  Expect<Extends<WireAddress, Address>>,
-  Expect<Extends<WirePrivacyGrant, PrivacyGrant>>,
-  Expect<Extends<WireUsageRow, UsageRow>>,
+  Expect<Extends<WireSocialLink, SocialLinkWire>>,
+  Expect<Extends<WireAddress, AddressWire>>,
+  Expect<Extends<WirePrivacyGrant, PrivacyGrantWire>>,
+  Expect<Extends<WirePrivacyEcho, PrivacyGrantWire>>,
+  Expect<Extends<WireUsageRow, UsageRowWire>>,
 
-  // `UsageRow` is the whole projection rather than a view of a row, so it is pinned EXACTLY:
-  // a new field on the usage summary is a field the usage page is meant to show.
-  Expect<Equal<WireUsageRow, UsageRow>>,
+  // `UsageRowWire` is the whole projection rather than a view of a row, so it is pinned EXACTLY:
+  // a new field on the usage summary is a field the usage page is meant to show. (The generated
+  // row also carries its `object` discriminator, which the transcription leaves out.)
+  Expect<Equal<NoObject<WireUsageRow>, NoObject<UsageRowWire>>>,
 
   // ── THE ONE DELIBERATE DIVERGENCE ───────────────────────────────────────────────────
   // `PrivacyTargetTable` widens the generated enum to `string` on purpose (see `data`'s
@@ -96,15 +120,23 @@ export type Checks = [
   // it a stated decision — if someone narrows the alias back to the union, this entry flips
   // and says so, instead of the widening quietly disappearing.
   Expect<Equal<PrivacyTargetTable, string>>,
-  Expect<Equal<Extends<PrivacyGrant, WirePrivacyGrant>, false>>,
+  Expect<Equal<Extends<PrivacyGrantWire, WirePrivacyGrant>, false>>,
 
   // ── WRITE SIDE ──────────────────────────────────────────────────────────────────────
   // Every field the editor sends must still be a column the backend accepts. A rename shows
-  // up as a leftover key here — a create that silently drops the value otherwise.
-  Expect<Equal<UnknownKeys<SocialLinkWrite, WireSocialLinkCreate>, never>>,
-  Expect<Equal<UnknownKeys<AddressWrite, WireAddressCreate>, never>>,
-  Expect<Extends<SocialLinkWrite, WireSocialLinkCreate>>,
-  Expect<Extends<AddressWrite, WireAddressCreate>>,
+  // up as a leftover key here — a create that silently drops the value otherwise. The wire
+  // bodies are what actually go out; the camelCase app writes are mapped onto them by
+  // profile.ts, so both are measured.
+  Expect<Equal<UnknownKeys<SocialLinkWriteWire, WireSocialLinkCreate>, never>>,
+  Expect<Equal<UnknownKeys<AddressWriteWire, WireAddressCreate>, never>>,
+  Expect<Extends<SocialLinkWriteWire, WireSocialLinkCreate>>,
+  Expect<Extends<AddressWriteWire, WireAddressCreate>>,
+  // The privacy write is `{target_table, target_id, audience_mask}` — all three required.
+  Expect<Equal<UnknownKeys<PrivacyGrantWire, WirePrivacyWrite>, never>>,
+  Expect<Extends<{ target_table: "avatar"; target_id: string; audience_mask: number }, WirePrivacyWrite>>,
+  // The app write shapes still name only fields that exist on the wire body once snake-cased.
+  Expect<Equal<Exclude<keyof SocialLinkWrite, "sortOrder" | keyof SocialLinkWriteWire>, never>>,
+  Expect<Equal<Exclude<keyof AddressWrite, "postalCode" | keyof AddressWriteWire>, never>>,
 ];
 
 // The write shapes are a SUBSET on purpose — the server owns identity, tenancy, ownership and

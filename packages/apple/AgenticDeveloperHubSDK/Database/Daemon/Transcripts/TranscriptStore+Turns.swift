@@ -121,8 +121,34 @@ extension DaemonDatabase {
         public let agentId: String
     }
 
-    /// Fetch one turn by its `message_id`, or `nil` if unknown.
+    /// One Claude turn of the event store by its message id (the turn's dedup
+    /// key), or nil when unknown or no store is attached. `timestamp` is the
+    /// transcript form (`…:ss.SSSZ`), "" for a line that carried none.
     public func transcriptTurn(messageId: String) throws -> TranscriptTurnRow? {
+        guard let row = try claudeTurn(dedupKey: messageId) else { return nil }
+        let time: Double = row[1] ?? 0
+        return TranscriptTurnRow(
+            sessionId: row[0] ?? "",
+            timestamp: time > 0 ? Self.transcriptTimestamp(time) : "",
+            kind: row[2] ?? "",
+            model: row[3] ?? "",
+            inputTokens: row[4] ?? 0,
+            outputTokens: row[5] ?? 0,
+            cacheReadTokens: row[6] ?? 0,
+            cacheCreationTokens: row[7] ?? 0,
+            toolName: row[8] ?? "",
+            isSubagent: (row[9] as Int?).map { $0 != 0 } ?? false,
+            agentId: row[10] ?? "")
+    }
+
+    /// Claude turns in the event store, optionally for one session; 0 without a store.
+    public func transcriptTurnCount(sessionId: String? = nil) throws -> Int {
+        try claudeTurnCount(sessionId: sessionId)
+    }
+
+    /// Fetch one legacy `transcript_turns` row by its `message_id`, or `nil`
+    /// if unknown — what the JSONL importer and the CSL migration still write.
+    public func legacyTranscriptTurn(messageId: String) throws -> TranscriptTurnRow? {
         var row: TranscriptTurnRow?
         try query("""
             SELECT session_id, timestamp, kind, model,
@@ -231,10 +257,9 @@ extension DaemonDatabase {
         return count
     }
 
-    /// Count rows in `transcript_turns`, optionally filtered by session.
-    /// Phase 4 will introduce richer per-turn read endpoints; this lightweight
-    /// counter is enough for ingest tests and a future `/health` summary.
-    public func transcriptTurnCount(sessionId: String? = nil) throws -> Int {
+    /// Count rows in the legacy `transcript_turns`, optionally filtered by
+    /// session — what the JSONL importer and the CSL migration still write.
+    public func legacyTranscriptTurnCount(sessionId: String? = nil) throws -> Int {
         var count = 0
         if let sessionId {
             try query(

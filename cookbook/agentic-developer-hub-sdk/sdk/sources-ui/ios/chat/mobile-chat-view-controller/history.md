@@ -1,0 +1,6 @@
+
+| Version | Date | Author | Summary |
+|---------|------|--------|---------|
+| 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web and iOS sources |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and moved UIKit-only theme/open-state details out of Behavioral Requirements into Platform Notes; reformatted Design Decisions to Decision/Rationale/Approved and resolved the opaque "Task 8" reference; rewrote Compliance with linked, one-word-category checks; corrected unverified Reduce Motion, Analytics, and Logging claims to match what the source actually does; wrote real Configuration and Localization sections in place of "Not applicable"; fixed the auto-scroll threshold wording, split its test vector, and gave bubble-width a single basis with per-platform units; corrected the Compose, WinUI 3, SwiftUI, and AppKit/UIKit platform notes; added missing test vectors for theme reapplication, whitespace-only Return, rapid-fire sends, and resize/rotation, and gave vector 016 concrete input |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |

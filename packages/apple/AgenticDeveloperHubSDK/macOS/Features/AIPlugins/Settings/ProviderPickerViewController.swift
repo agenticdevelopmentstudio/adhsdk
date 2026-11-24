@@ -147,17 +147,19 @@ public final class ProviderPickerViewController: NSViewController, Themeable {
     private var queryIsMirroredSelection = false
     private let keyboard = PickerKeyboardController()
 
-    /// Live model lists fetched for OpenAI-shaped (local/compatible) providers,
-    /// keyed by `cacheKey(for:)` — plugin identifier + template id. The
-    /// OpenAI-compatible plugin exposes many templates (Ollama, Groq, DeepSeek,
-    /// xAI, …) under one shared plugin identifier, each its own picker row;
-    /// keying by plugin identifier alone would let one template's live models
-    /// leak into every sibling template's row. Populated lazily on selection so
-    /// the models table shows the provider's real, current models instead of
-    /// the static snapshot baked into the descriptor. Absent entries (remote
-    /// providers, or a fetch still in flight / failed) fall back to
-    /// `template.models` — see `resolvedModels(for:)`.
+    /// Live model lists loaded this picker session for every provider with a
+    /// live source (Anthropic's rows through their public catalog, OpenAI-shaped
+    /// ones through their endpoint), keyed by `cacheKey(for:)` — plugin
+    /// identifier + template id, because the OpenAI-compatible plugin exposes
+    /// many templates (Ollama, Groq, …) under one plugin identifier and one
+    /// row's models must not leak into its siblings'. Loaded lazily on
+    /// selection. Only a load that succeeded is stored, so a failed one is
+    /// tried again the next time the row is shown; until then the row shows the
+    /// manager's cached or static list — see `resolvedModels(for:)`.
     private var liveModelsByTemplate: [String: [String]] = [:]
+    /// Keys with a load under way, so redrawing the selected row on every
+    /// keystroke starts one fetch, not one per keystroke.
+    private var liveModelsInFlight: Set<String> = []
 
     /// Frame-persistence key, shared with the presenter, so the picker window's
     /// size + location go through the app's `WindowManager` like every other window.
@@ -679,8 +681,10 @@ public final class ProviderPickerViewController: NSViewController, Themeable {
         if let row {
             let template = row.available.template
             modelsKey = cacheKey(for: row)
+            let manager = modelManager(for: row)
             modelRows = resolvedModels(for: row).map { model in
-                ModelRow(name: model, info: AIModelCatalog.shared.resolve(model: model, template: template))
+                ModelRow(name: model, title: manager.displayName(for: model),
+                         info: AIModelCatalog.shared.resolve(model: model, template: template))
             }
         } else {
             modelsKey = nil
@@ -711,7 +715,7 @@ public final class ProviderPickerViewController: NSViewController, Themeable {
 
     private func updateModelInfo(for model: ModelRow?) {
         let palette = view.resolvedThemeScope.palette
-        let content = model.map { ProviderPickerInfo.model(name: $0.name, info: $0.info, palette: palette) }
+        let content = model.map { ProviderPickerInfo.model(name: $0.title, info: $0.info, palette: palette) }
             ?? ProviderPickerInfo.placeholder(noModelText, palette: palette)
         modelInfoTextView.textStorage?.setAttributedString(content)
     }
@@ -725,7 +729,11 @@ public final class ProviderPickerViewController: NSViewController, Themeable {
     private var noModelText: String {
         guard let row = currentRow() else { return "Select a provider to see the models it serves." }
         guard modelRows.isEmpty else { return "Select a model to see what it can do." }
-        return ModelChooserContent.supportsLiveModels(pluginIdentifier: row.available.pluginIdentifier)
+        // An OpenAI-style endpoint has no source until it has a base URL, which the
+        // picker never has, yet it lists its models once one is configured.
+        let listsLive = modelManager(for: row).hasLiveSource
+            || ProviderModels.isOpenAIStyle(pluginIdentifier: row.available.pluginIdentifier)
+        return listsLive
             ? "This provider lists its models once it's configured and reachable."
             : "This provider doesn't publish a model list."
     }
@@ -738,30 +746,38 @@ public final class ProviderPickerViewController: NSViewController, Themeable {
         "\(row.available.pluginIdentifier)|\(row.available.template.id)"
     }
 
-    /// The models to render for `row`: a live-fetched list if one is cached
-    /// (local/OpenAI-compatible providers, once `fetchLiveModelsIfNeeded` has
-    /// resolved), else the static snapshot baked into the descriptor.
-    private func resolvedModels(for row: ProviderPickerRow) -> [String] {
-        liveModelsByTemplate[cacheKey(for: row)] ?? row.available.template.models
+    /// The model manager for `row`'s template. The picker has no credentials (it
+    /// chooses a provider before one is configured), so a keyed source falls back
+    /// to its public catalog.
+    private func modelManager(for row: ProviderPickerRow) -> any ProviderModelManager {
+        ProviderModels.manager(
+            pluginIdentifier: row.available.pluginIdentifier, template: row.available.template,
+            baseURL: nil, apiKey: nil)
     }
 
-    /// Kicks an async fetch of the real, live model list for OpenAI-shaped
-    /// providers (e.g. Ollama) so the models table stops showing the stale
-    /// static snapshot baked into the descriptor. No-op for remote providers
-    /// (`ModelChooserContent.supportsLiveModels` false), providers already
-    /// cached, or providers with no configured base URL yet. On success,
-    /// re-renders only if the fetched row is still selected.
+    /// The models to render for `row`: the latest version of each, from the list
+    /// loaded this session if there is one, else the manager's cached (or the
+    /// descriptor's static) list.
+    private func resolvedModels(for row: ProviderPickerRow) -> [String] {
+        liveModelsByTemplate[cacheKey(for: row)] ?? modelManager(for: row).list.latestIDs
+    }
+
+    /// Loads `row`'s current model list once per picker session, so the models
+    /// table stops showing the static snapshot baked into the descriptor. No-op
+    /// for providers with no live source, already loaded, or loading now. On
+    /// success, re-renders only if the fetched row is still selected; a failure
+    /// stores nothing, so the next selection tries again.
     private func fetchLiveModelsIfNeeded(for row: ProviderPickerRow) {
-        let id = row.available.pluginIdentifier
         let key = cacheKey(for: row)
-        guard ModelChooserContent.supportsLiveModels(pluginIdentifier: id),
-              liveModelsByTemplate[key] == nil else { return }
-        let baseURL = row.available.template.defaultValues["baseURL"] ?? ""
-        guard !baseURL.isEmpty else { return }
+        let manager = modelManager(for: row)
+        guard manager.hasLiveSource, liveModelsByTemplate[key] == nil,
+              !liveModelsInFlight.contains(key) else { return }
+        liveModelsInFlight.insert(key)
         Task { @MainActor in
-            let models = await OpenAIModelCatalog.fetch(baseURL: baseURL, apiKey: nil)
-            guard !models.isEmpty else { return }
-            liveModelsByTemplate[key] = models
+            let list = await manager.refreshLive()
+            liveModelsInFlight.remove(key)
+            guard let list, !list.isEmpty else { return }
+            liveModelsByTemplate[key] = list.latestIDs
             if let cur = currentRow(), cacheKey(for: cur) == key { updateInfo(for: cur) }
         }
     }
@@ -819,10 +835,12 @@ public final class ProviderPickerViewController: NSViewController, Themeable {
 
 extension ProviderPickerViewController {
 
-    /// One row of the models table: the model's name plus the catalog metadata the
-    /// capability columns and the description pane read.
+    /// One row of the models table: the model's id, the name it is shown by
+    /// (`Opus 5.5`), and the catalog metadata the capability columns and the
+    /// description pane read.
     fileprivate struct ModelRow {
         let name: String
+        let title: String
         let info: AIModelCatalog.ResolvedModel
     }
 }
@@ -848,7 +866,7 @@ extension ProviderPickerViewController: NSTableViewDataSource, NSTableViewDelega
                             color: palette.accentColor, alignment: .center)
             }
             return cell(in: tableView, for: column.identifier,
-                        text: entry.name, color: palette.primaryTextColor)
+                        text: entry.title, color: palette.primaryTextColor)
         }
         guard row >= 0, row < filteredRows.count else { return nil }
         let entry = filteredRows[row]

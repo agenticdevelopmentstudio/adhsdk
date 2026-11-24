@@ -76,7 +76,7 @@ class ShiprLadder:
         if notes is not UNSET:
             field_dict["notes"] = notes
         if read_at is not UNSET:
-            field_dict["readAt"] = read_at
+            field_dict["read_at"] = read_at
 
         return field_dict
 
@@ -108,7 +108,7 @@ class ShiprLadder:
 
         notes = cast(list[str], d.pop("notes", UNSET))
 
-        read_at = d.pop("readAt", UNSET)
+        read_at = d.pop("read_at", UNSET)
 
         shipr_ladder = cls(
             columns=columns,

@@ -1,0 +1,11 @@
+
+- **Empty list (MUST)**: An empty list is the default and a legal stored value; consumers MUST treat it as "exclude nothing", per the default's doc comment. `GitIgnoreMatcher.empty` is that case for the matcher.
+- **Blank and comment entries (MUST)**: Entries that are empty, whitespace only, or start with `#` are stored as given and ignored by `GitIgnoreMatcher`; the setting MUST NOT strip them. The one editor in the source, `ExcludedFilesSettingsPanelViewController`, trims surrounding spaces and never writes an empty row, but that is the panel's behavior, and a list written by anything else keeps its blanks.
+- **Malformed or unmatchable pattern (MUST)**: The setting accepts any string. What a malformed pattern does is decided by `GitIgnoreMatcher`, not by the setting; the matcher treats regex characters as literal (`testRegexCharactersAreLiteral`).
+- **Case sensitivity (MUST)**: Patterns are stored as typed and matched case-sensitively by `GitIgnoreMatcher` (`testMatchingIsCaseSensitive`), so `*.LOG` does not exclude `a.log`.
+- **Large list**: The source sets no limit on the number of entries; the whole list is read and written as one value, so each edit rewrites the full list.
+- **Concurrent access (MUST)**: `UserSetting` is `@MainActor`, so reads and writes are serialised on the main actor; concurrent calls from another thread are not part of the contract. Two writers on the main actor each replace the whole list, and the last write wins; the setting has no merge step.
+- **Own-write echo (SHOULD)**: A writer that also observes the setting receives its own write back through the change stream. A writer that needs to ignore the echo has to remember the list it last wrote. The setting itself does not suppress echoes.
+- **Offline or disconnected (not applicable)**: The setting is read from a local store and makes no network request. With a cloud-synced backend behind `UserSettings.shared` the list could change from another device; that is a property of the store, specified in settings-storage.
+- **Missing file or unreachable server (not applicable)**: The setting never opens a file or contacts a server; the paths in the patterns are matched as strings and never looked up.
+

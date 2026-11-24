@@ -1,0 +1,5 @@
+
+`GitContextFingerprint` records a fingerprint of a session's working tree each time the status line renders: the branch, the status output and the recent-commits list, the last two as a character count and a SHA-256 hash. Claude Code puts the same information in a context block of its system prompt, but that block is a snapshot taken when the conversation starts, so a change in these fields between two renders is tree drift, not a prompt change. The first sample of a session recovers the prompt's block; later samples show how far the tree has moved from what the model believes.
+
+It stores a fingerprint and not the text because a prompt change re-caches the whole prefix whatever its size, which makes which component changed the only useful question, and a hash answers that without keeping the user's file names. `enriched(payload:)` nests the fingerprint in the status-line payload under a namespaced key, by splicing bytes into the original text. It runs in the status-line command, in the session's own directory, so the sample is not taken minutes later against a moved tree.
+

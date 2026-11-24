@@ -1,13 +1,12 @@
 ---
 id: 54413e61-d82d-4526-b496-5daf917ce877
 title: "Window Activation"
-domain: adhsdk://cookbook/system/system-windows/window-activation
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -20,9 +19,9 @@ tags:
   - terminals
   - diagnostics
 depends-on:
-  - adhsdk://cookbook/system/scripting
+  - d5812249-f235-43df-9cd7-504220da1a7d
 related:
-  - adhsdk://cookbook/ui/windows/screen-manager
+  - 1e58add7-d85d-4e62-b857-c5e3203795be
 references: []
 approved-by: ""
 approved-date: ""
@@ -294,9 +293,9 @@ Levels are descriptive only; the log has no level field.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/WindowActivation/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/WindowActivation/` | confirmed (1.2.1) |
 
 ## Design Decisions
 
@@ -336,22 +335,23 @@ Levels are descriptive only; the log has no level field.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
-| [timeout-handling](agenticdevelopercookbook://compliance/reliability#timeout-handling) | failed | Reliability |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | Reliability |
-| [main-thread-freedom](agenticdevelopercookbook://compliance/performance#main-thread-freedom) | passed | Performance |
-| [platform-permissions](agenticdevelopercookbook://compliance/platform-compliance#platform-permissions) | partial | Platform Compliance |
-| [data-retention-policy](agenticdevelopercookbook://compliance/privacy-and-data#data-retention-policy) | partial | Privacy and Data |
-| [no-pii-in-logs](agenticdevelopercookbook://compliance/privacy-and-data#no-pii-in-logs) | partial | Privacy and Data |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | failed | Reliability |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
+| [adc.check.performance.main-thread-freedom](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/86dd71d6-1ab1-5d59-8c85-b9d469fbae0d) | passed | Performance |
+| [adc.check.platform-compliance.platform-permissions](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/90cb6a83-7544-53ea-8d2c-30851b253122) | partial | Platform Compliance |
+| [adc.check.privacy-and-data.data-retention-policy](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0c9cc813-244a-5dc1-8914-fd4710bb4943) | partial | Privacy and Data |
+| [adc.check.privacy-and-data.no-pii-in-logs](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/23bca2e1-dc0f-5ff4-beaf-03891ad48e6b) | partial | Privacy and Data |
 
-separation-of-concerns passes because the target value, each strategy, the terminal catalog, the running-apps abstraction, TTY resolution, logging and the harness each live in their own type. unit-test-coverage fails because no test file exists for any type in the package, despite `RunningAppsProvider` and `ActivationTestLog(fileURL:)` being designed for injection. explicit-error-handling is partial: AppleScript compile and runtime failures and missing TTYs are logged with detail, but two strategies report success without checking the platform call results (the open questions on ax-raise-result and front-activate-result) and file write failures are dropped by design. timeout-handling fails because neither the `ps` subprocess nor the AppleScript calls have a timeout. graceful-degradation passes because a missing Application Support directory falls back to memory-only logging and a denied accessibility permission aborts cleanly with a logged reason. main-thread-freedom passes because `runAllTests()` is documented to run off the main thread and hops to main only for the final host reactivation, though applescript-thread notes that its AppleScript calls stay on that background thread. platform-permissions is partial: accessibility trust is checked and reported before any work, but Automation permission for iTerm2 is not checked up front and only surfaces as a runtime AppleScript error. data-retention-policy is partial because the file is cleared at each run start but otherwise grows without bound and persists across launches. no-pii-in-logs is partial because the log records working-directory paths (which include the user's home directory name) and window titles in plain text on disk.
+separation-of-concerns passes because the target value, each strategy, the terminal catalog, the running-apps abstraction, TTY resolution, logging and the harness each live in their own type. unit-test-coverage is partial: all 18 vectors have tests in `ActivationTestLogConformanceTests.swift`, `ActivationStrategyConformanceTests.swift` and `ActivationTesterConformanceTests.swift` (under `Tests/AgenticDeveloperHubSDKMacOSTests/SystemIntegration/WindowManager/WindowActivation/`), but the harness vectors depend on the test process's real Accessibility trust, which a unit test cannot change: window-activation-014 is skipped when the process is trusted, and window-activation-015 to 018 are skipped when it is not. explicit-error-handling is partial: AppleScript compile and runtime failures and missing TTYs are logged with detail, but two strategies report success without checking the platform call results (the open questions on ax-raise-result and front-activate-result) and file write failures are dropped by design. timeout-handling fails because neither the `ps` subprocess nor the AppleScript calls have a timeout. graceful-degradation passes because a missing Application Support directory falls back to memory-only logging and a denied accessibility permission aborts cleanly with a logged reason. main-thread-freedom passes because `runAllTests()` is documented to run off the main thread and hops to main only for the final host reactivation, though applescript-thread notes that its AppleScript calls stay on that background thread. platform-permissions is partial: accessibility trust is checked and reported before any work, but Automation permission for iTerm2 is not checked up front and only surfaces as a runtime AppleScript error. data-retention-policy is partial because the file is cleared at each run start but otherwise grows without bound and persists across launches. no-pii-in-logs is partial because the log records working-directory paths (which include the user's home directory name) and window titles in plain text on disk.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.1 | 2026-11-15 | Mike Fullerton | Conformance tests added (ActivationTestLogConformanceTests.swift, ActivationStrategyConformanceTests.swift, ActivationTesterConformanceTests.swift, 18 of 18 vectors); unit-test-coverage now partial (014 skips when the process is Accessibility-trusted, 015-018 skip when it is not). |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolved three NEEDS REVIEW markers as current behavior plus pending decisions |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to system/system-windows/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

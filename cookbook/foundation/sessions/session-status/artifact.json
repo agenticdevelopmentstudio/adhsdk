@@ -1,0 +1,59 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "787b5da6-2f20-4f3e-8104-1763959a735f",
+    "title": "Session Status",
+    "type": "ingredient",
+    "version": "1.0.3",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-14",
+    "modified": "2026-11-14",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Three-case lifecycle enum for a Claude Code session: active, stale or ended, whose raw strings are the stored and published status values.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "foundation",
+      "sessions",
+      "claude-hooks",
+      "lifecycle"
+    ],
+    "depends-on": [],
+    "related": [
+      "bc99bb92-f6b7-4767-8d29-f68ee9e5e2b4",
+      "6a37e531-b5ae-4eea-b4f0-d28866776ddc"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "names_hosts": "The component parses Claude Code hook events and settings; the host's name, events and paths are its subject.",
+  "synced": "4f0d680e8982ae93",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

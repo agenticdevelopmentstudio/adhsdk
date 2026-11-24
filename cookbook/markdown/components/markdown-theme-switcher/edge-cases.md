@@ -1,0 +1,7 @@
+
+- **Empty theme registry**: The registry is a fixed module import, not a prop, so an empty registry can only be set up by mocking the module. In that case the control renders with no options; no error is thrown, and the control remains present but offers no selectable theme.
+- **Unknown active theme id**: If the given active theme id does not match any theme in the registry, the controlled `<select>` has a value that matches no option, so the browser shows the first option (`Dark`) as the visible selection. Picking a different option invokes **emit-theme-change**; picking the first option fires no change event, so the callback is not invoked.
+- **Theme registry mutation**: The registry is immutable input. Mutating a theme object's fields in place (e.g., changing a label) after render is a caller error: the control MUST NOT be relied upon to reflect that mutation until the control's own next render (e.g., driven by a change to the active theme id or a parent re-render).
+- **Rapid theme changes**: Each selection closes the dropdown; picking a different theme again requires reopening it. The control MUST NOT debounce **emit-theme-change**: every change event, however rapid the sequence, invokes the callback once. Re-selecting the current theme produces no change event and so no callback.
+- **Focus retention on selection**: The native `<select>` element keeps keyboard focus after an option is chosen; focus does not move away from the control.
+

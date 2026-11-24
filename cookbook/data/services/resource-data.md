@@ -1,13 +1,12 @@
 ---
 id: ec6e6ca5-8780-4ce2-8b3a-087adc50ed35
 title: "Resource Data"
-domain: adhsdk://cookbook/data/services/resource-data
 type: ingredient
-version: 1.2.1
+version: 1.2.2
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -23,7 +22,7 @@ tags:
   - workspace
   - http
 depends-on:
-  - adhsdk://cookbook/data/services/auth/auth-client
+  - 3ea9329e-5acc-4c43-b5ce-bb8c50570104
 related: []
 references:
   - packages/web/packages/data/src/client-helpers.ts (adhsdk)
@@ -259,13 +258,13 @@ app is a consumer of this contract, not part of it.
 - **write-cached-workspace-swallow**: Caching a workspace slug MUST swallow
   any failure raised while writing storage.
 - **workspace-prefs-get-unwraps**: The workspace-preferences read operation
-  MUST issue a GET request to `/api/me/workspace-prefs`, unwrap the
-  response's `prefs` field, and MUST default to an empty object rather than
-  surface a not-found result.
+  MUST issue a GET request to `/api/v1/account` with the
+  `workspace_prefs` include, unwrap the response's `workspace_prefs.prefs`
+  field, and MUST default to an empty object when the account carries none.
 - **workspace-prefs-put-full-replace**: The workspace-preferences write
-  operation MUST issue a PUT request to `/api/me/workspace-prefs` with the
-  full preferences object, replacing the stored preferences rather than
-  merging into them.
+  operation MUST issue a POST request to `/api/v1/account` with the
+  full preferences object under `workspace_prefs`, replacing the stored
+  preferences rather than merging into them.
 - **workspace-list-cache-key-constant**: The workspace-list cache key MUST
   be the constant `('workspaces')`.
 - **notify-workspaces-changed-dual-invalidate**: The
@@ -388,9 +387,9 @@ component.
 | resource-data-072 | workspace-prefs-cache-key | caching workspace `'acme'` with prefix `'x'` | writes under storage key `'x:home:workspace'` |
 | resource-data-073 | read-cached-workspace-safe-without-storage | reading the cached workspace with no persisted-storage environment available | returns a safe empty result, no failure raised |
 | resource-data-074 | write-cached-workspace-swallow | caching workspace `'acme'` when storage fails | resolves without raising |
-| resource-data-075 | workspace-prefs-get-unwraps | reading workspace preferences when the server reports not-found | resolves to an empty object, never raises |
-| resource-data-076 | workspace-prefs-get-unwraps | reading workspace preferences when the server returns preferences containing slug `'acme'` | resolves to `{ slug: 'acme' }` |
-| resource-data-077 | workspace-prefs-put-full-replace | writing preferences `{ slug: 'acme' }` | issues a PUT request to `/api/me/workspace-prefs` with body `{ slug: 'acme' }` |
+| resource-data-075 | workspace-prefs-get-unwraps | reading workspace preferences when the account answers without the workspace-preferences include (a user who never chose) | resolves to an empty object, never raises |
+| resource-data-076 | workspace-prefs-get-unwraps | reading workspace preferences when the account answer's workspace-preferences include holds `{ prefs: { slug: 'acme' } }` | resolves to `{ slug: 'acme' }` |
+| resource-data-077 | workspace-prefs-put-full-replace | writing preferences `{ slug: 'acme' }` | issues a POST request to `/api/v1/account` with body `{ "workspace_prefs": { "slug": "acme" } }` |
 | resource-data-078 | workspace-list-cache-key-constant | the workspace-list cache key | `('workspaces')` |
 | resource-data-079 | notify-workspaces-changed-dual-invalidate | announcing that the workspace list changed | the workspace-list cache entry is invalidated directly, and a matching invalidation accepts a resource-list entry keyed `'workspaces'` while rejecting one keyed `'organizations'` |
 | resource-data-080 | notify-workspaces-changed-swallows | announcing a change when the underlying invalidation fails | does not raise or produce an unhandled failure |
@@ -582,17 +581,17 @@ Auth Client recipe's own Logging section documents, not duplicated here.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/data/src/client-helpers.ts` |
-| web | `packages/web/packages/data/src/config.ts` |
-| web | `packages/web/packages/data/src/ftd-storage.ts` |
-| web | `packages/web/packages/data/src/http.ts` |
-| web | `packages/web/packages/data/src/tenant.ts` |
-| web | `packages/web/packages/data/src/use-resource-item.ts` |
-| web | `packages/web/packages/data/src/use-resource-list.ts` |
-| web | `packages/web/packages/data/src/workspace-prefs.ts` |
-| web | `packages/web/packages/data/src/workspaces.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/data/src/client-helpers.ts` | confirmed (1.2.2) |
+| web | `packages/web/packages/data/src/config.ts` | confirmed (1.2.2) |
+| web | `packages/web/packages/data/src/ftd-storage.ts` | confirmed (1.2.2) |
+| web | `packages/web/packages/data/src/http.ts` | confirmed (1.2.2) |
+| web | `packages/web/packages/data/src/tenant.ts` | confirmed (1.2.2) |
+| web | `packages/web/packages/data/src/use-resource-item.ts` | confirmed (1.2.2) |
+| web | `packages/web/packages/data/src/use-resource-list.ts` | confirmed (1.2.2) |
+| web | `packages/web/packages/data/src/workspace-prefs.ts` | confirmed (1.2.2) |
+| web | `packages/web/packages/data/src/workspaces.ts` | confirmed (1.2.2) |
 
 ## Design Decisions
 
@@ -704,15 +703,15 @@ Requirements.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [secure-storage](agenticdevelopercookbook://compliance/security#secure-storage) | partial | Security |
-| [input-sanitization](agenticdevelopercookbook://compliance/security#input-sanitization) | passed | Security |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | passed | Reliability |
-| [data-minimization](agenticdevelopercookbook://compliance/privacy-and-data#data-minimization) | passed | Privacy and Data |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
+| [adc.check.security.secure-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bb5dfc9b-c5b0-54fa-882f-007ae7dad0e9) | partial | Security |
+| [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | passed | Security |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | Reliability |
+| [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | Privacy and Data |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
 `secure-storage` is **partial**: the FTD last-id/view-mode values and the
 cached workspace slug sit in plaintext `localStorage` with no encryption —
@@ -742,12 +741,13 @@ lookup table or locale parameter anywhere in this component (see
 Localization) — a plain, honestly-reported gap in the source, not a hidden
 one.
 
-`separation-of-concerns` passes because each of the nine source files owns one concern — `http.ts` request helpers, `tenant.ts` the tenant-id read state, `ftd-storage.ts` and `workspace-prefs.ts` browser persistence, `use-resource-item.ts` and `use-resource-list.ts` the read states over the shared cache, `workspaces.ts` the workspace announcements, `config.ts` the host-injectable prefix, `client-helpers.ts` pure list helpers — with no presentation code. `unit-test-coverage` is partial because `use-resource-item.test.tsx`, `use-resource-list.test.tsx`, `ftd-storage.test.ts`, `http.test.ts`, `tenant.test.ts`, `workspace-prefs.test.ts` and `workspaces-changed.test.ts` in the data package's `__tests__` directory cover most behaviors, but `client-helpers.ts`, `config.ts` and the workspace slug-availability check in `workspaces.ts` have no dedicated test file, and the reload-without-id behavior is untested.
+`separation-of-concerns` passes because each of the nine source files owns one concern — `http.ts` request helpers, `tenant.ts` the tenant-id read state, `ftd-storage.ts` and `workspace-prefs.ts` browser persistence, `use-resource-item.ts` and `use-resource-list.ts` the read states over the shared cache, `workspaces.ts` the workspace announcements, `config.ts` the host-injectable prefix, `client-helpers.ts` pure list helpers — with no presentation code. `unit-test-coverage` passes: the data package's `__tests__` directory (`client-helpers.test.ts`, `config.test.ts`, `ftd-storage.test.ts`, `http.test.ts`, `tenant.test.ts`, `use-resource-item.test.tsx`, `use-resource-list.test.tsx`, `workspace-prefs.test.ts`, `workspaces.test.ts` and `workspaces-changed.test.ts`) holds one passing test for each of the 85 conformance vectors, the reload-without-id behavior included.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (client-helpers, config, workspaces, ftd-storage, http, tenant, use-resource-item, use-resource-list, workspace-prefs, workspaces-changed; 85 of 85 vectors); vectors 075-077 and their two requirements corrected to the source's real /api/v1/account endpoints; unit-test-coverage now passed. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Hub framing removed: vector ids take this spec's own name, and the ADH host's default names move to Platform Notes as the web implementation's shipped values. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Key prefixes and event name are configuration; reload-without-id restated as current behavior with pending decision; add separation-of-concerns and unit-test-coverage. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to data/services/. |

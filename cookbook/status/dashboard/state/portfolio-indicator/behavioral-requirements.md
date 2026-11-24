@@ -14,14 +14,10 @@
 
 ### Snapshot staleness
 
-- **snapshot-stale-rule**: The live snapshot MUST be judged stale exactly when `snapshot` is non-null and the shared snapshot-freshness check (given the snapshot's `lastCycleAt`, `generatedAt` and `probeIntervalMs`) returns anything other than `"fresh"` (that is, `"stale"` or `"very-stale"`).
+- **snapshot-stale-rule**: The live snapshot MUST be judged stale exactly when `snapshot` is non-null and its server-supplied `freshness.state` is anything other than `"fresh"` (that is, `"stale"`, `"very-stale"`, or no verdict at all).
 - **snapshot-null-not-stale**: A null `snapshot` (no live read yet) MUST NOT count as stale.
-- **shared-staleness-rule**: The snapshot staleness verdict MUST come from one shared snapshot-freshness check, the same rule the board-wide stale-snapshot banner uses, so the sign and the banner agree.
-- **freshness-no-probe**: Under the shared check, a missing or empty `lastCycleAt` or `generatedAt` MUST yield `"fresh"` — no probe yet means nothing to judge, so no alarm.
-- **freshness-window**: Under the shared check, the stale window MUST be `max(probeIntervalMs × 5, 300,000 ms)`, with a null or missing `probeIntervalMs` treated as 0 (so the window is the 300,000 ms floor).
-- **freshness-lag**: Under the shared check, the lag MUST be measured as the parsed timestamp of `generatedAt` minus the parsed timestamp of `lastCycleAt`, both server clocks, and MUST NOT involve the client's current time.
-- **freshness-threshold**: Under the shared check, a lag not strictly greater than the window MUST be `"fresh"`; a lag greater than the window MUST be `"stale"`, escalating to `"very-stale"` when greater than three times the window. Both non-fresh verdicts count as stale for Portfolio Indicator.
-- **freshness-unparseable**: Under the shared check, an unparseable date (an invalid lag) MUST yield `"fresh"`, because a comparison against an invalid value defaults to not-stale.
+- **shared-staleness-rule**: The snapshot staleness verdict MUST be the server's `snapshot.freshness` verdict, the same field the board-wide stale-snapshot banner reads, so the sign and the banner agree; Portfolio Indicator MUST NOT judge staleness from timestamps or cadence on the client.
+- **freshness-no-verdict**: A snapshot with no `freshness` field (from a backend older than the verdict) MUST read as stale, because no verdict is not "fresh"; it MUST NOT throw.
 
 ### Derivation
 

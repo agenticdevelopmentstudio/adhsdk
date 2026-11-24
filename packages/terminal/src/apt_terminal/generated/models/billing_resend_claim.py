@@ -35,8 +35,8 @@ class BillingResendClaim:
         field_dict.update(
             {
                 "ok": ok,
-                "accountId": account_id,
-                "expiresAt": expires_at,
+                "account_id": account_id,
+                "expires_at": expires_at,
             }
         )
 
@@ -47,9 +47,9 @@ class BillingResendClaim:
         d = dict(src_dict)
         ok = d.pop("ok")
 
-        account_id = d.pop("accountId")
+        account_id = d.pop("account_id")
 
-        expires_at = d.pop("expiresAt")
+        expires_at = d.pop("expires_at")
 
         billing_resend_claim = cls(
             ok=ok,

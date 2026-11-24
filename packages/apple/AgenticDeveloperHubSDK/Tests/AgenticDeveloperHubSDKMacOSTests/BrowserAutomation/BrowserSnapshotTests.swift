@@ -2,19 +2,23 @@ import XCTest
 import WebKit
 @testable import AgenticDeveloperHubSDKMacOS
 
+/// `browser_snapshot`'s tree for the legacy fixtures, now through the agent
+/// page (an empty agent list, privacy off): the agent page is the only
+/// snapshot there is, and these pin it to the legacy shape.
 @MainActor
 final class BrowserSnapshotTests: XCTestCase {
 
+    private var automations: [ObjectIdentifier: BrowserAutomation] = [:]
+
+    /// One automation per page, so a scope by ref resolves the refs of the
+    /// page's last snapshot.
     private func snapshot(
         _ page: OffscreenWebView, options: BrowserSnapshotOptions = .init()
-    ) async throws -> BrowserSnapshot {
-        try await BrowserSnapshotRuntime.install(in: page.webView)
-        let raw = try await page.webView.callAsyncJavaScript(
-            "return window.__adkitchen.snapshot(opts)",
-            arguments: ["opts": options.jsArguments], in: nil, contentWorld: BrowserSnapshotRuntime.world)
-        let data = try JSONSerialization.data(withJSONObject: raw as Any)
-        let payload = try JSONDecoder().decode(BrowserSnapshotPayload.self, from: data)
-        return BrowserSnapshot(payload: payload, includeURLs: options.includeURLs)
+    ) async throws -> AgentTestSnapshot {
+        let key = ObjectIdentifier(page)
+        let automation = automations[key] ?? BrowserAutomation(webView: page.webView, console: BrowserConsoleLog())
+        automations[key] = automation
+        return try await automation.agentSnapshot(options)
     }
 
     func testFormFixtureRendersLikePlaywright() async throws {
@@ -22,7 +26,7 @@ final class BrowserSnapshotTests: XCTestCase {
         try await page.load(fixture: "form")
         let snap = try await snapshot(page)
         XCTAssertEqual(snap.text, try OffscreenWebView.expected("form"))
-        XCTAssertEqual(snap.title, "Sign in")
+        XCTAssertEqual(snap.page.title, "Sign in")
         XCTAssertGreaterThan(snap.generation, 0)
     }
 
@@ -117,13 +121,10 @@ final class BrowserSnapshotTests: XCTestCase {
     func testFindReturnsMatchingRefs() async throws {
         let page = OffscreenWebView()
         try await page.load(fixture: "form")
-        _ = try await snapshot(page)
-        let raw = try await page.webView.callAsyncJavaScript(
-            "return window.__adkitchen.find(text)", arguments: ["text": "forgot"], in: nil,
-            contentWorld: BrowserSnapshotRuntime.world)
-        let matches = try XCTUnwrap(raw as? [[String: Any]])
-        XCTAssertEqual(matches.map { $0["ref"] as? String }, ["e11"])
-        XCTAssertEqual(matches.first?["role"] as? String, "link")
+        let snap = try await snapshot(page)
+        let matches = BrowserToolSet.find("forgot", in: snap.page)
+        XCTAssertEqual(matches.map(\.ref), ["e11"])
+        XCTAssertEqual(matches.first?.role, "link")
     }
 
     /// The page's own scripts must not see or replace the runtime.
@@ -140,11 +141,8 @@ final class BrowserSnapshotTests: XCTestCase {
     func testTextReturnsInnerTextOfMain() async throws {
         let page = OffscreenWebView()
         try await page.load(fixture: "form")
-        try await BrowserSnapshotRuntime.install(in: page.webView)
-        let raw = try await page.webView.callAsyncJavaScript(
-            "return window.__adkitchen.text(scope)", arguments: ["scope": NSNull()], in: nil,
-            contentWorld: BrowserSnapshotRuntime.world)
-        let text = try XCTUnwrap(raw as? String)
+        let snap = try await snapshot(page)
+        let text = snap.page.text()
         XCTAssertTrue(text.hasPrefix("Sign in"))
         XCTAssertTrue(text.contains("Forgot password?"))
     }

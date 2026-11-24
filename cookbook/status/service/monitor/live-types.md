@@ -1,13 +1,12 @@
 ---
 id: 2c8b4572-3851-4111-97d6-a42792fb7150
 title: "Status Server Monitor Live Types"
-domain: adhsdk://cookbook/status/service/monitor/live-types
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-09-27
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -23,7 +22,7 @@ tags:
   - server
 depends-on: []
 related:
-  - adhsdk://cookbook/status/service/live-events
+  - 635cbbe4-a8e1-4ae1-a8a5-437f5bba27a6
 references:
   - packages/web/packages/status-server/src/monitor/live-types.ts (adhsdk)
   - packages/web/packages/status-server/src/monitor/types.ts (adhsdk)
@@ -144,9 +143,9 @@ Not applicable: the source contains no log call of any kind — it declares data
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/monitor/live-types.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/monitor/live-types.ts` | confirmed (1.0.3) |
 
 ## Design Decisions
 
@@ -166,17 +165,18 @@ Not applicable: the source contains no log call of any kind — it declares data
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | passed | Reliability |
-| [health-observability](agenticdevelopercookbook://compliance/reliability#health-observability) | passed | Reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | Reliability |
+| [adc.check.reliability.health-observability](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d4ece88d-eeff-5e3f-8823-d8c2929a35e0) | passed | Reliability |
 
-`separation-of-concerns` passes because this file declares only the `/api/live` wire shapes, with no DB import and no bridge to the route or SSE fan-out logic that builds or delivers a value of this shape — building belongs to `routes/reads.ts`'s `buildLiveSnapshot`, delivery belongs to `live/live-events.ts` (`status-server-live` recipe), and this file imports neither. `unit-test-coverage` is partial: no test file targets `live-types.ts` directly (it has no function to unit-test), but every field this recipe documents is exercised indirectly through `reads.int.test.ts`'s integration tests against `GET /live`, which is the traceability basis for every Conformance Test Vector above; there is no direct test of the type declarations' shape in isolation from that route. `data-integrity` passes because every field in every interface this file declares is non-optional (**all-fields-required**), so a value that omits a field fails structural typing at compile time rather than silently propagating a partial `LiveSnapshot` to a consumer. `health-observability` passes because `LiveSnapshot` itself is a health-observability surface: `lastCycleAt`, `probeIntervalMs`, and `monitorVersion` exist specifically so a long-running monitor process's staleness and running version are observable from the snapshot it produces, per **last-cycle-at-is-data-freshness-clock**, **last-cycle-at-distinct-from-health-clock**, and **probe-interval-ms-scales-staleness**.
+`separation-of-concerns` passes because this file declares only the `/api/live` wire shapes, with no DB import and no bridge to the route or SSE fan-out logic that builds or delivers a value of this shape — building belongs to `routes/reads.ts`'s `buildLiveSnapshot`, delivery belongs to `live/live-events.ts` (`status-server-live` recipe), and this file imports neither. `unit-test-coverage` passes: `live-types.ts` has no function to unit-test, so `test/live-types.int.test.ts` carries one test per conformance vector (001-010) against `GET /live`, the route that builds a value of this shape; `reads.int.test.ts` covers the same fields too. `data-integrity` passes because every field in every interface this file declares is non-optional (**all-fields-required**), so a value that omits a field fails structural typing at compile time rather than silently propagating a partial `LiveSnapshot` to a consumer. `health-observability` passes because `LiveSnapshot` itself is a health-observability surface: `lastCycleAt`, `probeIntervalMs`, and `monitorVersion` exist specifically so a long-running monitor process's staleness and running version are observable from the snapshot it produces, per **last-cycle-at-is-data-freshness-clock**, **last-cycle-at-distinct-from-health-clock**, and **probe-interval-ms-scales-staleness**.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (live-types.int.test.ts, 10 of 10 vectors); unit-test-coverage now passed. |
 | 1.0.2 | 2026-09-27 | Mike Fullerton | Moved into the concept grouping. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.0.0 | 2026-09-24 | Mike Fullerton | Initial creation |

@@ -7,10 +7,17 @@
 // subject list is derived on the backend and never sent by the client, so there is no
 // "whose usage" parameter here beyond the workspace itself.
 
-import { authedJson } from "../http";
-import type { UsageRow } from "./wire";
+import { listAllV1, withV1Query } from "../http";
+import type { UsageRow, UsageRowWire } from "./wire";
 
-export type { UsageRow, UsageRowKind, UsageScope, UsageLimits } from "./wire";
+export type {
+  UsageRow,
+  UsageRowKind,
+  UsageScope,
+  UsageLimits,
+  UsageRowWire,
+  UsageLimitsWire,
+} from "./wire";
 
 // ── Query keys ─────────────────────────────────────────────────────────────────
 
@@ -27,8 +34,30 @@ export function usageSummaryKey(workspaceSlug?: string): readonly string[] {
 
 // ── Reads ──────────────────────────────────────────────────────────────────────
 
+const toUsageRow = (w: UsageRowWire): UsageRow => ({
+  kind: w.kind,
+  scope: w.scope,
+  principalId: w.principal_id,
+  label: w.label,
+  periodStart: w.period_start,
+  periodDays: w.period_days,
+  tier: w.tier,
+  limits: {
+    quotaRequests: w.limits.quota_requests,
+    quotaBytes: w.limits.quota_bytes,
+    quotaTokens: w.limits.quota_tokens,
+    quotaCostMicros: w.limits.quota_cost_micros,
+    enforced: w.limits.enforced,
+  },
+  requests: w.requests,
+  bytes: w.bytes,
+  tokens: w.tokens,
+  costMicros: w.cost_micros,
+});
+
 export async function getUsageSummary(opts?: { workspace?: string }): Promise<UsageRow[]> {
-  const query = opts?.workspace ? `?workspace=${encodeURIComponent(opts.workspace)}` : "";
-  const body = await authedJson<{ rows: UsageRow[] }>(`/api/usage/summary${query}`);
-  return body.rows;
+  const rows = await listAllV1<UsageRowWire>(
+    withV1Query("/api/v1/usage/summary", { workspace: opts?.workspace }),
+  );
+  return rows.map(toUsageRow);
 }

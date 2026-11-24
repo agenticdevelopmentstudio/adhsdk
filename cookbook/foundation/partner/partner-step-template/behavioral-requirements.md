@@ -1,0 +1,15 @@
+
+- **placeholder-syntax**: A placeholder MUST be an opening brace, one or more word characters (the ICU `\w` class used by Swift's `NSRegularExpression`: Unicode letters, marks and decimal digits, plus underscore and other connector punctuation, so `{café}` is a placeholder; a port MUST use this same class, not an ASCII-only one) and a closing brace; `{}` and `{two words}` are not placeholders.
+- **fill-known**: The command fill MUST replace each placeholder whose key has a value with that value.
+- **unknown-stays**: A placeholder whose key has no value MUST stay in the output exactly as written.
+- **one-pass**: Substitution MUST be one pass over the original command; a value MUST NOT be scanned for placeholders, so a value containing `{key}` appears as written.
+- **text-between-preserved**: All text outside replaced placeholders MUST be copied unchanged.
+- **terminal-quoting**: The step fill MUST quote every value with `shellQuoted` before filling a step whose environment is `terminal`.
+- **claude-unquoted**: The step fill MUST fill a step whose environment is `claude` with the values as written.
+- **steps-keep-fields**: The step fill MUST return one step per input step, in order, changing only `command`; `name`, `environment` and `condition` MUST be unchanged.
+- **plain-word-unquoted**: `shellQuoted` MUST return a value as written when it is not empty and every character is an ASCII letter, an ASCII numeral, or one of `_ - . / : @ + ,`.
+- **otherwise-single-quoted**: `shellQuoted` MUST otherwise return the value wrapped in single quotes, with each single quote in the value written as the four characters quote, backslash, quote, quote.
+- **empty-is-quoted**: `shellQuoted` MUST return two single quotes for an empty value, so it stays one word.
+- **no-equals-no-tilde**: `shellQuoted` MUST quote a value containing `=` or `~`.
+- **empty-values-unchanged**: The command fill MUST return a command with every placeholder as written when `values` is empty.
+- **hostile-values-inert**: The step fill MUST deliver a value containing `{key}`, a single quote, `$`, a backtick or a space to a terminal step as one shell word with no expansion, and MUST deliver it verbatim to a Claude step.

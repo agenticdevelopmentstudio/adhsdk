@@ -1,0 +1,7 @@
+
+- **SwiftUI**: The source imports only `Foundation`, so a SwiftUI host uses it unchanged from any view model or store. It is a caseless public `enum` over `TimeZone(identifier: "UTC")`: `string(from:)` calls `UTCTimestamp.day(of:in:)`, and `dayAfter(_:)` reads `<day>T00:00:00Z` through `UTCTimestamp.epochSeconds(_:)`, adds 86,400 seconds and formats with `UTCTimestamp.day(epochSeconds:in:)`.
+- **Compose**: `java.time.LocalDate.ofInstant(instant, ZoneOffset.UTC).toString()` produces the `yyyy-MM-dd` key and `LocalDate.parse(day).plusDays(1)` the next day; unparseable input throws `DateTimeParseException`, so catch it and return the input to match the source.
+- **React/Web**: `date.toISOString().slice(0, 10)` yields the UTC day; for the next day, add 86,400,000 ms to `Date.parse(day + 'T00:00:00Z')` and slice again, returning the input when the parse gives `NaN`.
+- **AppKit / UIKit**: Identical to the SwiftUI note: the file is UI-framework-agnostic, and only the embedding application differs, never this contract.
+- **WinUI 3**: `DateTimeOffset.UtcDateTime.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)` writes the day, and `DateTime.TryParseExact(day, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var d)` followed by `d.AddDays(1).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)` gives the next day; return the input string when `TryParseExact` fails. Use `static` methods on a `static class`, with no `INotifyPropertyChanged` or UI binding needed.
+

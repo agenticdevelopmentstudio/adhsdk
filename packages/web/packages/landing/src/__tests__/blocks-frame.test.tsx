@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { render } from '@testing-library/react'
+import type { ReactElement } from 'react'
 import { Card, Cards, Code, Head, Lede, Points, Shot, Table } from '../index'
 
 describe('Head', () => {
@@ -149,6 +150,76 @@ describe('Points', () => {
     const list = container.querySelector('.lp-points')!
     expect(list.tagName).toBe('UL')
     expect(list.classList.contains('lp-points--ordered')).toBe(false)
+  })
+
+  describe('conformance vectors', () => {
+    const html = (node: ReactElement): string => render(node).container.innerHTML
+
+    it('points-001 renders an empty ul.lp-points for no entries', () => {
+      expect(html(<Points entries={[]} ordered={false} />)).toBe('<ul class="lp-points"></ul>')
+    })
+
+    it('points-002 renders an empty ol with the ordered class for no entries', () => {
+      expect(html(<Points entries={[]} ordered />)).toBe('<ol class="lp-points lp-points--ordered"></ol>')
+    })
+
+    it('points-003 wraps detail-only content in li > span', () => {
+      expect(html(<Points entries={[{ detail: 'Content' }]} />)).toContain('<li><span>Content</span></li>')
+    })
+
+    it('points-004 bolds the term and separates it from the detail with a space', () => {
+      expect(html(<Points entries={[{ term: 'Term', detail: 'Description' }]} />)).toContain(
+        '<li><span><b>Term</b> Description</span></li>'
+      )
+    })
+
+    it('points-005 defaults to an unordered list when ordered is omitted', () => {
+      expect(html(<Points entries={[{ detail: 'First' }]} />).startsWith('<ul class="lp-points">')).toBe(true)
+    })
+
+    it('points-006 omits the b element only for the entry without a term', () => {
+      const { container } = render(<Points entries={[{ term: 'A', detail: 'First' }, { detail: 'Second' }]} />)
+      const items = container.querySelectorAll('li')
+      expect(items[0].outerHTML).toBe('<li><span><b>A</b> First</span></li>')
+      expect(items[1].outerHTML).toBe('<li><span>Second</span></li>')
+      expect(items[1].querySelector('b')).toBeNull()
+    })
+
+    it('points-007 gives the ordered root the ordered class', () => {
+      const { container } = render(<Points entries={[{ detail: 'First' }, { detail: 'Second' }]} ordered />)
+      expect(container.firstElementChild!.classList.contains('lp-points--ordered')).toBe(true)
+    })
+
+    it('points-008 leaves the ordered class off when ordered is false', () => {
+      const { container } = render(<Points entries={[{ detail: 'Item' }]} ordered={false} />)
+      expect(container.firstElementChild!.classList.contains('lp-points--ordered')).toBe(false)
+    })
+
+    it('points-009 renders ReactNode term and detail as given', () => {
+      expect(
+        html(<Points entries={[{ term: <em>Note</em>, detail: <a href="#more">link</a> }]} />)
+      ).toContain('<li><span><b><em>Note</em></b> <a href="#more">link</a></span></li>')
+    })
+
+    it('points-010 is a ul without the ordered class when ordered is omitted', () => {
+      const { container } = render(<Points entries={[{ detail: 'Item' }]} />)
+      expect(container.firstElementChild!.tagName).toBe('UL')
+      expect(container.firstElementChild!.classList.contains('lp-points--ordered')).toBe(false)
+    })
+
+    it('points-011 renders an empty span for an empty detail', () => {
+      expect(html(<Points entries={[{ detail: '' }]} />)).toContain('<li><span></span></li>')
+    })
+
+    it('points-012 renders a b for null, empty and zero terms; only undefined omits it', () => {
+      const { container } = render(
+        <Points entries={[{ term: null, detail: 'D' }, { term: '', detail: 'D' }, { term: 0, detail: 'D' }]} />
+      )
+      const items = container.querySelectorAll('li')
+      expect(items[0].outerHTML).toBe('<li><span><b></b> D</span></li>')
+      expect(items[1].outerHTML).toBe('<li><span><b></b> D</span></li>')
+      expect(items[2].outerHTML).toBe('<li><span><b>0</b> D</span></li>')
+    })
   })
 })
 

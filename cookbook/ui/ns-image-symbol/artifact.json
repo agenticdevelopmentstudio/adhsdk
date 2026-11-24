@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
-    "id": "5CACE721-E5EB-4D7A-AD2B-3EB67775CB88",
+    "id": "5cace721-e5eb-4d7a-ad2b-3eb67775cb88",
     "title": "Symbol Image",
-    "domain": "adhsdk://cookbook/ui/ns-image-symbol",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -29,7 +28,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "519cda96b487b397",
+  "synced": "0efba1a724192129",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -48,7 +47,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

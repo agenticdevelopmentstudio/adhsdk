@@ -57,9 +57,9 @@ class ArchivedWorkspace:
                 "slug": slug,
                 "name": name,
                 "type": type_,
-                "archivedAt": archived_at,
-                "handleAvailable": handle_available,
-                "canRestore": can_restore,
+                "archived_at": archived_at,
+                "handle_available": handle_available,
+                "can_restore": can_restore,
             }
         )
 
@@ -76,11 +76,11 @@ class ArchivedWorkspace:
 
         type_ = ArchivedWorkspaceType(d.pop("type"))
 
-        archived_at = d.pop("archivedAt")
+        archived_at = d.pop("archived_at")
 
-        handle_available = d.pop("handleAvailable")
+        handle_available = d.pop("handle_available")
 
-        can_restore = d.pop("canRestore")
+        can_restore = d.pop("can_restore")
 
         archived_workspace = cls(
             id=id,

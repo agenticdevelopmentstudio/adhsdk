@@ -38,7 +38,9 @@
   from `SignupMode.help` (declared in `EcosystemConfigModels.swift`).
   `AuthSettings.allowedProviders: [String]?` decodes from
   `AuthSettingsDataSource.get`'s response but `AuthSettingsTopic.detail`'s form
-  specification never surfaces it, and `AuthSettingsUpdate` has no field for it.
+  specification never surfaces it, and `AuthSettingsUpdate` has no field for it. The
+  login allow-list (`login_allowed_emails`) is not decoded on Apple at all
+  yet; that editor is planned.
 
   `SigninApp.leaf(in:)` implements leaf computation; the duplicate check compares
   against it case-insensitively; the `clientId` field validates against
@@ -85,8 +87,29 @@
   `EcosystemServerBagUpdate.value` are typed `unknown` in `server-bags.ts`. The UI
   panes and dialog-state modules that call these clients (`FeatureFlagsPane.tsx`,
   `bag-dialog-state.ts`, `flag-dialog-state.ts`, `ApplicationClientAuthSection.tsx`) are not
-  among this recipe's given sources, but see Design Decisions for the
+  among this ingredient's given sources, but see Design Decisions for the
   validation-layering split observed there.
+  The login allow-list (**auth-login-allow-list-edit**,
+  **auth-login-allow-list-bounds**) is the exception: its editor lives in
+  `packages/web/packages/features/ecosystem-config/src/` — `ClientAuthFields.tsx`
+  draws the section, `client-auth-model.ts` holds `cleanEmailList`,
+  `policyPatch`, `samePolicy` and `policyError`, and `ClientAuthSettingsPane.tsx`
+  blocks Save on `policyError` and re-keys the rows editor on each re-seed.
+  Emails are typed: the list names people by email so an owner can admit someone
+  who has never signed in, and the hub has no owner-scoped customer listing to
+  pick from. The email shape check is a local regular expression in
+  `client-auth-model.ts`, because no shared web package exports an email
+  validator; the backend's zod check stays authoritative.
+  The sync-tables topic is web-only. `sync-tables.ts` in the same data folder is
+  the client (`syncTablesApi(family)`, `schemaOf`). `SyncTablesPane.tsx` in the
+  features package holds `SyncTablesEditor` (the list and its progress modal, no
+  chrome, `family` defaulting to `"ecosystem"`) and `SyncTablesPane` (the hub's
+  `DetailsPane` around it); the hooks are in `sync-tables-hooks.ts`, keyed by
+  family and ecosystem. Bulk actions run through `useBatchRun` from
+  `@adh-sdk/data/query`. The admin console's `SyncPane` adds a picker over every
+  ecosystem and mounts `SyncTablesEditor` with `family="admin"`, keyed on the
+  ecosystem id; the hub's `[workspace]/sync` page mounts `SyncTablesPane`. Apple,
+  Android and Windows have no sync-tables editor; it is planned.
 - **Compose**: model each Apple protocol as a Kotlin `interface` with `suspend
   fun`s (e.g. `interface FeatureFlagsDataSource { suspend fun list(ecosystemId:
   String): List<FeatureFlag> }`); represent the shared token rail's revealed-secrets
@@ -94,7 +117,10 @@
   observes the reveal-once transition; model the wrapped JSON value type with
   `kotlinx.serialization.json.JsonElement`, noting the same integral-`Double`-vs-`Long`
   equality pitfall **bags-json-equality-int-number** documents applies to
-  `JsonPrimitive` unless normalized the same way.
+  `JsonPrimitive` unless normalized the same way. Model the sync-tables client as a
+  Kotlin `interface` with `suspend fun`s that return the refreshed catalog, and the
+  login allow-list as a `List<String>?` of lowercase emails, where `null` means
+  every customer and an empty list means nobody.
 - **WinUI 3**: model each data-source interface as a C# interface returning
   `Task<T>` (e.g. `Task<IReadOnlyList<FeatureFlag>> ListAsync(string
   ecosystemId)`) backed by `HttpClient` and `System.Text.Json` for
@@ -105,5 +131,8 @@
   secret, keep the equivalent of `revealedSecrets` as a plain in-memory field on the
   view-model — deliberately never written to `Windows.Storage.ApplicationData` or
   any DPAPI-backed store — so the "shown once" contract this component enforces is
-  preserved rather than accidentally persisted.
+  preserved rather than accidentally persisted. Model the sync-tables client as a
+  C# interface with one `Task`-returning method per operation, and the login
+  allow-list editor as a view-model holding a nullable `List<string>` of lowercase
+  emails, where `null` means every customer and an empty list means nobody.
 

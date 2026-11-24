@@ -1,0 +1,22 @@
+
+- **install-before-launch**: The watch MUST be created before the process is launched, and creating one for a process that is already running MUST fail a precondition with the message "ProcessExitWatch must be installed before run()".
+- **handler-installed**: Creating the watch MUST install a termination handler on the process that signals the watch's exit signal when the process terminates.
+- **handler-replaces**: Creating the watch MUST replace any termination handler already set on the process.
+- **wait-signalled**: `waitForExit(timeout:)` MUST return true when the exit arrives within `timeout` seconds.
+- **wait-timeout**: `waitForExit(timeout:)` MUST return false when the exit has not arrived after `timeout` seconds.
+- **wait-sticky**: Once `waitForExit(timeout:)` has returned true, every later call MUST return true at once, whatever the `timeout`.
+- **wait-already-exited**: `waitForExit(timeout:)` MUST return true without blocking when the exit has already been recorded.
+- **wait-zero-timeout**: A `timeout` of 0 MUST give a non-blocking check: true when the exit signal is already waiting, otherwise false.
+- **concurrent-waiters**: NEEDS REVIEW: Not implemented in source. The doc comment promises that once the exit has arrived every later call answers true at once, but the exit signal is a counting semaphore holding one count, so when two callers are blocked in `waitForExit(timeout:)` together only one is woken and the other waits out its whole timeout and returns false even though the process has exited. A test with two concurrent waiters, or a ruling that the type has one waiter, would settle it.
+- **stop-same-process**: `stop(_:)` MUST be given the same process the watch was created for; the behavior with any other process is undefined, because the watch checks only its own exit signal and the source does not guard it.
+- **stop-already-exited**: `stop(_:)` MUST return true without signalling the process when the exit has already been recorded.
+- **stop-terminate-first**: `stop(_:)` MUST send the process `terminate()` (SIGTERM) first and then wait up to `terminationGrace` seconds for the exit.
+- **stop-kill-second**: When the exit has not arrived after the first grace, `stop(_:)` MUST send SIGKILL to the process identifier and then wait up to `terminationGrace` more seconds.
+- **stop-result**: `stop(_:)` MUST return true when the exit arrived during either grace and false when it did not.
+- **stop-false-is-real**: When `stop(_:)` returns false the caller MUST NOT read the process's `terminationStatus`: a process blocked in an uninterruptible kernel wait (for example a read against a hung network mount) neither dies nor reaps.
+- **grace-value**: `terminationGrace` MUST be 2 seconds.
+- **stop-worst-case**: `stop(_:)` MUST NOT block for more than twice `terminationGrace` (4 seconds) plus the time to send the two signals, from the call.
+- **exit-recorded-once-seen**: The watch MUST record that the exit has arrived only when a wait observes the signal, so a process that exited with no wait yet made is still reported by the next `waitForExit(timeout:)` or `stop(_:)`.
+- **thread-safety**: The exit flag MUST be read and written under a lock, so `waitForExit(timeout:)`, `stop(_:)` and the flag can be used from any thread.
+- **no-status-api**: The type MUST NOT expose the exit code or termination reason; callers read `terminationStatus` from the process themselves after a true result.
+

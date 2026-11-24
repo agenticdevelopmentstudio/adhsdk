@@ -1,6 +1,6 @@
 
-**Decision**: Mark `lastCycleAt`, `probeIntervalMs` and `monitorVersion` optional on the client although the server copy declares them required.
-**Rationale**: The doc comments say each is optional "so an older backend degrades" to no warning, the client's floor, or no version shown; the client must tolerate backends that predate the fields.
+**Decision**: Made `lastCycleAt`, `probeIntervalMs` and `monitorVersion` required on the client, matching the server copy; they were once optional so an older backend degraded gracefully.
+**Rationale**: The staleness window and the freshness verdict moved to the server, so the client no longer needs a floor or a fallback for a missing field; the parity guard keeps the two copies identical.
 **Approved**: pending
 
 **Decision**: Carry `downSince` as server truth rather than the client's per-tab onset.

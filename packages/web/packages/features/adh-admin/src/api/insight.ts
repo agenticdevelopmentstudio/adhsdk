@@ -1,16 +1,16 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { RequestBody, SuccessBody, paths } from "@adh-sdk/adh-api-types";
-import { authedJson } from "./http";
+import type { RequestBody, SuccessBody, components, paths } from "@adh-sdk/adh-api-types";
+import { authedJson, listAllV1, type V1Deleted } from "./http";
 
 // ── Usage cost insight: what the platform costs, and who drives it ─────────
 //
-// The admin-gated `/usage/insight/*` reports read the metered usage and price it:
+// The admin-gated `/v1/usage/insights/*` reports read the metered usage and price it:
 // a month's run rate, the priced items over a range, a time series, and a
 // per-organization/ecosystem/user/persona breakdown with its drill-down. The prices
-// themselves are two admin-edited tables — per-unit rates (`/usage/rates`) and fixed
-// monthly costs (`/usage/fixed-costs`) — so a write to either re-prices every report,
+// themselves are two admin-edited tables — per-unit rates (`/v1/usage/rates`) and fixed
+// monthly costs (`/v1/usage/fixed_costs`) — so a write to either re-prices every report,
 // and each mutation below invalidates the whole insight key rather than guessing which
 // reports it touched.
 //
@@ -23,18 +23,19 @@ export interface InsightRange {
   to: string;
 }
 
-export type RunRate = SuccessBody<"/usage/insight/run-rate", "get">;
-export type InsightItems = SuccessBody<"/usage/insight/items", "get">;
+export type RunRate = SuccessBody<"/v1/usage/insights/run_rate", "get">;
+export type InsightItems = SuccessBody<"/v1/usage/insights/items", "get">;
 export type InsightItem = InsightItems["items"][number];
-export type InsightOverview = SuccessBody<"/usage/insight/overview", "get">;
+export type InsightOverview = SuccessBody<"/v1/usage/insights/overview", "get">;
 export type InsightInterval = InsightOverview["interval"];
-export type Breakdown = SuccessBody<"/usage/insight/breakdown", "get">;
+export type Breakdown = SuccessBody<"/v1/usage/insights/breakdown", "get">;
 export type BreakdownBy = Breakdown["by"];
-export type BreakdownDetail = SuccessBody<"/usage/insight/breakdown/{by}/{key}", "get">;
+/** The drill-down: `GET /v1/usage/insights/breakdown?by=&key=` answers this shape, not the page. */
+export type BreakdownDetail = components["schemas"]["UsageInsightBreakdownDetail"];
 
 /** What the breakdown ranks by: direct cost, estimated (direct + hosting share), or requests. */
 export type BreakdownSort = NonNullable<
-  paths["/usage/insight/breakdown"]["get"]["parameters"]["query"]["sort"]
+  paths["/v1/usage/insights/breakdown"]["get"]["parameters"]["query"]["sort"]
 >;
 
 export interface BreakdownParams extends InsightRange {
@@ -45,12 +46,12 @@ export interface BreakdownParams extends InsightRange {
   offset?: number;
 }
 
-export type UsageRate = SuccessBody<"/usage/rates", "get">["rows"][number];
-export type CreateRateBody = RequestBody<"/usage/rates", "post">;
-export type UpdateRateBody = RequestBody<"/usage/rates/{id}", "patch">;
-export type FixedCost = SuccessBody<"/usage/fixed-costs", "get">["rows"][number];
-export type CreateFixedCostBody = RequestBody<"/usage/fixed-costs", "post">;
-export type UpdateFixedCostBody = RequestBody<"/usage/fixed-costs/{id}", "patch">;
+export type UsageRate = SuccessBody<"/v1/usage/rates", "get">["data"][number];
+export type CreateRateBody = RequestBody<"/v1/usage/rates", "post">;
+export type UpdateRateBody = RequestBody<"/v1/usage/rates/{id}", "post">;
+export type FixedCost = SuccessBody<"/v1/usage/fixed_costs", "get">["data"][number];
+export type CreateFixedCostBody = RequestBody<"/v1/usage/fixed_costs", "post">;
+export type UpdateFixedCostBody = RequestBody<"/v1/usage/fixed_costs/{id}", "post">;
 
 /** A query string from the params that are set; `undefined` ones are left off. */
 function query(params: Record<string, string | number | undefined>): string {
@@ -69,74 +70,72 @@ const rangeQuery = ({ from, to }: InsightRange) => ({ from, to });
 // (mock `./http`); the hooks below are thin react-query wrappers over it.
 export const insightApi = {
   runRate(month: string): Promise<RunRate> {
-    return authedJson<RunRate>(`/api/usage/insight/run-rate?${query({ month })}`);
+    return authedJson<RunRate>(`/api/v1/usage/insights/run_rate?${query({ month })}`);
   },
 
   items(range: InsightRange): Promise<InsightItems> {
-    return authedJson<InsightItems>(`/api/usage/insight/items?${query(rangeQuery(range))}`);
+    return authedJson<InsightItems>(`/api/v1/usage/insights/items?${query(rangeQuery(range))}`);
   },
 
   overview(range: InsightRange, interval?: InsightInterval): Promise<InsightOverview> {
     return authedJson<InsightOverview>(
-      `/api/usage/insight/overview?${query({ ...rangeQuery(range), interval })}`,
+      `/api/v1/usage/insights/overview?${query({ ...rangeQuery(range), interval })}`,
     );
   },
 
   breakdown({ by, sort, limit, offset, ...range }: BreakdownParams): Promise<Breakdown> {
     return authedJson<Breakdown>(
-      `/api/usage/insight/breakdown?${query({ ...rangeQuery(range), by, sort, limit, offset })}`,
+      `/api/v1/usage/insights/breakdown?${query({ ...rangeQuery(range), by, sort, limit, offset })}`,
     );
   },
 
   breakdownDetail(by: BreakdownBy, key: string, range: InsightRange): Promise<BreakdownDetail> {
     return authedJson<BreakdownDetail>(
-      `/api/usage/insight/breakdown/${encodeURIComponent(by)}/${encodeURIComponent(key)}?${query(rangeQuery(range))}`,
+      `/api/v1/usage/insights/breakdown?${query({ ...rangeQuery(range), by, key })}`,
     );
   },
 
   async rates(): Promise<UsageRate[]> {
-    const { rows } = await authedJson<{ rows: UsageRate[] }>("/api/usage/rates");
-    return rows;
+    return listAllV1<UsageRate>("/api/v1/usage/rates");
   },
 
   createRate(body: CreateRateBody): Promise<UsageRate> {
-    return authedJson<UsageRate>("/api/usage/rates", { method: "POST", body: JSON.stringify(body) });
+    return authedJson<UsageRate>("/api/v1/usage/rates", { method: "POST", body: JSON.stringify(body) });
   },
 
   updateRate(id: string, changes: UpdateRateBody): Promise<UsageRate> {
-    return authedJson<UsageRate>(`/api/usage/rates/${encodeURIComponent(id)}`, {
-      method: "PATCH",
+    return authedJson<UsageRate>(`/api/v1/usage/rates/${encodeURIComponent(id)}`, {
+      method: "POST",
       body: JSON.stringify(changes),
     });
   },
 
-  deleteRate(id: string): Promise<{ ok: boolean }> {
-    return authedJson<{ ok: boolean }>(`/api/usage/rates/${encodeURIComponent(id)}`, {
+  deleteRate(id: string): Promise<V1Deleted> {
+    return authedJson<V1Deleted>(`/api/v1/usage/rates/${encodeURIComponent(id)}`, {
       method: "DELETE",
     });
   },
 
   async fixedCosts(): Promise<FixedCost[]> {
-    const { rows } = await authedJson<{ rows: FixedCost[] }>("/api/usage/fixed-costs");
-    return rows;
+    return listAllV1<FixedCost>("/api/v1/usage/fixed_costs");
   },
 
   createFixedCost(body: CreateFixedCostBody): Promise<FixedCost> {
-    return authedJson<FixedCost>("/api/usage/fixed-costs", {
+    return authedJson<FixedCost>("/api/v1/usage/fixed_costs", {
       method: "POST",
       body: JSON.stringify(body),
     });
   },
 
   updateFixedCost(id: string, changes: UpdateFixedCostBody): Promise<FixedCost> {
-    return authedJson<FixedCost>(`/api/usage/fixed-costs/${encodeURIComponent(id)}`, {
-      method: "PATCH",
+    return authedJson<FixedCost>(`/api/v1/usage/fixed_costs/${encodeURIComponent(id)}`, {
+      method: "POST",
       body: JSON.stringify(changes),
     });
   },
 
-  deleteFixedCost(id: string): Promise<{ ok: boolean }> {
-    return authedJson<{ ok: boolean }>(`/api/usage/fixed-costs/${encodeURIComponent(id)}`, {
+  deleteFixedCost(id: string): Promise<V1Deleted> {
+    return authedJson<V1Deleted>(`/api/v1/usage/fixed_costs/${encodeURIComponent(id)}`, {
       method: "DELETE",
     });
   },

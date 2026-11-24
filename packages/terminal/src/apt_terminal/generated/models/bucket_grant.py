@@ -22,8 +22,8 @@ class BucketGrant:
         target_type (BucketGrantTargetType):
         target_id (str):
         crud (str): comma-separated CRUD subset, e.g. 'C,R,U,D' or '' (none)
-        created_at (str):
-        updated_at (str):
+        created (int): Unix timestamp, in seconds.
+        updated (int): Unix timestamp, in seconds.
         granted_by (None | str | Unset):
     """
 
@@ -33,8 +33,8 @@ class BucketGrant:
     target_type: BucketGrantTargetType
     target_id: str
     crud: str
-    created_at: str
-    updated_at: str
+    created: int
+    updated: int
     granted_by: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -51,9 +51,9 @@ class BucketGrant:
 
         crud = self.crud
 
-        created_at = self.created_at
+        created = self.created
 
-        updated_at = self.updated_at
+        updated = self.updated
 
         granted_by: None | str | Unset
         if isinstance(self.granted_by, Unset):
@@ -66,17 +66,17 @@ class BucketGrant:
         field_dict.update(
             {
                 "id": id,
-                "ecosystemId": ecosystem_id,
-                "accessGroupId": access_group_id,
-                "targetType": target_type,
-                "targetId": target_id,
+                "ecosystem_id": ecosystem_id,
+                "access_group_id": access_group_id,
+                "target_type": target_type,
+                "target_id": target_id,
                 "crud": crud,
-                "createdAt": created_at,
-                "updatedAt": updated_at,
+                "created": created,
+                "updated": updated,
             }
         )
         if granted_by is not UNSET:
-            field_dict["grantedBy"] = granted_by
+            field_dict["granted_by"] = granted_by
 
         return field_dict
 
@@ -85,19 +85,19 @@ class BucketGrant:
         d = dict(src_dict)
         id = d.pop("id")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        access_group_id = d.pop("accessGroupId")
+        access_group_id = d.pop("access_group_id")
 
-        target_type = BucketGrantTargetType(d.pop("targetType"))
+        target_type = BucketGrantTargetType(d.pop("target_type"))
 
-        target_id = d.pop("targetId")
+        target_id = d.pop("target_id")
 
         crud = d.pop("crud")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
-        updated_at = d.pop("updatedAt")
+        updated = d.pop("updated")
 
         def _parse_granted_by(data: object) -> None | str | Unset:
             if data is None:
@@ -106,7 +106,7 @@ class BucketGrant:
                 return data
             return cast(None | str | Unset, data)
 
-        granted_by = _parse_granted_by(d.pop("grantedBy", UNSET))
+        granted_by = _parse_granted_by(d.pop("granted_by", UNSET))
 
         bucket_grant = cls(
             id=id,
@@ -115,8 +115,8 @@ class BucketGrant:
             target_type=target_type,
             target_id=target_id,
             crud=crud,
-            created_at=created_at,
-            updated_at=updated_at,
+            created=created,
+            updated=updated,
             granted_by=granted_by,
         )
 

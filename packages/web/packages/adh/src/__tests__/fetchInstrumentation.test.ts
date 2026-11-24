@@ -78,7 +78,7 @@ describe('instrumentFetch', () => {
   })
 
   it('flags authenticated when an Authorization header is present', async () => {
-    await wfetch('/api/auth/me', { headers: { Authorization: 'Bearer abc' } })
+    await wfetch('/api/v1/account', { headers: { Authorization: 'Bearer abc' } })
     expect(lastProps().authenticated).toBe(true)
   })
 

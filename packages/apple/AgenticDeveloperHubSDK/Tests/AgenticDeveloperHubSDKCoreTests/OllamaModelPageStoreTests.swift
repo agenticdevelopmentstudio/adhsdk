@@ -36,6 +36,12 @@ struct OllamaModelPageStoreTests {
         #expect(OllamaModelPageStore.parseDescription(html) == "Meta's Llama & friends")
     }
 
+    @Test("parseDescription decodes every HTML entity, not just the common few")
+    func decodesAllEntities() {
+        let html = #"<meta name="description" content="&nbsp;Mistral&rsquo;s model &#x2014; fast&hellip;">"#
+        #expect(OllamaModelPageStore.parseDescription(html) == "Mistral’s model — fast…")
+    }
+
     @Test("parseDescription falls back to the plain description meta")
     func parsesPlain() {
         let html = "<meta name=\"description\" content=\"  An open-source model.  \">"

@@ -183,9 +183,14 @@
 - **active-pane-cue-is-color-only**: As built, the pane's backdrop
   distinguishes the active pane from an inactive one by border color alone
   (`projectActivePaneOutline` vs. `projectPaneOutline`), with a constant
-  2pt border width in both states. This describes the current
+  2pt border width in both states while pane outlines are on (see
+  **outline-follows-the-owner** for when they are off). This describes the current
   implementation; it is not a constraint against adding a secondary cue —
   see Differentiate Without Color in Accessibility Options, which records
   that no such cue is implemented.
+- **outline-follows-the-owner**: A leaf pane MUST draw no outline, active
+  or inactive, while the split that owns it has pane outlines switched
+  off (a window that is one pane and has nothing to tell it from), and
+  MUST pick the setting up when it is created as well as when it changes.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
 

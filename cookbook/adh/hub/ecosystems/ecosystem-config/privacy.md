@@ -1,7 +1,9 @@
 
 - **Data collected**: this component collects no analytics of its own. It
   transports user-auth, sign-in-app, feature-flag, and server-bag records —
-  configuration entities holding no end-user personal data — and storage-token
+  configuration entities holding no end-user personal data, except the user-auth
+  login allow-list, which holds the email addresses an owner types to name who
+  may sign in — and storage-token
   records, which do carry a security-sensitive secret: the raw `adh_`-prefixed
   token minted by the create/mint operation.
 - **Storage**: on the primary implementation, the revealed-secrets store holds the

@@ -1,13 +1,12 @@
 ---
 id: 1463e7a2-e290-4b8c-8643-df9462a758e6
 title: "Git Repository Record"
-domain: adhsdk://cookbook/workspace/projects/git-repo
 type: ingredient
-version: 1.1.0
+version: 1.2.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-09-27
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -148,7 +147,13 @@ from each other.
   ever sets or reads it — per the doc comment it exists so that whichever
   component opens a project window "sorts by" it, a responsibility outside
   this component.
-
+- **git-repo-kind-document**: The repository kind MUST include `document` (a
+  window on one file, whose `path` is that file) and `documentTabs` (the one
+  window that holds single files as tabs), beside the project and File
+  Browser kinds, and MUST expose `isDocument`, true for exactly those two.
+- **git-repo-url-of-a-document**: For the `document` kind the record's
+  directory URL MUST be the directory that contains the file at `path`; for
+  every other kind it MUST be `path` itself.
 ## Appearance
 
 Not applicable — this is a data model, not a visual component.
@@ -349,9 +354,9 @@ Not applicable: this component contains no logging call of any kind.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepo.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepo.swift` | confirmed (1.2.0) |
 
 ## Design Decisions
 
@@ -413,8 +418,8 @@ do at a `GitRepo` call site but is not possible here.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 Notes: separation-of-concerns passes because `GitRepo.swift` holds only data
 shape and trivial, filesystem-free derived accessors (`url`, `defaultName`,
@@ -437,3 +442,4 @@ anywhere in the given sources.
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: removed source line-number citations; recipes cite files and symbols, not lines. |
 | 1.0.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to workspace/projects/. |
+| 1.2.0 | 2026-11-14 | Mike Fullerton | Document kinds: document and documentTabs, isDocument, url of a document |

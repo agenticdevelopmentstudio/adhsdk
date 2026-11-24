@@ -1,0 +1,43 @@
+
+- **compound-mode-children**: The component MUST render its `children` inside the root element when `panes` is absent or empty.
+- **data-mode-activation**: The component MUST enter data-driven mode when `panes` is supplied with at least one entry.
+- **data-mode-layout**: In data-driven mode the component MUST render the sidebar followed by a detail container with role `tabpanel` and class `aws-panel__detail`.
+- **data-mode-ignores-children**: In data-driven mode the component MUST NOT render `children`, even when children are supplied.
+- **data-mode-body**: In data-driven mode the detail container MUST contain the `body` of the entry whose `id` equals the selected id, and MUST be empty when no entry matches.
+- **data-mode-descriptors**: In data-driven mode the sidebar entries MUST come from the `panes` array with `body` removed, and panes registered by Pane children MUST NOT appear.
+- **root-class**: The root element MUST carry the class `aws-panel`, followed by `className` when it is a non-empty string.
+- **context-provision**: The component MUST give descendants the selected id, a select function, register and unregister functions, the resolved pane list and the sidebar title.
+- **context-required**: `SettingsPanel.Sidebar` and `SettingsPanel.Pane` MUST throw an `Error` with the message `SettingsPanel subcomponents must be rendered inside <SettingsPanel>` when rendered outside a panel.
+- **pane-registration**: A Pane MUST register a descriptor made of `id`, `title`, `icon`, `section` and `isDisabled` when it mounts, and MUST register again whenever any of those values change.
+- **pane-unregistration**: A Pane MUST unregister its id when it unmounts or before it re-registers.
+- **registration-replaces-by-id**: Registering a descriptor whose id is already registered MUST replace the earlier descriptor and place the new one last in the pane list.
+- **pane-renders-when-selected**: A Pane MUST render its children only while its id equals the selected id, and MUST render nothing otherwise while staying registered.
+- **pane-tabpanel**: A selected Pane MUST render a container with class `aws-panel__detail`, role `tabpanel`, id `aws-pane-` followed by the pane id, and `aria-labelledby` set to `aws-pane-` followed by the pane id and `-tab`.
+- **sidebar-nav**: The sidebar MUST render as a `nav` element with the class `aws-panel__sidebar` and the `aria-label` `Settings sections`.
+- **sidebar-title**: The sidebar MUST render an `h2` with class `aws-panel__sidebar-title` containing the heading text, where the Sidebar `title` prop wins over the panel `sidebarTitle` prop.
+- **sidebar-title-omitted**: The sidebar MUST NOT render a heading element when neither `title` nor `sidebarTitle` is given.
+- **sidebar-grouping**: The sidebar MUST group panes by `section`, keeping first-seen order within each group and placing the group of panes without a section first.
+- **sidebar-section-title**: The sidebar MUST render a section title element with class `aws-panel__sidebar-section-title` for each named section, and MUST NOT render one for the unsectioned group.
+- **sidebar-list-roles**: Each group's list MUST be a `ul` with role `tablist` whose `li` items have role `presentation`.
+- **row-element**: Each pane MUST render as a `button` of type `button` with role `tab`, `aria-selected` equal to whether the pane is selected, and `aria-controls` equal to `aws-pane-` followed by the pane id.
+- **row-label**: Each row MUST show the pane `title` in a span with class `aws-panel__sidebar-label`.
+- **row-icon**: A row MUST render the pane `icon` in a span with class `aws-panel__sidebar-icon` when an icon is given, and MUST NOT render that span otherwise.
+- **row-selected-class**: The selected row MUST carry the class `aws-panel__sidebar-row--selected`.
+- **row-disabled**: A disabled pane's row MUST carry the `disabled` attribute and the class `aws-panel__sidebar-row--disabled`.
+- **row-click-selects**: Clicking an enabled row MUST select that pane.
+- **row-click-disabled-ignored**: Clicking a disabled row MUST NOT select the pane and MUST NOT call `onSelect`.
+- **initial-selection**: In uncontrolled mode the initial selection MUST be the persisted id when one is readable, otherwise `defaultPaneId`, otherwise none.
+- **controlled-selection**: When `selectedId` is not `undefined` the component MUST treat it as the selection and MUST NOT change its internal selection on a click.
+- **uncontrolled-selection**: When `selectedId` is `undefined` a click on an enabled row MUST update the internal selection.
+- **select-notifies**: A click on an enabled row MUST call `onSelect` with the pane id in both controlled and uncontrolled mode.
+- **persist-write**: When `persistKey` is non-empty a click on an enabled row MUST write the pane id to local storage under the key `aws-settings:` followed by `persistKey`, in both controlled and uncontrolled mode.
+- **persist-read-once**: The persisted id MUST be read once, when the component first mounts, and not again on later renders.
+- **persist-failure-tolerated**: A thrown error from reading or writing local storage MUST be swallowed, with a read failure treated as no persisted value.
+- **persist-server-safe**: Reading and writing persistence MUST be skipped when `window` is undefined.
+- **auto-select-first-enabled**: When the pane list is non-empty and the selected id is missing, unknown or belongs to a disabled pane, the component MUST select the first enabled pane in list order.
+- **auto-select-notifies**: Auto-selection MUST call `onSelect` with the chosen id, in controlled mode as well as uncontrolled mode.
+- **auto-select-no-persist**: Auto-selection MUST NOT write to local storage.
+- **auto-select-once**: The component MUST NOT call `onSelect` again for the same auto-selected id until the selection has become valid at least once in between.
+- **auto-select-none-enabled**: The component MUST NOT select anything when the pane list is empty or every pane is disabled.
+- **selection-state-in-context**: The select function in context MUST update internal state only in uncontrolled mode, then call `onSelect`, then write persistence.
+

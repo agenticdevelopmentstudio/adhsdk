@@ -1,0 +1,231 @@
+import XCTest
+@testable import AgenticDeveloperHubSDKCore
+
+/// The conversation reading of a session: status, `~` paths, `--app` matching.
+final class ConversationSummaryDTOTests: XCTestCase {
+
+    private func session(
+        status: String = "active", lastEventType: String = "", subagentWorking: Bool = false,
+        cwd: String = "/Users/me/src/app", termProgram: String = "iTerm.app", gitBranch: String = "main"
+    ) -> SessionDTO {
+        SessionDTO(
+            sessionId: "s1", cwd: cwd, model: "claude-opus-5", startedAt: "2026-11-10 09:00:00",
+            lastActivityAt: "2026-11-10 10:00:00", lastTool: "", status: status, gitBranch: gitBranch,
+            summary: "", pid: 42, termProgram: termProgram, transcriptTitle: "my chat",
+            lastEventType: lastEventType, eventCount: 0, subagentWorking: subagentWorking)
+    }
+
+    func testStatusFollowsTheTurn() {
+        XCTAssertEqual(ConversationStatus(session: session(lastEventType: "Stop")), .idle)
+        XCTAssertEqual(ConversationStatus(session: session(lastEventType: "PreToolUse")), .busy)
+        XCTAssertEqual(ConversationStatus(session: session(lastEventType: "PermissionRequest")), .waiting)
+        XCTAssertEqual(ConversationStatus(session: session(lastEventType: "Stop", subagentWorking: true)), .busy)
+        XCTAssertEqual(ConversationStatus(session: session(status: "ended", lastEventType: "Stop")), .ended)
+    }
+
+    func testHomeRelative() {
+        XCTAssertEqual(ConversationSummaryDTO.homeRelative("/Users/me/src", homeDirectory: "/Users/me"), "~/src")
+        XCTAssertEqual(ConversationSummaryDTO.homeRelative("/Users/me", homeDirectory: "/Users/me/"), "~")
+        XCTAssertEqual(ConversationSummaryDTO.homeRelative("/Users/meow", homeDirectory: "/Users/me"), "/Users/meow")
+        XCTAssertEqual(ConversationSummaryDTO.homeRelative("/tmp", homeDirectory: ""), "/tmp")
+    }
+
+    func testSummaryReadsTheSession() {
+        let row = ConversationSummaryDTO(session: session(), homeDirectory: "/Users/me")
+        XCTAssertEqual(row.cwd, "~/src/app")
+        XCTAssertEqual(row.sessionName, "my chat")
+        XCTAssertEqual(row.agent, "claude")
+        XCTAssertEqual(row.lastActivity, UTCTimestamp.canonical("2026-11-10 10:00:00"))
+    }
+
+    func testAppMatchesAgentOrTerminalByPrefix() {
+        let iterm = session(termProgram: "iTerm.app")
+        XCTAssertTrue(ConversationSummaryDTO.matches(app: "claude", session: iterm))
+        XCTAssertTrue(ConversationSummaryDTO.matches(app: "ITERM", session: iterm))
+        XCTAssertFalse(ConversationSummaryDTO.matches(app: "ghostty", session: iterm))
+    }
+
+    func testWorkInProgressIsAFeatureBranchOrAWorktree() {
+        XCTAssertFalse(ConversationSummaryDTO.isWorkInProgress(session: session(gitBranch: "main")))
+        XCTAssertFalse(ConversationSummaryDTO.isWorkInProgress(session: session(gitBranch: "master")))
+        XCTAssertFalse(ConversationSummaryDTO.isWorkInProgress(session: session(gitBranch: "")))
+        XCTAssertFalse(ConversationSummaryDTO.isWorkInProgress(session: session(gitBranch: "HEAD")))
+        XCTAssertTrue(ConversationSummaryDTO.isWorkInProgress(session: session(gitBranch: "fix-login")))
+        XCTAssertTrue(ConversationSummaryDTO.isWorkInProgress(
+            session: session(cwd: "/Users/me/src/app/.claude/worktrees/wt/Sources", gitBranch: "main")))
+        XCTAssertFalse(ConversationSummaryDTO.isWorkInProgress(
+            session: session(cwd: "/Users/me/src/app/.claude/worktrees", gitBranch: "main")))
+    }
+
+    private func info(_ session: SessionDTO, live: [SessionDTO] = []) -> ConversationInfoDTO {
+        ConversationInfoDTO(session: session, liveSessions: live, homeDirectory: "/Users/me")
+    }
+
+    func testInfoCanSendOnlyToALiveSupportedTerminal() {
+        XCTAssertTrue(info(session()).canSend)
+        XCTAssertFalse(info(session(status: "ended")).canSend)
+        XCTAssertFalse(info(session(termProgram: "vscode")).canSend)
+    }
+
+    /// A pane showing a permission prompt would take the typed message's Return as
+    /// "Yes" — so a waiting conversation is refused, with the reason.
+    func testWaitingConversationRefusesASend() {
+        let waiting = session(lastEventType: "PermissionRequest")
+        XCTAssertFalse(info(waiting).canSend)
+        XCTAssertTrue(info(waiting).sendRefusal.contains("waiting on a prompt"), info(waiting).sendRefusal)
+        XCTAssertNil(ConversationSendability.refusal(for: session(lastEventType: "PreToolUse"), liveSessions: []),
+                     "busy queues")
+        XCTAssertEqual(info(session()).sendRefusal, "")
+    }
+
+    private func iTerm(_ id: String, pane: String, status: String = "active") -> SessionDTO {
+        SessionDTO(
+            sessionId: id, cwd: "/Users/me/src", model: "", startedAt: "", lastActivityAt: "", lastTool: "",
+            status: status, gitBranch: "", summary: "", pid: 0, termProgram: "iTerm.app",
+            termSessionId: "w0t0p0:\(pane)", transcriptTitle: "", lastEventType: "Stop", eventCount: 0)
+    }
+
+    /// A `claude -p` run from another session's Bash tool inherits that session's
+    /// TERM_SESSION_ID: its pane is the parent's, so neither may be sent to.
+    func testSessionsSharingAPaneRefuseASend() {
+        let parent = iTerm("parent", pane: "P")
+        let child = iTerm("child", pane: "P")
+        let elsewhere = iTerm("other", pane: "Q")
+        let live = [parent, child, elsewhere]
+        XCTAssertFalse(info(child, live: live).canSend)
+        XCTAssertTrue(info(child, live: live).sendRefusal.contains("parent"), info(child, live: live).sendRefusal)
+        XCTAssertFalse(info(parent, live: live).canSend)
+        XCTAssertTrue(info(elsewhere, live: live).canSend)
+        XCTAssertTrue(info(parent, live: [parent, iTerm("child", pane: "P", status: "ended")]).canSend,
+                      "an ended session shares nothing")
+    }
+
+    /// A review worker (`claude -p` from a script) inherits the pane but reads a pipe:
+    /// nothing typed there reaches it, so it doesn't block its interactive parent —
+    /// and it is never a send target itself. A process that can't be read still blocks.
+    func testAHeadlessSharerWithNoTerminalLeavesThePaneToTheInteractiveSession() {
+        let parent = iTerm("parent", pane: "P")
+        let worker = iTerm("worker", pane: "P")
+        let live = [parent, worker]
+        let headlessWorker: ConversationSendability.AttachmentProbe = {
+            $0.sessionId == "worker" ? .detached : .attached
+        }
+        XCTAssertNil(ConversationSendability.refusal(for: parent, liveSessions: live, attachment: headlessWorker))
+        let toWorker = ConversationSendability.refusal(for: worker, liveSessions: live, attachment: headlessWorker)
+        XCTAssertTrue(toWorker?.contains("headless") ?? false, toWorker ?? "nil")
+        let unknown: ConversationSendability.AttachmentProbe = { _ in nil }
+        XCTAssertNotNil(ConversationSendability.refusal(for: parent, liveSessions: live, attachment: unknown),
+                        "an unreadable process might be on the pane")
+    }
+
+    func testTerminalAttachmentIsUnknownForAProcessThatIsNotClaude() {
+        XCTAssertNil(ProcessLiveness.terminalAttachment(ofPid: 0))
+        XCTAssertNil(ProcessLiveness.terminalAttachment(ofPid: getpid()), "the test runner is not claude")
+    }
+
+    /// A `claude -p` started from an interactive shell has that shell's tty, so the
+    /// terminal check alone took it for a pane sharer. Its session file and its
+    /// arguments both say it is headless.
+    func testAScriptedClaudeIsHeadlessEvenWithATerminal() {
+        func file(_ entrypoint: String) -> Data {
+            Data(#"{"pid":1,"sessionId":"s","kind":"interactive","entrypoint":"\#(entrypoint)"}"#.utf8)
+        }
+        XCTAssertTrue(ProcessLiveness.isHeadless(argv: ["claude"], sessionFile: file("sdk-cli")))
+        XCTAssertFalse(ProcessLiveness.isHeadless(argv: ["claude"], sessionFile: file("cli")))
+        XCTAssertFalse(ProcessLiveness.isHeadless(argv: ["claude", "-p", "x"], sessionFile: file("cli")),
+                       "the session file outranks the arguments")
+        XCTAssertTrue(ProcessLiveness.isHeadless(argv: ["claude", "-p", "ping"], sessionFile: nil))
+        XCTAssertTrue(ProcessLiveness.isHeadless(argv: ["node", "cli.js", "--print", "ping"], sessionFile: nil))
+        XCTAssertFalse(ProcessLiveness.isHeadless(argv: ["claude", "--", "-p"], sessionFile: nil),
+                       "after -- it is the prompt, not a switch")
+        XCTAssertFalse(ProcessLiveness.isHeadless(argv: ["claude"], sessionFile: nil))
+        XCTAssertFalse(ProcessLiveness.isHeadless(argv: nil, sessionFile: nil))
+    }
+
+    // MARK: - Vectors 022 to 031
+
+    private let attached: ConversationSendability.AttachmentProbe = { _ in .attached }
+
+    func testV022_endedSessionRefusalNamesTheId() {
+        let refusal = ConversationSendability.refusal(for: session(status: "ended"), liveSessions: [])
+        XCTAssertEqual(refusal, "conversation s1 has ended.")
+    }
+
+    func testV023_unparsableLastActivityIsKeptVerbatim() {
+        let odd = SessionDTO(
+            sessionId: "s1", cwd: "/tmp", model: "", startedAt: "", lastActivityAt: "not a date", lastTool: "",
+            status: "active", gitBranch: "", summary: "", pid: 0, termProgram: "iTerm.app", eventCount: 0)
+        XCTAssertEqual(ConversationSummaryDTO(session: odd, homeDirectory: "/Users/me").lastActivity, "not a date")
+    }
+
+    func testV024_endedWinsOverUnsupportedTerminal() {
+        let refusal = ConversationSendability.refusal(
+            for: session(status: "ended", termProgram: "vscode"), liveSessions: [], attachment: attached)
+        XCTAssertEqual(refusal, "conversation s1 has ended.")
+    }
+
+    func testV025_unknownTerminalSentence() {
+        let refusal = ConversationSendability.refusal(
+            for: session(lastEventType: "Stop", termProgram: ""), liveSessions: [], attachment: attached)
+        XCTAssertEqual(
+            refusal, "typing into a conversation needs iTerm2 or Terminal.app; s1 runs in an unknown terminal.")
+    }
+
+    func testV026_unresolvedPanesAreNotShared() {
+        let bare = SessionDTO(
+            sessionId: "bare", cwd: "/tmp", model: "", startedAt: "", lastActivityAt: "", lastTool: "",
+            status: "active", gitBranch: "", summary: "", pid: 0, termProgram: "iTerm.app",
+            termSessionId: "", lastEventType: "Stop", eventCount: 0)
+        let other = SessionDTO(
+            sessionId: "bare2", cwd: "/tmp", model: "", startedAt: "", lastActivityAt: "", lastTool: "",
+            status: "active", gitBranch: "", summary: "", pid: 0, termProgram: "iTerm.app",
+            termSessionId: "", lastEventType: "Stop", eventCount: 0)
+        let live = [bare, other]
+        XCTAssertNil(ConversationSendability.refusal(for: bare, liveSessions: live, attachment: attached))
+        XCTAssertNil(ConversationSendability.refusal(for: other, liveSessions: live, attachment: attached))
+    }
+
+    func testV027_terminalNameIsTheKnownNameElseTheRawValue() {
+        XCTAssertEqual(ConversationSummaryDTO(session: session(termProgram: "iTerm.app")).terminal, "iTerm2")
+        XCTAssertEqual(ConversationSummaryDTO(session: session(termProgram: "ghostty")).terminal, "ghostty")
+        XCTAssertEqual(ConversationSummaryDTO.terminalName("iTerm.app"), "iTerm2")
+        XCTAssertEqual(ConversationSummaryDTO.terminalName("ghostty"), "ghostty")
+    }
+
+    func testV028_emptyTerminalNameDoesNotMatch() {
+        let headless = session(termProgram: "")
+        XCTAssertFalse(ConversationSummaryDTO.matches(app: "x", session: headless))
+        XCTAssertTrue(ConversationSummaryDTO.matches(app: "claude", session: headless))
+    }
+
+    func testV029_infoCarriesTheRawFields() {
+        let source = SessionDTO(
+            sessionId: "s1", cwd: "/Users/me/src/app", model: "claude-opus-5", startedAt: "2026-11-10 10:00:00",
+            lastActivityAt: "2026-11-10 10:30:00", lastTool: "Bash", status: "active", gitBranch: "main",
+            summary: "fixing a bug", pid: 42, termProgram: "iTerm.app", projectRoot: "/Users/me/src/app",
+            transcriptTitle: "my chat", lastEventType: "Stop", eventCount: 0)
+        let result = ConversationInfoDTO(session: source, liveSessions: [], homeDirectory: "/Users/me")
+        XCTAssertEqual(result.projectRoot, "~/src/app")
+        XCTAssertEqual(result.startedAt, UTCTimestamp.canonical("2026-11-10 10:00:00"))
+        XCTAssertEqual(result.termProgram, "iTerm.app")
+        XCTAssertEqual(result.model, "claude-opus-5")
+        XCTAssertEqual(result.lastTool, "Bash")
+        XCTAssertEqual(result.summary, "fixing a bug")
+        XCTAssertEqual(result.pid, 42)
+    }
+
+    func testV030_processAttachmentClampsAnOversizedPid() {
+        let huge = SessionDTO(
+            sessionId: "s1", cwd: "/tmp", model: "", startedAt: "", lastActivityAt: "", lastTool: "",
+            status: "active", gitBranch: "", summary: "", pid: Int.max, termProgram: "iTerm.app", eventCount: 0)
+        XCTAssertEqual(
+            ConversationSendability.processAttachment(huge),
+            ProcessLiveness.terminalAttachment(ofPid: pid_t.max))
+    }
+
+    func testV031_summaryHomeDefaultsToTheCurrentHome() {
+        let home = NSHomeDirectory()
+        let row = ConversationSummaryDTO(session: session(cwd: home + "/src"))
+        XCTAssertEqual(row.cwd, "~/src")
+    }
+}

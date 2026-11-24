@@ -14,7 +14,7 @@ Constructor parameters (dependency injection) per backend:
 | Cloud-synced provider's backing store | system store | the platform default | Backing key-value store |
 | JSON encoder/decoder (plain persistent, secure persistent, embedded-database, and cloud-synced providers) | encoder/decoder | the default encoder/decoder | Injected for testability |
 
-Setting keys declared on the shared settings store in the given sources:
+Example setting keys declared on the shared settings store in the given sources (illustrative; each belongs to the consuming ingredient, not to this storage layer):
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|

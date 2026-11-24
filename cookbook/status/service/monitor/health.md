@@ -1,13 +1,12 @@
 ---
 id: 2871e97f-f971-46fe-a4d2-de57ad5c94c5
 title: "Status Server Monitor Health"
-domain: adhsdk://cookbook/status/service/monitor/health
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-09-27
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -92,20 +91,19 @@ Not applicable — this is a health-classification function, not a visual compon
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| status-server-monitor-health-001 | success-status-range, degraded-latency-threshold | `classify({ statusCode: 200, responseTimeMs: 100, expectedStatus: 200 })` | `'healthy'` — `health.test.ts` › "healthy on fast 2xx" |
-| status-server-monitor-health-002 | degraded-latency-threshold | `classify({ statusCode: 200, responseTimeMs: 2500, expectedStatus: 200 })` | `'degraded'` — `health.test.ts` › "degraded when slow" |
-| status-server-monitor-health-003 | non-2xx-non-expected-is-down | `classify({ statusCode: 503, responseTimeMs: 100, expectedStatus: 200 })` | `'down'` — `health.test.ts` › "down on 5xx" |
-| status-server-monitor-health-004 | body-marker-missing-is-down | `classify({ statusCode: 200, responseTimeMs: 100, expectedStatus: 200, bodyMarkerMissing: true })` | `'down'` — `health.test.ts` › "down when the expected body marker is missing" |
-| status-server-monitor-health-005 | health-kind-json-down-on-non-ok-status | `classify({ statusCode: 200, responseTimeMs: 100, expectedStatus: 200, isHealthKind: true, bodyText: '{"status":"degraded"}' })` | `'down'` — `health.test.ts` › "down when a health-kind JSON body reports non-ok status" |
-| status-server-monitor-health-006 | expected-non-2xx-status-not-down | `classify({ statusCode: 401, responseTimeMs: 100, expectedStatus: 401 })` | `'healthy'` — `health.test.ts` › "honours a non-2xx expectedStatus match as not-down" |
-| status-server-monitor-health-007 | health-kind-json-parse-failure-falls-through | `classify({ statusCode: 200, responseTimeMs: 100, expectedStatus: 200, isHealthKind: true, bodyText: "not json" })` | `'healthy'` — traced directly to the source's own comment on the `catch` branch ("Non-JSON body ... fall through to the marker/latency checks"); no test in `health.test.ts` exercises this branch directly |
-| status-server-monitor-health-008 | health-kind-json-missing-status-field-falls-through | `classify({ statusCode: 200, responseTimeMs: 100, expectedStatus: 200, isHealthKind: true, bodyText: '{"ok":true}' })` | `'healthy'` — traced directly to the `"status" in parsed` guard; no test in `health.test.ts` exercises this branch directly |
-| status-server-monitor-health-009 | health-kind-check-skipped-without-body-text | `classify({ statusCode: 200, responseTimeMs: 100, expectedStatus: 200, isHealthKind: true, bodyText: "" })` | `'healthy'` — traced directly to the `isHealthKind && bodyText` truthiness check; an empty string is falsy so the JSON parse never runs; no test in `health.test.ts` exercises this branch directly |
-| status-server-monitor-health-010 | health-kind-status-field-string-coercion | `classify({ statusCode: 200, responseTimeMs: 100, expectedStatus: 200, isHealthKind: true, bodyText: '{"status":"OK"}' })` | `'healthy'` — traced directly to `String(status).toLowerCase() !== "ok"` matching case-insensitively; no test in `health.test.ts` exercises this branch directly |
-| status-server-monitor-health-011 | health-kind-status-field-string-coercion | `classify({ statusCode: 200, responseTimeMs: 100, expectedStatus: 200, isHealthKind: true, bodyText: '{"status":200}' })` | `'down'` — traced directly to `String(200).toLowerCase()` producing the string `"200"`, which is not `"ok"`; no test in `health.test.ts` exercises this branch directly |
-| status-server-monitor-health-012 | degraded-latency-threshold | `classify({ statusCode: 200, responseTimeMs: 2000, expectedStatus: 200 })` | `'healthy'` — traced directly to the strict `>` comparison; a `responseTimeMs` exactly equal to `DEGRADED_THRESHOLD_MS` is NOT degraded; no test in `health.test.ts` exercises this exact boundary |
-| status-server-monitor-health-013 | classification-evaluation-order, health-kind-json-down-on-non-ok-status | `classify({ statusCode: 200, responseTimeMs: 100, expectedStatus: 200, isHealthKind: true, bodyText: '{"status":"degraded"}', bodyMarkerMissing: true })` | `'down'` — traced directly to the health-kind branch's early `return "down"`, which returns before the `bodyMarkerMissing` check ever runs; both conditions independently imply `'down'`, so this vector confirms evaluation order rather than the final value; no test in `health.test.ts` exercises this combination |
-
+| status-server-monitor-health-001 | success-status-range, degraded-latency-threshold | `classify({ statusCode: 200, responseTimeMs: 100, expectedStatus: 200 })` | `'healthy'` — `health.test.ts` › "status-server-monitor-health-001 healthy on fast 2xx" |
+| status-server-monitor-health-002 | degraded-latency-threshold | `classify({ statusCode: 200, responseTimeMs: 2500, expectedStatus: 200 })` | `'degraded'` — `health.test.ts` › "status-server-monitor-health-002 degraded when slow" |
+| status-server-monitor-health-003 | non-2xx-non-expected-is-down | `classify({ statusCode: 503, responseTimeMs: 100, expectedStatus: 200 })` | `'down'` — `health.test.ts` › "status-server-monitor-health-003 down on 5xx" |
+| status-server-monitor-health-004 | body-marker-missing-is-down | `classify({ statusCode: 200, responseTimeMs: 100, expectedStatus: 200, bodyMarkerMissing: true })` | `'down'` — `health.test.ts` › "status-server-monitor-health-004 down when the expected body marker is missing" |
+| status-server-monitor-health-005 | health-kind-json-down-on-non-ok-status | `classify({ statusCode: 200, responseTimeMs: 100, expectedStatus: 200, isHealthKind: true, bodyText: '{"status":"degraded"}' })` | `'down'` — `health.test.ts` › "status-server-monitor-health-005 down when a health-kind JSON body reports non-ok status" |
+| status-server-monitor-health-006 | expected-non-2xx-status-not-down | `classify({ statusCode: 401, responseTimeMs: 100, expectedStatus: 401 })` | `'healthy'` — `health.test.ts` › "status-server-monitor-health-006 honours a non-2xx expectedStatus match as not-down" |
+| status-server-monitor-health-007 | health-kind-json-parse-failure-falls-through | `classify({ statusCode: 200, responseTimeMs: 100, expectedStatus: 200, isHealthKind: true, bodyText: "not json" })` | `'healthy'` — traced to the source's own comment on the `catch` branch ("Non-JSON body ... fall through to the marker/latency checks"); `health.test.ts` › "status-server-monitor-health-007 ..." |
+| status-server-monitor-health-008 | health-kind-json-missing-status-field-falls-through | `classify({ statusCode: 200, responseTimeMs: 100, expectedStatus: 200, isHealthKind: true, bodyText: '{"ok":true}' })` | `'healthy'` — traced to the `"status" in parsed` guard; `health.test.ts` › "status-server-monitor-health-008 ..." |
+| status-server-monitor-health-009 | health-kind-check-skipped-without-body-text | `classify({ statusCode: 200, responseTimeMs: 100, expectedStatus: 200, isHealthKind: true, bodyText: "" })` | `'healthy'` — traced to the `isHealthKind && bodyText` truthiness check; an empty string is falsy so the JSON parse never runs; `health.test.ts` › "status-server-monitor-health-009 ..." |
+| status-server-monitor-health-010 | health-kind-status-field-string-coercion | `classify({ statusCode: 200, responseTimeMs: 100, expectedStatus: 200, isHealthKind: true, bodyText: '{"status":"OK"}' })` | `'healthy'` — traced to `String(status).toLowerCase() !== "ok"` matching case-insensitively; `health.test.ts` › "status-server-monitor-health-010 ..." |
+| status-server-monitor-health-011 | health-kind-status-field-string-coercion | `classify({ statusCode: 200, responseTimeMs: 100, expectedStatus: 200, isHealthKind: true, bodyText: '{"status":200}' })` | `'down'` — traced to `String(200).toLowerCase()` producing the string `"200"`, which is not `"ok"`; `health.test.ts` › "status-server-monitor-health-011 ..." |
+| status-server-monitor-health-012 | degraded-latency-threshold | `classify({ statusCode: 200, responseTimeMs: 2000, expectedStatus: 200 })` | `'healthy'` — traced to the strict `>` comparison; a `responseTimeMs` exactly equal to `DEGRADED_THRESHOLD_MS` is NOT degraded; `health.test.ts` › "status-server-monitor-health-012 ..." |
+| status-server-monitor-health-013 | classification-evaluation-order, health-kind-json-down-on-non-ok-status | `classify({ statusCode: 200, responseTimeMs: 100, expectedStatus: 200, isHealthKind: true, bodyText: '{"status":"degraded"}', bodyMarkerMissing: true })` | `'down'` — traced to the health-kind branch's early `return "down"`, which returns before the `bodyMarkerMissing` check runs; both conditions independently imply `'down'`, so this vector confirms evaluation order rather than the final value; `health.test.ts` › "status-server-monitor-health-013 ..." |
 ## Edge Cases
 
 - **Null and empty input**: `bodyText: undefined` and `bodyText: ""` MUST both be treated as "no body to check" — `isHealthKind && bodyText` is falsy for either, so the JSON parse is skipped and evaluation proceeds to the `bodyMarkerMissing`/latency check (health-kind-check-skipped-without-body-text) — MUST. `isHealthKind: undefined` and `bodyMarkerMissing: undefined` MUST both be treated as `false` by the `&&`/`if` checks that read them, so an endpoint that never sets these optional fields gets the plain success/latency classification — MUST. `statusCode`, `responseTimeMs`, and `expectedStatus` are declared as required `number` fields on `ClassifyInput`; nothing inside `classify` validates that a caller actually supplied a finite number for any of them at runtime — this is a caller precondition enforced by the type signature, not unvalidated input the function's purpose calls for validating, since `classify` has exactly one caller in this codebase (`probe()` in `probe.ts`, external), which always supplies `res.status` and a computed millisecond duration.
@@ -168,9 +166,9 @@ Not applicable: this file contains no logging or console call of any kind; `clas
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-server/src/monitor/health.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-server/src/monitor/health.ts` | confirmed (1.0.3) |
 
 ## Design Decisions
 
@@ -191,17 +189,18 @@ Not applicable: this file contains no logging or console call of any kind; `clas
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
 
-`unit-test-coverage` is `partial`: `health.test.ts` gives `classify` six assertions with meaningful expectations, covering fast/slow 2xx, a 5xx, a missing body marker, a non-ok health-kind JSON body, and a non-2xx `expectedStatus` match — but four branches this recipe traces directly to the source (a non-JSON body falling through, a JSON body with no `status` field falling through, the exact `DEGRADED_THRESHOLD_MS` latency boundary, and the case-insensitive/non-string `status` coercion) have no assertion of their own anywhere in `health.test.ts`. `separation-of-concerns` passes: this file's only responsibility is turning an already-observed probe outcome into a `HealthStatus` verdict; it performs no I/O, no persistence, and no HTTP/DNS work of its own, leaving fetching, timing, and body-reading to `probe.ts` (external). `explicit-error-handling` passes: the one error `classify` can encounter — `JSON.parse` throwing on a non-JSON `bodyText` — is caught by an explicit `try`/`catch` whose empty body is documented by an inline comment explaining the fall-through is deliberate, not an unhandled or silently-ignored exception path. `fault-tolerance` passes: `classify` accepts an arbitrary `bodyText` string (malformed JSON, HTML, or any other content) and an arbitrary `status` field shape (string, number, boolean, object) without throwing or crashing, per health-kind-json-parse-failure-falls-through and health-kind-status-field-string-coercion.
+`unit-test-coverage` is `passed`: `health.test.ts` carries one passing test per conformance vector (001 through 013), covering fast/slow 2xx, a 5xx, a missing body marker, a non-ok health-kind JSON body, a non-2xx `expectedStatus` match, a non-JSON body and a status-less JSON body falling through, the empty-body skip, the exact `DEGRADED_THRESHOLD_MS` latency boundary, the case-insensitive/non-string `status` coercion, and the evaluation order of the health-kind and marker checks. `separation-of-concerns` passes: this file's only responsibility is turning an already-observed probe outcome into a `HealthStatus` verdict; it performs no I/O, no persistence, and no HTTP/DNS work of its own, leaving fetching, timing, and body-reading to `probe.ts` (external). `explicit-error-handling` passes: the one error `classify` can encounter — `JSON.parse` throwing on a non-JSON `bodyText` — is caught by an explicit `try`/`catch` whose empty body is documented by an inline comment explaining the fall-through is deliberate, not an unhandled or silently-ignored exception path. `fault-tolerance` passes: `classify` accepts an arbitrary `bodyText` string (malformed JSON, HTML, or any other content) and an arbitrary `status` field shape (string, number, boolean, object) without throwing or crashing, per health-kind-json-parse-failure-falls-through and health-kind-status-field-string-coercion.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (health.test.ts, 13 of 13 vectors); unit-test-coverage now passed. |
 | 1.0.2 | 2026-09-27 | Mike Fullerton | Moved into the concept grouping. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.0.0 | 2026-09-24 | Mike Fullerton | Initial creation |

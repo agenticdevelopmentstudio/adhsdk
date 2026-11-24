@@ -49,10 +49,10 @@ class IntegrationConnectGithubApp:
         field_dict.update(
             {
                 "type": type_,
-                "providerId": provider_id,
-                "serviceType": service_type,
-                "ecosystemId": ecosystem_id,
-                "installationId": installation_id,
+                "provider_id": provider_id,
+                "service_type": service_type,
+                "ecosystem_id": ecosystem_id,
+                "installation_id": installation_id,
                 "state": state,
             }
         )
@@ -64,13 +64,13 @@ class IntegrationConnectGithubApp:
         d = dict(src_dict)
         type_ = IntegrationConnectGithubAppType(d.pop("type"))
 
-        provider_id = d.pop("providerId")
+        provider_id = d.pop("provider_id")
 
-        service_type = d.pop("serviceType")
+        service_type = d.pop("service_type")
 
-        ecosystem_id = d.pop("ecosystemId")
+        ecosystem_id = d.pop("ecosystem_id")
 
-        installation_id = d.pop("installationId")
+        installation_id = d.pop("installation_id")
 
         state = d.pop("state")
 

@@ -1,12 +1,13 @@
 "use client";
 
 // The features an ecosystem has been PROVISIONED with — the client for the backend's
-// hand-written `/api/ecosystem/features/*` route, plus the react-query glue the picker
+// `/v1/features` + `/v1/ecosystems/{id}/features` routes, plus the react-query glue the picker
 // and the rail read.
 //
-// Routes: /api/ecosystem/features/catalog     every feature that can be added
-//         /api/ecosystem/features/{id}        what THIS ecosystem has (GET) / add (POST)
-//         /api/ecosystem/features/{id}/{key}  remove one (DELETE)
+// Routes: /api/v1/features                              every feature that can be added
+//         /api/v1/ecosystems/{id}/features              what THIS ecosystem has (GET) / add (POST)
+//         /api/v1/ecosystems/{id}/features?include[]=availability   what it may not add
+//         /api/v1/ecosystems/{id}/features/{key}        remove one (DELETE)
 //
 // `{id}` is the ecosystem's rdid or uuid — the same `:id` every other ecosystem-scoped
 // route takes, resolved server-side.
@@ -21,7 +22,7 @@
 // mechanism and must not take on adh product vocabulary.
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { authedJson, authedRequest, isNotFound } from "../http";
+import { authedJson, authedRequest, isNotFound, listAllV1, unixToIso, withV1Query } from "../http";
 import { enc } from "../client-helpers";
 // `AuthHttpError` only, straight from the auth package rather than re-exported through
 // ../http — the same direct-import pattern tenant.ts and stream/index.ts already use for
@@ -146,17 +147,61 @@ export interface FeatureChange {
   remove: string[];
 }
 
-interface CatalogResponse {
-  features: CatalogFeature[];
+/** `/v1/features` row. */
+interface CatalogRow {
+  key: string;
+  label: string;
+  description: string;
+  subscription_tier: FeatureSubscriptionTier;
+  feature_site?: boolean;
+  coming_soon?: boolean;
+  requires_features?: readonly string[];
+  allowed_in?: readonly EcosystemType[];
+  automatic_in?: readonly EcosystemType[];
+  included_with?: string;
+}
+/** `/v1/ecosystems/{id}/features` row. */
+interface ProvisionedRow {
+  feature_key: string;
+  state: FeatureState;
+  provisioned_at: string;
+  provisioned_by: string | null;
+  updated: number | string;
 }
 interface ProvisionedResponse {
-  features: ProvisionedFeature[];
-}
-interface AvailabilityResponse {
-  unavailable: UnavailableFeature[];
+  features: ProvisionedRow[];
 }
 
-const BASE = "/api/ecosystem/features";
+const BASE = "/api/v1/features";
+const ecoFeatures = (ecosystemId: string): string => `/api/v1/ecosystems/${enc(ecosystemId)}/features`;
+
+export function toCatalogFeature(r: CatalogRow): CatalogFeature {
+  return {
+    key: r.key,
+    label: r.label,
+    description: r.description,
+    subscriptionTier: r.subscription_tier,
+    ...(r.feature_site !== undefined ? { featureSite: r.feature_site } : {}),
+    ...(r.coming_soon !== undefined ? { comingSoon: r.coming_soon } : {}),
+    ...(r.requires_features !== undefined ? { requiresFeatures: r.requires_features } : {}),
+    ...(r.allowed_in !== undefined ? { allowedIn: r.allowed_in } : {}),
+    ...(r.automatic_in !== undefined ? { automaticIn: r.automatic_in } : {}),
+    ...(r.included_with !== undefined ? { includedWith: r.included_with } : {}),
+  };
+}
+
+export function toProvisionedFeature(r: ProvisionedRow): ProvisionedFeature {
+  return {
+    featureKey: r.feature_key,
+    state: r.state,
+    provisionedAt: r.provisioned_at,
+    provisionedBy: r.provisioned_by ?? null,
+    updatedAt: typeof r.updated === "number" ? unixToIso(r.updated) : r.updated,
+  };
+}
+
+const featureKeyCursor = (row: unknown): string | undefined =>
+  (row as { feature_key?: string }).feature_key;
 
 /**
  * Thrown by {@link ecosystemFeaturesApi.remove} in place of a generic {@link AuthHttpError} when
@@ -188,8 +233,11 @@ export class FeatureRequiredError extends Error {
  *  `feature_required` body; otherwise null, so the caller rethrows unchanged. */
 function asFeatureRequiredError(err: unknown): FeatureRequiredError | null {
   if (!(err instanceof AuthHttpError) || err.status !== 409) return null;
-  const body = err.body as { error?: { code?: unknown; neededBy?: unknown } } | null | undefined;
-  const neededBy = body?.error?.neededBy;
+  const body = err.body as
+    | { error?: { code?: unknown; neededBy?: unknown; needed_by?: unknown } }
+    | null
+    | undefined;
+  const neededBy = body?.error?.needed_by ?? body?.error?.neededBy;
   if (body?.error?.code !== "feature_required" || !Array.isArray(neededBy)) return null;
   return new FeatureRequiredError(err.message, neededBy as string[]);
 }
@@ -199,14 +247,14 @@ function asFeatureRequiredError(err: unknown): FeatureRequiredError | null {
 export const ecosystemFeaturesApi = {
   /** Every feature that can be added, in the backend's own order. */
   async catalog(): Promise<CatalogFeature[]> {
-    const body = await authedJson<CatalogResponse>(`${BASE}/catalog`);
-    return body.features;
+    const rows = await listAllV1<CatalogRow>(BASE, {}, { cursorOf: (r) => (r as { key?: string }).key });
+    return rows.map(toCatalogFeature);
   },
 
   /** What this ecosystem has, every state included — callers filter. */
   async list(ecosystemId: string): Promise<ProvisionedFeature[]> {
-    const body = await authedJson<ProvisionedResponse>(`${BASE}/${enc(ecosystemId)}`);
-    return body.features;
+    const rows = await listAllV1<ProvisionedRow>(ecoFeatures(ecosystemId), {}, { cursorOf: featureKeyCursor });
+    return rows.map(toProvisionedFeature);
   },
 
   /**
@@ -215,8 +263,10 @@ export const ecosystemFeaturesApi = {
    * exactly these never offers a change that would 400.
    */
   async availability(ecosystemId: string): Promise<UnavailableFeature[]> {
-    const body = await authedJson<AvailabilityResponse>(`${BASE}/${enc(ecosystemId)}/availability`);
-    return body.unavailable;
+    const body = await authedJson<{ availability?: { unavailable?: UnavailableFeature[] } }>(
+      withV1Query(ecoFeatures(ecosystemId), { "include[]": ["availability"], limit: 1 }),
+    );
+    return body.availability?.unavailable ?? [];
   },
 
   /**
@@ -230,12 +280,12 @@ export const ecosystemFeaturesApi = {
    * not a conflict: the picker can legitimately be holding a stale list.
    */
   async provision(ecosystemId: string, keys: string[]): Promise<ProvisionedFeature[]> {
-    const body = await authedJson<ProvisionedResponse>(`${BASE}/${enc(ecosystemId)}`, {
+    const body = await authedJson<ProvisionedResponse>(ecoFeatures(ecosystemId), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ keys }),
     });
-    return body.features;
+    return body.features.map(toProvisionedFeature);
   },
 
   /**
@@ -251,7 +301,7 @@ export const ecosystemFeaturesApi = {
    */
   async remove(ecosystemId: string, featureKey: string): Promise<void> {
     try {
-      await authedRequest(`${BASE}/${enc(ecosystemId)}/${enc(featureKey)}`, { method: "DELETE" });
+      await authedRequest(`${ecoFeatures(ecosystemId)}/${enc(featureKey)}`, { method: "DELETE" });
     } catch (err) {
       if (isNotFound(err)) return;
       throw asFeatureRequiredError(err) ?? err;

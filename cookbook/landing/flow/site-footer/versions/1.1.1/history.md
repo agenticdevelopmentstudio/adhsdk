@@ -1,0 +1,6 @@
+
+| Version | Date | Author | Summary |
+|---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Fixed landmark bullet to require SiteFooter be a Flow sibling; corrected dock-clearance double-pay decision. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: partial). |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; rewrote Appearance and Design Decisions from `flow.css` to correct the padding/background/border/font/dock-clearance claims and cite the source; added requirements and test vectors for the descendant link and small styling and for the footer's own chrome and dock clearance; narrowed the whitespace-only className edge case and merge-classes requirement to falsy-value filtering only; folded the untested duplicate-class claim out of the test vectors and added vectors for the Wrap child, className="", and dock-clearance padding; added a landmark-exposure note requiring direct page-level placement; reformatted Design Decisions into Decision/Rationale/Approved records; corrected the WinUI 3, SwiftUI, and AppKit/UIKit platform notes; rebuilt Compliance as a linked passed/partial table; added tags, depends-on, and related |
+| 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from source |

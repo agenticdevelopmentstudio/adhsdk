@@ -1,13 +1,12 @@
 ---
 id: 0640ca96-95c5-4234-925e-386425cc4435
 title: "Composable Tabs"
-domain: adhsdk://cookbook/ui/layout/composable-tabs
 type: ingredient
-version: 1.3.0
+version: 1.3.1
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -22,8 +21,8 @@ tags:
   - tabs
 depends-on: []
 related:
-  - adhsdk://cookbook/ui/layout/composable-tabs/leaf-pane-view
-  - adhsdk://cookbook/ui/layout/composable-tabs/pane-spacing
+  - 4d75a371-181e-4d80-a16b-022d37dc0d48
+  - 4c528e38-b70a-4ed3-bedc-9009292ad908
 references: []
 approved-by: ""
 approved-date: ""
@@ -446,7 +445,7 @@ resolves those requests against the layout spec and the live split items.
 | composable-tabs-027 | capture-skips-rail-split | One split's visible item is pinned to a fixed rail thickness; thicknesses are captured on it | No item in that split has its thickness fraction written |
 | composable-tabs-028 | capture-only-uncollapsed-items | One item in a split is collapsed; thicknesses are captured | The collapsed item's child does not have its thickness fraction overwritten |
 | composable-tabs-029 | capture-recurses-into-children | A rail split contains a nested split with its own children | Capturing thicknesses still descends into and updates the nested split's own children |
-| composable-tabs-030 | apply-sizes-matches-existing-shape | Live tree has 1 child; template layout node is a 2-child split | Applying sizes leaves the live tree's single child untouched |
+| composable-tabs-030 | apply-sizes-matches-existing-shape | Live tree has 2 children; template layout node is a single leaf | Applying sizes leaves both children's thickness fractions untouched |
 | composable-tabs-031 | apply-sizes-forces-relayout | Sizes are applied from a template on a loaded view | The one-shot thickness guard is reset and dividers move to the new fractions before the next natural layout pass |
 | composable-tabs-032 | debounce-thickness-persist | Two resize notifications arrive 100ms apart | Only one layout-change callback happens, timed 300ms after the second notification |
 | composable-tabs-033 | dedupe-unchanged-persist | A pending persist's rounded thickness signature matches the signature already delivered to the layout-change callback | The layout-change callback is not invoked |
@@ -746,9 +745,9 @@ Not applicable: source contains no logging call anywhere in this component.
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsViewController.swift` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsViewController.swift` | confirmed (1.3.1) |
 
 ## Design Decisions
 
@@ -810,10 +809,10 @@ Not applicable: source contains no logging call anywhere in this component.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [keyboard-navigable](agenticdevelopercookbook://compliance/accessibility#keyboard-navigable) | failed | Accessibility |
-| [screen-reader-support](agenticdevelopercookbook://compliance/accessibility#screen-reader-support) | failed | Accessibility |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | failed | Accessibility |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | failed | Accessibility |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 Keyboard-navigable is failed because no keyboard path exists in
 source for resizing a divider (see the non-pointer-resize
@@ -829,7 +828,7 @@ category's checks apply: this is a pointer/keyboard-driven macOS desktop
 control, not a touch surface, drawing no user-facing text and performing no
 networking, telemetry, or logging of its own.
 
-`separation-of-concerns` passes because `ComposableTabsViewController` owns only the split tree and its divider, zoom, minimize, split, remove and move mechanics; pane content comes from the view registry, each pane is a separately hosted child component, and persistence and window chrome belong to other components. `unit-test-coverage` is `partial`: `ComposableTabsViewControllerTests.swift`, `ComposableTabsArrangementTests.swift`, `ComposableTabsMoveTests.swift`, `ComposableTabsPaneChromeTests.swift`, `ComposableTabsClosePersistTests.swift` and `ComposableTabsPaneHostTests.swift` exercise the controller, and `ComposableTabs/LayoutNodeThicknessTests.swift` and `PaneContainerClampTests.swift` pin how stored thickness fractions survive moves and reconciliation and how a clamped split sizes its container, but divider drag, hit-test widening and the construction-trap vectors are not pinned by a test.
+`separation-of-concerns` passes because `ComposableTabsViewController` owns only the split tree and its divider, zoom, minimize, split, remove and move mechanics; pane content comes from the view registry, each pane is a separately hosted child component, and persistence and window chrome belong to other components. `unit-test-coverage` is `partial`: `ComposableTabsViewControllerTests.swift`, `ComposableTabsArrangementTests.swift`, `ComposableTabsMoveTests.swift`, `ComposableTabsPaneChromeTests.swift`, `ComposableTabsClosePersistTests.swift` and `ComposableTabsPaneHostTests.swift` and `ComposableTabsConformanceTests.swift` (one test per vector id) exercise the controller, and `ComposableTabs/LayoutNodeThicknessTests.swift` and `PaneContainerClampTests.swift` pin how stored thickness fractions survive moves and reconciliation and how a clamped split sizes its container, but vectors `composable-tabs-001` (construction trap), `006` (spy split view and shared spacing settings), `015` (divider hit-test widening), `035`, `046` (needs a key window), `052`, `057` (unreachable, the root walk always answers), `061`, `062`, `068`, `086`, `089`, `091` (a project always carries a layout), `098` (negative requirement) and `099` (build-time main-actor confinement) are skipped with a reason.
 
 ## Change History
 
@@ -842,3 +841,4 @@ networking, telemetry, or logging of its own.
 | 1.1.3 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/layout/. |
 | 1.3.0 | 2026-10-04 | Mike Fullerton | Resolved the non-pointer-resize NEEDS REVIEW marker as current behavior (pointer-only divider resize) with a vector and a pending decision; added separation-of-concerns (passed) and unit-test-coverage (partial) compliance rows. Added the confines-to-ui-thread requirement and vector. Compliance rationale credits the thickness and clamp tests. |
+| 1.3.1 | 2026-11-15 | Mike Fullerton | Conformance tests added (ComposableTabsConformanceTests.swift; 16 vectors skipped with reasons); unit-test-coverage now partial. |

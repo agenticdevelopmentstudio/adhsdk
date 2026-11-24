@@ -10,9 +10,11 @@ extension ProjectDatabase {
     // MARK: - Tabs
 
     /// Every persisted tab for `repoID` in display order, the active tab's id,
-    /// and the enabled edges — or `([], nil, [.top])` for a project that has
-    /// never been opened.
-    public func loadTabs(repoID: UUID) throws -> (tabs: [TabRecord], activeTabID: UUID?, enabledEdges: [Edge]) {
+    /// and the edges the user chose for this project's tab bars — `nil` when
+    /// they never chose any, which means the window follows the app-wide tab
+    /// positions (`UserSettings.tabsPositions`). A project that has never been
+    /// opened reads as `([], nil, nil)`.
+    public func loadTabs(repoID: UUID) throws -> (tabs: [TabRecord], activeTabID: UUID?, enabledEdges: [Edge]?) {
         let allRows = try fetchNodeRows(repoID: repoID)
         let sql = """
             SELECT id, title, root_node_id, focused_node_id, edge, group_id, working_directory
@@ -61,33 +63,59 @@ extension ProjectDatabase {
         }
         bindText(stateStmt, 1, repoID.uuidString)
         var activeTabID: UUID?
-        var enabledEdges: [Edge] = [.top]
+        var enabledEdges: [Edge]?
         if try stepRow(stateStmt) {
             activeTabID = columnText(stateStmt, 0).flatMap { UUID(uuidString: $0) }
-            // An empty or unparseable column keeps the default rather than
-            // becoming an empty list: a window with no enabled edge has no tab
-            // bar, so it has nowhere to put the control that would bring one
-            // back (`principle-of-least-astonishment`).
-            let stored = columnText(stateStmt, 1)?
-                .split(separator: ",")
-                .compactMap { Edge(rawValue: String($0)) } ?? []
-            if !stored.isEmpty { enabledEdges = stored }
+            enabledEdges = Self.edgeChoice(columnText(stateStmt, 1))
         }
         return (tabs, activeTabID, enabledEdges)
+    }
+
+    /// The user's tab-bar choice stored in `enabled_edges`, or `nil` for none.
+    /// The column is `NOT NULL`, so "no choice" is stored as an empty string;
+    /// an unparseable value reads the same way rather than as an empty list —
+    /// a window with no enabled edge has no tab bar, so it has nowhere to put
+    /// the control that would bring one back (`principle-of-least-astonishment`).
+    static func edgeChoice(_ column: String?) -> [Edge]? {
+        let stored = column?.split(separator: ",").compactMap { Edge(rawValue: String($0)) } ?? []
+        return stored.isEmpty ? nil : stored
+    }
+
+    /// The raw `enabled_edges` value stored for `repoID`, or `nil` with no row.
+    private func storedEdgeColumn(repoID: UUID) throws -> String? {
+        var stmt: OpaquePointer?
+        defer { sqlite3_finalize(stmt) }
+        guard sqlite3_prepare_v2(
+            database, "SELECT enabled_edges FROM project_state WHERE repo_id = ?", -1, &stmt, nil
+        ) == SQLITE_OK else {
+            throw ProjectDatabaseError.prepareFailed(lastErrorMessage)
+        }
+        bindText(stmt, 1, repoID.uuidString)
+        return try stepRow(stmt) ? columnText(stmt, 0) : nil
     }
 
     /// Replaces this project's whole arrangement in one transaction. The window
     /// controller always holds every tab on every edge, so a diff would be a
     /// second representation of the same knowledge (`dry`).
+    ///
+    /// `enabledEdges` is the user's explicit Tab Bars choice, and only that:
+    /// `nil` writes no edges, keeping whatever choice is already stored (none,
+    /// for a project that never had one), so seeding a window or saving its
+    /// layout can never turn the app-wide default into a per-project choice.
+    /// An empty list clears a stored choice, so the project follows the
+    /// app-wide default again.
     public func saveTabs(
         _ tabs: [TabRecord],
         activeTabID: UUID?,
-        enabledEdges: [Edge] = [.top],
+        enabledEdges: [Edge]? = nil,
         repoID: UUID
     ) throws {
         try execute("BEGIN IMMEDIATE TRANSACTION")
         do {
             let repoKey = repoID.uuidString
+            // Read before the state row goes, so a save with no choice of its
+            // own puts the stored one back.
+            let previousEdges = try storedEdgeColumn(repoID: repoID)
             // Read before the rows go: what a leaf used to hold is the only way
             // to tell a pane that merely moved from a pane that was replaced,
             // and both arrive here as the same node id.
@@ -152,10 +180,12 @@ extension ProjectDatabase {
                 }
             }
 
-            // The state row is always written so enabled edges survive even
+            // The state row is always written so a stored choice survives even
             // when no valid active tab exists.
             let validActive = activeTabID.flatMap { id in tabs.contains(where: { $0.id == id }) ? id : nil }
-            let edgesJoined = Edge.allCases.filter(enabledEdges.contains).map(\.rawValue).joined(separator: ",")
+            let edgesJoined = enabledEdges.map {
+                Edge.allCases.filter($0.contains).map(\.rawValue).joined(separator: ",")
+            } ?? previousEdges ?? ""
             try executeBound("""
                 INSERT INTO project_state (repo_id, active_tab_id, enabled_edges) VALUES (?, ?, ?)
             """) { stmt in

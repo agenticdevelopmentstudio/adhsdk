@@ -1,0 +1,3 @@
+
+Points is a marked list component designed for presenting a sequence of related claims or arguments, each substantial enough to be a sentence or longer. Unlike short-form lists ([adhsdk.ingredient.landing.blocks.trust](cookbook:79093eb5-83e8-46d8-9efe-3cc6ff88d8db)) or parallel boxed items ([adhsdk.ingredient.landing.blocks.cards](cookbook:7e4a2c5b-8f3d-4a7e-b9f2-1c5e8d3b6a2f)), Points emphasizes the logical flow of a multi-part argument by keeping items inline and marked with a consistent token. Each item has an optional bold lead-in term followed by the detail content; the lead-in provides visual scannability without truncating the full text. The marker itself is configurable via token, and the list supports both unordered and ordered presentation.
+

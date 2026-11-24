@@ -194,8 +194,10 @@ public final class InlineChatView: NSView, ChatStateObserver, Themeable, NSTextF
     /// `focusin`/`pointerdown`/`Escape` engagement triad. Removed in
     /// `deinit` via a direct `NSEvent.removeMonitor` call, which — like the
     /// existing `NotificationCenter.default.removeObserver(self)` below —
-    /// is safe to call from a nonisolated `deinit`.
-    private var clickOutsideMonitor: Any?
+    /// is safe to call from a nonisolated `deinit`. `nonisolated(unsafe)`
+    /// because it is mutated only on the main actor while the view lives,
+    /// and `deinit` reads it only once no other reference remains.
+    nonisolated(unsafe) private var clickOutsideMonitor: Any?
 
     private static let maxBubbleWidthFraction: CGFloat = 0.75
     private static let minBubbleWidth: CGFloat = 200

@@ -1,0 +1,22 @@
+
+- **claims-two-resources**: The projection MUST claim exactly `integration.integration_email_messages` and `integration.integration_email_labels`.
+- **typed-columns**: The projection MUST store each backend column under its own name in a typed column, keep JSON array and object columns (`to_addresses`, `cc_addresses`, `label_ids`, `attachments`, `color`) as JSON text, and keep `sync_version` and `deleted_at` for the store.
+- **numbers-never-trap**: The projection MUST store a JSON number in an integer column only when an `Int64` holds it (a fraction truncates toward zero), and store nil for one it cannot hold (magnitude 2^63 or more, NaN, an infinity); a number in a text column MUST be written as its integer digits when it is integral and in range, else as the `Double`'s text. No pulled value may trap inside the sync's batch transaction, where a crash leaves the cursor unadvanced and repeats on every launch.
+- **upsert-revives**: An upsert MUST replace the row's columns, take the change's sync version and clear `deleted_at`, so a deleted row that comes back is live again.
+- **soft-delete**: A delete MUST keep the row as a tombstone with `deleted_at` set, and take the delete's sync version when it has one. The tombstone keeps its content columns; they persist on disk until the next pull replaces the row or sign-out purges it.
+- **live-rows-only**: Every read MUST skip rows with `deleted_at` set or `is_deleted` true; the backend's worker sets `is_deleted` on mail Gmail removed.
+- **truncate-own-tables**: Truncate MUST empty only the tables of the resources it is given.
+- **connections**: `connections()` MUST return the distinct connection ids that have live messages or labels, sorted.
+- **labels-by-connection**: `labels(connectionId:)` MUST return that connection's live labels, system labels first (a label whose `type` column is `system`), then by name.
+- **messages-newest-first**: `messages(...)` MUST return live messages newest first by `internal_date`, then by id descending, optionally narrowed to one connection and to messages whose `label_ids` contain one label.
+- **query-filters**: `messages(_ query: HubMailQuery)` MUST order and page as **messages-newest-first** does and narrow further: every label in `labelIds` MUST be on the message, at least one of `anyLabelIds` MUST be when it is non-empty, and `since`/`until` bound `internal_date` inclusively.
+- **keyset-paging**: A page MUST hold at most `limit` messages (clamped to 1...500) and a `next` cursor that is non-nil exactly when more messages follow; passing it back MUST return the messages after the last one, with no repeats or gaps while the rows do not change.
+- **message-by-either-id**: `message(connectionId:id:)` MUST return the connection's live message whose row id or provider (`external_id`) id is `id`, preferring a row-id match, or nil.
+- **thread-oldest-first**: `thread(connectionId:threadId:)` MUST return the thread's live messages oldest first.
+- **pull-only**: `HubMailSync` MUST register both resources as pull-only with the sync store, because the hub refuses pushes to worker-owned tables, and MUST pass both as the engine's `hostResources` so no other enrolled table is mirrored.
+- **sign-out-purges**: `signOut()` MUST pause the engine, purge all mirrored rows, cursors and outbox entries (the mirror holds one identity's data, so nothing is scoped), then resume.
+- **send-action**: `HubMailSender.send` MUST post the `send` action for the connection with `to`, `cc`, `bcc`, `subject`, `bodyText` and `bodyHtml`, and return the result's `ok`, `externalId`, `deduped` and `error`. A 200 answer carries the hub's own result: `ok` false with an `error` is a failure the hub reports in the result, while any non-200 answer throws (**send-errors**). `deduped` is true when the hub recognised a repeat of an earlier send and did not send again.
+- **send-errors**: A non-200 answer MUST throw `HubMailSendError.rejected(statusCode:)`.
+- **label-write-action**: `HubMailSender.modifyLabels` MUST post the `modify_labels` action for the write's connection with its provider message ids and the label ids to add and remove, return the result as `send` does, and throw `HubMailSendError.rejected(statusCode:)` on a non-200 answer.
+- **local-label-write**: `applyLabels(messageIds:add:remove:)` MUST, for each row id that exists, drop every label in `remove`, append each label in `add` it lacks, and leave the row's sync version alone, so the next pull still replaces the row with the hub's copy.
+

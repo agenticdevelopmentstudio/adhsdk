@@ -1,0 +1,5 @@
+
+**TopicDetail** is the reusable two-pane primitive — a selectable topic list on the left rail beside a detail pane on the right (see References for its source layout). The pane itself is bare: no title row and no action bar of its own — that chrome (a titled header, the create `+`, a footer, a close button) belongs to the rail (`TopicRail`) and is composed there, not the pane. It is a faithful port of the source settings rail (CSS → utilities with `apt-*` tokens) so every consumer renders identically. It fills its container, so give it a height.
+
+The topic list is always collapsible (a core part of the site design, not a config flag): a desktop collapse toggle shrinks the rail to a thin icon-only strip for more pane room. Every topic stays clickable as its icon, the active icon keeps the gold selection bar, and the header affordances stay put. On mobile (≤768px) the layout collapses to a single column, so the rail stacks above the detail pane as the same vertical list; only the desktop collapse toggle and the drag-resize handle are hidden there.
+

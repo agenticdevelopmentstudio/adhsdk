@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
     "id": "4ebd01d4-1326-42fa-83ba-58b0aebb31c7",
     "title": "Model Capability",
-    "domain": "adhsdk://cookbook/ai/models/model-capability",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -23,7 +22,7 @@
       "capability"
     ],
     "depends-on": [
-      "adhsdk://cookbook/ai/models/model-catalog"
+      "c8438764-89c9-4286-9b58-10c9cd175a97"
     ],
     "related": [],
     "references": [
@@ -36,7 +35,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "0cba73941e3f459e",
+  "synced": "63dac0e5c95cba0b",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -55,7 +54,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

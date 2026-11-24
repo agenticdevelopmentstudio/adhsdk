@@ -32,7 +32,7 @@ class PublicPersona:
         character (None | str):
         examples (None | str):
         visibility (PublicPersonaVisibility):
-        created_at (str):
+        created (int): Unix timestamp, in seconds.
         owner (None | PublicOwnerType0):
         demo_enabled (bool):
         chat_status (None | PublicPersonaChatStatusType0 | Unset): Per-persona chat status configuration: word pairs,
@@ -50,7 +50,7 @@ class PublicPersona:
     character: None | str
     examples: None | str
     visibility: PublicPersonaVisibility
-    created_at: str
+    created: int
     owner: None | PublicOwnerType0
     demo_enabled: bool
     chat_status: None | PublicPersonaChatStatusType0 | Unset = UNSET
@@ -90,7 +90,7 @@ class PublicPersona:
 
         visibility = self.visibility.value
 
-        created_at = self.created_at
+        created = self.created
 
         owner: dict[str, Any] | None
         if isinstance(self.owner, PublicOwnerType0):
@@ -115,21 +115,21 @@ class PublicPersona:
                 "slug": slug,
                 "name": name,
                 "description": description,
-                "modelPrompt": model_prompt,
+                "model_prompt": model_prompt,
                 "provider": provider,
                 "model": model,
-                "avatarUrl": avatar_url,
+                "avatar_url": avatar_url,
                 "voice": voice,
                 "character": character,
                 "examples": examples,
                 "visibility": visibility,
-                "createdAt": created_at,
+                "created": created,
                 "owner": owner,
-                "demoEnabled": demo_enabled,
+                "demo_enabled": demo_enabled,
             }
         )
         if chat_status is not UNSET:
-            field_dict["chatStatus"] = chat_status
+            field_dict["chat_status"] = chat_status
 
         return field_dict
 
@@ -152,7 +152,7 @@ class PublicPersona:
 
         description = _parse_description(d.pop("description"))
 
-        model_prompt = d.pop("modelPrompt")
+        model_prompt = d.pop("model_prompt")
 
         def _parse_provider(data: object) -> None | str:
             if data is None:
@@ -168,7 +168,7 @@ class PublicPersona:
                 return data
             return cast(None | str, data)
 
-        avatar_url = _parse_avatar_url(d.pop("avatarUrl"))
+        avatar_url = _parse_avatar_url(d.pop("avatar_url"))
 
         def _parse_voice(data: object) -> None | str:
             if data is None:
@@ -193,7 +193,7 @@ class PublicPersona:
 
         visibility = PublicPersonaVisibility(d.pop("visibility"))
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
         def _parse_owner(data: object) -> None | PublicOwnerType0:
             if data is None:
@@ -210,7 +210,7 @@ class PublicPersona:
 
         owner = _parse_owner(d.pop("owner"))
 
-        demo_enabled = d.pop("demoEnabled")
+        demo_enabled = d.pop("demo_enabled")
 
         def _parse_chat_status(data: object) -> None | PublicPersonaChatStatusType0 | Unset:
             if data is None:
@@ -227,7 +227,7 @@ class PublicPersona:
                 pass
             return cast(None | PublicPersonaChatStatusType0 | Unset, data)
 
-        chat_status = _parse_chat_status(d.pop("chatStatus", UNSET))
+        chat_status = _parse_chat_status(d.pop("chat_status", UNSET))
 
         public_persona = cls(
             slug=slug,
@@ -241,7 +241,7 @@ class PublicPersona:
             character=character,
             examples=examples,
             visibility=visibility,
-            created_at=created_at,
+            created=created,
             owner=owner,
             demo_enabled=demo_enabled,
             chat_status=chat_status,

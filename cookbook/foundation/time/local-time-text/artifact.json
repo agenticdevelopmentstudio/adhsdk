@@ -1,9 +1,8 @@
 {
-  "format": 1,
+  "format": 2,
   "meta": {
-    "id": "A98DFCA4-B6B0-4565-91B3-0657981D1AC8",
+    "id": "a98dfca4-b6b0-4565-91b3-0657981d1ac8",
     "title": "Local Time Text",
-    "domain": "adhsdk://cookbook/foundation/time/local-time-text",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -26,14 +25,14 @@
     ],
     "depends-on": [],
     "related": [
-      "adhsdk://cookbook/foundation/time/utc-timestamp",
-      "adhsdk://cookbook/foundation/time/timestamp-parsing"
+      "59f7893e-58fe-4f11-abd9-f80c1e05c002",
+      "29a3044c-f785-4fa3-a1b9-746d069ae198"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "60ecb47540800ac9",
+  "synced": "87e0779d4a350ddb",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -52,7 +51,6 @@
     {"part": "privacy", "heading": "Privacy"},
     {"part": "logging", "heading": "Logging"},
     {"part": "platform-notes", "heading": "Platform Notes"},
-    {"part": "reference-implementations", "heading": "Reference Implementations"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
     {"part": "history", "heading": "Change History"}

@@ -14,7 +14,7 @@ There is no dedicated test file for this concept. The vectors below are derived 
 | refresh-all-009 | interval-cleanup | Start using Refresh All with a 1,000 ms interval, stop using it, advance the timer by 5,000 ms | The refetch operation is triggered zero times after that |
 | refresh-all-010 | interval-restart-on-change | Start with a 1,000 ms interval; advance 500 ms; change the interval to 2,000 ms; advance 1,999 ms, then 1 ms more | No call before the change and none during the 1,999 ms; exactly one call at 2,000 ms after the change |
 | refresh-all-011 | refresh-all-stable, return-object-fresh | Use Refresh All twice with the same cache context | The `refreshAll` reference is the same each time; the wrapper objects are different references |
-| refresh-all-012 | refetch-call | Call `refreshAll` once | The refetch operation is triggered once with one argument, an object whose only key is the filter |
+| refresh-all-012 | refetch-call | Call `refreshAll` once | The refetch operation is triggered once with one argument, an object holding the filter (`type: "active"`) and the predicate |
 | refresh-all-013 | one-timer-per-mount | Use Refresh All twice, each with a 1,000 ms interval, sharing one cache context; advance 1,000 ms | The refetch operation is triggered twice |
 | refresh-all-014 | client-only | Load Refresh All in a server-only rendering context | It is unavailable there: the module is marked for client execution only |
 

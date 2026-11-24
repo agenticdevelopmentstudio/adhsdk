@@ -50,9 +50,9 @@ class UsageInsightRate:
                 "category": category,
                 "provider": provider,
                 "sku": sku,
-                "quantityKey": quantity_key,
-                "microsPerUnit": micros_per_unit,
-                "effectiveFrom": effective_from,
+                "quantity_key": quantity_key,
+                "micros_per_unit": micros_per_unit,
+                "effective_from": effective_from,
             }
         )
 
@@ -67,11 +67,11 @@ class UsageInsightRate:
 
         sku = d.pop("sku")
 
-        quantity_key = d.pop("quantityKey")
+        quantity_key = d.pop("quantity_key")
 
-        micros_per_unit = d.pop("microsPerUnit")
+        micros_per_unit = d.pop("micros_per_unit")
 
-        effective_from = datetime.date.fromisoformat(d.pop("effectiveFrom"))
+        effective_from = datetime.date.fromisoformat(d.pop("effective_from"))
 
         usage_insight_rate = cls(
             category=category,

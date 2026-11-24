@@ -1,13 +1,12 @@
 ---
 id: 77dbd38e-9acd-4053-ba54-738b45101f6b
 title: "Window Matching Heuristics"
-domain: adhsdk://cookbook/system/system-windows/matching/title-heuristics
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -185,9 +184,9 @@ Titles below write the em dash as "—" (U+2014) and the en dash as "–"
 | wmh-037 | xcode-identity, warp-identity, brave-identity, vscode-identity, terminal-identity | Read the name and app-names list of each built-in heuristic | "Xcode"/`["Xcode"]`; "Warp"/`["Warp"]`; "Brave Browser"/`["Brave Browser"]`; "VS Code"/`["Code", "Visual Studio Code", "Cursor"]`; "Terminal"/`["Terminal"]` |
 | wmh-038 | heuristic-pure, heuristic-concurrency-safety | The pattern-extraction operation called on one shared heuristic instance from many concurrent tasks with the same title | Every call returns the same value; no data race is reported under strict concurrency checking |
 
-Vectors wmh-001, wmh-002, wmh-011, wmh-012, wmh-022, and a handful of others
-noted individually above are asserted by the reference test suite; the rest
-are traced to each heuristic's own logic and documented examples.
+Vectors wmh-001, wmh-002, wmh-011, wmh-012 and wmh-022 are asserted by
+`HeuristicTests`; every other vector is asserted by
+`TitleHeuristicConformanceTests`.
 
 ## Edge Cases
 
@@ -278,9 +277,9 @@ Not applicable: none of the five heuristics nor the title-parser helper logs any
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/Heuristics/` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/Heuristics/` | confirmed (1.2.1) |
 
 ## Design Decisions
 
@@ -316,16 +315,17 @@ Not applicable: none of the five heuristics nor the title-parser helper logs any
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
-| [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 
-unit-test-coverage is partial: `HeuristicTests.swift` asserts Xcode (em and
-en dash), one VS Code title, and two Warp titles, but has no test for
-`BraveHeuristic` or `TerminalHeuristic`, none for the VS Code generic-title
-and filename branches, and none for the "Welcome — Visual Studio Code" title
-whose code result contradicts its doc comment. separation-of-concerns passes
+unit-test-coverage passes: `HeuristicTests.swift` asserts wmh-001, 002, 011,
+012 and 022, and `TitleHeuristicConformanceTests.swift`
+(`Tests/AgenticDeveloperHubSDKMacOSTests/SystemWindows/`) asserts every other
+vector, wmh-003 through wmh-038, including the Brave, Terminal and VS Code
+branches and the "Welcome — Visual Studio Code" title whose code result
+contradicts its doc comment. separation-of-concerns passes
 because each app's title format lives in its own type, the separator logic is
 centralized in `HeuristicTitleParser`, and app-name lookup and scoring stay in
 `HeuristicRegistry` and `SystemWindowMatcher`. explicit-error-handling passes
@@ -340,6 +340,7 @@ Localization).
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.1 | 2026-11-14 | Mike Fullerton | Conformance tests added (TitleHeuristicConformanceTests.swift, 38 of 38 vectors with the 5 already covered by HeuristicTests); unit-test-coverage now passed. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolved vscode-welcome-doc-contract marker as current behavior plus pending decision |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to system/system-windows/matching/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

@@ -1,0 +1,16 @@
+{
+ "id": "m5",
+ "threadId": "tm5",
+ "payload": {
+  "mimeType": "text/plain",
+  "headers": [
+   {
+    "name": "Content-Type",
+    "value": "text/plain; format=flowed; Charset=\"ISO-8859-1\""
+   }
+  ],
+  "body": {
+   "data": "w6k"
+  }
+ }
+}

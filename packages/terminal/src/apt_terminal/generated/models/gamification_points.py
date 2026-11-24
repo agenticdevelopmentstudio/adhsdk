@@ -18,7 +18,7 @@ class GamificationPoints:
         reason (str):
         source_type (str):
         source_id (str):
-        created_at (str):
+        created (int): Unix timestamp, in seconds.
     """
 
     id: str
@@ -26,7 +26,7 @@ class GamificationPoints:
     reason: str
     source_type: str
     source_id: str
-    created_at: str
+    created: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -40,7 +40,7 @@ class GamificationPoints:
 
         source_id = self.source_id
 
-        created_at = self.created_at
+        created = self.created
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -49,9 +49,9 @@ class GamificationPoints:
                 "id": id,
                 "amount": amount,
                 "reason": reason,
-                "sourceType": source_type,
-                "sourceId": source_id,
-                "createdAt": created_at,
+                "source_type": source_type,
+                "source_id": source_id,
+                "created": created,
             }
         )
 
@@ -66,11 +66,11 @@ class GamificationPoints:
 
         reason = d.pop("reason")
 
-        source_type = d.pop("sourceType")
+        source_type = d.pop("source_type")
 
-        source_id = d.pop("sourceId")
+        source_id = d.pop("source_id")
 
-        created_at = d.pop("createdAt")
+        created = d.pop("created")
 
         gamification_points = cls(
             id=id,
@@ -78,7 +78,7 @@ class GamificationPoints:
             reason=reason,
             source_type=source_type,
             source_id=source_id,
-            created_at=created_at,
+            created=created,
         )
 
         gamification_points.additional_properties = d

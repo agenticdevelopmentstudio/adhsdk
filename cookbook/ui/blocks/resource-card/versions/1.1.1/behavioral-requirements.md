@@ -1,0 +1,17 @@
+
+- **render-title**: Component MUST render the `title` prop as plain text (the source renders a `<div>`, not a semantic heading element).
+- **accept-href**: Component MUST accept an `href` prop and, when provided, render as an anchor element with the destination URL.
+- **accept-onclick**: Component MUST accept an `onClick` prop and, when provided and `href` is not set, render as a button-role div with keyboard activation (Enter or Space key).
+- **href-precedence**: When both `href` and `onClick` are provided, the component MUST render as an anchor, execute the `onClick` handler before navigation, and allow the navigation to proceed. `onClick` MUST NOT block navigation (e.g. by calling `preventDefault`, which would cancel it) and its return value MUST NOT be awaited — navigation happens synchronously with the click. Implementers with asynchronous side effects (analytics, logging) MUST use a fire-and-forget mechanism such as `navigator.sendBeacon` or a `fetch` call with `keepalive: true`, not a Promise the click handler waits on.
+- **use-link-component**: When `href` is provided and `LinkComponent` prop is supplied, the component MUST use LinkComponent to render the anchor rather than a native `<a>` element, passing the destination as the `to` prop.
+- **fallback-link-component**: When `href` is provided and `LinkComponent` is not supplied, the component MUST render a native `<a>` element (via the default `LinkComponent`, which wraps a plain `<a href>`).
+- **keyboard-activation**: When `onClick` is provided without `href`, the component MUST respond to Enter and Space keys on `keydown` by invoking `onClick`, calling `preventDefault()` so Space does not scroll the page — the same scroll-prevention native `<button>` elements provide.
+- **button-focusable**: When `onClick` is provided without `href`, the component MUST set `tabIndex={0}` on the button-role div so it participates in the default tab order.
+- **optional-identifier**: Component MUST render the `identifier` prop as monospace text below the title when provided and non-empty; it MUST NOT render if `identifier` is undefined, null, or an empty string.
+- **optional-description**: Component MUST render the `description` prop as paragraph text below the identifier (or title if no identifier) when provided and non-empty; it MUST NOT render if `description` is undefined, null, or an empty string.
+- **optional-meta**: Component MUST render the `meta` prop as a flex-wrapped row of chips below the description when provided; it MUST NOT render if `meta` is undefined or null.
+- **meta-no-nested-interactive**: When the card is interactive (`href` or `onClick` is set), `meta` MUST NOT contain interactive elements (links, buttons). Nesting an interactive element inside an anchor or a `role="button"` container is invalid HTML and unreachable by assistive technology.
+- **interactive-styling**: When `href` or `onClick` is provided, the component MUST apply cursor-pointer, a hover state (stronger border and different background color), and a focus-visible state (gold-tinted border).
+- **classname-support**: Component MUST accept a `className` prop and apply it to the outermost element, merging it with the default classes.
+- **left-aligned-text**: Component MUST use `text-left` alignment for all text content. (Hardcoded to the physical left edge, not the logical start edge — see the `rtl-layout-support` compliance status below.)
+

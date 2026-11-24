@@ -7,7 +7,19 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthHttpError as ToolkitAuthHttpError } from "@adh-sdk/auth/client";
 import { reportUnexpectedAuthError, setAuthErrorReporter } from "@adh-sdk/auth";
-import { clientRefusal, isNotFound, isConflict, isForbidden, isServiceUnavailable } from "../http";
+import * as AuthClient from "@adh-sdk/auth/client";
+import {
+  authedJson,
+  authedRequest,
+  clientRefusal,
+  errMsg,
+  httpStatus,
+  isNotFound,
+  isConflict,
+  isForbidden,
+  isServiceUnavailable,
+  rethrowConflict,
+} from "../http";
 
 // A distinct constructor standing in for a host's own AuthHttpError (e.g.
 // atop this one): same numeric `.status`, different class identity.
@@ -98,5 +110,70 @@ describe("clientRefusal", () => {
   it("is an Error, so the shared status predicates recognize it", () => {
     expect(clientRefusal("nope")).toBeInstanceOf(Error);
     expect(isNotFound(clientRefusal("nope", 404))).toBe(true);
+  });
+});
+
+// Conformance vectors for resource-data (cookbook/data/services/resource-data).
+describe("http conformance", () => {
+  const withStatus = (status: number) => Object.assign(new Error("x"), { status });
+
+  it("resource-data-020 re-exports the auth client's authedRequest", () => {
+    expect(authedRequest).toBe(AuthClient.authedRequest);
+    expect(authedJson).toBe(AuthClient.authedJson);
+  });
+
+  it("resource-data-021 httpStatus reads a numeric status", () => {
+    expect(httpStatus(withStatus(404))).toBe(404);
+  });
+
+  it("resource-data-022 httpStatus is undefined for a plain error", () => {
+    expect(httpStatus(new Error("plain"))).toBeUndefined();
+  });
+
+  it("resource-data-023 clientRefusal defaults to status 400", () => {
+    const err = clientRefusal("bad input");
+    expect(err.message).toBe("bad input");
+    expect(err.status).toBe(400);
+  });
+
+  it("resource-data-024 isNotFound is true for 404", () => {
+    expect(isNotFound(withStatus(404))).toBe(true);
+  });
+
+  it("resource-data-025 isConflict is true for 409", () => {
+    expect(isConflict(withStatus(409))).toBe(true);
+  });
+
+  it("resource-data-026 isForbidden is true for 403", () => {
+    expect(isForbidden(withStatus(403))).toBe(true);
+  });
+
+  it("resource-data-027 isServiceUnavailable is true for 503", () => {
+    expect(isServiceUnavailable(withStatus(503))).toBe(true);
+  });
+
+  it("resource-data-028 errMsg returns the error's message", () => {
+    expect(errMsg(new Error("boom"), "fallback")).toBe("boom");
+  });
+
+  it("resource-data-029 errMsg falls back for a non-error", () => {
+    expect(errMsg("not an error", "fallback")).toBe("fallback");
+  });
+
+  it("resource-data-030 rethrowConflict raises the friendly message on 'already exists'", () => {
+    expect(() =>
+      rethrowConflict(new Error("a project with this name already exists"), "Pick another name"),
+    ).toThrow(new Error("Pick another name"));
+  });
+
+  it("resource-data-031 rethrowConflict rethrows any other error unchanged", () => {
+    const original = new Error("network down");
+    let thrown: unknown;
+    try {
+      rethrowConflict(original, "Pick another name");
+    } catch (e) {
+      thrown = e;
+    }
+    expect(thrown).toBe(original);
   });
 });

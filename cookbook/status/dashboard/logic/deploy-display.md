@@ -1,13 +1,12 @@
 ---
 id: 691f84ba-242a-40bc-a164-c95e535bb387
 title: "Deploy Display"
-domain: adhsdk://cookbook/status/dashboard/logic/deploy-display
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-09-27
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -18,7 +17,7 @@ platforms:
 tags: []
 depends-on: []
 related:
-  - adhsdk://cookbook/status/service/monitor/deploy-status
+  - 96009fcc-e32e-4a40-9b3c-8b4f83f1cfec
 references: []
 approved-by: ""
 approved-date: ""
@@ -49,8 +48,8 @@ The module has no state, no I/O and no side effects. It draws its deploy
 status vocabulary and its color-role map from two sibling modules. The
 callers are dashboard components and views that render deploy or platform
 badges; they render the returned strings and never branch on them. The
-server-side status vocabulary is specified in [Monitor Deploy
-Status](adhsdk://cookbook/status/service/monitor/deploy-status).
+server-side status vocabulary is specified in Monitor Deploy
+Status ([adhsdk.ingredient.status.service.monitor.deploy-status](cookbook:96009fcc-e32e-4a40-9b3c-8b4f83f1cfec)).
 
 ## Behavioral Requirements
 
@@ -240,9 +239,9 @@ Not applicable: the module has no logging calls. Unknown inputs fall back silent
 
 ## Reference Implementations
 
-| Platform | Path |
-|----------|------|
-| web | `packages/web/packages/status-web/src/lib/deploy-display.ts` |
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/status-web/src/lib/deploy-display.ts` | confirmed (1.1.1) |
 
 ## Design Decisions
 
@@ -278,14 +277,14 @@ Not applicable: the module has no logging calls. Unknown inputs fall back silent
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
-| [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | best-practices |
-| [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | best-practices |
-| [graceful-degradation](agenticdevelopercookbook://compliance/reliability#graceful-degradation) | passed | reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | best-practices |
+| [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | reliability |
 
 **Separation of concerns.** The module owns only the display taxonomy. Status colors come from `colors.ts`, the status vocabulary comes from `deploy-status.ts`, and components only render the results.
 
-**Unit test coverage.** No test file exercises any export of `deploy-display.ts`, so the mappings and fallbacks above are unverified by tests.
+**Unit test coverage.** `deploy-display.test.ts` covers every conformance vector (deploy-display-001 to deploy-display-025): glyphs, colors, labels, short labels and deploy-status color and label, including the fallbacks.
 
 **Explicit error handling.** Unknown inputs take explicit, defined fallbacks and never throw. However, the plain-object lookups let inherited keys return a non-string value, as described in the React/Web platform note.
 
@@ -295,6 +294,7 @@ Not applicable: the module has no logging calls. Unknown inputs fall back silent
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-11-14 | Mike Fullerton | Conformance tests added (deploy-display.test.ts, 25 of 25 vectors); unit-test-coverage now passed. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to status/dashboard/logic/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.0.0 | 2026-09-24 | Mike Fullerton | Initial creation from source |

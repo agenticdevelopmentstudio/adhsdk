@@ -1,0 +1,57 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "f2d56415-ac36-4a27-bee5-b447c4186513",
+    "title": "SiteMenu",
+    "type": "recipe",
+    "version": "1.1.1",
+    "status": "review",
+    "language": "en",
+    "created": "2026-07-05",
+    "modified": "2026-10-04",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "The platform navigation menu: an icon+label+description list with inline sub-items, an auth-conditional top section, and a Recents flyout.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "chrome",
+      "navigation",
+      "site-menu",
+      "recents",
+      "ui"
+    ],
+    "ingredients": [
+      "21cbbc1c-38a0-4e7a-8ca0-06e2f29429f5"
+    ],
+    "depends-on": [],
+    "related": [
+      "21cbbc1c-38a0-4e7a-8ca0-06e2f29429f5",
+      "4d0e04ff-39eb-472c-93a0-8070f1b64a6a",
+      "8fa7aaae-df62-44ea-b10c-182f3094ed9f"
+    ],
+    "references": [
+      "agenticdeveloperhub://docs/deep-linking-foundation"
+    ],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "129fd0c0ee228150",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "ingredients", "heading": "Ingredients"},
+    {"part": "integration-requirements", "heading": "Integration Requirements"},
+    {"part": "layout", "heading": "Layout"},
+    {"part": "shared-state", "heading": "Shared State"},
+    {"part": "integration-test-vectors", "heading": "Integration Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

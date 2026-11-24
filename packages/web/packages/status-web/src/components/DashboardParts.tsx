@@ -20,6 +20,20 @@ function SourceTag({ children }: { children: ReactNode }): ReactElement {
   );
 }
 
+/**
+ * A status server older than this page answers the dashboards without `views`, the server-side
+ * rankings and ratings the panels draw. Drawing those panels from nothing would read as an
+ * all-clear ("no site reported an error") while the sections beside them hold real numbers, so
+ * they say this instead.
+ */
+export const VIEWS_MISSING =
+  "This status server is older than this page and does not send the views this is drawn from. Update status-server to see it.";
+
+/** True when the server answered without `views`; false before any answer. */
+export function viewsMissing(body: { views?: unknown } | undefined): boolean {
+  return body !== undefined && (body.views === undefined || body.views === null);
+}
+
 export interface DashboardPanelProps<T> {
   title: string;
   source: string;
@@ -29,6 +43,8 @@ export interface DashboardPanelProps<T> {
   configured: boolean;
   /** The topic is still fetching, so an empty section is loading rather than absent. */
   refreshing: boolean;
+  /** Said in place of the content when it cannot be drawn at all (see {@link VIEWS_MISSING}). */
+  unavailable?: string;
   note?: ReactNode;
   actions?: ReactNode;
   skeletonHeight?: number;
@@ -42,6 +58,7 @@ export function DashboardPanel<T>({
   section,
   configured,
   refreshing,
+  unavailable,
   note,
   actions,
   skeletonHeight = 120,
@@ -61,7 +78,7 @@ export function DashboardPanel<T>({
           </>
         ) : undefined
       }
-      footnote={configured && section.data !== null ? note : undefined}
+      footnote={configured && section.data !== null && !unavailable ? note : undefined}
     >
       {section.data !== null && section.error !== null && (
         <p className="m-0 font-mono text-[11px] text-apt-gold">
@@ -71,6 +88,10 @@ export function DashboardPanel<T>({
       )}
       {!configured ? (
         <Notice>{source} is not configured on this backend.</Notice>
+      ) : unavailable && section.data !== null ? (
+        <p role="alert" className="m-0 font-mono text-xs text-apt-gold">
+          {unavailable}
+        </p>
       ) : section.data !== null ? (
         children(section.data)
       ) : section.error !== null ? (

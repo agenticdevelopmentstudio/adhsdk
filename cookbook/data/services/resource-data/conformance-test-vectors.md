@@ -75,9 +75,9 @@
 | resource-data-072 | workspace-prefs-cache-key | caching workspace `'acme'` with prefix `'x'` | writes under storage key `'x:home:workspace'` |
 | resource-data-073 | read-cached-workspace-safe-without-storage | reading the cached workspace with no persisted-storage environment available | returns a safe empty result, no failure raised |
 | resource-data-074 | write-cached-workspace-swallow | caching workspace `'acme'` when storage fails | resolves without raising |
-| resource-data-075 | workspace-prefs-get-unwraps | reading workspace preferences when the server reports not-found | resolves to an empty object, never raises |
-| resource-data-076 | workspace-prefs-get-unwraps | reading workspace preferences when the server returns preferences containing slug `'acme'` | resolves to `{ slug: 'acme' }` |
-| resource-data-077 | workspace-prefs-put-full-replace | writing preferences `{ slug: 'acme' }` | issues a PUT request to `/api/me/workspace-prefs` with body `{ slug: 'acme' }` |
+| resource-data-075 | workspace-prefs-get-unwraps | reading workspace preferences when the account answers without the workspace-preferences include (a user who never chose) | resolves to an empty object, never raises |
+| resource-data-076 | workspace-prefs-get-unwraps | reading workspace preferences when the account answer's workspace-preferences include holds `{ prefs: { slug: 'acme' } }` | resolves to `{ slug: 'acme' }` |
+| resource-data-077 | workspace-prefs-put-full-replace | writing preferences `{ slug: 'acme' }` | issues a POST request to `/api/v1/account` with body `{ "workspace_prefs": { "slug": "acme" } }` |
 | resource-data-078 | workspace-list-cache-key-constant | the workspace-list cache key | `('workspaces')` |
 | resource-data-079 | notify-workspaces-changed-dual-invalidate | announcing that the workspace list changed | the workspace-list cache entry is invalidated directly, and a matching invalidation accepts a resource-list entry keyed `'workspaces'` while rejecting one keyed `'organizations'` |
 | resource-data-080 | notify-workspaces-changed-swallows | announcing a change when the underlying invalidation fails | does not raise or produce an unhandled failure |

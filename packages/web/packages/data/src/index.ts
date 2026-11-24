@@ -26,6 +26,11 @@ export {
 // Request/response shaping shared by the CRUD clients.
 export { compact, enc, narrow, scopeByOwner, sortByText } from "./client-helpers";
 
+// The /v1 wire boundary for a client that keeps camelCase row types: map a snake_case /v1
+// object to its camelCase row (and `FromV1<T>`, that row's type), and a camelCase body back.
+// Published so a host's own /v1 clients use the same mapping as the toolkit's.
+export { fromV1, toV1Body, v1Json, v1List, v1Page, v1Write, type FromV1 } from "./v1-case";
+
 // Host-injectable runtime config (the FTD storage-key prefix, default "adh").
 export { configureData, dataConfig } from "./config";
 export type { DataRuntimeConfig } from "./config";
