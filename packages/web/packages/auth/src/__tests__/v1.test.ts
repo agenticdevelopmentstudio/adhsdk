@@ -197,13 +197,13 @@ describe('listAllPublicV1 and publicJson', () => {
     writeTokens({ accessToken: 'TOK', refreshToken: '' })
     const fetchMock = vi
       .spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(page([{ id: 'a' }], true))
-      .mockResolvedValueOnce(page([{ id: 'b' }], false))
+      .mockResolvedValueOnce(page([{ id: 'a' }, { id: 'b' }], true))
+      .mockResolvedValueOnce(page([{ id: 'c' }], false))
     const rows = await listAllPublicV1<{ id: string }>('/api/v1/feature_flags', { cache: 'no-store' })
-    expect(rows.map((r) => r.id)).toEqual(['a', 'b'])
+    expect(rows.map((r) => r.id)).toEqual(['a', 'b', 'c'])
     expect(fetchMock.mock.calls.map((c) => String(c[0]))).toEqual([
       '/api/v1/feature_flags?limit=100',
-      '/api/v1/feature_flags?limit=100&starting_after=a',
+      '/api/v1/feature_flags?limit=100&starting_after=b',
     ])
     for (const [, init] of fetchMock.mock.calls) {
       expect(authOf(init)).toBeNull()
@@ -216,17 +216,23 @@ describe('listAllPublicV1 and publicJson', () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
       new Response(JSON.stringify({ ok: 1 }), { status: 200, headers: { 'content-type': 'application/json' } }),
     )
-    expect(await publicJson('/api/v1/public/x', { method: 'POST', body: '{}' })).toEqual({ ok: 1 })
+    expect(await publicJson('/x', { method: 'POST', body: '{}' })).toEqual({ ok: 1 })
+    expect(fetchMock).toHaveBeenCalledTimes(1)
     const init = fetchMock.mock.calls[0]?.[1]
     expect(authOf(init)).toBeNull()
     expect(new Headers((init as RequestInit).headers).get('content-type')).toBe('application/json')
   })
 
   it('v1-024 publicJson throws AuthHttpError on a refusal, with no refresh and no retry', async () => {
+    writeTokens({ accessToken: 'TOK', refreshToken: 'REFRESH' })
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response(JSON.stringify({ error: { message: 'nope' } }), { status: 401 }),
     )
-    await expect(publicJson('/api/v1/public/x')).rejects.toBeInstanceOf(AuthHttpError)
+    const err = await publicJson('/x').catch((e: unknown) => e)
+    expect(err).toBeInstanceOf(AuthHttpError)
+    expect((err as AuthHttpError).status).toBe(401)
     expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(String(fetchMock.mock.calls[0]?.[0])).toBe('/x')
+    expect(authOf(fetchMock.mock.calls[0]?.[1])).toBeNull()
   })
 })
