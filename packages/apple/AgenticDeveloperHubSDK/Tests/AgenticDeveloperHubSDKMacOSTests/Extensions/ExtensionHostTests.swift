@@ -3073,8 +3073,9 @@ struct ExtensionHostTests {
         recorder.attach(to: host)
 
         try await host.activate()
-        #expect(host.runningTimerCount == 5)
-
+        // No count here: the Infinity timer is a 0 ms one and can fire before
+        // it is read. The two lines and the three still asleep prove all five
+        // were scheduled.
         try await Task.sleep(for: .milliseconds(400))
 
         #expect(recorder.texts == ["infinity is not a delay", "alive"])
