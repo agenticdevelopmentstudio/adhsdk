@@ -552,6 +552,28 @@ def test_built_app_refuses_a_bundle_owned_by_someone_else(tmp_path):
     assert 'sudo chown -R "$(id -un)"' in "\n".join(b.out)
 
 
+def test_a_failed_rollback_says_where_the_old_bundle_is(tmp_path):
+    b = Built(tmp_path)
+    b.make_old()
+    dest, aside = b.apps / "Thing.app", b.apps / "Thing.app.old-9"
+    new = tmp_path / "new.app"
+    new.mkdir()
+
+    def rename(src, dst):
+        if Path(src) == dest:
+            os.rename(src, dst)
+        else:
+            raise OSError("boom")
+
+    assert not ins.swap_in(new, dest, aside=aside, pids=lambda app: [], kill=b.kill,
+                           sleep=lambda s: None, monotonic=lambda: 0.0, rename=rename,
+                           say=b.out.append)
+    assert (aside / "Contents" / "marker").read_text() == "old"
+    said = "\n".join(b.out)
+    assert "could not put the old app back" in said
+    assert f'mv "{aside}" "{dest}"' in said
+
+
 def test_remove_quits_and_deletes_the_installed_bundle(tmp_path):
     b = Built(tmp_path)
     b.make_old()

@@ -187,10 +187,15 @@ def swap_in(new: Path, dest: Path, *, aside: Path,
     try:
         rename(new, dest)
     except OSError as exc:
+        say(f"error: could not move the new app into place: {exc}")
         if had_old:
             shutil.rmtree(dest, ignore_errors=True)  # any partial new copy
-            rename(aside, dest)
-        say(f"error: could not move the new app into place: {exc}")
+            try:
+                rename(aside, dest)
+            except OSError as back:
+                say(f"error: could not put the old app back either ({back}); it is at "
+                    f"{aside}. Restore it with:")
+                say(f'  mv "{aside}" "{dest}"')
         return False
     if had_old:
         shutil.rmtree(aside, ignore_errors=True)
