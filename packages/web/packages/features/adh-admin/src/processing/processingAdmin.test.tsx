@@ -89,7 +89,9 @@ describe("worker tokens: the Pool checkbox", () => {
     fireEvent.click(await screen.findByRole("button", { name: "New worker token" }));
     const pool = screen.getByRole("checkbox", { name: "Pool" });
     expect(pool.getAttribute("aria-checked")).toBe("false");
-    expect(screen.getByText(/claim the AI steps of jobs from every product/)).toBeTruthy();
+    // The box's own description, which the section intro above it also paraphrases.
+    const description = document.getElementById(pool.getAttribute("aria-describedby") ?? "");
+    expect(description?.textContent).toMatch(/claim the AI steps of jobs from every product/);
   });
 
   it("processing-admin-002: a checked Pool sends pool: true", async () => {
