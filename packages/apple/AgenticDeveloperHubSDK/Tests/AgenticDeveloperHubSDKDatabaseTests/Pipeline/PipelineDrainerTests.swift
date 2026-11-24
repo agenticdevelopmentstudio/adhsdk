@@ -649,15 +649,15 @@ final class PipelineDrainerTests: XCTestCase {
     func testHealRunsAtMostOncePerInterval() throws {
         let down = LockedBox(true), taken = LockedBox(0)
         let (rig, pipe) = try healRig(down: down, taken: taken)
-        let start = Date()
+        let start = ContinuousClock.now
         try rig.spool.append([record("k0"), record("k1")])
         exhaust(pipe)
         XCTAssertEqual(pipe.healTransientQuarantine(now: start), 2)
         exhaust(pipe)
         XCTAssertEqual(try rig.spool.quarantinedCount(), 2)
-        XCTAssertEqual(pipe.healTransientQuarantine(now: start.addingTimeInterval(60)), 0)
+        XCTAssertEqual(pipe.healTransientQuarantine(now: start.advanced(by: .seconds(60))), 0)
         XCTAssertEqual(try rig.spool.quarantinedCount(), 2, "a heal inside the interval moves nothing")
-        let due = start.addingTimeInterval(PipelineDrainer.quarantineHealInterval)
+        let due = start.advanced(by: PipelineDrainer.quarantineHealInterval)
         XCTAssertEqual(pipe.healTransientQuarantine(now: due), 2)
         XCTAssertEqual(try rig.spool.quarantinedCount(), 0)
     }
@@ -665,12 +665,12 @@ final class PipelineDrainerTests: XCTestCase {
     func testAnEmptyHealDoesNotStartTheInterval() throws {
         let down = LockedBox(true), taken = LockedBox(0)
         let (rig, pipe) = try healRig(down: down, taken: taken)
-        let start = Date()
+        let start = ContinuousClock.now
         XCTAssertEqual(pipe.healTransientQuarantine(now: start), 0)
         XCTAssertNil(pipe.lastQuarantineHeal, "an empty heal leaves no report")
         try rig.spool.append([record("k0"), record("k1")])
         exhaust(pipe)
-        XCTAssertEqual(pipe.healTransientQuarantine(now: start.addingTimeInterval(1)), 2)
+        XCTAssertEqual(pipe.healTransientQuarantine(now: start.advanced(by: .seconds(1))), 2)
     }
 
     func testTheWorkerHealsAQuarantineOnItsOwn() throws {

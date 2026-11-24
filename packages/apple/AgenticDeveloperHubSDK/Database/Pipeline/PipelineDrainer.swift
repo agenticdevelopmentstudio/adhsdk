@@ -192,7 +192,7 @@ public final class PipelineDrainer: @unchecked Sendable {
     /// Guarded by `lock`; see ``lastQuarantineHeal``.
     private var lastHeal: QuarantineHealReport?
     /// Guarded by `lock`: when the last heal found anything in quarantine.
-    private var lastHealAttempt: Date?
+    private var lastHealAttempt: ContinuousClock.Instant?
 
     /// Throws `PipelineError.providerMismatch` unless the spool, the archive and the
     /// normalizer name the same provider, and `EventStoreError.bulkLoadInProgress`
@@ -615,8 +615,10 @@ public final class PipelineDrainer: @unchecked Sendable {
         return drainer.shouldStop() ? nil : outcome.failed
     }
 
-    /// The least time between two heals that found something in quarantine.
-    static let quarantineHealInterval: TimeInterval = 15 * 60
+    /// The least time between two heals that found something in quarantine,
+    /// measured on the monotonic clock so a wall-clock change cannot stretch or
+    /// skip it.
+    static let quarantineHealInterval: Duration = .seconds(15 * 60)
 
     /// Sends the records quarantined by a destination outage (a sink or the
     /// events.db write, ``transientFailurePrefixes``) back through the pipeline,
@@ -632,18 +634,18 @@ public final class PipelineDrainer: @unchecked Sendable {
     /// interval. Returns how many records it requeued; a failure is kept in
     /// ``lastQuarantineHeal`` and never stops draining.
     @discardableResult
-    func healTransientQuarantine(now: Date = Date()) -> Int {
+    func healTransientQuarantine(now: ContinuousClock.Instant = .now) -> Int {
         lock.lock()
-        let due = lastHealAttempt.map { now.timeIntervalSince($0) >= Self.quarantineHealInterval } ?? true
+        let due = lastHealAttempt.map { now - $0 >= Self.quarantineHealInterval } ?? true
         lock.unlock()
         guard due else { return 0 }
         let report: QuarantineHealReport
         do {
             guard try spool.quarantinedCount() > 0 else { return 0 }
             let requeued = try spool.requeueQuarantined(reasonPrefixes: Self.transientFailurePrefixes)
-            report = QuarantineHealReport(finishedAt: now, requeued: requeued, error: nil)
+            report = QuarantineHealReport(finishedAt: Date(), requeued: requeued, error: nil)
         } catch {
-            report = QuarantineHealReport(finishedAt: now, requeued: 0, error: String(describing: error))
+            report = QuarantineHealReport(finishedAt: Date(), requeued: 0, error: String(describing: error))
         }
         lock.lock()
         lastHealAttempt = now
