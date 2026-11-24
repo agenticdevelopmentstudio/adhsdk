@@ -26,6 +26,7 @@ import { formatRelativeTime } from "../llm-providers/sync-format";
 import { NodeLogs } from "../processing/NodeLogs";
 import { RETENTION_ERROR, parseRetentionDays } from "../processing/retention";
 import { WorkerTokens } from "../processing/WorkerTokens";
+import { DeadJobs } from "../processing/DeadJobs";
 
 
 /** How long node logs are kept — one setting for the whole fleet. */
@@ -208,6 +209,7 @@ export function AiNodesPane({ help }: { help?: ReactNode } = {}) {
           checked in within the last two minutes. Select one to see what it reported and its logs.
         </p>
         <WorkerTokens />
+        <DeadJobs />
         <RetentionStrip />
         <EditableList<ProcessingNode>
           list={list}

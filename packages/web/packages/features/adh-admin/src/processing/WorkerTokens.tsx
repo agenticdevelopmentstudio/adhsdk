@@ -12,6 +12,7 @@ import {
 } from "@adh-sdk/ui/components/dialog";
 import { AlertModal } from "@adh-sdk/ui/components/alert-modal";
 import { Button } from "@adh-sdk/ui/components/button";
+import { Checkbox } from "@adh-sdk/ui/components/checkbox";
 import { CopyButton } from "@adh-sdk/ui/components/copy-button";
 import { DialogErrorText, ErrorText } from "@adh-sdk/ui/components/error-text";
 import { Input } from "@adh-sdk/ui/components/input";
@@ -36,9 +37,14 @@ import { unixToIso } from "../api/http";
 /** The env var a node reads its token from (websites/ai-node and the Swift daemon alike). */
 export const WORKER_TOKEN_ENV = "AI_NODE_API_TOKEN";
 
+/** What the Pool checkbox means, shown under it and as its description. */
+export const POOL_DESCRIPTION =
+  "A pool token can also claim the AI steps of jobs from every product, so its node sees their prompts. Mint one only for a hub node.";
+
 /**
- * The tokens AI nodes authenticate with. Each one carries only the `ai-processing:worker` scope, so
- * it can claim and report jobs and nothing else. The raw value is returned once, by the create, and
+ * The tokens AI nodes authenticate with. Each one carries the `ai-processing:worker` scope, so it
+ * can claim and report jobs and nothing else; a pool token also carries `ai-processing:pool`, which
+ * lets a hub node claim the AI steps of jobs from every product. The raw value is returned once, by the create, and
  * this dialog is the only place it is ever drawn; revoking one makes every node using it get 401.
  */
 export function WorkerTokens() {
@@ -48,6 +54,7 @@ export function WorkerTokens() {
 
   const [createOpen, setCreateOpen] = useState(false);
   const [name, setName] = useState("");
+  const [pool, setPool] = useState(false);
   const [minted, setMinted] = useState<string | null>(null);
   // Escape or a backdrop click on the reveal would otherwise drop a secret nobody can show again.
   const [confirmingDrop, setConfirmingDrop] = useState(false);
@@ -90,6 +97,17 @@ export function WorkerTokens() {
         ),
       },
       {
+        key: "pool",
+        header: "Pool",
+        width: "6rem",
+        value: (t) => (t.pool ? "Pool" : "Worker"),
+        render: (t) => (
+          <span className={t.pool ? "font-medium text-apt-text" : "text-apt-text-muted"}>
+            {t.pool ? "Pool" : "Worker"}
+          </span>
+        ),
+      },
+      {
         key: "createdAt",
         header: "Created",
         width: "9rem",
@@ -126,6 +144,7 @@ export function WorkerTokens() {
 
   function openCreate() {
     setName("");
+    setPool(false);
     setMinted(null);
     create.reset();
     setCreateOpen(true);
@@ -146,7 +165,7 @@ export function WorkerTokens() {
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!canCreate) return;
-    create.mutate({ name: name.trim() }, { onSuccess: (created) => setMinted(created.token) });
+    create.mutate({ name: name.trim(), pool }, { onSuccess: (created) => setMinted(created.token) });
   }
 
   return (
@@ -155,7 +174,8 @@ export function WorkerTokens() {
       <p className="max-w-2xl text-sm text-apt-text-muted">
         A node signs in to the backend with one of these, set as{" "}
         <code className="font-mono">{WORKER_TOKEN_ENV}</code> on its deployment. A token can only
-        claim and report processing jobs. Revoking one signs out every node using it.
+        claim and report processing jobs, and a pool token can also claim the AI steps of jobs from every
+        product. Revoking one signs out every node using it.
       </p>
       <EditableList<WorkerToken>
         list={list}
@@ -220,6 +240,25 @@ export function WorkerTokens() {
                   placeholder="e.g. railway-staging"
                 />
               </Field>
+              <div className="flex items-start gap-2">
+                <Checkbox
+                  id="worker-token-pool"
+                  aria-label="Pool"
+                  aria-describedby="worker-token-pool-description"
+                  checked={pool}
+                  disabled={create.isPending}
+                  onCheckedChange={(checked) => setPool(checked === true)}
+                  className="mt-0.5"
+                />
+                <div className="flex flex-col gap-0.5">
+                  <label htmlFor="worker-token-pool" className="text-sm text-apt-text">
+                    Pool
+                  </label>
+                  <p id="worker-token-pool-description" className="text-xs text-apt-text-muted">
+                    {POOL_DESCRIPTION}
+                  </p>
+                </div>
+              </div>
               {create.error && <ErrorText error={errorMessage(create.error)} />}
               <DialogFooter>
                 <Button

@@ -56,6 +56,7 @@ const workerToken = (over: Partial<WorkerToken>): WorkerToken => ({
   expires_at: null,
   last_used_at: null,
   nodes: [],
+  pool: false,
   ...over,
 });
 
@@ -270,7 +271,7 @@ describe("AiNodesPane worker tokens", () => {
     await waitFor(() =>
       expect(authedJson).toHaveBeenCalledWith("/api/v1/processing/worker_tokens", {
         method: "POST",
-        body: JSON.stringify({ name: "railway-testing" }),
+        body: JSON.stringify({ name: "railway-testing", pool: false }),
       }),
     );
     const value = (await screen.findByLabelText("Worker token")) as HTMLInputElement;

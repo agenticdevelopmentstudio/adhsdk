@@ -7,7 +7,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { authedJson, authedRequest, listAllV1 } from "./http";
+import { authedJson, authedRequest, listAllV1, unixToIso } from "./http";
 
 // ── AI processing: config sets, nodes, logs, retention ──────────────────────
 //
@@ -32,6 +32,26 @@ export type WorkerTokenInput = components["schemas"]["AiProcessingWorkerTokenInp
 export type WorkerTokenList = WorkerToken[];
 /** The create response: the listed token plus its raw value, shown this once. */
 export type CreatedWorkerToken = SuccessBody<"/v1/processing/worker_tokens", "post", 201>;
+/** What a dead-job retry answers: the row, back on the queue. */
+export type RetriedDeadJob = SuccessBody<"/v1/processing/jobs/{id}/retry", "post", 200>;
+
+/**
+ * One dead queue row, as the operator's Retry list shows it. No payload: a step's payload can hold
+ * a customer's prompt, and the row's type, error and attempts are all the decision needs.
+ */
+export interface DeadJob {
+  id: string;
+  ecosystemId: string;
+  jobType: string;
+  attempts: number;
+  lastError: string | null;
+  /** When the row went dead (the backend's timestamp text). */
+  failedAt: string;
+  targetKind: string;
+  targetId: string;
+  /** ISO creation time. */
+  createdAt: string | null;
+}
 
 export interface NodeLogQuery {
   level?: LogLevel;
@@ -50,6 +70,7 @@ export const processingKeys = {
     [...PROCESSING_ADMIN_KEY, "logs", id, query] as const,
   settings: () => [...PROCESSING_ADMIN_KEY, "settings"] as const,
   workerTokens: () => [...PROCESSING_ADMIN_KEY, "worker-tokens"] as const,
+  deadJobs: () => [...PROCESSING_ADMIN_KEY, "dead-jobs"] as const,
 };
 
 const BASE = "/api/v1/processing";
@@ -96,6 +117,50 @@ export const createWorkerToken = (input: WorkerTokenInput) =>
   authedJson<CreatedWorkerToken>(`${BASE}/worker_tokens`, send("POST", input));
 export const revokeWorkerToken = (id: string) =>
   authedRequest(`${BASE}/worker_tokens/${encodeURIComponent(id)}`, send("DELETE"));
+
+const text = (v: unknown): string => (typeof v === "string" ? v : "");
+
+/**
+ * A dead row off the /v1 list. The gateway snake-cases the fields the legacy job schema declares
+ * (`job_type`, `target_kind`, `target_id`, `created`) and passes the dead-only ones through as the
+ * legacy route wrote them (`ecosystemId`, `lastError`, `failedAt`), while the spec documents them all
+ * snake_case; read either spelling so the row survives the gateway settling on one.
+ */
+export function toDeadJob(w: Record<string, unknown>): DeadJob {
+  const pick = (snake: string, camel: string) => (w[snake] !== undefined ? w[snake] : w[camel]);
+  const lastError = pick("last_error", "lastError");
+  const created = pick("created", "createdAt");
+  return {
+    id: text(w.id),
+    ecosystemId: text(pick("ecosystem_id", "ecosystemId")),
+    jobType: text(pick("job_type", "jobType")),
+    attempts: typeof w.attempts === "number" ? w.attempts : 0,
+    lastError: typeof lastError === "string" && lastError !== "" ? lastError : null,
+    failedAt: text(pick("failed_at", "failedAt")),
+    targetKind: text(pick("target_kind", "targetKind")),
+    targetId: text(pick("target_id", "targetId")),
+    createdAt: typeof created === "number" ? unixToIso(created) : typeof created === "string" ? created : null,
+  };
+}
+
+/** A dead row's death time in ms, for newest-first ordering; unparseable reads as oldest. */
+export function deadJobTime(job: DeadJob): number {
+  const t = Date.parse(job.failedAt.includes("T") ? job.failedAt : job.failedAt.replace(" ", "T"));
+  return Number.isNaN(t) ? 0 : t;
+}
+
+/**
+ * Every dead queue row across all ecosystems (operator only), newest death first. The backend
+ * already orders them so; the sort keeps the order whatever the paging hands back.
+ */
+export async function listDeadJobs(): Promise<DeadJob[]> {
+  const rows = await listAllV1<Record<string, unknown>>(`${BASE}/jobs?status=dead`);
+  return rows.map(toDeadJob).sort((a, b) => deadJobTime(b) - deadJobTime(a));
+}
+
+/** Put one dead row back on the queue. 404 `not_found`, 409 `not_dead` (someone retried it first). */
+export const retryDeadJob = (id: string) =>
+  authedJson<RetriedDeadJob>(`${BASE}/jobs/${encodeURIComponent(id)}/retry`, send("POST"));
 
 // ── react-query hooks ───────────────────────────────────────────────────────
 
@@ -189,6 +254,29 @@ export function useCreateWorkerToken() {
   return useMutation({
     mutationFn: createWorkerToken,
     onSuccess: () => qc.invalidateQueries({ queryKey: processingKeys.workerTokens() }),
+  });
+}
+
+export const useDeadJobs = () =>
+  useQuery({
+    queryKey: processingKeys.deadJobs(),
+    queryFn: listDeadJobs,
+  });
+
+/**
+ * Retry one dead row. On success the row leaves the cached list at once, then the list is read
+ * again; a failure leaves the list as it was, so the row stays beside the shown error.
+ */
+export function useRetryDeadJob() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: retryDeadJob,
+    onSuccess: (_res, id) => {
+      qc.setQueryData<DeadJob[]>(processingKeys.deadJobs(), (rows) =>
+        rows?.filter((r) => r.id !== id),
+      );
+      void qc.invalidateQueries({ queryKey: processingKeys.deadJobs() });
+    },
   });
 }
 
