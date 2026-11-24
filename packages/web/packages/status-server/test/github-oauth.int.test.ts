@@ -6,6 +6,7 @@ import * as schema from '../src/libsql/schema';
 import { createApp } from '../src/app';
 import { MIGRATIONS_FOLDER } from '../src/libsql/client';
 import { testDeps } from './helpers/storage';
+import { safeNext } from '../src/auth/github';
 
 async function boot() {
   const db = drizzle(createClient({ url: ':memory:' }), { schema });
@@ -65,6 +66,41 @@ describe('GitHub OAuth', () => {
     expect(cb.headers.get('location')).toBe('/home');
     const me = await app.request('/auth/me', { headers: { Cookie: cookieVal(cb, 'status_auth') } });
     expect((await me.json() as { user: { email: string; role: string } | null }).user).toMatchObject({ email: 'octo@cat.com', role: 'pending' });
+  });
+
+  it('callback returns to the gated destination carried as `next` (the CLI device-approval deep link)', async () => {
+    const app = await boot();
+    const dest = '/device?code=BZNR-SG73';
+    const start = await app.request(`/auth/github/start?next=${encodeURIComponent(dest)}`);
+    const stateCookie = cookieVal(start, 'gh_oauth_state');
+    const nextCookie = cookieVal(start, 'gh_oauth_next');
+    mockGithub({ id: 43, login: 'approver', name: null, email: 'approver@x.com' });
+    const cb = await app.request(`/auth/github/callback?code=abc&state=${stateCookie.split('=')[1]}`, {
+      headers: { Cookie: `${stateCookie}; ${nextCookie}` },
+    });
+    expect(cb.status).toBe(302);
+    expect(cb.headers.get('location')).toBe(dest);
+  });
+
+  it('an off-site `next` is never stored, so the callback lands on /home', async () => {
+    const app = await boot();
+    const start = await app.request(`/auth/github/start?next=${encodeURIComponent('//evil.example/x')}`);
+    expect(start.headers.get('set-cookie') ?? '').not.toMatch(/gh_oauth_next=[^;]/);
+    const stateCookie = cookieVal(start, 'gh_oauth_state');
+    mockGithub({ id: 44, login: 'x', name: null, email: 'x@x.com' });
+    // Even a forged next cookie is re-validated at the callback.
+    const cb = await app.request(`/auth/github/callback?code=abc&state=${stateCookie.split('=')[1]}`, {
+      headers: { Cookie: `${stateCookie}; gh_oauth_next=https://evil.example` },
+    });
+    expect(cb.headers.get('location')).toBe('/home');
+  });
+
+  it('safeNext accepts only same-origin relative paths', () => {
+    expect(safeNext('/device?code=ABCD-2345')).toBe('/device?code=ABCD-2345');
+    expect(safeNext('/overview')).toBe('/overview');
+    for (const bad of [undefined, null, '', 'device', 'https://evil.example', '//evil.example', '/\\evil.example', '/a\nb', `/${'a'.repeat(2048)}`]) {
+      expect(safeNext(bad)).toBeNull();
+    }
   });
 
   it('a second callback with the same GitHub id reuses the account', async () => {

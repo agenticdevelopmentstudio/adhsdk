@@ -9,6 +9,24 @@ import { roleForEmail, isUniqueViolation } from '../storage/ports';
 import { setSessionCookie } from './cookie';
 
 const STATE_COOKIE = 'gh_oauth_state';
+/** Where the visitor was going when the login gate bounced them (the login
+ *  page's `next`), carried across the GitHub round trip beside the state. */
+const NEXT_COOKIE = 'gh_oauth_next';
+/** Where a GitHub login with no (valid) `next` lands. */
+const DEFAULT_DESTINATION = '/home';
+
+/**
+ * `next` if it is a same-origin, purely relative path, else null. The value ends
+ * up in a Location header, so anything that could leave the site is refused:
+ * a scheme or host (`https://evil`), a protocol-relative `//evil` and its
+ * backslash spelling `/\evil` (browsers treat `\` as `/`), and control chars.
+ */
+export function safeNext(next: string | undefined | null): string | null {
+  if (!next || next.length > 2048) return null;
+  if (!next.startsWith('/') || next.startsWith('//') || next.startsWith('/\\')) return null;
+  if (/[\x00-\x1f\x7f]/.test(next)) return null;
+  return next;
+}
 
 /** fetch with the GitHub deadline — the only outbound fetches on a PRE-AUTH
  *  request path; un-deadlined, a hung GitHub API held the callback open for as
@@ -100,6 +118,15 @@ export function githubRoutes(storage: Storage, config: StatusConfig): Hono<{ Var
     }
     const state = randomBytes(16).toString('hex');
     setCookie(c, STATE_COOKIE, state, { httpOnly: true, secure: config.cookieSecure, sameSite: 'Lax', path: '/', maxAge: 600 });
+    // The CLI device flow is why this exists: a signed-out approver opening
+    // `/device?code=…` is bounced to /login?next=…, and a GitHub login that
+    // dropped `next` landed on /home with the pending request never approved.
+    const next = safeNext(c.req.query('next'));
+    if (next) {
+      setCookie(c, NEXT_COOKIE, next, { httpOnly: true, secure: config.cookieSecure, sameSite: 'Lax', path: '/', maxAge: 600 });
+    } else {
+      deleteCookie(c, NEXT_COOKIE, { path: '/' });
+    }
     return c.redirect(authorizeUrl(state, config));
   });
 
@@ -108,6 +135,8 @@ export function githubRoutes(storage: Storage, config: StatusConfig): Hono<{ Var
     const state = c.req.query('state');
     const expected = getCookie(c, STATE_COOKIE);
     deleteCookie(c, STATE_COOKIE, { path: '/' });
+    const next = safeNext(getCookie(c, NEXT_COOKIE)) ?? DEFAULT_DESTINATION;
+    deleteCookie(c, NEXT_COOKIE, { path: '/' });
     if (!code || !state || !expected || state !== expected) {
       throw new HTTPException(400, { message: 'Invalid OAuth state' });
     }
@@ -140,7 +169,7 @@ export function githubRoutes(storage: Storage, config: StatusConfig): Hono<{ Var
     }
 
     setSessionCookie(c, await storage.auth.createSession(user.id), config);
-    return c.redirect('/home');
+    return c.redirect(next);
   });
 
   return app;

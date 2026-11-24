@@ -8821,6 +8821,17 @@
           "auth"
         ],
         "summary": "Begin the GitHub OAuth flow (redirects to GitHub)",
+        "description": "Optional `next`: a same-origin relative path the callback returns to after login (anything else is ignored).",
+        "parameters": [
+          {
+            "name": "next",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "302": {
             "description": "Redirect to GitHub authorize",
@@ -8851,7 +8862,7 @@
         "tags": [
           "auth"
         ],
-        "summary": "GitHub OAuth callback — establishes the session then redirects home",
+        "summary": "GitHub OAuth callback — establishes the session then redirects to `next` (default /home)",
         "parameters": [
           {
             "name": "code",
@@ -8872,7 +8883,7 @@
         ],
         "responses": {
           "302": {
-            "description": "Redirect to /home",
+            "description": "Redirect to the `next` given at start, or /home",
             "headers": {
               "Location": {
                 "schema": {
