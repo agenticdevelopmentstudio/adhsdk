@@ -28,6 +28,7 @@ const MAX_NEXT_COOKIE_CHARS = 3000;
  * `safeReturnTo` does) and only the normalized `pathname+search+hash` is returned:
  * dot segments that collapse to `//host` (`/x/..//evil`) are refused, and the
  * result is percent-encoded, so no raw non-ASCII byte reaches the Location header.
+ * Backend routes (`/api/...`) are refused too: only a page is a place to land.
  */
 export function safeNext(next: string | undefined | null): string | null {
   if (!next || next.length > 2048) return null;
@@ -40,6 +41,9 @@ export function safeNext(next: string | undefined | null): string | null {
     return null;
   }
   if (url.origin !== NEXT_RESOLVE_BASE || url.pathname.startsWith('//')) return null;
+  // The gate only bounces PAGE routes; an `/api/...` destination is a JSON body or,
+  // for /api/auth/github/start itself, a second OAuth round trip — never a page.
+  if (url.pathname === '/api' || url.pathname.startsWith('/api/')) return null;
   const path = url.pathname + url.search + url.hash;
   // The cookie stores it encodeURIComponent'd (up to 3x longer); a browser drops
   // a cookie over ~4KB without a word, and the login would land on /home.
