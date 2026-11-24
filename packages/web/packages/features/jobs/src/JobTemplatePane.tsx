@@ -59,8 +59,9 @@ export function JobTemplatePane({ ecosystemId, templateId }: JobTemplatePaneProp
   });
   if (template.error) return <JobsReadError error={template.error} step="read-template" what="this template" />;
   if (template.isPending) return <Loading />;
-  // Keyed by the edit time, so a saved or published template starts a fresh draft form.
-  return <TemplateEditor key={template.data.updatedAt} ecosystemId={ecosystemId} template={template.data} />;
+  // Keyed by the template, never by its edit time: this editor's own save and publish change that,
+  // and a remount on the refetch would drop the "Published version N" line and any edit made since.
+  return <TemplateEditor key={template.data.id} ecosystemId={ecosystemId} template={template.data} />;
 }
 
 /** A draft step with the key its editor is rendered under. */
