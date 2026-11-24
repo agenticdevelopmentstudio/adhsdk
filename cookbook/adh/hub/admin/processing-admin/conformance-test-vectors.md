@@ -1,6 +1,6 @@
 
-The Pool checkbox, the Dead jobs section and the two client calls are not written yet. These vectors
-are the tests the package's `__tests__/` MUST carry for them.
+The Pool checkbox, the Dead jobs section and the two client calls are written. These vectors are the
+tests the package carries for them, in `src/processing/processingAdmin.test.tsx`.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

@@ -2,7 +2,7 @@
 id: d3ba2e4e-bfce-4876-a05b-4ad7db88b34d
 title: "Processing Admin"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: draft
 language: en
 created: 2026-11-23
@@ -54,8 +54,9 @@ relabelled.
 - **worker-token-pool-checkbox**: The create dialog MUST offer a "Pool" checkbox, unchecked by default,
   whose description says that a pool token can claim AI steps of jobs from every product. The create
   MUST send `{ name, pool }`, with `pool` true only when the box is checked.
-- **worker-token-scope-shown**: The tokens list MUST show whether each token is a pool token, read from
-  the token's scopes (`ai-processing:pool`).
+- **worker-token-scope-shown**: The tokens list MUST show whether each token is a pool token ("Pool" or
+  "Worker"), read from the token's `pool` boolean, which the backend sets when the token carries
+  `ai-processing:pool`.
 - **worker-token-reveal-once**: The created token MUST be shown once in a read-only field with a copy
   button, and closing the reveal MUST ask "Close without copying?" first.
 - **worker-token-revoke-confirm**: Revoke MUST ask for confirmation and MUST say that every node using the
@@ -105,8 +106,8 @@ relabelled.
 
 ## Conformance Test Vectors
 
-The Pool checkbox, the Dead jobs section and the two client calls are not written yet. These vectors
-are the tests the package's `__tests__/` MUST carry for them.
+The Pool checkbox, the Dead jobs section and the two client calls are written. These vectors are the
+tests the package carries for them, in `src/processing/processingAdmin.test.tsx`.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -193,9 +194,10 @@ Not applicable: the panes contain no logging calls. Failures are shown in the sh
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/features/adh-admin/src/processing/WorkerTokens.tsx` | planned |
-| web | `packages/web/packages/features/adh-admin/src/panes/AiNodesPane.tsx` | planned |
-| web | `packages/web/packages/features/adh-admin/src/api/processing.ts` | planned |
+| web | `packages/web/packages/features/adh-admin/src/processing/WorkerTokens.tsx` | confirmed (1.0.1) |
+| web | `packages/web/packages/features/adh-admin/src/processing/DeadJobs.tsx` | confirmed (1.0.1) |
+| web | `packages/web/packages/features/adh-admin/src/panes/AiNodesPane.tsx` | confirmed (1.0.1) |
+| web | `packages/web/packages/features/adh-admin/src/api/processing.ts` | confirmed (1.0.1) |
 
 ## Design Decisions
 
@@ -218,15 +220,22 @@ error and attempts to decide to retry.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | pending | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | pending | Best Practices |
-| [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | pending | Access Patterns |
-| [adc.check.security.secure-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bb5dfc9b-c5b0-54fa-882f-007ae7dad0e9) | pending | Security |
-| [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | pending | Accessibility |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | passed | Access Patterns |
+| [adc.check.security.secure-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bb5dfc9b-c5b0-54fa-882f-007ae7dad0e9) | passed | Security |
+| [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | passed | Accessibility |
 
-Every check is `pending` until the phase 9 code is written.
-
+Each check was read against the phase 9 code:
+- `separation-of-concerns`: the calls and their query hooks sit in `api/processing.ts`; `WorkerTokens.tsx`
+  and `DeadJobs.tsx` only render.
+- `unit-test-coverage`: `partial`. `processingAdmin.test.tsx` carries vectors 001 to 008, written in
+  phase 9 without being run, so they are not yet known to pass.
+- `error-response-handling`: a failed dead-jobs read and a failed retry are both shown, and the row stays.
+- `secure-storage`: a minted token is shown once in the reveal and never written to storage.
+- `semantic-markup`: the Pool checkbox has the accessible name "Pool" and a described-by description.
 ## Change History
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-23 | Mike Fullerton | Code written: the pool flag is read from the token's pool boolean; vectors and compliance read against the code |
 | 1.0.0 | 2026-11-23 | Mike Fullerton | Initial creation: the Pool checkbox and the Dead jobs section for phase 9, written before the code |

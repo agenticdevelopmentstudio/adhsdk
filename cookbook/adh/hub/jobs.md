@@ -2,7 +2,7 @@
 id: 0bcb370d-a44f-48a8-a313-0266c2f86e51
 title: "Jobs"
 type: ingredient
-version: 1.1.0
+version: 1.2.0
 status: draft
 language: en
 created: 2026-11-23
@@ -40,8 +40,9 @@ approved-date: ""
 Jobs is the hub feature for scheduled and triggered work: AI steps, integration actions, webhooks,
 notifications and waits, run on the hub or on a machine the owner runs. This ingredient is the web
 package `@adh-sdk/jobs` and its data client, the `jobs` domain of `@adh-sdk/data` reached through the
-`./jobs` subpath. It was written in phase 9, before the code, as the shared design. The data client now exists
-(`packages/web/packages/data/src/jobs/`); the package does not yet.
+`./jobs` subpath. It was written in phase 9, before the code, as the shared design. Both now exist: the
+data client in `packages/web/packages/data/src/jobs/` and the package in
+`packages/web/packages/features/jobs/`.
 
 The package holds seven panes:
 
@@ -228,8 +229,10 @@ AI Settings feature ([adhsdk.ingredient.adh.hub.ai-settings](cookbook:5fdf4ce9-c
   `jobs` and the step that failed.
 - **switch-off-404**: A `404` from a `/jobs` route while the feature's switch is off MUST read as the feature
   being unavailable, not as a missing record.
-- **rail-host-dual-mode**: Each pane that owns a level MUST publish it into a rail host when one exists and
-  render its own hierarchical detail view when none does.
+- **host-navigation**: Each pane MUST render its own view and MUST NOT navigate on its own. It hands the
+  host the id to open through a callback (`onOpenJob`, `onOpenRun`, `onOpenTemplate`, `onOpenTemplates`,
+  `onDeleted`), and the host turns that into a route. Owner panes take an optional `workspace` slug and pass
+  it to every call.
 
 ### Registration outside the package
 
@@ -275,7 +278,7 @@ AI Settings feature ([adhsdk.ingredient.adh.hub.ai-settings](cookbook:5fdf4ce9-c
 ## Conformance Test Vectors
 
 These vectors come from the phase 9 design and are the tests the package's `__tests__/` and the data
-client's `jobs/__tests__/` MUST carry. The data client and its tests are written; the package is not yet.
+client's `jobs/__tests__/` MUST carry. The data client, the package and their tests are written.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -384,9 +387,10 @@ feature `jobs` and the step, such as `list`, `catalog`, `save`, `run`, `retry`, 
   the secret reveal. Collect the run stream in a `ViewModel` flow scoped to the screen, and show status as
   text in an `AssistChip`.
 - **React/Web**: The source platform. The package is a client component library built from the shared
-  UI blocks (hierarchical detail view, field groups, button bar, create dialog, rail host, editable
-  list) and the shared list resource hook. The topic sets sit in a plain-data module behind `./topics`.
-  The data client is a plain module of `authedJson` calls with an `EventSource` for the run stream.
+  UI components and blocks (field, dialog, alert modal, once-shown secret dialog, badge, error text).
+  Each pane reads and writes through TanStack Query, keyed by the data client's `jobsKeys`. The topic
+  sets sit in a plain-data module, `jobs-topics.ts`, behind `./topics`. The data client is a plain
+  module of `authedJson` calls with an `EventSource` for the run stream.
 - **AppKit / UIKit**: A split view controller with an `NSOutlineView` or `UITableView` of jobs. The status
   table is an `NSTableView`, and a sheet holds the secret reveal. Stream with a `URLSession` data task
   delegate and cancel it on `viewWillDisappear`.
@@ -398,8 +402,9 @@ feature `jobs` and the step, such as `list`, `catalog`, `save`, `run`, `retry`, 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/features/jobs/` | planned |
-| web | `packages/web/packages/data/src/jobs/` | unverified |
+| web | `packages/web/packages/data/src/jobs/` | confirmed (1.2.0) |
+| web | `packages/web/packages/features/jobs/` | confirmed (1.2.0) |
+| web | `packages/web/packages/ui/src/blocks/once-shown-secret-dialog.tsx` | confirmed (1.2.0) |
 
 ## Design Decisions
 
@@ -437,25 +442,28 @@ mappers read the snake_case, with no change to a caller.
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | pending | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | pending | Best Practices |
-| [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | pending | Access Patterns |
-| [adc.check.security.secure-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bb5dfc9b-c5b0-54fa-882f-007ae7dad0e9) | pending | Security |
-| [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | pending | Accessibility |
-| [adc.check.performance.caching-strategy](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3b773606-ab90-5e7d-8e96-093777dcf070) | pending | Performance |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | passed | Access Patterns |
+| [adc.check.security.secure-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bb5dfc9b-c5b0-54fa-882f-007ae7dad0e9) | passed | Security |
+| [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | passed | Accessibility |
+| [adc.check.performance.caching-strategy](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3b773606-ab90-5e7d-8e96-093777dcf070) | passed | Performance |
 
-Every check is `pending` because the package is not written yet. The requirements aim each one:
+Each check was read against the package and the data client:
 - `separation-of-concerns`: transport in the data client, mapping in `mappers.ts`, topics in their own
-  plain-data module.
-- `unit-test-coverage`: the vectors above.
-- `error-response-handling`: read-failure-shown, the refusal messages and switch-off-404.
-- `secure-storage`: once-shown-secrets.
-- `semantic-markup`: the native status table and status-text-not-color.
-- `caching-strategy`: one cached list resource per list.
-
+  plain-data module (`jobs-topics.ts`), and the shared pane pieces in `job-ui.tsx`.
+- `unit-test-coverage`: `partial`. The package's `__tests__/` carry the pane vectors, but they were
+  written in phase 9 without being run, so they are not yet known to pass.
+- `error-response-handling`: `JobsReadError` shows and reports a failed read, `refusalText` and
+  `describeStepProblem` show the refusal messages, and `isJobsOff` reads the switch-off 404.
+- `secure-storage`: an inbound secret and an environment token reach the page only through
+  `OnceShownSecretDialog`, held in component state and dropped when it closes.
+- `semantic-markup`: the status pane is a native `<table>`, and every status badge shows its status as text.
+- `caching-strategy`: one query key per list from `jobsKeys`, invalidated after each write.
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.0 | 2026-11-23 | Mike Fullerton | Package written: seven panes and the two topic sets; topics module is jobs-topics.ts; panes hand navigation to the host through callbacks (host-navigation replaces rail-host-dual-mode); compliance read against the code |
 | 1.1.0 | 2026-11-23 | Mike Fullerton | Data client written: unversioned /api/jobs wire restated by hand (call C18), run stream reconnect and stop, mappers fill nullable bags |
 | 1.0.0 | 2026-11-23 | Mike Fullerton | Initial creation: the Jobs package and its data client for phase 9, written before the code |

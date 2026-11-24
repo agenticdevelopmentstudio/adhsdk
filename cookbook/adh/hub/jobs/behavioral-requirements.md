@@ -152,8 +152,10 @@
   `jobs` and the step that failed.
 - **switch-off-404**: A `404` from a `/jobs` route while the feature's switch is off MUST read as the feature
   being unavailable, not as a missing record.
-- **rail-host-dual-mode**: Each pane that owns a level MUST publish it into a rail host when one exists and
-  render its own hierarchical detail view when none does.
+- **host-navigation**: Each pane MUST render its own view and MUST NOT navigate on its own. It hands the
+  host the id to open through a callback (`onOpenJob`, `onOpenRun`, `onOpenTemplate`, `onOpenTemplates`,
+  `onDeleted`), and the host turns that into a route. Owner panes take an optional `workspace` slug and pass
+  it to every call.
 
 ### Registration outside the package
 
