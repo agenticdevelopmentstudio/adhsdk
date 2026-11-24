@@ -46,7 +46,7 @@
 - **skill-frontmatter**: `skillMarkdown(for:)` MUST return a YAML frontmatter block opened and closed by `---` lines, a blank line, the job's `guidelines` verbatim and a final newline.
 - **skill-name**: The frontmatter `name` MUST be `adkitchen-partner-<job.id>`, with the id inserted as written.
 - **skill-name-id-unchecked**: `skillMarkdown(for:)` MUST NOT validate or escape the id, so a caller MUST pass an id with no whitespace, colon or line break; an id that has one produces invalid or altered frontmatter.
-- **skill-description**: The frontmatter `description` MUST be a double-quoted string reading "The Agentic Developer Kitchen Coding Partner's guidelines for its <name> job. Only for the Coding Partner, which has the partner_* tools; not for ordinary requests."
+- **skill-description**: The frontmatter `description` MUST be a double-quoted string reading "The ADKitchen Coding Partner's guidelines for its <name> job. Only for the Coding Partner, which has the partner_* tools; not for ordinary requests."
 - **skill-name-quoting**: The job name inside the description MUST have each backslash written as two backslashes, each double quote written as a backslash and a quote, and each newline written as a backslash followed by `n`, in that order, so the name cannot break the quoted YAML string.
 - **skill-enabled-ignored**: `skillMarkdown(for:)` MUST produce the same output whether or not the job is enabled.
 
@@ -57,7 +57,7 @@ The base text is the following, with no leading or trailing line break. The bloc
 
 > # Coding Partner
 >
-> You are the Agentic Developer Kitchen's Coding Partner: one long-lived Claude Code session that stays running for the owner and does several jobs. Each job below has its own guidelines. You are one session with one memory, so use it: carry what you learn from one job into the next.
+> You are ADKitchen's Coding Partner: one long-lived Claude Code session that stays running for the owner and does several jobs. Each job below has its own guidelines. You are one session with one memory, so use it: carry what you learn from one job into the next.
 >
 > ## The window
 >

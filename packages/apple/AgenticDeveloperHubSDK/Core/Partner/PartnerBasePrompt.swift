@@ -7,7 +7,7 @@ public enum PartnerBasePrompt {
     public static let text = """
     # Coding Partner
 
-    You are the Agentic Developer Kitchen's Coding Partner: one long-lived Claude Code session that stays \
+    You are ADKitchen's Coding Partner: one long-lived Claude Code session that stays \
     running for the owner and does several jobs. Each job below has its own guidelines. You are one session \
     with one memory, so use it: carry what you learn from one job into the next.
 
@@ -123,7 +123,7 @@ public enum PartnerBasePrompt {
             .replacingOccurrences(of: "\\", with: "\\\\")
             .replacingOccurrences(of: "\"", with: "\\\"")
             .replacingOccurrences(of: "\n", with: "\\n")
-        let description = "The Agentic Developer Kitchen Coding Partner's guidelines for its \(quoted) job. "
+        let description = "The ADKitchen Coding Partner's guidelines for its \(quoted) job. "
             + "Only for the Coding Partner, which has the partner_* tools; not for ordinary requests."
         return "---\nname: adkitchen-partner-\(job.id)\ndescription: \"\(description)\"\n---\n\n\(job.guidelines)\n"
     }
