@@ -294,6 +294,7 @@ export const RESERVED_HANDLE_WORDS: readonly string[] = [
   'feature-flags',
   'gamification',
   'invitations',
+  'jobs',
   'knowledgebases',
   'llm-providers',
   'members',

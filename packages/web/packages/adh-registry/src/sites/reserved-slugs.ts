@@ -63,6 +63,8 @@ const UNIVERSAL = [
   'contact',
   'legal',
   'status',
+  // Phase 9: the jobs feature's word, so no workspace or profile slug can take `/jobs`.
+  'jobs',
 ] as const
 
 export const RESERVED_SLUGS: Readonly<Record<string, readonly string[]>> = {

@@ -5,9 +5,10 @@ import { describe, expect, it } from "vitest";
 import { PRODUCT_ADMIN_TOPICS } from "@adh-sdk/product-admin/topics";
 import { SITE_ROUTES } from "../routes.generated";
 
-// The site's routes that are not rail pages: the root sends a person on to /users, and
-// /no-access is where a signed-in person without the admin role lands.
-const NOT_ON_THE_RAIL = new Set(["/", "/no-access"]);
+// The site's routes that are not rail pages: the root sends a person on to /users, /no-access is
+// where a signed-in person without the admin role lands, and /jobs/templates is reached from the
+// Jobs page (its own topic set, @adh-sdk/jobs' jobsProductAdminTopics), not from the rail.
+const NOT_ON_THE_RAIL = new Set(["/", "/no-access", "/jobs/templates"]);
 
 describe("the product-admin rail", () => {
   it("has one topic per page route of the product-admin site", () => {
@@ -27,5 +28,19 @@ describe("the product-admin rail", () => {
     for (const r of ["/support-grants", "/break-glass", "/support-access"]) {
       expect(SITE_ROUTES.admin).toContain(r);
     }
+  });
+
+  // site-registry-071: the two Jobs pages, and no Environments page.
+  it("has the Jobs pages in the product-admin share, sorted, with no environments", () => {
+    const share = SITE_ROUTES["product-admin"] ?? [];
+    expect(share).toContain("/jobs");
+    expect(share).toContain("/jobs/templates");
+    expect(share.some((r) => r.includes("environments"))).toBe(false);
+    expect([...share]).toEqual([...share].sort());
+  });
+
+  // site-registry-072: the operator's dead jobs are a section of AI Nodes, not a page.
+  it("has no /jobs page in the admin share", () => {
+    expect(SITE_ROUTES.admin ?? []).not.toContain("/jobs");
   });
 });
