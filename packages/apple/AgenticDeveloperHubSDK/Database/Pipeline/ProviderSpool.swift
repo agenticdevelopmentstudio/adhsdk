@@ -18,11 +18,14 @@ public struct SpooledRecord: Sendable, Equatable {
     public let id: Int64
     public let record: RawRecord
     public let attempts: Int
+    /// The reason the last attempt was charged under, nil before any was.
+    public let lastError: String?
 
-    public init(id: Int64, record: RawRecord, attempts: Int) {
+    public init(id: Int64, record: RawRecord, attempts: Int, lastError: String? = nil) {
         self.id = id
         self.record = record
         self.attempts = attempts
+        self.lastError = lastError
     }
 }
 
@@ -221,11 +224,12 @@ public final class ProviderSpool: @unchecked Sendable {
             guard keep > 0 else { return [] }
             let lastID: Int64 = sized[keep - 1]["id"]
             let rows = try Row.fetchAll(conn, sql: """
-                SELECT id, source_kind, dedup_key, received_at, payload, attempts
+                SELECT id, source_kind, dedup_key, received_at, payload, attempts, last_error
                 FROM spooled_record WHERE id <= ? ORDER BY id ASC LIMIT ?
                 """, arguments: [lastID, keep])
             return rows.map { row in
-                SpooledRecord(id: row["id"], record: makeRecord(row), attempts: row["attempts"])
+                SpooledRecord(id: row["id"], record: makeRecord(row), attempts: row["attempts"],
+                              lastError: row["last_error"])
             }
         }
     }

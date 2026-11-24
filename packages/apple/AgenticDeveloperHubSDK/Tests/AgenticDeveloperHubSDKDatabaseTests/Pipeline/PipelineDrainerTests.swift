@@ -676,11 +676,13 @@ final class PipelineDrainerTests: XCTestCase {
     func testTheWorkerHealsAQuarantineOnItsOwn() throws {
         let rig = try makeRig()
         try rig.spool.append([record("k0"), record("k1")])
-        let calls = LockedBox(0), taken = LockedBox(0)
-        // Down until both records are quarantined, then back.
+        let calls = LockedBox(0), taken = LockedBox(0), back = LockedBox(false)
+        // Down until both records are quarantined, then back for good: the heal
+        // empties the quarantine, so a live count would take the sink down again.
         let sink = ClosureSink { _, records in
             calls.update { $0 += 1 }
-            if ((try? rig.spool.quarantinedCount()) ?? 0) < 2 { throw SinkDown() }
+            if !back.value, ((try? rig.spool.quarantinedCount()) ?? 0) >= 2 { back.update { $0 = true } }
+            if !back.value { throw SinkDown() }
             taken.update { $0 += records.count }
         }
         let pipe = try drainer(rig, sinks: [sink])

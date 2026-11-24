@@ -167,6 +167,16 @@ public final class PipelineDrainer: @unchecked Sendable {
     /// archive and worth sending through again once the destination is back.
     public static let transientFailurePrefixes = [sinkFailurePrefix, storeFailurePrefix]
 
+    /// The reason to charge a record that failed with its whole batch. A record
+    /// already charged under `recordReason`'s prefix was refused while the
+    /// destination took its neighbours, so it keeps that reason: alone in its batch
+    /// on the next attempt, it would otherwise read as an outage and be healed.
+    private static func batchReason(
+        _ spooled: SpooledRecord, outage: String, record recordReason: String, recordPrefix: String
+    ) -> String {
+        spooled.lastError?.hasPrefix(recordPrefix) == true ? recordReason : outage
+    }
+
     private final class WeakObserver {
         weak var observer: (any PipelineObserver)?
         init(_ observer: any PipelineObserver) { self.observer = observer }
@@ -440,7 +450,12 @@ public final class PipelineDrainer: @unchecked Sendable {
                         sink, Array(zip(normalizedSpooled, zip(normalizedRecords, normalizedBatches))), &outcome)
                     : []
                 guard !kept.isEmpty else {
-                    for spooled in normalizedSpooled { try charge(spooled, reason: reason, &outcome) }
+                    let refusal = "\(Self.recordSinkFailurePrefix)\(type(of: sink)): \(error)"
+                    for spooled in normalizedSpooled {
+                        try charge(spooled, reason: Self.batchReason(
+                            spooled, outage: reason, record: refusal,
+                            recordPrefix: "\(Self.recordSinkFailurePrefix)\(type(of: sink)): "), &outcome)
+                    }
                     throw StepFailure(description: reason)
                 }
                 normalizedSpooled = kept.map(\.spooled)
@@ -463,7 +478,8 @@ public final class PipelineDrainer: @unchecked Sendable {
     /// the ones that are now stored. When some were stored, each record that still
     /// fails is charged under ``recordStoreFailurePrefix``: the store took its
     /// neighbours, so the record is at fault. When none was stored, the store is at
-    /// fault: every record is charged under ``storeFailurePrefix`` and the original
+    /// fault: every record is charged under ``storeFailurePrefix`` (except one already
+    /// refused on its own, which keeps ``recordStoreFailurePrefix``) and the original
     /// failure is thrown. A store outage met on the way fails the pass there,
     /// charging no record.
     private func isolateStoreFailure(
@@ -482,8 +498,14 @@ public final class PipelineDrainer: @unchecked Sendable {
                 refused.append((item, error))
             }
         }
-        let prefix = kept.isEmpty ? Self.storeFailurePrefix : Self.recordStoreFailurePrefix
-        for (item, error) in refused { try charge(item, reason: "\(prefix)\(error)", &outcome) }
+        for (item, error) in refused {
+            let reason = kept.isEmpty
+                ? Self.batchReason(item, outage: "\(Self.storeFailurePrefix)\(error)",
+                                   record: "\(Self.recordStoreFailurePrefix)\(error)",
+                                   recordPrefix: Self.recordStoreFailurePrefix)
+                : "\(Self.recordStoreFailurePrefix)\(error)"
+            try charge(item, reason: reason, &outcome)
+        }
         if kept.isEmpty { throw StepFailure(description: "\(Self.storeFailurePrefix)\(batchError)") }
         return kept
     }
