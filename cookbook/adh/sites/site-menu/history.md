@@ -9,3 +9,4 @@
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Matches its type's shape: required fields, title heading, and only the type's own sections. |
 | 1.1.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (siteMenuVectors.test.tsx, recents.test.ts, 11 of 12 vectors); unit-test-coverage now partial. Vectors T1, T3, T4, T5 and T6 rewritten to match the shipped trees. |
 | 1.2.0 | 2026-11-22 | Mike Fullerton | Rewritten from source: marketing and workspace trees, dispatcher, no Workspaces placeholder, Recents store, requirements and vectors re-derived; Reference Implementations removed. |
+| 1.3.0 | 2026-11-23 | Mike Fullerton | Phase 9: the jobs hub knob's menu icon (Workflow, key /jobs). |

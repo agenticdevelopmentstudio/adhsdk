@@ -3,7 +3,7 @@ Vectors marked with a test name are asserted in `features/product-admin/src/__te
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| product-admin-site-001 | topics-list | `PRODUCT_ADMIN_TOPICS` (test: "names the nine pages in rail order, ids unique") | Nine rows in the order above, the last `support` with `/support`, unique ids |
+| product-admin-site-001 | topics-list | `PRODUCT_ADMIN_TOPICS` (test: "names the ten pages in rail order, ids unique") | Ten rows in the order above, `jobs` with `/jobs` between `sets` and `totals`, the last `support` with `/support`, unique ids |
 | product-admin-site-002 | users-roster | The pane given a product, over a roster of customers (test: "lists the roster for the product it is given, with roles, storage and paused") | One row each, with roles, storage and the paused mark |
 | product-admin-site-003 | users-search-paging | Next, then Previous; then a search (tests: "pages forward by the cursor and back again", "searches from the first page") | The next page is read by the cursor, Previous returns to the first; a search reads from the first page |
 | product-admin-site-004 | users-confirm-writes | Pause chosen and confirmed; then chosen and cancelled (tests: "pauses only after the confirmation", "sends nothing when the confirmation is cancelled") | One pause request; then none |
@@ -25,3 +25,5 @@ Vectors marked with a test name are asserted in `features/product-admin/src/__te
 | product-admin-site-020 | support-page, support-step-up | The Support page for a product; a request refused as `step_up_required`, then a revoke refused the same way (test, for the request: "sends a step_up_required refusal through stepUp('/support')"; the revoke follows from the source) | `SupportGrantsPane` renders for the product; each refusal calls `stepUp('/support')`, which returns to `/support`, and no error is shown |
 | product-admin-site-021 | totals-pane | Totals carrying `jobsByStatus` of `{ failed: 2, done: 9 }`, then an empty map | A "Jobs" total of 11, then "Jobs done" 9 and "Jobs failed" 2; then "Jobs" 0 and no status count |
 | product-admin-site-022 | support-switch-off | The grants read answered 404 (test: "says support access is off when the grants read answers 404") | A note that support access is not available, no error and no request form |
+| product-admin-site-023 | jobs-pages | The `/jobs` and `/jobs/templates` pages for a product (derived from the phase 9 design; the site's e2e `jobs.spec.ts`) | `/jobs` mounts `JobStatusPane` and `/jobs/templates` mounts `JobTemplatesPane`, each for that product; the rail has one Jobs row |
+| product-admin-site-024 | jobs-status-no-content | The `/jobs` page over a product with a failed run | The run's status and error code show; no input, output or log is requested or shown |

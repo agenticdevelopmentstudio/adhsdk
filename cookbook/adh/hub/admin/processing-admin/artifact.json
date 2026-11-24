@@ -1,0 +1,59 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "d3ba2e4e-bfce-4876-a05b-4ad7db88b34d",
+    "title": "Processing Admin",
+    "type": "ingredient",
+    "version": "1.0.0",
+    "status": "draft",
+    "language": "en",
+    "created": "2026-11-23",
+    "modified": "2026-11-23",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "The operator's AI processing panes: worker tokens with the Pool checkbox, and the dead jobs list with Retry in AiNodesPane.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "hub",
+      "admin",
+      "processing",
+      "jobs",
+      "component",
+      "ui"
+    ],
+    "depends-on": [],
+    "related": [
+      "0bcb370d-a44f-48a8-a313-0266c2f86e51"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "2e75f2a93be2fa0f",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

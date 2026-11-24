@@ -1042,6 +1042,27 @@
       "path": "ui/containers/dismissible-overlay-view",
       "rdid": "adhsdk.ingredient.ui.containers.dismissible-overlay-view"
     },
+    "0bcb370d-a44f-48a8-a313-0266c2f86e51": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/web/packages/features/jobs/",
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/web/packages/data/src/jobs/",
+          "platform": "web"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "adh/hub/jobs",
+      "rdid": "adhsdk.ingredient.adh.hub.jobs"
+    },
     "0c199036-81c3-47c3-9e79-e4b8187ca69a": {
       "implementations": [
         {
@@ -19730,6 +19751,34 @@
       "kind": "ingredient",
       "path": "data/sync/offline-sync-client",
       "rdid": "adhsdk.ingredient.data.sync.offline-sync-client"
+    },
+    "d3ba2e4e-bfce-4876-a05b-4ad7db88b34d": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/web/packages/features/adh-admin/src/processing/WorkerTokens.tsx",
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/web/packages/features/adh-admin/src/panes/AiNodesPane.tsx",
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/web/packages/features/adh-admin/src/api/processing.ts",
+          "platform": "web"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "adh/hub/admin/processing-admin",
+      "rdid": "adhsdk.ingredient.adh.hub.admin.processing-admin"
     },
     "d3c2efb6-5ba6-4301-81d7-a25248b0992a": {
       "implementations": [

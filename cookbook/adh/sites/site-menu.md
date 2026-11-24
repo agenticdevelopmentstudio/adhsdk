@@ -2,11 +2,11 @@
 id: f2d56415-ac36-4a27-bee5-b447c4186513
 title: "SiteMenu"
 type: recipe
-version: 1.2.0
+version: 1.3.0
 status: review
 language: en
 created: 2026-07-05
-modified: 2026-11-22
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -137,6 +137,7 @@ Rows and links:
 - **icon-single-source**: A row's icon MUST resolve through `menuIcon(key)` and MUST NOT be hard-coded at a render site.
 - **icon-missing**: A key with no mapped icon MUST leave the icon slot empty.
 - **icon-segment-fold**: Every hub workspace segment that is a site's implementation MUST take that site's icon unless a hand-written key for the route already exists.
+- **icon-jobs**: The hub knob `jobs` (phase 9) MUST have a hand-written key, `'/jobs'`, beside `'/sets'`, mapped to lucide's `Workflow` glyph, so its Recents row is never blank.
 - **navigate-same-origin**: Choosing a row whose href begins with a single `/` MUST navigate in-app through the router.
 - **navigate-cross-site**: Choosing any other row MUST navigate with a full-page load.
 - **navigate-no-target**: Choosing a row with no href, or with the placeholder href `#`, MUST do nothing.
@@ -275,6 +276,7 @@ Tests live in `packages/web/packages/adh/src/header/__tests__/`. A vector with n
 | T30 | tree-admin-append, admin-block-shape, admin-is-not-access | `WorkspaceSiteMenu` with `userIsAdmin` true, false and undefined (derived from `SiteMenu`; no test) | An Admin flyout ending in Fleet Monitor for true; the same menu for false and undefined |
 | T31 | site-row-href, route-row-href, site-row-sso | Hub, signed in, in workspace `acme`, `hubOffersFeature` returning true for `research`; then a satellite with `resolveHref` supplied (useSiteMenu.test, "in-hub reroute"; the Contact result is derived from `routeHref`, no test) | The Research row goes to `/acme/research`; Contact stays `/contact`, because `contact` is not a hub workspace segment; satellite rows are wrapped by `resolveHref` |
 | T32 | icon-segment-fold, icon-missing | Resolve `/research`, a segment with no hand-written key, and an unknown key (derived from `menu-icons`; no test) | `/research` takes the research site's `FlaskConical`; the unknown key returns undefined and leaves the slot empty |
+| T33 | icon-jobs, icon-single-source | Resolve `/jobs` through `menuIcon` (derived from `menu-icons`; the hub's recents-recorder test walks every hub workspace segment) | The `Workflow` glyph; not undefined |
 
 ## Edge Cases
 
@@ -402,3 +404,4 @@ separation-of-concerns passes because logic sits in `SiteMenu`, the trees in `fl
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Matches its type's shape: required fields, title heading, and only the type's own sections. |
 | 1.1.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (siteMenuVectors.test.tsx, recents.test.ts, 11 of 12 vectors); unit-test-coverage now partial. Vectors T1, T3, T4, T5 and T6 rewritten to match the shipped trees. |
 | 1.2.0 | 2026-11-22 | Mike Fullerton | Rewritten from source: marketing and workspace trees, dispatcher, no Workspaces placeholder, Recents store, requirements and vectors re-derived; Reference Implementations removed. |
+| 1.3.0 | 2026-11-23 | Mike Fullerton | Phase 9: the jobs hub knob's menu icon (Workflow, key /jobs). |

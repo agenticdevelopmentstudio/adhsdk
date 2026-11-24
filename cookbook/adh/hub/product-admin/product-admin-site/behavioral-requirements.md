@@ -1,7 +1,7 @@
 
 ### Pages
 
-- **topics-list**: `PRODUCT_ADMIN_TOPICS` MUST list nine pages in this order, with these ids and paths: users (`/users`), requests, pending, invites, roles, signup-list, sets, totals and support (`/support`, labeled "Support"), each with a label and an `href` of `/` plus its id. The ids are unique.
+- **topics-list**: `PRODUCT_ADMIN_TOPICS` MUST list ten pages in this order, with these ids and paths: users (`/users`), requests, pending, invites, roles, signup-list, sets, jobs (`/jobs`, labeled "Jobs"), totals and support (`/support`, labeled "Support"), each with a label and an `href` of `/` plus its id. The ids are unique.
 - **topics-importable-server-side**: the topic list MUST be importable without the client barrel, through `@adh-sdk/product-admin/topics`.
 
 ### Users pane
@@ -23,6 +23,11 @@
 - **support-page**: the Support page MUST render `SupportGrantsPane` ([adhsdk.ingredient.adh.hub.support.support-panes](cookbook:2eff6ca4-5479-44b3-8636-04e455009a10)) for the product it is given, at `/support`, and MUST be listed in `PRODUCT_ADMIN_TOPICS` (see [topics-list](#requirements/topics-list)).
 - **support-step-up**: when the Support page's request for access, or its revoke of a grant, is refused as `step_up_required`, the page MUST send the admin through `stepUp('/support')` of the product admin session ([adhsdk.ingredient.data.services.auth.auth-client](cookbook:3ea9329e-5acc-4c43-b5ce-bb8c50570104)) and bring them back to `/support`, with no error shown; the sign-in parameters of that second pass are the authentication client's.
 - **support-switch-off**: when the backend answers the grants read with 404 (consented access is off), the page MUST say that support access is not available instead of showing an error, and MUST NOT show the request form.
+
+### Jobs pages
+
+- **jobs-pages**: the Jobs row (phase 9) MUST open `/jobs`, which renders `JobStatusPane` ([adhsdk.ingredient.adh.hub.jobs](cookbook:0bcb370d-a44f-48a8-a313-0266c2f86e51)) for the product it is given; `/jobs/templates` MUST render `JobTemplatesPane`. Both are reached from the Jobs row's own topics, `jobsProductAdminTopics`, so the rail keeps one Jobs row and does not list `/jobs/templates`.
+- **jobs-status-no-content**: the `/jobs` page MUST show only run status, never a run's inputs, outputs or logs; reading those needs a support grant (see [support-page](#requirements/support-page)).
 
 ### Which pages move
 
