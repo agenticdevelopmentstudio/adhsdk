@@ -594,6 +594,36 @@ def test_remove_quits_and_deletes_the_installed_bundle(tmp_path):
     assert b.signals == [(222, signal.SIGTERM)]
 
 
+def test_remove_leaves_the_bundle_whole_when_it_cannot_be_moved(tmp_path):
+    b = Built(tmp_path)
+    b.make_old()
+
+    def rename(src, dst):
+        raise OSError("Operation not permitted")
+
+    assert ins.remove_installed_app(b.apps / "Thing.app", pids=lambda app: [], kill=b.kill,
+                                    sleep=lambda s: None, monotonic=lambda: 0.0,
+                                    rename=rename, say=b.out.append) == 1
+    assert b.marker() == "old"
+    assert "could not remove" in "\n".join(b.out)
+
+
+def test_remove_reports_a_delete_that_fails_partway(tmp_path, monkeypatch):
+    b = Built(tmp_path)
+    b.make_old()
+
+    def rmtree(path, *a, **k):
+        raise PermissionError("Permission denied")
+
+    monkeypatch.setattr(ins.shutil, "rmtree", rmtree)
+    assert ins.remove_installed_app(b.apps / "Thing.app", pids=lambda app: [], kill=b.kill,
+                                    sleep=lambda s: None, monotonic=lambda: 0.0, pid=5,
+                                    say=b.out.append) == 1
+    assert not (b.apps / "Thing.app").exists()
+    assert (b.apps / ".Thing.app.removing-5").is_dir()
+    assert "sudo rm -rf" in "\n".join(b.out)
+
+
 def test_remove_with_nothing_installed_succeeds(tmp_path):
     b = Built(tmp_path)
     assert ins.remove_installed_app(b.apps / "Thing.app", pids=lambda app: [],

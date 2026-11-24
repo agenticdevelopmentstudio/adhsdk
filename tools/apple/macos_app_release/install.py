@@ -227,7 +227,8 @@ def remove_installed_app(dest: Path, *,
                          kill: Callable[[int, int], None] = os.kill,
                          sleep: Callable[[float], None] = time.sleep,
                          monotonic: Callable[[], float] = time.monotonic,
-                         uid: int | None = None,
+                         rename: Callable[[Path, Path], object] = os.rename,
+                         uid: int | None = None, pid: int | None = None,
                          say: Callable[[str], None] = print) -> int:
     """Quit what runs from `dest` and delete the bundle: the reverse of
     `install_built_app`. Nothing installed is a success. Only the bundle goes;
@@ -243,7 +244,21 @@ def remove_installed_app(dest: Path, *,
     if left:
         say(f"error: {dest} is still running (pids {', '.join(map(str, left))}); not removed.")
         return 1
-    shutil.rmtree(dest)
+    # Renamed out of the way first, so the bundle leaves its place whole: a delete
+    # that fails partway then strands a hidden copy, never a half-deleted app.
+    pid = os.getpid() if pid is None else pid
+    doomed = dest.parent / f".{dest.name}.removing-{pid}"
+    try:
+        rename(dest, doomed)
+    except OSError as exc:
+        say(f"error: could not remove {dest}: {exc}")
+        return 1
+    try:
+        shutil.rmtree(doomed)
+    except OSError as exc:
+        say(f"removed {dest}, but could not delete everything in {doomed}: {exc}")
+        say(f"  delete it with: sudo rm -rf \"{doomed}\"")
+        return 1
     say(f"removed {dest}")
     return 0
 
