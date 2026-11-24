@@ -13,7 +13,9 @@
   bare host, never on nothing. A site definition with neither a workspace route nor a
   home route is a valid, fully supported shape (an operations console such as `admin`,
   `status`, or `bitbag`), so the absence of both is not itself an inconsistency to
-  flag. A site marked `nativeApp` carries a true testing-deploy flag
+  flag. Nor is a home route without a workspace route (`myagenticdevteam`, a
+  coming-soon placeholder whose only signed-in surface is a gated `/home`): a home
+  route never implies a workspace route. A site marked `nativeApp` carries a true testing-deploy flag
   yet is excluded from every return-origin list, so the flags
   alone never decide membership.
 - **Concurrent access** (not applicable): This registry is synchronous and stateless.

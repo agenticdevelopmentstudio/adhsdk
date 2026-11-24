@@ -133,8 +133,10 @@ export interface SiteDef {
    *
    *  ⚠️ This is NOT derivable from `hasHome`, and must not be re-derived from it: `bitbag`,
    *  `status` and `admin` are workspace-less, while `hub-help` and `personaregistry` have
-   *  neither — a `/home` and a `[workspace]` are separate facts about a site's route tree, and
-   *  keying one off the other would send a workspace switch to a 404. The values are stamped
+   *  neither — and `myagenticdevteam` is the counter-example that matters most: it HAS a
+   *  `/home` (`hasHome: true`) and NO workspace route, so "has a home ⇒ has a workspace" is
+   *  false on a real site. A `/home` and a `[workspace]` are separate facts about a site's
+   *  route tree, and keying one off the other would send a workspace switch to a 404. The values are stamped
    *  from the actual route tree and held to it by `registry.test.ts` ("workspaceRoute matches
    *  the route tree").
    *
