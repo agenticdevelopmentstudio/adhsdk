@@ -2,11 +2,11 @@
 id: 45b6d470-4e58-4035-b1c7-e65dbe7716b9
 title: "Panel Scroll View"
 type: ingredient
-version: 1.3.0
+version: 1.3.1
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-11-18
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -20,7 +20,7 @@ tags:
   - scroll-view
 depends-on: []
 related:
-  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3741ed5e-0b67-48f2-b227-36ae152c0f4b
 references: []
 approved-by: ""
 approved-date: ""
@@ -444,6 +444,7 @@ Separation-of-concerns is passed: `PanelScrollView` is only the scroll host, pin
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.1 | 2026-11-23 | Mike Fullerton | Repoint the Platform Design Languages guideline link to its surviving adc artifact after adc folded the duplicate copy. |
 | 1.3.0 | 2026-11-18 | Mike Fullerton | Content width is a value fed from the viewport at layout, preferred at just below the default-high strength, never a constraint to the viewport: a required equal-width constraint let a wide row (a popup beside two buttons) widen the viewport and move the split's divider. Wider content now scrolls sideways. |
 | 1.2.2 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added Compliance rows for separation-of-concerns and unit-test-coverage |

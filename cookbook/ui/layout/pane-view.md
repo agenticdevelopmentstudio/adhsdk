@@ -2,11 +2,11 @@
 id: 2b4d0f95-dbdf-48a9-8579-a3e5b7d488fe
 title: "Pane View"
 type: ingredient
-version: 1.2.2
+version: 1.2.3
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -27,7 +27,7 @@ related:
   - 4d75a371-181e-4d80-a16b-022d37dc0d48
   - 9c1e6915-44ec-435e-a159-57b80b455698
   - f7fbabba-4b48-4b6b-a99c-b888cedec056
-  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3741ed5e-0b67-48f2-b227-36ae152c0f4b
 references: []
 approved-by: ""
 approved-date: ""
@@ -359,3 +359,4 @@ Statuses rest on `PaneViewController.swift` and `PaneSpacingOverride.swift` as b
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/layout/. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added separation-of-concerns and unit-test-coverage compliance rows. Added the confines-to-ui-thread requirement and vector. |
 | 1.2.2 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own adhsdk://recipes/ domains; the adhsdk://recipes/ form named nothing. |
+| 1.2.3 | 2026-11-23 | Mike Fullerton | Repoint the Platform Design Languages guideline link to its surviving adc artifact after adc folded the duplicate copy. |

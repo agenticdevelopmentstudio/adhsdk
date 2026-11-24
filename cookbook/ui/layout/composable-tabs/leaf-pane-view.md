@@ -2,11 +2,11 @@
 id: 4d75a371-181e-4d80-a16b-022d37dc0d48
 title: "Composable Tabs Leaf Pane"
 type: ingredient
-version: 1.3.0
+version: 1.3.1
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-11-14
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -24,7 +24,7 @@ depends-on:
 related:
   - bfc2dcde-d905-4923-bff2-577c85f17d5f
   - 08bfb299-851b-4b01-a84a-6a2a13e07c12
-  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3741ed5e-0b67-48f2-b227-36ae152c0f4b
 references: []
 approved-by: ""
 approved-date: ""
@@ -563,6 +563,7 @@ Accessibility statuses rest on the explicit `accessibilityDescription` labels al
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.3.1 | 2026-11-23 | Mike Fullerton | Repoint the Platform Design Languages guideline link to its surviving adc artifact after adc folded the duplicate copy. |
 | 1.3.0 | 2026-11-14 | Mike Fullerton | Pane outline follows the split's outline setting (outline-follows-the-owner, vector ctpvc-054); active-pane-cue-is-color-only and ctpvc-052 hold while outlines are on. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added separation-of-concerns and unit-test-coverage compliance rows. Added the confines-to-ui-thread requirement and vector. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/layout/composable-tabs/. |

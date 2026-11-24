@@ -2,11 +2,11 @@
 id: 432e8d4b-43c3-49fd-b481-036a759e7c55
 title: "Settings Panel"
 type: ingredient
-version: 1.3.0
+version: 1.3.1
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-11-19
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -22,7 +22,7 @@ depends-on:
   - 4b1a3eb0-0a8a-4059-b2ac-824013072bd5
 related:
   - 775f1761-f757-41d0-b51b-354a410a11f4
-  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3741ed5e-0b67-48f2-b227-36ae152c0f4b
 references: []
 approved-by: ""
 approved-date: ""
@@ -448,3 +448,4 @@ does not apply to this file and is omitted.
 | 1.2.2 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
 | 1.2.3 | 2026-10-04 | Mike Fullerton | Swift-only constructs in normative sections restated as platform-neutral behavior; the Apple mechanism is in Platform Notes. |
 | 1.3.0 | 2026-11-19 | Mike Fullerton | Descriptor carries an observable optional subtitle |
+| 1.3.1 | 2026-11-23 | Mike Fullerton | Repoint the Platform Design Languages guideline link to its surviving adc artifact after adc folded the duplicate copy. |

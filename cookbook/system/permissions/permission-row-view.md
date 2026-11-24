@@ -2,11 +2,11 @@
 id: c3269cfa-a8ec-4ba9-bc68-9cdf98e7e1fc
 title: "Permission Row View"
 type: ingredient
-version: 1.3.1
+version: 1.3.2
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -19,7 +19,7 @@ tags:
   - permissions
   - async
 depends-on:
-  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3741ed5e-0b67-48f2-b227-36ae152c0f4b
 related: []
 references: []
 approved-by: ""
@@ -181,7 +181,7 @@ reactivation, and after an action completes.
   guidance does not apply here. The action button's compact sizing is the
   platform's own system-determined click target, not measured or floored
   by this component.
-- **contrast**: Title, description and status text sit over the card's near-transparent white overlay (3%/6% alpha), composited over whatever background the host window supplies. The component performs no contrast check of its own, and the effective background is not fixed, so whether the combination meets 4.5:1 (3:1 for large text) per [adc.guideline.cookbook.ui.platform-design-languages](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2) is unverified.
+- **contrast**: Title, description and status text sit over the card's near-transparent white overlay (3%/6% alpha), composited over whatever background the host window supplies. The component performs no contrast check of its own, and the effective background is not fixed, so whether the combination meets 4.5:1 (3:1 for large text) per [adc.guideline.cookbook.ui.platform-design-languages](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3741ed5e-0b67-48f2-b227-36ae152c0f4b) is unverified.
 
 ## Conformance Test Vectors
 
@@ -506,3 +506,4 @@ activation (see **keyboard-activates-action**).
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to system/permissions/. |
 | 1.3.0 | 2026-10-04 | Mike Fullerton | Resolved contrast marker as current behavior plus pending decision; cited required Compliance checks |
 | 1.3.1 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
+| 1.3.2 | 2026-11-23 | Mike Fullerton | Repoint the Platform Design Languages guideline link to its surviving adc artifact after adc folded the duplicate copy. |

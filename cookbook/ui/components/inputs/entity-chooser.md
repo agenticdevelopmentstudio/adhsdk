@@ -2,11 +2,11 @@
 id: 79f7ed30-3193-49bc-856b-d7dd01303baa
 title: "EntityChooser"
 type: ingredient
-version: 1.2.2
+version: 1.2.3
 status: review
 language: en
 created: 2026-06-26
-modified: 2026-11-14
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -26,7 +26,7 @@ depends-on:
 related:
   - 43c55f5e-d9b3-430b-9026-d0af510fda15
   - d9ad192e-a642-46a2-8b25-b8aac9d9f441
-  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3741ed5e-0b67-48f2-b227-36ae152c0f4b
 references: []
 approved-by: ""
 approved-date: ""
@@ -291,6 +291,7 @@ Not applicable: `EntityChooser` emits no structured log events. Logging of user 
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.3 | 2026-11-23 | Mike Fullerton | Repoint the Platform Design Languages guideline link to its surviving adc artifact after adc folded the duplicate copy. |
 | 1.2.2 | 2026-11-14 | Mike Fullerton | Adds close-on-accept-single, keep-open-on-accept-multi, chip and min-touch-target requirements with vectors, states the duplicate equality rule, keeps the host-mode value as the single source of truth, lists inherited localization defaults and the Remove-label gap, and corrects the WinUI 3 flyout and UIKit presentation notes. |
 | 1.2.1 | 2026-09-25 | Mike Fullerton | Reshaped Design Decisions into `**Decision**`/`**Rationale**`/`**Approved**` line triples, marking each decision's approval status as pending. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename Behavioral Requirements to subject-only kebab-case and narrow forward-allow-create's scope; add show-trigger-value-single, trigger-label-only-multi, and host-mode-renders-trigger-only requirements; resolve the "browser stays open" contradiction between Overview/Design Decisions and the test vectors; add/renumber Conformance Test Vectors for value replacement, the null-trigger case, the multi trigger-label case, and host mode; add an EntitySelectionChips configuration table; rewrite Localization to list the hardcoded default strings; correct the Compliance table to canonical links, add missing accessibility checks, and mark touch-target-size partial; fix WinUI 3 (single native approach, real Symbol names) and Compose (InputChip) Platform Notes and drop the off-platform watchOS aside; move the guideline reference from references to related and set references to []; declare the RemovableChip dependency; remove list-chooser's duplicate related entry; fix the States/Localization empty-hint string mismatch; and remove the app-specific example from Overview. |

@@ -4,11 +4,11 @@
     "id": "c5a74f9a-d38f-4724-ad1d-f6460ebc2bb0",
     "title": "Log View",
     "type": "ingredient",
-    "version": "1.3.1",
+    "version": "1.3.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-23",
-    "modified": "2026-10-04",
+    "modified": "2026-11-23",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -23,13 +23,13 @@
     ],
     "depends-on": [],
     "related": [
-      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2"
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3741ed5e-0b67-48f2-b227-36ae152c0f4b"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "b94482acc67dbce6",
+  "synced": "f61828c11946297a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

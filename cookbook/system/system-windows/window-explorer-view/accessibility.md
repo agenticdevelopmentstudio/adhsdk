@@ -31,5 +31,5 @@
   theme palette, except the context badge's stored-color-or-fallback-blue
   color, which is not a palette color; contrast is a design-system-level
   concern outside this view's own decisions, per
-  [adc.guideline.cookbook.ui.platform-design-languages](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2).
+  [adc.guideline.cookbook.ui.platform-design-languages](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3741ed5e-0b67-48f2-b227-36ae152c0f4b).
 

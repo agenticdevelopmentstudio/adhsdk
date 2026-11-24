@@ -4,11 +4,11 @@
     "id": "45b6d470-4e58-4035-b1c7-e65dbe7716b9",
     "title": "Panel Scroll View",
     "type": "ingredient",
-    "version": "1.3.0",
+    "version": "1.3.1",
     "status": "review",
     "language": "en",
     "created": "2026-09-23",
-    "modified": "2026-11-18",
+    "modified": "2026-11-23",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -24,13 +24,13 @@
     ],
     "depends-on": [],
     "related": [
-      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2"
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3741ed5e-0b67-48f2-b227-36ae152c0f4b"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "358bdc32d8d1192c",
+  "synced": "a94168d0e5fd3206",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

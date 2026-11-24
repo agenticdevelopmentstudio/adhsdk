@@ -2,11 +2,11 @@
 id: b307116d-3ab8-422a-b031-885710e11e70
 title: "File Tree View"
 type: ingredient
-version: 1.2.3
+version: 1.2.4
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -20,7 +20,7 @@ tags:
 depends-on: []
 related:
   - ab6d7655-9476-4318-8c36-f431686e2d23
-  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3741ed5e-0b67-48f2-b227-36ae152c0f4b
 references:
   - https://developer.apple.com/documentation/appkit/nsoutlineview
   - https://developer.apple.com/design/human-interface-guidelines/lists-and-tables
@@ -790,3 +790,4 @@ Localization above).
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added compliance rows for the required checks judged from the source and test targets. |
 | 1.2.2 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
 | 1.2.3 | 2026-10-04 | Mike Fullerton | Inverted prohibitions (none/neither/no X MUST) restated as MUST NOT. |
+| 1.2.4 | 2026-11-23 | Mike Fullerton | Repoint the Platform Design Languages guideline link to its surviving adc artifact after adc folded the duplicate copy. |

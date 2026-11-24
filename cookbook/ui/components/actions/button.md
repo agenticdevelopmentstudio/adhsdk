@@ -2,11 +2,11 @@
 id: f3c25236-d72f-4a7b-839a-b7f335b3acd0
 title: "Button"
 type: ingredient
-version: 1.4.2
+version: 1.4.3
 status: review
 language: en
 created: 2026-06-26
-modified: 2026-11-14
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -22,7 +22,7 @@ tags:
 depends-on:
   - f483dfb7-d60e-4b12-8b17-2eb150b550db
 related:
-  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3741ed5e-0b67-48f2-b227-36ae152c0f4b
 references: []
 approved-by: ""
 approved-date: ""
@@ -165,7 +165,7 @@ press correctly clears when the pointer leaves the button while it is still held
   target on its own. A surface MUST opt in to a larger floor by setting
   `--adh-button-min-height` and/or `--adh-button-min-width` (both default
   `0px`) on an ancestor when the context requires it (per
-  [adc.guideline.cookbook.ui.platform-design-languages](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2)).
+  [adc.guideline.cookbook.ui.platform-design-languages](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3741ed5e-0b67-48f2-b227-36ae152c0f4b)).
 
 ## Conformance Test Vectors
 
@@ -392,3 +392,4 @@ Statuses rest on the source as documented above: `keyboard-activates` and the na
 | 1.4.0 | 2026-09-22 | Mike Fullerton | Lint pass: moved the `references` entry to `related`; rewrote Compliance as a link/status/category table against the real catalog; reformatted Design Decisions into Decision/Rationale/Approved triples and relocated the pointer-tracking provenance caveat inline above Behavioral Requirements; renamed `should-preserve-consumer-classname-precedence` to `consumer-classname-precedence` everywhere it's cited; added a size-to-utility table and a per-variant hover/active token table; made T18's expectation a concrete class-list assertion and added test vectors for a non-icon min-width floor, `:active`-absence, and sm/xs icon scaling; named `button.tsx` as the source of the shipr's-dialogs citation and dropped the uncitable "~40-site" figure; documented the `adh`/`apt` token-prefix mismatch as a Design Decision. |
 | 1.4.1 | 2026-09-25 | Mike Fullerton | Linked to button-pressable.md as pointer-contract owner; provenance note no longer a stale hedge. |
 | 1.4.2 | 2026-11-14 | Mike Fullerton | Replaced the copied pointer-tracking requirements with a citation of button-pressable, added named requirements and vectors T23-T26 for the disabled, explicit-size SVG, zero-floor and window-pointercancel cases, spelled out the invalid-state tokens, rewrote T20, documented Reduce Motion and the runtime result of an unknown variant, and said ingredient instead of recipe. |
+| 1.4.3 | 2026-11-23 | Mike Fullerton | Repoint the Platform Design Languages guideline link to its surviving adc artifact after adc folded the duplicate copy. |

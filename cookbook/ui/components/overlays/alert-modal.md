@@ -2,11 +2,11 @@
 id: e26e765d-2caa-40f8-a668-661ed2b0632c
 title: "AlertModal"
 type: ingredient
-version: 1.1.2
+version: 1.1.3
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-11-14
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -125,7 +125,7 @@ disables keyboard shortcuts.
 - The tone icon is decorative: it is rendered with `aria-hidden` and never substitutes for a text label.
 - The alert-mode busy spinner exposes `role="status"` and `aria-label="Working…"`; confirm-mode busy is forwarded to `DialogActions`, which applies the identical `role="status"` / `aria-label="Working…"` treatment ([adhsdk.ingredient.ui.components.overlays.dialog-actions](cookbook:f679a77e-04f7-4e43-b898-6d78a637a760)).
 - Both footer buttons are the shared `Button` component, which renders a real, focusable `<button>` — keyboard activation (Space/Enter) is native ([adhsdk.ingredient.ui.components.actions.button](cookbook:f3c25236-d72f-4a7b-839a-b7f335b3acd0)).
-- Minimum touch/click target size, minimum contrast ratio, and other platform-specific accessibility requirements are inherited from the `Button` component and the shared design-token stylesheet; see [adhsdk.ingredient.ui.components.actions.button](cookbook:f3c25236-d72f-4a7b-839a-b7f335b3acd0) and the WCAG 2.1 AA reference in [adc.guideline.cookbook.ui.platform-design-languages](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2).
+- Minimum touch/click target size, minimum contrast ratio, and other platform-specific accessibility requirements are inherited from the `Button` component and the shared design-token stylesheet; see [adhsdk.ingredient.ui.components.actions.button](cookbook:f3c25236-d72f-4a7b-839a-b7f335b3acd0) and the WCAG 2.1 AA reference in [adc.guideline.cookbook.ui.platform-design-languages](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3741ed5e-0b67-48f2-b227-36ae152c0f4b).
 
 ## Conformance Test Vectors
 
@@ -292,6 +292,7 @@ Statuses rest on: `alert-modal.tsx`'s extensive Enter/Escape/pointer requirement
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.3 | 2026-11-23 | Mike Fullerton | Repoint the Platform Design Languages guideline link to its surviving adc artifact after adc folded the duplicate copy. |
 | 1.1.2 | 2026-11-14 | Mike Fullerton | Clarified pointer dismissal, tone default and busy-label requirements, added tone and busy test vectors, trimmed the summary, and corrected WinUI, reduced-motion and terminology text. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Renamed pointer-dismissal requirement to route-close-button-regardless-of-keyboard-policy; corrected backdrop-never-dismisses behavior and test vectors. Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; reformatted Design Decisions to the Decision/Rationale/Approved triple; resolved the Escape double-fire contradiction between Edge Cases and Design Decisions; added `default-busy-label-working` and `tolerate-missing-oncancel` requirements with test vectors; added missing test vectors for the `initialFocus` default branch and the busy-only `showClose` branch; clarified explicit-keyboard-map key-matching semantics; corrected the WinUI 3 dismissal guidance; fixed an unbalanced backtick in Platform Notes; trimmed `tags` to five; added `references`; rewrote Compliance with linked catalog checks and legal statuses. |

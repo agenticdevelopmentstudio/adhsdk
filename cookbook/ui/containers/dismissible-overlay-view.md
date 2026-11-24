@@ -2,11 +2,11 @@
 id: 0bc93127-4078-4bc6-a250-04dde181788b
 title: "Dismissible Overlay View"
 type: ingredient
-version: 1.3.0
+version: 1.3.1
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -20,7 +20,7 @@ tags:
   - dismissible
 depends-on: []
 related:
-  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3741ed5e-0b67-48f2-b227-36ae152c0f4b
 references:
   - https://developer.apple.com/design/human-interface-guidelines/motion
 approved-by: ""
@@ -564,6 +564,7 @@ view chooses itself.
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.3.1 | 2026-11-23 | Mike Fullerton | Repoint the Platform Design Languages guideline link to its surviving adc artifact after adc folded the duplicate copy. |
 | 1.3.0 | 2026-10-04 | Mike Fullerton | Resolved the keyboard-focus-containment NEEDS REVIEW marker as current behavior (Tab focus is not trapped) with a pending design decision; added separation-of-concerns and unit-test-coverage compliance rows. Added the confines-to-ui-thread requirement and vector. Corrected unit-test-coverage to partial: the overlay's dismissal gestures are tested through its subclass. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/containers/. |
 | 1.1.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

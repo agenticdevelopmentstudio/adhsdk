@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.4.1 | 2026-11-23 | Mike Fullerton | Repoint the Platform Design Languages guideline link to its surviving adc artifact after adc folded the duplicate copy. |
 | 1.4.0 | 2026-11-18 | Mike Fullerton | The nested-detail floor counts every nested split at every depth (a split inside a split inside the window), and a nested split's layout change re-floors its enclosing split, so selecting a deeply nested section never pushes the root divider. |
 | 1.3.0 | 2026-11-15 | Mike Fullerton | Hosted panels get a settings.panel.<slug> accessibility identifier and group role; panels can be selected by title or slug. |
 | 1.2.2 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |

@@ -2,11 +2,11 @@
 id: 4205c688-865a-4d74-890d-f803ee66fdcb
 title: "Document Editor"
 type: ingredient
-version: 2.1.0
+version: 2.1.1
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-11-16
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -24,7 +24,7 @@ depends-on:
 related:
   - c2417a5c-953b-458e-856b-2c4f7e3a6fde
   - 9b1b54d5-e514-479f-b9f9-0a03cf4ebbc9
-  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3741ed5e-0b67-48f2-b227-36ae152c0f4b
 references: []
 approved-by: ""
 approved-date: ""
@@ -318,3 +318,4 @@ The `screen-reader-support` status is partial: the reset button's and each toggl
 | 1.2.2 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
 | 2.0.0 | 2026-11-15 | Mike Fullerton | Recent-documents menu between back and forward; navigation-bar-spans-the-pane, navigation-row-height, back-forward-is-outlined and markdown-opens-on-single-preview; the breadcrumb takes the 28-point navigation row's height inside the navigation bar (breadcrumb-fixed-height, breadcrumb-above-content, content-spans-container-width, devc-028 and devc-029 updated). |
 | 2.1.0 | 2026-11-16 | Mike Fullerton | The Markdown editor's tabs follow the global tab position's primary edge. |
+| 2.1.1 | 2026-11-23 | Mike Fullerton | Repoint the Platform Design Languages guideline link to its surviving adc artifact after adc folded the duplicate copy. |

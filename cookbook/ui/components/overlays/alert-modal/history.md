@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.3 | 2026-11-23 | Mike Fullerton | Repoint the Platform Design Languages guideline link to its surviving adc artifact after adc folded the duplicate copy. |
 | 1.1.2 | 2026-11-14 | Mike Fullerton | Clarified pointer dismissal, tone default and busy-label requirements, added tone and busy test vectors, trimmed the summary, and corrected WinUI, reduced-motion and terminology text. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Renamed pointer-dismissal requirement to route-close-button-regardless-of-keyboard-policy; corrected backdrop-never-dismisses behavior and test vectors. Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; reformatted Design Decisions to the Decision/Rationale/Approved triple; resolved the Escape double-fire contradiction between Edge Cases and Design Decisions; added `default-busy-label-working` and `tolerate-missing-oncancel` requirements with test vectors; added missing test vectors for the `initialFocus` default branch and the busy-only `showClose` branch; clarified explicit-keyboard-map key-matching semantics; corrected the WinUI 3 dismissal guidance; fixed an unbalanced backtick in Platform Notes; trimmed `tags` to five; added `references`; rewrote Compliance with linked catalog checks and legal statuses. |

@@ -2,11 +2,11 @@
 id: 8aee173a-25e4-443e-a9ab-d629b58817e1
 title: "Window Explorer View"
 type: ingredient
-version: 1.2.2
+version: 1.2.3
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-11-15
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -221,7 +221,7 @@ resulting set of selected window ids via a binding.
   theme palette, except the context badge's stored-color-or-fallback-blue
   color, which is not a palette color; contrast is a design-system-level
   concern outside this view's own decisions, per
-  [adc.guideline.cookbook.ui.platform-design-languages](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2).
+  [adc.guideline.cookbook.ui.platform-design-languages](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3741ed5e-0b67-48f2-b227-36ae152c0f4b).
 
 ## Conformance Test Vectors
 
@@ -354,7 +354,7 @@ instead.
 | Option | Behavior |
 |--------|----------|
 | Reduce Motion | Not applicable: no custom animated transition (movement, scaling, sliding, zooming, or pulsing) is implemented anywhere in this file; the only motion is the system-rendered indeterminate progress spinner, which this view does not implement or control. |
-| Increase Contrast | Not applicable at this layer for most colors: every color other than the context badge's fallback blue is sourced from the shared theme palette; contrast handling for those is a design-system-level concern this view does not decide, per [adc.guideline.cookbook.ui.platform-design-languages](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2). The context badge's stored-color-or-fallback-blue (see **window-context-badge**) is the one exception: it is a fixed system color outside the theme, so Increase Contrast has no effect on it. |
+| Increase Contrast | Not applicable at this layer for most colors: every color other than the context badge's fallback blue is sourced from the shared theme palette; contrast handling for those is a design-system-level concern this view does not decide, per [adc.guideline.cookbook.ui.platform-design-languages](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3741ed5e-0b67-48f2-b227-36ae152c0f4b). The context badge's stored-color-or-fallback-blue (see **window-context-badge**) is the one exception: it is a fixed system color outside the theme, so Increase Contrast has no effect on it. |
 | Differentiate Without Color | Handled: the context badge pairs its color with the context's name as text, not color alone; the Accessibility banner pairs its warning tint with an exclamation-triangle icon and explanatory text; and every selection state is shown by the checkbox glyph itself, not by color. |
 
 ## Feature Flags
@@ -527,6 +527,7 @@ only currently-running window data needed for display, filtered by
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.3 | 2026-11-23 | Mike Fullerton | Repoint the Platform Design Languages guideline link to its surviving adc artifact after adc folded the duplicate copy. |
 | 1.2.2 | 2026-11-15 | Mike Fullerton | Conformance test file added (WindowExplorerViewConformanceTests.swift, 0 of 34 vectors testable, all 34 skipped with a reason: view-internal logic with no seam); unit-test-coverage stays failed. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Cited separation-of-concerns and unit-test-coverage in Compliance |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to system/system-windows/. |

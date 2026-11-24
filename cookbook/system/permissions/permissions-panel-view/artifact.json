@@ -4,11 +4,11 @@
     "id": "07388a5c-901d-4cf3-b818-bf52c180be08",
     "title": "Permissions Panel View",
     "type": "ingredient",
-    "version": "1.2.2",
+    "version": "1.2.3",
     "status": "review",
     "language": "en",
     "created": "2026-09-23",
-    "modified": "2026-10-04",
+    "modified": "2026-11-23",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -25,13 +25,13 @@
       "c3269cfa-a8ec-4ba9-bc68-9cdf98e7e1fc"
     ],
     "related": [
-      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2"
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3741ed5e-0b67-48f2-b227-36ae152c0f4b"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "f7ba0ba633268734",
+  "synced": "b488947257c3d5e7",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

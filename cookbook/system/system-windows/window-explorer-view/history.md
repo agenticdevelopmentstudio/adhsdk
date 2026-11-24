@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.3 | 2026-11-23 | Mike Fullerton | Repoint the Platform Design Languages guideline link to its surviving adc artifact after adc folded the duplicate copy. |
 | 1.2.2 | 2026-11-15 | Mike Fullerton | Conformance test file added (WindowExplorerViewConformanceTests.swift, 0 of 34 vectors testable, all 34 skipped with a reason: view-internal logic with no seam); unit-test-coverage stays failed. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Cited separation-of-concerns and unit-test-coverage in Compliance |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to system/system-windows/. |

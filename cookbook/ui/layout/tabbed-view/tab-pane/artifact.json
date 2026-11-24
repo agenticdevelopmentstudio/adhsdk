@@ -4,11 +4,11 @@
     "id": "a30725ca-fa2f-4a04-8cb0-8beddf264a0a",
     "title": "Tab Pane",
     "type": "ingredient",
-    "version": "1.2.2",
+    "version": "1.2.3",
     "status": "review",
     "language": "en",
     "created": "2026-09-23",
-    "modified": "2026-10-04",
+    "modified": "2026-11-23",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -26,7 +26,7 @@
     "depends-on": [],
     "related": [
       "d1257c76-fb28-47a5-bc2b-d4fb1ef87b53",
-      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2"
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3741ed5e-0b67-48f2-b227-36ae152c0f4b"
     ],
     "references": [
       "https://developer.apple.com/design/human-interface-guidelines",
@@ -36,7 +36,7 @@
     "approved-date": ""
   },
   "names_hosts": "Test vectors use literal agent and model labels (`Claude`, `Fable 5.1`) as display data.",
-  "synced": "2e63726a1c66006b",
+  "synced": "584d27493baf3ffa",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

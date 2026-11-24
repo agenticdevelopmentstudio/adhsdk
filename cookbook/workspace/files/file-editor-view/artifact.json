@@ -4,11 +4,11 @@
     "id": "9b1b54d5-e514-479f-b9f9-0a03cf4ebbc9",
     "title": "File Editor View",
     "type": "ingredient",
-    "version": "1.2.2",
+    "version": "1.2.3",
     "status": "review",
     "language": "en",
     "created": "2026-09-23",
-    "modified": "2026-10-04",
+    "modified": "2026-11-23",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -25,13 +25,13 @@
     "depends-on": [],
     "related": [
       "4205c688-865a-4d74-890d-f803ee66fdcb",
-      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2"
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3741ed5e-0b67-48f2-b227-36ae152c0f4b"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "fe32b8a6ab9fd3a7",
+  "synced": "f95577fb726c99b0",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

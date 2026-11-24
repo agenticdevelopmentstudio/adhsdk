@@ -2,11 +2,11 @@
 id: d5aba939-471d-48cd-9a9c-888ac92adf38
 title: "Disclosure Card View"
 type: ingredient
-version: 1.4.1
+version: 1.4.2
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-11-15
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -20,7 +20,7 @@ tags:
   - collapsible
 depends-on: []
 related:
-  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3741ed5e-0b67-48f2-b227-36ae152c0f4b
 references: []
 approved-by: ""
 approved-date: ""
@@ -846,3 +846,4 @@ localization key (see Localization).
 | 1.3.0 | 2026-10-01 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/containers/. |
 | 1.4.0 | 2026-10-04 | Mike Fullerton | Resolved the minimum-contrast-ratio NEEDS REVIEW marker as current behavior (no contrast check; theme colors as resolved) with a pending design decision; added separation-of-concerns and unit-test-coverage compliance rows. Corrected the unit-test-coverage rationale to credit the title status symbol and badge tests; added the confines-to-ui-thread requirement and vector. |
 | 1.4.1 | 2026-11-15 | Mike Fullerton | Conformance tests added (DisclosureCardTests.swift; 49 of 49 vectors, 051 skipped); unit-test-coverage now partial. |
+| 1.4.2 | 2026-11-23 | Mike Fullerton | Repoint the Platform Design Languages guideline link to its surviving adc artifact after adc folded the duplicate copy. |

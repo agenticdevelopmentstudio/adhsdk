@@ -8,3 +8,4 @@
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/controls/. |
 | 1.3.0 | 2026-10-04 | Mike Fullerton | Resolved the minimum-contrast-ratio NEEDS REVIEW marker as current behavior (no contrast check) with a vector and a pending decision; added the unit-test-coverage compliance row. Added the confines-to-ui-thread requirement and vector. |
 | 1.3.1 | 2026-11-15 | Mike Fullerton | Conformance tests added (SpacingControlConformanceTests in UI/SpacingTests.swift, 23 of 28 vectors); unit-test-coverage stays partial (012, 013, 014, 026, 028 skipped; 024 and 027 colours partial). |
+| 1.3.2 | 2026-11-23 | Mike Fullerton | Repoint the Platform Design Languages guideline link to its surviving adc artifact after adc folded the duplicate copy. |

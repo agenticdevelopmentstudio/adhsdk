@@ -2,11 +2,11 @@
 id: 775f1761-f757-41d0-b51b-354a410a11f4
 title: "Group View"
 type: ingredient
-version: 1.3.0
+version: 1.3.1
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-11-15
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -22,7 +22,7 @@ depends-on: []
 related:
   - 537cf2a7-6be6-4a09-9a6c-8f8ecc6012da
   - f3d7adbb-ece4-4b00-97af-f7e3db9d5999
-  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3741ed5e-0b67-48f2-b227-36ae152c0f4b
 references:
   - https://developer.apple.com/design/human-interface-guidelines/lists-and-tables
   - https://developer.apple.com/documentation/appkit/nsstackview
@@ -553,6 +553,7 @@ Separation-of-concerns is passed: `GroupView` owns only the card layout (a title
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.3.1 | 2026-11-23 | Mike Fullerton | Repoint the Platform Design Languages guideline link to its surviving adc artifact after adc folded the duplicate copy. |
 | 1.3.0 | 2026-11-15 | Mike Fullerton | Rows name their interactive controls settings.<slug of title>, then .2, .3; a control's own identifier is kept |
 | 1.2.2 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added Compliance rows for separation-of-concerns and unit-test-coverage |

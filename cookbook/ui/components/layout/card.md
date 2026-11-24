@@ -2,11 +2,11 @@
 id: ea565474-df7a-42bd-9613-5dd0cd861911
 title: "Card"
 type: ingredient
-version: 1.2.4
+version: 1.2.5
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-11-14
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -21,7 +21,7 @@ tags:
   - ui
 depends-on: []
 related:
-  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3741ed5e-0b67-48f2-b227-36ae152c0f4b
   - 01947259-4883-44e1-a047-6b4e463cb422
 references: []
 approved-by: ""
@@ -212,6 +212,7 @@ The source sets no explicit ARIA role or heading semantics for the UI Card famil
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.5 | 2026-11-23 | Mike Fullerton | Repoint the Platform Design Languages guideline link to its surviving adc artifact after adc folded the duplicate copy. |
 | 1.2.4 | 2026-11-14 | Mike Fullerton | Added card, header and footer layout requirements with vectors, corrected merge-classname-prop to caller-wins with an override vector, folded always-renders-default-div into render-div-root, renamed title-font-weight to title-typography, trimmed Appearance duplication, recorded a heading-semantics decision for native ports, and added footer and header layout to the platform notes. |
 | 1.2.3 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.2.2 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

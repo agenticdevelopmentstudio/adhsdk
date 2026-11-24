@@ -17,5 +17,5 @@
   target on its own. A surface MUST opt in to a larger floor by setting
   `--adh-button-min-height` and/or `--adh-button-min-width` (both default
   `0px`) on an ancestor when the context requires it (per
-  [adc.guideline.cookbook.ui.platform-design-languages](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2)).
+  [adc.guideline.cookbook.ui.platform-design-languages](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3741ed5e-0b67-48f2-b227-36ae152c0f4b)).
 

@@ -2,11 +2,11 @@
 id: f064de5a-b117-4147-96a9-c1ed11d5c976
 title: "Spacing Control"
 type: ingredient
-version: 1.3.1
+version: 1.3.2
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-11-15
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -23,7 +23,7 @@ depends-on: []
 related:
   - 4c528e38-b70a-4ed3-bedc-9009292ad908
   - 92d66361-a16d-4c35-a0d3-4c1c8bbd5f52
-  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3741ed5e-0b67-48f2-b227-36ae152c0f4b
   - 64825f85-8b4d-4406-befc-aa08ce55cc8b
 references: []
 approved-by: ""
@@ -685,3 +685,4 @@ localization mechanism (see Localization).
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/controls/. |
 | 1.3.0 | 2026-10-04 | Mike Fullerton | Resolved the minimum-contrast-ratio NEEDS REVIEW marker as current behavior (no contrast check) with a vector and a pending decision; added the unit-test-coverage compliance row. Added the confines-to-ui-thread requirement and vector. |
 | 1.3.1 | 2026-11-15 | Mike Fullerton | Conformance tests added (SpacingControlConformanceTests in UI/SpacingTests.swift, 23 of 28 vectors); unit-test-coverage stays partial (012, 013, 014, 026, 028 skipped; 024 and 027 colours partial). |
+| 1.3.2 | 2026-11-23 | Mike Fullerton | Repoint the Platform Design Languages guideline link to its surviving adc artifact after adc folded the duplicate copy. |

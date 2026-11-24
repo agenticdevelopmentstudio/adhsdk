@@ -2,11 +2,11 @@
 id: 1cecd319-1cc2-40a5-8ef0-56267eb78b89
 title: "Session Activity Icon View"
 type: ingredient
-version: 1.3.1
+version: 1.3.2
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-11-15
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -19,7 +19,7 @@ tags:
   - status-indicator
 depends-on: []
 related:
-  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3741ed5e-0b67-48f2-b227-36ae152c0f4b
 references: []
 approved-by: ""
 approved-date: ""
@@ -532,3 +532,4 @@ literals with no localization key (see Localization).
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ai/agent-sessions/. |
 | 1.3.0 | 2026-10-04 | Mike Fullerton | Resolved the contrast NEEDS REVIEW marker as current behavior plus a pending Design Decision; added separation-of-concerns and unit-test-coverage compliance. |
 | 1.3.1 | 2026-11-15 | Mike Fullerton | Conformance tests added (SessionWatcherActivityIconViewTests.swift, 20 of 23 vectors); unit-test-coverage now partial. |
+| 1.3.2 | 2026-11-23 | Mike Fullerton | Repoint the Platform Design Languages guideline link to its surviving adc artifact after adc folded the duplicate copy. |

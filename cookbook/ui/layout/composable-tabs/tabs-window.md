@@ -2,11 +2,11 @@
 id: 55a394e6-9934-404b-941d-25bebbf71378
 title: "Composable Tabs Window"
 type: ingredient
-version: 1.5.0
+version: 1.5.1
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-11-17
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -285,7 +285,7 @@ address directly.
 - Color/contrast: chrome colors are read from the shared theme palette;
   contrast is a design-system-level concern outside this window's own
   decisions, per
-  [adc.guideline.cookbook.ui.platform-design-languages](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2).
+  [adc.guideline.cookbook.ui.platform-design-languages](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3741ed5e-0b67-48f2-b227-36ae152c0f4b).
 
 ## Conformance Test Vectors
 
@@ -651,3 +651,4 @@ hardcoded-literal inventory in Localization.
 | 1.3.0 | 2026-11-14 | Mike Fullerton | Document windows: title-document-kinds and title-breadcrumb-document-file, then title-sits-in-the-toolbar, title-follows-the-focused-document and pane-chrome-is-optional, then footer-is-optional; the Document-kind title and title-breadcrumb rules apply only while no focused document is supplied. |
 | 1.4.0 | 2026-11-16 | Mike Fullerton | Extra toolbar items: the window's own items after the shelf's and before the flexible space, a targeted button sending to the object its WindowToolbarTarget names |
 | 1.5.0 | 2026-11-17 | Mike Fullerton | Tab edges are an explicit per-project Tab Bars choice: no stored edges means follow the app-wide tab positions live, an empty enabled_edges value means no choice, and the shared tab configuration carries only the pane arrangement. |
+| 1.5.1 | 2026-11-23 | Mike Fullerton | Repoint the Platform Design Languages guideline link to its surviving adc artifact after adc folded the duplicate copy. |

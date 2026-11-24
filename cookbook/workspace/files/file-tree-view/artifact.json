@@ -4,11 +4,11 @@
     "id": "b307116d-3ab8-422a-b031-885710e11e70",
     "title": "File Tree View",
     "type": "ingredient",
-    "version": "1.2.3",
+    "version": "1.2.4",
     "status": "review",
     "language": "en",
     "created": "2026-09-23",
-    "modified": "2026-10-04",
+    "modified": "2026-11-23",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -24,7 +24,7 @@
     "depends-on": [],
     "related": [
       "ab6d7655-9476-4318-8c36-f431686e2d23",
-      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2"
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3741ed5e-0b67-48f2-b227-36ae152c0f4b"
     ],
     "references": [
       "https://developer.apple.com/documentation/appkit/nsoutlineview",
@@ -34,7 +34,7 @@
     "approved-date": ""
   },
   "names_hosts": "`.claude` is a literal directory name the view gives a dedicated icon.",
-  "synced": "5dca12bc3ae03ddf",
+  "synced": "f3884c7720f3b772",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

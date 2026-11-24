@@ -2,11 +2,11 @@
 id: d906afe1-a621-42f1-87c5-c71ec9d43c1e
 title: "Tab Pane View"
 type: ingredient
-version: 1.3.0
+version: 1.3.1
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-11-15
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -22,7 +22,7 @@ tags:
 depends-on: []
 related:
   - d1257c76-fb28-47a5-bc2b-d4fb1ef87b53
-  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3741ed5e-0b67-48f2-b227-36ae152c0f4b
 references:
   - https://developer.apple.com/design/human-interface-guidelines/
 approved-by: ""
@@ -634,3 +634,4 @@ Separation-of-concerns is passed: `TabPaneView` only draws the card (background,
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added Compliance rows for separation-of-concerns and unit-test-coverage |
 | 1.2.2 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
 | 1.3.0 | 2026-11-15 | Mike Fullerton | The close button has the tooltip Close Tab, and its accessibility description is Close Tab to match |
+| 1.3.1 | 2026-11-23 | Mike Fullerton | Repoint the Platform Design Languages guideline link to its surviving adc artifact after adc folded the duplicate copy. |

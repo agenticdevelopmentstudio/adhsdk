@@ -2,11 +2,11 @@
 id: a11f34ff-116c-47d6-bffa-edd0799cbcb2
 title: "Settings Split View"
 type: ingredient
-version: 1.4.0
+version: 1.4.1
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-11-18
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -27,7 +27,7 @@ depends-on:
 related:
   - ba8d9517-2528-4ae9-bc52-16046d68b126
   - 7cac2263-94fe-47ec-ab1d-6cf5a12baf14
-  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2
+  - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3741ed5e-0b67-48f2-b227-36ae152c0f4b
 references:
   - https://developer.apple.com/design/human-interface-guidelines/split-views
 approved-by: ""
@@ -728,6 +728,7 @@ regardless of the app's language.
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.4.1 | 2026-11-23 | Mike Fullerton | Repoint the Platform Design Languages guideline link to its surviving adc artifact after adc folded the duplicate copy. |
 | 1.4.0 | 2026-11-18 | Mike Fullerton | The nested-detail floor counts every nested split at every depth (a split inside a split inside the window), and a nested split's layout change re-floors its enclosing split, so selecting a deeply nested section never pushes the root divider. |
 | 1.3.0 | 2026-11-15 | Mike Fullerton | Hosted panels get a settings.panel.<slug> accessibility identifier and group role; panels can be selected by title or slug. |
 | 1.2.2 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |

@@ -4,11 +4,11 @@
     "id": "d906afe1-a621-42f1-87c5-c71ec9d43c1e",
     "title": "Tab Pane View",
     "type": "ingredient",
-    "version": "1.3.0",
+    "version": "1.3.1",
     "status": "review",
     "language": "en",
     "created": "2026-09-23",
-    "modified": "2026-11-15",
+    "modified": "2026-11-23",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -26,7 +26,7 @@
     "depends-on": [],
     "related": [
       "d1257c76-fb28-47a5-bc2b-d4fb1ef87b53",
-      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2"
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3741ed5e-0b67-48f2-b227-36ae152c0f4b"
     ],
     "references": [
       "https://developer.apple.com/design/human-interface-guidelines/"
@@ -34,7 +34,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "1f59d03feb18cef8",
+  "synced": "c945b8e949baafd1",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

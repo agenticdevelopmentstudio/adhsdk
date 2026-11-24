@@ -4,11 +4,11 @@
     "id": "a11f34ff-116c-47d6-bffa-edd0799cbcb2",
     "title": "Settings Split View",
     "type": "ingredient",
-    "version": "1.4.0",
+    "version": "1.4.1",
     "status": "review",
     "language": "en",
     "created": "2026-09-23",
-    "modified": "2026-11-18",
+    "modified": "2026-11-23",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -32,7 +32,7 @@
     "related": [
       "ba8d9517-2528-4ae9-bc52-16046d68b126",
       "7cac2263-94fe-47ec-ab1d-6cf5a12baf14",
-      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2"
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3741ed5e-0b67-48f2-b227-36ae152c0f4b"
     ],
     "references": [
       "https://developer.apple.com/design/human-interface-guidelines/split-views"
@@ -40,7 +40,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "5775d8ba948dbaaf",
+  "synced": "52d5ee10e032aae4",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

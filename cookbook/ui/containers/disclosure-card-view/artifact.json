@@ -4,11 +4,11 @@
     "id": "d5aba939-471d-48cd-9a9c-888ac92adf38",
     "title": "Disclosure Card View",
     "type": "ingredient",
-    "version": "1.4.1",
+    "version": "1.4.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-23",
-    "modified": "2026-11-15",
+    "modified": "2026-11-23",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -24,13 +24,13 @@
     ],
     "depends-on": [],
     "related": [
-      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2"
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3741ed5e-0b67-48f2-b227-36ae152c0f4b"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "95059437fa2a3375",
+  "synced": "2df75e752a0cc1e3",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

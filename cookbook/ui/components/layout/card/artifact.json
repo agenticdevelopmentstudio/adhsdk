@@ -4,11 +4,11 @@
     "id": "ea565474-df7a-42bd-9613-5dd0cd861911",
     "title": "Card",
     "type": "ingredient",
-    "version": "1.2.4",
+    "version": "1.2.5",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-11-14",
+    "modified": "2026-11-23",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -25,14 +25,14 @@
     ],
     "depends-on": [],
     "related": [
-      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3741ed5e-0b67-48f2-b227-36ae152c0f4b",
       "01947259-4883-44e1-a047-6b4e463cb422"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "d84fe05439f387ee",
+  "synced": "1a48a8d19dc5e31b",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
