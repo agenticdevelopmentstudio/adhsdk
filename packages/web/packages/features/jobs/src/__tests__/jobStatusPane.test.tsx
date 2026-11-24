@@ -78,4 +78,14 @@ describe("JobStatusPane (vector jobs-009)", () => {
     await waitFor(() => expect(status.list).toHaveBeenLastCalledWith(ECO, { before: "cursor-1" }));
     for (const fn of Object.values(forbidden)) expect(fn).not.toHaveBeenCalled();
   });
+
+  it("reports a failed Load more under the rows, keeping them (vector jobs-017)", async () => {
+    renderWithQuery(<JobStatusPane ecosystemId={ECO} />);
+    await screen.findByText("Morning digest");
+    status.list.mockRejectedValueOnce(new Error("network down"));
+    fireEvent.click(screen.getByRole("button", { name: "Load more" }));
+    await waitFor(() => expect(status.list).toHaveBeenLastCalledWith(ECO, { before: "cursor-1" }));
+    expect(await screen.findByText(/more runs/)).toBeTruthy();
+    expect(screen.getByText("Morning digest")).toBeTruthy();
+  });
 });

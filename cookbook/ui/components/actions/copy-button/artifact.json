@@ -4,11 +4,11 @@
     "id": "ecaba9e2-de10-45ac-80d8-398e9ab02626",
     "title": "CopyButton",
     "type": "ingredient",
-    "version": "1.2.2",
+    "version": "1.3.0",
     "status": "review",
     "language": "en",
     "created": "2026-07-03",
-    "modified": "2026-11-14",
+    "modified": "2026-11-23",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "88fbfe5401fdde91",
+  "synced": "725d21878e503a22",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

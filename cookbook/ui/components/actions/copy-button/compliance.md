@@ -23,6 +23,6 @@ grounds both internationalization failures. `separation-of-concerns` passes:
 `copy-button.tsx` holds only the presentational `Button` wiring, while the
 clipboard-write-and-flash logic lives entirely in the generic `useClipboard`
 hook, which carries no knowledge of this component. `unit-test-coverage`
-passes — `copyButton.test.tsx` in the `ui` package covers all eleven
-conformance vectors (T1-T11).
+passes — `copyButton.test.tsx` in the `ui` package covers all thirteen
+conformance vectors (T1-T13).
 

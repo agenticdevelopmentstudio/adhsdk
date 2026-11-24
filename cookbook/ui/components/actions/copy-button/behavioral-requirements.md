@@ -7,6 +7,7 @@
 - **sets-copied-title**: On a successful copy, the component MUST set its `title` to `"Copied!"`.
 - **reverts-after-timeout**: The component MUST revert the check, the green tint, and the title back to the idle state 1200 ms after a successful copy.
 - **swallows-copy-failure**: When the clipboard write rejects (insecure context or denied permission), the component MUST NOT enter the success state and MUST NOT throw.
+- **reports-successful-copy**: When `onCopied` is given, the component MUST call it once after each clipboard write that succeeds, and MUST NOT call it when the write rejects or when `getText()` returns `""`.
 - **labels-from-prop**: The component MUST expose `label` as its accessible name via `aria-label`.
 - **decorative-icon**: The component MUST mark its glyph `aria-hidden` so the accessible name comes solely from `label`.
 - **forwards-classname**: The component MUST merge a consumer `className` onto the button element via `cn()`.

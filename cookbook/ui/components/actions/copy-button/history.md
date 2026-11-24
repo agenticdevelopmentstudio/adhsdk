@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.3.0 | 2026-11-23 | Mike Fullerton | Added the onCopied callback and the reports-successful-copy requirement (vectors T12, T13): a host learns the text reached the clipboard only when the write succeeded |
 | 1.2.2 | 2026-11-14 | Mike Fullerton | Rewrote Privacy for the system-wide clipboard, recorded the 24px touch target, hard-coded title and missing live region as accepted-debt decisions, added the classname-overrides-default-size requirement with vector T11, corrected T9, and tidied the overview, deep-linking and platform notes (current Compose clipboard API, React/Web bullet trimmed). |
 | 1.2.1 | 2026-09-25 | Mike Fullerton | Restored on-main 1.0.0 Change History row (authorized); added missing separation-of-concerns/unit-test-coverage Compliance rows. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: correct Platform Notes clipboard-permission/API claims and reorder to SwiftUI/Compose/React-Web/AppKit-UIKit/WinUI-3; rewrite Localization to acknowledge the hard-coded, user-visible "Copied!" title and cite the symbol instead of a line number; reformat Design Decisions into Decision/Rationale/Approved triplets; rebuild Compliance as catalog-linked checks (passed/partial/failed) with a grounding sentence; add the idle-title-from-label requirement and T9/T10 test vectors, and clarify skips-empty-text for whitespace-only text; note why useClipboard has no depends-on entry; rename the 1.0.0 summary to "Initial ingredient". |

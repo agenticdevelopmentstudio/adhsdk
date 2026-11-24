@@ -2,7 +2,7 @@
 id: 0bcb370d-a44f-48a8-a313-0266c2f86e51
 title: "Jobs"
 type: ingredient
-version: 1.2.0
+version: 1.3.0
 status: draft
 language: en
 created: 2026-11-23
@@ -161,6 +161,10 @@ AI Settings feature ([adhsdk.ingredient.adh.hub.ai-settings](cookbook:5fdf4ce9-c
   notifications and its runs.
 - **job-inputs-declared**: The inputs editor MUST offer exactly the inputs that the job's template version
   declares. A job with inline steps edits its steps instead.
+- **job-inputs-pinned-version**: The catalog holds only each template's latest version, so the editor MUST
+  take a template job's inputs and defaults from the catalog only when the catalog's version is the one the
+  job is pinned to. Otherwise it MUST show the pinned version and the saved inputs read-only, and a save
+  MUST NOT send `inputs`.
 - **job-environment-choice**: The environment choice MUST be "Hub" (no environment) or one of the
   owner's environments. A save the backend refuses with `step_needs_hub` or `step_needs_machine` MUST
   show which step needs which.
@@ -171,7 +175,13 @@ AI Settings feature ([adhsdk.ingredient.adh.hub.ai-settings](cookbook:5fdf4ce9-c
   copy button. Closing it before copying MUST ask for confirmation, as a worker token's reveal does.
 - **job-run-now**: The pane MUST offer "Run now", which starts a manual run and opens the returned run.
 - **job-notifications**: The notifications editor MUST choose when to notify (failed, succeeded) and
-  through which channels (email, SMS, hub). The default is failures by email.
+  through which channels (email, SMS, hub). It MUST show what the engine resolves: the job's own notify,
+  else its pinned template version's defaults, else failures by email. A save MUST send `options.notify`
+  only when the owner changed a notification choice, so saving another setting never replaces the
+  version's defaults.
+- **job-runs-list**: The job's runs MUST be listed newest first with a "Load more" that passes `before`.
+  Every loaded page MUST be held in one paged query, so a refresh (after "Run now") reads again from the
+  newest run and a new run appears at the top.
 - **job-delete-archives**: Delete MUST ask for confirmation and MUST say that the job is archived and
   its runs are kept.
 
@@ -179,7 +189,9 @@ AI Settings feature ([adhsdk.ingredient.adh.hub.ai-settings](cookbook:5fdf4ce9-c
 
 - **run-steps**: `JobRunPane` MUST list the run's step runs in order, each with its name, kind and status
   (`pending`, `running`, `succeeded`, `failed`, `skipped` or `cancelled`), and with its output, log and
-  usage when it has them.
+  usage when it has them. The name comes from the job's own steps. A template job's steps are its pinned
+  version's, which no owner route reads and the step runs do not carry, so such a row MUST read
+  "Step N" (its position, from 1) with its step id beside it rather than showing the bare id as a name.
 - **run-live**: While the run is `queued` or `running`, the pane MUST follow it through the run stream and
   MUST close the stream when the run ends or the pane unmounts.
 - **run-model-unavailable**: A step that failed with `error_code` `model_unavailable` MUST read "The model
@@ -201,7 +213,8 @@ AI Settings feature ([adhsdk.ingredient.adh.hub.ai-settings](cookbook:5fdf4ce9-c
   with one of its available models, or the environment's own model (`local` or `claude-code`).
 - **template-inputs**: The pane MUST edit the template's declared inputs.
 - **template-publish**: Publish MUST send the draft to the publish route and show the new version, or show
-  the backend's validation errors beside the steps they name.
+  the backend's validation errors beside the steps they name. Errors on the draft's defaults, which name no
+  step, MUST be listed as defaults problems rather than dropped.
 - **template-offers**: The offers editor MUST choose the sets that offer the template and write them with
   the offers route. A refusal because the version holds a script step MUST be shown.
 - **template-retire**: Retire MUST ask for confirmation and MUST say that existing jobs keep running their
@@ -220,7 +233,8 @@ AI Settings feature ([adhsdk.ingredient.adh.hub.ai-settings](cookbook:5fdf4ce9-c
 
 - **status-table**: `JobStatusPane` MUST show the product's customer runs as a table of job name,
   template, owner, status, error code, the first part of the error, and the times, read through the
-  status route, newest first, with a "Load more" that passes `before`.
+  status route, newest first, with a "Load more" that passes `before`. A "Load more" that fails MUST be
+  reported under the rows already shown, never in their place.
 - **status-no-content**: The pane MUST NOT show or request a run's inputs, steps, outputs or logs.
 
 ### Shared behavior
@@ -295,6 +309,11 @@ client's `jobs/__tests__/` MUST carry. The data client, the package and their te
 | jobs-011 | once-shown-secrets, inbound-secret-once | Create an inbound trigger whose result carries a secret; close the reveal without copying | The secret is shown once; closing asks for confirmation; a later trigger read carries no secret. |
 | jobs-012 | job-environment-choice | Save a job with an environment while the backend answers 422 `step_needs_hub` for step `summarize` | The refusal names the step `summarize` and says it needs the hub. |
 | jobs-013 | jobs-reserved-handle-word | `reservedWorkspaceSlugs()` from `@adh-sdk/adh` | Contains `jobs` |
+| jobs-014 | job-inputs-pinned-version | A job pinned to version 2 with saved inputs, while the catalog offers version 3 with an input; save | The pane says the job runs version 2 and version 3 is offered; no input field is shown; the save sends no `inputs`. |
+| jobs-015 | job-notifications | A job with no notify of its own whose version's defaults notify on success through the hub; save, then tick Email and save | The boxes show succeeded and Hub; the first save sends no `options`; the second sends `notify` `{ on: ["succeeded"], channels: ["hub", "email"] }`. |
+| jobs-016 | run-steps | A template job's run whose step run at position 1 has step id `summarize` | The row reads "Step 2" with `summarize` beside it. |
+| jobs-017 | status-table | `JobStatusPane` whose Load more read fails | The error is shown and the rows already loaded stay. |
+| jobs-018 | job-runs-list | A job's runs after Load more, then Run now while the newest page gains a run | The list is read again from the newest; the new run is first and the older pages stay. |
 
 ## Edge Cases
 
@@ -464,6 +483,7 @@ Each check was read against the package and the data client:
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.0 | 2026-11-23 | Mike Fullerton | Review fixes: a template job's inputs and defaults come from the catalog only at its pinned version (job-inputs-pinned-version); notify shows the resolved value and saves only when changed; the job's runs and the status table hold every page in one query, and a failed Load more keeps the rows; a step run with no known name reads Step N with its id; defaults problems on publish are listed (vectors jobs-014 to jobs-018) |
 | 1.2.0 | 2026-11-23 | Mike Fullerton | Package written: seven panes and the two topic sets; topics module is jobs-topics.ts; panes hand navigation to the host through callbacks (host-navigation replaces rail-host-dual-mode); compliance read against the code |
 | 1.1.0 | 2026-11-23 | Mike Fullerton | Data client written: unversioned /api/jobs wire restated by hand (call C18), run stream reconnect and stop, mappers fill nullable bags |
 | 1.0.0 | 2026-11-23 | Mike Fullerton | Initial creation: the Jobs package and its data client for phase 9, written before the code |

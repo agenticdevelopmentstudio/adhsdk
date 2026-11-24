@@ -4,7 +4,7 @@
     "id": "0bcb370d-a44f-48a8-a313-0266c2f86e51",
     "title": "Jobs",
     "type": "ingredient",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "status": "draft",
     "language": "en",
     "created": "2026-11-23",
@@ -39,7 +39,7 @@
     "approved-date": ""
   },
   "names_hosts": "An AI step's model value `claude-code` (a machine environment's own model) is product data, not host wording.",
-  "synced": "e67927722e8cd018",
+  "synced": "d008fb2ef9479c35",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

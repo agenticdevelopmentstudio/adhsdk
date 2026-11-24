@@ -2,11 +2,11 @@
 id: ecaba9e2-de10-45ac-80d8-398e9ab02626
 title: "CopyButton"
 type: ingredient
-version: 1.2.2
+version: 1.3.0
 status: review
 language: en
 created: 2026-07-03
-modified: 2026-11-14
+modified: 2026-11-23
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -64,6 +64,7 @@ fully self-driving — the only inputs are `getText`, the `label`, and an option
 - **sets-copied-title**: On a successful copy, the component MUST set its `title` to `"Copied!"`.
 - **reverts-after-timeout**: The component MUST revert the check, the green tint, and the title back to the idle state 1200 ms after a successful copy.
 - **swallows-copy-failure**: When the clipboard write rejects (insecure context or denied permission), the component MUST NOT enter the success state and MUST NOT throw.
+- **reports-successful-copy**: When `onCopied` is given, the component MUST call it once after each clipboard write that succeeds, and MUST NOT call it when the write rejects or when `getText()` returns `""`.
 - **labels-from-prop**: The component MUST expose `label` as its accessible name via `aria-label`.
 - **decorative-icon**: The component MUST mark its glyph `aria-hidden` so the accessible name comes solely from `label`.
 - **forwards-classname**: The component MUST merge a consumer `className` onto the button element via `cn()`.
@@ -126,6 +127,8 @@ success    [ ✓ ]   apt-green check, title "Copied!"  (1200 ms)  then reverts
 | T9 | reverts-after-timeout | after a successful copy, click again (also successful) at 1000 ms, before the first timer fires | the check reverts 1200 ms after the second click (2200 ms after the first), because the timer is cleared and re-armed |
 | T10 | reverts-after-timeout | unmount the component before the 1200 ms timer fires | the pending timer is cleared on cleanup; no state update occurs after unmount |
 | T11 | forwards-classname, classname-overrides-default-size | `className="size-8"` | the button carries `size-8` and does not carry `size-6` (tailwind-merge in `cn()` lets the consumer class win) |
+| T12 | reports-successful-copy | `onCopied={spy}`, `getText={() => "rows"}`, click | `spy` called once, after `writeText` resolves |
+| T13 | reports-successful-copy | `onCopied={spy}`; click once with `writeText` rejecting, then once with `getText={() => ""}` | `spy` never called |
 ## Edge Cases
 
 - `getText()` returning `""` is the sanctioned "nothing to copy" signal — the host
@@ -150,6 +153,7 @@ success    [ ✓ ]   apt-green check, title "Copied!"  (1200 ms)  then reverts
 | `getText` | `() => string` | required | Produces the text to copy, evaluated at click time; return `""` to copy nothing. |
 | `label` | `string` | required | Accessible name (`aria-label`) and the idle hover `title`. |
 | `className` | `string` | — | Extra classes merged onto the button via `cn()` (e.g. spacing). |
+| `onCopied` | `() => void` | — | Called after the clipboard write succeeds, never after a refused write or an empty `getText()`. A host that must know the text really reached the clipboard (a once-shown secret) listens here rather than to the click. |
 
 The 1200 ms success window and the outline/icon/`size-6` chrome are fixed by the
 component and are not exposed as props — see Design Decisions.
@@ -303,13 +307,14 @@ grounds both internationalization failures. `separation-of-concerns` passes:
 `copy-button.tsx` holds only the presentational `Button` wiring, while the
 clipboard-write-and-flash logic lives entirely in the generic `useClipboard`
 hook, which carries no knowledge of this component. `unit-test-coverage`
-passes — `copyButton.test.tsx` in the `ui` package covers all eleven
-conformance vectors (T1-T11).
+passes — `copyButton.test.tsx` in the `ui` package covers all thirteen
+conformance vectors (T1-T13).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.3.0 | 2026-11-23 | Mike Fullerton | Added the onCopied callback and the reports-successful-copy requirement (vectors T12, T13): a host learns the text reached the clipboard only when the write succeeded |
 | 1.2.2 | 2026-11-14 | Mike Fullerton | Rewrote Privacy for the system-wide clipboard, recorded the 24px touch target, hard-coded title and missing live region as accepted-debt decisions, added the classname-overrides-default-size requirement with vector T11, corrected T9, and tidied the overview, deep-linking and platform notes (current Compose clipboard API, React/Web bullet trimmed). |
 | 1.2.1 | 2026-09-25 | Mike Fullerton | Restored on-main 1.0.0 Change History row (authorized); added missing separation-of-concerns/unit-test-coverage Compliance rows. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: correct Platform Notes clipboard-permission/API claims and reorder to SwiftUI/Compose/React-Web/AppKit-UIKit/WinUI-3; rewrite Localization to acknowledge the hard-coded, user-visible "Copied!" title and cite the symbol instead of a line number; reformat Design Decisions into Decision/Rationale/Approved triplets; rebuild Compliance as catalog-linked checks (passed/partial/failed) with a grounding sentence; add the idle-title-from-label requirement and T9/T10 test vectors, and clarify skips-empty-text for whitespace-only text; note why useClipboard has no depends-on entry; rename the 1.0.0 summary to "Initial ingredient". |

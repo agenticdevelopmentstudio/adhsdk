@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 // JobRunPane: a switched-off model reads as such (vector jobs-006), Retry and Cancel by status
-// (jobs-007), and a live run followed until it finishes, then the stream closed (jobs-008). Mocks
+// (jobs-007), a live run followed until it finishes, then the stream closed (jobs-008), and a
+// template job's steps named by place (jobs-016). Mocks
 // the jobs data client and its stream.
 import { act, cleanup, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -101,5 +102,22 @@ describe("JobRunPane", () => {
     act(() => stream.onRun?.(done));
     await waitFor(() => expect(stream.stop).toHaveBeenCalled());
     expect(screen.queryByRole("button", { name: "Cancel" })).toBeNull();
+  });
+
+  it("names a template job's step by its place and id, not the id alone (vector jobs-016)", async () => {
+    // A template job carries no steps of its own, so the pane has no name for its step runs.
+    api.get.mockResolvedValue(job());
+    api.getRun.mockResolvedValue(
+      runDetail({ status: "succeeded", stepRuns: [stepRun({ position: 1, status: "succeeded" })] }),
+    );
+    renderWithQuery(<JobRunPane runId="run-1" />);
+    await waitFor(() => expect(api.get).toHaveBeenCalled());
+    const row = await waitFor(() => {
+      const el = stepRow();
+      expect(el).toBeTruthy();
+      return el;
+    });
+    expect(within(row).getByText("Step 2")).toBeTruthy();
+    expect(within(row).getByText("summarize")).toBeTruthy();
   });
 });

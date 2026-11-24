@@ -84,6 +84,10 @@
   notifications and its runs.
 - **job-inputs-declared**: The inputs editor MUST offer exactly the inputs that the job's template version
   declares. A job with inline steps edits its steps instead.
+- **job-inputs-pinned-version**: The catalog holds only each template's latest version, so the editor MUST
+  take a template job's inputs and defaults from the catalog only when the catalog's version is the one the
+  job is pinned to. Otherwise it MUST show the pinned version and the saved inputs read-only, and a save
+  MUST NOT send `inputs`.
 - **job-environment-choice**: The environment choice MUST be "Hub" (no environment) or one of the
   owner's environments. A save the backend refuses with `step_needs_hub` or `step_needs_machine` MUST
   show which step needs which.
@@ -94,7 +98,13 @@
   copy button. Closing it before copying MUST ask for confirmation, as a worker token's reveal does.
 - **job-run-now**: The pane MUST offer "Run now", which starts a manual run and opens the returned run.
 - **job-notifications**: The notifications editor MUST choose when to notify (failed, succeeded) and
-  through which channels (email, SMS, hub). The default is failures by email.
+  through which channels (email, SMS, hub). It MUST show what the engine resolves: the job's own notify,
+  else its pinned template version's defaults, else failures by email. A save MUST send `options.notify`
+  only when the owner changed a notification choice, so saving another setting never replaces the
+  version's defaults.
+- **job-runs-list**: The job's runs MUST be listed newest first with a "Load more" that passes `before`.
+  Every loaded page MUST be held in one paged query, so a refresh (after "Run now") reads again from the
+  newest run and a new run appears at the top.
 - **job-delete-archives**: Delete MUST ask for confirmation and MUST say that the job is archived and
   its runs are kept.
 
@@ -102,7 +112,9 @@
 
 - **run-steps**: `JobRunPane` MUST list the run's step runs in order, each with its name, kind and status
   (`pending`, `running`, `succeeded`, `failed`, `skipped` or `cancelled`), and with its output, log and
-  usage when it has them.
+  usage when it has them. The name comes from the job's own steps. A template job's steps are its pinned
+  version's, which no owner route reads and the step runs do not carry, so such a row MUST read
+  "Step N" (its position, from 1) with its step id beside it rather than showing the bare id as a name.
 - **run-live**: While the run is `queued` or `running`, the pane MUST follow it through the run stream and
   MUST close the stream when the run ends or the pane unmounts.
 - **run-model-unavailable**: A step that failed with `error_code` `model_unavailable` MUST read "The model
@@ -124,7 +136,8 @@
   with one of its available models, or the environment's own model (`local` or `claude-code`).
 - **template-inputs**: The pane MUST edit the template's declared inputs.
 - **template-publish**: Publish MUST send the draft to the publish route and show the new version, or show
-  the backend's validation errors beside the steps they name.
+  the backend's validation errors beside the steps they name. Errors on the draft's defaults, which name no
+  step, MUST be listed as defaults problems rather than dropped.
 - **template-offers**: The offers editor MUST choose the sets that offer the template and write them with
   the offers route. A refusal because the version holds a script step MUST be shown.
 - **template-retire**: Retire MUST ask for confirmation and MUST say that existing jobs keep running their
@@ -143,7 +156,8 @@
 
 - **status-table**: `JobStatusPane` MUST show the product's customer runs as a table of job name,
   template, owner, status, error code, the first part of the error, and the times, read through the
-  status route, newest first, with a "Load more" that passes `before`.
+  status route, newest first, with a "Load more" that passes `before`. A "Load more" that fails MUST be
+  reported under the rows already shown, never in their place.
 - **status-no-content**: The pane MUST NOT show or request a run's inputs, steps, outputs or logs.
 
 ### Shared behavior

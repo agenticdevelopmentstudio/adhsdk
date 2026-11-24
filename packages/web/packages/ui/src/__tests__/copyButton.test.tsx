@@ -1,5 +1,5 @@
 /** Conformance tests for CopyButton (recipe ui/components/actions/copy-button).
- *  One `it` per conformance vector, titled with the vector id (T1..T11). */
+ *  One `it` per conformance vector, titled with the vector id (T1..T13). */
 /// <reference types="@testing-library/jest-dom/vitest" />
 import { render, screen, fireEvent, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
@@ -124,5 +124,23 @@ describe('CopyButton conformance', () => {
     const el = screen.getByRole('button')
     expect(el).toHaveClass('size-8')
     expect(el).not.toHaveClass('size-6')
+  })
+
+  it('T12 onCopied is called once after a successful copy', async () => {
+    const onCopied = vi.fn()
+    render(<CopyButton getText={() => 'rows'} label="Copy rows" onCopied={onCopied} />)
+    await click(screen.getByRole('button'))
+    expect(onCopied).toHaveBeenCalledTimes(1)
+  })
+
+  it('T13 onCopied is not called when the write rejects or there is nothing to copy', async () => {
+    const onCopied = vi.fn()
+    writeText.mockRejectedValue(new Error('denied'))
+    const { unmount } = render(<CopyButton getText={() => 'rows'} label="Copy rows" onCopied={onCopied} />)
+    await click(screen.getByRole('button'))
+    unmount()
+    render(<CopyButton getText={() => ''} label="Copy rows" onCopied={onCopied} />)
+    await click(screen.getByRole('button'))
+    expect(onCopied).not.toHaveBeenCalled()
   })
 })

@@ -1,8 +1,10 @@
 // @vitest-environment jsdom
 // JobPane: an inbound trigger's secret shown once, with a confirmation on a close without copying
-// (vector jobs-011), and a save refused because a step needs the hub naming that step (jobs-012).
+// (vector jobs-011), a save refused because a step needs the hub naming that step (jobs-012), a job
+// pinned to an older version (jobs-014), notify defaults kept on save (jobs-015), and the runs list
+// after Load more and Run now (jobs-018).
 // Mocks the jobs data client.
-import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AuthHttpError } from "@adh-sdk/auth/client";
@@ -16,6 +18,7 @@ const api = vi.hoisted(() => ({
   runs: vi.fn(),
   createTrigger: vi.fn(),
   update: vi.fn(),
+  run: vi.fn(),
 }));
 
 vi.mock("@adh-sdk/data/jobs", async (importOriginal) => {
@@ -24,7 +27,7 @@ vi.mock("@adh-sdk/data/jobs", async (importOriginal) => {
 });
 
 import { JobPane } from "../JobPane";
-import { job, renderWithQuery } from "./fixtures";
+import { catalogTemplate, job, renderWithQuery, runDetail } from "./fixtures";
 
 const SECRET = "jtrg_once_only_secret_value";
 
@@ -65,7 +68,13 @@ beforeEach(() => {
   api.runs.mockReset().mockResolvedValue({ runs: [], nextBefore: null });
   api.createTrigger.mockReset();
   api.update.mockReset();
+  api.run.mockReset();
 });
+
+/** The patch the latest save sent. */
+const savedPatch = () => api.update.mock.calls[api.update.mock.calls.length - 1]?.[1] as Record<string, unknown>;
+
+const checkbox = (name: string) => screen.getByRole("checkbox", { name });
 afterEach(cleanup);
 
 describe("JobPane", () => {
@@ -113,5 +122,75 @@ describe("JobPane", () => {
     );
     const refusal = await screen.findByText(/Step "summarize" needs the hub/);
     expect(refusal.textContent).toContain("summarize");
+  });
+
+  it("shows a job pinned to an older version's inputs read-only and saves none (vector jobs-014)", async () => {
+    api.get.mockResolvedValue(job({ templateVersion: 2, inputs: { topic: "old topic" } }));
+    api.catalog.mockResolvedValue([
+      catalogTemplate({ version: 3, inputs: [{ key: "topic", label: "Topic", type: "text" }] }),
+    ]);
+    api.update.mockResolvedValue(job());
+    renderWithQuery(<JobPane jobId="job-1" />);
+    expect(await screen.findByText(/runs version 2 of its template, and version 3/)).toBeTruthy();
+    expect(screen.queryByRole("textbox", { name: "Topic" })).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(api.update).toHaveBeenCalled());
+    expect(savedPatch()).not.toHaveProperty("inputs");
+  });
+
+  it("shows the version's notify defaults and saves notify only once changed (vector jobs-015)", async () => {
+    api.get.mockResolvedValue(job({ options: {} }));
+    api.catalog.mockResolvedValue([
+      catalogTemplate({ version: 3, defaults: { notify: { on: ["succeeded"], channels: ["hub"] } } }),
+    ]);
+    api.update.mockResolvedValue(job());
+    renderWithQuery(<JobPane jobId="job-1" />);
+    await waitFor(() =>
+      expect(checkbox("Notify when a run succeeded").getAttribute("aria-checked")).toBe("true"),
+    );
+    expect(checkbox("Notify when a run failed").getAttribute("aria-checked")).toBe("false");
+    expect(checkbox("Notify by Email").getAttribute("aria-checked")).toBe("false");
+
+    // A save that changed no notification leaves the version's defaults in force.
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(api.update).toHaveBeenCalledTimes(1));
+    expect(savedPatch()).not.toHaveProperty("options");
+
+    fireEvent.click(checkbox("Notify by Email"));
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(api.update).toHaveBeenCalledTimes(2));
+    expect(savedPatch().options).toEqual({ notify: { on: ["succeeded"], channels: ["hub", "email"] } });
+  });
+
+  it("shows a new run at the top after Load more and Run now (vector jobs-018)", async () => {
+    api.runs.mockImplementation(({ before }: { before?: string }) =>
+      Promise.resolve(
+        before === "c1"
+          ? { runs: [runDetail({ id: "run-old", status: "failed" })], nextBefore: null }
+          : { runs: [runDetail({ id: "run-mid", status: "succeeded" })], nextBefore: "c1" },
+      ),
+    );
+    renderWithQuery(<JobPane jobId="job-1" />);
+    const runs = await screen.findByRole("region", { name: "Runs" });
+    fireEvent.click(await within(runs).findByRole("button", { name: "Load more" }));
+    await waitFor(() => expect(within(runs).getAllByRole("listitem")).toHaveLength(2));
+
+    // A run is started: the newest page now begins with it, and the list is read again from there.
+    api.runs.mockImplementation(({ before }: { before?: string }) =>
+      Promise.resolve(
+        before === "c1"
+          ? { runs: [runDetail({ id: "run-old", status: "failed" })], nextBefore: null }
+          : {
+              runs: [runDetail({ id: "run-new", status: "queued" }), runDetail({ id: "run-mid", status: "succeeded" })],
+              nextBefore: "c1",
+            },
+      ),
+    );
+    api.run.mockResolvedValue({ runId: "run-new" });
+    fireEvent.click(screen.getByRole("button", { name: "Run now" }));
+    await waitFor(() => expect(within(runs).getAllByRole("listitem")).toHaveLength(3));
+    const [newest] = within(runs).getAllByRole("listitem");
+    expect(within(newest!).getByText("queued")).toBeTruthy();
   });
 });

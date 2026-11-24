@@ -12,3 +12,5 @@
 | T9 | reverts-after-timeout | after a successful copy, click again (also successful) at 1000 ms, before the first timer fires | the check reverts 1200 ms after the second click (2200 ms after the first), because the timer is cleared and re-armed |
 | T10 | reverts-after-timeout | unmount the component before the 1200 ms timer fires | the pending timer is cleared on cleanup; no state update occurs after unmount |
 | T11 | forwards-classname, classname-overrides-default-size | `className="size-8"` | the button carries `size-8` and does not carry `size-6` (tailwind-merge in `cn()` lets the consumer class win) |
+| T12 | reports-successful-copy | `onCopied={spy}`, `getText={() => "rows"}`, click | `spy` called once, after `writeText` resolves |
+| T13 | reports-successful-copy | `onCopied={spy}`; click once with `writeText` rejecting, then once with `getText={() => ""}` | `spy` never called |
