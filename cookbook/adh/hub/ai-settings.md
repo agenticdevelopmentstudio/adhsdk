@@ -569,7 +569,7 @@ feature `create-resource-dialog` and step `save`.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/features/ai-settings/` | confirmed (1.0.2) |
+| web | `packages/web/packages/features/ai-settings/` | confirmed (1.0.4) |
 
 ## Design Decisions
 

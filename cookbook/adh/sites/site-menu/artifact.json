@@ -4,11 +4,11 @@
     "id": "f2d56415-ac36-4a27-bee5-b447c4186513",
     "title": "SiteMenu",
     "type": "recipe",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "status": "review",
     "language": "en",
     "created": "2026-07-05",
-    "modified": "2026-11-22",
+    "modified": "2026-11-23",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -39,7 +39,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "d0e8ca8662650322",
+  "synced": "27d3ca171ba7ef4f",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -29,7 +29,8 @@
   `ssoReturnOrigins`. The phase-6 `product-admin` site is one `SITES` row (`adminOnly`,
   `crawlable: false`), one `SITE_BUILD` entry (`handRolledConfig: true`), one entry in
   `MAIN_SITE_IDS`, one `SITE_STORIES` entry in `story.ts` (a `chapter` of the `backend`
-  pillar, like `admin`), and `admin-site` in `HUB_EXTRA_FEATURE_SEGMENTS`, which phase 8 extends with `ai-settings` (keeping `llm-providers` and `persona-services` as redirect-only segments, with a source comment beside them saying they redirect until Cleanup), and the `hub` share in `routes.hub.generated.ts` carries its `/[workspace]/ai-settings/[[...path]]` line; its
+  pillar, like `admin`), and `admin-site` in `HUB_EXTRA_FEATURE_SEGMENTS`, which phase 8 extends with `ai-settings` (keeping `llm-providers` and `persona-services` as redirect-only segments, with a source comment beside them saying they redirect until Cleanup), and the `hub` share in `routes.hub.generated.ts` carries its `/[workspace]/ai-settings/[[...path]]` line;
+  phase 9 adds `jobs` to `HUB_EXTRA_FEATURE_SEGMENTS` (its `templates` and `environments` pages are sub-paths of the one `/[workspace]/jobs/[[...path]]` line), `/jobs` and `/jobs/templates` to the `product-admin` share, and `jobs` to the `UNIVERSAL` reserved list; its
   `devDependencies` carry `@adh-sdk/product-admin` for the one test that holds that
   package's rail equal to the site's share of the route table. `reserved-slugs.ts` holds `RESERVED_SLUGS`, `isReservedSlug`, and
   `isReservedSlugAnywhere`. The support routes of

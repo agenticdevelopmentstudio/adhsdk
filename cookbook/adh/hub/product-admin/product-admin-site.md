@@ -16,7 +16,7 @@ depends-on:
   - 2eff6ca4-5479-44b3-8636-04e455009a10
   - 150bf00e-6c6b-4f91-a323-d307ebd5700d
   - 3ea9329e-5acc-4c43-b5ce-bb8c50570104
-version: 2.0.0
+version: 2.1.0
 created: 2026-11-23
 modified: 2026-11-23
 author: Mike Fullerton
@@ -43,7 +43,7 @@ The pieces:
 
 ### Pages
 
-- **topics-list**: `PRODUCT_ADMIN_TOPICS` MUST list nine pages in this order, with these ids and paths: users (`/users`), requests, pending, invites, roles, signup-list, sets, totals and support (`/support`, labeled "Support"), each with a label and an `href` of `/` plus its id. The ids are unique.
+- **topics-list**: `PRODUCT_ADMIN_TOPICS` MUST list ten pages in this order, with these ids and paths: users (`/users`), requests, pending, invites, roles, signup-list, sets, jobs (`/jobs`, labeled "Jobs"), totals and support (`/support`, labeled "Support"), each with a label and an `href` of `/` plus its id. The ids are unique.
 - **topics-importable-server-side**: the topic list MUST be importable without the client barrel, through `@adh-sdk/product-admin/topics`.
 
 ### Users pane
@@ -65,6 +65,11 @@ The pieces:
 - **support-page**: the Support page MUST render `SupportGrantsPane` ([adhsdk.ingredient.adh.hub.support.support-panes](cookbook:2eff6ca4-5479-44b3-8636-04e455009a10)) for the product it is given, at `/support`, and MUST be listed in `PRODUCT_ADMIN_TOPICS` (see [topics-list](#requirements/topics-list)).
 - **support-step-up**: when the Support page's request for access, or its revoke of a grant, is refused as `step_up_required`, the page MUST send the admin through `stepUp('/support')` of the product admin session ([adhsdk.ingredient.data.services.auth.auth-client](cookbook:3ea9329e-5acc-4c43-b5ce-bb8c50570104)) and bring them back to `/support`, with no error shown; the sign-in parameters of that second pass are the authentication client's.
 - **support-switch-off**: when the backend answers the grants read with 404 (consented access is off), the page MUST say that support access is not available instead of showing an error, and MUST NOT show the request form.
+
+### Jobs pages
+
+- **jobs-pages**: the Jobs row (phase 9) MUST open `/jobs`, which renders `JobStatusPane` ([adhsdk.ingredient.adh.hub.jobs](cookbook:0bcb370d-a44f-48a8-a313-0266c2f86e51)) for the product it is given; `/jobs/templates` MUST render `JobTemplatesPane`. Both are reached from the Jobs row's own topics, `jobsProductAdminTopics`, so the rail keeps one Jobs row and does not list `/jobs/templates`.
+- **jobs-status-no-content**: the `/jobs` page MUST show only run status, never a run's inputs, outputs or logs; reading those needs a support grant (see [support-page](#requirements/support-page)).
 
 ### Which pages move
 
@@ -94,7 +99,7 @@ Vectors marked with a test name are asserted in `features/product-admin/src/__te
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| product-admin-site-001 | topics-list | `PRODUCT_ADMIN_TOPICS` (test: "names the nine pages in rail order, ids unique") | Nine rows in the order above, the last `support` with `/support`, unique ids |
+| product-admin-site-001 | topics-list | `PRODUCT_ADMIN_TOPICS` (test: "names the ten pages in rail order, ids unique") | Ten rows in the order above, `jobs` with `/jobs` between `sets` and `totals`, the last `support` with `/support`, unique ids |
 | product-admin-site-002 | users-roster | The pane given a product, over a roster of customers (test: "lists the roster for the product it is given, with roles, storage and paused") | One row each, with roles, storage and the paused mark |
 | product-admin-site-003 | users-search-paging | Next, then Previous; then a search (tests: "pages forward by the cursor and back again", "searches from the first page") | The next page is read by the cursor, Previous returns to the first; a search reads from the first page |
 | product-admin-site-004 | users-confirm-writes | Pause chosen and confirmed; then chosen and cancelled (tests: "pauses only after the confirmation", "sends nothing when the confirmation is cancelled") | One pause request; then none |
@@ -116,6 +121,8 @@ Vectors marked with a test name are asserted in `features/product-admin/src/__te
 | product-admin-site-020 | support-page, support-step-up | The Support page for a product; a request refused as `step_up_required`, then a revoke refused the same way (test, for the request: "sends a step_up_required refusal through stepUp('/support')"; the revoke follows from the source) | `SupportGrantsPane` renders for the product; each refusal calls `stepUp('/support')`, which returns to `/support`, and no error is shown |
 | product-admin-site-021 | totals-pane | Totals carrying `jobsByStatus` of `{ failed: 2, done: 9 }`, then an empty map | A "Jobs" total of 11, then "Jobs done" 9 and "Jobs failed" 2; then "Jobs" 0 and no status count |
 | product-admin-site-022 | support-switch-off | The grants read answered 404 (test: "says support access is off when the grants read answers 404") | A note that support access is not available, no error and no request form |
+| product-admin-site-023 | jobs-pages | The `/jobs` and `/jobs/templates` pages for a product (derived from the phase 9 design; the site's e2e `jobs.spec.ts`) | `/jobs` mounts `JobStatusPane` and `/jobs/templates` mounts `JobTemplatesPane`, each for that product; the rail has one Jobs row |
+| product-admin-site-024 | jobs-status-no-content | The `/jobs` page over a product with a failed run | The run's status and error code show; no input, output or log is requested or shown |
 ## Edge Cases
 
 - **No product selected (MUST)**: the Admin site page and the totals page say so and make no request.
@@ -210,6 +217,7 @@ The panes keep the data calls in the client and the page list in a plain module,
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 2.1.0 | 2026-11-23 | Mike Fullerton | Phase 9: a Jobs row between Sets and Totals (ten pages); /jobs renders JobStatusPane and /jobs/templates JobTemplatesPane, status only. |
 | 2.0.0 | 2026-11-23 | Mike Fullerton | Phase 7: consented support access |
 | 1.0.1 | 2026-11-23 | Mike Fullerton | Admin site removal confirmed; adding an admin keeps a listed address's set and refreshes the Sign-up list; an emptied later Users page steps back; Users keeps Email Signup and Authentication once a site is up; a routed Admin site row is kept while the site is unknown; runAtAdminSite |
 | 1.0.0 | | | Initial creation |
