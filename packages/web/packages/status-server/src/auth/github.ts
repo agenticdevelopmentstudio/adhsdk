@@ -16,6 +16,8 @@ const NEXT_COOKIE = 'gh_oauth_next';
 const DEFAULT_DESTINATION = '/home';
 /** A throwaway origin `next` is resolved against; only its path part is kept. */
 const NEXT_RESOLVE_BASE = 'http://next.invalid';
+/** The longest `next` (as the cookie stores it) that still fits a 4KB cookie. */
+const MAX_NEXT_COOKIE_CHARS = 3000;
 
 /**
  * `next` if it is a same-origin, purely relative path, else null. The value ends
@@ -38,7 +40,10 @@ export function safeNext(next: string | undefined | null): string | null {
     return null;
   }
   if (url.origin !== NEXT_RESOLVE_BASE || url.pathname.startsWith('//')) return null;
-  return url.pathname + url.search + url.hash;
+  const path = url.pathname + url.search + url.hash;
+  // The cookie stores it encodeURIComponent'd (up to 3x longer); a browser drops
+  // a cookie over ~4KB without a word, and the login would land on /home.
+  return encodeURIComponent(path).length > MAX_NEXT_COOKIE_CHARS ? null : path;
 }
 
 /** fetch with the GitHub deadline — the only outbound fetches on a PRE-AUTH

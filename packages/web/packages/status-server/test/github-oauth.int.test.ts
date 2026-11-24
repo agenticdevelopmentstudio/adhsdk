@@ -103,7 +103,9 @@ describe('GitHub OAuth', () => {
     expect(safeNext('/a/../device?code=X')).toBe('/device?code=X');
     for (const bad of [undefined, null, '', 'device', 'https://evil.example', '//evil.example', '/\\evil.example', '/a\nb', `/${'a'.repeat(2048)}`,
       // dot segments that collapse to a protocol-relative `//host`
-      '/x/..//evil.example/', '/x/..\\/evil.example/']) {
+      '/x/..//evil.example/', '/x/..\\/evil.example/',
+      // under 2048 chars, but over the cookie budget once encoded
+      `/?${'a=%25&'.repeat(300)}`]) {
       expect(safeNext(bad)).toBeNull();
     }
   });
