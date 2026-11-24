@@ -192,6 +192,15 @@ Not applicable: the panes contain no logging calls. Failures are shown in the sh
 - **WinUI 3**: A `CheckBox` in the `ContentDialog`, and a `ListView` of dead rows with a Retry
   `Button` in each item template.
 
+## Reference Implementations
+
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| web | `packages/web/packages/features/adh-admin/src/processing/WorkerTokens.tsx` | confirmed (1.0.2) |
+| web | `packages/web/packages/features/adh-admin/src/processing/DeadJobs.tsx` | confirmed (1.0.1) |
+| web | `packages/web/packages/features/adh-admin/src/panes/AiNodesPane.tsx` | confirmed (1.0.1) |
+| web | `packages/web/packages/features/adh-admin/src/api/processing.ts` | confirmed (1.0.1) |
+
 ## Design Decisions
 
 **Decision**: Dead jobs go in a section of `AiNodesPane`, not a new topic.

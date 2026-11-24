@@ -2,11 +2,11 @@
 id: ea580796-8b16-4832-b11d-ad3cae991ecd
 title: "Database"
 type: ingredient
-version: 1.4.0
+version: 1.5.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-11-23
+modified: 2026-11-24
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -231,6 +231,14 @@ account router, moved out of stenographerd so any daemon can host it:
 - **follower-syncs-then-applies**: The follower MUST `sync` the local `LocalProjectMirror` to the registry's projects, then `apply` each change as it arrives, so the local file's rows match the registry's.
 - **follower-keeps-local-path**: Given `keepingLocal`, the follower MUST NOT mirror a project at that path, neither in the first sync nor in a later upsert.
 - **follower-stop**: `stop()` MUST end the follow and leave the rows already mirrored in place; a failure to read or subscribe MUST reach `onFailure`.
+
+### Pipeline Quarantine Heal
+
+- **heal-after-clean-drain**: The `PipelineDrainer` worker MUST, after each drain that did not fail, send back through the pipeline the quarantined records whose reason starts with one of `PipelineDrainer.transientFailurePrefixes` (a sink or the events.db write failed), without a restart and without a caller asking.
+- **heal-keeps-record-failures**: The heal MUST NOT requeue a record quarantined for itself (invalid JSON, an archive conflict, any reason without a transient prefix); it stays in quarantine.
+- **heal-interval**: The heal MUST requeue at most once per `PipelineDrainer.quarantineHealInterval` (15 minutes), counted from the last heal that found anything in quarantine, so a record that keeps failing costs at most `ProviderSpool.maxAttempts` attempts per interval. A heal that finds the quarantine empty MUST NOT start the interval.
+- **heal-drains-promptly**: A heal that requeued records MUST wake the worker so they drain without waiting for the idle poll.
+- **heal-report**: The drainer MUST keep the last heal that requeued records or failed in `lastQuarantineHeal` (when, how many, the error); a failed heal MUST NOT stop draining.
 ## Appearance
 
 Not applicable — this is a database access layer and storage-path helper, not a visual component.
@@ -283,6 +291,10 @@ Not applicable — this is a database access layer and storage-path helper, not 
 | sed-034 | follower-syncs-then-applies | a registry holding one project, then an insert, an update and a delete | the local file holds the first project after `start`, then each change (`testStartMirrorsTheProjectsAlreadyRegistered`, `testARegistryChangeReachesTheLocalFile`) |
 | sed-035 | follower-keeps-local-path | a registry project at the kept path | the local file never holds it (`testTheKeptPathIsNeverMirrored`) |
 | sed-036 | follower-stop | `stop()`, then an insert in the registry | the earlier rows stay; the insert never arrives (`testStopLeavesTheMirroredRowsAndFollowsNoFurther`) |
+| sed-037 | heal-after-clean-drain, heal-keeps-record-failures | two records quarantined by a failed sink and one by invalid JSON, then the sink recovers and a heal runs | the two sink records are requeued and stored; the invalid one stays quarantined (`testHealRequeuesTransientQuarantineAndLeavesRecordFailures`) |
+| sed-038 | heal-interval | a heal that requeued, then a second heal 1 minute later and a third after `quarantineHealInterval` | the second requeues nothing; the third requeues (`testHealRunsAtMostOncePerInterval`) |
+| sed-039 | heal-interval | a heal over an empty quarantine, then a sink-failure quarantine and a heal 1 second later | the second heal requeues (`testAnEmptyHealDoesNotStartTheInterval`) |
+| sed-040 | heal-after-clean-drain, heal-drains-promptly | a started worker whose sink fails until records are quarantined, then recovers | the quarantine empties and every record is stored with no manual retry (`testTheWorkerHealsAQuarantineOnItsOwn`) |
 ## Edge Cases
 
 - **Empty display name**: The token-deriving operation applied to an empty string, or to a name made only of spaces or punctuation, MUST return `"AgenticDeveloperHubSDK"`; a missing or empty declared display name MUST make the display-name reader return `"AgenticDeveloperHubSDK"`.
@@ -383,8 +395,8 @@ The bounded database and the storage-location helper do not log; ejections surfa
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Database/` | confirmed (1.3.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/ProjectRegistryFollower.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Database/` | confirmed (1.5.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/ProjectRegistryFollower.swift` | confirmed (1.5.0) |
 
 ## Design Decisions
 
@@ -467,6 +479,14 @@ The bounded database and the storage-location helper do not log; ejections surfa
 **Decision**: The relay route does no caller check of its own.
 **Rationale**: Who may post credentials is the hosting daemon's front-door decision (its client token), not the route set's; the route trusts what reaches it, as the other shared route sets do.
 **Approved**: pending
+
+### The drainer heals its own transient quarantine
+
+**Decision**: After every drain that did not fail, the worker requeues the quarantined records whose reason is a destination outage, at most once per 15 minutes; the requeue at daemon start stays.
+
+**Rationale**: A destination stall of a few minutes (a read lane held past its 30-second deadline) spends every record's attempts and parks the batch, and the start-time requeue alone left it parked for days on a daemon that never restarted. A clean drain is the evidence the destination is back. The interval bounds a record that fails for itself under a transient prefix (a per-record store write failure) to `maxAttempts` cheap attempts per interval instead of a loop, and still lets a fresh outage heal on the next clean drain, because an empty heal does not start the interval.
+
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -486,6 +506,7 @@ The module keeps storage mechanics (pool, deadlines, metrics) and storage naming
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.5.0 | 2026-11-24 | Mike Fullerton | Pipeline quarantine heal: the drainer requeues transient quarantine after a clean drain, at most once per 15 minutes |
 | 1.4.0 | 2026-11-23 | Mike Fullerton | Project registry follower (keeps a local Projects.db in step with adhd's registry) moved in from the Kitchen. |
 | 1.3.1 | 2026-11-23 | Mike Fullerton | billing-routes-since: GET /billing/entries reads a timestamp `since` as the earliest calendar day that instant falls on in any zone (UTC-12), not its text prefix, and its 400 names both accepted forms (review f8). |
 | 1.3.0 | 2026-11-21 | Mike Fullerton | Account credential store, quota probe, account router and its routes (credential relay) moved into Database/Daemon. Billing routes (every stenographerd billing call) and activity routes with a work tracker's controls added for adhd. |

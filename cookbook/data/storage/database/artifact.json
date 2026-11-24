@@ -4,11 +4,11 @@
     "id": "ea580796-8b16-4832-b11d-ad3cae991ecd",
     "title": "Database",
     "type": "ingredient",
-    "version": "1.4.0",
+    "version": "1.5.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-11-23",
+    "modified": "2026-11-24",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -40,7 +40,7 @@
     "approved-date": ""
   },
   "names_hosts": "The account router's subject is Claude account credentials: the source's type names (`ClaudeCredentialDTO`, `ClaudeCredentialKind`) and the Claude Code traffic it routes are stated as the source names them.",
-  "synced": "eeeaaad1febeb628",
+  "synced": "fa56840889b1b674",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

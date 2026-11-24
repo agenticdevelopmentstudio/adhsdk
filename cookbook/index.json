@@ -21959,16 +21959,18 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:bbe0a73ce30a1d7767e05ed048414ce5c8e4facf8acc61b3345b4ccdec87602f",
+            "hash": "sha256:3ee0b1cba516274454e3d169e50b9b02f58f3883e7956c8d2c201b2ae38b15e3",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "1.5.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Database/",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:c38d20daae31c41df1f011981a987a138327d824196e31d1e32457b0807c192e",
+            "state": "confirmed",
+            "version": "1.5.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Database/Daemon/Projects/ProjectRegistryFollower.swift",
           "platform": "apple"

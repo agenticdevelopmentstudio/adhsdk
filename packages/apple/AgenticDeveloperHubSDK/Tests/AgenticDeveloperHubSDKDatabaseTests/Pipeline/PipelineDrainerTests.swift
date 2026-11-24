@@ -548,6 +548,93 @@ final class PipelineDrainerTests: XCTestCase {
         XCTAssertEqual(try rig.store.counts().events, 2)
     }
 
+    // MARK: - Quarantine heal
+
+    private struct SinkDown: Error {}
+
+    /// A drainer whose sink fails while `down` holds true, and the records it took.
+    private func healRig(down: LockedBox<Bool>, taken: LockedBox<Int>) throws -> (Rig, PipelineDrainer) {
+        let rig = try makeRig()
+        let sink = ClosureSink { _, records in
+            if down.value { throw SinkDown() }
+            taken.update { $0 += records.count }
+        }
+        return (rig, try drainer(rig, sinks: [sink]))
+    }
+
+    /// Spends every attempt of whatever is pending, so it lands in quarantine.
+    private func exhaust(_ pipe: PipelineDrainer) {
+        for _ in 0..<ProviderSpool.maxAttempts { pipe.drainOnce() }
+    }
+
+    func testHealRequeuesTransientQuarantineAndLeavesRecordFailures() throws {
+        let down = LockedBox(true), taken = LockedBox(0)
+        let (rig, pipe) = try healRig(down: down, taken: taken)
+        try rig.spool.append([record("k0"), record("k1"), record("bad", payload: "BAD")])
+        exhaust(pipe)
+        XCTAssertEqual(try rig.spool.quarantinedCount(), 3)
+
+        down.update { $0 = false }
+        XCTAssertEqual(pipe.healTransientQuarantine(), 2)
+        XCTAssertFalse(pipe.drainUntilEmpty().failed)
+        XCTAssertEqual(taken.value, 2, "the requeued records reached the recovered sink")
+        XCTAssertEqual(try rig.spool.pendingCount(), 0)
+        XCTAssertEqual(try rig.spool.quarantined(limit: 10).map(\.record.dedupKey), ["bad"])
+        XCTAssertEqual(try rig.store.counts().events, 2)
+        let report = try XCTUnwrap(pipe.lastQuarantineHeal)
+        XCTAssertEqual(report.requeued, 2)
+        XCTAssertNil(report.error)
+    }
+
+    func testHealRunsAtMostOncePerInterval() throws {
+        let down = LockedBox(true), taken = LockedBox(0)
+        let (rig, pipe) = try healRig(down: down, taken: taken)
+        let start = Date()
+        try rig.spool.append([record("k0"), record("k1")])
+        exhaust(pipe)
+        XCTAssertEqual(pipe.healTransientQuarantine(now: start), 2)
+        exhaust(pipe)
+        XCTAssertEqual(try rig.spool.quarantinedCount(), 2)
+        XCTAssertEqual(pipe.healTransientQuarantine(now: start.addingTimeInterval(60)), 0)
+        XCTAssertEqual(try rig.spool.quarantinedCount(), 2, "a heal inside the interval moves nothing")
+        let due = start.addingTimeInterval(PipelineDrainer.quarantineHealInterval)
+        XCTAssertEqual(pipe.healTransientQuarantine(now: due), 2)
+        XCTAssertEqual(try rig.spool.quarantinedCount(), 0)
+    }
+
+    func testAnEmptyHealDoesNotStartTheInterval() throws {
+        let down = LockedBox(true), taken = LockedBox(0)
+        let (rig, pipe) = try healRig(down: down, taken: taken)
+        let start = Date()
+        XCTAssertEqual(pipe.healTransientQuarantine(now: start), 0)
+        XCTAssertNil(pipe.lastQuarantineHeal, "an empty heal leaves no report")
+        try rig.spool.append([record("k0"), record("k1")])
+        exhaust(pipe)
+        XCTAssertEqual(pipe.healTransientQuarantine(now: start.addingTimeInterval(1)), 2)
+    }
+
+    func testTheWorkerHealsAQuarantineOnItsOwn() throws {
+        let rig = try makeRig()
+        try rig.spool.append([record("k0"), record("k1")])
+        let calls = LockedBox(0), taken = LockedBox(0)
+        // Down for exactly enough passes to quarantine both records, then back.
+        let sink = ClosureSink { _, records in
+            calls.update { $0 += 1 }
+            if calls.value <= ProviderSpool.maxAttempts { throw SinkDown() }
+            taken.update { $0 += records.count }
+        }
+        let pipe = try drainer(rig, sinks: [sink])
+        XCTAssertTrue(pipe.start(idlePoll: 0.05))
+        let deadline = Date().addingTimeInterval(10)
+        while Date() < deadline, taken.value < 2 { Thread.sleep(forTimeInterval: 0.02) }
+        pipe.stop()
+        XCTAssertGreaterThanOrEqual(calls.value, ProviderSpool.maxAttempts + 1, "the records were quarantined first")
+        XCTAssertEqual(taken.value, 2, "the worker requeued and stored them with no manual retry")
+        XCTAssertEqual(try rig.spool.quarantinedCount(), 0)
+        XCTAssertEqual(try rig.spool.pendingCount(), 0)
+        XCTAssertEqual(pipe.lastQuarantineHeal?.requeued, 2)
+    }
+
     func testAfterSinksCrashRedeliversAndConverges() throws {
         let rig = try makeRig()
         try rig.spool.append((0..<5).map { record("k\($0)") })

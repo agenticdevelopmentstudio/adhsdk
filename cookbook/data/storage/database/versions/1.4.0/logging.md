@@ -1,0 +1,2 @@
+
+The bounded database and the storage-location helper do not log; ejections surface as raised deadline-exceeded errors and as the evicted counters in the metrics snapshot. The quota probe logs through the unified logging system: a store it cannot read or write, the count of credentials a client relayed, and a one-time warning when no credentials are held. It never logs a token. The router's errors are scrubbed by `AccountRouterLog.scrub` before they reach a log or a route reply.

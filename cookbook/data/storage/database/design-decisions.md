@@ -78,3 +78,11 @@
 **Decision**: The relay route does no caller check of its own.
 **Rationale**: Who may post credentials is the hosting daemon's front-door decision (its client token), not the route set's; the route trusts what reaches it, as the other shared route sets do.
 **Approved**: pending
+
+### The drainer heals its own transient quarantine
+
+**Decision**: After every drain that did not fail, the worker requeues the quarantined records whose reason is a destination outage, at most once per 15 minutes; the requeue at daemon start stays.
+
+**Rationale**: A destination stall of a few minutes (a read lane held past its 30-second deadline) spends every record's attempts and parks the batch, and the start-time requeue alone left it parked for days on a daemon that never restarted. A clean drain is the evidence the destination is back. The interval bounds a record that fails for itself under a transient prefix (a per-record store write failure) to `maxAttempts` cheap attempts per interval instead of a loop, and still lets a fresh outage heal on the next clean drain, because an empty heal does not start the interval.
+
+**Approved**: pending

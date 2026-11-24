@@ -124,6 +124,22 @@ public struct SpoolCompactionReport: Sendable, Equatable {
     }
 }
 
+/// When the drainer last sent transiently quarantined records back through the
+/// pipeline, and what happened.
+public struct QuarantineHealReport: Sendable, Equatable {
+    public let finishedAt: Date
+    /// How many records went back to the spool; 0 when it failed.
+    public let requeued: Int
+    /// Why it failed; nil when it did not.
+    public let error: String?
+
+    public init(finishedAt: Date, requeued: Int, error: String?) {
+        self.finishedAt = finishedAt
+        self.requeued = requeued
+        self.error = error
+    }
+}
+
 public final class PipelineDrainer: @unchecked Sendable {
     private struct StepFailure: Error, CustomStringConvertible {
         let description: String
@@ -164,6 +180,10 @@ public final class PipelineDrainer: @unchecked Sendable {
     private var passOwner: Thread?
     /// Guarded by `lock`; see ``lastSpoolCompaction``.
     private var lastCompaction: SpoolCompactionReport?
+    /// Guarded by `lock`; see ``lastQuarantineHeal``.
+    private var lastHeal: QuarantineHealReport?
+    /// Guarded by `lock`: when the last heal found anything in quarantine.
+    private var lastHealAttempt: Date?
 
     /// Throws `PipelineError.providerMismatch` unless the spool, the archive and the
     /// normalizer name the same provider, and `EventStoreError.bulkLoadInProgress`
@@ -529,8 +549,53 @@ public final class PipelineDrainer: @unchecked Sendable {
     private static func passIfRunning(_ drainer: PipelineDrainer?) -> Bool? {
         guard let drainer, !drainer.shouldStop() else { return nil }
         let failed = drainer.drainUntilEmpty().failed
-        if !failed, !drainer.shouldStop() { drainer.compactSpool() }
+        if !failed, !drainer.shouldStop() {
+            drainer.compactSpool()
+            // A requeue banks a wake, so the worker drains the records at once.
+            if drainer.healTransientQuarantine() > 0 { drainer.wake() }
+        }
         return drainer.shouldStop() ? nil : failed
+    }
+
+    /// The least time between two heals that found something in quarantine.
+    static let quarantineHealInterval: TimeInterval = 15 * 60
+
+    /// Sends the records quarantined by a destination outage (a sink or the
+    /// events.db write, ``transientFailurePrefixes``) back through the pipeline,
+    /// run by the worker after each drain that did not fail: a clean drain says the
+    /// destination is back, so a stall that spent their attempts heals on its own
+    /// instead of waiting for a restart. Records quarantined for themselves stay.
+    /// Runs at most once per ``quarantineHealInterval``, counted from the last heal
+    /// that found anything in quarantine, so a record that keeps failing under a
+    /// transient reason costs at most ``ProviderSpool/maxAttempts`` attempts per
+    /// interval. Returns how many records it requeued; a failure is kept in
+    /// ``lastQuarantineHeal`` and never stops draining.
+    @discardableResult
+    func healTransientQuarantine(now: Date = Date()) -> Int {
+        lock.lock()
+        let due = lastHealAttempt.map { now.timeIntervalSince($0) >= Self.quarantineHealInterval } ?? true
+        lock.unlock()
+        guard due else { return 0 }
+        let report: QuarantineHealReport
+        do {
+            guard try spool.quarantinedCount() > 0 else { return 0 }
+            let requeued = try spool.requeueQuarantined(reasonPrefixes: Self.transientFailurePrefixes)
+            report = QuarantineHealReport(finishedAt: now, requeued: requeued, error: nil)
+        } catch {
+            report = QuarantineHealReport(finishedAt: now, requeued: 0, error: String(describing: error))
+        }
+        lock.lock()
+        lastHealAttempt = now
+        if report.requeued > 0 || report.error != nil { lastHeal = report }
+        lock.unlock()
+        return report.requeued
+    }
+
+    /// The last ``healTransientQuarantine(now:)`` that requeued records or failed;
+    /// nil until one has.
+    public var lastQuarantineHeal: QuarantineHealReport? {
+        lock.lock(); defer { lock.unlock() }
+        return lastHeal
     }
 
     /// How long one ``compactSpool()`` may spend on incremental vacuum steps

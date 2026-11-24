@@ -146,3 +146,11 @@
 - **follower-syncs-then-applies**: The follower MUST `sync` the local `LocalProjectMirror` to the registry's projects, then `apply` each change as it arrives, so the local file's rows match the registry's.
 - **follower-keeps-local-path**: Given `keepingLocal`, the follower MUST NOT mirror a project at that path, neither in the first sync nor in a later upsert.
 - **follower-stop**: `stop()` MUST end the follow and leave the rows already mirrored in place; a failure to read or subscribe MUST reach `onFailure`.
+
+### Pipeline Quarantine Heal
+
+- **heal-after-clean-drain**: The `PipelineDrainer` worker MUST, after each drain that did not fail, send back through the pipeline the quarantined records whose reason starts with one of `PipelineDrainer.transientFailurePrefixes` (a sink or the events.db write failed), without a restart and without a caller asking.
+- **heal-keeps-record-failures**: The heal MUST NOT requeue a record quarantined for itself (invalid JSON, an archive conflict, any reason without a transient prefix); it stays in quarantine.
+- **heal-interval**: The heal MUST requeue at most once per `PipelineDrainer.quarantineHealInterval` (15 minutes), counted from the last heal that found anything in quarantine, so a record that keeps failing costs at most `ProviderSpool.maxAttempts` attempts per interval. A heal that finds the quarantine empty MUST NOT start the interval.
+- **heal-drains-promptly**: A heal that requeued records MUST wake the worker so they drain without waiting for the idle poll.
+- **heal-report**: The drainer MUST keep the last heal that requeued records or failed in `lastQuarantineHeal` (when, how many, the error); a failed heal MUST NOT stop draining.
