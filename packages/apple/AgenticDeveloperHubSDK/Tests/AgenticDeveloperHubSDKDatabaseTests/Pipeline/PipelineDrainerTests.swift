@@ -284,6 +284,37 @@ final class PipelineDrainerTests: XCTestCase {
         XCTAssertFalse(PipelineDrainer.isStoreOutage(Other()))
     }
 
+    /// `ClaudeMainDBSink` writes through `DaemonDatabase`, which maps GRDB and
+    /// deadline errors into `DaemonDatabaseError`: those must still read as outages.
+    func testMappedDaemonDatabaseErrorsAreClassifiedAsOutages() {
+        func mapped(_ error: Error) -> Error { DaemonDatabase.mapDBError(error) }
+        XCTAssertTrue(PipelineDrainer.isStoreOutage(mapped(DatabaseError(resultCode: .SQLITE_BUSY))))
+        XCTAssertTrue(PipelineDrainer.isStoreOutage(mapped(DatabaseError(resultCode: .SQLITE_LOCKED))))
+        XCTAssertTrue(PipelineDrainer.isStoreOutage(mapped(DatabaseError(resultCode: .SQLITE_FULL))))
+        XCTAssertTrue(PipelineDrainer.isStoreOutage(mapped(DatabaseError(resultCode: .SQLITE_IOERR_WRITE))))
+        XCTAssertTrue(PipelineDrainer.isStoreOutage(
+            mapped(BoundedDatabaseError.deadlineExceeded(lane: "write", elapsedMs: 60_000))))
+        XCTAssertTrue(PipelineDrainer.isStoreOutage(DaemonDatabaseError.openFailed("gone")))
+        XCTAssertFalse(PipelineDrainer.isStoreOutage(mapped(DatabaseError(resultCode: .SQLITE_CONSTRAINT))))
+        XCTAssertFalse(PipelineDrainer.isStoreOutage(mapped(DatabaseError(resultCode: .SQLITE_ERROR))))
+    }
+
+    func testASinkOutageThroughDaemonDatabaseIsNotRetriedRecordByRecord() throws {
+        let rig = try makeRig()
+        try rig.spool.append((0..<3).map { record("k\($0)") })
+        let calls = LockedBox(0)
+        let busy = ClosureSink { _, _ in
+            calls.update { $0 += 1 }
+            throw DaemonDatabase.mapDBError(DatabaseError(resultCode: .SQLITE_BUSY))
+        }
+        let outcome = try drainer(rig, sinks: [busy]).drainOnce()
+        XCTAssertTrue(outcome.failed)
+        XCTAssertEqual(calls.value, 1, "an outage is not isolated one record at a time")
+        XCTAssertEqual(try rig.spool.pendingBatch(limit: 10).map(\.attempts), [1, 1, 1])
+        XCTAssertTrue(outcome.failureReason?.hasPrefix(PipelineDrainer.sinkFailurePrefix) ?? false,
+                      outcome.failureReason ?? "")
+    }
+
     func testUnstorableRecordIsIsolatedChargedAndQuarantinedWithoutBlockingItsBatch() throws {
         let rig = try makeRig()
         try rig.spool.append([record("k0"), record("poison"), record("k1")])

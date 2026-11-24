@@ -37,4 +37,18 @@ public enum DaemonDatabaseError: Error, LocalizedError {
         }
     }
 }
+
+/// `ClaudeMainDBSink` writes through `DaemonDatabase`, which maps every GRDB and
+/// deadline error into this type, so the drainer classifies it here: a busy,
+/// locked, full or failing database (or one that cannot be opened) is an outage
+/// of the sink, not a refusal of the records.
+extension DaemonDatabaseError: DestinationOutageClassifying {
+    public var isDestinationOutage: Bool {
+        switch self {
+        case .openFailed: return true
+        case .prepareFailed(_, let code), .stepFailed(_, let code):
+            return PipelineDrainer.isOutageResultCode(code)
+        }
+    }
+}
 #endif

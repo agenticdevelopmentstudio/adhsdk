@@ -70,6 +70,16 @@ public protocol PipelineSink: Sendable {
     func write(_ batch: NormalizedBatch, records: [ArchivedRecord], provider: String) throws
 }
 
+/// An error that says for itself whether the destination that threw it is down as
+/// a whole (busy, locked, out of disk, past its deadline) rather than refusing the
+/// records it was given. A sink whose store maps its database errors into its own
+/// type (as `DaemonDatabase` maps them into `DaemonDatabaseError`) conforms that
+/// type, so the drainer can tell an outage from a bad record
+/// (``PipelineDrainer/isStoreOutage(_:)``).
+public protocol DestinationOutageClassifying: Error {
+    var isDestinationOutage: Bool { get }
+}
+
 /// The live path: spool -> raw archive -> normalize -> events.db -> sinks -> complete.
 /// A spool row is only completed after its record is in the archive and its
 /// normalized rows are committed, so a crash at any step loses nothing and the
@@ -538,13 +548,23 @@ public final class PipelineDrainer: @unchecked Sendable {
         return kept
     }
 
-    /// A failure of the store as a whole (disk full, I/O, a lock held past the busy
-    /// timeout, a write ejected at its deadline), which says nothing about the
-    /// records being written.
+    /// A failure of a destination (the store or a sink) as a whole (disk full, I/O,
+    /// a lock held past the busy timeout, a write ejected at its deadline), which
+    /// says nothing about the records being written. Recognizes GRDB's and
+    /// `BoundedDatabase`'s errors, and any ``DestinationOutageClassifying`` error,
+    /// which is how a sink writing through a store that maps those errors into
+    /// its own type (`DaemonDatabaseError`) still reads as an outage.
     static func isStoreOutage(_ error: Error) -> Bool {
+        if let classified = error as? any DestinationOutageClassifying { return classified.isDestinationOutage }
         if error is BoundedDatabaseError { return true }
         guard let databaseError = error as? DatabaseError else { return false }
-        switch databaseError.resultCode {
+        return isOutageResultCode(databaseError.resultCode.rawValue)
+    }
+
+    /// Whether a SQLite result code (primary or extended) names an outage of the
+    /// database rather than a problem with the statement's data.
+    static func isOutageResultCode(_ code: Int32) -> Bool {
+        switch ResultCode(rawValue: code).primaryResultCode {
         case .SQLITE_FULL, .SQLITE_IOERR, .SQLITE_BUSY, .SQLITE_LOCKED, .SQLITE_READONLY,
              .SQLITE_CANTOPEN, .SQLITE_NOMEM, .SQLITE_PROTOCOL, .SQLITE_INTERRUPT:
             return true
