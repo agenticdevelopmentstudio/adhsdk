@@ -33,6 +33,13 @@
 - **no-loop-guard**: `listAllV1` SHOULD NOT be relied on to detect a server that keeps returning `has_more` true with the same last row; it has no page cap, no repeated-cursor check, no timeout and no cancellation, so such a server makes the loop run until the caller's request fails.
 - **error-propagation**: `listAllV1` MUST let any error thrown by `authedJson` (for example `AuthHttpError` with the HTTP status, or a network `TypeError`) propagate out unchanged and MUST discard the rows already gathered.
 
+### listAllPublicV1 and publicJson
+
+- **public-walk**: `listAllPublicV1<T>(url, init, opts)` MUST walk the collection exactly as `listAllV1` does (every rule above from walk-all-pages to truncation-guard holds for it), reading each page with `publicJson` in place of `authedJson`.
+- **public-no-token**: `publicJson` MUST send no `Authorization` header and MUST NOT read the stored or installed access token, even when someone is signed in. A public path must not depend on who is signed in, and a token the gateway refuses on that path would otherwise refuse the read on every page.
+- **public-json-body**: `publicJson<T>(url, init)` MUST call `fetch(url, init)` with the caller's headers kept, adding `content-type: application/json` only when `init` carries a body and no content type, and MUST return the parsed JSON body.
+- **public-no-refresh**: `publicJson` MUST throw the `AuthHttpError` built by `responseError` on a status that is not ok, after that one request; it MUST NOT refresh a token or retry. The walk lets the error propagate unchanged.
+
 ### listV1Page
 
 - **single-page**: `listV1Page<T>(url, init)` MUST issue exactly one `authedJson` request for `url` exactly as given, adding no `limit` or `starting_after`.
@@ -54,11 +61,11 @@
 
 ### Side effects
 
-- **network-only**: The only side effect MUST be the HTTP requests `authedJson` makes. The module does not read or write storage, tokens, files or notifications, does not log, and does not mutate its inputs.
+- **network-only**: The only side effect MUST be the HTTP requests `authedJson` and `publicJson` make. The module does not read or write storage, tokens, files or notifications, does not log, and does not mutate its inputs.
 
 ### Security
 
-- **credential-source**: Bearer credentials are attached, and a 401 is refreshed and retried once, inside `authedJson`; this module MUST NOT read, store or log a token. Token lifetime, storage and revocation are specified in the Authentication Client ([adhsdk.ingredient.data.services.auth.auth-client](cookbook:3ea9329e-5acc-4c43-b5ce-bb8c50570104)) recipe.
+- **credential-source**: Bearer credentials are attached, and a 401 is refreshed and retried once, inside `authedJson`; this module MUST NOT read, store or log a token. `publicJson` attaches none. Token lifetime, storage and revocation are specified in the Authentication Client ([adhsdk.ingredient.data.services.auth.auth-client](cookbook:3ea9329e-5acc-4c43-b5ce-bb8c50570104)) recipe.
 - **url-as-given**: The module MUST send requests to the `url` the caller passes and MUST NOT rewrite its origin; the caller owns choosing a same-origin proxy path or an authorization-server base.
 - **sensitive-data-in-url**: The only caller-supplied data this module places in a URL is the paging cursor (an object id) and caller params. It MUST NOT be given secrets as params, because the URL is part of the thrown error message from `listAllV1`.
 

@@ -16,7 +16,9 @@ export {
 
 export {
   listAllV1,
+  listAllPublicV1,
   listV1Page,
+  publicJson,
   withV1Query,
   unixToIso,
   isoToUnix,

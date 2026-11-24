@@ -12,7 +12,7 @@
 // `listAllV1` is the ONE place that walks a collection to its end — a caller that
 // needs every row calls it rather than looping `starting_after` itself.
 
-import { authedJson } from './client'
+import { authedJson, responseError } from './client'
 
 /** The /v1 collection envelope. */
 export interface V1List<T> {
@@ -83,14 +83,33 @@ export async function listAllV1<T>(
   init: RequestInit = {},
   opts: ListAllV1Options = {},
 ): Promise<T[]> {
+  return walkV1<T>(url, (page) => authedJson<V1List<T>>(page, init), opts)
+}
+
+/**
+ * {@link listAllV1} for a public collection: the same paging, but each page is read with
+ * {@link publicJson}, so no caller's token is sent. A public path must not depend on who is
+ * signed in, and a site whose token the gateway refuses on that path would otherwise be
+ * refused there on every page.
+ */
+export async function listAllPublicV1<T>(
+  url: string,
+  init: RequestInit = {},
+  opts: ListAllV1Options = {},
+): Promise<T[]> {
+  return walkV1<T>(url, (page) => publicJson<V1List<T>>(page, init), opts)
+}
+
+async function walkV1<T>(
+  url: string,
+  readPage: (pageUrl: string) => Promise<V1List<T>>,
+  opts: ListAllV1Options,
+): Promise<T[]> {
   const cursorOf = opts.cursorOf ?? defaultCursor
   const rows: T[] = []
   let after: string | undefined
   for (;;) {
-    const page = await authedJson<V1List<T>>(
-      withV1Query(url, { limit: V1_PAGE_MAX, starting_after: after }),
-      init,
-    )
+    const page = await readPage(withV1Query(url, { limit: V1_PAGE_MAX, starting_after: after }))
     const data = Array.isArray(page?.data) ? page.data : []
     rows.push(...data)
     if (!page?.has_more || data.length === 0) return rows
@@ -100,6 +119,19 @@ export async function listAllV1<T>(
     }
     after = next
   }
+}
+
+/**
+ * A JSON request that sends no authorization: for a public endpoint, or one whose credential
+ * rides in the request itself (an emailed link's token). A body is sent as JSON. Throws
+ * `AuthHttpError` on a non-ok response, as the authed helpers do.
+ */
+export async function publicJson<T>(url: string, init: RequestInit = {}): Promise<T> {
+  const headers = new Headers(init.headers)
+  if (init.body != null && !headers.has('content-type')) headers.set('content-type', 'application/json')
+  const res = await fetch(url, { ...init, headers })
+  if (!res.ok) throw await responseError(res, `HTTP ${res.status}`)
+  return (await res.json()) as T
 }
 
 /** One page of a /v1 collection, unwrapped: its rows and whether more follow. */

@@ -2,7 +2,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { AuthHttpError } from '../client'
 import { configureAuth } from '../config'
 import { invalidateRefresh } from '../refresh'
-import { V1_PAGE_MAX, isoToUnix, listAllV1, listV1Page, unixToIso, withV1Query } from '../v1'
+import { writeTokens } from '../tokens'
+import {
+  V1_PAGE_MAX,
+  isoToUnix,
+  listAllPublicV1,
+  listAllV1,
+  listV1Page,
+  publicJson,
+  unixToIso,
+  withV1Query,
+} from '../v1'
 
 beforeEach(() => {
   localStorage.clear()
@@ -177,5 +187,46 @@ describe('timestamps (more)', () => {
 
   it('v1-021 V1_PAGE_MAX is 100', () => {
     expect(V1_PAGE_MAX).toBe(100)
+  })
+})
+
+describe('listAllPublicV1 and publicJson', () => {
+  const authOf = (init: unknown) => new Headers((init as RequestInit | undefined)?.headers).get('authorization')
+
+  it('v1-022 listAllPublicV1 walks the pages like listAllV1 and sends no token', async () => {
+    writeTokens({ accessToken: 'TOK', refreshToken: '' })
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(page([{ id: 'a' }], true))
+      .mockResolvedValueOnce(page([{ id: 'b' }], false))
+    const rows = await listAllPublicV1<{ id: string }>('/api/v1/feature_flags', { cache: 'no-store' })
+    expect(rows.map((r) => r.id)).toEqual(['a', 'b'])
+    expect(fetchMock.mock.calls.map((c) => String(c[0]))).toEqual([
+      '/api/v1/feature_flags?limit=100',
+      '/api/v1/feature_flags?limit=100&starting_after=a',
+    ])
+    for (const [, init] of fetchMock.mock.calls) {
+      expect(authOf(init)).toBeNull()
+      expect((init as RequestInit).cache).toBe('no-store')
+    }
+  })
+
+  it('v1-023 publicJson sends a body as JSON and no token', async () => {
+    writeTokens({ accessToken: 'TOK', refreshToken: '' })
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({ ok: 1 }), { status: 200, headers: { 'content-type': 'application/json' } }),
+    )
+    expect(await publicJson('/api/v1/public/x', { method: 'POST', body: '{}' })).toEqual({ ok: 1 })
+    const init = fetchMock.mock.calls[0]?.[1]
+    expect(authOf(init)).toBeNull()
+    expect(new Headers((init as RequestInit).headers).get('content-type')).toBe('application/json')
+  })
+
+  it('v1-024 publicJson throws AuthHttpError on a refusal, with no refresh and no retry', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ error: { message: 'nope' } }), { status: 401 }),
+    )
+    await expect(publicJson('/api/v1/public/x')).rejects.toBeInstanceOf(AuthHttpError)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 })

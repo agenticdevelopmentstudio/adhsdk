@@ -2,7 +2,7 @@
 id: 3ea9329e-5acc-4c43-b5ce-bb8c50570104
 title: "Authentication Client"
 type: ingredient
-version: 2.1.0
+version: 2.1.1
 status: review
 language: en
 created: 2026-09-23
@@ -63,6 +63,8 @@ account-security screens) is a consumer of this contract, not part of it.
 
 
 A twelfth, React-based module covers a second kind of session. The product admin site (phase 6), where a product's own admins manage that product at its own host, keeps its access token in memory only, with its refresh token as an HttpOnly cookie on the site's origin. Its provider installs an access-token source that the request wrapper and the refresh operation ask before storage, so every data client sends the site's bearer unchanged; with no source installed, nothing differs.
+
+The client entry point (`client.ts`, published as `@adh-sdk/auth/client`) also re-exports the /v1 wire helpers, among them the token-free `publicJson` and `listAllPublicV1`, which are specified in the Auth v1 Wire Conventions ([adhsdk.ingredient.data.services.auth.v1](cookbook:870c182f-1a80-4254-8fec-3eb35c8f13f7)) recipe, not here.
 ## Behavioral Requirements
 
 - **default-runtime-config**: the runtime configuration MUST default to
@@ -982,19 +984,19 @@ keeps an expected 4xx (wrong password, stale code) off this log.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/auth/src/account-security.ts` | confirmed (2.1.0) |
-| web | `packages/web/packages/auth/src/asBase.ts` | confirmed (2.1.0) |
-| web | `packages/web/packages/auth/src/client.ts` | confirmed (2.1.0) |
-| web | `packages/web/packages/auth/src/config.ts` | confirmed (2.1.0) |
-| web | `packages/web/packages/auth/src/labels.ts` | confirmed (2.1.0) |
-| web | `packages/web/packages/auth/src/mfa.ts` | confirmed (2.1.0) |
-| web | `packages/web/packages/auth/src/refresh.ts` | confirmed (2.1.0) |
-| web | `packages/web/packages/auth/src/report.ts` | confirmed (2.1.0) |
-| web | `packages/web/packages/auth/src/sso.ts` | confirmed (2.1.0) |
-| web | `packages/web/packages/auth/src/tokens.ts` | confirmed (2.1.0) |
-| web | `packages/web/packages/auth/src/types.ts` | confirmed (2.1.0) |
-| web | `packages/web/packages/auth/src/ProductAdminAuthProvider.tsx` | confirmed (2.1.0) |
-| web | `packages/web/packages/auth/src/index.ts` | confirmed (2.1.0) |
+| web | `packages/web/packages/auth/src/account-security.ts` | confirmed (2.1.1) |
+| web | `packages/web/packages/auth/src/asBase.ts` | confirmed (2.1.1) |
+| web | `packages/web/packages/auth/src/client.ts` | confirmed (2.1.1) |
+| web | `packages/web/packages/auth/src/config.ts` | confirmed (2.1.1) |
+| web | `packages/web/packages/auth/src/labels.ts` | confirmed (2.1.1) |
+| web | `packages/web/packages/auth/src/mfa.ts` | confirmed (2.1.1) |
+| web | `packages/web/packages/auth/src/refresh.ts` | confirmed (2.1.1) |
+| web | `packages/web/packages/auth/src/report.ts` | confirmed (2.1.1) |
+| web | `packages/web/packages/auth/src/sso.ts` | confirmed (2.1.1) |
+| web | `packages/web/packages/auth/src/tokens.ts` | confirmed (2.1.1) |
+| web | `packages/web/packages/auth/src/types.ts` | confirmed (2.1.1) |
+| web | `packages/web/packages/auth/src/ProductAdminAuthProvider.tsx` | confirmed (2.1.1) |
+| web | `packages/web/packages/auth/src/index.ts` | confirmed (2.1.1) |
 
 ## Design Decisions
 
@@ -1163,6 +1165,7 @@ honestly-reported gap in the source, not a hidden one.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 2.1.1 | 2026-11-23 | Mike Fullerton | The public reads use the shared token-free publicJson from the Auth v1 Wire Conventions; behaviour unchanged. |
 | 2.1.0 | 2026-11-23 | Mike Fullerton | Phase 7: consented support access |
 | 2.0.0 | 2026-11-23 | Mike Fullerton | Phase 6: the access-token source seam and ProductAdminAuthProvider, the product admin site's in-memory session |
 | 1.1.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (conformance-vectors.test.ts, 119 of 120 vectors; auth-client-118 skipped as a static property); vector text corrected to the /v1 API; unit-test-coverage now passed. |

@@ -4,11 +4,11 @@
     "id": "870c182f-1a80-4254-8fec-3eb35c8f13f7",
     "title": "Auth v1 Wire Conventions",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.1.0",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
-    "modified": "2026-11-14",
+    "modified": "2026-11-23",
     "author": "mfullerton",
     "copyright": "2026 mfullerton",
     "license": "MIT",
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "4dc9f2c5110966cb",
+  "synced": "95e477119f555a55",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

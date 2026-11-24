@@ -24,4 +24,6 @@ Every vector is asserted in `packages/web/packages/auth/src/__tests__/v1.test.ts
 | v1-019 | iso-to-unix | `isoToUnix('2026-01-01T00:00:00.999Z')` | `1767225600` |
 | v1-020 | iso-to-unix-invalid | `isoToUnix('not a date')` | `NaN` |
 | v1-021 | page-max | Read `V1_PAGE_MAX` | `100` |
-
+| v1-022 | public-walk, public-no-token | A stored access token; two pages of `/api/v1/feature_flags` (ids a, b, then c), `init` `{ cache: 'no-store' }`; call `listAllPublicV1` | Rows a, b, c; no request carries `Authorization`; each request carries `cache: 'no-store'` |
+| v1-023 | public-json-body, public-no-token | A stored access token; `publicJson('/x', { method: 'POST', body: '{}' })` | One request with `content-type: application/json` and no `Authorization`; resolves to the parsed body |
+| v1-024 | public-no-refresh | A stored access token; `publicJson('/x')` answered 401 | Rejects with `AuthHttpError` status 401 after exactly one request |

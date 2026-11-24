@@ -34,7 +34,7 @@ import {
   type UseMutationResult,
   type UseQueryResult,
 } from "@tanstack/react-query";
-import { responseError } from "@adh-sdk/auth/client";
+import { publicJson } from "@adh-sdk/auth/client";
 import { authedJson, authedRequest, httpStatus, listAllV1, listV1Page, withV1Query } from "../http";
 import { enc } from "../client-helpers";
 import {
@@ -534,24 +534,17 @@ export interface SupportLinkGrant {
   reads: SupportAccess[];
 }
 
-async function publicJson<T>(url: string, init: RequestInit = {}): Promise<T> {
-  const res = await fetch(url, {
-    ...init,
-    cache: "no-store",
-    headers: init.body != null ? { "content-type": "application/json" } : undefined,
-  });
-  if (!res.ok) throw await responseError(res, `HTTP ${res.status}`);
-  return (await res.json()) as T;
-}
+/** The emailed link's reads are never cached: a grant can be revoked at any moment. */
+const linkJson = <T>(url: string, init: RequestInit = {}) => publicJson<T>(url, { ...init, cache: "no-store" });
 
 const publicPost = <T>(id: string, tail: string, body: Record<string, string>) =>
-  publicJson<T>(`${PUBLIC_PATH}/${enc(id)}${tail}`, { method: "POST", body: JSON.stringify(body) });
+  linkJson<T>(`${PUBLIC_PATH}/${enc(id)}${tail}`, { method: "POST", body: JSON.stringify(body) });
 
 /** The emailed link's calls. They send no authorization; the token is the credential, and the
  *  client never stores it. */
 export const publicSupportApi = {
   async get(id: string, token: string): Promise<SupportLinkGrant> {
-    const w = await publicJson<SupportLinkGrantWire>(withV1Query(`${PUBLIC_PATH}/${enc(id)}`, { token }));
+    const w = await linkJson<SupportLinkGrantWire>(withV1Query(`${PUBLIC_PATH}/${enc(id)}`, { token }));
     return { grant: toSupportAdminGrant(w.grant), reads: (w.reads ?? []).map(toSupportRead) };
   },
 

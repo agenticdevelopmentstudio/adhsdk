@@ -16,7 +16,7 @@ depends-on:
   - 870c182f-1a80-4254-8fec-3eb35c8f13f7
   - 3ea9329e-5acc-4c43-b5ce-bb8c50570104
   - 150bf00e-6c6b-4f91-a323-d307ebd5700d
-version: 1.1.0
+version: 1.1.1
 created: 2026-11-23
 modified: 2026-11-23
 author: Mike Fullerton
@@ -33,7 +33,7 @@ This is the web client for consented support access. A person who built content 
 
 The component is three files in `packages/web/packages/data/src/support/`, published as `@adh-sdk/data/support`: `wire.ts` (the wire types and mappers), `grants.ts` (the four clients, the rules the panes read and the hooks) and `index.ts` (the re-exports). It uses the shared /v1 conventions ([adhsdk.ingredient.data.services.auth.v1](cookbook:870c182f-1a80-4254-8fec-3eb35c8f13f7)) and the authentication client ([adhsdk.ingredient.data.services.auth.auth-client](cookbook:3ea9329e-5acc-4c43-b5ce-bb8c50570104)); nothing here reads a token or a base URL itself. A product admin's calls name the product the way the product admin client does ([adhsdk.ingredient.adh.hub.product-admin.product-admin-client](cookbook:150bf00e-6c6b-4f91-a323-d307ebd5700d)), by ecosystem uuid.
 
-Four clients, one for each kind of caller. Every path is a `/api/v1` path, the backend's path snake-cased. None takes a transport argument: each calls the shared `authedJson`, `authedRequest` and `listV1Page` imports, and the public client calls `fetch`.
+Four clients, one for each kind of caller. Every path is a `/api/v1` path, the backend's path snake-cased. None takes a transport argument: each calls the shared `authedJson`, `authedRequest` and `listV1Page` imports, and the public client calls the shared token-free `publicJson` ([adhsdk.ingredient.data.services.auth.v1](cookbook:870c182f-1a80-4254-8fec-3eb35c8f13f7)).
 
 | Client | Caller | Functions |
 |---|---|---|
@@ -139,7 +139,7 @@ Vectors are asserted in `packages/web/packages/data/src/support/__tests__/suppor
 | `SUPPORT_REASON_MIN`, `SUPPORT_REASON_MAX` | numbers | 10, 500 | The reason length the backend accepts. |
 | `SUPPORT_HOURS_MAX`, `SUPPORT_BREAK_GLASS_HOURS_MAX`, `SUPPORT_HOURS_DEFAULT` | numbers | 168, 4, 24 | The longest consented grant, the longest break-glass grant, and the length a request form starts at. |
 | `SUPPORT_ATTESTATION_MIN` | number | 40 | The shortest break-glass attestation. |
-| Transport | static imports | `authedJson`, `authedRequest`, `httpStatus`, `listAllV1`, `listV1Page` and `withV1Query` from `../http`, `enc` from `../client-helpers`, and `responseError` from `@adh-sdk/auth/client` | No client takes a transport argument. A test replaces the `../http` imports (`authedJson`, `authedRequest`, `listAllV1`, `listV1Page`) with stubs; the caller's environment supplies the token and base URL. The public client calls `fetch` and sends no authorization. |
+| Transport | static imports | `authedJson`, `authedRequest`, `httpStatus`, `listAllV1`, `listV1Page` and `withV1Query` from `../http`, `enc` from `../client-helpers`, and `publicJson` from `@adh-sdk/auth/client` | No client takes a transport argument. A test replaces the `../http` imports (`authedJson`, `authedRequest`, `listAllV1`, `listV1Page`) with stubs; the caller's environment supplies the token and base URL. The public client calls the shared `publicJson` with `cache: 'no-store'` and sends no authorization. |
 ## Deep Linking
 
 Not applicable: this is a data client; it declares no URL scheme or route of its own, only the backend `/v1` paths it calls.
@@ -183,7 +183,7 @@ Not applicable: the module logs nothing; a failure surfaces only as a thrown err
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/data/src/support/` | confirmed (1.1.0) |
+| web | `packages/web/packages/data/src/support/` | confirmed (1.1.1) |
 
 ## Design Decisions
 
@@ -215,5 +215,6 @@ The module is written, in `wire.ts`, `grants.ts` and `index.ts`. Both checks sta
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-11-23 | Mike Fullerton | The public reads use the shared token-free publicJson from the Auth v1 Wire Conventions; behaviour unchanged. |
 | 1.1.0 | 2026-11-23 | Mike Fullerton | Matches the code: real file names, /api/v1 snake-cased paths, has_more paging, request limits, full hook keys, and the operator and emailed-link calls |
 | 1.0.0 | | | Initial creation |

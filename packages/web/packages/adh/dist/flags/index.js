@@ -1,7 +1,7 @@
 'use client'
 
 // src/flags/FeatureFlagsProvider.tsx
-import { listAllV1 } from "@adh-sdk/auth/client";
+import { listAllPublicV1 } from "@adh-sdk/auth/client";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { jsx } from "react/jsx-runtime";
 var FlagState = {
@@ -43,7 +43,7 @@ function FeatureFlagsProvider({
       setSettled(true);
       return;
     }
-    listAllV1("/api/v1/feature_flags", { cache: "no-store" }).then((rows) => rows.filter((f) => f.enabled === true).map((f) => f.key)).catch(() => []).then((backendKeys) => {
+    listAllPublicV1("/api/v1/feature_flags", { cache: "no-store" }).then((rows) => rows.filter((f) => f.enabled === true).map((f) => f.key)).catch(() => []).then((backendKeys) => {
       if (!live) return;
       setFlags(/* @__PURE__ */ new Set([...backendKeys, ...clientFlags()]));
       setSettled(true);

@@ -1,6 +1,6 @@
 'use client'
 
-import { listAllV1 } from '@adh-sdk/auth/client'
+import { listAllPublicV1 } from '@adh-sdk/auth/client'
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 
 /**
@@ -143,8 +143,10 @@ export function FeatureFlagsProvider({
       return
     }
     // `no-store`: the flag set is the live switchboard — a cached answer is a stale gate.
-    // The collection is paged (10 rows by default), so `listAllV1` walks it to the end.
-    listAllV1<{ key: string; enabled?: boolean }>('/api/v1/feature_flags', { cache: 'no-store' })
+    // The collection is paged (10 rows by default), so it is walked to the end. It is public, so
+    // it is read without the caller's token: a site whose token the gateway refuses on this path
+    // would otherwise read no flags, on every page.
+    listAllPublicV1<{ key: string; enabled?: boolean }>('/api/v1/feature_flags', { cache: 'no-store' })
       .then((rows) => rows.filter((f) => f.enabled === true).map((f) => f.key))
       .catch(() => [] as string[]) // backend down ⇒ no flags ⇒ everything gated stays off
       .then((backendKeys) => {

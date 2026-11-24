@@ -10,3 +10,5 @@ account-security screens) is a consumer of this contract, not part of it.
 
 
 A twelfth, React-based module covers a second kind of session. The product admin site (phase 6), where a product's own admins manage that product at its own host, keeps its access token in memory only, with its refresh token as an HttpOnly cookie on the site's origin. Its provider installs an access-token source that the request wrapper and the refresh operation ask before storage, so every data client sends the site's bearer unchanged; with no source installed, nothing differs.
+
+The client entry point (`client.ts`, published as `@adh-sdk/auth/client`) also re-exports the /v1 wire helpers, among them the token-free `publicJson` and `listAllPublicV1`, which are specified in the Auth v1 Wire Conventions ([adhsdk.ingredient.data.services.auth.v1](cookbook:870c182f-1a80-4254-8fec-3eb35c8f13f7)) recipe, not here.
