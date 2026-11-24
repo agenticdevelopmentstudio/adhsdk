@@ -285,11 +285,13 @@ export const SITES: SiteDef[] = [
   // `fullLabel` is required — siteHeaderTitle can't derive the brand from the host.
   { id: 'myagenticteams', label: 'My Teams', fullLabel: 'My Agentic Teams', description: 'Build your own agentic teams', prodHost: 'myagenticteams.com', hasStaging: true, hasTesting: true, hasHome: true, workspaceRoute: 'root' },
   // myagenticdevteam: off-pattern consumer brand like myagenticteams, so `fullLabel` is
-  // required for the same reason. Unlike myagenticteams it has NO `workspaceRoute`: the site
+  // required for the same reason. Its short `label` is the full brand too (as bitbag's is):
+  // it sits directly after devteam in SITE_CATEGORIES' Build group, and a shortened "My Dev
+  // Team" there reads as a personal copy of that row, not the separate product it is. Unlike myagenticteams it has NO `workspaceRoute`: the site
   // is a coming-soon placeholder whose only signed-in surface is a gated `/home`, and it
   // mounts no `app/[workspace]` — a workspace switch into it falls back to its landing rather
   // than landing on a 404. Give it `workspaceRoute: 'root'` the day it grows that route.
-  { id: 'myagenticdevteam', label: 'My Dev Team', fullLabel: 'My Agentic Dev Team', description: 'Your own agentic development team', prodHost: 'myagenticdevteam.com', hasStaging: true, hasTesting: true, hasHome: true },
+  { id: 'myagenticdevteam', label: 'My Agentic Dev Team', fullLabel: 'My Agentic Dev Team', description: 'Your own agentic development team', prodHost: 'myagenticdevteam.com', hasStaging: true, hasTesting: true, hasHome: true },
   { id: 'mcp', label: 'MCP', fullLabel: 'Agentic Developer MCP', description: 'MCP server', prodHost: 'mcp.agenticdeveloperhub.com', hasStaging: true, hasTesting: false, hasHome: false, crawlable: false },
   // <gen:sites> managed by scaffold-sites.py — do not edit by hand
   { id: 'community', label: 'Community', fullLabel: 'Agentic Developer Community', description: 'Forums & discussion', prodHost: 'agenticdevelopercommunity.com', hasStaging: true, hasTesting: true, hasHome: true, workspaceRoute: 'root', dividerBefore: true, sectionLabel: 'Developer platform' },
