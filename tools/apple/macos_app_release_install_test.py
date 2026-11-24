@@ -423,8 +423,18 @@ def test_restores_the_old_bundle_when_the_second_move_fails(tmp_path):
     env = Env(tmp_path, fail_new_move=True)
     env.make_old()
     assert env.go() == 1
-    assert not any(c[0] == "open" for c in env.calls)
+    assert env.dest_marker() == "old"
+    # The install had quit it, so the restored old app is started again.
+    assert [c for c in env.calls if c[0] == "open"] == [["open", "-a", str(env.apps / env.name)]]
     assert not (env.apps / f".{env.cfg.app_name}-install-4242").exists()
+
+
+def test_a_rollback_does_not_open_an_app_that_was_not_running(tmp_path):
+    env = Env(tmp_path, fail_new_move=True)
+    env.make_old()
+    env.alive = []
+    assert env.go() == 1
+    assert not any(c[0] == "open" for c in env.calls)
 
 
 def test_a_failed_second_rename_restores_the_old_bundle_without_nesting(tmp_path):

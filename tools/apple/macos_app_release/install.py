@@ -124,7 +124,8 @@ def install(zip_path: Path, cfg: ReleaseConfig, *, apps_dir: Path | None = None,
             return 1
 
         if not swap_in(new, dest, aside=apps_dir / f"{app_name}.old-{pid}", pids=pids,
-                       kill=kill, sleep=sleep, monotonic=monotonic, rename=rename, say=say):
+                       kill=kill, sleep=sleep, monotonic=monotonic, rename=rename,
+                       reopen=lambda d: run(["open", "-a", str(d)]), say=say):
             return 1
     finally:
         shutil.rmtree(staging, ignore_errors=True)
@@ -168,13 +169,16 @@ def swap_in(new: Path, dest: Path, *, aside: Path,
             sleep: Callable[[float], None] = time.sleep,
             monotonic: Callable[[], float] = time.monotonic,
             rename: Callable[[Path, Path], object] = os.rename,
+            reopen: Callable[[Path], object] | None = None,
             say: Callable[[str], None] = print) -> bool:
     """Quit what runs from `dest`, then put the bundle at `new` in its place.
 
     `new` and `aside` must be on `dest`'s volume, so both moves are renames. The
     old bundle is moved to `aside` and deleted only once the new one is in place;
-    if the second move fails, the old one goes back. True when `new` is installed.
+    if the second move fails, the old one goes back and, when it was running
+    before the quit, `reopen(dest)` starts it again. True when `new` is installed.
     """
+    was_running = bool(pids(dest))
     quit_app(dest, pids=pids, kill=kill, sleep=sleep, monotonic=monotonic)
 
     had_old = dest.exists()
@@ -196,6 +200,10 @@ def swap_in(new: Path, dest: Path, *, aside: Path,
                 say(f"error: could not put the old app back either ({back}); it is at "
                     f"{aside}. Restore it with:")
                 say(f'  mv "{aside}" "{dest}"')
+                return False
+            if was_running and reopen is not None:
+                say(f"put the old {dest.name} back; reopening it.")
+                reopen(dest)
         return False
     if had_old:
         shutil.rmtree(aside, ignore_errors=True)
@@ -273,7 +281,8 @@ def install_built_app(app: Path, apps_dir: Path, *, run: Runner = run_command,
             say(f"error: ditto failed: {(copied.stderr or '').strip()}")
             return 1
         if not swap_in(new, dest, aside=apps_dir / f"{app.name}.old-{pid}", pids=pids,
-                       kill=kill, sleep=sleep, monotonic=monotonic, rename=rename, say=say):
+                       kill=kill, sleep=sleep, monotonic=monotonic, rename=rename,
+                       reopen=lambda d: run(["open", "-a", str(d)]), say=say):
             return 1
     finally:
         shutil.rmtree(staging, ignore_errors=True)
