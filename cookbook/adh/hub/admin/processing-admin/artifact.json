@@ -4,11 +4,11 @@
     "id": "d3ba2e4e-bfce-4876-a05b-4ad7db88b34d",
     "title": "Processing Admin",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "draft",
     "language": "en",
     "created": "2026-11-23",
-    "modified": "2026-11-23",
+    "modified": "2026-11-24",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "ce8ed879dc3232d3",
+  "synced": "0dd7ec339368f5ef",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -19779,9 +19779,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:4b7901bb72fb2e2d3a2e2d04639fc027f7b06f3212d56316aa2f9fcf02076a40",
+            "hash": "sha256:5bf9ba95b1ef8a72de64a96dd4d166cb43186fb43a1dc276ada98c5ef0c09d6e",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/web/packages/features/adh-admin/src/processing/WorkerTokens.tsx",
           "platform": "web"

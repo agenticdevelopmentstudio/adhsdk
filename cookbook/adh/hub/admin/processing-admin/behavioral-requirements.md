@@ -10,7 +10,9 @@
   "Worker"), read from the token's `pool` boolean, which the backend sets when the token carries
   `ai-processing:pool`.
 - **worker-token-reveal-once**: The created token MUST be shown once in a read-only field with a copy
-  button, and closing the reveal MUST ask "Close without copying?" first.
+  button, and closing the reveal MUST ask "Close without copying?" first. That confirm's buttons MUST read
+  "Close without copying" and "Keep open", so the button that drops the token is named for what it does
+  and no other "Close" on the page shares its name.
 - **worker-token-revoke-confirm**: Revoke MUST ask for confirmation and MUST say that every node using the
   token stops working.
 

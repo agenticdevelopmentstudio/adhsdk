@@ -2,11 +2,11 @@
 id: d3ba2e4e-bfce-4876-a05b-4ad7db88b34d
 title: "Processing Admin"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: draft
 language: en
 created: 2026-11-23
-modified: 2026-11-23
+modified: 2026-11-24
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -58,7 +58,9 @@ relabelled.
   "Worker"), read from the token's `pool` boolean, which the backend sets when the token carries
   `ai-processing:pool`.
 - **worker-token-reveal-once**: The created token MUST be shown once in a read-only field with a copy
-  button, and closing the reveal MUST ask "Close without copying?" first.
+  button, and closing the reveal MUST ask "Close without copying?" first. That confirm's buttons MUST read
+  "Close without copying" and "Keep open", so the button that drops the token is named for what it does
+  and no other "Close" on the page shares its name.
 - **worker-token-revoke-confirm**: Revoke MUST ask for confirmation and MUST say that every node using the
   token stops working.
 
@@ -190,15 +192,6 @@ Not applicable: the panes contain no logging calls. Failures are shown in the sh
 - **WinUI 3**: A `CheckBox` in the `ContentDialog`, and a `ListView` of dead rows with a Retry
   `Button` in each item template.
 
-## Reference Implementations
-
-| Platform | Location | Conformance |
-|----------|----------|-------------|
-| web | `packages/web/packages/features/adh-admin/src/processing/WorkerTokens.tsx` | confirmed (1.0.1) |
-| web | `packages/web/packages/features/adh-admin/src/processing/DeadJobs.tsx` | confirmed (1.0.1) |
-| web | `packages/web/packages/features/adh-admin/src/panes/AiNodesPane.tsx` | confirmed (1.0.1) |
-| web | `packages/web/packages/features/adh-admin/src/api/processing.ts` | confirmed (1.0.1) |
-
 ## Design Decisions
 
 **Decision**: Dead jobs go in a section of `AiNodesPane`, not a new topic.
@@ -237,5 +230,6 @@ Each check was read against the phase 9 code:
 ## Change History
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-24 | Mike Fullerton | worker-token-reveal-once names the drop confirm's buttons: "Close without copying" and "Keep open" |
 | 1.0.1 | 2026-11-23 | Mike Fullerton | Code written: the pool flag is read from the token's pool boolean; vectors and compliance read against the code |
 | 1.0.0 | 2026-11-23 | Mike Fullerton | Initial creation: the Pool checkbox and the Dead jobs section for phase 9, written before the code |
