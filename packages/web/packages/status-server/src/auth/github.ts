@@ -14,18 +14,31 @@ const STATE_COOKIE = 'gh_oauth_state';
 const NEXT_COOKIE = 'gh_oauth_next';
 /** Where a GitHub login with no (valid) `next` lands. */
 const DEFAULT_DESTINATION = '/home';
+/** A throwaway origin `next` is resolved against; only its path part is kept. */
+const NEXT_RESOLVE_BASE = 'http://next.invalid';
 
 /**
  * `next` if it is a same-origin, purely relative path, else null. The value ends
  * up in a Location header, so anything that could leave the site is refused:
  * a scheme or host (`https://evil`), a protocol-relative `//evil` and its
  * backslash spelling `/\evil` (browsers treat `\` as `/`), and control chars.
+ * It is then resolved the way a browser would (as `@adh-sdk/auth`'s browser-side
+ * `safeReturnTo` does) and only the normalized `pathname+search+hash` is returned:
+ * dot segments that collapse to `//host` (`/x/..//evil`) are refused, and the
+ * result is percent-encoded, so no raw non-ASCII byte reaches the Location header.
  */
 export function safeNext(next: string | undefined | null): string | null {
   if (!next || next.length > 2048) return null;
   if (!next.startsWith('/') || next.startsWith('//') || next.startsWith('/\\')) return null;
   if (/[\x00-\x1f\x7f]/.test(next)) return null;
-  return next;
+  let url: URL;
+  try {
+    url = new URL(next, NEXT_RESOLVE_BASE);
+  } catch {
+    return null;
+  }
+  if (url.origin !== NEXT_RESOLVE_BASE || url.pathname.startsWith('//')) return null;
+  return url.pathname + url.search + url.hash;
 }
 
 /** fetch with the GitHub deadline — the only outbound fetches on a PRE-AUTH
