@@ -604,13 +604,15 @@ public final class PipelineDrainer: @unchecked Sendable {
     /// it failed, or nil when the worker should exit.
     private static func passIfRunning(_ drainer: PipelineDrainer?) -> Bool? {
         guard let drainer, !drainer.shouldStop() else { return nil }
-        let failed = drainer.drainUntilEmpty().failed
-        if !failed, !drainer.shouldStop() {
+        let outcome = drainer.drainUntilEmpty()
+        if !outcome.failed, !drainer.shouldStop() {
             drainer.compactSpool()
-            // A requeue banks a wake, so the worker drains the records at once.
-            if drainer.healTransientQuarantine() > 0 { drainer.wake() }
+            // Only a drain that completed records proves the destinations take writes
+            // again: an empty drain touched neither the store nor a sink. A requeue
+            // banks a wake, so the worker drains the records at once.
+            if outcome.completed > 0, drainer.healTransientQuarantine() > 0 { drainer.wake() }
         }
-        return drainer.shouldStop() ? nil : failed
+        return drainer.shouldStop() ? nil : outcome.failed
     }
 
     /// The least time between two heals that found something in quarantine.
@@ -618,9 +620,12 @@ public final class PipelineDrainer: @unchecked Sendable {
 
     /// Sends the records quarantined by a destination outage (a sink or the
     /// events.db write, ``transientFailurePrefixes``) back through the pipeline,
-    /// run by the worker after each drain that did not fail: a clean drain says the
-    /// destination is back, so a stall that spent their attempts heals on its own
-    /// instead of waiting for a restart. Records quarantined for themselves stay.
+    /// run by the worker after each drain that did not fail and completed records:
+    /// records written through the store and every sink say the destinations are
+    /// back, so a stall that spent their attempts heals on its own instead of waiting
+    /// for a restart. An empty drain proves nothing, so a daemon left idle after an
+    /// outage heals with the next record that arrives. Records quarantined for
+    /// themselves stay.
     /// Runs at most once per ``quarantineHealInterval``, counted from the last heal
     /// that found anything in quarantine, so a record that keeps failing under a
     /// transient reason costs at most ``ProviderSpool/maxAttempts`` attempts per

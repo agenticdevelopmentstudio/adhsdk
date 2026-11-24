@@ -685,11 +685,21 @@ final class PipelineDrainerTests: XCTestCase {
         }
         let pipe = try drainer(rig, sinks: [sink])
         XCTAssertTrue(pipe.start(idlePoll: 0.05))
-        let deadline = Date().addingTimeInterval(10)
-        while Date() < deadline, taken.value < 2 { Thread.sleep(forTimeInterval: 0.02) }
+        var deadline = Date().addingTimeInterval(10)
+        while Date() < deadline, (try? rig.spool.quarantinedCount()) != 2 { Thread.sleep(forTimeInterval: 0.02) }
+        // Empty drains after the outage prove nothing, so nothing is requeued yet.
+        Thread.sleep(forTimeInterval: 0.3)
+        XCTAssertEqual(try rig.spool.quarantinedCount(), 2, "an empty drain does not heal")
+        XCTAssertNil(pipe.lastQuarantineHeal)
+
+        // The next record through proves the sink is back, and the heal follows it.
+        try rig.spool.append([record("k2")])
+        pipe.wake()
+        deadline = Date().addingTimeInterval(10)
+        while Date() < deadline, taken.value < 3 { Thread.sleep(forTimeInterval: 0.02) }
         pipe.stop()
         XCTAssertGreaterThanOrEqual(calls.value, ProviderSpool.maxAttempts + 1, "the records were quarantined first")
-        XCTAssertEqual(taken.value, 2, "the worker requeued and stored them with no manual retry")
+        XCTAssertEqual(taken.value, 3, "the worker requeued and stored them with no manual retry")
         XCTAssertEqual(try rig.spool.quarantinedCount(), 0)
         XCTAssertEqual(try rig.spool.pendingCount(), 0)
         XCTAssertEqual(pipe.lastQuarantineHeal?.requeued, 2)
