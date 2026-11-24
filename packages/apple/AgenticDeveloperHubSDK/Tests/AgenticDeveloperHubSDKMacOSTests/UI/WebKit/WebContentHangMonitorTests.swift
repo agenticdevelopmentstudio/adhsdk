@@ -8,8 +8,14 @@ import XCTest
 @MainActor
 final class WebContentHangMonitorTests: XCTestCase {
 
-    /// Fast enough for a test; the shape of `Timing.standard`.
+    /// Fast enough for a test; the shape of `Timing.standard`. For the tests
+    /// that expect an end.
     private let quick = WebContentHangMonitor.Timing(interval: .milliseconds(100), timeout: .milliseconds(800))
+
+    /// For the tests that expect a responsive page to be left alone: a
+    /// timeout long enough that a slow process launch on a busy machine is
+    /// never read as a hang.
+    private let patient = WebContentHangMonitor.Timing(interval: .milliseconds(100), timeout: .seconds(5))
 
     /// A page that finishes loading, then never lets its main thread go —
     /// the shape of the hang that froze a status site: a loop spinning on
@@ -46,12 +52,16 @@ final class WebContentHangMonitorTests: XCTestCase {
 
     func testAPageReloadedAfterTheHangIsLeftRunning() async throws {
         await host.load(html: hangingPage)
-        let monitor = WebContentHangMonitor(webView: host.webView, timing: quick)
-        monitor.start()
+        let first = WebContentHangMonitor(webView: host.webView, timing: quick)
+        first.start()
         let firstTermination = await host.waitForTermination(within: .seconds(10))
         XCTAssertTrue(firstTermination)
+        first.stop()
 
-        // What a host does in webViewWebContentProcessDidTerminate(_:).
+        // What a host does in webViewWebContentProcessDidTerminate(_:), with
+        // a monitor that tolerates a slow relaunch.
+        let monitor = WebContentHangMonitor(webView: host.webView, timing: patient)
+        monitor.start()
         await host.load(html: quietPage)
         let terminatedAgain = await host.waitForTermination(within: .seconds(3))
         XCTAssertFalse(terminatedAgain, "the fresh, responsive process must be left alone")
@@ -62,11 +72,61 @@ final class WebContentHangMonitorTests: XCTestCase {
 
     func testLeavesAResponsivePageAlone() async throws {
         await host.load(html: quietPage)
-        let monitor = WebContentHangMonitor(webView: host.webView, timing: quick)
+        let monitor = WebContentHangMonitor(webView: host.webView, timing: patient)
         monitor.start()
 
         let terminated = await host.waitForTermination(within: .seconds(3))
         XCTAssertFalse(terminated, "a page that answers its pings is never ended")
+        monitor.stop()
+    }
+
+    func testAStallOfTheAppsOwnMainThreadEndsNothing() async throws {
+        await host.load(html: quietPage)
+        let monitor = WebContentHangMonitor(webView: host.webView, timing: quick)
+        monitor.start()
+        try await Task.sleep(for: .milliseconds(150))
+
+        // Longer than the timeout: the page's answer queues behind this.
+        stallMainThread(seconds: 1.5)
+
+        let terminated = await host.waitForTermination(within: .seconds(2))
+        XCTAssertFalse(terminated, "a page whose answer waited on the app itself is not hung")
+        monitor.stop()
+    }
+
+    /// Blocks the main thread outright, as a slow synchronous call in the app
+    /// would.
+    private func stallMainThread(seconds: TimeInterval) {
+        Thread.sleep(forTimeInterval: seconds)
+    }
+
+    func testAPageUnderASheetIsNotEndedUntilTheSheetCloses() async throws {
+        await host.load(html: hangingPage)
+        let sheet = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 200, height: 100),
+            styleMask: .titled, backing: .buffered, defer: false)
+        sheet.isReleasedWhenClosed = false
+        host.window.beginSheet(sheet, completionHandler: nil)
+        let monitor = WebContentHangMonitor(webView: host.webView, timing: quick)
+        monitor.start()
+
+        let underSheet = await host.waitForTermination(within: .seconds(3))
+        XCTAssertFalse(underSheet, "a page may be waiting on the dialog the sheet shows")
+
+        host.window.endSheet(sheet)
+        let afterSheet = await host.waitForTermination(within: .seconds(10))
+        XCTAssertTrue(afterSheet, "once the sheet is gone, the hang is the page's own")
+        monitor.stop()
+    }
+
+    func testAnInspectablePageIsNeverEnded() async throws {
+        host.webView.isInspectable = true
+        await host.load(html: hangingPage)
+        let monitor = WebContentHangMonitor(webView: host.webView, timing: quick)
+        monitor.start()
+
+        let terminated = await host.waitForTermination(within: .seconds(3))
+        XCTAssertFalse(terminated, "it may be paused at a breakpoint")
         monitor.stop()
     }
 
@@ -92,6 +152,14 @@ final class WebContentHangMonitorTests: XCTestCase {
         let terminated = await host.waitForTermination(within: .seconds(3))
         XCTAssertFalse(terminated, "releasing the monitor must stop the watching")
     }
+
+    func testDescribesAPageByItsHostOrItsURL() {
+        func describe(_ string: String) -> String { WebContentHangMonitor.describe(URL(string: string)) }
+        XCTAssertEqual(describe("https://status.example.com/x"), "Page on status.example.com")
+        XCTAssertEqual(describe("file:///tmp/index.html"), "Page file:///tmp/index.html")
+        XCTAssertEqual(describe("about:blank"), "Page about:blank")
+        XCTAssertEqual(WebContentHangMonitor.describe(nil), "A page with no URL")
+    }
 }
 
 /// A web view in an off-screen window, recording when WebKit reports its
@@ -107,12 +175,15 @@ private final class HostedWebView: NSObject, WKNavigationDelegate {
         window = NSWindow(
             contentRect: NSRect(x: -20000, y: -20000, width: 400, height: 300),
             styleMask: .borderless, backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false
         webView = WKWebView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
         super.init()
         window.contentView = webView
         webView.navigationDelegate = self
     }
 
+    /// Loads `html` and returns once the load ends — finished, failed, or cut
+    /// short by its process ending.
     func load(html: String) async {
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
             loaded = continuation
@@ -131,17 +202,29 @@ private final class HostedWebView: NSObject, WKNavigationDelegate {
         return terminations > before
     }
 
-    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+    private func finishLoad() {
         loaded?.resume()
         loaded = nil
     }
 
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        finishLoad()
+    }
+
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
-        loaded?.resume()
-        loaded = nil
+        finishLoad()
+    }
+
+    func webView(
+        _ webView: WKWebView,
+        didFailProvisionalNavigation navigation: WKNavigation!,
+        withError error: Error
+    ) {
+        finishLoad()
     }
 
     func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
         terminations += 1
+        finishLoad()
     }
 }
