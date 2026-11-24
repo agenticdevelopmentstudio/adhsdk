@@ -128,13 +128,13 @@ class ConfigurationTests(EmbedAdhdTestCase):
         [build] = runner.ran("xcodebuild")
         derived = build[build.index("-derivedDataPath") + 1]
         self.assertIn("ADHDaemon-adkitchen-", derived)
+        self.assertNotIn("SDKROOT", env_seen)
+        self.assertEqual(env_seen["HOME"], str(self.home))
 
     def test_the_app_names_the_folder(self):
         other = embed_adhd.Checkout(self.repo, "stenographer")
         self.assertIn("ADHDaemon-stenographer-", str(embed_adhd.adhd_derived_data(other)))
         self.assertNotEqual(embed_adhd.adhd_derived_data(other), embed_adhd.adhd_derived_data(self.checkout))
-        self.assertNotIn("SDKROOT", env_seen)
-        self.assertEqual(env_seen["HOME"], str(self.home))
 
 
 class StampTests(EmbedAdhdTestCase):
