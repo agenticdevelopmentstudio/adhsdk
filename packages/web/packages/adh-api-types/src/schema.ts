@@ -10245,7 +10245,7 @@ export interface paths {
         };
         /**
          * List ecosystem jobs (management)
-         * @description List the caller's ecosystem jobs, newest first. Requires a user JWT. Optional ?status= filter and ?limit= cap (default 50, max 200).
+         * @description List the caller's ecosystem jobs, newest first. Requires a user JWT. Optional ?status= filter and ?limit= cap (default 50, max 200). An operator (an admin acting as itself) asking for status=dead gets every ecosystem's dead rows instead, newest death first, with no payload, as an AiProcessingDeadJobPage paged by ?before=.
          *
          *     Replaces GET /processing/jobs.
          */
@@ -10253,7 +10253,7 @@ export interface paths {
         put?: never;
         /**
          * Enqueue an ad-hoc job (management)
-         * @description Ad-hoc / explicit enqueue path (task family 3). Requires a user JWT. The caller's ecosystemId becomes the owning ecosystem. Returns { id, deduped }.
+         * @description Ad-hoc / explicit enqueue path (task family 3). Requires a user JWT. The caller's ecosystemId becomes the owning ecosystem. Returns { id, deduped }. A jobType starting with 'jobs.' is 400: those rows are the Jobs engine's alone.
          *
          *     Replaces POST /processing/jobs.
          */
@@ -10275,7 +10275,7 @@ export interface paths {
         put?: never;
         /**
          * Claim queued jobs (worker pull)
-         * @description Atomically claim up to `batch` queued jobs for this worker. Returns an empty array when no jobs are available — never blocks. Ecosystem-scoped via RLS to the caller's api-token.
+         * @description Atomically claim up to `batch` queued jobs for this worker. Returns an empty array when no jobs are available — never blocks. Ecosystem-scoped via RLS to the caller's api-token. One route serves three bearers: a worker token (its own ecosystem), a pool token (also `jobs.step.ai` rows in every ecosystem that are bound to no machine) and a `jenv_` machine token (only its own environment's `jobs.step.*` rows). A claim that names no `jobTypes` gets only the legacy types (`categorize_and_tag`), never a `jobs.step.*` row; a plain worker token is never given a step row.
          *
          *     Replaces POST /processing/jobs/claim.
          */
@@ -10366,6 +10366,28 @@ export interface paths {
          *     Replaces POST /processing/jobs/{id}/heartbeat.
          */
         post: operations["postV1ProcessingJobsByIdHeartbeat"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/processing/jobs/{id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Retry a dead job (operator)
+         * @description Puts a dead queue row of any ecosystem back on the queue: queued, attempts 0, run_at now, its lease and last error cleared. Operator only (an admin acting as itself; 403 otherwise). 404 error.code not_found when no row has the id; 409 error.code not_dead when the row is not dead.
+         *
+         *     Replaces POST /processing/jobs/{id}/retry.
+         */
+        post: operations["postV1ProcessingJobsByIdRetry"];
         delete?: never;
         options?: never;
         head?: never;
@@ -14740,6 +14762,26 @@ export interface components {
             /** @description Unix timestamp, in seconds. */
             updated: number;
         };
+        AiProcessingDeadJob: {
+            /** Format: uuid */
+            id: string;
+            ecosystem_id: string;
+            job_type: string;
+            /** @description Attempts recorded, the last one included */
+            attempts: number;
+            last_error: string | null;
+            /** @description When the row went dead */
+            failed_at: string;
+            target_kind: string;
+            target_id: string;
+            /** @description Unix timestamp, in seconds. */
+            created: number;
+        };
+        AiProcessingDeadJobPage: {
+            jobs: components["schemas"]["AiProcessingDeadJob"][];
+            /** @description Pass as `before` for the next (older) page; null = no more. Opaque. */
+            next_before: string | null;
+        };
         AiProcessingConfigSet: {
             /** Format: uuid */
             id: string;
@@ -14821,11 +14863,15 @@ export interface components {
             last_used_at: string | null;
             /** @description Ids of the registered nodes that last registered with this token */
             nodes: string[];
+            /** @description Whether the token carries ai-processing:pool (claims Jobs AI steps across ecosystems) */
+            pool: boolean;
         };
         AiProcessingWorkerTokenInput: {
             name: string;
             /** Format: date-time */
             expires_at?: string | null;
+            /** @description Also grant ai-processing:pool: the node claims Jobs AI steps in every ecosystem. The most sensitive worker credential. */
+            pool?: boolean;
         };
         TokenPrincipal: {
             id: string;
@@ -16984,7 +17030,7 @@ export interface components {
         };
         NotificationPreference: {
             /** @enum {string} */
-            category: "account" | "community_reply" | "community_mention" | "admin_announcement" | "direct_message" | "project_assigned" | "project_mention" | "project_comment" | "project_status" | "project_due";
+            category: "account" | "community_reply" | "community_mention" | "admin_announcement" | "direct_message" | "project_assigned" | "project_mention" | "project_comment" | "project_status" | "project_due" | "jobs";
             email: boolean;
             sms: boolean;
             /** @description In-app (inbox) delivery for this category. */
@@ -19751,6 +19797,370 @@ export interface components {
         };
         SupportLinkCodeSent: {
             ok: boolean;
+        };
+        JobTemplateDraft: {
+            /** @description The steps being edited; each is `{ id, kind, ... }` with kind ai, action, webhook, notify, wait or script. Checked in full at publish. */
+            steps: {
+                [key: string]: unknown;
+            }[];
+            /** @description Declared inputs: `{ key, label, type, required?, choices? }`. */
+            inputs: {
+                [key: string]: unknown;
+            }[];
+            /** @description Default options: priority, onError, notify, minIntervalMinutes. */
+            defaults: {
+                [key: string]: unknown;
+            };
+        };
+        JobTemplate: {
+            /** Format: uuid */
+            id: string;
+            /** @description Lower case letters, digits and hyphens; unique per ecosystem. */
+            key: string;
+            name: string;
+            description: string | null;
+            /** @enum {string} */
+            status: "draft" | "published" | "retired";
+            /** @description Null until the first publish. */
+            latest_version: number | null;
+            /** @description Whether the latest version has a script step (it then cannot be offered). */
+            latest_has_script: boolean | null;
+            /** Format: date-time */
+            latest_published_at: string | null;
+            offered_set_ids: string[];
+            /** @description Unix timestamp, in seconds. */
+            created: number;
+            /** @description Unix timestamp, in seconds. */
+            updated: number;
+            draft: components["schemas"]["JobTemplateDraft"];
+        };
+        JobTemplateList: {
+            templates: components["schemas"]["JobTemplate"][];
+        };
+        JobTemplateCreate: {
+            key: string;
+            name: string;
+            description?: string | null;
+            steps?: {
+                [key: string]: unknown;
+            }[];
+            inputs?: {
+                [key: string]: unknown;
+            }[];
+            defaults?: {
+                [key: string]: unknown;
+            };
+        };
+        JobTemplatePatch: {
+            name?: string;
+            description?: string | null;
+            steps?: {
+                [key: string]: unknown;
+            }[];
+            inputs?: {
+                [key: string]: unknown;
+            }[];
+            defaults?: {
+                [key: string]: unknown;
+            };
+        };
+        JobTemplateVersion: {
+            /** Format: uuid */
+            template_id: string;
+            version: number;
+            steps: {
+                [key: string]: unknown;
+            }[];
+            inputs: {
+                [key: string]: unknown;
+            }[];
+            defaults: {
+                [key: string]: unknown;
+            };
+            has_script: boolean;
+            published_by: string;
+            /** Format: date-time */
+            published_at: string;
+        };
+        JobTemplateOffers: {
+            set_ids: string[];
+        };
+        JobCatalogTemplate: {
+            /** Format: uuid */
+            id: string;
+            key: string;
+            name: string;
+            description: string | null;
+            /** @description The latest published version. */
+            version: number;
+            inputs: {
+                [key: string]: unknown;
+            }[];
+            defaults: {
+                [key: string]: unknown;
+            };
+            /** Format: date-time */
+            published_at: string;
+        };
+        JobCatalog: {
+            templates: components["schemas"]["JobCatalogTemplate"][];
+        };
+        JobInstance: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** @enum {string} */
+            owner_kind: "customer" | "organization";
+            owner_id: string;
+            /** Format: uuid */
+            template_id: string | null;
+            template_version: number | null;
+            /** @description A job's own inline steps; null for a job made from a template. */
+            steps: {
+                [key: string]: unknown;
+            }[] | null;
+            inputs: {
+                [key: string]: unknown;
+            };
+            /** Format: uuid */
+            environment_id: string | null;
+            /** @description Job options: priority (0 to 90), the default error strategy, and notify. */
+            options: {
+                priority?: number;
+                /** @enum {string} */
+                on_error?: "fail" | "continue";
+                notify?: {
+                    [key: string]: unknown;
+                };
+            };
+            /** @enum {string} */
+            status: "active" | "paused" | "archived";
+            /** @description Unix timestamp, in seconds. */
+            created: number;
+            /** @description Unix timestamp, in seconds. */
+            updated: number;
+        };
+        JobInstanceList: {
+            instances: components["schemas"]["JobInstance"][];
+        };
+        JobInstanceCreate: {
+            name: string;
+            /**
+             * Format: uuid
+             * @description Exactly one of templateId and steps.
+             */
+            template_id?: string;
+            /** @description Defaults to the latest. A customer may only name the offered (latest) version. */
+            template_version?: number;
+            /** @description Inline steps: not for an end-customer token (403 `inline_steps_not_allowed`). */
+            steps?: {
+                [key: string]: unknown;
+            }[];
+            inputs?: {
+                [key: string]: unknown;
+            };
+            /** Format: uuid */
+            environment_id?: string | null;
+            /** @description Job options: priority (0 to 90), the default error strategy, and notify. */
+            options?: {
+                priority?: number;
+                /** @enum {string} */
+                on_error?: "fail" | "continue";
+                notify?: {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        JobInstancePatch: {
+            name?: string;
+            inputs?: {
+                [key: string]: unknown;
+            };
+            /** Format: uuid */
+            environment_id?: string | null;
+            /** @description Job options: priority (0 to 90), the default error strategy, and notify. */
+            options?: {
+                priority?: number;
+                /** @enum {string} */
+                on_error?: "fail" | "continue";
+                notify?: {
+                    [key: string]: unknown;
+                };
+            };
+            /** @enum {string} */
+            status?: "active" | "paused";
+        };
+        JobRunStarted: {
+            /** Format: uuid */
+            run_id: string;
+            /** @enum {string} */
+            status: "running" | "failed";
+            error_code: string | null;
+            error: string | null;
+        };
+        JobTrigger: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            instance_id: string;
+            /** @enum {string} */
+            kind: "schedule" | "event" | "inbound";
+            cron: string | null;
+            time_zone: string | null;
+            event_types: string[] | null;
+            enabled: boolean;
+            /** Format: date-time */
+            next_fire_at: string | null;
+            /** Format: date-time */
+            last_fired_at: string | null;
+            /** @description Unix timestamp, in seconds. */
+            created: number;
+            /** @description Unix timestamp, in seconds. */
+            updated: number;
+            /** @description An inbound trigger's secret, only in the create answer. Send it as `X-ADH-Trigger-Secret` to `POST /public/jobs/hooks/{id}`. */
+            secret?: string;
+        };
+        JobTriggerList: {
+            triggers: components["schemas"]["JobTrigger"][];
+        };
+        /** @description schedule: `{ kind, cron, timeZone, enabled? }`; event: `{ kind, eventTypes, enabled? }`; inbound: `{ kind, enabled? }`. */
+        JobTriggerCreate: {
+            /** @enum {string} */
+            kind: "schedule" | "event" | "inbound";
+            cron?: string;
+            /** @description An IANA zone. */
+            time_zone?: string;
+            event_types?: string[];
+            enabled?: boolean;
+        };
+        /** @description cron and timeZone for a schedule only; eventTypes for an event trigger only. */
+        JobTriggerPatch: {
+            enabled?: boolean;
+            cron?: string;
+            time_zone?: string;
+            event_types?: string[];
+        };
+        JobRun: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            instance_id: string;
+            /** Format: uuid */
+            trigger_id: string | null;
+            /** @enum {string} */
+            status: "queued" | "running" | "succeeded" | "failed" | "cancelled";
+            current_step: number | null;
+            usage: {
+                [key: string]: unknown;
+            };
+            error_code: string | null;
+            error: string | null;
+            /** Format: date-time */
+            started_at: string | null;
+            /** Format: date-time */
+            finished_at: string | null;
+            /** @description Unix timestamp, in seconds. */
+            created: number;
+            /** @description Unix timestamp, in seconds. */
+            updated: number;
+        };
+        JobStepRun: {
+            /** Format: uuid */
+            id: string;
+            position: number;
+            step_id: string;
+            kind: string;
+            status: string;
+            attempts: number;
+            output: unknown;
+            log: string | null;
+            usage: {
+                [key: string]: unknown;
+            };
+            error_code: string | null;
+            error: string | null;
+            /** Format: date-time */
+            started_at: string | null;
+            /** Format: date-time */
+            finished_at: string | null;
+        };
+        JobRunDetail: components["schemas"]["JobRun"] & {
+            step_runs: components["schemas"]["JobStepRun"][];
+        };
+        JobRunList: {
+            runs: components["schemas"]["JobRun"][];
+            /**
+             * Format: date-time
+             * @description Pass as `before` for the next page; null on the last page.
+             */
+            next_before: string | null;
+        };
+        JobEnvironment: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** @enum {string} */
+            kind: "machine";
+            capabilities: {
+                [key: string]: unknown;
+            };
+            /** Format: date-time */
+            last_seen_at: string | null;
+            /** @description Unix timestamp, in seconds. */
+            created: number;
+            /** @description Unix timestamp, in seconds. */
+            updated: number;
+        };
+        JobEnvironmentWithToken: components["schemas"]["JobEnvironment"] & {
+            /** @description The `jenv_` token, shown only in this answer. */
+            token: string;
+        };
+        JobEnvironmentList: {
+            environments: components["schemas"]["JobEnvironment"][];
+        };
+        JobEnvironmentCreate: {
+            name: string;
+        };
+        JobRunStatus: {
+            /** Format: uuid */
+            run_id: string;
+            /** Format: uuid */
+            job_id: string;
+            job_name: string;
+            /** @description Null for a job with inline steps. */
+            template_key: string | null;
+            /** @description The customer who owns the job. */
+            owner_id: string;
+            /** @enum {string} */
+            status: "queued" | "running" | "succeeded" | "failed" | "cancelled";
+            error_code: string | null;
+            /** @description The first 200 characters of the run's error. */
+            error: string | null;
+            /** Format: date-time */
+            started_at: string | null;
+            /** Format: date-time */
+            finished_at: string | null;
+            /** @description Unix timestamp, in seconds. */
+            created: number;
+        };
+        JobRunStatusList: {
+            runs: components["schemas"]["JobRunStatus"][];
+            /**
+             * Format: date-time
+             * @description Pass as `before` for the next page; null on the last page.
+             */
+            next_before: string | null;
+        };
+        JobInboundFired: {
+            /** @description The run the fire started. */
+            run_id: string;
+            /**
+             * @description Present only when the run was written `failed` at once (see `errorCode`).
+             * @enum {string}
+             */
+            status?: "failed";
+            /** @description Why the run failed at start, e.g. `template_missing`. */
+            error_code?: string;
         };
         TeamReachGrant: {
             id: string;
@@ -62619,7 +63029,7 @@ export interface operations {
             content: {
                 "application/json": {
                     /** @enum {string} */
-                    category: "account" | "community_reply" | "community_mention" | "admin_announcement" | "direct_message" | "project_assigned" | "project_mention" | "project_comment" | "project_status" | "project_due";
+                    category: "account" | "community_reply" | "community_mention" | "admin_announcement" | "direct_message" | "project_assigned" | "project_mention" | "project_comment" | "project_status" | "project_due" | "jobs";
                     email: boolean;
                     sms: boolean;
                     /** @description In-app (inbox) delivery for this category. Omitted means true — the PUT replaces the row wholesale, so a client that edits only email/sms must send back the value it read. */
@@ -62627,7 +63037,7 @@ export interface operations {
                 } | {
                     preferences: {
                         /** @enum {string} */
-                        category: "account" | "community_reply" | "community_mention" | "admin_announcement" | "direct_message" | "project_assigned" | "project_mention" | "project_comment" | "project_status" | "project_due";
+                        category: "account" | "community_reply" | "community_mention" | "admin_announcement" | "direct_message" | "project_assigned" | "project_mention" | "project_comment" | "project_status" | "project_due" | "jobs";
                         email: boolean;
                         sms: boolean;
                         /** @description In-app (inbox) delivery for this category. Omitted means true — the PUT replaces the row wholesale, so a client that edits only email/sms must send back the value it read. */
@@ -68974,6 +69384,8 @@ export interface operations {
             query?: {
                 /** @description Filter to a specific job lifecycle status; absent = all statuses */
                 status?: "queued" | "claimed" | "succeeded" | "dead";
+                /** @description Operator dead list only: the previous page's `nextBefore` */
+                before?: string;
                 /** @description Page size, 1–100 (default 10). */
                 limit?: number;
                 /** @description Cursor: an object id; returns the page after it. */
@@ -69018,6 +69430,15 @@ export interface operations {
             };
             /** @description Error */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -69111,8 +69532,16 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    /** @description Filter to specific job types; absent = any type */
+                    /** @description Filter to specific job types. Absent = the legacy types only. Step rows (`jobs.step.*`) must be named here. */
                     job_types?: string[];
+                    /** @description A machine only: what it can run, recorded on its environment with last_seen_at. Ignored for a worker or pool token. */
+                    capabilities?: {
+                        job_types: string[];
+                        /** @description Provider kinds the machine can run, `claude-code` included */
+                        providers: string[];
+                        /** @description Whether jobs.step.script is registered */
+                        scripts: boolean;
+                    };
                     /** @description Claim only jobs with priority >= this value (interactive lane = 100) */
                     min_priority?: number;
                     /** @description Max jobs to claim (default 1) */
@@ -69398,6 +69827,71 @@ export interface operations {
             };
             /** @description Error */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+        };
+    };
+    postV1ProcessingJobsByIdRetry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Job re-queued */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        object?: "processing.job";
+                        /** Format: uuid */
+                        id: string;
+                        /** @enum {string} */
+                        status: "queued";
+                    };
+                };
+            };
+            /** @description Error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeError"];
+                };
+            };
+            /** @description Error */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

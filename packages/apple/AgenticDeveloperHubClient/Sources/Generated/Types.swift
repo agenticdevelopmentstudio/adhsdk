@@ -5605,7 +5605,7 @@ public protocol APIProtocol: Sendable {
     func postV1ProcessingConfigSetsByIdMakeDefault(_ input: Operations.PostV1ProcessingConfigSetsByIdMakeDefault.Input) async throws -> Operations.PostV1ProcessingConfigSetsByIdMakeDefault.Output
     /// List ecosystem jobs (management)
     ///
-    /// List the caller's ecosystem jobs, newest first. Requires a user JWT. Optional ?status= filter and ?limit= cap (default 50, max 200).
+    /// List the caller's ecosystem jobs, newest first. Requires a user JWT. Optional ?status= filter and ?limit= cap (default 50, max 200). An operator (an admin acting as itself) asking for status=dead gets every ecosystem's dead rows instead, newest death first, with no payload, as an AiProcessingDeadJobPage paged by ?before=.
     ///
     /// Replaces GET /processing/jobs.
     ///
@@ -5614,7 +5614,7 @@ public protocol APIProtocol: Sendable {
     func getV1ProcessingJobs(_ input: Operations.GetV1ProcessingJobs.Input) async throws -> Operations.GetV1ProcessingJobs.Output
     /// Enqueue an ad-hoc job (management)
     ///
-    /// Ad-hoc / explicit enqueue path (task family 3). Requires a user JWT. The caller's ecosystemId becomes the owning ecosystem. Returns { id, deduped }.
+    /// Ad-hoc / explicit enqueue path (task family 3). Requires a user JWT. The caller's ecosystemId becomes the owning ecosystem. Returns { id, deduped }. A jobType starting with 'jobs.' is 400: those rows are the Jobs engine's alone.
     ///
     /// Replaces POST /processing/jobs.
     ///
@@ -5623,7 +5623,7 @@ public protocol APIProtocol: Sendable {
     func postV1ProcessingJobs(_ input: Operations.PostV1ProcessingJobs.Input) async throws -> Operations.PostV1ProcessingJobs.Output
     /// Claim queued jobs (worker pull)
     ///
-    /// Atomically claim up to `batch` queued jobs for this worker. Returns an empty array when no jobs are available — never blocks. Ecosystem-scoped via RLS to the caller's api-token.
+    /// Atomically claim up to `batch` queued jobs for this worker. Returns an empty array when no jobs are available — never blocks. Ecosystem-scoped via RLS to the caller's api-token. One route serves three bearers: a worker token (its own ecosystem), a pool token (also `jobs.step.ai` rows in every ecosystem that are bound to no machine) and a `jenv_` machine token (only its own environment's `jobs.step.*` rows). A claim that names no `jobTypes` gets only the legacy types (`categorize_and_tag`), never a `jobs.step.*` row; a plain worker token is never given a step row.
     ///
     /// Replaces POST /processing/jobs/claim.
     ///
@@ -5664,6 +5664,15 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `POST /v1/processing/jobs/{id}/heartbeat`.
     /// - Remark: Generated from `#/paths//v1/processing/jobs/{id}/heartbeat/post(postV1ProcessingJobsByIdHeartbeat)`.
     func postV1ProcessingJobsByIdHeartbeat(_ input: Operations.PostV1ProcessingJobsByIdHeartbeat.Input) async throws -> Operations.PostV1ProcessingJobsByIdHeartbeat.Output
+    /// Retry a dead job (operator)
+    ///
+    /// Puts a dead queue row of any ecosystem back on the queue: queued, attempts 0, run_at now, its lease and last error cleared. Operator only (an admin acting as itself; 403 otherwise). 404 error.code not_found when no row has the id; 409 error.code not_dead when the row is not dead.
+    ///
+    /// Replaces POST /processing/jobs/{id}/retry.
+    ///
+    /// - Remark: HTTP `POST /v1/processing/jobs/{id}/retry`.
+    /// - Remark: Generated from `#/paths//v1/processing/jobs/{id}/retry/post(postV1ProcessingJobsByIdRetry)`.
+    func postV1ProcessingJobsByIdRetry(_ input: Operations.PostV1ProcessingJobsByIdRetry.Input) async throws -> Operations.PostV1ProcessingJobsByIdRetry.Output
     /// Server-sent completion stream for a job
     ///
     /// Opens an SSE stream that emits one `job` event ({ id, status, result }) when the job reaches a terminal state, then closes. Emits immediately if already terminal. Closes after 60s with no event if still running (client should fall back to polling).
@@ -19953,7 +19962,7 @@ extension APIProtocol {
     }
     /// List ecosystem jobs (management)
     ///
-    /// List the caller's ecosystem jobs, newest first. Requires a user JWT. Optional ?status= filter and ?limit= cap (default 50, max 200).
+    /// List the caller's ecosystem jobs, newest first. Requires a user JWT. Optional ?status= filter and ?limit= cap (default 50, max 200). An operator (an admin acting as itself) asking for status=dead gets every ecosystem's dead rows instead, newest death first, with no payload, as an AiProcessingDeadJobPage paged by ?before=.
     ///
     /// Replaces GET /processing/jobs.
     ///
@@ -19970,7 +19979,7 @@ extension APIProtocol {
     }
     /// Enqueue an ad-hoc job (management)
     ///
-    /// Ad-hoc / explicit enqueue path (task family 3). Requires a user JWT. The caller's ecosystemId becomes the owning ecosystem. Returns { id, deduped }.
+    /// Ad-hoc / explicit enqueue path (task family 3). Requires a user JWT. The caller's ecosystemId becomes the owning ecosystem. Returns { id, deduped }. A jobType starting with 'jobs.' is 400: those rows are the Jobs engine's alone.
     ///
     /// Replaces POST /processing/jobs.
     ///
@@ -19987,7 +19996,7 @@ extension APIProtocol {
     }
     /// Claim queued jobs (worker pull)
     ///
-    /// Atomically claim up to `batch` queued jobs for this worker. Returns an empty array when no jobs are available — never blocks. Ecosystem-scoped via RLS to the caller's api-token.
+    /// Atomically claim up to `batch` queued jobs for this worker. Returns an empty array when no jobs are available — never blocks. Ecosystem-scoped via RLS to the caller's api-token. One route serves three bearers: a worker token (its own ecosystem), a pool token (also `jobs.step.ai` rows in every ecosystem that are bound to no machine) and a `jenv_` machine token (only its own environment's `jobs.step.*` rows). A claim that names no `jobTypes` gets only the legacy types (`categorize_and_tag`), never a `jobs.step.*` row; a plain worker token is never given a step row.
     ///
     /// Replaces POST /processing/jobs/claim.
     ///
@@ -20074,6 +20083,23 @@ extension APIProtocol {
             path: path,
             headers: headers,
             body: body
+        ))
+    }
+    /// Retry a dead job (operator)
+    ///
+    /// Puts a dead queue row of any ecosystem back on the queue: queued, attempts 0, run_at now, its lease and last error cleared. Operator only (an admin acting as itself; 403 otherwise). 404 error.code not_found when no row has the id; 409 error.code not_dead when the row is not dead.
+    ///
+    /// Replaces POST /processing/jobs/{id}/retry.
+    ///
+    /// - Remark: HTTP `POST /v1/processing/jobs/{id}/retry`.
+    /// - Remark: Generated from `#/paths//v1/processing/jobs/{id}/retry/post(postV1ProcessingJobsByIdRetry)`.
+    public func postV1ProcessingJobsByIdRetry(
+        path: Operations.PostV1ProcessingJobsByIdRetry.Input.Path,
+        headers: Operations.PostV1ProcessingJobsByIdRetry.Input.Headers = .init()
+    ) async throws -> Operations.PostV1ProcessingJobsByIdRetry.Output {
+        try await postV1ProcessingJobsByIdRetry(Operations.PostV1ProcessingJobsByIdRetry.Input(
+            path: path,
+            headers: headers
         ))
     }
     /// Server-sent completion stream for a job
@@ -26046,6 +26072,102 @@ public enum Components {
                 case updated
             }
         }
+        /// - Remark: Generated from `#/components/schemas/AiProcessingDeadJob`.
+        public struct AiProcessingDeadJob: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/AiProcessingDeadJob/id`.
+            public var id: Swift.String
+            /// - Remark: Generated from `#/components/schemas/AiProcessingDeadJob/ecosystem_id`.
+            public var ecosystemId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/AiProcessingDeadJob/job_type`.
+            public var jobType: Swift.String
+            /// Attempts recorded, the last one included
+            ///
+            /// - Remark: Generated from `#/components/schemas/AiProcessingDeadJob/attempts`.
+            public var attempts: Swift.Int
+            /// - Remark: Generated from `#/components/schemas/AiProcessingDeadJob/last_error`.
+            public var lastError: Swift.String?
+            /// When the row went dead
+            ///
+            /// - Remark: Generated from `#/components/schemas/AiProcessingDeadJob/failed_at`.
+            public var failedAt: Swift.String
+            /// - Remark: Generated from `#/components/schemas/AiProcessingDeadJob/target_kind`.
+            public var targetKind: Swift.String
+            /// - Remark: Generated from `#/components/schemas/AiProcessingDeadJob/target_id`.
+            public var targetId: Swift.String
+            /// Unix timestamp, in seconds.
+            ///
+            /// - Remark: Generated from `#/components/schemas/AiProcessingDeadJob/created`.
+            public var created: Swift.Int
+            /// Creates a new `AiProcessingDeadJob`.
+            ///
+            /// - Parameters:
+            ///   - id:
+            ///   - ecosystemId:
+            ///   - jobType:
+            ///   - attempts: Attempts recorded, the last one included
+            ///   - lastError:
+            ///   - failedAt: When the row went dead
+            ///   - targetKind:
+            ///   - targetId:
+            ///   - created: Unix timestamp, in seconds.
+            public init(
+                id: Swift.String,
+                ecosystemId: Swift.String,
+                jobType: Swift.String,
+                attempts: Swift.Int,
+                lastError: Swift.String? = nil,
+                failedAt: Swift.String,
+                targetKind: Swift.String,
+                targetId: Swift.String,
+                created: Swift.Int
+            ) {
+                self.id = id
+                self.ecosystemId = ecosystemId
+                self.jobType = jobType
+                self.attempts = attempts
+                self.lastError = lastError
+                self.failedAt = failedAt
+                self.targetKind = targetKind
+                self.targetId = targetId
+                self.created = created
+            }
+            public enum CodingKeys: String, CodingKey {
+                case id
+                case ecosystemId = "ecosystem_id"
+                case jobType = "job_type"
+                case attempts
+                case lastError = "last_error"
+                case failedAt = "failed_at"
+                case targetKind = "target_kind"
+                case targetId = "target_id"
+                case created
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/AiProcessingDeadJobPage`.
+        public struct AiProcessingDeadJobPage: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/AiProcessingDeadJobPage/jobs`.
+            public var jobs: [Components.Schemas.AiProcessingDeadJob]
+            /// Pass as `before` for the next (older) page; null = no more. Opaque.
+            ///
+            /// - Remark: Generated from `#/components/schemas/AiProcessingDeadJobPage/next_before`.
+            public var nextBefore: Swift.String?
+            /// Creates a new `AiProcessingDeadJobPage`.
+            ///
+            /// - Parameters:
+            ///   - jobs:
+            ///   - nextBefore: Pass as `before` for the next (older) page; null = no more. Opaque.
+            public init(
+                jobs: [Components.Schemas.AiProcessingDeadJob],
+                nextBefore: Swift.String? = nil
+            ) {
+                self.jobs = jobs
+                self.nextBefore = nextBefore
+            }
+            public enum CodingKeys: String, CodingKey {
+                case jobs
+                case nextBefore = "next_before"
+            }
+        }
         /// - Remark: Generated from `#/components/schemas/AiProcessingConfigSet`.
         public struct AiProcessingConfigSet: Codable, Hashable, Sendable {
             /// - Remark: Generated from `#/components/schemas/AiProcessingConfigSet/id`.
@@ -26452,6 +26574,10 @@ public enum Components {
             ///
             /// - Remark: Generated from `#/components/schemas/AiProcessingWorkerToken/nodes`.
             public var nodes: [Swift.String]
+            /// Whether the token carries ai-processing:pool (claims Jobs AI steps across ecosystems)
+            ///
+            /// - Remark: Generated from `#/components/schemas/AiProcessingWorkerToken/pool`.
+            public var pool: Swift.Bool
             /// Creates a new `AiProcessingWorkerToken`.
             ///
             /// - Parameters:
@@ -26462,6 +26588,7 @@ public enum Components {
             ///   - expiresAt:
             ///   - lastUsedAt:
             ///   - nodes: Ids of the registered nodes that last registered with this token
+            ///   - pool: Whether the token carries ai-processing:pool (claims Jobs AI steps across ecosystems)
             public init(
                 id: Swift.String,
                 name: Swift.String,
@@ -26469,7 +26596,8 @@ public enum Components {
                 created: Swift.Int,
                 expiresAt: Swift.String? = nil,
                 lastUsedAt: Swift.String? = nil,
-                nodes: [Swift.String]
+                nodes: [Swift.String],
+                pool: Swift.Bool
             ) {
                 self.id = id
                 self.name = name
@@ -26478,6 +26606,7 @@ public enum Components {
                 self.expiresAt = expiresAt
                 self.lastUsedAt = lastUsedAt
                 self.nodes = nodes
+                self.pool = pool
             }
             public enum CodingKeys: String, CodingKey {
                 case id
@@ -26487,6 +26616,7 @@ public enum Components {
                 case expiresAt = "expires_at"
                 case lastUsedAt = "last_used_at"
                 case nodes
+                case pool
             }
         }
         /// - Remark: Generated from `#/components/schemas/AiProcessingWorkerTokenInput`.
@@ -26495,21 +26625,29 @@ public enum Components {
             public var name: Swift.String
             /// - Remark: Generated from `#/components/schemas/AiProcessingWorkerTokenInput/expires_at`.
             public var expiresAt: Foundation.Date?
+            /// Also grant ai-processing:pool: the node claims Jobs AI steps in every ecosystem. The most sensitive worker credential.
+            ///
+            /// - Remark: Generated from `#/components/schemas/AiProcessingWorkerTokenInput/pool`.
+            public var pool: Swift.Bool?
             /// Creates a new `AiProcessingWorkerTokenInput`.
             ///
             /// - Parameters:
             ///   - name:
             ///   - expiresAt:
+            ///   - pool: Also grant ai-processing:pool: the node claims Jobs AI steps in every ecosystem. The most sensitive worker credential.
             public init(
                 name: Swift.String,
-                expiresAt: Foundation.Date? = nil
+                expiresAt: Foundation.Date? = nil,
+                pool: Swift.Bool? = nil
             ) {
                 self.name = name
                 self.expiresAt = expiresAt
+                self.pool = pool
             }
             public enum CodingKeys: String, CodingKey {
                 case name
                 case expiresAt = "expires_at"
+                case pool
             }
         }
         /// - Remark: Generated from `#/components/schemas/TokenPrincipal`.
@@ -38396,6 +38534,7 @@ public enum Components {
                 case projectComment = "project_comment"
                 case projectStatus = "project_status"
                 case projectDue = "project_due"
+                case jobs = "jobs"
             }
             /// - Remark: Generated from `#/components/schemas/NotificationPreference/category`.
             public var category: Components.Schemas.NotificationPreference.CategoryPayload
@@ -52934,6 +53073,2178 @@ public enum Components {
             }
             public enum CodingKeys: String, CodingKey {
                 case ok
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/JobTemplateDraft`.
+        public struct JobTemplateDraft: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/JobTemplateDraft/StepsPayload`.
+            public struct StepsPayloadPayload: Codable, Hashable, Sendable {
+                /// A container of undocumented properties.
+                public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
+                /// Creates a new `StepsPayloadPayload`.
+                ///
+                /// - Parameters:
+                ///   - additionalProperties: A container of undocumented properties.
+                public init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
+                    self.additionalProperties = additionalProperties
+                }
+                public init(from decoder: any Swift.Decoder) throws {
+                    additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+                }
+                public func encode(to encoder: any Swift.Encoder) throws {
+                    try encoder.encodeAdditionalProperties(additionalProperties)
+                }
+            }
+            /// The steps being edited; each is `{ id, kind, ... }` with kind ai, action, webhook, notify, wait or script. Checked in full at publish.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobTemplateDraft/steps`.
+            public typealias StepsPayload = [Components.Schemas.JobTemplateDraft.StepsPayloadPayload]
+            /// The steps being edited; each is `{ id, kind, ... }` with kind ai, action, webhook, notify, wait or script. Checked in full at publish.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobTemplateDraft/steps`.
+            public var steps: Components.Schemas.JobTemplateDraft.StepsPayload
+            /// - Remark: Generated from `#/components/schemas/JobTemplateDraft/InputsPayload`.
+            public struct InputsPayloadPayload: Codable, Hashable, Sendable {
+                /// A container of undocumented properties.
+                public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
+                /// Creates a new `InputsPayloadPayload`.
+                ///
+                /// - Parameters:
+                ///   - additionalProperties: A container of undocumented properties.
+                public init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
+                    self.additionalProperties = additionalProperties
+                }
+                public init(from decoder: any Swift.Decoder) throws {
+                    additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+                }
+                public func encode(to encoder: any Swift.Encoder) throws {
+                    try encoder.encodeAdditionalProperties(additionalProperties)
+                }
+            }
+            /// Declared inputs: `{ key, label, type, required?, choices? }`.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobTemplateDraft/inputs`.
+            public typealias InputsPayload = [Components.Schemas.JobTemplateDraft.InputsPayloadPayload]
+            /// Declared inputs: `{ key, label, type, required?, choices? }`.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobTemplateDraft/inputs`.
+            public var inputs: Components.Schemas.JobTemplateDraft.InputsPayload
+            /// Default options: priority, onError, notify, minIntervalMinutes.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobTemplateDraft/defaults`.
+            public struct DefaultsPayload: Codable, Hashable, Sendable {
+                /// A container of undocumented properties.
+                public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
+                /// Creates a new `DefaultsPayload`.
+                ///
+                /// - Parameters:
+                ///   - additionalProperties: A container of undocumented properties.
+                public init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
+                    self.additionalProperties = additionalProperties
+                }
+                public init(from decoder: any Swift.Decoder) throws {
+                    additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+                }
+                public func encode(to encoder: any Swift.Encoder) throws {
+                    try encoder.encodeAdditionalProperties(additionalProperties)
+                }
+            }
+            /// Default options: priority, onError, notify, minIntervalMinutes.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobTemplateDraft/defaults`.
+            public var defaults: Components.Schemas.JobTemplateDraft.DefaultsPayload
+            /// Creates a new `JobTemplateDraft`.
+            ///
+            /// - Parameters:
+            ///   - steps: The steps being edited; each is `{ id, kind, ... }` with kind ai, action, webhook, notify, wait or script. Checked in full at publish.
+            ///   - inputs: Declared inputs: `{ key, label, type, required?, choices? }`.
+            ///   - defaults: Default options: priority, onError, notify, minIntervalMinutes.
+            public init(
+                steps: Components.Schemas.JobTemplateDraft.StepsPayload,
+                inputs: Components.Schemas.JobTemplateDraft.InputsPayload,
+                defaults: Components.Schemas.JobTemplateDraft.DefaultsPayload
+            ) {
+                self.steps = steps
+                self.inputs = inputs
+                self.defaults = defaults
+            }
+            public enum CodingKeys: String, CodingKey {
+                case steps
+                case inputs
+                case defaults
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/JobTemplate`.
+        public struct JobTemplate: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/JobTemplate/id`.
+            public var id: Swift.String
+            /// Lower case letters, digits and hyphens; unique per ecosystem.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobTemplate/key`.
+            public var key: Swift.String
+            /// - Remark: Generated from `#/components/schemas/JobTemplate/name`.
+            public var name: Swift.String
+            /// - Remark: Generated from `#/components/schemas/JobTemplate/description`.
+            public var description: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/JobTemplate/status`.
+            @frozen public enum StatusPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case draft = "draft"
+                case published = "published"
+                case retired = "retired"
+            }
+            /// - Remark: Generated from `#/components/schemas/JobTemplate/status`.
+            public var status: Components.Schemas.JobTemplate.StatusPayload
+            /// Null until the first publish.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobTemplate/latest_version`.
+            public var latestVersion: Swift.Int?
+            /// Whether the latest version has a script step (it then cannot be offered).
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobTemplate/latest_has_script`.
+            public var latestHasScript: Swift.Bool?
+            /// - Remark: Generated from `#/components/schemas/JobTemplate/latest_published_at`.
+            public var latestPublishedAt: Foundation.Date?
+            /// - Remark: Generated from `#/components/schemas/JobTemplate/offered_set_ids`.
+            public var offeredSetIds: [Swift.String]
+            /// Unix timestamp, in seconds.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobTemplate/created`.
+            public var created: Swift.Int
+            /// Unix timestamp, in seconds.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobTemplate/updated`.
+            public var updated: Swift.Int
+            /// - Remark: Generated from `#/components/schemas/JobTemplate/draft`.
+            public var draft: Components.Schemas.JobTemplateDraft?
+            /// Creates a new `JobTemplate`.
+            ///
+            /// - Parameters:
+            ///   - id:
+            ///   - key: Lower case letters, digits and hyphens; unique per ecosystem.
+            ///   - name:
+            ///   - description:
+            ///   - status:
+            ///   - latestVersion: Null until the first publish.
+            ///   - latestHasScript: Whether the latest version has a script step (it then cannot be offered).
+            ///   - latestPublishedAt:
+            ///   - offeredSetIds:
+            ///   - created: Unix timestamp, in seconds.
+            ///   - updated: Unix timestamp, in seconds.
+            ///   - draft:
+            public init(
+                id: Swift.String,
+                key: Swift.String,
+                name: Swift.String,
+                description: Swift.String? = nil,
+                status: Components.Schemas.JobTemplate.StatusPayload,
+                latestVersion: Swift.Int? = nil,
+                latestHasScript: Swift.Bool? = nil,
+                latestPublishedAt: Foundation.Date? = nil,
+                offeredSetIds: [Swift.String],
+                created: Swift.Int,
+                updated: Swift.Int,
+                draft: Components.Schemas.JobTemplateDraft? = nil
+            ) {
+                self.id = id
+                self.key = key
+                self.name = name
+                self.description = description
+                self.status = status
+                self.latestVersion = latestVersion
+                self.latestHasScript = latestHasScript
+                self.latestPublishedAt = latestPublishedAt
+                self.offeredSetIds = offeredSetIds
+                self.created = created
+                self.updated = updated
+                self.draft = draft
+            }
+            public enum CodingKeys: String, CodingKey {
+                case id
+                case key
+                case name
+                case description
+                case status
+                case latestVersion = "latest_version"
+                case latestHasScript = "latest_has_script"
+                case latestPublishedAt = "latest_published_at"
+                case offeredSetIds = "offered_set_ids"
+                case created
+                case updated
+                case draft
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/JobTemplateList`.
+        public struct JobTemplateList: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/JobTemplateList/templates`.
+            public var templates: [Components.Schemas.JobTemplate]
+            /// Creates a new `JobTemplateList`.
+            ///
+            /// - Parameters:
+            ///   - templates:
+            public init(templates: [Components.Schemas.JobTemplate]) {
+                self.templates = templates
+            }
+            public enum CodingKeys: String, CodingKey {
+                case templates
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/JobTemplateCreate`.
+        public struct JobTemplateCreate: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/JobTemplateCreate/key`.
+            public var key: Swift.String
+            /// - Remark: Generated from `#/components/schemas/JobTemplateCreate/name`.
+            public var name: Swift.String
+            /// - Remark: Generated from `#/components/schemas/JobTemplateCreate/description`.
+            public var description: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/JobTemplateCreate/StepsPayload`.
+            public struct StepsPayloadPayload: Codable, Hashable, Sendable {
+                /// A container of undocumented properties.
+                public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
+                /// Creates a new `StepsPayloadPayload`.
+                ///
+                /// - Parameters:
+                ///   - additionalProperties: A container of undocumented properties.
+                public init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
+                    self.additionalProperties = additionalProperties
+                }
+                public init(from decoder: any Swift.Decoder) throws {
+                    additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+                }
+                public func encode(to encoder: any Swift.Encoder) throws {
+                    try encoder.encodeAdditionalProperties(additionalProperties)
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/JobTemplateCreate/steps`.
+            public typealias StepsPayload = [Components.Schemas.JobTemplateCreate.StepsPayloadPayload]
+            /// - Remark: Generated from `#/components/schemas/JobTemplateCreate/steps`.
+            public var steps: Components.Schemas.JobTemplateCreate.StepsPayload?
+            /// - Remark: Generated from `#/components/schemas/JobTemplateCreate/InputsPayload`.
+            public struct InputsPayloadPayload: Codable, Hashable, Sendable {
+                /// A container of undocumented properties.
+                public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
+                /// Creates a new `InputsPayloadPayload`.
+                ///
+                /// - Parameters:
+                ///   - additionalProperties: A container of undocumented properties.
+                public init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
+                    self.additionalProperties = additionalProperties
+                }
+                public init(from decoder: any Swift.Decoder) throws {
+                    additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+                }
+                public func encode(to encoder: any Swift.Encoder) throws {
+                    try encoder.encodeAdditionalProperties(additionalProperties)
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/JobTemplateCreate/inputs`.
+            public typealias InputsPayload = [Components.Schemas.JobTemplateCreate.InputsPayloadPayload]
+            /// - Remark: Generated from `#/components/schemas/JobTemplateCreate/inputs`.
+            public var inputs: Components.Schemas.JobTemplateCreate.InputsPayload?
+            /// - Remark: Generated from `#/components/schemas/JobTemplateCreate/defaults`.
+            public struct DefaultsPayload: Codable, Hashable, Sendable {
+                /// A container of undocumented properties.
+                public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
+                /// Creates a new `DefaultsPayload`.
+                ///
+                /// - Parameters:
+                ///   - additionalProperties: A container of undocumented properties.
+                public init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
+                    self.additionalProperties = additionalProperties
+                }
+                public init(from decoder: any Swift.Decoder) throws {
+                    additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+                }
+                public func encode(to encoder: any Swift.Encoder) throws {
+                    try encoder.encodeAdditionalProperties(additionalProperties)
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/JobTemplateCreate/defaults`.
+            public var defaults: Components.Schemas.JobTemplateCreate.DefaultsPayload?
+            /// Creates a new `JobTemplateCreate`.
+            ///
+            /// - Parameters:
+            ///   - key:
+            ///   - name:
+            ///   - description:
+            ///   - steps:
+            ///   - inputs:
+            ///   - defaults:
+            public init(
+                key: Swift.String,
+                name: Swift.String,
+                description: Swift.String? = nil,
+                steps: Components.Schemas.JobTemplateCreate.StepsPayload? = nil,
+                inputs: Components.Schemas.JobTemplateCreate.InputsPayload? = nil,
+                defaults: Components.Schemas.JobTemplateCreate.DefaultsPayload? = nil
+            ) {
+                self.key = key
+                self.name = name
+                self.description = description
+                self.steps = steps
+                self.inputs = inputs
+                self.defaults = defaults
+            }
+            public enum CodingKeys: String, CodingKey {
+                case key
+                case name
+                case description
+                case steps
+                case inputs
+                case defaults
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                self.key = try container.decode(
+                    Swift.String.self,
+                    forKey: .key
+                )
+                self.name = try container.decode(
+                    Swift.String.self,
+                    forKey: .name
+                )
+                self.description = try container.decodeIfPresent(
+                    Swift.String.self,
+                    forKey: .description
+                )
+                self.steps = try container.decodeIfPresent(
+                    Components.Schemas.JobTemplateCreate.StepsPayload.self,
+                    forKey: .steps
+                )
+                self.inputs = try container.decodeIfPresent(
+                    Components.Schemas.JobTemplateCreate.InputsPayload.self,
+                    forKey: .inputs
+                )
+                self.defaults = try container.decodeIfPresent(
+                    Components.Schemas.JobTemplateCreate.DefaultsPayload.self,
+                    forKey: .defaults
+                )
+                try decoder.ensureNoAdditionalProperties(knownKeys: [
+                    "key",
+                    "name",
+                    "description",
+                    "steps",
+                    "inputs",
+                    "defaults"
+                ])
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/JobTemplatePatch`.
+        public struct JobTemplatePatch: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/JobTemplatePatch/name`.
+            public var name: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/JobTemplatePatch/description`.
+            public var description: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/JobTemplatePatch/StepsPayload`.
+            public struct StepsPayloadPayload: Codable, Hashable, Sendable {
+                /// A container of undocumented properties.
+                public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
+                /// Creates a new `StepsPayloadPayload`.
+                ///
+                /// - Parameters:
+                ///   - additionalProperties: A container of undocumented properties.
+                public init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
+                    self.additionalProperties = additionalProperties
+                }
+                public init(from decoder: any Swift.Decoder) throws {
+                    additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+                }
+                public func encode(to encoder: any Swift.Encoder) throws {
+                    try encoder.encodeAdditionalProperties(additionalProperties)
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/JobTemplatePatch/steps`.
+            public typealias StepsPayload = [Components.Schemas.JobTemplatePatch.StepsPayloadPayload]
+            /// - Remark: Generated from `#/components/schemas/JobTemplatePatch/steps`.
+            public var steps: Components.Schemas.JobTemplatePatch.StepsPayload?
+            /// - Remark: Generated from `#/components/schemas/JobTemplatePatch/InputsPayload`.
+            public struct InputsPayloadPayload: Codable, Hashable, Sendable {
+                /// A container of undocumented properties.
+                public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
+                /// Creates a new `InputsPayloadPayload`.
+                ///
+                /// - Parameters:
+                ///   - additionalProperties: A container of undocumented properties.
+                public init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
+                    self.additionalProperties = additionalProperties
+                }
+                public init(from decoder: any Swift.Decoder) throws {
+                    additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+                }
+                public func encode(to encoder: any Swift.Encoder) throws {
+                    try encoder.encodeAdditionalProperties(additionalProperties)
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/JobTemplatePatch/inputs`.
+            public typealias InputsPayload = [Components.Schemas.JobTemplatePatch.InputsPayloadPayload]
+            /// - Remark: Generated from `#/components/schemas/JobTemplatePatch/inputs`.
+            public var inputs: Components.Schemas.JobTemplatePatch.InputsPayload?
+            /// - Remark: Generated from `#/components/schemas/JobTemplatePatch/defaults`.
+            public struct DefaultsPayload: Codable, Hashable, Sendable {
+                /// A container of undocumented properties.
+                public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
+                /// Creates a new `DefaultsPayload`.
+                ///
+                /// - Parameters:
+                ///   - additionalProperties: A container of undocumented properties.
+                public init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
+                    self.additionalProperties = additionalProperties
+                }
+                public init(from decoder: any Swift.Decoder) throws {
+                    additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+                }
+                public func encode(to encoder: any Swift.Encoder) throws {
+                    try encoder.encodeAdditionalProperties(additionalProperties)
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/JobTemplatePatch/defaults`.
+            public var defaults: Components.Schemas.JobTemplatePatch.DefaultsPayload?
+            /// Creates a new `JobTemplatePatch`.
+            ///
+            /// - Parameters:
+            ///   - name:
+            ///   - description:
+            ///   - steps:
+            ///   - inputs:
+            ///   - defaults:
+            public init(
+                name: Swift.String? = nil,
+                description: Swift.String? = nil,
+                steps: Components.Schemas.JobTemplatePatch.StepsPayload? = nil,
+                inputs: Components.Schemas.JobTemplatePatch.InputsPayload? = nil,
+                defaults: Components.Schemas.JobTemplatePatch.DefaultsPayload? = nil
+            ) {
+                self.name = name
+                self.description = description
+                self.steps = steps
+                self.inputs = inputs
+                self.defaults = defaults
+            }
+            public enum CodingKeys: String, CodingKey {
+                case name
+                case description
+                case steps
+                case inputs
+                case defaults
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                self.name = try container.decodeIfPresent(
+                    Swift.String.self,
+                    forKey: .name
+                )
+                self.description = try container.decodeIfPresent(
+                    Swift.String.self,
+                    forKey: .description
+                )
+                self.steps = try container.decodeIfPresent(
+                    Components.Schemas.JobTemplatePatch.StepsPayload.self,
+                    forKey: .steps
+                )
+                self.inputs = try container.decodeIfPresent(
+                    Components.Schemas.JobTemplatePatch.InputsPayload.self,
+                    forKey: .inputs
+                )
+                self.defaults = try container.decodeIfPresent(
+                    Components.Schemas.JobTemplatePatch.DefaultsPayload.self,
+                    forKey: .defaults
+                )
+                try decoder.ensureNoAdditionalProperties(knownKeys: [
+                    "name",
+                    "description",
+                    "steps",
+                    "inputs",
+                    "defaults"
+                ])
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/JobTemplateVersion`.
+        public struct JobTemplateVersion: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/JobTemplateVersion/template_id`.
+            public var templateId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/JobTemplateVersion/version`.
+            public var version: Swift.Int
+            /// - Remark: Generated from `#/components/schemas/JobTemplateVersion/StepsPayload`.
+            public struct StepsPayloadPayload: Codable, Hashable, Sendable {
+                /// A container of undocumented properties.
+                public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
+                /// Creates a new `StepsPayloadPayload`.
+                ///
+                /// - Parameters:
+                ///   - additionalProperties: A container of undocumented properties.
+                public init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
+                    self.additionalProperties = additionalProperties
+                }
+                public init(from decoder: any Swift.Decoder) throws {
+                    additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+                }
+                public func encode(to encoder: any Swift.Encoder) throws {
+                    try encoder.encodeAdditionalProperties(additionalProperties)
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/JobTemplateVersion/steps`.
+            public typealias StepsPayload = [Components.Schemas.JobTemplateVersion.StepsPayloadPayload]
+            /// - Remark: Generated from `#/components/schemas/JobTemplateVersion/steps`.
+            public var steps: Components.Schemas.JobTemplateVersion.StepsPayload
+            /// - Remark: Generated from `#/components/schemas/JobTemplateVersion/InputsPayload`.
+            public struct InputsPayloadPayload: Codable, Hashable, Sendable {
+                /// A container of undocumented properties.
+                public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
+                /// Creates a new `InputsPayloadPayload`.
+                ///
+                /// - Parameters:
+                ///   - additionalProperties: A container of undocumented properties.
+                public init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
+                    self.additionalProperties = additionalProperties
+                }
+                public init(from decoder: any Swift.Decoder) throws {
+                    additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+                }
+                public func encode(to encoder: any Swift.Encoder) throws {
+                    try encoder.encodeAdditionalProperties(additionalProperties)
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/JobTemplateVersion/inputs`.
+            public typealias InputsPayload = [Components.Schemas.JobTemplateVersion.InputsPayloadPayload]
+            /// - Remark: Generated from `#/components/schemas/JobTemplateVersion/inputs`.
+            public var inputs: Components.Schemas.JobTemplateVersion.InputsPayload
+            /// - Remark: Generated from `#/components/schemas/JobTemplateVersion/defaults`.
+            public struct DefaultsPayload: Codable, Hashable, Sendable {
+                /// A container of undocumented properties.
+                public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
+                /// Creates a new `DefaultsPayload`.
+                ///
+                /// - Parameters:
+                ///   - additionalProperties: A container of undocumented properties.
+                public init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
+                    self.additionalProperties = additionalProperties
+                }
+                public init(from decoder: any Swift.Decoder) throws {
+                    additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+                }
+                public func encode(to encoder: any Swift.Encoder) throws {
+                    try encoder.encodeAdditionalProperties(additionalProperties)
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/JobTemplateVersion/defaults`.
+            public var defaults: Components.Schemas.JobTemplateVersion.DefaultsPayload
+            /// - Remark: Generated from `#/components/schemas/JobTemplateVersion/has_script`.
+            public var hasScript: Swift.Bool
+            /// - Remark: Generated from `#/components/schemas/JobTemplateVersion/published_by`.
+            public var publishedBy: Swift.String
+            /// - Remark: Generated from `#/components/schemas/JobTemplateVersion/published_at`.
+            public var publishedAt: Foundation.Date
+            /// Creates a new `JobTemplateVersion`.
+            ///
+            /// - Parameters:
+            ///   - templateId:
+            ///   - version:
+            ///   - steps:
+            ///   - inputs:
+            ///   - defaults:
+            ///   - hasScript:
+            ///   - publishedBy:
+            ///   - publishedAt:
+            public init(
+                templateId: Swift.String,
+                version: Swift.Int,
+                steps: Components.Schemas.JobTemplateVersion.StepsPayload,
+                inputs: Components.Schemas.JobTemplateVersion.InputsPayload,
+                defaults: Components.Schemas.JobTemplateVersion.DefaultsPayload,
+                hasScript: Swift.Bool,
+                publishedBy: Swift.String,
+                publishedAt: Foundation.Date
+            ) {
+                self.templateId = templateId
+                self.version = version
+                self.steps = steps
+                self.inputs = inputs
+                self.defaults = defaults
+                self.hasScript = hasScript
+                self.publishedBy = publishedBy
+                self.publishedAt = publishedAt
+            }
+            public enum CodingKeys: String, CodingKey {
+                case templateId = "template_id"
+                case version
+                case steps
+                case inputs
+                case defaults
+                case hasScript = "has_script"
+                case publishedBy = "published_by"
+                case publishedAt = "published_at"
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/JobTemplateOffers`.
+        public struct JobTemplateOffers: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/JobTemplateOffers/set_ids`.
+            public var setIds: [Swift.String]
+            /// Creates a new `JobTemplateOffers`.
+            ///
+            /// - Parameters:
+            ///   - setIds:
+            public init(setIds: [Swift.String]) {
+                self.setIds = setIds
+            }
+            public enum CodingKeys: String, CodingKey {
+                case setIds = "set_ids"
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                self.setIds = try container.decode(
+                    [Swift.String].self,
+                    forKey: .setIds
+                )
+                try decoder.ensureNoAdditionalProperties(knownKeys: [
+                    "set_ids"
+                ])
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/JobCatalogTemplate`.
+        public struct JobCatalogTemplate: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/JobCatalogTemplate/id`.
+            public var id: Swift.String
+            /// - Remark: Generated from `#/components/schemas/JobCatalogTemplate/key`.
+            public var key: Swift.String
+            /// - Remark: Generated from `#/components/schemas/JobCatalogTemplate/name`.
+            public var name: Swift.String
+            /// - Remark: Generated from `#/components/schemas/JobCatalogTemplate/description`.
+            public var description: Swift.String?
+            /// The latest published version.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobCatalogTemplate/version`.
+            public var version: Swift.Int
+            /// - Remark: Generated from `#/components/schemas/JobCatalogTemplate/InputsPayload`.
+            public struct InputsPayloadPayload: Codable, Hashable, Sendable {
+                /// A container of undocumented properties.
+                public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
+                /// Creates a new `InputsPayloadPayload`.
+                ///
+                /// - Parameters:
+                ///   - additionalProperties: A container of undocumented properties.
+                public init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
+                    self.additionalProperties = additionalProperties
+                }
+                public init(from decoder: any Swift.Decoder) throws {
+                    additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+                }
+                public func encode(to encoder: any Swift.Encoder) throws {
+                    try encoder.encodeAdditionalProperties(additionalProperties)
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/JobCatalogTemplate/inputs`.
+            public typealias InputsPayload = [Components.Schemas.JobCatalogTemplate.InputsPayloadPayload]
+            /// - Remark: Generated from `#/components/schemas/JobCatalogTemplate/inputs`.
+            public var inputs: Components.Schemas.JobCatalogTemplate.InputsPayload
+            /// - Remark: Generated from `#/components/schemas/JobCatalogTemplate/defaults`.
+            public struct DefaultsPayload: Codable, Hashable, Sendable {
+                /// A container of undocumented properties.
+                public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
+                /// Creates a new `DefaultsPayload`.
+                ///
+                /// - Parameters:
+                ///   - additionalProperties: A container of undocumented properties.
+                public init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
+                    self.additionalProperties = additionalProperties
+                }
+                public init(from decoder: any Swift.Decoder) throws {
+                    additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+                }
+                public func encode(to encoder: any Swift.Encoder) throws {
+                    try encoder.encodeAdditionalProperties(additionalProperties)
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/JobCatalogTemplate/defaults`.
+            public var defaults: Components.Schemas.JobCatalogTemplate.DefaultsPayload
+            /// - Remark: Generated from `#/components/schemas/JobCatalogTemplate/published_at`.
+            public var publishedAt: Foundation.Date
+            /// Creates a new `JobCatalogTemplate`.
+            ///
+            /// - Parameters:
+            ///   - id:
+            ///   - key:
+            ///   - name:
+            ///   - description:
+            ///   - version: The latest published version.
+            ///   - inputs:
+            ///   - defaults:
+            ///   - publishedAt:
+            public init(
+                id: Swift.String,
+                key: Swift.String,
+                name: Swift.String,
+                description: Swift.String? = nil,
+                version: Swift.Int,
+                inputs: Components.Schemas.JobCatalogTemplate.InputsPayload,
+                defaults: Components.Schemas.JobCatalogTemplate.DefaultsPayload,
+                publishedAt: Foundation.Date
+            ) {
+                self.id = id
+                self.key = key
+                self.name = name
+                self.description = description
+                self.version = version
+                self.inputs = inputs
+                self.defaults = defaults
+                self.publishedAt = publishedAt
+            }
+            public enum CodingKeys: String, CodingKey {
+                case id
+                case key
+                case name
+                case description
+                case version
+                case inputs
+                case defaults
+                case publishedAt = "published_at"
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/JobCatalog`.
+        public struct JobCatalog: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/JobCatalog/templates`.
+            public var templates: [Components.Schemas.JobCatalogTemplate]
+            /// Creates a new `JobCatalog`.
+            ///
+            /// - Parameters:
+            ///   - templates:
+            public init(templates: [Components.Schemas.JobCatalogTemplate]) {
+                self.templates = templates
+            }
+            public enum CodingKeys: String, CodingKey {
+                case templates
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/JobInstance`.
+        public struct JobInstance: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/JobInstance/id`.
+            public var id: Swift.String
+            /// - Remark: Generated from `#/components/schemas/JobInstance/name`.
+            public var name: Swift.String
+            /// - Remark: Generated from `#/components/schemas/JobInstance/owner_kind`.
+            @frozen public enum OwnerKindPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case customer = "customer"
+                case organization = "organization"
+            }
+            /// - Remark: Generated from `#/components/schemas/JobInstance/owner_kind`.
+            public var ownerKind: Components.Schemas.JobInstance.OwnerKindPayload
+            /// - Remark: Generated from `#/components/schemas/JobInstance/owner_id`.
+            public var ownerId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/JobInstance/template_id`.
+            public var templateId: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/JobInstance/template_version`.
+            public var templateVersion: Swift.Int?
+            /// - Remark: Generated from `#/components/schemas/JobInstance/StepsPayload`.
+            public struct StepsPayloadPayload: Codable, Hashable, Sendable {
+                /// A container of undocumented properties.
+                public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
+                /// Creates a new `StepsPayloadPayload`.
+                ///
+                /// - Parameters:
+                ///   - additionalProperties: A container of undocumented properties.
+                public init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
+                    self.additionalProperties = additionalProperties
+                }
+                public init(from decoder: any Swift.Decoder) throws {
+                    additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+                }
+                public func encode(to encoder: any Swift.Encoder) throws {
+                    try encoder.encodeAdditionalProperties(additionalProperties)
+                }
+            }
+            /// A job's own inline steps; null for a job made from a template.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobInstance/steps`.
+            public typealias StepsPayload = [Components.Schemas.JobInstance.StepsPayloadPayload]
+            /// A job's own inline steps; null for a job made from a template.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobInstance/steps`.
+            public var steps: Components.Schemas.JobInstance.StepsPayload?
+            /// - Remark: Generated from `#/components/schemas/JobInstance/inputs`.
+            public struct InputsPayload: Codable, Hashable, Sendable {
+                /// A container of undocumented properties.
+                public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
+                /// Creates a new `InputsPayload`.
+                ///
+                /// - Parameters:
+                ///   - additionalProperties: A container of undocumented properties.
+                public init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
+                    self.additionalProperties = additionalProperties
+                }
+                public init(from decoder: any Swift.Decoder) throws {
+                    additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+                }
+                public func encode(to encoder: any Swift.Encoder) throws {
+                    try encoder.encodeAdditionalProperties(additionalProperties)
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/JobInstance/inputs`.
+            public var inputs: Components.Schemas.JobInstance.InputsPayload
+            /// - Remark: Generated from `#/components/schemas/JobInstance/environment_id`.
+            public var environmentId: Swift.String?
+            /// Job options: priority (0 to 90), the default error strategy, and notify.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobInstance/options`.
+            public struct OptionsPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/JobInstance/options/priority`.
+                public var priority: Swift.Int?
+                /// - Remark: Generated from `#/components/schemas/JobInstance/options/on_error`.
+                @frozen public enum OnErrorPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case fail = "fail"
+                    case _continue = "continue"
+                }
+                /// - Remark: Generated from `#/components/schemas/JobInstance/options/on_error`.
+                public var onError: Components.Schemas.JobInstance.OptionsPayload.OnErrorPayload?
+                /// - Remark: Generated from `#/components/schemas/JobInstance/options/notify`.
+                public struct NotifyPayload: Codable, Hashable, Sendable {
+                    /// A container of undocumented properties.
+                    public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
+                    /// Creates a new `NotifyPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - additionalProperties: A container of undocumented properties.
+                    public init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
+                        self.additionalProperties = additionalProperties
+                    }
+                    public init(from decoder: any Swift.Decoder) throws {
+                        additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+                    }
+                    public func encode(to encoder: any Swift.Encoder) throws {
+                        try encoder.encodeAdditionalProperties(additionalProperties)
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/JobInstance/options/notify`.
+                public var notify: Components.Schemas.JobInstance.OptionsPayload.NotifyPayload?
+                /// Creates a new `OptionsPayload`.
+                ///
+                /// - Parameters:
+                ///   - priority:
+                ///   - onError:
+                ///   - notify:
+                public init(
+                    priority: Swift.Int? = nil,
+                    onError: Components.Schemas.JobInstance.OptionsPayload.OnErrorPayload? = nil,
+                    notify: Components.Schemas.JobInstance.OptionsPayload.NotifyPayload? = nil
+                ) {
+                    self.priority = priority
+                    self.onError = onError
+                    self.notify = notify
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case priority
+                    case onError = "on_error"
+                    case notify
+                }
+            }
+            /// Job options: priority (0 to 90), the default error strategy, and notify.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobInstance/options`.
+            public var options: Components.Schemas.JobInstance.OptionsPayload
+            /// - Remark: Generated from `#/components/schemas/JobInstance/status`.
+            @frozen public enum StatusPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case active = "active"
+                case paused = "paused"
+                case archived = "archived"
+            }
+            /// - Remark: Generated from `#/components/schemas/JobInstance/status`.
+            public var status: Components.Schemas.JobInstance.StatusPayload
+            /// Unix timestamp, in seconds.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobInstance/created`.
+            public var created: Swift.Int
+            /// Unix timestamp, in seconds.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobInstance/updated`.
+            public var updated: Swift.Int
+            /// Creates a new `JobInstance`.
+            ///
+            /// - Parameters:
+            ///   - id:
+            ///   - name:
+            ///   - ownerKind:
+            ///   - ownerId:
+            ///   - templateId:
+            ///   - templateVersion:
+            ///   - steps: A job's own inline steps; null for a job made from a template.
+            ///   - inputs:
+            ///   - environmentId:
+            ///   - options: Job options: priority (0 to 90), the default error strategy, and notify.
+            ///   - status:
+            ///   - created: Unix timestamp, in seconds.
+            ///   - updated: Unix timestamp, in seconds.
+            public init(
+                id: Swift.String,
+                name: Swift.String,
+                ownerKind: Components.Schemas.JobInstance.OwnerKindPayload,
+                ownerId: Swift.String,
+                templateId: Swift.String? = nil,
+                templateVersion: Swift.Int? = nil,
+                steps: Components.Schemas.JobInstance.StepsPayload? = nil,
+                inputs: Components.Schemas.JobInstance.InputsPayload,
+                environmentId: Swift.String? = nil,
+                options: Components.Schemas.JobInstance.OptionsPayload,
+                status: Components.Schemas.JobInstance.StatusPayload,
+                created: Swift.Int,
+                updated: Swift.Int
+            ) {
+                self.id = id
+                self.name = name
+                self.ownerKind = ownerKind
+                self.ownerId = ownerId
+                self.templateId = templateId
+                self.templateVersion = templateVersion
+                self.steps = steps
+                self.inputs = inputs
+                self.environmentId = environmentId
+                self.options = options
+                self.status = status
+                self.created = created
+                self.updated = updated
+            }
+            public enum CodingKeys: String, CodingKey {
+                case id
+                case name
+                case ownerKind = "owner_kind"
+                case ownerId = "owner_id"
+                case templateId = "template_id"
+                case templateVersion = "template_version"
+                case steps
+                case inputs
+                case environmentId = "environment_id"
+                case options
+                case status
+                case created
+                case updated
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/JobInstanceList`.
+        public struct JobInstanceList: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/JobInstanceList/instances`.
+            public var instances: [Components.Schemas.JobInstance]
+            /// Creates a new `JobInstanceList`.
+            ///
+            /// - Parameters:
+            ///   - instances:
+            public init(instances: [Components.Schemas.JobInstance]) {
+                self.instances = instances
+            }
+            public enum CodingKeys: String, CodingKey {
+                case instances
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/JobInstanceCreate`.
+        public struct JobInstanceCreate: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/JobInstanceCreate/name`.
+            public var name: Swift.String
+            /// Exactly one of templateId and steps.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobInstanceCreate/template_id`.
+            public var templateId: Swift.String?
+            /// Defaults to the latest. A customer may only name the offered (latest) version.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobInstanceCreate/template_version`.
+            public var templateVersion: Swift.Int?
+            /// - Remark: Generated from `#/components/schemas/JobInstanceCreate/StepsPayload`.
+            public struct StepsPayloadPayload: Codable, Hashable, Sendable {
+                /// A container of undocumented properties.
+                public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
+                /// Creates a new `StepsPayloadPayload`.
+                ///
+                /// - Parameters:
+                ///   - additionalProperties: A container of undocumented properties.
+                public init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
+                    self.additionalProperties = additionalProperties
+                }
+                public init(from decoder: any Swift.Decoder) throws {
+                    additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+                }
+                public func encode(to encoder: any Swift.Encoder) throws {
+                    try encoder.encodeAdditionalProperties(additionalProperties)
+                }
+            }
+            /// Inline steps: not for an end-customer token (403 `inline_steps_not_allowed`).
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobInstanceCreate/steps`.
+            public typealias StepsPayload = [Components.Schemas.JobInstanceCreate.StepsPayloadPayload]
+            /// Inline steps: not for an end-customer token (403 `inline_steps_not_allowed`).
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobInstanceCreate/steps`.
+            public var steps: Components.Schemas.JobInstanceCreate.StepsPayload?
+            /// - Remark: Generated from `#/components/schemas/JobInstanceCreate/inputs`.
+            public struct InputsPayload: Codable, Hashable, Sendable {
+                /// A container of undocumented properties.
+                public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
+                /// Creates a new `InputsPayload`.
+                ///
+                /// - Parameters:
+                ///   - additionalProperties: A container of undocumented properties.
+                public init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
+                    self.additionalProperties = additionalProperties
+                }
+                public init(from decoder: any Swift.Decoder) throws {
+                    additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+                }
+                public func encode(to encoder: any Swift.Encoder) throws {
+                    try encoder.encodeAdditionalProperties(additionalProperties)
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/JobInstanceCreate/inputs`.
+            public var inputs: Components.Schemas.JobInstanceCreate.InputsPayload?
+            /// - Remark: Generated from `#/components/schemas/JobInstanceCreate/environment_id`.
+            public var environmentId: Swift.String?
+            /// Job options: priority (0 to 90), the default error strategy, and notify.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobInstanceCreate/options`.
+            public struct OptionsPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/JobInstanceCreate/options/priority`.
+                public var priority: Swift.Int?
+                /// - Remark: Generated from `#/components/schemas/JobInstanceCreate/options/on_error`.
+                @frozen public enum OnErrorPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case fail = "fail"
+                    case _continue = "continue"
+                }
+                /// - Remark: Generated from `#/components/schemas/JobInstanceCreate/options/on_error`.
+                public var onError: Components.Schemas.JobInstanceCreate.OptionsPayload.OnErrorPayload?
+                /// - Remark: Generated from `#/components/schemas/JobInstanceCreate/options/notify`.
+                public struct NotifyPayload: Codable, Hashable, Sendable {
+                    /// A container of undocumented properties.
+                    public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
+                    /// Creates a new `NotifyPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - additionalProperties: A container of undocumented properties.
+                    public init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
+                        self.additionalProperties = additionalProperties
+                    }
+                    public init(from decoder: any Swift.Decoder) throws {
+                        additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+                    }
+                    public func encode(to encoder: any Swift.Encoder) throws {
+                        try encoder.encodeAdditionalProperties(additionalProperties)
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/JobInstanceCreate/options/notify`.
+                public var notify: Components.Schemas.JobInstanceCreate.OptionsPayload.NotifyPayload?
+                /// Creates a new `OptionsPayload`.
+                ///
+                /// - Parameters:
+                ///   - priority:
+                ///   - onError:
+                ///   - notify:
+                public init(
+                    priority: Swift.Int? = nil,
+                    onError: Components.Schemas.JobInstanceCreate.OptionsPayload.OnErrorPayload? = nil,
+                    notify: Components.Schemas.JobInstanceCreate.OptionsPayload.NotifyPayload? = nil
+                ) {
+                    self.priority = priority
+                    self.onError = onError
+                    self.notify = notify
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case priority
+                    case onError = "on_error"
+                    case notify
+                }
+            }
+            /// Job options: priority (0 to 90), the default error strategy, and notify.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobInstanceCreate/options`.
+            public var options: Components.Schemas.JobInstanceCreate.OptionsPayload?
+            /// Creates a new `JobInstanceCreate`.
+            ///
+            /// - Parameters:
+            ///   - name:
+            ///   - templateId: Exactly one of templateId and steps.
+            ///   - templateVersion: Defaults to the latest. A customer may only name the offered (latest) version.
+            ///   - steps: Inline steps: not for an end-customer token (403 `inline_steps_not_allowed`).
+            ///   - inputs:
+            ///   - environmentId:
+            ///   - options: Job options: priority (0 to 90), the default error strategy, and notify.
+            public init(
+                name: Swift.String,
+                templateId: Swift.String? = nil,
+                templateVersion: Swift.Int? = nil,
+                steps: Components.Schemas.JobInstanceCreate.StepsPayload? = nil,
+                inputs: Components.Schemas.JobInstanceCreate.InputsPayload? = nil,
+                environmentId: Swift.String? = nil,
+                options: Components.Schemas.JobInstanceCreate.OptionsPayload? = nil
+            ) {
+                self.name = name
+                self.templateId = templateId
+                self.templateVersion = templateVersion
+                self.steps = steps
+                self.inputs = inputs
+                self.environmentId = environmentId
+                self.options = options
+            }
+            public enum CodingKeys: String, CodingKey {
+                case name
+                case templateId = "template_id"
+                case templateVersion = "template_version"
+                case steps
+                case inputs
+                case environmentId = "environment_id"
+                case options
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                self.name = try container.decode(
+                    Swift.String.self,
+                    forKey: .name
+                )
+                self.templateId = try container.decodeIfPresent(
+                    Swift.String.self,
+                    forKey: .templateId
+                )
+                self.templateVersion = try container.decodeIfPresent(
+                    Swift.Int.self,
+                    forKey: .templateVersion
+                )
+                self.steps = try container.decodeIfPresent(
+                    Components.Schemas.JobInstanceCreate.StepsPayload.self,
+                    forKey: .steps
+                )
+                self.inputs = try container.decodeIfPresent(
+                    Components.Schemas.JobInstanceCreate.InputsPayload.self,
+                    forKey: .inputs
+                )
+                self.environmentId = try container.decodeIfPresent(
+                    Swift.String.self,
+                    forKey: .environmentId
+                )
+                self.options = try container.decodeIfPresent(
+                    Components.Schemas.JobInstanceCreate.OptionsPayload.self,
+                    forKey: .options
+                )
+                try decoder.ensureNoAdditionalProperties(knownKeys: [
+                    "name",
+                    "template_id",
+                    "template_version",
+                    "steps",
+                    "inputs",
+                    "environment_id",
+                    "options"
+                ])
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/JobInstancePatch`.
+        public struct JobInstancePatch: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/JobInstancePatch/name`.
+            public var name: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/JobInstancePatch/inputs`.
+            public struct InputsPayload: Codable, Hashable, Sendable {
+                /// A container of undocumented properties.
+                public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
+                /// Creates a new `InputsPayload`.
+                ///
+                /// - Parameters:
+                ///   - additionalProperties: A container of undocumented properties.
+                public init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
+                    self.additionalProperties = additionalProperties
+                }
+                public init(from decoder: any Swift.Decoder) throws {
+                    additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+                }
+                public func encode(to encoder: any Swift.Encoder) throws {
+                    try encoder.encodeAdditionalProperties(additionalProperties)
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/JobInstancePatch/inputs`.
+            public var inputs: Components.Schemas.JobInstancePatch.InputsPayload?
+            /// - Remark: Generated from `#/components/schemas/JobInstancePatch/environment_id`.
+            public var environmentId: Swift.String?
+            /// Job options: priority (0 to 90), the default error strategy, and notify.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobInstancePatch/options`.
+            public struct OptionsPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/JobInstancePatch/options/priority`.
+                public var priority: Swift.Int?
+                /// - Remark: Generated from `#/components/schemas/JobInstancePatch/options/on_error`.
+                @frozen public enum OnErrorPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case fail = "fail"
+                    case _continue = "continue"
+                }
+                /// - Remark: Generated from `#/components/schemas/JobInstancePatch/options/on_error`.
+                public var onError: Components.Schemas.JobInstancePatch.OptionsPayload.OnErrorPayload?
+                /// - Remark: Generated from `#/components/schemas/JobInstancePatch/options/notify`.
+                public struct NotifyPayload: Codable, Hashable, Sendable {
+                    /// A container of undocumented properties.
+                    public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
+                    /// Creates a new `NotifyPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - additionalProperties: A container of undocumented properties.
+                    public init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
+                        self.additionalProperties = additionalProperties
+                    }
+                    public init(from decoder: any Swift.Decoder) throws {
+                        additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+                    }
+                    public func encode(to encoder: any Swift.Encoder) throws {
+                        try encoder.encodeAdditionalProperties(additionalProperties)
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/JobInstancePatch/options/notify`.
+                public var notify: Components.Schemas.JobInstancePatch.OptionsPayload.NotifyPayload?
+                /// Creates a new `OptionsPayload`.
+                ///
+                /// - Parameters:
+                ///   - priority:
+                ///   - onError:
+                ///   - notify:
+                public init(
+                    priority: Swift.Int? = nil,
+                    onError: Components.Schemas.JobInstancePatch.OptionsPayload.OnErrorPayload? = nil,
+                    notify: Components.Schemas.JobInstancePatch.OptionsPayload.NotifyPayload? = nil
+                ) {
+                    self.priority = priority
+                    self.onError = onError
+                    self.notify = notify
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case priority
+                    case onError = "on_error"
+                    case notify
+                }
+            }
+            /// Job options: priority (0 to 90), the default error strategy, and notify.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobInstancePatch/options`.
+            public var options: Components.Schemas.JobInstancePatch.OptionsPayload?
+            /// - Remark: Generated from `#/components/schemas/JobInstancePatch/status`.
+            @frozen public enum StatusPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case active = "active"
+                case paused = "paused"
+            }
+            /// - Remark: Generated from `#/components/schemas/JobInstancePatch/status`.
+            public var status: Components.Schemas.JobInstancePatch.StatusPayload?
+            /// Creates a new `JobInstancePatch`.
+            ///
+            /// - Parameters:
+            ///   - name:
+            ///   - inputs:
+            ///   - environmentId:
+            ///   - options: Job options: priority (0 to 90), the default error strategy, and notify.
+            ///   - status:
+            public init(
+                name: Swift.String? = nil,
+                inputs: Components.Schemas.JobInstancePatch.InputsPayload? = nil,
+                environmentId: Swift.String? = nil,
+                options: Components.Schemas.JobInstancePatch.OptionsPayload? = nil,
+                status: Components.Schemas.JobInstancePatch.StatusPayload? = nil
+            ) {
+                self.name = name
+                self.inputs = inputs
+                self.environmentId = environmentId
+                self.options = options
+                self.status = status
+            }
+            public enum CodingKeys: String, CodingKey {
+                case name
+                case inputs
+                case environmentId = "environment_id"
+                case options
+                case status
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                self.name = try container.decodeIfPresent(
+                    Swift.String.self,
+                    forKey: .name
+                )
+                self.inputs = try container.decodeIfPresent(
+                    Components.Schemas.JobInstancePatch.InputsPayload.self,
+                    forKey: .inputs
+                )
+                self.environmentId = try container.decodeIfPresent(
+                    Swift.String.self,
+                    forKey: .environmentId
+                )
+                self.options = try container.decodeIfPresent(
+                    Components.Schemas.JobInstancePatch.OptionsPayload.self,
+                    forKey: .options
+                )
+                self.status = try container.decodeIfPresent(
+                    Components.Schemas.JobInstancePatch.StatusPayload.self,
+                    forKey: .status
+                )
+                try decoder.ensureNoAdditionalProperties(knownKeys: [
+                    "name",
+                    "inputs",
+                    "environment_id",
+                    "options",
+                    "status"
+                ])
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/JobRunStarted`.
+        public struct JobRunStarted: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/JobRunStarted/run_id`.
+            public var runId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/JobRunStarted/status`.
+            @frozen public enum StatusPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case running = "running"
+                case failed = "failed"
+            }
+            /// - Remark: Generated from `#/components/schemas/JobRunStarted/status`.
+            public var status: Components.Schemas.JobRunStarted.StatusPayload
+            /// - Remark: Generated from `#/components/schemas/JobRunStarted/error_code`.
+            public var errorCode: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/JobRunStarted/error`.
+            public var error: Swift.String?
+            /// Creates a new `JobRunStarted`.
+            ///
+            /// - Parameters:
+            ///   - runId:
+            ///   - status:
+            ///   - errorCode:
+            ///   - error:
+            public init(
+                runId: Swift.String,
+                status: Components.Schemas.JobRunStarted.StatusPayload,
+                errorCode: Swift.String? = nil,
+                error: Swift.String? = nil
+            ) {
+                self.runId = runId
+                self.status = status
+                self.errorCode = errorCode
+                self.error = error
+            }
+            public enum CodingKeys: String, CodingKey {
+                case runId = "run_id"
+                case status
+                case errorCode = "error_code"
+                case error
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/JobTrigger`.
+        public struct JobTrigger: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/JobTrigger/id`.
+            public var id: Swift.String
+            /// - Remark: Generated from `#/components/schemas/JobTrigger/instance_id`.
+            public var instanceId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/JobTrigger/kind`.
+            @frozen public enum KindPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case schedule = "schedule"
+                case event = "event"
+                case inbound = "inbound"
+            }
+            /// - Remark: Generated from `#/components/schemas/JobTrigger/kind`.
+            public var kind: Components.Schemas.JobTrigger.KindPayload
+            /// - Remark: Generated from `#/components/schemas/JobTrigger/cron`.
+            public var cron: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/JobTrigger/time_zone`.
+            public var timeZone: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/JobTrigger/event_types`.
+            public var eventTypes: [Swift.String]?
+            /// - Remark: Generated from `#/components/schemas/JobTrigger/enabled`.
+            public var enabled: Swift.Bool
+            /// - Remark: Generated from `#/components/schemas/JobTrigger/next_fire_at`.
+            public var nextFireAt: Foundation.Date?
+            /// - Remark: Generated from `#/components/schemas/JobTrigger/last_fired_at`.
+            public var lastFiredAt: Foundation.Date?
+            /// Unix timestamp, in seconds.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobTrigger/created`.
+            public var created: Swift.Int
+            /// Unix timestamp, in seconds.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobTrigger/updated`.
+            public var updated: Swift.Int
+            /// An inbound trigger's secret, only in the create answer. Send it as `X-ADH-Trigger-Secret` to `POST /public/jobs/hooks/{id}`.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobTrigger/secret`.
+            public var secret: Swift.String?
+            /// Creates a new `JobTrigger`.
+            ///
+            /// - Parameters:
+            ///   - id:
+            ///   - instanceId:
+            ///   - kind:
+            ///   - cron:
+            ///   - timeZone:
+            ///   - eventTypes:
+            ///   - enabled:
+            ///   - nextFireAt:
+            ///   - lastFiredAt:
+            ///   - created: Unix timestamp, in seconds.
+            ///   - updated: Unix timestamp, in seconds.
+            ///   - secret: An inbound trigger's secret, only in the create answer. Send it as `X-ADH-Trigger-Secret` to `POST /public/jobs/hooks/{id}`.
+            public init(
+                id: Swift.String,
+                instanceId: Swift.String,
+                kind: Components.Schemas.JobTrigger.KindPayload,
+                cron: Swift.String? = nil,
+                timeZone: Swift.String? = nil,
+                eventTypes: [Swift.String]? = nil,
+                enabled: Swift.Bool,
+                nextFireAt: Foundation.Date? = nil,
+                lastFiredAt: Foundation.Date? = nil,
+                created: Swift.Int,
+                updated: Swift.Int,
+                secret: Swift.String? = nil
+            ) {
+                self.id = id
+                self.instanceId = instanceId
+                self.kind = kind
+                self.cron = cron
+                self.timeZone = timeZone
+                self.eventTypes = eventTypes
+                self.enabled = enabled
+                self.nextFireAt = nextFireAt
+                self.lastFiredAt = lastFiredAt
+                self.created = created
+                self.updated = updated
+                self.secret = secret
+            }
+            public enum CodingKeys: String, CodingKey {
+                case id
+                case instanceId = "instance_id"
+                case kind
+                case cron
+                case timeZone = "time_zone"
+                case eventTypes = "event_types"
+                case enabled
+                case nextFireAt = "next_fire_at"
+                case lastFiredAt = "last_fired_at"
+                case created
+                case updated
+                case secret
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/JobTriggerList`.
+        public struct JobTriggerList: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/JobTriggerList/triggers`.
+            public var triggers: [Components.Schemas.JobTrigger]
+            /// Creates a new `JobTriggerList`.
+            ///
+            /// - Parameters:
+            ///   - triggers:
+            public init(triggers: [Components.Schemas.JobTrigger]) {
+                self.triggers = triggers
+            }
+            public enum CodingKeys: String, CodingKey {
+                case triggers
+            }
+        }
+        /// schedule: `{ kind, cron, timeZone, enabled? }`; event: `{ kind, eventTypes, enabled? }`; inbound: `{ kind, enabled? }`.
+        ///
+        /// - Remark: Generated from `#/components/schemas/JobTriggerCreate`.
+        public struct JobTriggerCreate: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/JobTriggerCreate/kind`.
+            @frozen public enum KindPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case schedule = "schedule"
+                case event = "event"
+                case inbound = "inbound"
+            }
+            /// - Remark: Generated from `#/components/schemas/JobTriggerCreate/kind`.
+            public var kind: Components.Schemas.JobTriggerCreate.KindPayload
+            /// - Remark: Generated from `#/components/schemas/JobTriggerCreate/cron`.
+            public var cron: Swift.String?
+            /// An IANA zone.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobTriggerCreate/time_zone`.
+            public var timeZone: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/JobTriggerCreate/event_types`.
+            public var eventTypes: [Swift.String]?
+            /// - Remark: Generated from `#/components/schemas/JobTriggerCreate/enabled`.
+            public var enabled: Swift.Bool?
+            /// Creates a new `JobTriggerCreate`.
+            ///
+            /// - Parameters:
+            ///   - kind:
+            ///   - cron:
+            ///   - timeZone: An IANA zone.
+            ///   - eventTypes:
+            ///   - enabled:
+            public init(
+                kind: Components.Schemas.JobTriggerCreate.KindPayload,
+                cron: Swift.String? = nil,
+                timeZone: Swift.String? = nil,
+                eventTypes: [Swift.String]? = nil,
+                enabled: Swift.Bool? = nil
+            ) {
+                self.kind = kind
+                self.cron = cron
+                self.timeZone = timeZone
+                self.eventTypes = eventTypes
+                self.enabled = enabled
+            }
+            public enum CodingKeys: String, CodingKey {
+                case kind
+                case cron
+                case timeZone = "time_zone"
+                case eventTypes = "event_types"
+                case enabled
+            }
+        }
+        /// cron and timeZone for a schedule only; eventTypes for an event trigger only.
+        ///
+        /// - Remark: Generated from `#/components/schemas/JobTriggerPatch`.
+        public struct JobTriggerPatch: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/JobTriggerPatch/enabled`.
+            public var enabled: Swift.Bool?
+            /// - Remark: Generated from `#/components/schemas/JobTriggerPatch/cron`.
+            public var cron: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/JobTriggerPatch/time_zone`.
+            public var timeZone: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/JobTriggerPatch/event_types`.
+            public var eventTypes: [Swift.String]?
+            /// Creates a new `JobTriggerPatch`.
+            ///
+            /// - Parameters:
+            ///   - enabled:
+            ///   - cron:
+            ///   - timeZone:
+            ///   - eventTypes:
+            public init(
+                enabled: Swift.Bool? = nil,
+                cron: Swift.String? = nil,
+                timeZone: Swift.String? = nil,
+                eventTypes: [Swift.String]? = nil
+            ) {
+                self.enabled = enabled
+                self.cron = cron
+                self.timeZone = timeZone
+                self.eventTypes = eventTypes
+            }
+            public enum CodingKeys: String, CodingKey {
+                case enabled
+                case cron
+                case timeZone = "time_zone"
+                case eventTypes = "event_types"
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                self.enabled = try container.decodeIfPresent(
+                    Swift.Bool.self,
+                    forKey: .enabled
+                )
+                self.cron = try container.decodeIfPresent(
+                    Swift.String.self,
+                    forKey: .cron
+                )
+                self.timeZone = try container.decodeIfPresent(
+                    Swift.String.self,
+                    forKey: .timeZone
+                )
+                self.eventTypes = try container.decodeIfPresent(
+                    [Swift.String].self,
+                    forKey: .eventTypes
+                )
+                try decoder.ensureNoAdditionalProperties(knownKeys: [
+                    "enabled",
+                    "cron",
+                    "time_zone",
+                    "event_types"
+                ])
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/JobRun`.
+        public struct JobRun: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/JobRun/id`.
+            public var id: Swift.String
+            /// - Remark: Generated from `#/components/schemas/JobRun/instance_id`.
+            public var instanceId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/JobRun/trigger_id`.
+            public var triggerId: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/JobRun/status`.
+            @frozen public enum StatusPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case queued = "queued"
+                case running = "running"
+                case succeeded = "succeeded"
+                case failed = "failed"
+                case cancelled = "cancelled"
+            }
+            /// - Remark: Generated from `#/components/schemas/JobRun/status`.
+            public var status: Components.Schemas.JobRun.StatusPayload
+            /// - Remark: Generated from `#/components/schemas/JobRun/current_step`.
+            public var currentStep: Swift.Int?
+            /// - Remark: Generated from `#/components/schemas/JobRun/usage`.
+            public struct UsagePayload: Codable, Hashable, Sendable {
+                /// A container of undocumented properties.
+                public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
+                /// Creates a new `UsagePayload`.
+                ///
+                /// - Parameters:
+                ///   - additionalProperties: A container of undocumented properties.
+                public init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
+                    self.additionalProperties = additionalProperties
+                }
+                public init(from decoder: any Swift.Decoder) throws {
+                    additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+                }
+                public func encode(to encoder: any Swift.Encoder) throws {
+                    try encoder.encodeAdditionalProperties(additionalProperties)
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/JobRun/usage`.
+            public var usage: Components.Schemas.JobRun.UsagePayload
+            /// - Remark: Generated from `#/components/schemas/JobRun/error_code`.
+            public var errorCode: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/JobRun/error`.
+            public var error: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/JobRun/started_at`.
+            public var startedAt: Foundation.Date?
+            /// - Remark: Generated from `#/components/schemas/JobRun/finished_at`.
+            public var finishedAt: Foundation.Date?
+            /// Unix timestamp, in seconds.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobRun/created`.
+            public var created: Swift.Int
+            /// Unix timestamp, in seconds.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobRun/updated`.
+            public var updated: Swift.Int
+            /// Creates a new `JobRun`.
+            ///
+            /// - Parameters:
+            ///   - id:
+            ///   - instanceId:
+            ///   - triggerId:
+            ///   - status:
+            ///   - currentStep:
+            ///   - usage:
+            ///   - errorCode:
+            ///   - error:
+            ///   - startedAt:
+            ///   - finishedAt:
+            ///   - created: Unix timestamp, in seconds.
+            ///   - updated: Unix timestamp, in seconds.
+            public init(
+                id: Swift.String,
+                instanceId: Swift.String,
+                triggerId: Swift.String? = nil,
+                status: Components.Schemas.JobRun.StatusPayload,
+                currentStep: Swift.Int? = nil,
+                usage: Components.Schemas.JobRun.UsagePayload,
+                errorCode: Swift.String? = nil,
+                error: Swift.String? = nil,
+                startedAt: Foundation.Date? = nil,
+                finishedAt: Foundation.Date? = nil,
+                created: Swift.Int,
+                updated: Swift.Int
+            ) {
+                self.id = id
+                self.instanceId = instanceId
+                self.triggerId = triggerId
+                self.status = status
+                self.currentStep = currentStep
+                self.usage = usage
+                self.errorCode = errorCode
+                self.error = error
+                self.startedAt = startedAt
+                self.finishedAt = finishedAt
+                self.created = created
+                self.updated = updated
+            }
+            public enum CodingKeys: String, CodingKey {
+                case id
+                case instanceId = "instance_id"
+                case triggerId = "trigger_id"
+                case status
+                case currentStep = "current_step"
+                case usage
+                case errorCode = "error_code"
+                case error
+                case startedAt = "started_at"
+                case finishedAt = "finished_at"
+                case created
+                case updated
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/JobStepRun`.
+        public struct JobStepRun: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/JobStepRun/id`.
+            public var id: Swift.String
+            /// - Remark: Generated from `#/components/schemas/JobStepRun/position`.
+            public var position: Swift.Int
+            /// - Remark: Generated from `#/components/schemas/JobStepRun/step_id`.
+            public var stepId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/JobStepRun/kind`.
+            public var kind: Swift.String
+            /// - Remark: Generated from `#/components/schemas/JobStepRun/status`.
+            public var status: Swift.String
+            /// - Remark: Generated from `#/components/schemas/JobStepRun/attempts`.
+            public var attempts: Swift.Int
+            /// - Remark: Generated from `#/components/schemas/JobStepRun/output`.
+            public var output: OpenAPIRuntime.OpenAPIValueContainer?
+            /// - Remark: Generated from `#/components/schemas/JobStepRun/log`.
+            public var log: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/JobStepRun/usage`.
+            public struct UsagePayload: Codable, Hashable, Sendable {
+                /// A container of undocumented properties.
+                public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
+                /// Creates a new `UsagePayload`.
+                ///
+                /// - Parameters:
+                ///   - additionalProperties: A container of undocumented properties.
+                public init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
+                    self.additionalProperties = additionalProperties
+                }
+                public init(from decoder: any Swift.Decoder) throws {
+                    additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+                }
+                public func encode(to encoder: any Swift.Encoder) throws {
+                    try encoder.encodeAdditionalProperties(additionalProperties)
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/JobStepRun/usage`.
+            public var usage: Components.Schemas.JobStepRun.UsagePayload
+            /// - Remark: Generated from `#/components/schemas/JobStepRun/error_code`.
+            public var errorCode: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/JobStepRun/error`.
+            public var error: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/JobStepRun/started_at`.
+            public var startedAt: Foundation.Date?
+            /// - Remark: Generated from `#/components/schemas/JobStepRun/finished_at`.
+            public var finishedAt: Foundation.Date?
+            /// Creates a new `JobStepRun`.
+            ///
+            /// - Parameters:
+            ///   - id:
+            ///   - position:
+            ///   - stepId:
+            ///   - kind:
+            ///   - status:
+            ///   - attempts:
+            ///   - output:
+            ///   - log:
+            ///   - usage:
+            ///   - errorCode:
+            ///   - error:
+            ///   - startedAt:
+            ///   - finishedAt:
+            public init(
+                id: Swift.String,
+                position: Swift.Int,
+                stepId: Swift.String,
+                kind: Swift.String,
+                status: Swift.String,
+                attempts: Swift.Int,
+                output: OpenAPIRuntime.OpenAPIValueContainer? = nil,
+                log: Swift.String? = nil,
+                usage: Components.Schemas.JobStepRun.UsagePayload,
+                errorCode: Swift.String? = nil,
+                error: Swift.String? = nil,
+                startedAt: Foundation.Date? = nil,
+                finishedAt: Foundation.Date? = nil
+            ) {
+                self.id = id
+                self.position = position
+                self.stepId = stepId
+                self.kind = kind
+                self.status = status
+                self.attempts = attempts
+                self.output = output
+                self.log = log
+                self.usage = usage
+                self.errorCode = errorCode
+                self.error = error
+                self.startedAt = startedAt
+                self.finishedAt = finishedAt
+            }
+            public enum CodingKeys: String, CodingKey {
+                case id
+                case position
+                case stepId = "step_id"
+                case kind
+                case status
+                case attempts
+                case output
+                case log
+                case usage
+                case errorCode = "error_code"
+                case error
+                case startedAt = "started_at"
+                case finishedAt = "finished_at"
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/JobRunDetail`.
+        public struct JobRunDetail: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/JobRunDetail/value1`.
+            public var value1: Components.Schemas.JobRun
+            /// - Remark: Generated from `#/components/schemas/JobRunDetail/value2`.
+            public struct Value2Payload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/JobRunDetail/value2/step_runs`.
+                public var stepRuns: [Components.Schemas.JobStepRun]
+                /// Creates a new `Value2Payload`.
+                ///
+                /// - Parameters:
+                ///   - stepRuns:
+                public init(stepRuns: [Components.Schemas.JobStepRun]) {
+                    self.stepRuns = stepRuns
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case stepRuns = "step_runs"
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/JobRunDetail/value2`.
+            public var value2: Components.Schemas.JobRunDetail.Value2Payload
+            /// Creates a new `JobRunDetail`.
+            ///
+            /// - Parameters:
+            ///   - value1:
+            ///   - value2:
+            public init(
+                value1: Components.Schemas.JobRun,
+                value2: Components.Schemas.JobRunDetail.Value2Payload
+            ) {
+                self.value1 = value1
+                self.value2 = value2
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                self.value1 = try .init(from: decoder)
+                self.value2 = try .init(from: decoder)
+            }
+            public func encode(to encoder: any Swift.Encoder) throws {
+                try self.value1.encode(to: encoder)
+                try self.value2.encode(to: encoder)
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/JobRunList`.
+        public struct JobRunList: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/JobRunList/runs`.
+            public var runs: [Components.Schemas.JobRun]
+            /// Pass as `before` for the next page; null on the last page.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobRunList/next_before`.
+            public var nextBefore: Foundation.Date?
+            /// Creates a new `JobRunList`.
+            ///
+            /// - Parameters:
+            ///   - runs:
+            ///   - nextBefore: Pass as `before` for the next page; null on the last page.
+            public init(
+                runs: [Components.Schemas.JobRun],
+                nextBefore: Foundation.Date? = nil
+            ) {
+                self.runs = runs
+                self.nextBefore = nextBefore
+            }
+            public enum CodingKeys: String, CodingKey {
+                case runs
+                case nextBefore = "next_before"
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/JobEnvironment`.
+        public struct JobEnvironment: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/JobEnvironment/id`.
+            public var id: Swift.String
+            /// - Remark: Generated from `#/components/schemas/JobEnvironment/name`.
+            public var name: Swift.String
+            /// - Remark: Generated from `#/components/schemas/JobEnvironment/kind`.
+            @frozen public enum KindPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case machine = "machine"
+            }
+            /// - Remark: Generated from `#/components/schemas/JobEnvironment/kind`.
+            public var kind: Components.Schemas.JobEnvironment.KindPayload
+            /// - Remark: Generated from `#/components/schemas/JobEnvironment/capabilities`.
+            public struct CapabilitiesPayload: Codable, Hashable, Sendable {
+                /// A container of undocumented properties.
+                public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
+                /// Creates a new `CapabilitiesPayload`.
+                ///
+                /// - Parameters:
+                ///   - additionalProperties: A container of undocumented properties.
+                public init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
+                    self.additionalProperties = additionalProperties
+                }
+                public init(from decoder: any Swift.Decoder) throws {
+                    additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+                }
+                public func encode(to encoder: any Swift.Encoder) throws {
+                    try encoder.encodeAdditionalProperties(additionalProperties)
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/JobEnvironment/capabilities`.
+            public var capabilities: Components.Schemas.JobEnvironment.CapabilitiesPayload
+            /// - Remark: Generated from `#/components/schemas/JobEnvironment/last_seen_at`.
+            public var lastSeenAt: Foundation.Date?
+            /// Unix timestamp, in seconds.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobEnvironment/created`.
+            public var created: Swift.Int
+            /// Unix timestamp, in seconds.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobEnvironment/updated`.
+            public var updated: Swift.Int
+            /// Creates a new `JobEnvironment`.
+            ///
+            /// - Parameters:
+            ///   - id:
+            ///   - name:
+            ///   - kind:
+            ///   - capabilities:
+            ///   - lastSeenAt:
+            ///   - created: Unix timestamp, in seconds.
+            ///   - updated: Unix timestamp, in seconds.
+            public init(
+                id: Swift.String,
+                name: Swift.String,
+                kind: Components.Schemas.JobEnvironment.KindPayload,
+                capabilities: Components.Schemas.JobEnvironment.CapabilitiesPayload,
+                lastSeenAt: Foundation.Date? = nil,
+                created: Swift.Int,
+                updated: Swift.Int
+            ) {
+                self.id = id
+                self.name = name
+                self.kind = kind
+                self.capabilities = capabilities
+                self.lastSeenAt = lastSeenAt
+                self.created = created
+                self.updated = updated
+            }
+            public enum CodingKeys: String, CodingKey {
+                case id
+                case name
+                case kind
+                case capabilities
+                case lastSeenAt = "last_seen_at"
+                case created
+                case updated
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/JobEnvironmentWithToken`.
+        public struct JobEnvironmentWithToken: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/JobEnvironmentWithToken/value1`.
+            public var value1: Components.Schemas.JobEnvironment
+            /// - Remark: Generated from `#/components/schemas/JobEnvironmentWithToken/value2`.
+            public struct Value2Payload: Codable, Hashable, Sendable {
+                /// The `jenv_` token, shown only in this answer.
+                ///
+                /// - Remark: Generated from `#/components/schemas/JobEnvironmentWithToken/value2/token`.
+                public var token: Swift.String
+                /// Creates a new `Value2Payload`.
+                ///
+                /// - Parameters:
+                ///   - token: The `jenv_` token, shown only in this answer.
+                public init(token: Swift.String) {
+                    self.token = token
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case token
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/JobEnvironmentWithToken/value2`.
+            public var value2: Components.Schemas.JobEnvironmentWithToken.Value2Payload
+            /// Creates a new `JobEnvironmentWithToken`.
+            ///
+            /// - Parameters:
+            ///   - value1:
+            ///   - value2:
+            public init(
+                value1: Components.Schemas.JobEnvironment,
+                value2: Components.Schemas.JobEnvironmentWithToken.Value2Payload
+            ) {
+                self.value1 = value1
+                self.value2 = value2
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                self.value1 = try .init(from: decoder)
+                self.value2 = try .init(from: decoder)
+            }
+            public func encode(to encoder: any Swift.Encoder) throws {
+                try self.value1.encode(to: encoder)
+                try self.value2.encode(to: encoder)
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/JobEnvironmentList`.
+        public struct JobEnvironmentList: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/JobEnvironmentList/environments`.
+            public var environments: [Components.Schemas.JobEnvironment]
+            /// Creates a new `JobEnvironmentList`.
+            ///
+            /// - Parameters:
+            ///   - environments:
+            public init(environments: [Components.Schemas.JobEnvironment]) {
+                self.environments = environments
+            }
+            public enum CodingKeys: String, CodingKey {
+                case environments
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/JobEnvironmentCreate`.
+        public struct JobEnvironmentCreate: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/JobEnvironmentCreate/name`.
+            public var name: Swift.String
+            /// Creates a new `JobEnvironmentCreate`.
+            ///
+            /// - Parameters:
+            ///   - name:
+            public init(name: Swift.String) {
+                self.name = name
+            }
+            public enum CodingKeys: String, CodingKey {
+                case name
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                self.name = try container.decode(
+                    Swift.String.self,
+                    forKey: .name
+                )
+                try decoder.ensureNoAdditionalProperties(knownKeys: [
+                    "name"
+                ])
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/JobRunStatus`.
+        public struct JobRunStatus: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/JobRunStatus/run_id`.
+            public var runId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/JobRunStatus/job_id`.
+            public var jobId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/JobRunStatus/job_name`.
+            public var jobName: Swift.String
+            /// Null for a job with inline steps.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobRunStatus/template_key`.
+            public var templateKey: Swift.String?
+            /// The customer who owns the job.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobRunStatus/owner_id`.
+            public var ownerId: Swift.String
+            /// - Remark: Generated from `#/components/schemas/JobRunStatus/status`.
+            @frozen public enum StatusPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case queued = "queued"
+                case running = "running"
+                case succeeded = "succeeded"
+                case failed = "failed"
+                case cancelled = "cancelled"
+            }
+            /// - Remark: Generated from `#/components/schemas/JobRunStatus/status`.
+            public var status: Components.Schemas.JobRunStatus.StatusPayload
+            /// - Remark: Generated from `#/components/schemas/JobRunStatus/error_code`.
+            public var errorCode: Swift.String?
+            /// The first 200 characters of the run's error.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobRunStatus/error`.
+            public var error: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/JobRunStatus/started_at`.
+            public var startedAt: Foundation.Date?
+            /// - Remark: Generated from `#/components/schemas/JobRunStatus/finished_at`.
+            public var finishedAt: Foundation.Date?
+            /// Unix timestamp, in seconds.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobRunStatus/created`.
+            public var created: Swift.Int
+            /// Creates a new `JobRunStatus`.
+            ///
+            /// - Parameters:
+            ///   - runId:
+            ///   - jobId:
+            ///   - jobName:
+            ///   - templateKey: Null for a job with inline steps.
+            ///   - ownerId: The customer who owns the job.
+            ///   - status:
+            ///   - errorCode:
+            ///   - error: The first 200 characters of the run's error.
+            ///   - startedAt:
+            ///   - finishedAt:
+            ///   - created: Unix timestamp, in seconds.
+            public init(
+                runId: Swift.String,
+                jobId: Swift.String,
+                jobName: Swift.String,
+                templateKey: Swift.String? = nil,
+                ownerId: Swift.String,
+                status: Components.Schemas.JobRunStatus.StatusPayload,
+                errorCode: Swift.String? = nil,
+                error: Swift.String? = nil,
+                startedAt: Foundation.Date? = nil,
+                finishedAt: Foundation.Date? = nil,
+                created: Swift.Int
+            ) {
+                self.runId = runId
+                self.jobId = jobId
+                self.jobName = jobName
+                self.templateKey = templateKey
+                self.ownerId = ownerId
+                self.status = status
+                self.errorCode = errorCode
+                self.error = error
+                self.startedAt = startedAt
+                self.finishedAt = finishedAt
+                self.created = created
+            }
+            public enum CodingKeys: String, CodingKey {
+                case runId = "run_id"
+                case jobId = "job_id"
+                case jobName = "job_name"
+                case templateKey = "template_key"
+                case ownerId = "owner_id"
+                case status
+                case errorCode = "error_code"
+                case error
+                case startedAt = "started_at"
+                case finishedAt = "finished_at"
+                case created
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/JobRunStatusList`.
+        public struct JobRunStatusList: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/JobRunStatusList/runs`.
+            public var runs: [Components.Schemas.JobRunStatus]
+            /// Pass as `before` for the next page; null on the last page.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobRunStatusList/next_before`.
+            public var nextBefore: Foundation.Date?
+            /// Creates a new `JobRunStatusList`.
+            ///
+            /// - Parameters:
+            ///   - runs:
+            ///   - nextBefore: Pass as `before` for the next page; null on the last page.
+            public init(
+                runs: [Components.Schemas.JobRunStatus],
+                nextBefore: Foundation.Date? = nil
+            ) {
+                self.runs = runs
+                self.nextBefore = nextBefore
+            }
+            public enum CodingKeys: String, CodingKey {
+                case runs
+                case nextBefore = "next_before"
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/JobInboundFired`.
+        public struct JobInboundFired: Codable, Hashable, Sendable {
+            /// The run the fire started.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobInboundFired/run_id`.
+            public var runId: Swift.String
+            /// Present only when the run was written `failed` at once (see `errorCode`).
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobInboundFired/status`.
+            @frozen public enum StatusPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case failed = "failed"
+            }
+            /// Present only when the run was written `failed` at once (see `errorCode`).
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobInboundFired/status`.
+            public var status: Components.Schemas.JobInboundFired.StatusPayload?
+            /// Why the run failed at start, e.g. `template_missing`.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobInboundFired/error_code`.
+            public var errorCode: Swift.String?
+            /// Creates a new `JobInboundFired`.
+            ///
+            /// - Parameters:
+            ///   - runId: The run the fire started.
+            ///   - status: Present only when the run was written `failed` at once (see `errorCode`).
+            ///   - errorCode: Why the run failed at start, e.g. `template_missing`.
+            public init(
+                runId: Swift.String,
+                status: Components.Schemas.JobInboundFired.StatusPayload? = nil,
+                errorCode: Swift.String? = nil
+            ) {
+                self.runId = runId
+                self.status = status
+                self.errorCode = errorCode
+            }
+            public enum CodingKeys: String, CodingKey {
+                case runId = "run_id"
+                case status
+                case errorCode = "error_code"
             }
         }
         /// - Remark: Generated from `#/components/schemas/TeamReachGrant`.
@@ -327309,6 +329620,7 @@ public enum Operations {
                             case projectComment = "project_comment"
                             case projectStatus = "project_status"
                             case projectDue = "project_due"
+                            case jobs = "jobs"
                         }
                         /// - Remark: Generated from `#/paths/v1/notification_preferences/POST/requestBody/json/case1/category`.
                         public var category: Operations.PostV1NotificationPreferences.Input.Body.JsonPayload.Case1Payload.CategoryPayload
@@ -327363,6 +329675,7 @@ public enum Operations {
                                 case projectComment = "project_comment"
                                 case projectStatus = "project_status"
                                 case projectDue = "project_due"
+                                case jobs = "jobs"
                             }
                             /// - Remark: Generated from `#/paths/v1/notification_preferences/POST/requestBody/json/case2/PreferencesPayload/category`.
                             public var category: Operations.PostV1NotificationPreferences.Input.Body.JsonPayload.Case2Payload.PreferencesPayloadPayload.CategoryPayload
@@ -366194,7 +368507,7 @@ public enum Operations {
     }
     /// List ecosystem jobs (management)
     ///
-    /// List the caller's ecosystem jobs, newest first. Requires a user JWT. Optional ?status= filter and ?limit= cap (default 50, max 200).
+    /// List the caller's ecosystem jobs, newest first. Requires a user JWT. Optional ?status= filter and ?limit= cap (default 50, max 200). An operator (an admin acting as itself) asking for status=dead gets every ecosystem's dead rows instead, newest death first, with no payload, as an AiProcessingDeadJobPage paged by ?before=.
     ///
     /// Replaces GET /processing/jobs.
     ///
@@ -366216,6 +368529,10 @@ public enum Operations {
                 ///
                 /// - Remark: Generated from `#/paths/v1/processing/jobs/GET/query/status`.
                 public var status: Operations.GetV1ProcessingJobs.Input.Query.StatusPayload?
+                /// Operator dead list only: the previous page's `nextBefore`
+                ///
+                /// - Remark: Generated from `#/paths/v1/processing/jobs/GET/query/before`.
+                public var before: Swift.String?
                 /// Page size, 1–100 (default 10).
                 ///
                 /// - Remark: Generated from `#/paths/v1/processing/jobs/GET/query/limit`.
@@ -366236,18 +368553,21 @@ public enum Operations {
                 ///
                 /// - Parameters:
                 ///   - status: Filter to a specific job lifecycle status; absent = all statuses
+                ///   - before: Operator dead list only: the previous page's `nextBefore`
                 ///   - limit: Page size, 1–100 (default 10).
                 ///   - startingAfter: Cursor: an object id; returns the page after it.
                 ///   - endingBefore: Cursor: an object id; returns the page before it.
                 ///   - expand_lbrack__rbrack_: Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.
                 public init(
                     status: Operations.GetV1ProcessingJobs.Input.Query.StatusPayload? = nil,
+                    before: Swift.String? = nil,
                     limit: Swift.Int? = nil,
                     startingAfter: Swift.String? = nil,
                     endingBefore: Swift.String? = nil,
                     expand_lbrack__rbrack_: [Swift.String]? = nil
                 ) {
                     self.status = status
+                    self.before = before
                     self.limit = limit
                     self.startingAfter = startingAfter
                     self.endingBefore = endingBefore
@@ -366521,6 +368841,57 @@ public enum Operations {
                     }
                 }
             }
+            public struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/processing/jobs/GET/responses/403/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/processing/jobs/GET/responses/403/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetV1ProcessingJobs.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetV1ProcessingJobs.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/processing/jobs/get(getV1ProcessingJobs)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.GetV1ProcessingJobs.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Operations.GetV1ProcessingJobs.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
             /// Undocumented response.
             ///
             /// A response with a code that is not documented in the OpenAPI document.
@@ -366554,7 +368925,7 @@ public enum Operations {
     }
     /// Enqueue an ad-hoc job (management)
     ///
-    /// Ad-hoc / explicit enqueue path (task family 3). Requires a user JWT. The caller's ecosystemId becomes the owning ecosystem. Returns { id, deduped }.
+    /// Ad-hoc / explicit enqueue path (task family 3). Requires a user JWT. The caller's ecosystemId becomes the owning ecosystem. Returns { id, deduped }. A jobType starting with 'jobs.' is 400: those rows are the Jobs engine's alone.
     ///
     /// Replaces POST /processing/jobs.
     ///
@@ -366928,7 +369299,7 @@ public enum Operations {
     }
     /// Claim queued jobs (worker pull)
     ///
-    /// Atomically claim up to `batch` queued jobs for this worker. Returns an empty array when no jobs are available — never blocks. Ecosystem-scoped via RLS to the caller's api-token.
+    /// Atomically claim up to `batch` queued jobs for this worker. Returns an empty array when no jobs are available — never blocks. Ecosystem-scoped via RLS to the caller's api-token. One route serves three bearers: a worker token (its own ecosystem), a pool token (also `jobs.step.ai` rows in every ecosystem that are bound to no machine) and a `jenv_` machine token (only its own environment's `jobs.step.*` rows). A claim that names no `jobTypes` gets only the legacy types (`categorize_and_tag`), never a `jobs.step.*` row; a plain worker token is never given a step row.
     ///
     /// Replaces POST /processing/jobs/claim.
     ///
@@ -366953,10 +369324,49 @@ public enum Operations {
             @frozen public enum Body: Sendable, Hashable {
                 /// - Remark: Generated from `#/paths/v1/processing/jobs/claim/POST/requestBody/json`.
                 public struct JsonPayload: Codable, Hashable, Sendable {
-                    /// Filter to specific job types; absent = any type
+                    /// Filter to specific job types. Absent = the legacy types only. Step rows (`jobs.step.*`) must be named here.
                     ///
                     /// - Remark: Generated from `#/paths/v1/processing/jobs/claim/POST/requestBody/json/job_types`.
                     public var jobTypes: [Swift.String]?
+                    /// A machine only: what it can run, recorded on its environment with last_seen_at. Ignored for a worker or pool token.
+                    ///
+                    /// - Remark: Generated from `#/paths/v1/processing/jobs/claim/POST/requestBody/json/capabilities`.
+                    public struct CapabilitiesPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/v1/processing/jobs/claim/POST/requestBody/json/capabilities/job_types`.
+                        public var jobTypes: [Swift.String]
+                        /// Provider kinds the machine can run, `claude-code` included
+                        ///
+                        /// - Remark: Generated from `#/paths/v1/processing/jobs/claim/POST/requestBody/json/capabilities/providers`.
+                        public var providers: [Swift.String]
+                        /// Whether jobs.step.script is registered
+                        ///
+                        /// - Remark: Generated from `#/paths/v1/processing/jobs/claim/POST/requestBody/json/capabilities/scripts`.
+                        public var scripts: Swift.Bool
+                        /// Creates a new `CapabilitiesPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - jobTypes:
+                        ///   - providers: Provider kinds the machine can run, `claude-code` included
+                        ///   - scripts: Whether jobs.step.script is registered
+                        public init(
+                            jobTypes: [Swift.String],
+                            providers: [Swift.String],
+                            scripts: Swift.Bool
+                        ) {
+                            self.jobTypes = jobTypes
+                            self.providers = providers
+                            self.scripts = scripts
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case jobTypes = "job_types"
+                            case providers
+                            case scripts
+                        }
+                    }
+                    /// A machine only: what it can run, recorded on its environment with last_seen_at. Ignored for a worker or pool token.
+                    ///
+                    /// - Remark: Generated from `#/paths/v1/processing/jobs/claim/POST/requestBody/json/capabilities`.
+                    public var capabilities: Operations.PostV1ProcessingJobsClaim.Input.Body.JsonPayload.CapabilitiesPayload?
                     /// Claim only jobs with priority >= this value (interactive lane = 100)
                     ///
                     /// - Remark: Generated from `#/paths/v1/processing/jobs/claim/POST/requestBody/json/min_priority`.
@@ -366980,7 +369390,8 @@ public enum Operations {
                     /// Creates a new `JsonPayload`.
                     ///
                     /// - Parameters:
-                    ///   - jobTypes: Filter to specific job types; absent = any type
+                    ///   - jobTypes: Filter to specific job types. Absent = the legacy types only. Step rows (`jobs.step.*`) must be named here.
+                    ///   - capabilities: A machine only: what it can run, recorded on its environment with last_seen_at. Ignored for a worker or pool token.
                     ///   - minPriority: Claim only jobs with priority >= this value (interactive lane = 100)
                     ///   - batch: Max jobs to claim (default 1)
                     ///   - leaseMs: Lease duration in ms (default 30 000)
@@ -366988,6 +369399,7 @@ public enum Operations {
                     ///   - providers: LLM providers this node can run; only jobs resolving to one of them are claimed. Absent = ['local'].
                     public init(
                         jobTypes: [Swift.String]? = nil,
+                        capabilities: Operations.PostV1ProcessingJobsClaim.Input.Body.JsonPayload.CapabilitiesPayload? = nil,
                         minPriority: Swift.Int? = nil,
                         batch: Swift.Int? = nil,
                         leaseMs: Swift.Int? = nil,
@@ -366995,6 +369407,7 @@ public enum Operations {
                         providers: [Components.Schemas.AiProcessingProviderKind]? = nil
                     ) {
                         self.jobTypes = jobTypes
+                        self.capabilities = capabilities
                         self.minPriority = minPriority
                         self.batch = batch
                         self.leaseMs = leaseMs
@@ -367003,6 +369416,7 @@ public enum Operations {
                     }
                     public enum CodingKeys: String, CodingKey {
                         case jobTypes = "job_types"
+                        case capabilities
                         case minPriority = "min_priority"
                         case batch
                         case leaseMs = "lease_ms"
@@ -368579,6 +370993,379 @@ public enum Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// Retry a dead job (operator)
+    ///
+    /// Puts a dead queue row of any ecosystem back on the queue: queued, attempts 0, run_at now, its lease and last error cleared. Operator only (an admin acting as itself; 403 otherwise). 404 error.code not_found when no row has the id; 409 error.code not_dead when the row is not dead.
+    ///
+    /// Replaces POST /processing/jobs/{id}/retry.
+    ///
+    /// - Remark: HTTP `POST /v1/processing/jobs/{id}/retry`.
+    /// - Remark: Generated from `#/paths//v1/processing/jobs/{id}/retry/post(postV1ProcessingJobsByIdRetry)`.
+    public enum PostV1ProcessingJobsByIdRetry {
+        public static let id: Swift.String = "postV1ProcessingJobsByIdRetry"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/processing/jobs/{id}/retry/POST/path`.
+            public struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/processing/jobs/{id}/retry/POST/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id:
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.PostV1ProcessingJobsByIdRetry.Input.Path
+            /// - Remark: Generated from `#/paths/v1/processing/jobs/{id}/retry/POST/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1ProcessingJobsByIdRetry.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostV1ProcessingJobsByIdRetry.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.PostV1ProcessingJobsByIdRetry.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            public init(
+                path: Operations.PostV1ProcessingJobsByIdRetry.Input.Path,
+                headers: Operations.PostV1ProcessingJobsByIdRetry.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/processing/jobs/{id}/retry/POST/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/processing/jobs/{id}/retry/POST/responses/200/content/json`.
+                    public struct JsonPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/paths/v1/processing/jobs/{id}/retry/POST/responses/200/content/json/object`.
+                        @frozen public enum ObjectPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                            case processing_job = "processing.job"
+                        }
+                        /// - Remark: Generated from `#/paths/v1/processing/jobs/{id}/retry/POST/responses/200/content/json/object`.
+                        public var object: Operations.PostV1ProcessingJobsByIdRetry.Output.Ok.Body.JsonPayload.ObjectPayload?
+                        /// - Remark: Generated from `#/paths/v1/processing/jobs/{id}/retry/POST/responses/200/content/json/id`.
+                        public var id: Swift.String
+                        /// - Remark: Generated from `#/paths/v1/processing/jobs/{id}/retry/POST/responses/200/content/json/status`.
+                        @frozen public enum StatusPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                            case queued = "queued"
+                        }
+                        /// - Remark: Generated from `#/paths/v1/processing/jobs/{id}/retry/POST/responses/200/content/json/status`.
+                        public var status: Operations.PostV1ProcessingJobsByIdRetry.Output.Ok.Body.JsonPayload.StatusPayload
+                        /// Creates a new `JsonPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - object:
+                        ///   - id:
+                        ///   - status:
+                        public init(
+                            object: Operations.PostV1ProcessingJobsByIdRetry.Output.Ok.Body.JsonPayload.ObjectPayload? = nil,
+                            id: Swift.String,
+                            status: Operations.PostV1ProcessingJobsByIdRetry.Output.Ok.Body.JsonPayload.StatusPayload
+                        ) {
+                            self.object = object
+                            self.id = id
+                            self.status = status
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case object
+                            case id
+                            case status
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/processing/jobs/{id}/retry/POST/responses/200/content/application\/json`.
+                    case json(Operations.PostV1ProcessingJobsByIdRetry.Output.Ok.Body.JsonPayload)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Operations.PostV1ProcessingJobsByIdRetry.Output.Ok.Body.JsonPayload {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1ProcessingJobsByIdRetry.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1ProcessingJobsByIdRetry.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Job re-queued
+            ///
+            /// - Remark: Generated from `#/paths//v1/processing/jobs/{id}/retry/post(postV1ProcessingJobsByIdRetry)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.PostV1ProcessingJobsByIdRetry.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.PostV1ProcessingJobsByIdRetry.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Unauthorized: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/processing/jobs/{id}/retry/POST/responses/401/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/processing/jobs/{id}/retry/POST/responses/401/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1ProcessingJobsByIdRetry.Output.Unauthorized.Body
+                /// Creates a new `Unauthorized`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1ProcessingJobsByIdRetry.Output.Unauthorized.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/processing/jobs/{id}/retry/post(postV1ProcessingJobsByIdRetry)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Operations.PostV1ProcessingJobsByIdRetry.Output.Unauthorized)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            public var unauthorized: Operations.PostV1ProcessingJobsByIdRetry.Output.Unauthorized {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/processing/jobs/{id}/retry/POST/responses/403/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/processing/jobs/{id}/retry/POST/responses/403/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1ProcessingJobsByIdRetry.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1ProcessingJobsByIdRetry.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/processing/jobs/{id}/retry/post(postV1ProcessingJobsByIdRetry)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.PostV1ProcessingJobsByIdRetry.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Operations.PostV1ProcessingJobsByIdRetry.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/processing/jobs/{id}/retry/POST/responses/404/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/processing/jobs/{id}/retry/POST/responses/404/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1ProcessingJobsByIdRetry.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1ProcessingJobsByIdRetry.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/processing/jobs/{id}/retry/post(postV1ProcessingJobsByIdRetry)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.PostV1ProcessingJobsByIdRetry.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Operations.PostV1ProcessingJobsByIdRetry.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Conflict: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/processing/jobs/{id}/retry/POST/responses/409/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/processing/jobs/{id}/retry/POST/responses/409/content/application\/json`.
+                    case json(Components.Schemas.StripeError)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.StripeError {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostV1ProcessingJobsByIdRetry.Output.Conflict.Body
+                /// Creates a new `Conflict`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostV1ProcessingJobsByIdRetry.Output.Conflict.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//v1/processing/jobs/{id}/retry/post(postV1ProcessingJobsByIdRetry)/responses/409`.
+            ///
+            /// HTTP response code: `409 conflict`.
+            case conflict(Operations.PostV1ProcessingJobsByIdRetry.Output.Conflict)
+            /// The associated value of the enum case if `self` is `.conflict`.
+            ///
+            /// - Throws: An error if `self` is not `.conflict`.
+            /// - SeeAlso: `.conflict`.
+            public var conflict: Operations.PostV1ProcessingJobsByIdRetry.Output.Conflict {
+                get throws {
+                    switch self {
+                    case let .conflict(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "conflict",
                             response: self
                         )
                     }

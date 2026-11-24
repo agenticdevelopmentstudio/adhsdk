@@ -18,10 +18,13 @@ class AiProcessingWorkerTokenInput:
     Attributes:
         name (str):
         expires_at (datetime.datetime | None | Unset):
+        pool (bool | Unset): Also grant ai-processing:pool: the node claims Jobs AI steps in every ecosystem. The most
+            sensitive worker credential.
     """
 
     name: str
     expires_at: datetime.datetime | None | Unset = UNSET
+    pool: bool | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -35,6 +38,8 @@ class AiProcessingWorkerTokenInput:
         else:
             expires_at = self.expires_at
 
+        pool = self.pool
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -44,6 +49,8 @@ class AiProcessingWorkerTokenInput:
         )
         if expires_at is not UNSET:
             field_dict["expires_at"] = expires_at
+        if pool is not UNSET:
+            field_dict["pool"] = pool
 
         return field_dict
 
@@ -69,9 +76,12 @@ class AiProcessingWorkerTokenInput:
 
         expires_at = _parse_expires_at(d.pop("expires_at", UNSET))
 
+        pool = d.pop("pool", UNSET)
+
         ai_processing_worker_token_input = cls(
             name=name,
             expires_at=expires_at,
+            pool=pool,
         )
 
         ai_processing_worker_token_input.additional_properties = d

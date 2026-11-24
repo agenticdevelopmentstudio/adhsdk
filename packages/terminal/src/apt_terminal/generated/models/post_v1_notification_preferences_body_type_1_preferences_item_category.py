@@ -7,6 +7,7 @@ class PostV1NotificationPreferencesBodyType1PreferencesItemCategory(StrEnum):
     COMMUNITY_MENTION = "community_mention"
     COMMUNITY_REPLY = "community_reply"
     DIRECT_MESSAGE = "direct_message"
+    JOBS = "jobs"
     PROJECT_ASSIGNED = "project_assigned"
     PROJECT_COMMENT = "project_comment"
     PROJECT_DUE = "project_due"

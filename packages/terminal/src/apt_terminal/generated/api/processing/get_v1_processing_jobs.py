@@ -14,6 +14,7 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     *,
     status: GetV1ProcessingJobsStatus | Unset = UNSET,
+    before: str | Unset = UNSET,
     limit: int | Unset = 10,
     starting_after: str | Unset = UNSET,
     ending_before: str | Unset = UNSET,
@@ -26,6 +27,8 @@ def _get_kwargs(
         json_status = status.value
 
     params["status"] = json_status
+
+    params["before"] = before
 
     params["limit"] = limit
 
@@ -68,6 +71,11 @@ def _parse_response(
 
         return response_401
 
+    if response.status_code == 403:
+        response_403 = StripeError.from_dict(response.json())
+
+        return response_403
+
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
@@ -89,6 +97,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     status: GetV1ProcessingJobsStatus | Unset = UNSET,
+    before: str | Unset = UNSET,
     limit: int | Unset = 10,
     starting_after: str | Unset = UNSET,
     ending_before: str | Unset = UNSET,
@@ -97,12 +106,15 @@ def sync_detailed(
     """List ecosystem jobs (management)
 
      List the caller's ecosystem jobs, newest first. Requires a user JWT. Optional ?status= filter and
-    ?limit= cap (default 50, max 200).
+    ?limit= cap (default 50, max 200). An operator (an admin acting as itself) asking for status=dead
+    gets every ecosystem's dead rows instead, newest death first, with no payload, as an
+    AiProcessingDeadJobPage paged by ?before=.
 
     Replaces GET /processing/jobs.
 
     Args:
         status (GetV1ProcessingJobsStatus | Unset):
+        before (str | Unset):
         limit (int | Unset):  Default: 10.
         starting_after (str | Unset):
         ending_before (str | Unset):
@@ -118,6 +130,7 @@ def sync_detailed(
 
     kwargs = _get_kwargs(
         status=status,
+        before=before,
         limit=limit,
         starting_after=starting_after,
         ending_before=ending_before,
@@ -135,6 +148,7 @@ def sync(
     *,
     client: AuthenticatedClient,
     status: GetV1ProcessingJobsStatus | Unset = UNSET,
+    before: str | Unset = UNSET,
     limit: int | Unset = 10,
     starting_after: str | Unset = UNSET,
     ending_before: str | Unset = UNSET,
@@ -143,12 +157,15 @@ def sync(
     """List ecosystem jobs (management)
 
      List the caller's ecosystem jobs, newest first. Requires a user JWT. Optional ?status= filter and
-    ?limit= cap (default 50, max 200).
+    ?limit= cap (default 50, max 200). An operator (an admin acting as itself) asking for status=dead
+    gets every ecosystem's dead rows instead, newest death first, with no payload, as an
+    AiProcessingDeadJobPage paged by ?before=.
 
     Replaces GET /processing/jobs.
 
     Args:
         status (GetV1ProcessingJobsStatus | Unset):
+        before (str | Unset):
         limit (int | Unset):  Default: 10.
         starting_after (str | Unset):
         ending_before (str | Unset):
@@ -165,6 +182,7 @@ def sync(
     return sync_detailed(
         client=client,
         status=status,
+        before=before,
         limit=limit,
         starting_after=starting_after,
         ending_before=ending_before,
@@ -176,6 +194,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     status: GetV1ProcessingJobsStatus | Unset = UNSET,
+    before: str | Unset = UNSET,
     limit: int | Unset = 10,
     starting_after: str | Unset = UNSET,
     ending_before: str | Unset = UNSET,
@@ -184,12 +203,15 @@ async def asyncio_detailed(
     """List ecosystem jobs (management)
 
      List the caller's ecosystem jobs, newest first. Requires a user JWT. Optional ?status= filter and
-    ?limit= cap (default 50, max 200).
+    ?limit= cap (default 50, max 200). An operator (an admin acting as itself) asking for status=dead
+    gets every ecosystem's dead rows instead, newest death first, with no payload, as an
+    AiProcessingDeadJobPage paged by ?before=.
 
     Replaces GET /processing/jobs.
 
     Args:
         status (GetV1ProcessingJobsStatus | Unset):
+        before (str | Unset):
         limit (int | Unset):  Default: 10.
         starting_after (str | Unset):
         ending_before (str | Unset):
@@ -205,6 +227,7 @@ async def asyncio_detailed(
 
     kwargs = _get_kwargs(
         status=status,
+        before=before,
         limit=limit,
         starting_after=starting_after,
         ending_before=ending_before,
@@ -220,6 +243,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     status: GetV1ProcessingJobsStatus | Unset = UNSET,
+    before: str | Unset = UNSET,
     limit: int | Unset = 10,
     starting_after: str | Unset = UNSET,
     ending_before: str | Unset = UNSET,
@@ -228,12 +252,15 @@ async def asyncio(
     """List ecosystem jobs (management)
 
      List the caller's ecosystem jobs, newest first. Requires a user JWT. Optional ?status= filter and
-    ?limit= cap (default 50, max 200).
+    ?limit= cap (default 50, max 200). An operator (an admin acting as itself) asking for status=dead
+    gets every ecosystem's dead rows instead, newest death first, with no payload, as an
+    AiProcessingDeadJobPage paged by ?before=.
 
     Replaces GET /processing/jobs.
 
     Args:
         status (GetV1ProcessingJobsStatus | Unset):
+        before (str | Unset):
         limit (int | Unset):  Default: 10.
         starting_after (str | Unset):
         ending_before (str | Unset):
@@ -251,6 +278,7 @@ async def asyncio(
         await asyncio_detailed(
             client=client,
             status=status,
+            before=before,
             limit=limit,
             starting_after=starting_after,
             ending_before=ending_before,

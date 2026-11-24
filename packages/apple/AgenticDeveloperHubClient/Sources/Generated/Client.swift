@@ -102820,7 +102820,7 @@ public struct Client: APIProtocol {
     }
     /// List ecosystem jobs (management)
     ///
-    /// List the caller's ecosystem jobs, newest first. Requires a user JWT. Optional ?status= filter and ?limit= cap (default 50, max 200).
+    /// List the caller's ecosystem jobs, newest first. Requires a user JWT. Optional ?status= filter and ?limit= cap (default 50, max 200). An operator (an admin acting as itself) asking for status=dead gets every ecosystem's dead rows instead, newest death first, with no payload, as an AiProcessingDeadJobPage paged by ?before=.
     ///
     /// Replaces GET /processing/jobs.
     ///
@@ -102846,6 +102846,13 @@ public struct Client: APIProtocol {
                     explode: true,
                     name: "status",
                     value: input.query.status
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "before",
+                    value: input.query.before
                 )
                 try converter.setQueryItemAsURI(
                     in: &request,
@@ -102949,6 +102956,28 @@ public struct Client: APIProtocol {
                         preconditionFailure("bestContentType chose an invalid content type.")
                     }
                     return .unauthorized(.init(body: body))
+                case 403:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.GetV1ProcessingJobs.Output.Forbidden.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.StripeError.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .forbidden(.init(body: body))
                 default:
                     return .undocumented(
                         statusCode: response.status.code,
@@ -102963,7 +102992,7 @@ public struct Client: APIProtocol {
     }
     /// Enqueue an ad-hoc job (management)
     ///
-    /// Ad-hoc / explicit enqueue path (task family 3). Requires a user JWT. The caller's ecosystemId becomes the owning ecosystem. Returns { id, deduped }.
+    /// Ad-hoc / explicit enqueue path (task family 3). Requires a user JWT. The caller's ecosystemId becomes the owning ecosystem. Returns { id, deduped }. A jobType starting with 'jobs.' is 400: those rows are the Jobs engine's alone.
     ///
     /// Replaces POST /processing/jobs.
     ///
@@ -103102,7 +103131,7 @@ public struct Client: APIProtocol {
     }
     /// Claim queued jobs (worker pull)
     ///
-    /// Atomically claim up to `batch` queued jobs for this worker. Returns an empty array when no jobs are available — never blocks. Ecosystem-scoped via RLS to the caller's api-token.
+    /// Atomically claim up to `batch` queued jobs for this worker. Returns an empty array when no jobs are available — never blocks. Ecosystem-scoped via RLS to the caller's api-token. One route serves three bearers: a worker token (its own ecosystem), a pool token (also `jobs.step.ai` rows in every ecosystem that are bound to no machine) and a `jenv_` machine token (only its own environment's `jobs.step.*` rows). A claim that names no `jobTypes` gets only the legacy types (`categorize_and_tag`), never a `jobs.step.*` row; a plain worker token is never given a step row.
     ///
     /// Replaces POST /processing/jobs/claim.
     ///
@@ -103743,6 +103772,160 @@ public struct Client: APIProtocol {
                         preconditionFailure("bestContentType chose an invalid content type.")
                     }
                     return .notFound(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// Retry a dead job (operator)
+    ///
+    /// Puts a dead queue row of any ecosystem back on the queue: queued, attempts 0, run_at now, its lease and last error cleared. Operator only (an admin acting as itself; 403 otherwise). 404 error.code not_found when no row has the id; 409 error.code not_dead when the row is not dead.
+    ///
+    /// Replaces POST /processing/jobs/{id}/retry.
+    ///
+    /// - Remark: HTTP `POST /v1/processing/jobs/{id}/retry`.
+    /// - Remark: Generated from `#/paths//v1/processing/jobs/{id}/retry/post(postV1ProcessingJobsByIdRetry)`.
+    public func postV1ProcessingJobsByIdRetry(_ input: Operations.PostV1ProcessingJobsByIdRetry.Input) async throws -> Operations.PostV1ProcessingJobsByIdRetry.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.PostV1ProcessingJobsByIdRetry.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/processing/jobs/{}/retry",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .post
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PostV1ProcessingJobsByIdRetry.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Operations.PostV1ProcessingJobsByIdRetry.Output.Ok.Body.JsonPayload.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                case 401:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PostV1ProcessingJobsByIdRetry.Output.Unauthorized.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.StripeError.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .unauthorized(.init(body: body))
+                case 403:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PostV1ProcessingJobsByIdRetry.Output.Forbidden.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.StripeError.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .forbidden(.init(body: body))
+                case 404:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PostV1ProcessingJobsByIdRetry.Output.NotFound.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.StripeError.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .notFound(.init(body: body))
+                case 409:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.PostV1ProcessingJobsByIdRetry.Output.Conflict.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.StripeError.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .conflict(.init(body: body))
                 default:
                     return .undocumented(
                         statusCode: response.status.code,

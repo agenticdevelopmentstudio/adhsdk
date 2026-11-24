@@ -23,6 +23,7 @@ class GetV1ProcessingWorkerTokensResponse200DataItem:
         expires_at (None | str):
         last_used_at (None | str):
         nodes (list[str]): Ids of the registered nodes that last registered with this token
+        pool (bool): Whether the token carries ai-processing:pool (claims Jobs AI steps across ecosystems)
         object_ (Literal['processing.worker_token'] | Unset):
     """
 
@@ -33,6 +34,7 @@ class GetV1ProcessingWorkerTokensResponse200DataItem:
     expires_at: None | str
     last_used_at: None | str
     nodes: list[str]
+    pool: bool
     object_: Literal["processing.worker_token"] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -53,6 +55,8 @@ class GetV1ProcessingWorkerTokensResponse200DataItem:
 
         nodes = self.nodes
 
+        pool = self.pool
+
         object_ = self.object_
 
         field_dict: dict[str, Any] = {}
@@ -66,6 +70,7 @@ class GetV1ProcessingWorkerTokensResponse200DataItem:
                 "expires_at": expires_at,
                 "last_used_at": last_used_at,
                 "nodes": nodes,
+                "pool": pool,
             }
         )
         if object_ is not UNSET:
@@ -100,6 +105,8 @@ class GetV1ProcessingWorkerTokensResponse200DataItem:
 
         nodes = cast(list[str], d.pop("nodes"))
 
+        pool = d.pop("pool")
+
         object_ = cast(Literal["processing.worker_token"] | Unset, d.pop("object", UNSET))
         if object_ != "processing.worker_token" and not isinstance(object_, Unset):
             raise ValueError(f"object must match const 'processing.worker_token', got '{object_}'")
@@ -112,6 +119,7 @@ class GetV1ProcessingWorkerTokensResponse200DataItem:
             expires_at=expires_at,
             last_used_at=last_used_at,
             nodes=nodes,
+            pool=pool,
             object_=object_,
         )
 

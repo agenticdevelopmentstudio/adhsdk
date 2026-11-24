@@ -21,6 +21,7 @@ class AiProcessingWorkerToken:
         expires_at (None | str):
         last_used_at (None | str):
         nodes (list[str]): Ids of the registered nodes that last registered with this token
+        pool (bool): Whether the token carries ai-processing:pool (claims Jobs AI steps across ecosystems)
     """
 
     id: UUID
@@ -30,6 +31,7 @@ class AiProcessingWorkerToken:
     expires_at: None | str
     last_used_at: None | str
     nodes: list[str]
+    pool: bool
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -49,6 +51,8 @@ class AiProcessingWorkerToken:
 
         nodes = self.nodes
 
+        pool = self.pool
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -60,6 +64,7 @@ class AiProcessingWorkerToken:
                 "expires_at": expires_at,
                 "last_used_at": last_used_at,
                 "nodes": nodes,
+                "pool": pool,
             }
         )
 
@@ -92,6 +97,8 @@ class AiProcessingWorkerToken:
 
         nodes = cast(list[str], d.pop("nodes"))
 
+        pool = d.pop("pool")
+
         ai_processing_worker_token = cls(
             id=id,
             name=name,
@@ -100,6 +107,7 @@ class AiProcessingWorkerToken:
             expires_at=expires_at,
             last_used_at=last_used_at,
             nodes=nodes,
+            pool=pool,
         )
 
         ai_processing_worker_token.additional_properties = d

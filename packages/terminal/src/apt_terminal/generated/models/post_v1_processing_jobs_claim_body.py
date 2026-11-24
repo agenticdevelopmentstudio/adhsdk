@@ -1,13 +1,19 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
 from ..models.ai_processing_provider_kind import AiProcessingProviderKind
 from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.post_v1_processing_jobs_claim_body_capabilities import (
+        PostV1ProcessingJobsClaimBodyCapabilities,
+    )
+
 
 T = TypeVar("T", bound="PostV1ProcessingJobsClaimBody")
 
@@ -16,7 +22,10 @@ T = TypeVar("T", bound="PostV1ProcessingJobsClaimBody")
 class PostV1ProcessingJobsClaimBody:
     """
     Attributes:
-        job_types (list[str] | Unset): Filter to specific job types; absent = any type
+        job_types (list[str] | Unset): Filter to specific job types. Absent = the legacy types only. Step rows
+            (`jobs.step.*`) must be named here.
+        capabilities (PostV1ProcessingJobsClaimBodyCapabilities | Unset): A machine only: what it can run, recorded on
+            its environment with last_seen_at. Ignored for a worker or pool token.
         min_priority (int | Unset): Claim only jobs with priority >= this value (interactive lane = 100)
         batch (int | Unset): Max jobs to claim (default 1)
         lease_ms (int | Unset): Lease duration in ms (default 30 000)
@@ -26,6 +35,7 @@ class PostV1ProcessingJobsClaimBody:
     """
 
     job_types: list[str] | Unset = UNSET
+    capabilities: PostV1ProcessingJobsClaimBodyCapabilities | Unset = UNSET
     min_priority: int | Unset = UNSET
     batch: int | Unset = UNSET
     lease_ms: int | Unset = UNSET
@@ -37,6 +47,10 @@ class PostV1ProcessingJobsClaimBody:
         job_types: list[str] | Unset = UNSET
         if not isinstance(self.job_types, Unset):
             job_types = self.job_types
+
+        capabilities: dict[str, Any] | Unset = UNSET
+        if not isinstance(self.capabilities, Unset):
+            capabilities = self.capabilities.to_dict()
 
         min_priority = self.min_priority
 
@@ -58,6 +72,8 @@ class PostV1ProcessingJobsClaimBody:
         field_dict.update({})
         if job_types is not UNSET:
             field_dict["job_types"] = job_types
+        if capabilities is not UNSET:
+            field_dict["capabilities"] = capabilities
         if min_priority is not UNSET:
             field_dict["min_priority"] = min_priority
         if batch is not UNSET:
@@ -73,8 +89,19 @@ class PostV1ProcessingJobsClaimBody:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.post_v1_processing_jobs_claim_body_capabilities import (
+            PostV1ProcessingJobsClaimBodyCapabilities,
+        )
+
         d = dict(src_dict)
         job_types = cast(list[str], d.pop("job_types", UNSET))
+
+        _capabilities = d.pop("capabilities", UNSET)
+        capabilities: PostV1ProcessingJobsClaimBodyCapabilities | Unset
+        if isinstance(_capabilities, Unset):
+            capabilities = UNSET
+        else:
+            capabilities = PostV1ProcessingJobsClaimBodyCapabilities.from_dict(_capabilities)
 
         min_priority = d.pop("min_priority", UNSET)
 
@@ -95,6 +122,7 @@ class PostV1ProcessingJobsClaimBody:
 
         post_v1_processing_jobs_claim_body = cls(
             job_types=job_types,
+            capabilities=capabilities,
             min_priority=min_priority,
             batch=batch,
             lease_ms=lease_ms,
