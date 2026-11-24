@@ -79,6 +79,7 @@ export const SITE_ROUTES_HUB: Partial<Record<SiteId, readonly string[]>> = {
     '/[workspace]/help/[[...path]]',
     '/[workspace]/integrations/[[...path]]',
     '/[workspace]/invitations/[[...path]]',
+    '/[workspace]/jobs/[[...path]]',
     '/[workspace]/knowledgebases/[[...path]]',
     '/[workspace]/llm-providers/[[...path]]',
     '/[workspace]/members',
@@ -165,6 +166,9 @@ export const SITE_ROUTES_HUB: Partial<Record<SiteId, readonly string[]>> = {
   'product-admin': [
     '/',
     '/invites',
+    '/jobs',
+    '/jobs/templates',
+    '/jobs/templates/[templateId]',
     '/no-access',
     '/pending',
     '/requests',
