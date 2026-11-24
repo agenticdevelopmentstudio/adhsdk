@@ -1,0 +1,54 @@
+
+- **SwiftUI / AppKit / UIKit (Apple, already implemented)**: `PersonasModule` is a `@MainActor
+  final class` conforming to `HTDVDataSource` — the navigation data source contract described
+  neutrally above resolves here to `rootLevel()`/`child(for:)` returning `.level`/`.detail`/
+  `.empty` cases, driving `FormSpec`/`FormSheet`/`FormViewController` from `AgenticDeveloperHubSDKHTDV`
+  (see [adhsdk.ingredient.ui.navigation.htdv](cookbook:faa2c3f3-1ff7-45fb-b6da-efed3cc1d451)); shared Hub support types (`HubError`,
+  `HubText`, `RailPath`, `Slug`, `JSONValue`, `FormDetails`) are reused rather than reimplemented
+  per feature. `PersonasDataSource` is `Sendable` and exposes `list()`, `get(id:)`, `create(_:)`,
+  `update(id:_:)`, `delete(id:)`, and `listServices()`, all `async throws`; the app repo
+  implements it over `HubAPI`. `Persona`/`PersonaService`/`PersonaServiceModel` are `Codable,
+  Sendable, Equatable, Identifiable` structs. `Persona.cannedChat`/`.chatStatus` are typed as the
+  Hub `JSONValue` (hand-written `Decodable`, `==`/`hash(into:)` that treats `.int` and `.number`
+  as the same JSON number) — not the unrelated, simpler `JSONValue` under `Sync/`. Errors from the
+  data source are wrapped as `HubError.wrap(error)`. The hand-written
+  `PersonaServiceModel` in `PersonasModels.swift` has only `id` and `displayName`, so it carries
+  no availability at all and the Apple side has no availability filter or toggle of its own. The
+  regenerated OpenAPI client (`Components.Schemas.PersonaServiceModel` in the generated
+  `Types.swift` under `AgenticDeveloperHubClient`) carries `available` and `offered` as required
+  `Swift.Bool`, with no default for an omitted key, unlike the web `ModelInfo` reads; nothing in
+  the hand-written persona models reads them yet.
+- **React / TypeScript (web, already implemented)**: the client family under
+  `packages/web/packages/data/src/personas/` is the wider of the two implementations — it covers
+  services, provider templates, tool/may-act/approval grants, per-user tool consent, special
+  interests, interest-document corpora, and demo preview, none of which the Apple side's given
+  sources implement yet. From phase 8 it also holds `services.setModelAvailability` and the
+  `available`/`offered` fields of `ModelInfo`. The feature package
+  `packages/web/packages/features/personas` re-exports `ServicesSection`, `useUserServices` and
+  `PERSONA_SERVICES_CACHE_KEY` from `@adh-sdk/ai-settings` (the provider UI's new home, a sibling
+  package laid out like it, with `.` and `./sources.css` exports under the `development`
+  condition), and its `PersonaEditor` filters the model select and keeps the draft's switched-off model as the
+  current value. Its `package.json` lists `@adh-sdk/ai-settings` as a `workspace:*` dependency, and
+  `PersonasSection` reads the services through that package's `useUserServices`.
+- **Jetpack Compose / Kotlin (Android, port target)**: the rootLevel→facet-rail→form navigation
+  has no existing implementation to port from directly; a Compose port would mirror
+  `HTDVDataSource`'s `rootLevel()`/`child(for:)` shape with a `ViewModel` exposing `StateFlow`
+  screens, `kotlinx.serialization`-annotated `Persona`/`PersonaBody` data classes matching the
+  wire field names, and a `sealed class` (or the `CHAT_STATUS_KINDS`-style string literal set) for
+  facet ids so an unhandled facet fails to compile rather than silently falling through.
+- **WinUI 3 / .NET (Windows, port target)**: a `Persona`/`PersonaBody` record pair serialized with
+  `System.Text.Json.JsonSerializer` and `[JsonPropertyName]` attributes matching the wire field
+  names; the facet rail as an `ObservableCollection<PersonaFacet>` bound to a
+  `Microsoft.UI.Xaml.Controls.NavigationView` (or `TreeView`) for the two-level rail; the llm
+  facet's service/model pickers as `Microsoft.UI.Xaml.Controls.ComboBox` bound to the same
+  `serviceOptions`/`modelOptions` derivation `llmSpec` computes; and `DispatcherQueue.TryEnqueue`
+  (or a `[MainThread]`-equivalent dispatcher) to keep persona mutation on the UI thread the way
+  `@MainActor` does on Apple.
+- **Cross-platform (backend contract, applies to every port)**: `canDemoChat`, `parseChatStatus`
+  /`resolveChatStatus`, and `demoPreviewApi` are deliberately duplicated logic that must agree
+  with the backend's authoritative implementation (`backend/src/adh/src/llm/canned/config.ts`,
+  `backend/src/adh/src/db/schema/persona.ts`, `adh/docs/planning/demo-chat-ink-engine.md §10`); any
+  port MUST keep its copy in lockstep with the backend rather than treating this ingredient's
+  TypeScript as the source of truth — "when they disagree, the backend wins," per `wire.ts`'s own
+  comment.
+

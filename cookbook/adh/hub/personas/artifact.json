@@ -4,7 +4,7 @@
     "id": "4af83bb1-0178-462a-b0fc-ae009b63133f",
     "title": "Personas",
     "type": "ingredient",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
@@ -70,7 +70,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "1d4fd39f5c5718f5",
+  "synced": "058bd2f42c64d6f5",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
