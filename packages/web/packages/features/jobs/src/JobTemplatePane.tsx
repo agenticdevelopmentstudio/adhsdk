@@ -282,16 +282,18 @@ function OffersSection({ ecosystemId, template: t }: { ecosystemId: string; temp
           <ul className="flex flex-col gap-1">
             {sets.data.map((s) => (
               <li key={s.id}>
+                {/* The wrapping label names the box (Base UI points aria-labelledby at it, joined
+                    with any aria-label), so the label alone carries the full name for readers. */}
                 <label className="flex items-center gap-2 text-sm text-apt-text">
                   <Checkbox
-                    aria-label={`Offered by ${s.name}`}
                     checked={chosen.includes(s.id)}
                     disabled={write.isPending}
                     onCheckedChange={(c) =>
                       setChosen((all) => (c === true ? [...new Set([...all, s.id])] : all.filter((x) => x !== s.id)))
                     }
                   />
-                  {s.name}
+                  <span className="sr-only">Offered by {s.name}</span>
+                  <span aria-hidden="true">{s.name}</span>
                 </label>
               </li>
             ))}

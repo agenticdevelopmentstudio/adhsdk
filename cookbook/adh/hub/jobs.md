@@ -2,7 +2,7 @@
 id: 0bcb370d-a44f-48a8-a313-0266c2f86e51
 title: "Jobs"
 type: ingredient
-version: 1.4.0
+version: 1.4.1
 status: draft
 language: en
 created: 2026-11-23
@@ -292,7 +292,12 @@ AI Settings feature ([adhsdk.ingredient.adh.hub.ai-settings](cookbook:5fdf4ce9-c
 - **Announce state changes**: A live run's status change MUST be announced through a polite live region.
 - **Labels**: Each step editor's fields MUST carry labels naming the step, so two steps' fields can be told
   apart.
-
+- **Unambiguous names**: A notify checkbox's accessible name MUST name what it does in full ("Notify
+  when a run failed", "Notify by Email"), and a template's offer checkbox MUST be named exactly "Offered
+  by <set name>", never with the set's name twice. The box sits inside its label, which names it, so that label
+  MUST carry the full name, with the short text shown on screen. The once-shown secret's confirm MUST
+  be named "Close without copying", never plain "Close", which is the name of the dialogs' ✕ buttons
+  that keep the secret open.
 ## Conformance Test Vectors
 
 These vectors come from the phase 9 design and are the tests the package's `__tests__/` and the data
@@ -425,9 +430,9 @@ feature `jobs` and the step, such as `list`, `catalog`, `save`, `run`, `retry`, 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/data/src/jobs/` | confirmed (1.4.0) |
-| web | `packages/web/packages/features/jobs/` | confirmed (1.4.0) |
-| web | `packages/web/packages/ui/src/blocks/once-shown-secret-dialog.tsx` | confirmed (1.4.0) |
+| web | `packages/web/packages/data/src/jobs/` | confirmed (1.4.1) |
+| web | `packages/web/packages/features/jobs/` | confirmed (1.4.1) |
+| web | `packages/web/packages/ui/src/blocks/once-shown-secret-dialog.tsx` | confirmed (1.4.1) |
 
 ## Design Decisions
 
@@ -487,6 +492,7 @@ Each check was read against the package and the data client:
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.4.1 | 2026-11-23 | Mike Fullerton | Accessibility: the notify boxes, the Offered-by boxes and the once-shown secret's confirm carry names that say what they do. |
 | 1.4.0 | 2026-11-23 | Mike Fullerton | A template job's inputs and defaults come from its pinned-version read and are editable against that version; a step run shows the name its run froze, else Step N. |
 | 1.3.0 | 2026-11-23 | Mike Fullerton | Review fixes: a template job's inputs and defaults come from the catalog only at its pinned version (job-inputs-pinned-version); notify shows the resolved value and saves only when changed; the job's runs and the status table hold every page in one query, and a failed Load more keeps the rows; a step run with no known name reads Step N with its id; defaults problems on publish are listed (vectors jobs-014 to jobs-018) |
 | 1.2.0 | 2026-11-23 | Mike Fullerton | Package written: seven panes and the two topic sets; topics module is jobs-topics.ts; panes hand navigation to the host through callbacks (host-navigation replaces rail-host-dual-mode); compliance read against the code |
