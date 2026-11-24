@@ -78,6 +78,9 @@ export function JobRunPane({ runId, workspace }: JobRunPaneProps): ReactElement 
     },
   });
 
+  // A custom job's steps carry their names. A template job's steps are its pinned version's, which
+  // no owner route reads (the step runs carry no name either), so those rows fall back to their
+  // position and step id in StepRunRow.
   const stepNames = useMemo(() => {
     const out = new Map<string, string>();
     for (const s of job.data?.steps ?? []) out.set(s.id, s.name);
@@ -123,7 +126,7 @@ export function JobRunPane({ runId, workspace }: JobRunPaneProps): ReactElement 
       ) : (
         <ol aria-label="Steps" className="flex flex-col gap-2">
           {r.stepRuns.map((s) => (
-            <StepRunRow key={s.id} step={s} name={stepNames.get(s.stepId) ?? s.stepId} />
+            <StepRunRow key={s.id} step={s} name={stepNames.get(s.stepId)} />
           ))}
         </ol>
       )}
@@ -149,12 +152,14 @@ export function JobRunPane({ runId, workspace }: JobRunPaneProps): ReactElement 
   );
 }
 
-function StepRunRow({ step, name }: { step: JobStepRun; name: string }): ReactElement {
+/** A step run, under its step's name when that is known, else its place in the run and its id. */
+function StepRunRow({ step, name }: { step: JobStepRun; name: string | undefined }): ReactElement {
   const headline = step.errorCode ? STEP_ERROR_HEADLINE[step.errorCode] : undefined;
   return (
     <li className="flex flex-col gap-2 rounded-md border border-apt-border p-3" data-step-id={step.stepId}>
       <div className="flex flex-wrap items-center gap-2">
-        <span className="font-medium text-apt-text">{name}</span>
+        <span className="font-medium text-apt-text">{name ?? `Step ${step.position + 1}`}</span>
+        {name === undefined ? <span className="font-mono text-xs text-apt-text-muted">{step.stepId}</span> : null}
         <span className="text-xs text-apt-text-muted">{step.kind}</span>
         <StatusBadge status={step.status} />
         {step.attempts > 1 ? (
