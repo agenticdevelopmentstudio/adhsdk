@@ -610,7 +610,11 @@ public final class PipelineDrainer: @unchecked Sendable {
             // Only a drain that completed records proves the destinations take writes
             // again: an empty drain touched neither the store nor a sink. A requeue
             // banks a wake, so the worker drains the records at once.
-            if outcome.completed > 0, drainer.healTransientQuarantine() > 0 { drainer.wake() }
+            // Compaction can outlast stop()'s wait, so a stop asked for meanwhile is
+            // honoured before the heal writes to the spool.
+            if outcome.completed > 0, !drainer.shouldStop(), drainer.healTransientQuarantine() > 0 {
+                drainer.wake()
+            }
         }
         return drainer.shouldStop() ? nil : outcome.failed
     }
