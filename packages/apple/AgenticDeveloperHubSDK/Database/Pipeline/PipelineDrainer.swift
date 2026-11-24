@@ -19,6 +19,10 @@ public enum PipelineError: Error, Equatable {
 public struct DrainOutcome: Sendable, Equatable {
     public var read = 0
     public var archived = 0
+    /// Records whose rows this pass committed to events.db, counted once the store
+    /// write (and any one-record-at-a-time retry of it) is done. Only events.db:
+    /// a record a sink then refuses stays counted here, since its rows are in
+    /// events.db, but is not completed, so `stored` can exceed `completed`.
     public var stored = 0
     public var quarantined = 0
     /// Records whose key the archive already held with other bytes: their bytes

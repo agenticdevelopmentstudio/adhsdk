@@ -620,6 +620,8 @@ final class PipelineDrainerTests: XCTestCase {
         let first = pipe.drainOnce()
         XCTAssertFalse(first.failed, first.failureReason ?? "")
         XCTAssertEqual(first.completed, 2)
+        XCTAssertEqual(first.stored, 3, "stored counts events.db writes, including the record the sink refused")
+        XCTAssertEqual(try rig.store.counts().events, 3)
         XCTAssertEqual(reached.value.sorted(), ["k0", "k1"], "the later sink gets only what the first took")
         XCTAssertEqual(try rig.spool.pendingBatch(limit: 10).map(\.record.dedupKey), ["bad"])
 
