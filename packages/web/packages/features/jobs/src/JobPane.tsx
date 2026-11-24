@@ -270,8 +270,9 @@ function JobSettings({
         <div className="flex flex-wrap gap-4">
           {NOTIFY_ON.map((on) => (
             <label key={on} className="flex items-center gap-2 text-sm text-apt-text">
-              {/* The wrapping label names the box (it is linked by aria-labelledby, which outranks
-                  an aria-label), so the label carries the full name for readers and the short one on screen. */}
+              {/* The wrapping label names the box (Base UI points aria-labelledby at it, joined
+                  with any aria-label, which would then be read twice), so the label
+                  alone carries the full name for readers and the short one on screen. */}
               <Checkbox
                 checked={notify.on.includes(on)}
                 disabled={disabled}
