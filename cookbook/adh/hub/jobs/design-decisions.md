@@ -23,3 +23,9 @@ logs needs a support grant, because the runs are the customer's content.
 **Rationale**: The `must-create-in-modal` rule of [adhsdk.recipe.ui.blocks.hierarchical-topic-detail](cookbook:0bba1f5b-bc8d-4f76-b1c9-329b627f7ee8) applies, and the created row then opens.
 **Approved**: pending
 
+**Decision**: The data client restates the unversioned `/jobs` wire by hand and calls `/api/jobs/...`.
+**Rationale**: Per the design (call C18), no `/jobs` route is in `/v1` this phase, so the generated types
+carry no `/jobs` paths, and their `Job*` components are the `/v1` projection, not what the routes answer.
+Moving the routes into `/v1` later swaps `wire.ts` for aliases of the generated components and the
+mappers read the snake_case, with no change to a caller.
+**Approved**: pending

@@ -2,8 +2,8 @@
 Jobs is the hub feature for scheduled and triggered work: AI steps, integration actions, webhooks,
 notifications and waits, run on the hub or on a machine the owner runs. This ingredient is the web
 package `@adh-sdk/jobs` and its data client, the `jobs` domain of `@adh-sdk/data` reached through the
-`./jobs` subpath. It is written in phase 9, before the code, as the shared design; the package and the
-data client do not exist yet.
+`./jobs` subpath. It was written in phase 9, before the code, as the shared design. The data client now exists
+(`packages/web/packages/data/src/jobs/`); the package does not yet.
 
 The package holds seven panes:
 
