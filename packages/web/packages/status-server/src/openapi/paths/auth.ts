@@ -86,15 +86,17 @@ export const authPaths: Paths = {
     get: {
       tags: [tag],
       summary: 'Begin the GitHub OAuth flow (redirects to GitHub)',
+      description: 'Optional `next`: a same-origin relative path the callback returns to after login (anything else is ignored).',
+      parameters: [queryParam('next')],
       responses: { 302: redirect('Redirect to GitHub authorize'), ...errors(500) },
     },
   },
   '/auth/github/callback': {
     get: {
       tags: [tag],
-      summary: 'GitHub OAuth callback — establishes the session then redirects home',
+      summary: 'GitHub OAuth callback — establishes the session then redirects to `next` (default /home)',
       parameters: [queryParam('code'), queryParam('state')],
-      responses: { 302: redirect('Redirect to /home'), ...errors(400, 502) },
+      responses: { 302: redirect('Redirect to the `next` given at start, or /home'), ...errors(400, 502) },
     },
   },
 };
