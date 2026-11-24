@@ -25,7 +25,9 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }))
 // that file's own comment: it's the one route a Server Component outside this package may
 // also use, so this file matches it rather than importing relatively), and vitest mocks
 // match the exact specifier string a module imports, not the file it resolves to.
-vi.mock('../registry', () => ({
+// Only the topic list is faked: the overlay's other registry helpers (visibleTopicId) run as written.
+vi.mock('../registry', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../registry')>()),
   useSettingsTopics: () => [
     { id: 'a', label: 'Topic A', href: '/a', content: <PanelA /> },
     { id: 'b', label: 'Topic B', href: '/b', content: <div>Topic B content</div> },

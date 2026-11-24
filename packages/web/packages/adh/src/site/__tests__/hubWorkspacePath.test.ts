@@ -48,7 +48,10 @@ describe('isHubWorkspacePath', () => {
     expect(isHubWorkspacePath('/details')).toBe(false)
     expect(isHubWorkspacePath('/login')).toBe(false)
     expect(isHubWorkspacePath('/explore')).toBe(false)
+    // The hub's own /support page (app/(hub)/(auth)/support) shadows the slug like any route.
+    expect(isHubWorkspacePath('/support')).toBe(false)
     expect(hubWorkspaceSlug('/details')).toBeNull()
+    expect(hubWorkspaceSlug('/support')).toBeNull()
   })
 
   it('answers TRUE for a word the MINT forms refuse but the hub does not route', () => {
@@ -59,10 +62,10 @@ describe('isHubWorkspacePath', () => {
     // as a hub page: null slug, and useSiteMenu quietly swapping the visitor's own slug into
     // every feature link while they looked at someone else's workspace.
     //
-    // `teams` and `support` are hub FEATURE words — second segments, `/<workspace>/teams` —
-    // and `about` is pure taste. None of the three is a hub route, so none of them decides
-    // anything about a first segment.
-    for (const slug of ['teams', 'support', 'about', 'me', 'research']) {
+    // `teams` is a hub FEATURE word — a second segment, `/<workspace>/teams` — and `about` is
+    // pure taste. Neither is a hub route, so neither decides anything about a first segment.
+    // (`support` used to be listed here; the hub serves `/support` now, so it is a route.)
+    for (const slug of ['teams', 'about', 'me', 'research']) {
       expect(isHubWorkspacePath(`/${slug}`), slug).toBe(true)
       expect(hubWorkspaceSlug(`/${slug}`), slug).toBe(slug)
     }
