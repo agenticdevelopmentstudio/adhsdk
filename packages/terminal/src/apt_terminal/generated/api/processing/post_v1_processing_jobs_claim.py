@@ -75,7 +75,11 @@ def sync_detailed(
     """Claim queued jobs (worker pull)
 
      Atomically claim up to `batch` queued jobs for this worker. Returns an empty array when no jobs are
-    available — never blocks. Ecosystem-scoped via RLS to the caller's api-token.
+    available — never blocks. Ecosystem-scoped via RLS to the caller's api-token. One route serves three
+    bearers: a worker token (its own ecosystem), a pool token (also `jobs.step.ai` rows in every
+    ecosystem that are bound to no machine) and a `jenv_` machine token (only its own environment's
+    `jobs.step.*` rows). A claim that names no `jobTypes` gets only the legacy types
+    (`categorize_and_tag`), never a `jobs.step.*` row; a plain worker token is never given a step row.
 
     Replaces POST /processing/jobs/claim.
 
@@ -109,7 +113,11 @@ def sync(
     """Claim queued jobs (worker pull)
 
      Atomically claim up to `batch` queued jobs for this worker. Returns an empty array when no jobs are
-    available — never blocks. Ecosystem-scoped via RLS to the caller's api-token.
+    available — never blocks. Ecosystem-scoped via RLS to the caller's api-token. One route serves three
+    bearers: a worker token (its own ecosystem), a pool token (also `jobs.step.ai` rows in every
+    ecosystem that are bound to no machine) and a `jenv_` machine token (only its own environment's
+    `jobs.step.*` rows). A claim that names no `jobTypes` gets only the legacy types
+    (`categorize_and_tag`), never a `jobs.step.*` row; a plain worker token is never given a step row.
 
     Replaces POST /processing/jobs/claim.
 
@@ -138,7 +146,11 @@ async def asyncio_detailed(
     """Claim queued jobs (worker pull)
 
      Atomically claim up to `batch` queued jobs for this worker. Returns an empty array when no jobs are
-    available — never blocks. Ecosystem-scoped via RLS to the caller's api-token.
+    available — never blocks. Ecosystem-scoped via RLS to the caller's api-token. One route serves three
+    bearers: a worker token (its own ecosystem), a pool token (also `jobs.step.ai` rows in every
+    ecosystem that are bound to no machine) and a `jenv_` machine token (only its own environment's
+    `jobs.step.*` rows). A claim that names no `jobTypes` gets only the legacy types
+    (`categorize_and_tag`), never a `jobs.step.*` row; a plain worker token is never given a step row.
 
     Replaces POST /processing/jobs/claim.
 
@@ -170,7 +182,11 @@ async def asyncio(
     """Claim queued jobs (worker pull)
 
      Atomically claim up to `batch` queued jobs for this worker. Returns an empty array when no jobs are
-    available — never blocks. Ecosystem-scoped via RLS to the caller's api-token.
+    available — never blocks. Ecosystem-scoped via RLS to the caller's api-token. One route serves three
+    bearers: a worker token (its own ecosystem), a pool token (also `jobs.step.ai` rows in every
+    ecosystem that are bound to no machine) and a `jenv_` machine token (only its own environment's
+    `jobs.step.*` rows). A claim that names no `jobTypes` gets only the legacy types
+    (`categorize_and_tag`), never a `jobs.step.*` row; a plain worker token is never given a step row.
 
     Replaces POST /processing/jobs/claim.
 

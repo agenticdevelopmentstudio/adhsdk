@@ -36,6 +36,8 @@ from .ai_processing_config_set_input import AiProcessingConfigSetInput
 from .ai_processing_config_set_params import AiProcessingConfigSetParams
 from .ai_processing_config_set_params_output_mode import AiProcessingConfigSetParamsOutputMode
 from .ai_processing_config_set_service_type_0 import AiProcessingConfigSetServiceType0
+from .ai_processing_dead_job import AiProcessingDeadJob
+from .ai_processing_dead_job_page import AiProcessingDeadJobPage
 from .ai_processing_job import AiProcessingJob
 from .ai_processing_job_llm import AiProcessingJobLlm
 from .ai_processing_job_llm_connection_type_0 import AiProcessingJobLlmConnectionType0
@@ -1636,6 +1638,72 @@ from .iteration_work_item import IterationWorkItem
 from .iteration_work_item_estimate_scale import IterationWorkItemEstimateScale
 from .iteration_work_item_priority_scale import IterationWorkItemPriorityScale
 from .iteration_work_item_status_category import IterationWorkItemStatusCategory
+from .job_catalog import JobCatalog
+from .job_catalog_template import JobCatalogTemplate
+from .job_catalog_template_defaults import JobCatalogTemplateDefaults
+from .job_catalog_template_inputs_item import JobCatalogTemplateInputsItem
+from .job_environment import JobEnvironment
+from .job_environment_capabilities import JobEnvironmentCapabilities
+from .job_environment_create import JobEnvironmentCreate
+from .job_environment_kind import JobEnvironmentKind
+from .job_environment_list import JobEnvironmentList
+from .job_environment_with_token import JobEnvironmentWithToken
+from .job_inbound_fired import JobInboundFired
+from .job_inbound_fired_status import JobInboundFiredStatus
+from .job_instance import JobInstance
+from .job_instance_create import JobInstanceCreate
+from .job_instance_create_inputs import JobInstanceCreateInputs
+from .job_instance_create_options import JobInstanceCreateOptions
+from .job_instance_create_options_notify import JobInstanceCreateOptionsNotify
+from .job_instance_create_options_on_error import JobInstanceCreateOptionsOnError
+from .job_instance_create_steps_item import JobInstanceCreateStepsItem
+from .job_instance_inputs import JobInstanceInputs
+from .job_instance_list import JobInstanceList
+from .job_instance_options import JobInstanceOptions
+from .job_instance_options_notify import JobInstanceOptionsNotify
+from .job_instance_options_on_error import JobInstanceOptionsOnError
+from .job_instance_owner_kind import JobInstanceOwnerKind
+from .job_instance_patch import JobInstancePatch
+from .job_instance_patch_inputs import JobInstancePatchInputs
+from .job_instance_patch_options import JobInstancePatchOptions
+from .job_instance_patch_options_notify import JobInstancePatchOptionsNotify
+from .job_instance_patch_options_on_error import JobInstancePatchOptionsOnError
+from .job_instance_patch_status import JobInstancePatchStatus
+from .job_instance_status import JobInstanceStatus
+from .job_instance_steps_type_0_item import JobInstanceStepsType0Item
+from .job_run_started import JobRunStarted
+from .job_run_started_status import JobRunStartedStatus
+from .job_run_status import JobRunStatus
+from .job_run_status_list import JobRunStatusList
+from .job_run_status_status import JobRunStatusStatus
+from .job_step_run import JobStepRun
+from .job_step_run_usage import JobStepRunUsage
+from .job_template import JobTemplate
+from .job_template_create import JobTemplateCreate
+from .job_template_create_defaults import JobTemplateCreateDefaults
+from .job_template_create_inputs_item import JobTemplateCreateInputsItem
+from .job_template_create_steps_item import JobTemplateCreateStepsItem
+from .job_template_draft import JobTemplateDraft
+from .job_template_draft_defaults import JobTemplateDraftDefaults
+from .job_template_draft_inputs_item import JobTemplateDraftInputsItem
+from .job_template_draft_steps_item import JobTemplateDraftStepsItem
+from .job_template_list import JobTemplateList
+from .job_template_offers import JobTemplateOffers
+from .job_template_patch import JobTemplatePatch
+from .job_template_patch_defaults import JobTemplatePatchDefaults
+from .job_template_patch_inputs_item import JobTemplatePatchInputsItem
+from .job_template_patch_steps_item import JobTemplatePatchStepsItem
+from .job_template_status import JobTemplateStatus
+from .job_template_version import JobTemplateVersion
+from .job_template_version_defaults import JobTemplateVersionDefaults
+from .job_template_version_inputs_item import JobTemplateVersionInputsItem
+from .job_template_version_steps_item import JobTemplateVersionStepsItem
+from .job_trigger import JobTrigger
+from .job_trigger_create import JobTriggerCreate
+from .job_trigger_create_kind import JobTriggerCreateKind
+from .job_trigger_kind import JobTriggerKind
+from .job_trigger_list import JobTriggerList
+from .job_trigger_patch import JobTriggerPatch
 from .legacy_billing_ack import LegacyBillingAck
 from .legacy_error import LegacyError
 from .legacy_error_error import LegacyErrorError
@@ -2911,7 +2979,16 @@ from .post_v1_processing_jobs_by_id_heartbeat_body import PostV1ProcessingJobsBy
 from .post_v1_processing_jobs_by_id_heartbeat_response_200 import (
     PostV1ProcessingJobsByIdHeartbeatResponse200,
 )
+from .post_v1_processing_jobs_by_id_retry_response_200 import (
+    PostV1ProcessingJobsByIdRetryResponse200,
+)
+from .post_v1_processing_jobs_by_id_retry_response_200_status import (
+    PostV1ProcessingJobsByIdRetryResponse200Status,
+)
 from .post_v1_processing_jobs_claim_body import PostV1ProcessingJobsClaimBody
+from .post_v1_processing_jobs_claim_body_capabilities import (
+    PostV1ProcessingJobsClaimBodyCapabilities,
+)
 from .post_v1_processing_jobs_claim_response_200 import PostV1ProcessingJobsClaimResponse200
 from .post_v1_processing_jobs_response_201 import PostV1ProcessingJobsResponse201
 from .post_v1_processing_nodes_body import PostV1ProcessingNodesBody
@@ -3829,6 +3906,8 @@ __all__ = (
     "AiProcessingConfigSetParams",
     "AiProcessingConfigSetParamsOutputMode",
     "AiProcessingConfigSetServiceType0",
+    "AiProcessingDeadJob",
+    "AiProcessingDeadJobPage",
     "AiProcessingJob",
     "AiProcessingJobLlm",
     "AiProcessingJobLlmConnectionType0",
@@ -4939,6 +5018,72 @@ __all__ = (
     "IterationWorkItemEstimateScale",
     "IterationWorkItemPriorityScale",
     "IterationWorkItemStatusCategory",
+    "JobCatalog",
+    "JobCatalogTemplate",
+    "JobCatalogTemplateDefaults",
+    "JobCatalogTemplateInputsItem",
+    "JobEnvironment",
+    "JobEnvironmentCapabilities",
+    "JobEnvironmentCreate",
+    "JobEnvironmentKind",
+    "JobEnvironmentList",
+    "JobEnvironmentWithToken",
+    "JobInboundFired",
+    "JobInboundFiredStatus",
+    "JobInstance",
+    "JobInstanceCreate",
+    "JobInstanceCreateInputs",
+    "JobInstanceCreateOptions",
+    "JobInstanceCreateOptionsNotify",
+    "JobInstanceCreateOptionsOnError",
+    "JobInstanceCreateStepsItem",
+    "JobInstanceInputs",
+    "JobInstanceList",
+    "JobInstanceOptions",
+    "JobInstanceOptionsNotify",
+    "JobInstanceOptionsOnError",
+    "JobInstanceOwnerKind",
+    "JobInstancePatch",
+    "JobInstancePatchInputs",
+    "JobInstancePatchOptions",
+    "JobInstancePatchOptionsNotify",
+    "JobInstancePatchOptionsOnError",
+    "JobInstancePatchStatus",
+    "JobInstanceStatus",
+    "JobInstanceStepsType0Item",
+    "JobRunStarted",
+    "JobRunStartedStatus",
+    "JobRunStatus",
+    "JobRunStatusList",
+    "JobRunStatusStatus",
+    "JobStepRun",
+    "JobStepRunUsage",
+    "JobTemplate",
+    "JobTemplateCreate",
+    "JobTemplateCreateDefaults",
+    "JobTemplateCreateInputsItem",
+    "JobTemplateCreateStepsItem",
+    "JobTemplateDraft",
+    "JobTemplateDraftDefaults",
+    "JobTemplateDraftInputsItem",
+    "JobTemplateDraftStepsItem",
+    "JobTemplateList",
+    "JobTemplateOffers",
+    "JobTemplatePatch",
+    "JobTemplatePatchDefaults",
+    "JobTemplatePatchInputsItem",
+    "JobTemplatePatchStepsItem",
+    "JobTemplateStatus",
+    "JobTemplateVersion",
+    "JobTemplateVersionDefaults",
+    "JobTemplateVersionInputsItem",
+    "JobTemplateVersionStepsItem",
+    "JobTrigger",
+    "JobTriggerCreate",
+    "JobTriggerCreateKind",
+    "JobTriggerKind",
+    "JobTriggerList",
+    "JobTriggerPatch",
     "LegacyBillingAck",
     "LegacyError",
     "LegacyErrorError",
@@ -5802,7 +5947,10 @@ __all__ = (
     "PostV1ProcessingJobsByIdFailResponse200",
     "PostV1ProcessingJobsByIdHeartbeatBody",
     "PostV1ProcessingJobsByIdHeartbeatResponse200",
+    "PostV1ProcessingJobsByIdRetryResponse200",
+    "PostV1ProcessingJobsByIdRetryResponse200Status",
     "PostV1ProcessingJobsClaimBody",
+    "PostV1ProcessingJobsClaimBodyCapabilities",
     "PostV1ProcessingJobsClaimResponse200",
     "PostV1ProcessingJobsResponse201",
     "PostV1ProcessingNodesBody",

@@ -897,6 +897,74 @@
           }
         }
       },
+      "AiProcessingDeadJob": {
+        "type": "object",
+        "required": [
+          "id",
+          "ecosystem_id",
+          "job_type",
+          "attempts",
+          "last_error",
+          "failed_at",
+          "target_kind",
+          "target_id",
+          "created"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ecosystem_id": {
+            "type": "string"
+          },
+          "job_type": {
+            "type": "string"
+          },
+          "attempts": {
+            "type": "integer",
+            "description": "Attempts recorded, the last one included"
+          },
+          "last_error": {
+            "type": "string",
+            "nullable": true
+          },
+          "failed_at": {
+            "type": "string",
+            "description": "When the row went dead"
+          },
+          "target_kind": {
+            "type": "string"
+          },
+          "target_id": {
+            "type": "string"
+          },
+          "created": {
+            "type": "integer",
+            "description": "Unix timestamp, in seconds."
+          }
+        }
+      },
+      "AiProcessingDeadJobPage": {
+        "type": "object",
+        "required": [
+          "jobs",
+          "next_before"
+        ],
+        "properties": {
+          "jobs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AiProcessingDeadJob"
+            }
+          },
+          "next_before": {
+            "type": "string",
+            "nullable": true,
+            "description": "Pass as `before` for the next (older) page; null = no more. Opaque."
+          }
+        }
+      },
       "AiProcessingConfigSet": {
         "type": "object",
         "required": [
@@ -1147,7 +1215,8 @@
           "created",
           "expires_at",
           "last_used_at",
-          "nodes"
+          "nodes",
+          "pool"
         ],
         "properties": {
           "id": {
@@ -1179,6 +1248,10 @@
               "type": "string"
             },
             "description": "Ids of the registered nodes that last registered with this token"
+          },
+          "pool": {
+            "type": "boolean",
+            "description": "Whether the token carries ai-processing:pool (claims Jobs AI steps across ecosystems)"
           }
         }
       },
@@ -1197,6 +1270,10 @@
             "type": "string",
             "format": "date-time",
             "nullable": true
+          },
+          "pool": {
+            "type": "boolean",
+            "description": "Also grant ai-processing:pool: the node claims Jobs AI steps in every ecosystem. The most sensitive worker credential."
           }
         }
       },
@@ -8599,7 +8676,8 @@
               "project_mention",
               "project_comment",
               "project_status",
-              "project_due"
+              "project_due",
+              "jobs"
             ]
           },
           "email": {
@@ -17813,6 +17891,1136 @@
         "properties": {
           "ok": {
             "type": "boolean"
+          }
+        }
+      },
+      "JobTemplateDraft": {
+        "type": "object",
+        "required": [
+          "steps",
+          "inputs",
+          "defaults"
+        ],
+        "properties": {
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "description": "The steps being edited; each is `{ id, kind, ... }` with kind ai, action, webhook, notify, wait or script. Checked in full at publish."
+          },
+          "inputs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "description": "Declared inputs: `{ key, label, type, required?, choices? }`."
+          },
+          "defaults": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Default options: priority, onError, notify, minIntervalMinutes."
+          }
+        }
+      },
+      "JobTemplate": {
+        "type": "object",
+        "required": [
+          "id",
+          "key",
+          "name",
+          "description",
+          "status",
+          "latest_version",
+          "latest_has_script",
+          "latest_published_at",
+          "offered_set_ids",
+          "created",
+          "updated",
+          "draft"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "key": {
+            "type": "string",
+            "description": "Lower case letters, digits and hyphens; unique per ecosystem."
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "published",
+              "retired"
+            ]
+          },
+          "latest_version": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Null until the first publish."
+          },
+          "latest_has_script": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Whether the latest version has a script step (it then cannot be offered)."
+          },
+          "latest_published_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "offered_set_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "created": {
+            "type": "integer",
+            "description": "Unix timestamp, in seconds."
+          },
+          "updated": {
+            "type": "integer",
+            "description": "Unix timestamp, in seconds."
+          },
+          "draft": {
+            "$ref": "#/components/schemas/JobTemplateDraft",
+            "nullable": true
+          }
+        }
+      },
+      "JobTemplateList": {
+        "type": "object",
+        "required": [
+          "templates"
+        ],
+        "properties": {
+          "templates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JobTemplate"
+            }
+          }
+        }
+      },
+      "JobTemplateCreate": {
+        "type": "object",
+        "required": [
+          "key",
+          "name"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "key": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$",
+            "maxLength": 64
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "inputs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "defaults": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "JobTemplatePatch": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "inputs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "defaults": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "JobTemplateVersion": {
+        "type": "object",
+        "required": [
+          "template_id",
+          "version",
+          "steps",
+          "inputs",
+          "defaults",
+          "has_script",
+          "published_by",
+          "published_at"
+        ],
+        "properties": {
+          "template_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer"
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "inputs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "defaults": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "has_script": {
+            "type": "boolean"
+          },
+          "published_by": {
+            "type": "string"
+          },
+          "published_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "JobTemplateOffers": {
+        "type": "object",
+        "required": [
+          "set_ids"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "set_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "JobCatalogTemplate": {
+        "type": "object",
+        "required": [
+          "id",
+          "key",
+          "name",
+          "description",
+          "version",
+          "inputs",
+          "defaults",
+          "published_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "version": {
+            "type": "integer",
+            "description": "The latest published version."
+          },
+          "inputs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "defaults": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "published_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "JobCatalog": {
+        "type": "object",
+        "required": [
+          "templates"
+        ],
+        "properties": {
+          "templates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JobCatalogTemplate"
+            }
+          }
+        }
+      },
+      "JobInstance": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "owner_kind",
+          "owner_id",
+          "template_id",
+          "template_version",
+          "steps",
+          "inputs",
+          "environment_id",
+          "options",
+          "status",
+          "created",
+          "updated"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "owner_kind": {
+            "type": "string",
+            "enum": [
+              "customer",
+              "organization"
+            ]
+          },
+          "owner_id": {
+            "type": "string"
+          },
+          "template_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "template_version": {
+            "type": "integer",
+            "nullable": true
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "nullable": true,
+            "description": "A job's own inline steps; null for a job made from a template."
+          },
+          "inputs": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "environment_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "options": {
+            "type": "object",
+            "properties": {
+              "priority": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 90
+              },
+              "on_error": {
+                "type": "string",
+                "enum": [
+                  "fail",
+                  "continue"
+                ]
+              },
+              "notify": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            },
+            "description": "Job options: priority (0 to 90), the default error strategy, and notify."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "paused",
+              "archived"
+            ]
+          },
+          "created": {
+            "type": "integer",
+            "description": "Unix timestamp, in seconds."
+          },
+          "updated": {
+            "type": "integer",
+            "description": "Unix timestamp, in seconds."
+          }
+        }
+      },
+      "JobInstanceList": {
+        "type": "object",
+        "required": [
+          "instances"
+        ],
+        "properties": {
+          "instances": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JobInstance"
+            }
+          }
+        }
+      },
+      "JobInstanceCreate": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "template_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Exactly one of templateId and steps."
+          },
+          "template_version": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Defaults to the latest. A customer may only name the offered (latest) version."
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "minItems": 1,
+            "maxItems": 50,
+            "description": "Inline steps: not for an end-customer token (403 `inline_steps_not_allowed`)."
+          },
+          "inputs": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "environment_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "options": {
+            "type": "object",
+            "properties": {
+              "priority": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 90
+              },
+              "on_error": {
+                "type": "string",
+                "enum": [
+                  "fail",
+                  "continue"
+                ]
+              },
+              "notify": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            },
+            "description": "Job options: priority (0 to 90), the default error strategy, and notify."
+          }
+        }
+      },
+      "JobInstancePatch": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "inputs": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "environment_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "options": {
+            "type": "object",
+            "properties": {
+              "priority": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 90
+              },
+              "on_error": {
+                "type": "string",
+                "enum": [
+                  "fail",
+                  "continue"
+                ]
+              },
+              "notify": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            },
+            "description": "Job options: priority (0 to 90), the default error strategy, and notify."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "paused"
+            ]
+          }
+        }
+      },
+      "JobRunStarted": {
+        "type": "object",
+        "required": [
+          "run_id",
+          "status",
+          "error_code",
+          "error"
+        ],
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "running",
+              "failed"
+            ]
+          },
+          "error_code": {
+            "type": "string",
+            "nullable": true
+          },
+          "error": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "JobTrigger": {
+        "type": "object",
+        "required": [
+          "id",
+          "instance_id",
+          "kind",
+          "cron",
+          "time_zone",
+          "event_types",
+          "enabled",
+          "next_fire_at",
+          "last_fired_at",
+          "created",
+          "updated"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "instance_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "schedule",
+              "event",
+              "inbound"
+            ]
+          },
+          "cron": {
+            "type": "string",
+            "nullable": true
+          },
+          "time_zone": {
+            "type": "string",
+            "nullable": true
+          },
+          "event_types": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "next_fire_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "last_fired_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "created": {
+            "type": "integer",
+            "description": "Unix timestamp, in seconds."
+          },
+          "updated": {
+            "type": "integer",
+            "description": "Unix timestamp, in seconds."
+          },
+          "secret": {
+            "type": "string",
+            "description": "An inbound trigger's secret, only in the create answer. Send it as `X-ADH-Trigger-Secret` to `POST /public/jobs/hooks/{id}`."
+          }
+        }
+      },
+      "JobTriggerList": {
+        "type": "object",
+        "required": [
+          "triggers"
+        ],
+        "properties": {
+          "triggers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JobTrigger"
+            }
+          }
+        }
+      },
+      "JobTriggerCreate": {
+        "type": "object",
+        "required": [
+          "kind"
+        ],
+        "description": "schedule: `{ kind, cron, timeZone, enabled? }`; event: `{ kind, eventTypes, enabled? }`; inbound: `{ kind, enabled? }`.",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "schedule",
+              "event",
+              "inbound"
+            ]
+          },
+          "cron": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "time_zone": {
+            "type": "string",
+            "maxLength": 64,
+            "description": "An IANA zone."
+          },
+          "event_types": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "maxItems": 20
+          },
+          "enabled": {
+            "type": "boolean"
+          }
+        }
+      },
+      "JobTriggerPatch": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "cron and timeZone for a schedule only; eventTypes for an event trigger only.",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "cron": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "time_zone": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "event_types": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "maxItems": 20
+          }
+        }
+      },
+      "JobRun": {
+        "type": "object",
+        "required": [
+          "id",
+          "instance_id",
+          "trigger_id",
+          "status",
+          "current_step",
+          "usage",
+          "error_code",
+          "error",
+          "started_at",
+          "finished_at",
+          "created",
+          "updated"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "instance_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "trigger_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "succeeded",
+              "failed",
+              "cancelled"
+            ]
+          },
+          "current_step": {
+            "type": "integer",
+            "nullable": true
+          },
+          "usage": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "error_code": {
+            "type": "string",
+            "nullable": true
+          },
+          "error": {
+            "type": "string",
+            "nullable": true
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "finished_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "created": {
+            "type": "integer",
+            "description": "Unix timestamp, in seconds."
+          },
+          "updated": {
+            "type": "integer",
+            "description": "Unix timestamp, in seconds."
+          }
+        }
+      },
+      "JobStepRun": {
+        "type": "object",
+        "required": [
+          "id",
+          "position",
+          "step_id",
+          "kind",
+          "status",
+          "attempts",
+          "output",
+          "log",
+          "usage",
+          "error_code",
+          "error",
+          "started_at",
+          "finished_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "position": {
+            "type": "integer"
+          },
+          "step_id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "attempts": {
+            "type": "integer"
+          },
+          "output": {
+            "nullable": true
+          },
+          "log": {
+            "type": "string",
+            "nullable": true
+          },
+          "usage": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "error_code": {
+            "type": "string",
+            "nullable": true
+          },
+          "error": {
+            "type": "string",
+            "nullable": true
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "finished_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "JobRunDetail": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/JobRun"
+          },
+          {
+            "type": "object",
+            "required": [
+              "step_runs"
+            ],
+            "properties": {
+              "step_runs": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/JobStepRun"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "JobRunList": {
+        "type": "object",
+        "required": [
+          "runs",
+          "next_before"
+        ],
+        "properties": {
+          "runs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JobRun"
+            }
+          },
+          "next_before": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "Pass as `before` for the next page; null on the last page."
+          }
+        }
+      },
+      "JobEnvironment": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "kind",
+          "capabilities",
+          "last_seen_at",
+          "created",
+          "updated"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "machine"
+            ]
+          },
+          "capabilities": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "last_seen_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "created": {
+            "type": "integer",
+            "description": "Unix timestamp, in seconds."
+          },
+          "updated": {
+            "type": "integer",
+            "description": "Unix timestamp, in seconds."
+          }
+        }
+      },
+      "JobEnvironmentWithToken": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/JobEnvironment"
+          },
+          {
+            "type": "object",
+            "required": [
+              "token"
+            ],
+            "properties": {
+              "token": {
+                "type": "string",
+                "description": "The `jenv_` token, shown only in this answer."
+              }
+            }
+          }
+        ]
+      },
+      "JobEnvironmentList": {
+        "type": "object",
+        "required": [
+          "environments"
+        ],
+        "properties": {
+          "environments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JobEnvironment"
+            }
+          }
+        }
+      },
+      "JobEnvironmentCreate": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          }
+        }
+      },
+      "JobRunStatus": {
+        "type": "object",
+        "required": [
+          "run_id",
+          "job_id",
+          "job_name",
+          "template_key",
+          "owner_id",
+          "status",
+          "error_code",
+          "error",
+          "started_at",
+          "finished_at",
+          "created"
+        ],
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "job_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "job_name": {
+            "type": "string"
+          },
+          "template_key": {
+            "type": "string",
+            "nullable": true,
+            "description": "Null for a job with inline steps."
+          },
+          "owner_id": {
+            "type": "string",
+            "description": "The customer who owns the job."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "succeeded",
+              "failed",
+              "cancelled"
+            ]
+          },
+          "error_code": {
+            "type": "string",
+            "nullable": true
+          },
+          "error": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 200,
+            "description": "The first 200 characters of the run's error."
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "finished_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "created": {
+            "type": "integer",
+            "description": "Unix timestamp, in seconds."
+          }
+        }
+      },
+      "JobRunStatusList": {
+        "type": "object",
+        "required": [
+          "runs",
+          "next_before"
+        ],
+        "properties": {
+          "runs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JobRunStatus"
+            }
+          },
+          "next_before": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "Pass as `before` for the next page; null on the last page."
+          }
+        }
+      },
+      "JobInboundFired": {
+        "type": "object",
+        "required": [
+          "run_id"
+        ],
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "description": "The run the fire started."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "failed"
+            ],
+            "description": "Present only when the run was written `failed` at once (see `errorCode`)."
+          },
+          "error_code": {
+            "type": "string",
+            "description": "Why the run failed at start, e.g. `template_missing`."
           }
         }
       },
@@ -119965,7 +121173,8 @@
                           "project_mention",
                           "project_comment",
                           "project_status",
-                          "project_due"
+                          "project_due",
+                          "jobs"
                         ]
                       },
                       "email": {
@@ -120009,7 +121218,8 @@
                                 "project_mention",
                                 "project_comment",
                                 "project_status",
-                                "project_due"
+                                "project_due",
+                                "jobs"
                               ]
                             },
                             "email": {
@@ -133981,7 +135191,7 @@
           "processing"
         ],
         "summary": "List ecosystem jobs (management)",
-        "description": "List the caller's ecosystem jobs, newest first. Requires a user JWT. Optional ?status= filter and ?limit= cap (default 50, max 200).\n\nReplaces GET /processing/jobs.",
+        "description": "List the caller's ecosystem jobs, newest first. Requires a user JWT. Optional ?status= filter and ?limit= cap (default 50, max 200). An operator (an admin acting as itself) asking for status=dead gets every ecosystem's dead rows instead, newest death first, with no payload, as an AiProcessingDeadJobPage paged by ?before=.\n\nReplaces GET /processing/jobs.",
         "operationId": "getV1ProcessingJobs",
         "security": [
           {
@@ -134003,6 +135213,15 @@
               ]
             },
             "description": "Filter to a specific job lifecycle status; absent = all statuses"
+          },
+          {
+            "name": "before",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Operator dead list only: the previous page's `nextBefore`"
           },
           {
             "name": "limit",
@@ -134116,6 +135335,16 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
           }
         },
         "x-adh-object": "processing.job",
@@ -134128,7 +135357,7 @@
           "processing"
         ],
         "summary": "Enqueue an ad-hoc job (management)",
-        "description": "Ad-hoc / explicit enqueue path (task family 3). Requires a user JWT. The caller's ecosystemId becomes the owning ecosystem. Returns { id, deduped }.\n\nReplaces POST /processing/jobs.",
+        "description": "Ad-hoc / explicit enqueue path (task family 3). Requires a user JWT. The caller's ecosystemId becomes the owning ecosystem. Returns { id, deduped }. A jobType starting with 'jobs.' is 400: those rows are the Jobs engine's alone.\n\nReplaces POST /processing/jobs.",
         "operationId": "postV1ProcessingJobs",
         "security": [
           {
@@ -134253,7 +135482,7 @@
           "processing"
         ],
         "summary": "Claim queued jobs (worker pull)",
-        "description": "Atomically claim up to `batch` queued jobs for this worker. Returns an empty array when no jobs are available — never blocks. Ecosystem-scoped via RLS to the caller's api-token.\n\nReplaces POST /processing/jobs/claim.",
+        "description": "Atomically claim up to `batch` queued jobs for this worker. Returns an empty array when no jobs are available — never blocks. Ecosystem-scoped via RLS to the caller's api-token. One route serves three bearers: a worker token (its own ecosystem), a pool token (also `jobs.step.ai` rows in every ecosystem that are bound to no machine) and a `jenv_` machine token (only its own environment's `jobs.step.*` rows). A claim that names no `jobTypes` gets only the legacy types (`categorize_and_tag`), never a `jobs.step.*` row; a plain worker token is never given a step row.\n\nReplaces POST /processing/jobs/claim.",
         "operationId": "postV1ProcessingJobsClaim",
         "security": [
           {
@@ -134272,7 +135501,35 @@
                     "items": {
                       "type": "string"
                     },
-                    "description": "Filter to specific job types; absent = any type"
+                    "description": "Filter to specific job types. Absent = the legacy types only. Step rows (`jobs.step.*`) must be named here."
+                  },
+                  "capabilities": {
+                    "type": "object",
+                    "required": [
+                      "job_types",
+                      "providers",
+                      "scripts"
+                    ],
+                    "description": "A machine only: what it can run, recorded on its environment with last_seen_at. Ignored for a worker or pool token.",
+                    "properties": {
+                      "job_types": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "providers": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "description": "Provider kinds the machine can run, `claude-code` included"
+                      },
+                      "scripts": {
+                        "type": "boolean",
+                        "description": "Whether jobs.step.script is registered"
+                      }
+                    }
                   },
                   "min_priority": {
                     "type": "integer",
@@ -134803,6 +136060,107 @@
         "x-adh-object": "processing.job",
         "x-adh-replaces": [
           "POST /processing/jobs/{id}/heartbeat"
+        ]
+      }
+    },
+    "/v1/processing/jobs/{id}/retry": {
+      "post": {
+        "tags": [
+          "processing"
+        ],
+        "summary": "Retry a dead job (operator)",
+        "description": "Puts a dead queue row of any ecosystem back on the queue: queued, attempts 0, run_at now, its lease and last error cleared. Operator only (an admin acting as itself; 403 otherwise). 404 error.code not_found when no row has the id; 409 error.code not_dead when the row is not dead.\n\nReplaces POST /processing/jobs/{id}/retry.",
+        "operationId": "postV1ProcessingJobsByIdRetry",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job re-queued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "status"
+                  ],
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "const": "processing.job"
+                    },
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "queued"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "processing.job",
+        "x-adh-replaces": [
+          "POST /processing/jobs/{id}/retry"
         ]
       }
     },

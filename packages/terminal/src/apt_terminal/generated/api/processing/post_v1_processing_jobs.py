@@ -78,7 +78,8 @@ def sync_detailed(
     """Enqueue an ad-hoc job (management)
 
      Ad-hoc / explicit enqueue path (task family 3). Requires a user JWT. The caller's ecosystemId
-    becomes the owning ecosystem. Returns { id, deduped }.
+    becomes the owning ecosystem. Returns { id, deduped }. A jobType starting with 'jobs.' is 400: those
+    rows are the Jobs engine's alone.
 
     Replaces POST /processing/jobs.
 
@@ -112,7 +113,8 @@ def sync(
     """Enqueue an ad-hoc job (management)
 
      Ad-hoc / explicit enqueue path (task family 3). Requires a user JWT. The caller's ecosystemId
-    becomes the owning ecosystem. Returns { id, deduped }.
+    becomes the owning ecosystem. Returns { id, deduped }. A jobType starting with 'jobs.' is 400: those
+    rows are the Jobs engine's alone.
 
     Replaces POST /processing/jobs.
 
@@ -141,7 +143,8 @@ async def asyncio_detailed(
     """Enqueue an ad-hoc job (management)
 
      Ad-hoc / explicit enqueue path (task family 3). Requires a user JWT. The caller's ecosystemId
-    becomes the owning ecosystem. Returns { id, deduped }.
+    becomes the owning ecosystem. Returns { id, deduped }. A jobType starting with 'jobs.' is 400: those
+    rows are the Jobs engine's alone.
 
     Replaces POST /processing/jobs.
 
@@ -173,7 +176,8 @@ async def asyncio(
     """Enqueue an ad-hoc job (management)
 
      Ad-hoc / explicit enqueue path (task family 3). Requires a user JWT. The caller's ecosystemId
-    becomes the owning ecosystem. Returns { id, deduped }.
+    becomes the owning ecosystem. Returns { id, deduped }. A jobType starting with 'jobs.' is 400: those
+    rows are the Jobs engine's alone.
 
     Replaces POST /processing/jobs.
 
