@@ -17,9 +17,11 @@ export interface CopyButtonProps {
   /** Accessible name for the button (also its hover title). */
   label: string
   className?: string
+  /** Called once the text is on the clipboard; never when the write failed or nothing was copied. */
+  onCopied?: () => void
 }
 
-export function CopyButton({ getText, label, className }: CopyButtonProps) {
+export function CopyButton({ getText, label, className, onCopied }: CopyButtonProps) {
   const { copied, copy } = useClipboard(1200)
   return (
     <Button
@@ -31,7 +33,10 @@ export function CopyButton({ getText, label, className }: CopyButtonProps) {
       className={cn("size-6 text-apt-text-muted", copied && "text-apt-green", className)}
       onClick={() => {
         const text = getText()
-        if (text) void copy(text)
+        if (!text) return
+        void copy(text).then((ok) => {
+          if (ok) onCopied?.()
+        })
       }}
     >
       {copied ? <Check aria-hidden /> : <Copy aria-hidden />}

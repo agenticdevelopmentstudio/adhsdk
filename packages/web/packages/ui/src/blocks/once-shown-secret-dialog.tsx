@@ -72,10 +72,13 @@ export function OnceShownSecretDialog({
               onFocus={(e) => e.currentTarget.select()}
               onCopy={() => setCopied(true)}
             />
-            {/* CopyButton takes no click handler; the capture marks the copy without wrapping it. */}
-            <span className="contents" onClickCapture={() => setCopied(true)}>
-              <CopyButton label={`Copy ${label.toLowerCase()}`} getText={() => secret ?? ""} />
-            </span>
+            {/* Marked copied only once the clipboard write succeeded: a failed write (an insecure
+                origin, a denied permission) must still ask before the secret is dropped. */}
+            <CopyButton
+              label={`Copy ${label.toLowerCase()}`}
+              getText={() => secret ?? ""}
+              onCopied={() => setCopied(true)}
+            />
           </div>
           <DialogFooter>
             <Button type="button" size="sm" onClick={requestClose}>
