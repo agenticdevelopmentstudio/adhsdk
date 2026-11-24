@@ -20,15 +20,14 @@
     "tags": [
       "hub",
       "jobs",
-      "component",
-      "ui",
+      "workflows",
+      "scheduling",
       "data-client"
     ],
     "depends-on": [
       "5fdf4ce9-cb7e-4490-a6d6-066690ef07ca"
     ],
     "related": [
-      "5fdf4ce9-cb7e-4490-a6d6-066690ef07ca",
       "9069ccf9-0357-4311-9671-91ee2793adae",
       "2eff6ca4-5479-44b3-8636-04e455009a10",
       "2cb51edd-84c5-448a-a5dc-134d3f8b6c1c",
@@ -40,7 +39,7 @@
     "approved-date": ""
   },
   "names_hosts": "An AI step's model value `claude-code` (a machine environment's own model) is product data, not host wording.",
-  "synced": "ece37e98c001ba5c",
+  "synced": "b421610f81fece22",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

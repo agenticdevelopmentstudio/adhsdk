@@ -105,7 +105,7 @@ router, and a downstream OAuth-return-origin sync process.
 - **jobs-extra-segment**: The hub-only extra segments MUST include `jobs` (phase 9), the hub knob that holds the workspace's jobs, templates and environments.
 - **jobs-sub-paths-not-segments**: `jobs/templates` and `jobs/environments` MUST be sub-paths served by the `jobs` workspace line, and MUST NOT be added to the hub-only extra segments, because a workspace segment is one path segment.
 - **jobs-hub-route-line**: The hub route share MUST carry one workspace line for `jobs`, `/[workspace]/jobs/[[...path]]`, in sorted place [route-list-per-site-is-normalized](#requirements/route-list-per-site-is-normalized).
-- **product-admin-share-jobs**: The `product-admin` route share MUST list the site's two Jobs pages, `/jobs` and `/jobs/templates`, in sorted place.
+- **product-admin-share-jobs**: The `product-admin` route share MUST list the site's two Jobs pages, `/jobs` and `/jobs/templates`, in sorted place. It has no Environments page: environments belong to a job's owner, and a product admin only reads run status.
 - **admin-share-no-jobs**: The admin route share MUST NOT gain a `/jobs` line: the operator's dead jobs list is a section of its AI Nodes page.
 - **product-admin-site-registered**: The roster MUST define a `product-admin` site (a
   product's own admin site, phase 6) that is `adminOnly`, not `crawlable`, and has no home
@@ -272,7 +272,7 @@ router, and a downstream OAuth-return-origin sync process.
 - **hub-extra-segments-have-no-registry-site**: An entry in the hub-only extra
   segments MUST name a hub workspace feature with no corresponding registry site (a
   hub-only knob, such as an ecosystem's member list, the persona-data management
-  surface, or the workspace's `ai-settings`; a product knob with a row on the product rail, such as `roles`,
+  surface, or the workspace's `ai-settings` and `jobs`; a product knob with a row on the product rail, such as `roles`,
   `signup-list`, `sets`, or `admin-site`; or a bespoke rail route such as `email-signup`); a feature that is some site's own implementation MUST be keyed in the
   feature-segment map by that site's identifier instead.
 
@@ -665,7 +665,7 @@ an empty result, or the input path unchanged) with no side channel.
   pattern. The local-sites setting would come from `System.getenv`.
 - **React/Web**: This is the source. The implementation lives under
   `packages/web/packages/adh-registry/src/sites/`: `registry.ts`, `reserved-slugs.ts`,
-  `legal.ts`, `fleets.ts`, `story.ts`, the thirteen `routes.*.generated.ts` shares, and
+  `legal.ts`, `fleets.ts`, `story.ts`, the `routes.*.generated.ts` shares, and
   the hand-written `routes.generated.ts`, which declares `SITE_ROUTE_SHARES` and merges its values with
   `Object.assign` into `SITE_ROUTES`. `registry.ts` declares the `SiteId` union and
   the `SiteDef` shape (including the `nativeApp`, `featured`, `listed`, and

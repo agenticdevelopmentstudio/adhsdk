@@ -137,7 +137,7 @@ Rows and links:
 - **icon-single-source**: A row's icon MUST resolve through `menuIcon(key)` and MUST NOT be hard-coded at a render site.
 - **icon-missing**: A key with no mapped icon MUST leave the icon slot empty.
 - **icon-segment-fold**: Every hub workspace segment that is a site's implementation MUST take that site's icon unless a hand-written key for the route already exists.
-- **icon-jobs**: The hub knob `jobs` (phase 9) MUST have a hand-written key, `'/jobs'`, beside `'/sets'`, mapped to lucide's `Workflow` glyph, so its Recents row is never blank.
+- **icon-jobs**: The hub knob `jobs` MUST have a hand-written key, `'/jobs'`, beside `'/sets'`, mapped to lucide's `Workflow` glyph, so its rows show the Jobs glyph rather than the hub icon that [recents-row](#requirements/recents-row) falls back to.
 - **navigate-same-origin**: Choosing a row whose href begins with a single `/` MUST navigate in-app through the router.
 - **navigate-cross-site**: Choosing any other row MUST navigate with a full-page load.
 - **navigate-no-target**: Choosing a row with no href, or with the placeholder href `#`, MUST do nothing.
