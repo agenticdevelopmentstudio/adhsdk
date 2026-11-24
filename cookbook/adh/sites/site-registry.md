@@ -105,7 +105,7 @@ router, and a downstream OAuth-return-origin sync process.
 - **jobs-extra-segment**: The hub-only extra segments MUST include `jobs` (phase 9), the hub knob that holds the workspace's jobs, templates and environments.
 - **jobs-sub-paths-not-segments**: `jobs/templates` and `jobs/environments` MUST be sub-paths served by the `jobs` workspace line, and MUST NOT be added to the hub-only extra segments, because a workspace segment is one path segment.
 - **jobs-hub-route-line**: The hub route share MUST carry one workspace line for `jobs`, `/[workspace]/jobs/[[...path]]`, in sorted place [route-list-per-site-is-normalized](#requirements/route-list-per-site-is-normalized).
-- **product-admin-share-jobs**: The `product-admin` route share MUST list the site's two Jobs pages, `/jobs` and `/jobs/templates`, in sorted place. It has no Environments page: environments belong to a job's owner, and a product admin only reads run status.
+- **product-admin-share-jobs**: The `product-admin` route share MUST list the site's three Jobs pages, `/jobs`, `/jobs/templates` and a template's own page `/jobs/templates/[templateId]`, in sorted place. It has no Environments page: environments belong to a job's owner, and a product admin only reads run status.
 - **admin-share-no-jobs**: The admin route share MUST NOT gain a `/jobs` line: the operator's dead jobs list is a section of its AI Nodes page.
 - **product-admin-site-registered**: The roster MUST define a `product-admin` site (a
   product's own admin site, phase 6) that is `adminOnly`, not `crawlable`, and has no home
@@ -535,7 +535,7 @@ Not applicable: this is the site family's data registry and routing-resolution m
 | site-registry-068 | admin-share-no-ai-settings | The `admin` route share | It still has `/llm-providers` and has no `/ai-settings` |
 | site-registry-069 | jobs-extra-segment, jobs-sub-paths-not-segments | The hub-only extra segments and the hub workspace segments | `jobs` is in both; neither contains `jobs/templates`, `jobs/environments`, `templates` or `environments` |
 | site-registry-070 | jobs-hub-route-line | The `hub` route share | It contains `/[workspace]/jobs/[[...path]]` in sorted place, and the website generator's `--check` reports no drift |
-| site-registry-071 | product-admin-share-jobs | The `product-admin` route share | It contains `/jobs` and `/jobs/templates` in sorted place, and the product admin rail's test still finds every rail href in the share |
+| site-registry-071 | product-admin-share-jobs | The `product-admin` route share | It contains `/jobs`, `/jobs/templates` and `/jobs/templates/[templateId]` in sorted place, and the product admin rail's test still finds every rail href in the share |
 | site-registry-072 | admin-share-no-jobs | The `admin` route share | It has no `/jobs` line |
 | site-registry-073 | reserved-slugs-name-jobs, reserved-slug-normalization | Checking `'jobs'` and `' Jobs '` against the `registries` list, and `'jobs'` with the cross-site check | `true` for all three |
 ## Edge Cases
@@ -680,7 +680,7 @@ an empty result, or the input path unchanged) with no side channel.
   `crawlable: false`), one `SITE_BUILD` entry (`handRolledConfig: true`), one entry in
   `MAIN_SITE_IDS`, one `SITE_STORIES` entry in `story.ts` (a `chapter` of the `backend`
   pillar, like `admin`), and `admin-site` in `HUB_EXTRA_FEATURE_SEGMENTS`, which phase 8 extends with `ai-settings` (keeping `llm-providers` and `persona-services` as redirect-only segments, with a source comment beside them saying they redirect until Cleanup), and the `hub` share in `routes.hub.generated.ts` carries its `/[workspace]/ai-settings/[[...path]]` line;
-  phase 9 adds `jobs` to `HUB_EXTRA_FEATURE_SEGMENTS` (its `templates` and `environments` pages are sub-paths of the one `/[workspace]/jobs/[[...path]]` line), `/jobs` and `/jobs/templates` to the `product-admin` share, and `jobs` to the `UNIVERSAL` reserved list; its
+  phase 9 adds `jobs` to `HUB_EXTRA_FEATURE_SEGMENTS` (its `templates` and `environments` pages are sub-paths of the one `/[workspace]/jobs/[[...path]]` line), `/jobs`, `/jobs/templates` and `/jobs/templates/[templateId]` to the `product-admin` share, and `jobs` to the `UNIVERSAL` reserved list; its
   `devDependencies` carry `@adh-sdk/product-admin` for the one test that holds that
   package's rail equal to the site's share of the route table. `reserved-slugs.ts` holds `RESERVED_SLUGS`, `isReservedSlug`, and
   `isReservedSlugAnywhere`. The support routes of

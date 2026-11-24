@@ -71,6 +71,6 @@
 | site-registry-068 | admin-share-no-ai-settings | The `admin` route share | It still has `/llm-providers` and has no `/ai-settings` |
 | site-registry-069 | jobs-extra-segment, jobs-sub-paths-not-segments | The hub-only extra segments and the hub workspace segments | `jobs` is in both; neither contains `jobs/templates`, `jobs/environments`, `templates` or `environments` |
 | site-registry-070 | jobs-hub-route-line | The `hub` route share | It contains `/[workspace]/jobs/[[...path]]` in sorted place, and the website generator's `--check` reports no drift |
-| site-registry-071 | product-admin-share-jobs | The `product-admin` route share | It contains `/jobs` and `/jobs/templates` in sorted place, and the product admin rail's test still finds every rail href in the share |
+| site-registry-071 | product-admin-share-jobs | The `product-admin` route share | It contains `/jobs`, `/jobs/templates` and `/jobs/templates/[templateId]` in sorted place, and the product admin rail's test still finds every rail href in the share |
 | site-registry-072 | admin-share-no-jobs | The `admin` route share | It has no `/jobs` line |
 | site-registry-073 | reserved-slugs-name-jobs, reserved-slug-normalization | Checking `'jobs'` and `' Jobs '` against the `registries` list, and `'jobs'` with the cross-site check | `true` for all three |

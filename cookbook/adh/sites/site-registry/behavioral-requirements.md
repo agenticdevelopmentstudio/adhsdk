@@ -38,7 +38,7 @@
 - **jobs-extra-segment**: The hub-only extra segments MUST include `jobs` (phase 9), the hub knob that holds the workspace's jobs, templates and environments.
 - **jobs-sub-paths-not-segments**: `jobs/templates` and `jobs/environments` MUST be sub-paths served by the `jobs` workspace line, and MUST NOT be added to the hub-only extra segments, because a workspace segment is one path segment.
 - **jobs-hub-route-line**: The hub route share MUST carry one workspace line for `jobs`, `/[workspace]/jobs/[[...path]]`, in sorted place [route-list-per-site-is-normalized](#requirements/route-list-per-site-is-normalized).
-- **product-admin-share-jobs**: The `product-admin` route share MUST list the site's two Jobs pages, `/jobs` and `/jobs/templates`, in sorted place. It has no Environments page: environments belong to a job's owner, and a product admin only reads run status.
+- **product-admin-share-jobs**: The `product-admin` route share MUST list the site's three Jobs pages, `/jobs`, `/jobs/templates` and a template's own page `/jobs/templates/[templateId]`, in sorted place. It has no Environments page: environments belong to a job's owner, and a product admin only reads run status.
 - **admin-share-no-jobs**: The admin route share MUST NOT gain a `/jobs` line: the operator's dead jobs list is a section of its AI Nodes page.
 - **product-admin-site-registered**: The roster MUST define a `product-admin` site (a
   product's own admin site, phase 6) that is `adminOnly`, not `crawlable`, and has no home
