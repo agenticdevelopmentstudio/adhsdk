@@ -22,10 +22,18 @@
   `jobs.ts` (the calls), `wire.ts` (the wire shapes) and `mappers.ts`. It is reached through a `./jobs`
   subpath in the data package's `exports`, shaped like the other domain subpaths, and never through the
   data package's root.
-- **wire-from-api-types**: The wire shapes MUST be derived from `@adh-sdk/adh-api-types` once the backend's
-  OpenAPI document carries the `/jobs` routes. The client MUST NOT restate a route's shape by hand.
+- **wire-from-api-types**: The wire shapes MUST be derived from `@adh-sdk/adh-api-types` once the `/jobs`
+  routes are in the backend's `/v1` document. Until then (design call C18 keeps every `/jobs` route out of
+  `/v1` this phase), `wire.ts` MUST restate, by hand, the camelCase shapes the unversioned routes answer,
+  with the backend's `openapi.json` as its reference, and MUST say so in its header. The `Job*` components
+  `@adh-sdk/adh-api-types` already carries are the `/v1` projection (snake_case, unix-second times) and
+  MUST NOT be used for these routes.
+- **unversioned-base**: Until the routes move into `/v1`, every call MUST go to `/api/jobs/...` (the site's
+  rewrite to the backend's unversioned routes). Authoring and status calls MUST name the ecosystem as
+  `?ecosystem=`; owner calls MUST pass `?workspace=<slug>` only when acting for an organization.
 - **mappers-own-the-wire**: Every call MUST return camelCase domain shapes, and `mappers.ts` MUST be the
-  one place that reads the snake_case wire.
+  one place that reads the wire. It fills every nullable bag (lists `[]`, objects `{}`, usage zeroes) and
+  narrows every status to its union, so a pane reads a row without a guard.
 - **route-coverage**: The client MUST offer one call per `/jobs` route the panes use:
   - authoring: templates (list, create, read, update, publish, retire), a version read, and the offers
     write with a body of `{ setIds }`;
@@ -34,7 +42,10 @@
     mint token);
   - the product admin's run status read.
 - **run-stream**: The client MUST offer a subscription to a run's server-sent event stream that hands
-  each event to a callback and returns a function that closes the stream.
+  each event to a callback and returns a function that closes the stream. The server closes the stream
+  after 60 seconds; the subscription MUST reconnect then, and MUST fall back to polling the run read while
+  the stream cannot open. Once a run arrives `succeeded`, `failed` or `cancelled`, the subscription MUST
+  hand it to the callback and then close for good, so a finished run never becomes a reconnect loop.
 - **runs-query**: The runs list MUST accept `instanceId`, `status` and `before`, and MUST return the runs
   newest first, as the route answers them.
 - **once-shown-secrets**: A trigger create that returns an inbound secret, and an environment token mint,

@@ -1,6 +1,6 @@
 
-The package and the data client are not written yet. These vectors come from the phase 9 design and are
-the tests the package's `__tests__/` and the data client's `jobs/__tests__/` MUST carry.
+These vectors come from the phase 9 design and are the tests the package's `__tests__/` and the data
+client's `jobs/__tests__/` MUST carry. The data client and its tests are written; the package is not yet.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -13,7 +13,7 @@ the tests the package's `__tests__/` and the data client's `jobs/__tests__/` MUS
 | jobs-007 | run-retry, run-cancel | A `failed` run; a `running` run | The failed run offers Retry and not Cancel; the running run offers Cancel and not Retry. |
 | jobs-008 | run-live | A `running` run whose stream sends a step's success, then the run's success | The step's status changes, then the stream is closed. |
 | jobs-009 | status-no-content | Render `JobStatusPane` | The only read is the status route; no run read, and no inputs, outputs or logs, are requested or shown. |
-| jobs-010 | mappers-own-the-wire | Map a wire run with `error_code`, `created_at` and step runs | The domain run carries `errorCode`, `createdAt` and camelCase step runs. |
+| jobs-010 | mappers-own-the-wire | Map a wire run with `errorCode`, `createdAt` and step runs | The domain run carries `errorCode`, `createdAt` and camelCase step runs. |
 | jobs-011 | once-shown-secrets, inbound-secret-once | Create an inbound trigger whose result carries a secret; close the reveal without copying | The secret is shown once; closing asks for confirmation; a later trigger read carries no secret. |
 | jobs-012 | job-environment-choice | Save a job with an environment while the backend answers 422 `step_needs_hub` for step `summarize` | The refusal names the step `summarize` and says it needs the hub. |
 | jobs-013 | jobs-reserved-handle-word | `reservedWorkspaceSlugs()` from `@adh-sdk/adh` | Contains `jobs` |

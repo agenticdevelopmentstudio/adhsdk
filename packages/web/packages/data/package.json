@@ -127,6 +127,11 @@
       "development": "./src/sets/index.ts",
       "import": "./dist/sets/index.js"
     },
+    "./jobs": {
+      "types": "./dist/jobs/index.d.ts",
+      "development": "./src/jobs/index.ts",
+      "import": "./dist/jobs/index.js"
+    },
     "./product-admin": {
       "types": "./dist/product-admin/index.d.ts",
       "development": "./src/product-admin/index.ts",
