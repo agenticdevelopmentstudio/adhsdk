@@ -95,6 +95,22 @@ describe('GitHub OAuth', () => {
     expect(cb.headers.get('location')).toBe('/home');
   });
 
+  it('a start without `next` clears a leftover `next` cookie, so the callback lands on /home', async () => {
+    const app = await boot();
+    const first = await app.request(`/auth/github/start?next=${encodeURIComponent('/device?code=OLD-CODE')}`);
+    const staleNext = cookieVal(first, 'gh_oauth_next');
+    // The visitor abandoned that login; a plain one later must not inherit its destination.
+    const second = await app.request('/auth/github/start', { headers: { Cookie: staleNext } });
+    expect(second.headers.get('set-cookie') ?? '').toMatch(/gh_oauth_next=;[^,]*Max-Age=0/);
+    const stateCookie = cookieVal(second, 'gh_oauth_state');
+    mockGithub({ id: 45, login: 'y', name: null, email: 'y@x.com' });
+    // What the browser sends once it has applied the expiry: the state cookie only.
+    const cb = await app.request(`/auth/github/callback?code=abc&state=${stateCookie.split('=')[1]}`, {
+      headers: { Cookie: stateCookie },
+    });
+    expect(cb.headers.get('location')).toBe('/home');
+  });
+
   it('safeNext accepts only same-origin relative paths', () => {
     expect(safeNext('/device?code=ABCD-2345')).toBe('/device?code=ABCD-2345');
     expect(safeNext('/overview')).toBe('/overview');
@@ -105,7 +121,9 @@ describe('GitHub OAuth', () => {
       // dot segments that collapse to a protocol-relative `//host`
       '/x/..//evil.example/', '/x/..\\/evil.example/',
       // under 2048 chars, but over the cookie budget once encoded
-      `/?${'a=%25&'.repeat(300)}`]) {
+      `/?${'a=%25&'.repeat(300)}`,
+      // backend routes are not pages
+      '/api/auth/github/start', '/api', '/x/../api/auth/me']) {
       expect(safeNext(bad)).toBeNull();
     }
   });
