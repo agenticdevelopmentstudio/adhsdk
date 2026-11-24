@@ -618,6 +618,52 @@ final class PipelineDrainerTests: XCTestCase {
         XCTAssertEqual(reached.value.sorted(), ["k0", "k1"])
     }
 
+    /// Contention that starts while the sink is isolating a refused batch is an
+    /// outage: no record, not even one refused before it, is charged for itself.
+    func testAnOutageMidIsolationChargesEveryRecordAsAnOutage() throws {
+        let rig = try makeRig()
+        try rig.spool.append([record("k0"), record("k1"), record("k2")])
+        struct Refused: Error {}
+        let sink = ClosureSink { _, records in
+            if records.count > 1 || records.first?.record.dedupKey == "k0" { throw Refused() }
+            throw DaemonDatabase.mapDBError(DatabaseError(resultCode: .SQLITE_BUSY))
+        }
+        let outcome = try drainer(rig, sinks: [sink]).drainOnce()
+        XCTAssertTrue(outcome.failed)
+        let pending = try rig.spool.pendingBatch(limit: 10)
+        XCTAssertEqual(pending.map(\.attempts), [1, 1, 1])
+        for spooled in pending {
+            let reason = try XCTUnwrap(spooled.lastError)
+            XCTAssertTrue(reason.hasPrefix(PipelineDrainer.sinkFailurePrefix), reason)
+        }
+    }
+
+    /// A record once refused for itself, then caught in a sink outage, is quarantined
+    /// under the outage reason, so the heal sends it through again.
+    func testARecordReasonDoesNotStickThroughASinkOutage() throws {
+        let rig = try makeRig()
+        try rig.spool.append([record("k0"), record("bad"), record("k1")])
+        struct Refused: Error {}
+        let down = LockedBox(false)
+        let sink = ClosureSink { _, records in
+            if down.value { throw DaemonDatabase.mapDBError(DatabaseError(resultCode: .SQLITE_BUSY)) }
+            if records.contains(where: { $0.record.dedupKey == "bad" }) { throw Refused() }
+        }
+        let pipe = try drainer(rig, sinks: [sink])
+        XCTAssertEqual(pipe.drainOnce().completed, 2)
+        let refused = try XCTUnwrap(rig.spool.pendingBatch(limit: 10).first)
+        XCTAssertTrue(refused.lastError?.hasPrefix(PipelineDrainer.recordSinkFailurePrefix) ?? false)
+
+        down.update { $0 = true }
+        try rig.spool.append([record("k2")])
+        exhaust(pipe)
+        let quarantined = try rig.spool.quarantined(limit: 10)
+        XCTAssertEqual(Set(quarantined.map(\.record.dedupKey)), ["bad", "k2"])
+        XCTAssertTrue(quarantined.allSatisfy { $0.reason.hasPrefix(PipelineDrainer.sinkFailurePrefix) },
+                      "\(quarantined.map(\.reason))")
+        XCTAssertEqual(pipe.healTransientQuarantine(), 2)
+    }
+
     func testSinkFailureFailsThePassChargesEachRecordAndQuarantinesAtMaxAttempts() throws {
         let rig = try makeRig()
         try rig.spool.append((0..<2).map { record("k\($0)") })

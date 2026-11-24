@@ -177,10 +177,12 @@ public final class PipelineDrainer: @unchecked Sendable {
     /// archive and worth sending through again once the destination is back.
     public static let transientFailurePrefixes = [sinkFailurePrefix, storeFailurePrefix]
 
-    /// The reason to charge a record that failed with its whole batch. A record
-    /// already charged under `recordReason`'s prefix was refused while the
-    /// destination took its neighbours, so it keeps that reason: alone in its batch
-    /// on the next attempt, it would otherwise read as an outage and be healed.
+    /// The reason to charge a record that failed with its whole batch for a reason
+    /// that is not an outage (``isStoreOutage(_:)``). A record already charged under
+    /// `recordReason`'s prefix was refused while the destination took its
+    /// neighbours, so it keeps that reason. A batch failed by a sink outage never
+    /// comes here: it is charged under the outage reason, so a record charged for
+    /// itself before cannot keep that reason through an outage and miss the heal.
     private static func batchReason(
         _ spooled: SpooledRecord, outage: String, record recordReason: String, recordPrefix: String
     ) -> String {
@@ -454,17 +456,28 @@ public final class PipelineDrainer: @unchecked Sendable {
             do {
                 try sink.write(merged, records: normalizedRecords, provider: normalizer.provider)
             } catch {
-                let reason = "\(Self.sinkFailurePrefix)\(type(of: sink)) failed: \(error)"
-                let kept = normalizedSpooled.count > 1 && !Self.isStoreOutage(error)
-                    ? try isolateSinkFailure(
+                let sinkName = String(describing: type(of: sink))
+                var isolation = SinkIsolation(kept: [], outage: Self.isStoreOutage(error) ? error : nil)
+                if isolation.outage == nil, normalizedSpooled.count > 1 {
+                    isolation = try isolateSinkFailure(
                         sink, Array(zip(normalizedSpooled, zip(normalizedRecords, normalizedBatches))), &outcome)
-                    : []
+                }
+                let kept = isolation.kept
                 guard !kept.isEmpty else {
-                    let refusal = "\(Self.recordSinkFailurePrefix)\(type(of: sink)): \(error)"
+                    if let outage = isolation.outage {
+                        // The sink is down: no record is at fault, so every record is
+                        // charged as an outage, whatever it was charged before, and the
+                        // heal sends it through again once the sink is back.
+                        let reason = "\(Self.sinkFailurePrefix)\(sinkName) failed: \(outage)"
+                        for spooled in normalizedSpooled { try charge(spooled, reason: reason, &outcome) }
+                        throw StepFailure(description: reason)
+                    }
+                    let reason = "\(Self.sinkFailurePrefix)\(sinkName) failed: \(error)"
+                    let refusalPrefix = "\(Self.recordSinkFailurePrefix)\(sinkName): "
                     for spooled in normalizedSpooled {
                         try charge(spooled, reason: Self.batchReason(
-                            spooled, outage: reason, record: refusal,
-                            recordPrefix: "\(Self.recordSinkFailurePrefix)\(type(of: sink)): "), &outcome)
+                            spooled, outage: reason, record: "\(refusalPrefix)\(error)",
+                            recordPrefix: refusalPrefix), &outcome)
                     }
                     throw StepFailure(description: reason)
                 }
@@ -520,15 +533,23 @@ public final class PipelineDrainer: @unchecked Sendable {
         return kept
     }
 
+    /// What ``isolateSinkFailure(_:_:_:)`` found: the records the sink took, and
+    /// the outage it met on the way, if any.
+    private struct SinkIsolation {
+        var kept: [(spooled: SpooledRecord, archived: ArchivedRecord, batch: NormalizedBatch)]
+        var outage: Error?
+    }
+
     /// After a sink refused a batch: writes each record to that sink on its own and
     /// returns the ones it took. When it took some, each record it still refuses is
     /// charged under ``recordSinkFailurePrefix``. When it took none, nothing is
     /// charged here and the caller charges the batch as a sink failure. An outage met
-    /// on the way returns nothing, so the batch is charged the same way.
+    /// on the way (``isStoreOutage(_:)``) returns nothing and that outage, so the
+    /// caller charges the batch as an outage, never under a record's own reason.
     private func isolateSinkFailure(
         _ sink: any PipelineSink, _ items: [(SpooledRecord, (ArchivedRecord, NormalizedBatch))],
         _ outcome: inout DrainOutcome
-    ) throws -> [(spooled: SpooledRecord, archived: ArchivedRecord, batch: NormalizedBatch)] {
+    ) throws -> SinkIsolation {
         var kept: [(spooled: SpooledRecord, archived: ArchivedRecord, batch: NormalizedBatch)] = []
         var refused: [(SpooledRecord, Error)] = []
         for (item, (archived, batch)) in items {
@@ -536,16 +557,16 @@ public final class PipelineDrainer: @unchecked Sendable {
                 try sink.write(batch, records: [archived], provider: normalizer.provider)
                 kept.append((item, archived, batch))
             } catch where Self.isStoreOutage(error) {
-                return []
+                return SinkIsolation(kept: [], outage: error)
             } catch {
                 refused.append((item, error))
             }
         }
-        guard !kept.isEmpty else { return [] }
+        guard !kept.isEmpty else { return SinkIsolation(kept: [], outage: nil) }
         for (item, error) in refused {
             try charge(item, reason: "\(Self.recordSinkFailurePrefix)\(type(of: sink)): \(error)", &outcome)
         }
-        return kept
+        return SinkIsolation(kept: kept, outage: nil)
     }
 
     /// A failure of a destination (the store or a sink) as a whole (disk full, I/O,
