@@ -784,7 +784,16 @@ describe('MAIN_SITE_IDS / MARKETING_SITE_IDS (the site-app roster)', () => {
         `${id}: registry vs route tree`,
       ).toBe(hasWorkspaceOnDisk(id))
     }
+  })
 
+  // The literal pins, in their own UNCONDITIONAL test. They used to sit at the end of the
+  // walk above, after its `skipIf(STANDALONE)` and its `NO_SITES` early return — so in this
+  // toolkit repo (STANDALONE) and in adh (`adhFleet.sites: "none"`) they never ran, and a
+  // wrong `workspaceRoute` on a site no checkout can see shipped green from both of the
+  // repos that publish and pin the registry. Every value below is pinned literally
+  // because no route tree here can decide it, so nothing about the route tree may gate
+  // it either.
+  it('workspaceRoute and hasHome are pinned literally for the sites no route tree here decides', () => {
     // The hub is the one site whose value is not 'root', and the reason is not its route
     // — it is that its non-slug first segments are its own. Stated literally so a change
     // is a deliberate edit here, not a silent re-derivation from a tree that cannot see it.
@@ -793,7 +802,8 @@ describe('MAIN_SITE_IDS / MARKETING_SITE_IDS (the site-app roster)', () => {
     // The trap this field exists to avoid: a /home is not a workspace route. `hub-help`
     // has neither, and `bitbag` has a workspace-less site with no /home either — keying
     // the carry off `hasHome` would send a switch to a 404 on any site with one and no
-    // `[workspace]`, which is why this is stamped from the tree above rather than derived.
+    // `[workspace]`, which is why the walk above stamps it from the route tree rather
+    // than deriving it.
     expect(getSite('hub-help')!.hasHome).toBe(false)
     expect(getSite('hub-help')!.workspaceRoute).toBeUndefined()
     expect(getSite('status')!.workspaceRoute).toBeUndefined()
@@ -801,12 +811,12 @@ describe('MAIN_SITE_IDS / MARKETING_SITE_IDS (the site-app roster)', () => {
     // it is the only site where the reason is structural: Next allows one dynamic name per
     // level, and this site's root is spent on `[slug]` — the public persona handle that is
     // the whole point of the site — so `app/[workspace]` cannot also live there. Named
-    // literally because the walk above sees only the absent directory, not the collision
+    // literally because the route-tree walk sees only the absent directory, not the collision
     // that forces it, and re-adding a workspace here is a route the framework refuses.
     expect(getSite('personaregistry')!.workspaceRoute).toBeUndefined()
     expect(getSite('personaregistry')!.hasHome).toBe(false)
 
-    // Two sites the walk above cannot reach in ANY checkout. It enumerates FOLDERS, so
+    // Two sites the route-tree walk cannot reach in ANY checkout. It enumerates FOLDERS, so
     // when bitbag and myagenticteams moved to their own repos they stopped being
     // subjects of this test — silently, with no failure and no note. That shrink is now
     // the normal case rather than the exception: since the marketing split, no single
