@@ -775,9 +775,19 @@
             "minimum": 0,
             "description": "Prior failed or reaped runs of this job; this claim is attempt attempts + 1"
           },
+          "acting_token": {
+            "type": "string",
+            "nullable": true,
+            "description": "A short-lived acting token for an acting job (its persona and subject), bound to the job and this lease. It expires with the lease, and each heartbeat answers a fresh one. Null for a job that does not act."
+          },
           "llm": {
-            "$ref": "#/components/schemas/AiProcessingJobLlm",
-            "description": "The LLM target this job runs under (its config set, else the default set)"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AiProcessingJobLlm"
+              }
+            ],
+            "nullable": true,
+            "description": "The LLM target this job runs under (its config set, else the default set); null for a machine's claim, which runs its own provider and is never sent a key"
           }
         }
       },
@@ -18206,6 +18216,61 @@
           }
         }
       },
+      "JobPinnedVersion": {
+        "type": "object",
+        "required": [
+          "template_id",
+          "template_version",
+          "inputs",
+          "defaults",
+          "steps"
+        ],
+        "properties": {
+          "template_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "template_version": {
+            "type": "integer",
+            "nullable": true
+          },
+          "inputs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "description": "Declared inputs: `{ key, label, type, required?, choices? }`; empty for inline steps."
+          },
+          "defaults": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "name",
+                "kind"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "kind": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
       "JobCatalog": {
         "type": "object",
         "required": [
@@ -18713,6 +18778,7 @@
           "id",
           "position",
           "step_id",
+          "name",
           "kind",
           "status",
           "attempts",
@@ -18733,10 +18799,17 @@
             "type": "integer"
           },
           "step_id": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true,
+            "description": "The step's name in the run's frozen steps (its pinned version's)."
           },
           "kind": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "status": {
             "type": "string"
@@ -18748,8 +18821,13 @@
             "nullable": true
           },
           "log": {
-            "type": "string",
-            "nullable": true
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 500
+            },
+            "maxItems": 200,
+            "description": "The latest lines the executor wrote."
           },
           "usage": {
             "type": "object",
@@ -136010,7 +136088,8 @@
                 "schema": {
                   "type": "object",
                   "required": [
-                    "lease_expires_at"
+                    "lease_expires_at",
+                    "acting_token"
                   ],
                   "properties": {
                     "object": {
@@ -136020,6 +136099,11 @@
                     "lease_expires_at": {
                       "type": "string",
                       "description": "New lease expiry timestamp"
+                    },
+                    "acting_token": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "A fresh acting token for the new lease, bound to the same job and lease as the claim's; null for a job that does not act. The claim's token expires with its first lease, so a worker uses the latest one for its callbacks and /mcp."
                     }
                   }
                 }
@@ -136069,7 +136153,7 @@
           "processing"
         ],
         "summary": "Retry a dead job (operator)",
-        "description": "Puts a dead queue row of any ecosystem back on the queue: queued, attempts 0, run_at now, its lease and last error cleared. Operator only (an admin acting as itself; 403 otherwise). 404 error.code not_found when no row has the id; 409 error.code not_dead when the row is not dead.\n\nReplaces POST /processing/jobs/{id}/retry.",
+        "description": "Puts a dead queue row of any ecosystem back on the queue: queued, attempts 0, run_at now, its lease and last error cleared. Operator only (an admin acting as itself; 403 otherwise). 404 error.code not_found when no row has the id; 409 error.code not_dead when the row is not dead; 409 error.code step_row when it is a dead Jobs step row, whose run is retried through POST /jobs/runs/{id}/retry instead.\n\nReplaces POST /processing/jobs/{id}/retry.",
         "operationId": "postV1ProcessingJobsByIdRetry",
         "security": [
           {

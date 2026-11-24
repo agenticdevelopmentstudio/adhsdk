@@ -80,7 +80,9 @@ def sync_detailed(
 
      Puts a dead queue row of any ecosystem back on the queue: queued, attempts 0, run_at now, its lease
     and last error cleared. Operator only (an admin acting as itself; 403 otherwise). 404 error.code
-    not_found when no row has the id; 409 error.code not_dead when the row is not dead.
+    not_found when no row has the id; 409 error.code not_dead when the row is not dead; 409 error.code
+    step_row when it is a dead Jobs step row, whose run is retried through POST /jobs/runs/{id}/retry
+    instead.
 
     Replaces POST /processing/jobs/{id}/retry.
 
@@ -115,7 +117,9 @@ def sync(
 
      Puts a dead queue row of any ecosystem back on the queue: queued, attempts 0, run_at now, its lease
     and last error cleared. Operator only (an admin acting as itself; 403 otherwise). 404 error.code
-    not_found when no row has the id; 409 error.code not_dead when the row is not dead.
+    not_found when no row has the id; 409 error.code not_dead when the row is not dead; 409 error.code
+    step_row when it is a dead Jobs step row, whose run is retried through POST /jobs/runs/{id}/retry
+    instead.
 
     Replaces POST /processing/jobs/{id}/retry.
 
@@ -145,7 +149,9 @@ async def asyncio_detailed(
 
      Puts a dead queue row of any ecosystem back on the queue: queued, attempts 0, run_at now, its lease
     and last error cleared. Operator only (an admin acting as itself; 403 otherwise). 404 error.code
-    not_found when no row has the id; 409 error.code not_dead when the row is not dead.
+    not_found when no row has the id; 409 error.code not_dead when the row is not dead; 409 error.code
+    step_row when it is a dead Jobs step row, whose run is retried through POST /jobs/runs/{id}/retry
+    instead.
 
     Replaces POST /processing/jobs/{id}/retry.
 
@@ -178,7 +184,9 @@ async def asyncio(
 
      Puts a dead queue row of any ecosystem back on the queue: queued, attempts 0, run_at now, its lease
     and last error cleared. Operator only (an admin acting as itself; 403 otherwise). 404 error.code
-    not_found when no row has the id; 409 error.code not_dead when the row is not dead.
+    not_found when no row has the id; 409 error.code not_dead when the row is not dead; 409 error.code
+    step_row when it is a dead Jobs step row, whose run is retried through POST /jobs/runs/{id}/retry
+    instead.
 
     Replaces POST /processing/jobs/{id}/retry.
 

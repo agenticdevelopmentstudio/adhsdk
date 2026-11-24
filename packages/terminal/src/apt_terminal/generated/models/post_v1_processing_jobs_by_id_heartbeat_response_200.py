@@ -16,15 +16,22 @@ class PostV1ProcessingJobsByIdHeartbeatResponse200:
     """
     Attributes:
         lease_expires_at (str): New lease expiry timestamp
+        acting_token (None | str): A fresh acting token for the new lease, bound to the same job and lease as the
+            claim's; null for a job that does not act. The claim's token expires with its first lease, so a worker uses the
+            latest one for its callbacks and /mcp.
         object_ (Literal['processing.job'] | Unset):
     """
 
     lease_expires_at: str
+    acting_token: None | str
     object_: Literal["processing.job"] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         lease_expires_at = self.lease_expires_at
+
+        acting_token: None | str
+        acting_token = self.acting_token
 
         object_ = self.object_
 
@@ -33,6 +40,7 @@ class PostV1ProcessingJobsByIdHeartbeatResponse200:
         field_dict.update(
             {
                 "lease_expires_at": lease_expires_at,
+                "acting_token": acting_token,
             }
         )
         if object_ is not UNSET:
@@ -45,12 +53,20 @@ class PostV1ProcessingJobsByIdHeartbeatResponse200:
         d = dict(src_dict)
         lease_expires_at = d.pop("lease_expires_at")
 
+        def _parse_acting_token(data: object) -> None | str:
+            if data is None:
+                return data
+            return cast(None | str, data)
+
+        acting_token = _parse_acting_token(d.pop("acting_token"))
+
         object_ = cast(Literal["processing.job"] | Unset, d.pop("object", UNSET))
         if object_ != "processing.job" and not isinstance(object_, Unset):
             raise ValueError(f"object must match const 'processing.job', got '{object_}'")
 
         post_v1_processing_jobs_by_id_heartbeat_response_200 = cls(
             lease_expires_at=lease_expires_at,
+            acting_token=acting_token,
             object_=object_,
         )
 

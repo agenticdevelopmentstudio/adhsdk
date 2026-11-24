@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 from uuid import UUID
 
 from attrs import define as _attrs_define
@@ -30,7 +30,11 @@ class AiProcessingClaimedJob:
         lease_expires_at (str): Drizzle-read timestamp when the lease expires
         lease_token (str): Opaque lease token required for heartbeat / complete / fail
         attempts (int | Unset): Prior failed or reaped runs of this job; this claim is attempt attempts + 1
-        llm (AiProcessingJobLlm | Unset):
+        acting_token (None | str | Unset): A short-lived acting token for an acting job (its persona and subject), bound
+            to the job and this lease. It expires with the lease, and each heartbeat answers a fresh one. Null for a job
+            that does not act.
+        llm (AiProcessingJobLlm | None | Unset): The LLM target this job runs under (its config set, else the default
+            set); null for a machine's claim, which runs its own provider and is never sent a key
     """
 
     id: UUID
@@ -42,10 +46,13 @@ class AiProcessingClaimedJob:
     lease_expires_at: str
     lease_token: str
     attempts: int | Unset = UNSET
-    llm: AiProcessingJobLlm | Unset = UNSET
+    acting_token: None | str | Unset = UNSET
+    llm: AiProcessingJobLlm | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        from ..models.ai_processing_job_llm import AiProcessingJobLlm
+
         id = str(self.id)
 
         job_type = self.job_type
@@ -64,9 +71,19 @@ class AiProcessingClaimedJob:
 
         attempts = self.attempts
 
-        llm: dict[str, Any] | Unset = UNSET
-        if not isinstance(self.llm, Unset):
+        acting_token: None | str | Unset
+        if isinstance(self.acting_token, Unset):
+            acting_token = UNSET
+        else:
+            acting_token = self.acting_token
+
+        llm: dict[str, Any] | None | Unset
+        if isinstance(self.llm, Unset):
+            llm = UNSET
+        elif isinstance(self.llm, AiProcessingJobLlm):
             llm = self.llm.to_dict()
+        else:
+            llm = self.llm
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -84,6 +101,8 @@ class AiProcessingClaimedJob:
         )
         if attempts is not UNSET:
             field_dict["attempts"] = attempts
+        if acting_token is not UNSET:
+            field_dict["acting_token"] = acting_token
         if llm is not UNSET:
             field_dict["llm"] = llm
 
@@ -115,12 +134,31 @@ class AiProcessingClaimedJob:
 
         attempts = d.pop("attempts", UNSET)
 
-        _llm = d.pop("llm", UNSET)
-        llm: AiProcessingJobLlm | Unset
-        if isinstance(_llm, Unset):
-            llm = UNSET
-        else:
-            llm = AiProcessingJobLlm.from_dict(_llm)
+        def _parse_acting_token(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        acting_token = _parse_acting_token(d.pop("acting_token", UNSET))
+
+        def _parse_llm(data: object) -> AiProcessingJobLlm | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                llm_type_1 = AiProcessingJobLlm.from_dict(data)
+
+                return llm_type_1
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(AiProcessingJobLlm | None | Unset, data)
+
+        llm = _parse_llm(d.pop("llm", UNSET))
 
         ai_processing_claimed_job = cls(
             id=id,
@@ -132,6 +170,7 @@ class AiProcessingClaimedJob:
             lease_expires_at=lease_expires_at,
             lease_token=lease_token,
             attempts=attempts,
+            acting_token=acting_token,
             llm=llm,
         )
 

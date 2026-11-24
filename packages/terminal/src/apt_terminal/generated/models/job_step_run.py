@@ -21,12 +21,13 @@ class JobStepRun:
     Attributes:
         id (UUID):
         position (int):
-        step_id (str):
-        kind (str):
+        step_id (None | str):
+        name (None | str): The step's name in the run's frozen steps (its pinned version's).
+        kind (None | str):
         status (str):
         attempts (int):
         output (Any):
-        log (None | str):
+        log (list[str]): The latest lines the executor wrote.
         usage (JobStepRunUsage):
         error_code (None | str):
         error (None | str):
@@ -36,12 +37,13 @@ class JobStepRun:
 
     id: UUID
     position: int
-    step_id: str
-    kind: str
+    step_id: None | str
+    name: None | str
+    kind: None | str
     status: str
     attempts: int
     output: Any
-    log: None | str
+    log: list[str]
     usage: JobStepRunUsage
     error_code: None | str
     error: None | str
@@ -54,8 +56,13 @@ class JobStepRun:
 
         position = self.position
 
+        step_id: None | str
         step_id = self.step_id
 
+        name: None | str
+        name = self.name
+
+        kind: None | str
         kind = self.kind
 
         status = self.status
@@ -64,7 +71,6 @@ class JobStepRun:
 
         output = self.output
 
-        log: None | str
         log = self.log
 
         usage = self.usage.to_dict()
@@ -94,6 +100,7 @@ class JobStepRun:
                 "id": id,
                 "position": position,
                 "step_id": step_id,
+                "name": name,
                 "kind": kind,
                 "status": status,
                 "attempts": attempts,
@@ -118,9 +125,26 @@ class JobStepRun:
 
         position = d.pop("position")
 
-        step_id = d.pop("step_id")
+        def _parse_step_id(data: object) -> None | str:
+            if data is None:
+                return data
+            return cast(None | str, data)
 
-        kind = d.pop("kind")
+        step_id = _parse_step_id(d.pop("step_id"))
+
+        def _parse_name(data: object) -> None | str:
+            if data is None:
+                return data
+            return cast(None | str, data)
+
+        name = _parse_name(d.pop("name"))
+
+        def _parse_kind(data: object) -> None | str:
+            if data is None:
+                return data
+            return cast(None | str, data)
+
+        kind = _parse_kind(d.pop("kind"))
 
         status = d.pop("status")
 
@@ -128,12 +152,7 @@ class JobStepRun:
 
         output = d.pop("output")
 
-        def _parse_log(data: object) -> None | str:
-            if data is None:
-                return data
-            return cast(None | str, data)
-
-        log = _parse_log(d.pop("log"))
+        log = cast(list[str], d.pop("log"))
 
         usage = JobStepRunUsage.from_dict(d.pop("usage"))
 
@@ -185,6 +204,7 @@ class JobStepRun:
             id=id,
             position=position,
             step_id=step_id,
+            name=name,
             kind=kind,
             status=status,
             attempts=attempts,

@@ -10383,7 +10383,7 @@ export interface paths {
         put?: never;
         /**
          * Retry a dead job (operator)
-         * @description Puts a dead queue row of any ecosystem back on the queue: queued, attempts 0, run_at now, its lease and last error cleared. Operator only (an admin acting as itself; 403 otherwise). 404 error.code not_found when no row has the id; 409 error.code not_dead when the row is not dead.
+         * @description Puts a dead queue row of any ecosystem back on the queue: queued, attempts 0, run_at now, its lease and last error cleared. Operator only (an admin acting as itself; 403 otherwise). 404 error.code not_found when no row has the id; 409 error.code not_dead when the row is not dead; 409 error.code step_row when it is a dead Jobs step row, whose run is retried through POST /jobs/runs/{id}/retry instead.
          *
          *     Replaces POST /processing/jobs/{id}/retry.
          */
@@ -14722,8 +14722,10 @@ export interface components {
             lease_token: string;
             /** @description Prior failed or reaped runs of this job; this claim is attempt attempts + 1 */
             attempts?: number;
-            /** @description The LLM target this job runs under (its config set, else the default set) */
-            llm?: components["schemas"]["AiProcessingJobLlm"];
+            /** @description A short-lived acting token for an acting job (its persona and subject), bound to the job and this lease. It expires with the lease, and each heartbeat answers a fresh one. Null for a job that does not act. */
+            acting_token?: string | null;
+            /** @description The LLM target this job runs under (its config set, else the default set); null for a machine's claim, which runs its own provider and is never sent a key */
+            llm?: components["schemas"]["AiProcessingJobLlm"] | null;
         };
         AiProcessingWorkerUsage: {
             /** @description The provider billed, as its API host (e.g. api.openai.com, localhost:11434) */
@@ -19902,6 +19904,23 @@ export interface components {
             /** Format: date-time */
             published_at: string;
         };
+        JobPinnedVersion: {
+            /** Format: uuid */
+            template_id: string | null;
+            template_version: number | null;
+            /** @description Declared inputs: `{ key, label, type, required?, choices? }`; empty for inline steps. */
+            inputs: {
+                [key: string]: unknown;
+            }[];
+            defaults: {
+                [key: string]: unknown;
+            };
+            steps: {
+                id: string;
+                name: string;
+                kind: string;
+            }[];
+        };
         JobCatalog: {
             templates: components["schemas"]["JobCatalogTemplate"][];
         };
@@ -20068,12 +20087,15 @@ export interface components {
             /** Format: uuid */
             id: string;
             position: number;
-            step_id: string;
-            kind: string;
+            step_id: string | null;
+            /** @description The step's name in the run's frozen steps (its pinned version's). */
+            name: string | null;
+            kind: string | null;
             status: string;
             attempts: number;
             output: unknown;
-            log: string | null;
+            /** @description The latest lines the executor wrote. */
+            log: string[];
             usage: {
                 [key: string]: unknown;
             };
@@ -69804,6 +69826,8 @@ export interface operations {
                         object?: "processing.job";
                         /** @description New lease expiry timestamp */
                         lease_expires_at: string;
+                        /** @description A fresh acting token for the new lease, bound to the same job and lease as the claim's; null for a job that does not act. The claim's token expires with its first lease, so a worker uses the latest one for its callbacks and /mcp. */
+                        acting_token: string | null;
                     };
                 };
             };

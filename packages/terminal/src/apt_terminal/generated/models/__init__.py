@@ -1671,6 +1671,10 @@ from .job_instance_patch_options_on_error import JobInstancePatchOptionsOnError
 from .job_instance_patch_status import JobInstancePatchStatus
 from .job_instance_status import JobInstanceStatus
 from .job_instance_steps_type_0_item import JobInstanceStepsType0Item
+from .job_pinned_version import JobPinnedVersion
+from .job_pinned_version_defaults import JobPinnedVersionDefaults
+from .job_pinned_version_inputs_item import JobPinnedVersionInputsItem
+from .job_pinned_version_steps_item import JobPinnedVersionStepsItem
 from .job_run_started import JobRunStarted
 from .job_run_started_status import JobRunStartedStatus
 from .job_run_status import JobRunStatus
@@ -5051,6 +5055,10 @@ __all__ = (
     "JobInstancePatchStatus",
     "JobInstanceStatus",
     "JobInstanceStepsType0Item",
+    "JobPinnedVersion",
+    "JobPinnedVersionDefaults",
+    "JobPinnedVersionInputsItem",
+    "JobPinnedVersionStepsItem",
     "JobRunStarted",
     "JobRunStartedStatus",
     "JobRunStatus",

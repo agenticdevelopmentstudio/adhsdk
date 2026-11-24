@@ -5666,7 +5666,7 @@ public protocol APIProtocol: Sendable {
     func postV1ProcessingJobsByIdHeartbeat(_ input: Operations.PostV1ProcessingJobsByIdHeartbeat.Input) async throws -> Operations.PostV1ProcessingJobsByIdHeartbeat.Output
     /// Retry a dead job (operator)
     ///
-    /// Puts a dead queue row of any ecosystem back on the queue: queued, attempts 0, run_at now, its lease and last error cleared. Operator only (an admin acting as itself; 403 otherwise). 404 error.code not_found when no row has the id; 409 error.code not_dead when the row is not dead.
+    /// Puts a dead queue row of any ecosystem back on the queue: queued, attempts 0, run_at now, its lease and last error cleared. Operator only (an admin acting as itself; 403 otherwise). 404 error.code not_found when no row has the id; 409 error.code not_dead when the row is not dead; 409 error.code step_row when it is a dead Jobs step row, whose run is retried through POST /jobs/runs/{id}/retry instead.
     ///
     /// Replaces POST /processing/jobs/{id}/retry.
     ///
@@ -20087,7 +20087,7 @@ extension APIProtocol {
     }
     /// Retry a dead job (operator)
     ///
-    /// Puts a dead queue row of any ecosystem back on the queue: queued, attempts 0, run_at now, its lease and last error cleared. Operator only (an admin acting as itself; 403 otherwise). 404 error.code not_found when no row has the id; 409 error.code not_dead when the row is not dead.
+    /// Puts a dead queue row of any ecosystem back on the queue: queued, attempts 0, run_at now, its lease and last error cleared. Operator only (an admin acting as itself; 403 otherwise). 404 error.code not_found when no row has the id; 409 error.code not_dead when the row is not dead; 409 error.code step_row when it is a dead Jobs step row, whose run is retried through POST /jobs/runs/{id}/retry instead.
     ///
     /// Replaces POST /processing/jobs/{id}/retry.
     ///
@@ -25807,10 +25807,34 @@ public enum Components {
             ///
             /// - Remark: Generated from `#/components/schemas/AiProcessingClaimedJob/attempts`.
             public var attempts: Swift.Int?
-            /// The LLM target this job runs under (its config set, else the default set)
+            /// A short-lived acting token for an acting job (its persona and subject), bound to the job and this lease. It expires with the lease, and each heartbeat answers a fresh one. Null for a job that does not act.
+            ///
+            /// - Remark: Generated from `#/components/schemas/AiProcessingClaimedJob/acting_token`.
+            public var actingToken: Swift.String?
+            /// The LLM target this job runs under (its config set, else the default set); null for a machine's claim, which runs its own provider and is never sent a key
             ///
             /// - Remark: Generated from `#/components/schemas/AiProcessingClaimedJob/llm`.
-            public var llm: Components.Schemas.AiProcessingJobLlm?
+            public struct LlmPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/AiProcessingClaimedJob/llm/value1`.
+                public var value1: Components.Schemas.AiProcessingJobLlm
+                /// Creates a new `LlmPayload`.
+                ///
+                /// - Parameters:
+                ///   - value1:
+                public init(value1: Components.Schemas.AiProcessingJobLlm) {
+                    self.value1 = value1
+                }
+                public init(from decoder: any Swift.Decoder) throws {
+                    self.value1 = try .init(from: decoder)
+                }
+                public func encode(to encoder: any Swift.Encoder) throws {
+                    try self.value1.encode(to: encoder)
+                }
+            }
+            /// The LLM target this job runs under (its config set, else the default set); null for a machine's claim, which runs its own provider and is never sent a key
+            ///
+            /// - Remark: Generated from `#/components/schemas/AiProcessingClaimedJob/llm`.
+            public var llm: Components.Schemas.AiProcessingClaimedJob.LlmPayload?
             /// Creates a new `AiProcessingClaimedJob`.
             ///
             /// - Parameters:
@@ -25823,7 +25847,8 @@ public enum Components {
             ///   - leaseExpiresAt: Drizzle-read timestamp when the lease expires
             ///   - leaseToken: Opaque lease token required for heartbeat / complete / fail
             ///   - attempts: Prior failed or reaped runs of this job; this claim is attempt attempts + 1
-            ///   - llm: The LLM target this job runs under (its config set, else the default set)
+            ///   - actingToken: A short-lived acting token for an acting job (its persona and subject), bound to the job and this lease. It expires with the lease, and each heartbeat answers a fresh one. Null for a job that does not act.
+            ///   - llm: The LLM target this job runs under (its config set, else the default set); null for a machine's claim, which runs its own provider and is never sent a key
             public init(
                 id: Swift.String,
                 jobType: Swift.String,
@@ -25834,7 +25859,8 @@ public enum Components {
                 leaseExpiresAt: Swift.String,
                 leaseToken: Swift.String,
                 attempts: Swift.Int? = nil,
-                llm: Components.Schemas.AiProcessingJobLlm? = nil
+                actingToken: Swift.String? = nil,
+                llm: Components.Schemas.AiProcessingClaimedJob.LlmPayload? = nil
             ) {
                 self.id = id
                 self.jobType = jobType
@@ -25845,6 +25871,7 @@ public enum Components {
                 self.leaseExpiresAt = leaseExpiresAt
                 self.leaseToken = leaseToken
                 self.attempts = attempts
+                self.actingToken = actingToken
                 self.llm = llm
             }
             public enum CodingKeys: String, CodingKey {
@@ -25857,6 +25884,7 @@ public enum Components {
                 case leaseExpiresAt = "lease_expires_at"
                 case leaseToken = "lease_token"
                 case attempts
+                case actingToken = "acting_token"
                 case llm
             }
         }
@@ -53798,6 +53826,120 @@ public enum Components {
                 case publishedAt = "published_at"
             }
         }
+        /// - Remark: Generated from `#/components/schemas/JobPinnedVersion`.
+        public struct JobPinnedVersion: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/JobPinnedVersion/template_id`.
+            public var templateId: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/JobPinnedVersion/template_version`.
+            public var templateVersion: Swift.Int?
+            /// - Remark: Generated from `#/components/schemas/JobPinnedVersion/InputsPayload`.
+            public struct InputsPayloadPayload: Codable, Hashable, Sendable {
+                /// A container of undocumented properties.
+                public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
+                /// Creates a new `InputsPayloadPayload`.
+                ///
+                /// - Parameters:
+                ///   - additionalProperties: A container of undocumented properties.
+                public init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
+                    self.additionalProperties = additionalProperties
+                }
+                public init(from decoder: any Swift.Decoder) throws {
+                    additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+                }
+                public func encode(to encoder: any Swift.Encoder) throws {
+                    try encoder.encodeAdditionalProperties(additionalProperties)
+                }
+            }
+            /// Declared inputs: `{ key, label, type, required?, choices? }`; empty for inline steps.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobPinnedVersion/inputs`.
+            public typealias InputsPayload = [Components.Schemas.JobPinnedVersion.InputsPayloadPayload]
+            /// Declared inputs: `{ key, label, type, required?, choices? }`; empty for inline steps.
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobPinnedVersion/inputs`.
+            public var inputs: Components.Schemas.JobPinnedVersion.InputsPayload
+            /// - Remark: Generated from `#/components/schemas/JobPinnedVersion/defaults`.
+            public struct DefaultsPayload: Codable, Hashable, Sendable {
+                /// A container of undocumented properties.
+                public var additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer
+                /// Creates a new `DefaultsPayload`.
+                ///
+                /// - Parameters:
+                ///   - additionalProperties: A container of undocumented properties.
+                public init(additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()) {
+                    self.additionalProperties = additionalProperties
+                }
+                public init(from decoder: any Swift.Decoder) throws {
+                    additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
+                }
+                public func encode(to encoder: any Swift.Encoder) throws {
+                    try encoder.encodeAdditionalProperties(additionalProperties)
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/JobPinnedVersion/defaults`.
+            public var defaults: Components.Schemas.JobPinnedVersion.DefaultsPayload
+            /// - Remark: Generated from `#/components/schemas/JobPinnedVersion/StepsPayload`.
+            public struct StepsPayloadPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/JobPinnedVersion/StepsPayload/id`.
+                public var id: Swift.String
+                /// - Remark: Generated from `#/components/schemas/JobPinnedVersion/StepsPayload/name`.
+                public var name: Swift.String
+                /// - Remark: Generated from `#/components/schemas/JobPinnedVersion/StepsPayload/kind`.
+                public var kind: Swift.String
+                /// Creates a new `StepsPayloadPayload`.
+                ///
+                /// - Parameters:
+                ///   - id:
+                ///   - name:
+                ///   - kind:
+                public init(
+                    id: Swift.String,
+                    name: Swift.String,
+                    kind: Swift.String
+                ) {
+                    self.id = id
+                    self.name = name
+                    self.kind = kind
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case id
+                    case name
+                    case kind
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/JobPinnedVersion/steps`.
+            public typealias StepsPayload = [Components.Schemas.JobPinnedVersion.StepsPayloadPayload]
+            /// - Remark: Generated from `#/components/schemas/JobPinnedVersion/steps`.
+            public var steps: Components.Schemas.JobPinnedVersion.StepsPayload
+            /// Creates a new `JobPinnedVersion`.
+            ///
+            /// - Parameters:
+            ///   - templateId:
+            ///   - templateVersion:
+            ///   - inputs: Declared inputs: `{ key, label, type, required?, choices? }`; empty for inline steps.
+            ///   - defaults:
+            ///   - steps:
+            public init(
+                templateId: Swift.String? = nil,
+                templateVersion: Swift.Int? = nil,
+                inputs: Components.Schemas.JobPinnedVersion.InputsPayload,
+                defaults: Components.Schemas.JobPinnedVersion.DefaultsPayload,
+                steps: Components.Schemas.JobPinnedVersion.StepsPayload
+            ) {
+                self.templateId = templateId
+                self.templateVersion = templateVersion
+                self.inputs = inputs
+                self.defaults = defaults
+                self.steps = steps
+            }
+            public enum CodingKeys: String, CodingKey {
+                case templateId = "template_id"
+                case templateVersion = "template_version"
+                case inputs
+                case defaults
+                case steps
+            }
+        }
         /// - Remark: Generated from `#/components/schemas/JobCatalog`.
         public struct JobCatalog: Codable, Hashable, Sendable {
             /// - Remark: Generated from `#/components/schemas/JobCatalog/templates`.
@@ -54758,17 +54900,23 @@ public enum Components {
             /// - Remark: Generated from `#/components/schemas/JobStepRun/position`.
             public var position: Swift.Int
             /// - Remark: Generated from `#/components/schemas/JobStepRun/step_id`.
-            public var stepId: Swift.String
+            public var stepId: Swift.String?
+            /// The step's name in the run's frozen steps (its pinned version's).
+            ///
+            /// - Remark: Generated from `#/components/schemas/JobStepRun/name`.
+            public var name: Swift.String?
             /// - Remark: Generated from `#/components/schemas/JobStepRun/kind`.
-            public var kind: Swift.String
+            public var kind: Swift.String?
             /// - Remark: Generated from `#/components/schemas/JobStepRun/status`.
             public var status: Swift.String
             /// - Remark: Generated from `#/components/schemas/JobStepRun/attempts`.
             public var attempts: Swift.Int
             /// - Remark: Generated from `#/components/schemas/JobStepRun/output`.
             public var output: OpenAPIRuntime.OpenAPIValueContainer?
+            /// The latest lines the executor wrote.
+            ///
             /// - Remark: Generated from `#/components/schemas/JobStepRun/log`.
-            public var log: Swift.String?
+            public var log: [Swift.String]
             /// - Remark: Generated from `#/components/schemas/JobStepRun/usage`.
             public struct UsagePayload: Codable, Hashable, Sendable {
                 /// A container of undocumented properties.
@@ -54803,11 +54951,12 @@ public enum Components {
             ///   - id:
             ///   - position:
             ///   - stepId:
+            ///   - name: The step's name in the run's frozen steps (its pinned version's).
             ///   - kind:
             ///   - status:
             ///   - attempts:
             ///   - output:
-            ///   - log:
+            ///   - log: The latest lines the executor wrote.
             ///   - usage:
             ///   - errorCode:
             ///   - error:
@@ -54816,12 +54965,13 @@ public enum Components {
             public init(
                 id: Swift.String,
                 position: Swift.Int,
-                stepId: Swift.String,
-                kind: Swift.String,
+                stepId: Swift.String? = nil,
+                name: Swift.String? = nil,
+                kind: Swift.String? = nil,
                 status: Swift.String,
                 attempts: Swift.Int,
                 output: OpenAPIRuntime.OpenAPIValueContainer? = nil,
-                log: Swift.String? = nil,
+                log: [Swift.String],
                 usage: Components.Schemas.JobStepRun.UsagePayload,
                 errorCode: Swift.String? = nil,
                 error: Swift.String? = nil,
@@ -54831,6 +54981,7 @@ public enum Components {
                 self.id = id
                 self.position = position
                 self.stepId = stepId
+                self.name = name
                 self.kind = kind
                 self.status = status
                 self.attempts = attempts
@@ -54846,6 +54997,7 @@ public enum Components {
                 case id
                 case position
                 case stepId = "step_id"
+                case name
                 case kind
                 case status
                 case attempts
@@ -370780,21 +370932,29 @@ public enum Operations {
                         ///
                         /// - Remark: Generated from `#/paths/v1/processing/jobs/{id}/heartbeat/POST/responses/200/content/json/lease_expires_at`.
                         public var leaseExpiresAt: Swift.String
+                        /// A fresh acting token for the new lease, bound to the same job and lease as the claim's; null for a job that does not act. The claim's token expires with its first lease, so a worker uses the latest one for its callbacks and /mcp.
+                        ///
+                        /// - Remark: Generated from `#/paths/v1/processing/jobs/{id}/heartbeat/POST/responses/200/content/json/acting_token`.
+                        public var actingToken: Swift.String?
                         /// Creates a new `JsonPayload`.
                         ///
                         /// - Parameters:
                         ///   - object:
                         ///   - leaseExpiresAt: New lease expiry timestamp
+                        ///   - actingToken: A fresh acting token for the new lease, bound to the same job and lease as the claim's; null for a job that does not act. The claim's token expires with its first lease, so a worker uses the latest one for its callbacks and /mcp.
                         public init(
                             object: Operations.PostV1ProcessingJobsByIdHeartbeat.Output.Ok.Body.JsonPayload.ObjectPayload? = nil,
-                            leaseExpiresAt: Swift.String
+                            leaseExpiresAt: Swift.String,
+                            actingToken: Swift.String? = nil
                         ) {
                             self.object = object
                             self.leaseExpiresAt = leaseExpiresAt
+                            self.actingToken = actingToken
                         }
                         public enum CodingKeys: String, CodingKey {
                             case object
                             case leaseExpiresAt = "lease_expires_at"
+                            case actingToken = "acting_token"
                         }
                     }
                     /// - Remark: Generated from `#/paths/v1/processing/jobs/{id}/heartbeat/POST/responses/200/content/application\/json`.
@@ -371031,7 +371191,7 @@ public enum Operations {
     }
     /// Retry a dead job (operator)
     ///
-    /// Puts a dead queue row of any ecosystem back on the queue: queued, attempts 0, run_at now, its lease and last error cleared. Operator only (an admin acting as itself; 403 otherwise). 404 error.code not_found when no row has the id; 409 error.code not_dead when the row is not dead.
+    /// Puts a dead queue row of any ecosystem back on the queue: queued, attempts 0, run_at now, its lease and last error cleared. Operator only (an admin acting as itself; 403 otherwise). 404 error.code not_found when no row has the id; 409 error.code not_dead when the row is not dead; 409 error.code step_row when it is a dead Jobs step row, whose run is retried through POST /jobs/runs/{id}/retry instead.
     ///
     /// Replaces POST /processing/jobs/{id}/retry.
     ///
