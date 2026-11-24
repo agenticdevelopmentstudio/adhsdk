@@ -66,6 +66,11 @@ public protocol PipelineObserver: AnyObject, Sendable {
 /// quarantine. Those records are already archived and in events.db; once the sink
 /// is back, `ProviderSpool.requeueQuarantined` sends them through again, and the
 /// pass reads only their archive rows (`RawArchive.records(ids:)`).
+///
+/// A sink that refuses a batch for any other reason than an outage
+/// (`PipelineDrainer.isStoreOutage`) is retried one record at a time, and a record
+/// it refuses on its own (beside records it took, or alone in its pass) is charged
+/// for itself and never healed.
 public protocol PipelineSink: Sendable {
     func write(_ batch: NormalizedBatch, records: [ArchivedRecord], provider: String) throws
 }
@@ -474,12 +479,16 @@ public final class PipelineDrainer: @unchecked Sendable {
                     }
                     let reason = "\(Self.sinkFailurePrefix)\(sinkName) failed: \(error)"
                     let refusalPrefix = "\(Self.recordSinkFailurePrefix)\(sinkName): "
+                    let refusal = "\(refusalPrefix)\(error)"
+                    // A lone record the sink refused while it was not down (the error
+                    // is no outage) is refused for itself: charged as an outage, the
+                    // heal would send it through again every interval, forever.
+                    let lone = normalizedSpooled.count == 1
                     for spooled in normalizedSpooled {
-                        try charge(spooled, reason: Self.batchReason(
-                            spooled, outage: reason, record: "\(refusalPrefix)\(error)",
-                            recordPrefix: refusalPrefix), &outcome)
+                        try charge(spooled, reason: lone ? refusal : Self.batchReason(
+                            spooled, outage: reason, record: refusal, recordPrefix: refusalPrefix), &outcome)
                     }
-                    throw StepFailure(description: reason)
+                    throw StepFailure(description: lone ? refusal : reason)
                 }
                 normalizedSpooled = kept.map(\.spooled)
                 normalizedRecords = kept.map(\.archived)
@@ -500,11 +509,13 @@ public final class PipelineDrainer: @unchecked Sendable {
     /// After a failed batch write: writes each record's rows on its own and returns
     /// the ones that are now stored. When some were stored, each record that still
     /// fails is charged under ``recordStoreFailurePrefix``: the store took its
-    /// neighbours, so the record is at fault. When none was stored, the store is at
-    /// fault: every record is charged under ``storeFailurePrefix`` (except one already
-    /// refused on its own, which keeps ``recordStoreFailurePrefix``) and the original
-    /// failure is thrown. A store outage met on the way fails the pass there,
-    /// charging no record.
+    /// neighbours, so the record is at fault. A lone record that fails is at fault
+    /// too: the error is no outage (``isStoreOutage(_:)``), so the store is up and
+    /// refused that record. When several were written and none was stored, the store
+    /// is at fault: every record is charged under ``storeFailurePrefix`` (except one
+    /// already refused on its own, which keeps ``recordStoreFailurePrefix``). Either
+    /// way, when none was stored the original failure is thrown. A store outage met
+    /// on the way fails the pass there, charging no record.
     private func isolateStoreFailure(
         _ batchError: Error, _ items: [(SpooledRecord, (ArchivedRecord, NormalizedBatch))],
         _ outcome: inout DrainOutcome
@@ -522,14 +533,17 @@ public final class PipelineDrainer: @unchecked Sendable {
             }
         }
         for (item, error) in refused {
-            let reason = kept.isEmpty
+            let reason = kept.isEmpty && items.count > 1
                 ? Self.batchReason(item, outage: "\(Self.storeFailurePrefix)\(error)",
                                    record: "\(Self.recordStoreFailurePrefix)\(error)",
                                    recordPrefix: Self.recordStoreFailurePrefix)
                 : "\(Self.recordStoreFailurePrefix)\(error)"
             try charge(item, reason: reason, &outcome)
         }
-        if kept.isEmpty { throw StepFailure(description: "\(Self.storeFailurePrefix)\(batchError)") }
+        if kept.isEmpty {
+            let prefix = items.count > 1 ? Self.storeFailurePrefix : Self.recordStoreFailurePrefix
+            throw StepFailure(description: "\(prefix)\(batchError)")
+        }
         return kept
     }
 
