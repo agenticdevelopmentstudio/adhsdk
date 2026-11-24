@@ -129,6 +129,8 @@ async function walkV1<T>(
  */
 export async function publicJson<T>(url: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers)
+  // A public read never carries a bearer, not even one a caller passed in by hand.
+  headers.delete('authorization')
   if (init.body != null && !headers.has('content-type')) headers.set('content-type', 'application/json')
   const res = await fetch(url, { ...init, headers })
   if (!res.ok) throw await responseError(res, `HTTP ${res.status}`)

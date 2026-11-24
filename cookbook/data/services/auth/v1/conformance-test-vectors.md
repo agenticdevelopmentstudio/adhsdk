@@ -28,3 +28,4 @@ Every vector is asserted in `packages/web/packages/auth/src/__tests__/v1.test.ts
 | v1-023 | public-json-body, public-no-token | A stored access token; `publicJson('/x', { method: 'POST', body: '{}' })` | One request with `content-type: application/json` and no `Authorization`; resolves to the parsed body |
 | v1-024 | public-no-refresh | A stored access token; `publicJson('/x')` answered 401 | Rejects with `AuthHttpError` status 401 after exactly one request |
 | v1-025 | public-json-body | `publicJson('/x')` answered 204 with no body | Rejects with an `Error` (not an `AuthHttpError`) whose message starts `Unexpected empty response (204 No Content)` |
+| v1-026 | public-no-token, public-json-body | `publicJson('/x', { headers: { Authorization: 'Bearer CALLER', 'x-trace': 't1' } })` | One request with no `Authorization` header; `x-trace` is still `t1` |

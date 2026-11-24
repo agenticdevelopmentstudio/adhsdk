@@ -243,4 +243,15 @@ describe('listAllPublicV1 and publicJson', () => {
     expect(err).not.toBeInstanceOf(AuthHttpError)
     expect((err as Error).message).toMatch(/^Unexpected empty response \(204 No Content\)/)
   })
+
+  it('v1-026 publicJson drops an Authorization header the caller passes and keeps the rest', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({ ok: 1 }), { status: 200, headers: { 'content-type': 'application/json' } }),
+    )
+    await publicJson('/x', { headers: { Authorization: 'Bearer CALLER', 'x-trace': 't1' } })
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    const init = fetchMock.mock.calls[0]?.[1]
+    expect(authOf(init)).toBeNull()
+    expect(new Headers((init as RequestInit).headers).get('x-trace')).toBe('t1')
+  })
 })
