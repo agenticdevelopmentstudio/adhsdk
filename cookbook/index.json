@@ -1048,7 +1048,7 @@
         },
         {
           "conformance": {
-            "hash": "sha256:2a532dbf4f56d0ee93c9e670f7c7ceda5d5f1fe2128a6d803430913d70e78556",
+            "hash": "sha256:8a6bb977a5e09c1f0c7496d7ab68b7dd033e6a633c1d395581b1f5b8436324c0",
             "state": "confirmed",
             "version": "1.2.0"
           },
