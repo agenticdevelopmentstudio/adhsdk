@@ -63,6 +63,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from typing import Callable
 
 RUN_PATH_MACROS = ("@rpath", "@loader_path", "@executable_path")
 
@@ -306,6 +307,18 @@ def verifies(framework: Path) -> bool:
     return subprocess.run(["codesign", "--verify", str(framework)], capture_output=True).returncode == 0
 
 
+def needs_signing(framework: Path, copied_this_run: bool, *,
+                  verify: Callable[[Path], bool] = verifies) -> bool:
+    """Whether to sign a framework in the app's Frameworks folder. A copy
+    this run made is always signed: a copy can carry a signature that
+    verifies but is not the app's -- ad-hoc, or another team's -- and
+    library validation refuses a framework whose Team ID is not the app's.
+    Anything else is signed only if it does not verify: an earlier run's copy,
+    which an incremental build keeps (and that run signed), or a framework
+    Xcode's Embed Frameworks phase already signed with the app's identity."""
+    return copied_this_run or not verify(framework)
+
+
 def sign(framework: Path, identity: str) -> bool:
     """Sign one copied framework the way Xcode's Embed Frameworks phase does."""
     result = subprocess.run(
@@ -354,6 +367,7 @@ def main(argv: list[str]) -> int:
     missing: set[str] = set()
     unreadable: set[str] = set()
     unsigned: set[str] = set()
+    copied: set[str] = set()
     identity = signing_identity(os.environ)
     requirements: set[Path] = set()
 
@@ -387,6 +401,7 @@ def main(argv: list[str]) -> int:
                 shutil.rmtree(target)
             shutil.copytree(source, target, symlinks=True)
             embedded.add(name)
+            copied.add(name)
             print(f"embedded {name}.framework")
             enqueue_framework_binary(target, required=True)
         wanted = set()
@@ -409,12 +424,9 @@ def main(argv: list[str]) -> int:
 
     absent = sorted(str(path) for path in requirements if not path.exists())
 
-    # Sign whatever in the Frameworks folder does not verify: this run's copies
-    # and an earlier run's, which an incremental build keeps rather than
-    # re-copying. The frameworks Xcode embedded itself verify already.
     if identity:
         for framework in sorted(frameworks_dir.glob("*.framework")):
-            if not verifies(framework) and not sign(framework, identity):
+            if needs_signing(framework, framework.stem in copied) and not sign(framework, identity):
                 unsigned.add(framework.stem)
 
     if missing or unresolved or unreadable or absent or unsigned:

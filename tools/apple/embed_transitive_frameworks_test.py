@@ -91,3 +91,11 @@ def test_xcode_mode_fails_the_build_when_the_app_is_missing(tmp_path: Path, monk
     assert etf.main(["embed", "--xcode"]) == 1
     assert "app binary not found" in capsys.readouterr().err
 
+
+def test_a_copy_made_this_run_is_always_signed_even_when_it_verifies():
+    assert etf.needs_signing(Path("X.framework"), True, verify=lambda _: True)
+
+
+def test_a_framework_already_in_place_is_signed_only_when_it_does_not_verify():
+    assert not etf.needs_signing(Path("X.framework"), False, verify=lambda _: True)
+    assert etf.needs_signing(Path("X.framework"), False, verify=lambda _: False)
