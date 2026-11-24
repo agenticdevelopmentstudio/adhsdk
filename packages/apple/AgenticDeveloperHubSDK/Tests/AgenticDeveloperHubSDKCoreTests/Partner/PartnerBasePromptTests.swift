@@ -74,7 +74,7 @@ struct PartnerBasePromptTests {
     @Test func skillMarkdownHasFrontmatter() {
         let markdown = PartnerBasePrompt.skillMarkdown(for: job("General coding partner", enabled: true))
         let head = "---\nname: adkitchen-partner-general\n"
-            + "description: \"The Agentic Developer Kitchen Coding Partner's guidelines for its General coding "
+            + "description: \"The ADKitchen Coding Partner's guidelines for its General coding "
             + "partner job. Only for the Coding Partner, which has the partner_* tools; not for ordinary "
             + "requests.\"\n---\n"
         #expect(markdown.hasPrefix(head))
@@ -187,7 +187,7 @@ struct PartnerBasePromptTests {
     private static let exactBaseText = """
         # Coding Partner
 
-        You are the Agentic Developer Kitchen's Coding Partner: one long-lived Claude Code session that \
+        You are ADKitchen's Coding Partner: one long-lived Claude Code session that \
         stays running for the owner and does several jobs. Each job below has its own guidelines. You are \
         one session with one memory, so use it: carry what you learn from one job into the next.
 

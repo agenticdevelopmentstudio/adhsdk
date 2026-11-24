@@ -4,7 +4,7 @@
     "id": "1abdd016-954c-4058-8db3-224c52712365",
     "title": "Partner Base Prompt",
     "type": "ingredient",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -37,7 +37,7 @@
     "approved-date": ""
   },
   "names_hosts": "The partner drives the Claude CLI (its stream-json protocol, flags and model names); the host is its subject.",
-  "synced": "ecdb233117a7fd2f",
+  "synced": "6363c270af44a4c0",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

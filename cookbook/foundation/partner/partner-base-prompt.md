@@ -2,7 +2,7 @@
 id: 1abdd016-954c-4058-8db3-224c52712365
 title: "Partner Base Prompt"
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-11-14
@@ -86,7 +86,7 @@ approved-date: ""
 - **skill-frontmatter**: `skillMarkdown(for:)` MUST return a YAML frontmatter block opened and closed by `---` lines, a blank line, the job's `guidelines` verbatim and a final newline.
 - **skill-name**: The frontmatter `name` MUST be `adkitchen-partner-<job.id>`, with the id inserted as written.
 - **skill-name-id-unchecked**: `skillMarkdown(for:)` MUST NOT validate or escape the id, so a caller MUST pass an id with no whitespace, colon or line break; an id that has one produces invalid or altered frontmatter.
-- **skill-description**: The frontmatter `description` MUST be a double-quoted string reading "The Agentic Developer Kitchen Coding Partner's guidelines for its <name> job. Only for the Coding Partner, which has the partner_* tools; not for ordinary requests."
+- **skill-description**: The frontmatter `description` MUST be a double-quoted string reading "The ADKitchen Coding Partner's guidelines for its <name> job. Only for the Coding Partner, which has the partner_* tools; not for ordinary requests."
 - **skill-name-quoting**: The job name inside the description MUST have each backslash written as two backslashes, each double quote written as a backslash and a quote, and each newline written as a backslash followed by `n`, in that order, so the name cannot break the quoted YAML string.
 - **skill-enabled-ignored**: `skillMarkdown(for:)` MUST produce the same output whether or not the job is enabled.
 
@@ -97,7 +97,7 @@ The base text is the following, with no leading or trailing line break. The bloc
 
 > # Coding Partner
 >
-> You are the Agentic Developer Kitchen's Coding Partner: one long-lived Claude Code session that stays running for the owner and does several jobs. Each job below has its own guidelines. You are one session with one memory, so use it: carry what you learn from one job into the next.
+> You are ADKitchen's Coding Partner: one long-lived Claude Code session that stays running for the owner and does several jobs. Each job below has its own guidelines. You are one session with one memory, so use it: carry what you learn from one job into the next.
 >
 > ## The window
 >
@@ -194,7 +194,7 @@ Vectors 001 to 008 are asserted by the named tests. Vectors 009 onward are deriv
 | partner-base-prompt-005 | base-tool-table, base-message-kinds, base-attention-rules | Test `baseTextNamesEveryToolAndKeyPhrases`: read `text` | Contains each of the 15 tool names and the phrases `attention item`, `tick` and `went idle` |
 | partner-base-prompt-006 | base-button-messages, base-item-reply | Test `baseTextCoversButtonMessagesAndItemReplies`: read `text` | Contains `Resolved: <text>`, `Confirmed: <text>`, `carries an item id` and "close that item with `partner_attention_update`" |
 | partner-base-prompt-007 | skill-name-quoting, skill-description | Test `skillDescriptionIsYAMLQuoted`: job named `Say "hi": a\b` | Markdown contains `guidelines for its Say \"hi\": a\\b job. ` |
-| partner-base-prompt-008 | skill-frontmatter, skill-name, skill-description | Test `skillMarkdownHasFrontmatter`: job id `general`, name `General coding partner`, guidelines `Be useful.` | Markdown starts with `---\nname: adkitchen-partner-general\ndescription: "The Agentic Developer Kitchen Coding Partner's guidelines for its General coding partner job. Only for the Coding Partner, which has the partner_* tools; not for ordinary requests."\n---\n` and contains `Be useful.` |
+| partner-base-prompt-008 | skill-frontmatter, skill-name, skill-description | Test `skillMarkdownHasFrontmatter`: job id `general`, name `General coding partner`, guidelines `Be useful.` | Markdown starts with `---\nname: adkitchen-partner-general\ndescription: "The ADKitchen Coding Partner's guidelines for its General coding partner job. Only for the Coding Partner, which has the partner_* tools; not for ordinary requests."\n---\n` and contains `Be useful.` |
 | partner-base-prompt-009 | system-prompt-no-jobs | `systemPrompt(jobs: [])` | Equals `text` |
 | partner-base-prompt-010 | system-prompt-no-jobs, system-prompt-enabled-only | `systemPrompt(jobs:)` with one disabled job | Equals `text` |
 | partner-base-prompt-011 | system-prompt-job-order | Two enabled jobs `A` then `B` | `## Job: A` appears before `## Job: B` |
@@ -316,6 +316,7 @@ Not applicable: The source calls no logging API.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-11-23 | Mike Fullerton | The prompt and the skill description name ADKitchen (apps suite Phase 5 rename) |
 | 1.1.0 | 2026-11-23 | Mike Fullerton | The tools section says adhd serves the tools under the app's name. |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (PartnerBasePromptTests.swift, 20 of 20 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Linked partner-job and partner-job-defaults in depends-on and related, quoted the exact base text and a full code-review steps section, stated the unchecked skill id, accepted the backtick risk, marked vectors 009 onward untested and removed unsupported consumer claims. |
