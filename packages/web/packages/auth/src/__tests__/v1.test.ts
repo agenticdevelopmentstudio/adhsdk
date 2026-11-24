@@ -235,4 +235,12 @@ describe('listAllPublicV1 and publicJson', () => {
     expect(String(fetchMock.mock.calls[0]?.[0])).toBe('/x')
     expect(authOf(fetchMock.mock.calls[0]?.[1])).toBeNull()
   })
+
+  it('v1-025 publicJson refuses a 204 with a clear error, not a JSON parse failure', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response(null, { status: 204 }))
+    const err = await publicJson('/x').catch((e: unknown) => e)
+    expect(err).toBeInstanceOf(Error)
+    expect(err).not.toBeInstanceOf(AuthHttpError)
+    expect((err as Error).message).toMatch(/^Unexpected empty response \(204 No Content\)/)
+  })
 })

@@ -124,13 +124,15 @@ async function walkV1<T>(
 /**
  * A JSON request that sends no authorization: for a public endpoint, or one whose credential
  * rides in the request itself (an emailed link's token). A body is sent as JSON. Throws
- * `AuthHttpError` on a non-ok response, as the authed helpers do.
+ * `AuthHttpError` on a non-ok response, as the authed helpers do, and a plain `Error` on a 204,
+ * which has no body to parse.
  */
 export async function publicJson<T>(url: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers)
   if (init.body != null && !headers.has('content-type')) headers.set('content-type', 'application/json')
   const res = await fetch(url, { ...init, headers })
   if (!res.ok) throw await responseError(res, `HTTP ${res.status}`)
+  if (res.status === 204) throw new Error('Unexpected empty response (204 No Content); publicJson is for endpoints that return a body')
   return (await res.json()) as T
 }
 

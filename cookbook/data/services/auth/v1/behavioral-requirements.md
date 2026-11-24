@@ -37,7 +37,7 @@
 
 - **public-walk**: `listAllPublicV1<T>(url, init, opts)` MUST walk the collection exactly as `listAllV1` does (every rule above from walk-all-pages to truncation-guard holds for it), reading each page with `publicJson` in place of `authedJson`.
 - **public-no-token**: `publicJson` MUST send no `Authorization` header and MUST NOT read the stored or installed access token, even when someone is signed in. A public path must not depend on who is signed in, and a token the gateway refuses on that path would otherwise refuse the read on every page.
-- **public-json-body**: `publicJson<T>(url, init)` MUST call `fetch(url, init)` with the caller's headers kept, adding `content-type: application/json` only when `init` carries a body and no content type, and MUST return the parsed JSON body.
+- **public-json-body**: `publicJson<T>(url, init)` MUST call `fetch(url, init)` with the caller's headers kept, adding `content-type: application/json` only when `init` carries a body and no content type, and MUST return the parsed JSON body. On a 204 it MUST throw a plain `Error` whose message starts `Unexpected empty response (204 No Content)`, as `authedJson` does, rather than fail inside the JSON parser: it is for endpoints that return a body.
 - **public-no-refresh**: `publicJson` MUST throw the `AuthHttpError` built by `responseError` on a status that is not ok, after that one request; it MUST NOT refresh a token or retry. The walk lets the error propagate unchanged.
 
 ### listV1Page

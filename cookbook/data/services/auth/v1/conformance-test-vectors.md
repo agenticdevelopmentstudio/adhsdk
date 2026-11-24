@@ -27,3 +27,4 @@ Every vector is asserted in `packages/web/packages/auth/src/__tests__/v1.test.ts
 | v1-022 | public-walk, public-no-token | A stored access token; two pages of `/api/v1/feature_flags` (ids a, b, then c), `init` `{ cache: 'no-store' }`; call `listAllPublicV1` | Rows a, b, c; no request carries `Authorization`; each request carries `cache: 'no-store'` |
 | v1-023 | public-json-body, public-no-token | A stored access token; `publicJson('/x', { method: 'POST', body: '{}' })` | One request with `content-type: application/json` and no `Authorization`; resolves to the parsed body |
 | v1-024 | public-no-refresh | A stored access token; `publicJson('/x')` answered 401 | Rejects with `AuthHttpError` status 401 after exactly one request |
+| v1-025 | public-json-body | `publicJson('/x')` answered 204 with no body | Rejects with an `Error` (not an `AuthHttpError`) whose message starts `Unexpected empty response (204 No Content)` |
