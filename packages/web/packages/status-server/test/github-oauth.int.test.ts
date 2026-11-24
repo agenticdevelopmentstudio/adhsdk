@@ -98,7 +98,12 @@ describe('GitHub OAuth', () => {
   it('safeNext accepts only same-origin relative paths', () => {
     expect(safeNext('/device?code=ABCD-2345')).toBe('/device?code=ABCD-2345');
     expect(safeNext('/overview')).toBe('/overview');
-    for (const bad of [undefined, null, '', 'device', 'https://evil.example', '//evil.example', '/\\evil.example', '/a\nb', `/${'a'.repeat(2048)}`]) {
+    // Normalized and percent-encoded: no raw non-ASCII byte reaches the Location header.
+    expect(safeNext('/café')).toBe('/caf%C3%A9');
+    expect(safeNext('/a/../device?code=X')).toBe('/device?code=X');
+    for (const bad of [undefined, null, '', 'device', 'https://evil.example', '//evil.example', '/\\evil.example', '/a\nb', `/${'a'.repeat(2048)}`,
+      // dot segments that collapse to a protocol-relative `//host`
+      '/x/..//evil.example/', '/x/..\\/evil.example/']) {
       expect(safeNext(bad)).toBeNull();
     }
   });
