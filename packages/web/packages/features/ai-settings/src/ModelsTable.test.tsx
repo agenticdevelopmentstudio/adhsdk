@@ -132,7 +132,11 @@ describe("ModelsTable Available column", () => {
     const before = withModels([{ id: "m1", available: true, offered: true }]);
     const after = withModels([{ id: "m1", available: false, offered: true }]);
     list.mockResolvedValue([before]);
-    setModelAvailability.mockResolvedValue(after);
+    // The backend applies the write, so the revalidation's re-read lists the new state too.
+    setModelAvailability.mockImplementation(async () => {
+      list.mockResolvedValue([after]);
+      return after;
+    });
     renderSection();
 
     fireEvent.click(await screen.findByRole("checkbox", { name: "Available: m1" }));
