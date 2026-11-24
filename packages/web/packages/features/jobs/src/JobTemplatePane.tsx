@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactElement } from "react";
+import { useRef, useState, type ReactElement } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { setsApi } from "@adh-sdk/data/sets";
@@ -63,12 +63,23 @@ export function JobTemplatePane({ ecosystemId, templateId }: JobTemplatePaneProp
   return <TemplateEditor key={template.data.updatedAt} ecosystemId={ecosystemId} template={template.data} />;
 }
 
+/** A draft step with the key its editor is rendered under. */
+interface StepRow {
+  key: string;
+  step: JobStep;
+}
+
 function TemplateEditor({ ecosystemId, template: t }: { ecosystemId: string; template: JobTemplate }): ReactElement {
   const qc = useQueryClient();
   const retired = t.status === "retired";
   const [name, setName] = useState(t.name);
   const [description, setDescription] = useState(t.description);
-  const [steps, setSteps] = useState<JobStep[]>(t.draft?.steps ?? []);
+  // Each step editor is keyed by a key made here, never by its index, so moving or removing a
+  // step keeps every editor's own state (its JSON text) with the step it belongs to.
+  const nextKey = useRef(0);
+  const keyed = (step: JobStep): StepRow => ({ key: `step-${nextKey.current++}`, step });
+  const [rows, setRows] = useState<StepRow[]>(() => (t.draft?.steps ?? []).map(keyed));
+  const steps = rows.map((r) => r.step);
   const [inputs, setInputs] = useState<JobInputSpec[]>(t.draft?.inputs ?? []);
   const [published, setPublished] = useState<number | null>(null);
   const [confirmRetire, setConfirmRetire] = useState(false);
@@ -107,7 +118,7 @@ function TemplateEditor({ ecosystemId, template: t }: { ecosystemId: string; tem
   const busy = save.isPending || publish.isPending;
 
   const moveStep = (i: number, delta: -1 | 1) =>
-    setSteps((s) => {
+    setRows((s) => {
       const next = [...s];
       const [moved] = next.splice(i, 1);
       if (moved) next.splice(i + delta, 0, moved);
@@ -166,22 +177,22 @@ function TemplateEditor({ ecosystemId, template: t }: { ecosystemId: string; tem
         <h3 className="text-sm font-medium text-apt-text">Steps</h3>
         {steps.length === 0 ? <p className="text-sm text-apt-text-muted">No steps yet.</p> : null}
         <ol className="flex flex-col gap-2">
-          {steps.map((s, i) => (
+          {rows.map(({ key, step: s }, i) => (
             <JobStepEditor
-              key={i}
+              key={key}
               step={s}
               index={i}
               count={steps.length}
               problems={stepProblems.get(i)}
               disabled={retired}
-              onChange={(next) => setSteps((all) => all.map((x, j) => (j === i ? next : x)))}
+              onChange={(next) => setRows((all) => all.map((x, j) => (j === i ? { ...x, step: next } : x)))}
               onMove={(d) => moveStep(i, d)}
-              onRemove={() => setSteps((all) => all.filter((_, j) => j !== i))}
+              onRemove={() => setRows((all) => all.filter((_, j) => j !== i))}
             />
           ))}
         </ol>
         {retired ? null : (
-          <AddStepPicker taken={steps.map((s) => s.id)} onAdd={(s) => setSteps((all) => [...all, s])} />
+          <AddStepPicker taken={steps.map((s) => s.id)} onAdd={(s) => setRows((all) => [...all, keyed(s)])} />
         )}
       </section>
 
