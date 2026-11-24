@@ -653,6 +653,29 @@ final class PipelineDrainerTests: XCTestCase {
         }
     }
 
+    /// An outage met after the sink took some records one by one keeps what it took:
+    /// those complete, and the rest stay pending without being charged.
+    func testAnOutageMidIsolationCompletesWhatTheSinkTookAndChargesNothing() throws {
+        let rig = try makeRig()
+        try rig.spool.append([record("k0"), record("k1"), record("k2")])
+        struct Refused: Error {}
+        let sink = ClosureSink { _, records in
+            if records.count > 1 { throw Refused() }
+            if records.first?.record.dedupKey == "k0" { return }
+            throw DaemonDatabase.mapDBError(DatabaseError(resultCode: .SQLITE_BUSY))
+        }
+        let reached = LockedBox<[String]>([])
+        let after = ClosureSink { _, records in reached.update { $0 += records.map(\.record.dedupKey) } }
+        let outcome = try drainer(rig, sinks: [sink, after]).drainOnce()
+        XCTAssertFalse(outcome.failed, outcome.failureReason ?? "")
+        XCTAssertEqual(outcome.completed, 1)
+        XCTAssertEqual(outcome.quarantined, 0)
+        XCTAssertEqual(reached.value, ["k0"])
+        let pending = try rig.spool.pendingBatch(limit: 10)
+        XCTAssertEqual(pending.map(\.record.dedupKey), ["k1", "k2"])
+        XCTAssertEqual(pending.map(\.attempts), [0, 0])
+    }
+
     /// A record once refused for itself, then caught in a sink outage, is quarantined
     /// under the outage reason, so the heal sends it through again.
     func testARecordReasonDoesNotStickThroughASinkOutage() throws {

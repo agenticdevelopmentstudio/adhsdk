@@ -490,6 +490,9 @@ public final class PipelineDrainer: @unchecked Sendable {
                     }
                     throw StepFailure(description: lone ? refusal : reason)
                 }
+                // Only what this sink took goes on to the later sinks and is
+                // completed; after an outage mid-isolation, the rest stays pending,
+                // uncharged, and the next pass meets the outage (or its end) again.
                 normalizedSpooled = kept.map(\.spooled)
                 normalizedRecords = kept.map(\.archived)
                 normalizedBatches = kept.map(\.batch)
@@ -558,8 +561,11 @@ public final class PipelineDrainer: @unchecked Sendable {
     /// returns the ones it took. When it took some, each record it still refuses is
     /// charged under ``recordSinkFailurePrefix``. When it took none, nothing is
     /// charged here and the caller charges the batch as a sink failure. An outage met
-    /// on the way (``isStoreOutage(_:)``) returns nothing and that outage, so the
-    /// caller charges the batch as an outage, never under a record's own reason.
+    /// on the way (``isStoreOutage(_:)``) stops the loop and is returned with the
+    /// records the sink took before it, which the pass completes; the rest (those
+    /// refused before the outage and those not yet tried) are left pending,
+    /// uncharged, for the next pass. When it took none, the caller charges the batch
+    /// as an outage, never under a record's own reason.
     private func isolateSinkFailure(
         _ sink: any PipelineSink, _ items: [(SpooledRecord, (ArchivedRecord, NormalizedBatch))],
         _ outcome: inout DrainOutcome
@@ -571,7 +577,7 @@ public final class PipelineDrainer: @unchecked Sendable {
                 try sink.write(batch, records: [archived], provider: normalizer.provider)
                 kept.append((item, archived, batch))
             } catch where Self.isStoreOutage(error) {
-                return SinkIsolation(kept: [], outage: error)
+                return SinkIsolation(kept: kept, outage: error)
             } catch {
                 refused.append((item, error))
             }
