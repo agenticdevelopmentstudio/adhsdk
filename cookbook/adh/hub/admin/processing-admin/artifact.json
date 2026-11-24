@@ -4,7 +4,7 @@
     "id": "d3ba2e4e-bfce-4876-a05b-4ad7db88b34d",
     "title": "Processing Admin",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "draft",
     "language": "en",
     "created": "2026-11-23",
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "072d761f006e12dc",
+  "synced": "ce8ed879dc3232d3",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

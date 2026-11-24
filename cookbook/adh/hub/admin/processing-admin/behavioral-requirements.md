@@ -6,8 +6,9 @@
 - **worker-token-pool-checkbox**: The create dialog MUST offer a "Pool" checkbox, unchecked by default,
   whose description says that a pool token can claim AI steps of jobs from every product. The create
   MUST send `{ name, pool }`, with `pool` true only when the box is checked.
-- **worker-token-scope-shown**: The tokens list MUST show whether each token is a pool token, read from
-  the token's scopes (`ai-processing:pool`).
+- **worker-token-scope-shown**: The tokens list MUST show whether each token is a pool token ("Pool" or
+  "Worker"), read from the token's `pool` boolean, which the backend sets when the token carries
+  `ai-processing:pool`.
 - **worker-token-reveal-once**: The created token MUST be shown once in a read-only field with a copy
   button, and closing the reveal MUST ask "Close without copying?" first.
 - **worker-token-revoke-confirm**: Revoke MUST ask for confirmation and MUST say that every node using the

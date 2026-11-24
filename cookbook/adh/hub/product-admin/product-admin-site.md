@@ -37,7 +37,7 @@ The pieces:
 - `@adh-sdk/ecosystem-config`: `AdminSitePane` (the manager's page: the site's host, and the product's admins) and `ProductTotalsPane` (the eight figures, shown on the site's Totals page).
 - `@adh-sdk/adh-products` (`topics.ts`, `ProductsFeature.tsx`): the Admin site topic row and `visibleProductTopics`, which hides the hub's people pages once a site carries them.
 - `@adh-sdk/ecosystems`: the requests, pending and invites panes take `hideAdminRecords`.
-- `@adh-sdk/jobs` ([adhsdk.ingredient.adh.hub.jobs](cookbook:0bcb370d-a44f-48a8-a313-0266c2f86e51), phase 9, not yet written): `JobStatusPane` and `JobTemplatesPane`, shown on the site's Jobs pages.
+- `@adh-sdk/jobs` ([adhsdk.ingredient.adh.hub.jobs](cookbook:0bcb370d-a44f-48a8-a313-0266c2f86e51), phase 9): `JobStatusPane` and `JobTemplatesPane`, shown on the site's Jobs pages.
 - `@adh-sdk/site-registry`: the `product-admin` site and the `admin-site` hub segment (see the site registry recipe).
 
 ## Behavioral Requirements
@@ -183,7 +183,7 @@ Not applicable: no file contains a log call.
 
 - **SwiftUI**: A table with a cursor stack for paging and a confirmation dialog for each write; the topic list is a static array.
 - **Compose**: A lazy list, a cursor stack in the view model and an alert dialog per write.
-- **React/Web**: The source platform. `packages/web/packages/features/product-admin/src/` holds `ProductUsersPane.tsx` and `topics.ts`; `packages/web/packages/features/ecosystem-config/src/` holds `AdminSitePane.tsx` and `ProductTotalsPane.tsx`; `packages/web/packages/features/adh-products/src/topics.ts` and `ProductsFeature.tsx` hold the Admin site row and `visibleProductTopics`. The `/jobs` and `/jobs/templates` pages mount `JobStatusPane` and `JobTemplatesPane` from `packages/web/packages/features/jobs/` (phase 9, not yet written). The package's `sideEffects` and `exports` publish the `./topics` entry beside the barrel.
+- **React/Web**: The source platform. `packages/web/packages/features/product-admin/src/` holds `ProductUsersPane.tsx` and `product-admin-topics.ts`; `packages/web/packages/features/ecosystem-config/src/` holds `AdminSitePane.tsx` and `ProductTotalsPane.tsx`; `packages/web/packages/features/adh-products/src/topics.ts` and `ProductsFeature.tsx` hold the Admin site row and `visibleProductTopics`. The `/jobs` and `/jobs/templates` pages mount `JobStatusPane` and `JobTemplatesPane` from `packages/web/packages/features/jobs/` (phase 9). The page routes themselves live in the hub website. The package's `sideEffects` and `exports` publish the `./topics` entry beside the barrel.
 - **AppKit / UIKit**: As SwiftUI, with a table view and an alert per write.
 - **WinUI 3**: A data grid and a content dialog per write.
 
@@ -191,11 +191,11 @@ Not applicable: no file contains a log call.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/features/product-admin/src/` | confirmed (2.0.0) |
-| web | `packages/web/packages/features/ecosystem-config/src/AdminSitePane.tsx` | confirmed (2.0.0) |
-| web | `packages/web/packages/features/ecosystem-config/src/ProductTotalsPane.tsx` | confirmed (2.0.0) |
-| web | `packages/web/packages/features/adh-products/src/topics.ts` | confirmed (2.0.0) |
-| web | `packages/web/packages/features/ecosystems/src/EcosystemInvitationPanes.tsx` | confirmed (2.0.0) |
+| web | `packages/web/packages/features/product-admin/src/` | confirmed (2.1.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/AdminSitePane.tsx` | confirmed (2.1.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/ProductTotalsPane.tsx` | confirmed (2.1.0) |
+| web | `packages/web/packages/features/adh-products/src/topics.ts` | confirmed (2.1.0) |
+| web | `packages/web/packages/features/ecosystems/src/EcosystemInvitationPanes.tsx` | confirmed (2.1.0) |
 
 ## Design Decisions
 

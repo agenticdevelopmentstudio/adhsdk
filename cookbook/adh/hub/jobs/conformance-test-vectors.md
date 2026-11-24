@@ -1,6 +1,6 @@
 
 These vectors come from the phase 9 design and are the tests the package's `__tests__/` and the data
-client's `jobs/__tests__/` MUST carry. The data client and its tests are written; the package is not yet.
+client's `jobs/__tests__/` MUST carry. The data client, the package and their tests are written.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

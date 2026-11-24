@@ -734,7 +734,7 @@ an empty result, or the input path unchanged) with no side channel.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/adh-registry/src/sites/` | confirmed (1.5.0) |
+| web | `packages/web/packages/adh-registry/src/sites/` | confirmed (1.6.0) |
 
 ## Design Decisions
 

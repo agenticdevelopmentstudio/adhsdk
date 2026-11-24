@@ -1039,16 +1039,29 @@
       "implementations": [
         {
           "conformance": {
-            "state": "planned"
+            "hash": "sha256:87aced3a73e3a434a09b892681b3646788aba9aaeb9de17c3d6309d60f23bab8",
+            "state": "confirmed",
+            "version": "1.2.0"
+          },
+          "location": "packages/web/packages/data/src/jobs/",
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:2a532dbf4f56d0ee93c9e670f7c7ceda5d5f1fe2128a6d803430913d70e78556",
+            "state": "confirmed",
+            "version": "1.2.0"
           },
           "location": "packages/web/packages/features/jobs/",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:64b91e5cdb8ff54ecdeec4bbfc9863b230c76ac8ca53b04e883ba4c25d33a5b3",
+            "state": "confirmed",
+            "version": "1.2.0"
           },
-          "location": "packages/web/packages/data/src/jobs/",
+          "location": "packages/web/packages/ui/src/blocks/once-shown-secret-dialog.tsx",
           "platform": "web"
         }
       ],
@@ -4268,9 +4281,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:1bb5ce3ad56fdc55c96f8a000a4e8150f04d6ffddc03bbd9d69648636cc2608c",
+            "hash": "sha256:97c79661ad8ef04b5c89f71835c4ee99951d108abaccf68e017fe59d8f5b116c",
             "state": "confirmed",
-            "version": "2.0.0"
+            "version": "2.1.0"
           },
           "location": "packages/web/packages/features/product-admin/src/",
           "platform": "web"
@@ -4279,7 +4292,7 @@
           "conformance": {
             "hash": "sha256:c84dd07d5be51a859a69bfe053e9007a12bcbaf72b509aaadc666307d35cbaed",
             "state": "confirmed",
-            "version": "2.0.0"
+            "version": "2.1.0"
           },
           "location": "packages/web/packages/features/ecosystem-config/src/AdminSitePane.tsx",
           "platform": "web"
@@ -4288,7 +4301,7 @@
           "conformance": {
             "hash": "sha256:ecf6e02f258a6adabcb49559f6af9874a98cffec4ab08fdcf948f3d857db6eb0",
             "state": "confirmed",
-            "version": "2.0.0"
+            "version": "2.1.0"
           },
           "location": "packages/web/packages/features/ecosystem-config/src/ProductTotalsPane.tsx",
           "platform": "web"
@@ -4297,7 +4310,7 @@
           "conformance": {
             "hash": "sha256:1f4aa53c1a46a707d3167468c8eedc9bf72c9641dd3c4fd40a0c563cd00e413e",
             "state": "confirmed",
-            "version": "2.0.0"
+            "version": "2.1.0"
           },
           "location": "packages/web/packages/features/adh-products/src/topics.ts",
           "platform": "web"
@@ -4306,7 +4319,7 @@
           "conformance": {
             "hash": "sha256:5fc22bd97221bfc083e8e00d7dafa9cca64679a184bd27d2f9335fa449e1774b",
             "state": "confirmed",
-            "version": "2.0.0"
+            "version": "2.1.0"
           },
           "location": "packages/web/packages/features/ecosystems/src/EcosystemInvitationPanes.tsx",
           "platform": "web"
@@ -13532,9 +13545,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:439b1107b9c749349686974fa1badb0911e1495381508736889164c58ee36311",
+            "hash": "sha256:3dd67b47133836ab0dbf6e83e647b4b02042d4adbda48772b2aa04f7a16c6f09",
             "state": "confirmed",
-            "version": "1.5.0"
+            "version": "1.6.0"
           },
           "location": "packages/web/packages/adh-registry/src/sites/",
           "platform": "web"
@@ -19639,21 +19652,36 @@
       "implementations": [
         {
           "conformance": {
-            "state": "planned"
+            "hash": "sha256:4b7901bb72fb2e2d3a2e2d04639fc027f7b06f3212d56316aa2f9fcf02076a40",
+            "state": "confirmed",
+            "version": "1.0.1"
           },
           "location": "packages/web/packages/features/adh-admin/src/processing/WorkerTokens.tsx",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "planned"
+            "hash": "sha256:ac4eda99e114bd307937c419dc53152b2d27dbf176f479be053a2c88bf419564",
+            "state": "confirmed",
+            "version": "1.0.1"
+          },
+          "location": "packages/web/packages/features/adh-admin/src/processing/DeadJobs.tsx",
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:21d5881e7ed91e2420f1630732a658b561e62bc5886170a3870b6d3e2325780a",
+            "state": "confirmed",
+            "version": "1.0.1"
           },
           "location": "packages/web/packages/features/adh-admin/src/panes/AiNodesPane.tsx",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "planned"
+            "hash": "sha256:d09fb2fa6f6cb1ab3a4a105287f212e8ea03c8ef1d72bcb7d904fb4b9ae9483c",
+            "state": "confirmed",
+            "version": "1.0.1"
           },
           "location": "packages/web/packages/features/adh-admin/src/api/processing.ts",
           "platform": "web"
@@ -22557,7 +22585,7 @@
           "conformance": {
             "hash": "sha256:8102c7a9dd585a3626e83c916b2bdbc8af5b19c83516070306e1c246f1bc3b43",
             "state": "confirmed",
-            "version": "1.2.0"
+            "version": "1.3.0"
           },
           "location": "packages/web/packages/adh/src/header/SiteMenu.tsx",
           "platform": "web"
@@ -22566,7 +22594,7 @@
           "conformance": {
             "hash": "sha256:a312baa1a3549e70363ca2df99b70a026b7dc5adf137f02505db83eef540b901",
             "state": "confirmed",
-            "version": "1.2.0"
+            "version": "1.3.0"
           },
           "location": "packages/web/packages/adh/src/header/SiteMenuSwitcher.tsx",
           "platform": "web"
@@ -22575,7 +22603,7 @@
           "conformance": {
             "hash": "sha256:96ada3f62ca738c7e61394be1f0ef7753a213141807286085104f12bd9c483ea",
             "state": "confirmed",
-            "version": "1.2.0"
+            "version": "1.3.0"
           },
           "location": "packages/web/packages/adh/src/header/MarketingSiteMenu.tsx",
           "platform": "web"
@@ -22584,16 +22612,16 @@
           "conformance": {
             "hash": "sha256:727ecc7baa281ffe969f32ec2603fdb948196b439e4a0f0914f4c3572f12a71c",
             "state": "confirmed",
-            "version": "1.2.0"
+            "version": "1.3.0"
           },
           "location": "packages/web/packages/adh/src/header/WorkspaceSiteMenu.tsx",
           "platform": "web"
         },
         {
           "conformance": {
-            "hash": "sha256:119e9ac778ea6107a4ef63d0d5d3a3edbbd61f5f240c2a4aec599f0331bb3d0c",
+            "hash": "sha256:9da061d7e46dd33225337f1a591b2572e844124ec2e5c6019f3db022e2eb0049",
             "state": "confirmed",
-            "version": "1.2.0"
+            "version": "1.3.0"
           },
           "location": "packages/web/packages/adh/src/header/menu-icons.ts",
           "platform": "web"
@@ -22602,7 +22630,7 @@
           "conformance": {
             "hash": "sha256:7cbe29bc4078eacdf2477f366bea4972100db562265bfdcb0451bb5a677cec0a",
             "state": "confirmed",
-            "version": "1.2.0"
+            "version": "1.3.0"
           },
           "location": "packages/web/packages/adh/src/header/recents.ts",
           "platform": "web"

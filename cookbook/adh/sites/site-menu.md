@@ -309,12 +309,12 @@ Tests live in `packages/web/packages/adh/src/header/__tests__/`. A vector with n
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/adh/src/header/SiteMenu.tsx` | confirmed (1.2.0) |
-| web | `packages/web/packages/adh/src/header/SiteMenuSwitcher.tsx` | confirmed (1.2.0) |
-| web | `packages/web/packages/adh/src/header/MarketingSiteMenu.tsx` | confirmed (1.2.0) |
-| web | `packages/web/packages/adh/src/header/WorkspaceSiteMenu.tsx` | confirmed (1.2.0) |
-| web | `packages/web/packages/adh/src/header/menu-icons.ts` | confirmed (1.2.0) |
-| web | `packages/web/packages/adh/src/header/recents.ts` | confirmed (1.2.0) |
+| web | `packages/web/packages/adh/src/header/SiteMenu.tsx` | confirmed (1.3.0) |
+| web | `packages/web/packages/adh/src/header/SiteMenuSwitcher.tsx` | confirmed (1.3.0) |
+| web | `packages/web/packages/adh/src/header/MarketingSiteMenu.tsx` | confirmed (1.3.0) |
+| web | `packages/web/packages/adh/src/header/WorkspaceSiteMenu.tsx` | confirmed (1.3.0) |
+| web | `packages/web/packages/adh/src/header/menu-icons.ts` | confirmed (1.3.0) |
+| web | `packages/web/packages/adh/src/header/recents.ts` | confirmed (1.3.0) |
 
 ## Design Decisions
 
