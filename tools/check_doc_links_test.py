@@ -199,6 +199,28 @@ with tempfile.TemporaryDirectory() as tmp:
     check("a live citation of a missing archived doc fails", bad.returncode, 1)
     check("names the archived target", "docs/archive/plans/moved.md" in bad.stderr, True)
 
+    # (15b) A cookr version snapshot is a record too: its own dangling citations are
+    #       skipped, the live spec beside it is still checked, and a `versions/`
+    #       directory without a semver segment, or outside cookbook/, is not exempt.
+    root = Path(tmp) / "snapshot"
+    snap = root / "cookbook" / "g" / "spec" / "versions" / "1.2.0"
+    snap.mkdir(parents=True)
+    (snap / "design.md").write_text("see docs/planning/gone.md\n")
+    (root / "cookbook" / "g" / "spec" / "design.md").write_text("no citation\n")
+    check("a version snapshot's own citations are skipped", run(root).returncode, 0)
+    (root / "cookbook" / "g" / "spec" / "design.md").write_text("see docs/planning/gone.md\n")
+    check("the live spec beside a snapshot is still checked", run(root).returncode, 1)
+    (root / "cookbook" / "g" / "spec" / "design.md").write_text("no citation\n")
+    notes = root / "cookbook" / "g" / "spec" / "versions" / "notes"
+    notes.mkdir()
+    (notes / "n.md").write_text("see docs/planning/gone.md\n")
+    check("a versions/ dir with no semver segment is checked", run(root).returncode, 1)
+    (notes / "n.md").unlink()
+    other = root / "docs" / "versions" / "1.0.0"
+    other.mkdir(parents=True)
+    (other / "n.md").write_text("see docs/planning/gone.md\n")
+    check("a versions/<semver>/ outside cookbook/ is checked", run(root).returncode, 1)
+
     # (16) A glob or placeholder INSIDE the filename segment names no single file
     #      either. The path pattern stops at `*` and `<`, so `pre_*_test.py` reaches
     #      the check as the half-name `packages/x/pre_`, which is not a coordinate.
