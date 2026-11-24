@@ -478,7 +478,46 @@ export function AddStepPicker({
   );
 }
 
-const INPUT_TYPES: readonly JobInputType[] = ["text", "number", "boolean", "connection", "endpoint", "choice"];
+const parseChoices = (text: string): string[] =>
+  text
+    .split(",")
+    .map((c) => c.trim())
+    .filter(Boolean);
+
+/**
+ * A choice input's values, typed as comma-separated text. The text the author types is kept as
+ * typed (a trailing comma included) and parsed into the list on every change; it is replaced from
+ * `choices` only when the list changes from outside this field.
+ */
+function ChoicesField({
+  choices,
+  disabled,
+  onChange,
+}: {
+  choices: readonly string[];
+  disabled?: boolean;
+  onChange: (choices: string[]) => void;
+}): ReactElement {
+  const [text, setText] = useState(() => choices.join(", "));
+  const parsed = parseChoices(text);
+  const outside = parsed.length !== choices.length || parsed.some((c, k) => c !== choices[k]);
+  const shown = outside ? choices.join(", ") : text;
+  return (
+    <Field label="Choices" hint="Comma separated.">
+      <Input
+        aria-label="Input choices"
+        value={shown}
+        disabled={disabled}
+        onChange={(e) => {
+          setText(e.target.value);
+          onChange(parseChoices(e.target.value));
+        }}
+      />
+    </Field>
+  );
+}
+
+const INPUT_TYPES: readonly JobInputType[] =["text", "number", "boolean", "connection", "endpoint", "choice"];
 
 /** The inputs a template declares: key, label, type, required, and a choice input's values. */
 export function JobInputSpecsEditor({
@@ -532,21 +571,11 @@ export function JobInputSpecsEditor({
             </Select>
           </Field>
           {s.type === "choice" ? (
-            <Field label="Choices" hint="Comma separated.">
-              <Input
-                aria-label="Input choices"
-                value={(s.choices ?? []).join(", ")}
-                disabled={disabled}
-                onChange={(e) =>
-                  set(i, {
-                    choices: e.target.value
-                      .split(",")
-                      .map((c) => c.trim())
-                      .filter(Boolean),
-                  })
-                }
-              />
-            </Field>
+            <ChoicesField
+              choices={s.choices ?? []}
+              disabled={disabled}
+              onChange={(choices) => set(i, { choices })}
+            />
           ) : null}
           <label className="flex items-center gap-2 pb-2 text-sm text-apt-text">
             <Checkbox
