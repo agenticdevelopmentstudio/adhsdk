@@ -22,7 +22,7 @@ export type SiteId =
   | 'hub-sdk'
   | 'myagenticteams'
   // myagenticdevteam: myagenticdevteam.com, the consumer "your own agentic development team"
-  // brand, built from its own repo (myagenticdevteamwebsite). A coming-soon placeholder today.
+  // brand. A coming-soon placeholder today.
   | 'myagenticdevteam'
   | 'mcp'
   | 'status'
