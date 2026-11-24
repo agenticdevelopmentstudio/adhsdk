@@ -4,7 +4,7 @@ title: "Product Admin Site"
 type: ingredient
 status: review
 language: en
-summary: "The product admin site's feature layer: the users pane, the page list, the manager's Admin site page, the totals pane and the rule for which hub pages move to the site."
+summary: "The product admin site's feature layer: the users pane, the page list, the manager's Admin site page, the totals pane, the Support and Jobs pages, and the rule for which hub pages move to the site."
 platforms:
   - typescript
   - web
@@ -37,6 +37,7 @@ The pieces:
 - `@adh-sdk/ecosystem-config`: `AdminSitePane` (the manager's page: the site's host, and the product's admins) and `ProductTotalsPane` (the eight figures, shown on the site's Totals page).
 - `@adh-sdk/adh-products` (`topics.ts`, `ProductsFeature.tsx`): the Admin site topic row and `visibleProductTopics`, which hides the hub's people pages once a site carries them.
 - `@adh-sdk/ecosystems`: the requests, pending and invites panes take `hideAdminRecords`.
+- `@adh-sdk/jobs` ([adhsdk.ingredient.adh.hub.jobs](cookbook:0bcb370d-a44f-48a8-a313-0266c2f86e51), phase 9, not yet written): `JobStatusPane` and `JobTemplatesPane`, shown on the site's Jobs pages.
 - `@adh-sdk/site-registry`: the `product-admin` site and the `admin-site` hub segment (see the site registry recipe).
 
 ## Behavioral Requirements
@@ -89,6 +90,8 @@ The users pane is a searchable table with a Previous and Next pager; each row ha
 - **Totals**: loading, loaded and failed.
 
 The Support page has four states: loading, loaded (grants listed), failed (the backend's message), and not available (the grants read answered 404 because consented access is off). A step-up refusal is not a state of the page: it leaves the page through the sign-in redirect and returns to `/support`.
+
+The Jobs pages (phase 9) take their states from `JobStatusPane` and `JobTemplatesPane`: loading, loaded, empty (no runs, or no templates), failed (the backend's message), and not available (a 404 while the `jobs_feature` switch is off).
 ## Accessibility
 
 Not applicable beyond the shared UI kit: the panes use its table, form, dialog and stat card components and add no focus handling of their own.
@@ -111,13 +114,13 @@ Vectors marked with a test name are asserted in `features/product-admin/src/__te
 | product-admin-site-010 | totals-pane | A product with totals; then loading and failed (tests: "shows each figure, read for the product it is given", "says it is loading, and says when it could not load") | The eight figures; the loading and failed notes |
 | product-admin-site-011 | visible-topics | The four switch and site combinations (tests: "switch off, no site: every pane but the Admin site row", "switch off, a site: still every pane but the Admin site row", "switch on, no site yet: every pane, and the Admin site row to set one up", "switch on and a site: the people rows leave for the site, the Admin site row stays") | As the requirement states; Users stays, narrowed |
 | product-admin-site-012 | admin-site-topic | The product topic list | An `admin-site` row for the `users` feature |
+| product-admin-site-013 | hide-admin-records | Each of the three panes given `hideAdminRecords`, then not (tests: "mounts the notes editor and offers Admin notes by default", "mounts no notes editor and offers no Admin notes when set") | Set: no notes editor, no history, no Admin notes; unset: all three |
 | product-admin-site-014 | users-search-paging | Page two's last person deleted (test: "steps back a page when a later page comes back empty, and never says there are no users") | The first page is read again; no "No users yet." |
 | product-admin-site-015 | admin-site-pane | Remove, then cancel (tests: "removes a site only after the confirmation", "sends nothing when the removal is cancelled") | The removal is sent only once confirmed; none when cancelled |
 | product-admin-site-016 | admin-site-admins | An address already listed with a set (test: "keeps the set of an address already on the sign-up list, and changes only its role") | The entry is put with the admin role and its own set |
 | product-admin-site-017 | visible-topics | The site not known yet, with and without the URL naming Admin site; then a known switch-off naming it (tests: "not known yet: every pane, and no Admin site row unless the URL names it", "a known switch-off drops the Admin site row even when the URL names it") | As the requirement states |
 | product-admin-site-018 | visible-topics | Switch on and a site (test: "switch on and a site: Users keeps Email Signup and Authentication, and nothing else") | The Users row carries members `email-signup` and `auth` |
 | product-admin-site-019 | run-at-admin-site | Each moved topic and four others, with each switch and site state (test: "runAtAdminSite: the moved topics, only with the switch on and a site") | True for the moved topics with the switch on and a site; false otherwise |
-| product-admin-site-013 | hide-admin-records | Each of the three panes given `hideAdminRecords`, then not (tests: "mounts the notes editor and offers Admin notes by default", "mounts no notes editor and offers no Admin notes when set") | Set: no notes editor, no history, no Admin notes; unset: all three |
 | product-admin-site-020 | support-page, support-step-up | The Support page for a product; a request refused as `step_up_required`, then a revoke refused the same way (test, for the request: "sends a step_up_required refusal through stepUp('/support')"; the revoke follows from the source) | `SupportGrantsPane` renders for the product; each refusal calls `stepUp('/support')`, which returns to `/support`, and no error is shown |
 | product-admin-site-021 | totals-pane | Totals carrying `jobsByStatus` of `{ failed: 2, done: 9 }`, then an empty map | A "Jobs" total of 11, then "Jobs done" 9 and "Jobs failed" 2; then "Jobs" 0 and no status count |
 | product-admin-site-022 | support-switch-off | The grants read answered 404 (test: "says support access is off when the grants read answers 404") | A note that support access is not available, no error and no request form |
@@ -133,6 +136,8 @@ Vectors marked with a test name are asserted in `features/product-admin/src/__te
 - **A cancelled confirmation (MUST NOT)**: nothing is sent.
 - **Quota above the default (MUST NOT send)**: refused before any request.
 - **A step-up refusal (MUST)**: a request or a revoke refused as `step_up_required` is handled as [support-step-up](#requirements/support-step-up) says.
+- **A product with no runs (MUST)**: `/jobs` says there are no runs yet, and is not an error.
+- **Jobs off (MUST)**: a 404 from a `/jobs` read while the `jobs_feature` switch is off says Jobs is not available, as the Jobs ingredient's switch-off-404 says.
 - **Support access off (MUST)**: a 404 on the grants read is handled as [support-switch-off](#requirements/support-switch-off) says.
 ## Configuration
 
@@ -145,7 +150,7 @@ Vectors marked with a test name are asserted in `features/product-admin/src/__te
 
 ## Deep Linking
 
-The pages are `/users`, `/requests`, `/pending`, `/invites`, `/roles`, `/signup-list`, `/sets`, `/totals` and `/support` on the admin site's own host. On the hub the page is the product's `admin-site` topic, under the `admin-site` hub segment.
+The pages are `/users`, `/requests`, `/pending`, `/invites`, `/roles`, `/signup-list`, `/sets`, `/jobs` (with `/jobs/templates` beneath it), `/totals` and `/support` on the admin site's own host. On the hub the page is the product's `admin-site` topic, under the `admin-site` hub segment.
 
 ## Localization
 
@@ -168,6 +173,8 @@ Not applicable: the panes emit no event.
 
 The users pane shows customers' emails, names, roles and storage to the product's own admins only. The roster is existence, not content. Who may read it is the backend's decision, made per request.
 - **Consented support access**: the Support page lets a product admin, once a customer approves, read that customer's content in a read-only viewer. The customer grants it, for a length they were told, every read is logged, and the backend requires a second factor from a recent sign-in for each request and opening.
+- **Jobs status only**: the `/jobs` page shows a product's run status, never a run's inputs, outputs or logs ([jobs-status-no-content](#requirements/jobs-status-no-content)); reading those needs a support grant.
+
 ## Logging
 
 Not applicable: no file contains a log call.
@@ -176,7 +183,7 @@ Not applicable: no file contains a log call.
 
 - **SwiftUI**: A table with a cursor stack for paging and a confirmation dialog for each write; the topic list is a static array.
 - **Compose**: A lazy list, a cursor stack in the view model and an alert dialog per write.
-- **React/Web**: The source platform. `packages/web/packages/features/product-admin/src/` holds `ProductUsersPane.tsx` and `topics.ts`; `packages/web/packages/features/ecosystem-config/src/` holds `AdminSitePane.tsx` and `ProductTotalsPane.tsx`; `packages/web/packages/features/adh-products/src/topics.ts` and `ProductsFeature.tsx` hold the Admin site row and `visibleProductTopics`. The package's `sideEffects` and `exports` publish the `./topics` entry beside the barrel.
+- **React/Web**: The source platform. `packages/web/packages/features/product-admin/src/` holds `ProductUsersPane.tsx` and `topics.ts`; `packages/web/packages/features/ecosystem-config/src/` holds `AdminSitePane.tsx` and `ProductTotalsPane.tsx`; `packages/web/packages/features/adh-products/src/topics.ts` and `ProductsFeature.tsx` hold the Admin site row and `visibleProductTopics`. The `/jobs` and `/jobs/templates` pages mount `JobStatusPane` and `JobTemplatesPane` from `packages/web/packages/features/jobs/` (phase 9, not yet written). The package's `sideEffects` and `exports` publish the `./topics` entry beside the barrel.
 - **AppKit / UIKit**: As SwiftUI, with a table view and an alert per write.
 - **WinUI 3**: A data grid and a content dialog per write.
 

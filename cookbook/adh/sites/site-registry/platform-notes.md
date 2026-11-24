@@ -15,7 +15,7 @@
   pattern. The local-sites setting would come from `System.getenv`.
 - **React/Web**: This is the source. The implementation lives under
   `packages/web/packages/adh-registry/src/sites/`: `registry.ts`, `reserved-slugs.ts`,
-  `legal.ts`, `fleets.ts`, `story.ts`, the thirteen `routes.*.generated.ts` shares, and
+  `legal.ts`, `fleets.ts`, `story.ts`, the `routes.*.generated.ts` shares, and
   the hand-written `routes.generated.ts`, which declares `SITE_ROUTE_SHARES` and merges its values with
   `Object.assign` into `SITE_ROUTES`. `registry.ts` declares the `SiteId` union and
   the `SiteDef` shape (including the `nativeApp`, `featured`, `listed`, and

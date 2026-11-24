@@ -21,9 +21,7 @@
       "hub",
       "admin",
       "processing",
-      "jobs",
-      "component",
-      "ui"
+      "jobs"
     ],
     "depends-on": [],
     "related": [
@@ -33,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "2e75f2a93be2fa0f",
+  "synced": "072d761f006e12dc",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

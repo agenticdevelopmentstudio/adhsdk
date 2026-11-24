@@ -146,5 +146,5 @@
 
 ### Registration outside the package
 
-- **jobs-reserved-handle-word**: `RESERVED_HANDLE_WORDS` in `@adh-sdk/adh` (`site/reservedSlugs.ts`) MUST contain `jobs`, in its alphabetical place, so no workspace is ever given the handle the hub serves as a feature segment. The registry side (the `jobs` hub segment, the route lines and the universal reserved slug) is specified by [adhsdk.ingredient.adh.sites.site-registry](cookbook:9069ccf9-0357-4311-9671-91ee2793adae), and the `/jobs` menu icon by [adhsdk.recipe.adh.sites.site-menu](cookbook:f2d56415-ac36-4a27-bee5-b447c4186513).
+- **jobs-reserved-handle-word**: `RESERVED_HANDLE_WORDS` in `@adh-sdk/adh` (`site/reservedSlugs.ts`) MUST contain `jobs`, in its alphabetical place (it is read through `reservedWorkspaceSlugs()`, the package's one accessor for that constant), so no workspace is ever given the handle the hub serves as a feature segment. The registry side (the `jobs` hub segment, the route lines and the universal reserved slug) is specified by [adhsdk.ingredient.adh.sites.site-registry](cookbook:9069ccf9-0357-4311-9671-91ee2793adae), and the `/jobs` menu icon by [adhsdk.recipe.adh.sites.site-menu](cookbook:f2d56415-ac36-4a27-bee5-b447c4186513).
 
