@@ -21,6 +21,9 @@ export type SiteId =
   // hub-sdk: the Agentic Developer Hub SDK's site, a subdomain of the hub built in its repo.
   | 'hub-sdk'
   | 'myagenticteams'
+  // myagenticdevteam: myagenticdevteam.com, the consumer "your own agentic development team"
+  // brand, built from its own repo (myagenticdevteamwebsite). A coming-soon placeholder today.
+  | 'myagenticdevteam'
   | 'mcp'
   | 'status'
   | 'builds'
@@ -279,6 +282,12 @@ export const SITES: SiteDef[] = [
   // myagenticteams: off-pattern consumer brand (not agenticdeveloper<x>.com), so
   // `fullLabel` is required — siteHeaderTitle can't derive the brand from the host.
   { id: 'myagenticteams', label: 'My Teams', fullLabel: 'My Agentic Teams', description: 'Build your own agentic teams', prodHost: 'myagenticteams.com', hasStaging: true, hasTesting: true, hasHome: true, workspaceRoute: 'root' },
+  // myagenticdevteam: off-pattern consumer brand like myagenticteams, so `fullLabel` is
+  // required for the same reason. Unlike myagenticteams it has NO `workspaceRoute`: the site
+  // is a coming-soon placeholder whose only signed-in surface is a gated `/home`, and it
+  // mounts no `app/[workspace]` — a workspace switch into it falls back to its landing rather
+  // than landing on a 404. Give it `workspaceRoute: 'root'` the day it grows that route.
+  { id: 'myagenticdevteam', label: 'My Dev Team', fullLabel: 'My Agentic Dev Team', description: 'Your own agentic development team', prodHost: 'myagenticdevteam.com', hasStaging: true, hasTesting: true, hasHome: true },
   { id: 'mcp', label: 'MCP', fullLabel: 'Agentic Developer MCP', description: 'MCP server', prodHost: 'mcp.agenticdeveloperhub.com', hasStaging: true, hasTesting: false, hasHome: false, crawlable: false },
   // <gen:sites> managed by scaffold-sites.py — do not edit by hand
   { id: 'community', label: 'Community', fullLabel: 'Agentic Developer Community', description: 'Forums & discussion', prodHost: 'agenticdevelopercommunity.com', hasStaging: true, hasTesting: true, hasHome: true, workspaceRoute: 'root', dividerBefore: true, sectionLabel: 'Developer platform' },
@@ -540,7 +549,8 @@ export function siteIdForDir(name: string): SiteId | undefined {
  *
  *  Membership here means "this id HAS a Next app", not "its app is checked out
  *  beside this file": `bitbag` and `myagenticteams` are built from their own repos
- *  since 2026-08-15 and are full members regardless, which is why the test names
+ *  since 2026-08-15, and `myagenticdevteam` was born in its own (2026-11-24), and all
+ *  three are full members regardless, which is why the test names
  *  them rather than the registry doing it — where a site's source sits is a fact
  *  about one checkout, and this file is shared by all of them. `mcp` and `builds`
  *  have no site folder ANYWHERE (an endpoint and a backend), so they're in neither
@@ -553,8 +563,8 @@ export function siteIdForDir(name: string): SiteId | undefined {
  *  which is why the route did not have to move when the id changed hands. */
 export const MAIN_SITE_IDS: SiteId[] = [
   'admin', 'bitbag', 'community', 'cookbook', 'devteam', 'help', 'hub', 'hub-help', 'hub-sdk',
-  'myagenticteams', 'news', 'personaregistry', 'product-admin', 'shipr', 'status', 'support',
-  'toolkit',
+  'myagenticdevteam', 'myagenticteams', 'news', 'personaregistry', 'product-admin', 'shipr',
+  'status', 'support', 'toolkit',
 ]
 export const MARKETING_SITE_IDS: SiteId[] = [
   'academy', 'authentication', 'billing', 'codereviews', 'communities', 'consultants', 'consulting',
@@ -623,7 +633,7 @@ export const SITE_CATEGORIES: { label: string; ids: SiteId[] }[] = [
   // are developer tools too, on the Mac rather than the web, so they file here.
   {
     label: 'Build',
-    ids: ['devteam', 'codereviews', 'cookbook', 'hub-sdk', 'toolkit', 'tools', 'testing', 'shipr', 'kitchen', 'stenographer', 'mcp'],
+    ids: ['devteam', 'myagenticdevteam', 'codereviews', 'cookbook', 'hub-sdk', 'toolkit', 'tools', 'testing', 'shipr', 'kitchen', 'stenographer', 'mcp'],
   },
   {
     label: 'Personas',

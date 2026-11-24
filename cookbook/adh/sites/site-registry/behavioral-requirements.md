@@ -17,9 +17,10 @@
   field MUST NOT be inferred from `hasHome`; the two are independent facts about a
   site's route tree (`bitbag`, `status`, and `admin` have `hasHome: false` and no
   workspace route; `hub-help` and `personaregistry` have neither a home route nor a
-  workspace route; and `store` has `hasHome: false` yet a `'root'` workspace route),
-  and a caller deriving one from the other risks sending a workspace switch to a
-  route that 404s.
+  workspace route; `store` has `hasHome: false` yet a `'root'` workspace route; and
+  `myagenticdevteam`, a coming-soon placeholder whose only signed-in surface is a
+  gated `/home`, has `hasHome: true` and no workspace route), and a caller deriving
+  one from the other risks sending a workspace switch to a route that 404s.
 - **native-app-site-flag**: A site definition for a macOS native tool (`kitchen`,
   `stenographer`) MUST be marked `nativeApp`; such a site MUST remain in every roster
   that lists sites (the switcher, the footer, the overview) and MUST be absent from the

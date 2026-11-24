@@ -56,7 +56,7 @@ function siteOf(link: MenuLink): SiteId | undefined {
 
 /** The segment a menu link leads to in the hub, or undefined when it leads somewhere the hub has
  *  no workspace route for (a `{ route }` or `{ href }` row, or a site with no hub route: bitbag,
- *  status, hub-help, personaregistry, myagenticteams). */
+ *  status, hub-help, personaregistry, myagenticteams, myagenticdevteam). */
 function segmentOf(link: MenuLink): HubFeatureSegment | undefined {
   const site = siteOf(link)
   return site ? hubFeatureSegment(site) : undefined

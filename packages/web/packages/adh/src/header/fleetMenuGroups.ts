@@ -149,6 +149,10 @@ export const FLEET_MENU_GROUPS: MenuGroup[] = [
     iconKey: 'build',
     links: [
       { site: 'devteam', label: 'Dev Team' },
+      // The full brand, as My Agentic Teams' row has it: directly under "Dev Team", the
+      // registry's short "My Dev Team" would read as a personal copy of the row above it
+      // rather than the separate consumer product it is.
+      { site: 'myagenticdevteam', label: 'My Agentic Dev Team' },
       { site: 'codereviews', description: 'Review your code' },
       { site: 'cookbook' },
       { site: 'recipes' },

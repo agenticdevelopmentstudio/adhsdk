@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.6.1 | 2026-11-24 | Mike Fullerton | workspace-route-not-derived-from-has-home names myagenticdevteam: hasHome true, no workspace route |
 | 1.6.0 | 2026-11-23 | Mike Fullerton | Phase 9: jobs hub segment and route line (templates and environments are sub-paths), the product admin Jobs pages in its share, jobs in the universal reserved list. |
 | 1.5.0 | 2026-11-23 | Mike Fullerton | Phase 8: added ai-settings-extra-segment, ai-settings-hub-route-line, admin-share-no-ai-settings and legacy-provider-segments-redirect-only, and the Design Decision that keeps the old segments redirect-only until a later cleanup |
 | 1.4.0 | 2026-11-23 | Mike Fullerton | Phase 7: consented support access |

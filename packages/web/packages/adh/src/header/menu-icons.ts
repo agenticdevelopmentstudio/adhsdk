@@ -125,6 +125,9 @@ const ICONS: Record<string, LucideIcon> = {
   cookbook: ChefHat, // recipes/cookbook
   devteam: UsersRound, // matches FEATURE_META `teams`
   myagenticteams: Sparkles, // matches the myagenticteams landing
+  // The "My Agentic" consumer brands share one glyph, so the family reads as one; NOT
+  // devteam's UsersRound, which its row sits directly beneath in Build.
+  myagenticdevteam: Sparkles,
   narratives: ScrollText, // matches FEATURE_META `narratives`
   help: CircleHelp, // matches SiteMenu's existing help affordance
   'hub-help': CircleHelp, // the promoted family Help site (help.adh.com)
@@ -210,8 +213,9 @@ const ICONS: Record<string, LucideIcon> = {
 
   // --- Remaining MAIN family sites (websites/main/), for the admin section's
   //     consoles and the fleet tree's operations rows. The rest of the family
-  //     (hub, bitbag, community, cookbook, devteam, help, myagenticteams, news,
-  //     personaregistry, toolkit) is mapped among the Hub-core rows above. ---
+  //     (hub, bitbag, community, cookbook, devteam, help, myagenticdevteam,
+  //     myagenticteams, news, personaregistry, toolkit) is mapped among the
+  //     Hub-core rows above. ---
   admin: ShieldCheck, // operations console
   api: Code,
   builds: HardHat, // the build console

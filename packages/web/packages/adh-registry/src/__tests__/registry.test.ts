@@ -360,6 +360,7 @@ describe('LISTED_SITES (the family roster)', () => {
       'hub-sdk',
       'toolkit',
       'myagenticteams',
+      'myagenticdevteam',
       'mcp',
       // <gen:order> managed by scaffold-sites.py — do not edit by hand
       'community',
@@ -821,6 +822,13 @@ describe('MAIN_SITE_IDS / MARKETING_SITE_IDS (the site-app roster)', () => {
     expect(getSite('myagenticteams')!.hasHome).toBe(true)
     expect(getSite('bitbag')!.workspaceRoute).toBeUndefined()
     expect(getSite('bitbag')!.hasHome).toBe(false)
+    // myagenticdevteam joined the fleet in its own repo (2026-11-24), so it is in the same
+    // unreachable-from-here position and is pinned literally for the same reason. It is a
+    // coming-soon placeholder: a gated `/home`, and NO `[workspace]` route — the registry must
+    // not promise one, or a workspace switch into the site would carry the user to a 404.
+    expect(getSite('myagenticdevteam'), 'myagenticdevteam must still be a registry site').toBeTruthy()
+    expect(getSite('myagenticdevteam')!.workspaceRoute).toBeUndefined()
+    expect(getSite('myagenticdevteam')!.hasHome).toBe(true)
   })
 
 })
@@ -993,6 +1001,7 @@ describe('FOOTER_SITES (SEO interlinks)', () => {
       'hub-sdk',
       'toolkit',
       'myagenticteams',
+      'myagenticdevteam',
       // <gen:order> managed by scaffold-sites.py — do not edit by hand
       'community',
       'support',

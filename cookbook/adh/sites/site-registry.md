@@ -2,11 +2,11 @@
 id: 9069ccf9-0357-4311-9671-91ee2793adae
 title: "Site Registry"
 type: ingredient
-version: 1.6.0
+version: 1.6.1
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-11-23
+modified: 2026-11-24
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -84,9 +84,10 @@ router, and a downstream OAuth-return-origin sync process.
   field MUST NOT be inferred from `hasHome`; the two are independent facts about a
   site's route tree (`bitbag`, `status`, and `admin` have `hasHome: false` and no
   workspace route; `hub-help` and `personaregistry` have neither a home route nor a
-  workspace route; and `store` has `hasHome: false` yet a `'root'` workspace route),
-  and a caller deriving one from the other risks sending a workspace switch to a
-  route that 404s.
+  workspace route; `store` has `hasHome: false` yet a `'root'` workspace route; and
+  `myagenticdevteam`, a coming-soon placeholder whose only signed-in surface is a
+  gated `/home`, has `hasHome: true` and no workspace route), and a caller deriving
+  one from the other risks sending a workspace switch to a route that 404s.
 - **native-app-site-flag**: A site definition for a macOS native tool (`kitchen`,
   `stenographer`) MUST be marked `nativeApp`; such a site MUST remain in every roster
   that lists sites (the switcher, the footer, the overview) and MUST be absent from the
@@ -734,7 +735,7 @@ an empty result, or the input path unchanged) with no side channel.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/adh-registry/src/sites/` | confirmed (1.6.0) |
+| web | `packages/web/packages/adh-registry/src/sites/` | confirmed (1.6.1) |
 
 ## Design Decisions
 
@@ -852,6 +853,7 @@ the page it sends the reader to.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.6.1 | 2026-11-24 | Mike Fullerton | workspace-route-not-derived-from-has-home names myagenticdevteam: hasHome true, no workspace route |
 | 1.6.0 | 2026-11-23 | Mike Fullerton | Phase 9: jobs hub segment and route line (templates and environments are sub-paths), the product admin Jobs pages in its share, jobs in the universal reserved list. |
 | 1.5.0 | 2026-11-23 | Mike Fullerton | Phase 8: added ai-settings-extra-segment, ai-settings-hub-route-line, admin-share-no-ai-settings and legacy-provider-segments-redirect-only, and the Design Decision that keeps the old segments redirect-only until a later cleanup |
 | 1.4.0 | 2026-11-23 | Mike Fullerton | Phase 7: consented support access |

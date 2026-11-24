@@ -4,11 +4,11 @@
     "id": "9069ccf9-0357-4311-9671-91ee2793adae",
     "title": "Site Registry",
     "type": "ingredient",
-    "version": "1.6.0",
+    "version": "1.6.1",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-11-23",
+    "modified": "2026-11-24",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "973e0eade0778231",
+  "synced": "05e6b9e2e9c2cf39",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

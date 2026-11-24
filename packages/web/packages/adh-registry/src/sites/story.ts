@@ -19,8 +19,9 @@ import type { SiteId } from './registry'
  *  - `satellite`: endorsed own-identity products (Toolkit, Persona Registry,
  *    Cookbook, FishLamp Design) — their own audience, visibly "from the Hub".
  *  - `proof`: own-named consumer products FROM the hub (Bitbag, My Agentic
- *    Teams, Learn True Facts) — the proof layer; only tie is a provenance mark,
- *    and they are excluded from hub-brand chrome and audits. */
+ *    Teams, My Agentic Dev Team, Learn True Facts) — the proof layer; only
+ *    tie is a provenance mark, and they are excluded from hub-brand chrome
+ *    and audits. */
 export type BrandTier = 'masterbrand' | 'chapter' | 'satellite' | 'proof'
 
 /** Message-house pillar (brand-story-plan §3) — which third of the promise
@@ -69,6 +70,9 @@ export const SITE_STORIES: Record<SiteId, SiteStory> = {
   'hub-sdk': { tier: 'chapter', pillar: 'build', funnelStage: 'build', nextStep: 'hub' },
   toolkit: { tier: 'satellite', pillar: 'build', funnelStage: 'build', nextStep: 'hub' },
   myagenticteams: { tier: 'proof', pillar: 'identity', funnelStage: 'adopt', nextStep: 'hub' },
+  // My Agentic Dev Team: an own-named consumer product FROM the hub, like My Agentic Teams —
+  // so proof tier — but about building software with an agentic team, so the build pillar.
+  myagenticdevteam: { tier: 'proof', pillar: 'build', funnelStage: 'adopt', nextStep: 'hub' },
   mcp: { tier: 'chapter', pillar: 'backend', funnelStage: 'build', nextStep: 'hub' },
   // --- the scaffolded chapters ---
   community: { tier: 'chapter', pillar: 'build', funnelStage: 'adopt', nextStep: 'hub' },
