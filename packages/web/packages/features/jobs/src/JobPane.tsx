@@ -11,6 +11,9 @@ import {
   type JobInputValues,
   type JobInstance,
   type JobInstancePatch,
+  type JobNotifyOptions,
+  type JobOptions,
+  type JobTemplateDefaults,
   type JobTrigger,
   type JobTriggerCreate,
 } from "@adh-sdk/data/jobs";
@@ -49,8 +52,19 @@ const NOTIFY_CHANNELS = [
   { id: "hub", label: "Hub" },
 ] as const;
 
-/** A job's notifications when it names none: failures, by email. */
+/** A job's notifications when neither it nor its template version names any: failures, by email. */
 const DEFAULT_NOTIFY = { on: ["failed" as const], channels: ["email" as const] };
+
+type ShownNotify = Required<JobNotifyOptions>;
+
+/**
+ * The notifications a job runs with, resolved as the engine does (`resolveJobOptions`): the job's
+ * own `notify` whole, else its template version's, else none; then each missing field's default.
+ */
+function resolvedNotify(options: JobOptions, defaults?: JobTemplateDefaults): ShownNotify {
+  const n = options.notify ?? defaults?.notify ?? {};
+  return { on: n.on ?? DEFAULT_NOTIFY.on, channels: n.channels ?? DEFAULT_NOTIFY.channels };
+}
 
 /**
  * One job: its inputs (exactly the ones its template version declares) or its inline steps, the
@@ -167,25 +181,27 @@ function JobSettings({
   });
   const [inputs, setInputs] = useState<JobInputValues>(job.inputs);
   const [environmentId, setEnvironmentId] = useState<string | null>(job.environmentId);
-  const [notify, setNotify] = useState(() => ({
-    on: job.options.notify?.on ?? DEFAULT_NOTIFY.on,
-    channels: job.options.notify?.channels ?? DEFAULT_NOTIFY.channels,
-  }));
+  // Null until the person changes a notification box: an untouched job keeps whatever it resolves to
+  // (its own, else its template version's defaults), and a save never writes that over.
+  const [notifyEdit, setNotifyEdit] = useState<ShownNotify | null>(null);
 
   // The inputs and defaults a template job has are its own version's. The catalog holds only each
   // template's latest offered version, so it speaks for this job only when that is the job's version.
   const template = catalog.data?.find((t) => t.id === job.templateId);
   const pinned = template && template.version === job.templateVersion ? template : undefined;
   const inputsLocked = job.templateId !== null && !pinned;
+  const notify = notifyEdit ?? resolvedNotify(job.options, pinned?.defaults);
 
   const save = useMutation({
     mutationFn: () => {
-      const patch: JobInstancePatch = { environmentId, options: { ...job.options, notify } };
+      const patch: JobInstancePatch = { environmentId };
       if (!inputsLocked) patch.inputs = inputs;
+      if (notifyEdit) patch.options = { ...job.options, notify: notifyEdit };
       return jobsApi.update(job.id, patch, scope);
     },
     onSuccess: () => void qc.invalidateQueries({ queryKey: JOBS_KEY }),
   });
+  const setNotify = (change: (n: ShownNotify) => ShownNotify) => setNotifyEdit(change(notify));
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
