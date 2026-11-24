@@ -560,6 +560,33 @@ final class PipelineDrainerTests: XCTestCase {
         XCTAssertEqual(try rig.spool.pendingCount(), 0)
     }
 
+    func testASinkThatRefusesOneRecordTakesTheRestAndTheHealLeavesIt() throws {
+        let rig = try makeRig()
+        try rig.spool.append([record("k0"), record("bad"), record("k1")])
+        struct Refused: Error {}
+        let picky = ClosureSink { _, records in
+            if records.contains(where: { $0.record.dedupKey == "bad" }) { throw Refused() }
+        }
+        let reached = LockedBox<[String]>([])
+        let after = ClosureSink { _, records in reached.update { $0 += records.map(\.record.dedupKey) } }
+        let pipe = try drainer(rig, sinks: [picky, after])
+
+        let first = pipe.drainOnce()
+        XCTAssertFalse(first.failed, first.failureReason ?? "")
+        XCTAssertEqual(first.completed, 2)
+        XCTAssertEqual(reached.value.sorted(), ["k0", "k1"], "the later sink gets only what the first took")
+        XCTAssertEqual(try rig.spool.pendingBatch(limit: 10).map(\.record.dedupKey), ["bad"])
+
+        for _ in 1..<ProviderSpool.maxAttempts { pipe.drainOnce() }
+        let quarantined = try rig.spool.quarantined(limit: 10)
+        XCTAssertEqual(quarantined.map(\.record.dedupKey), ["bad"])
+        let reason = try XCTUnwrap(quarantined.first).reason
+        XCTAssertTrue(reason.hasPrefix(PipelineDrainer.recordSinkFailurePrefix), reason)
+        XCTAssertFalse(PipelineDrainer.transientFailurePrefixes.contains { reason.hasPrefix($0) }, reason)
+        XCTAssertEqual(pipe.healTransientQuarantine(), 0)
+        XCTAssertEqual(reached.value.sorted(), ["k0", "k1"])
+    }
+
     func testSinkFailureFailsThePassChargesEachRecordAndQuarantinesAtMaxAttempts() throws {
         let rig = try makeRig()
         try rig.spool.append((0..<2).map { record("k\($0)") })
@@ -650,10 +677,10 @@ final class PipelineDrainerTests: XCTestCase {
         let rig = try makeRig()
         try rig.spool.append([record("k0"), record("k1")])
         let calls = LockedBox(0), taken = LockedBox(0)
-        // Down for exactly enough passes to quarantine both records, then back.
+        // Down until both records are quarantined, then back.
         let sink = ClosureSink { _, records in
             calls.update { $0 += 1 }
-            if calls.value <= ProviderSpool.maxAttempts { throw SinkDown() }
+            if ((try? rig.spool.quarantinedCount()) ?? 0) < 2 { throw SinkDown() }
             taken.update { $0 += records.count }
         }
         let pipe = try drainer(rig, sinks: [sink])
@@ -765,8 +792,12 @@ final class PipelineDrainerTests: XCTestCase {
         let rig = try makeRig()
         try rig.spool.append((0..<2).map { record("k\($0)") })
         struct SinkDown: Error {}
-        let once = FireOnce()
-        let sink = ClosureSink { _, _ in if once.shouldFire() { throw SinkDown() } }
+        // Down for the batch and for each record written on its own, then back.
+        let calls = LockedBox(0)
+        let sink = ClosureSink { _, _ in
+            calls.update { $0 += 1 }
+            if calls.value <= 3 { throw SinkDown() }
+        }
         let observer = RecordingObserver()
         let pipe = try drainer(rig, sinks: [sink])
         pipe.addObserver(observer)

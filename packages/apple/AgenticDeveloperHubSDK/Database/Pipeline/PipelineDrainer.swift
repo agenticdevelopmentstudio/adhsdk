@@ -145,8 +145,12 @@ public final class PipelineDrainer: @unchecked Sendable {
         let description: String
     }
 
-    /// Prefix of a quarantine reason written when a sink failed.
+    /// Prefix of a quarantine reason written when a sink failed for the whole batch.
     public static let sinkFailurePrefix = "sink "
+    /// Prefix of a quarantine reason written when a sink refused one record on its
+    /// own while it took the rest of the batch: the record is at fault, so it is not
+    /// a transient failure and the heal leaves it in quarantine.
+    public static let recordSinkFailurePrefix = "record refused by "
     /// Prefix of a quarantine reason written when the events.db write failed as a
     /// whole (``isStoreOutage(_:)``): the store, not the record, was at fault.
     public static let storeFailurePrefix = "store write failed: "
@@ -414,6 +418,7 @@ public final class PipelineDrainer: @unchecked Sendable {
                 error, Array(zip(normalizedSpooled, zip(normalizedRecords, normalizedBatches))), &outcome)
             normalizedSpooled = kept.map(\.spooled)
             normalizedRecords = kept.map(\.archived)
+            normalizedBatches = kept.map(\.batch)
             normalizedIDs = normalizedSpooled.map(\.id)
             merged = NormalizedBatch()
             for item in kept { merged.append(item.batch) }
@@ -426,8 +431,20 @@ public final class PipelineDrainer: @unchecked Sendable {
                 try sink.write(merged, records: normalizedRecords, provider: normalizer.provider)
             } catch {
                 let reason = "\(Self.sinkFailurePrefix)\(type(of: sink)) failed: \(error)"
-                for spooled in normalizedSpooled { try charge(spooled, reason: reason, &outcome) }
-                throw StepFailure(description: reason)
+                let kept = normalizedSpooled.count > 1 && !Self.isStoreOutage(error)
+                    ? try isolateSinkFailure(
+                        sink, Array(zip(normalizedSpooled, zip(normalizedRecords, normalizedBatches))), &outcome)
+                    : []
+                guard !kept.isEmpty else {
+                    for spooled in normalizedSpooled { try charge(spooled, reason: reason, &outcome) }
+                    throw StepFailure(description: reason)
+                }
+                normalizedSpooled = kept.map(\.spooled)
+                normalizedRecords = kept.map(\.archived)
+                normalizedBatches = kept.map(\.batch)
+                normalizedIDs = normalizedSpooled.map(\.id)
+                merged = NormalizedBatch()
+                for item in kept { merged.append(item.batch) }
             }
         }
         try inject(.afterSinks)
@@ -464,6 +481,34 @@ public final class PipelineDrainer: @unchecked Sendable {
         let prefix = kept.isEmpty ? Self.storeFailurePrefix : Self.recordStoreFailurePrefix
         for (item, error) in refused { try charge(item, reason: "\(prefix)\(error)", &outcome) }
         if kept.isEmpty { throw StepFailure(description: "\(Self.storeFailurePrefix)\(batchError)") }
+        return kept
+    }
+
+    /// After a sink refused a batch: writes each record to that sink on its own and
+    /// returns the ones it took. When it took some, each record it still refuses is
+    /// charged under ``recordSinkFailurePrefix``. When it took none, nothing is
+    /// charged here and the caller charges the batch as a sink failure. An outage met
+    /// on the way returns nothing, so the batch is charged the same way.
+    private func isolateSinkFailure(
+        _ sink: any PipelineSink, _ items: [(SpooledRecord, (ArchivedRecord, NormalizedBatch))],
+        _ outcome: inout DrainOutcome
+    ) throws -> [(spooled: SpooledRecord, archived: ArchivedRecord, batch: NormalizedBatch)] {
+        var kept: [(spooled: SpooledRecord, archived: ArchivedRecord, batch: NormalizedBatch)] = []
+        var refused: [(SpooledRecord, Error)] = []
+        for (item, (archived, batch)) in items {
+            do {
+                try sink.write(batch, records: [archived], provider: normalizer.provider)
+                kept.append((item, archived, batch))
+            } catch where Self.isStoreOutage(error) {
+                return []
+            } catch {
+                refused.append((item, error))
+            }
+        }
+        guard !kept.isEmpty else { return [] }
+        for (item, error) in refused {
+            try charge(item, reason: "\(Self.recordSinkFailurePrefix)\(type(of: sink)): \(error)", &outcome)
+        }
         return kept
     }
 
