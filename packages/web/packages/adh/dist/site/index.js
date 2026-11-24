@@ -266,6 +266,7 @@ var RESERVED_HANDLE_WORDS = [
   "feature-flags",
   "gamification",
   "invitations",
+  "jobs",
   "knowledgebases",
   "llm-providers",
   "members",

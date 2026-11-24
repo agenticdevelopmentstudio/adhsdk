@@ -184,6 +184,13 @@ describe('reserved slugs', () => {
     }
   })
 
+  // site-registry-073
+  it('reserves jobs (phase 9), however it is spelled', () => {
+    expect(isReservedSlug('registries', 'jobs')).toBe(true)
+    expect(isReservedSlug('registries', ' Jobs ')).toBe(true)
+    expect(isReservedSlugAnywhere('jobs')).toBe(true)
+  })
+
   it('is case-insensitive', () => {
     expect(isReservedSlug('registries', 'Tour')).toBe(true)
     expect(isReservedSlug('registries', 'TOUR')).toBe(true)

@@ -17,6 +17,7 @@ export const PRODUCT_ADMIN_TOPICS: readonly ProductAdminTopic[] = [
   { id: "roles", label: "Roles", href: "/roles" },
   { id: "signup-list", label: "Sign-up list", href: "/signup-list" },
   { id: "sets", label: "Sets", href: "/sets" },
+  { id: "jobs", label: "Jobs", href: "/jobs" },
   { id: "totals", label: "Totals", href: "/totals" },
   { id: "support", label: "Support", href: "/support" },
 ];

@@ -16,4 +16,9 @@ describe('reservedWorkspaceSlugs', () => {
       expect(reserved.has(slug)).toBe(true)
     }
   })
+
+  // jobs-013: `/<workspace>/jobs` (phase 9) is the hub's Jobs feature segment.
+  it('reserves jobs', () => {
+    expect(reservedWorkspaceSlugs().has('jobs')).toBe(true)
+  })
 })

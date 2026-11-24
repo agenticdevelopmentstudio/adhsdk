@@ -75,6 +75,7 @@ import {
   UserPlus,
   Users,
   UsersRound,
+  Workflow,
   Wrench
 } from "lucide-react";
 import { SITE_FOR_HUB_SEGMENT } from "@adh-sdk/adh-registry";
@@ -131,6 +132,7 @@ var ICONS = {
   "/email-signup": Mail,
   "/feature-flags": Flag,
   "/invitations": UsersRound,
+  "/jobs": Workflow,
   "/llm-providers": Boxes,
   "/members": BookUser,
   "/persona-services": Boxes,

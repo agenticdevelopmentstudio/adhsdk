@@ -1216,3 +1216,15 @@ describe('AI Settings segment (phase 8)', () => {
     expect(HUB_EXTRA_FEATURE_SEGMENTS).toContain('persona-services')
   })
 })
+
+describe('Jobs segment (phase 9)', () => {
+  // site-registry-069
+  it('lists jobs, and not its sub-paths, among the hub segments', () => {
+    expect(HUB_EXTRA_FEATURE_SEGMENTS).toContain('jobs')
+    expect(HUB_WORKSPACE_SEGMENTS.has('jobs')).toBe(true)
+    for (const sub of ['jobs/templates', 'jobs/environments', 'templates', 'environments']) {
+      expect(HUB_WORKSPACE_SEGMENTS.has(sub)).toBe(false)
+      expect((HUB_EXTRA_FEATURE_SEGMENTS as readonly string[]).includes(sub)).toBe(false)
+    }
+  })
+})

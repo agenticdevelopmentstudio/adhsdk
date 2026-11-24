@@ -1045,6 +1045,10 @@ export const HUB_EXTRA_FEATURE_SEGMENTS = [
   'sets',
   // Admin site (phase 6): a product knob, a product rail row and only a route here.
   'admin-site',
+  // Jobs (phase 9): the workspace's jobs, with its templates and environments as sub-paths of the
+  // one `/[workspace]/jobs/[[...path]]` route, never segments of their own (a segment is one path
+  // segment). No site sells jobs, so it is a hub knob.
+  'jobs',
   // Email Signup: a bespoke rail route (audience.* lists/templates/campaigns), no
   // distinct registry site of its own — same lockstep as the row above.
   'email-signup',
