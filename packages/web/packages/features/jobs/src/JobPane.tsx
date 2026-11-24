@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent, type ReactElement } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   JOBS_KEY,
@@ -536,22 +536,23 @@ function RunsSection({
   workspace?: string;
   onOpenRun?: JobsOpen;
 }): ReactElement {
-  const [before, setBefore] = useState<string | undefined>(undefined);
-  const [older, setOlder] = useState<Awaited<ReturnType<typeof jobsApi.runs>>["runs"]>([]);
-  const query = { instanceId: jobId, before };
-  const runs = useQuery({
-    queryKey: jobsKeys.runs(query, workspace),
-    queryFn: () => jobsApi.runs(query, { workspace }),
+  // One query holding every page loaded: an invalidation (Run now, a retry) refetches them all from
+  // the newest, so a new run shows at the top after Load more too.
+  const runs = useInfiniteQuery({
+    queryKey: jobsKeys.runs({ instanceId: jobId }, workspace),
+    queryFn: ({ pageParam }) => jobsApi.runs({ instanceId: jobId, before: pageParam }, { workspace }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last) => last.nextBefore ?? undefined,
   });
 
-  const rows = before ? [...older, ...(runs.data?.runs ?? [])] : (runs.data?.runs ?? []);
+  const rows = runs.data?.pages.flatMap((p) => p.runs) ?? [];
 
   return (
     <section aria-label="Runs" className="flex flex-col gap-2">
       <h3 className="text-sm font-medium text-apt-text">Runs</h3>
-      {runs.error ? (
+      {runs.error && !runs.data ? (
         <JobsReadError error={runs.error} step="list-runs" what="the runs" />
-      ) : runs.isPending && rows.length === 0 ? (
+      ) : runs.isPending ? (
         <Loading />
       ) : rows.length === 0 ? (
         <p className="text-sm text-apt-text-muted">No runs yet.</p>
@@ -583,16 +584,18 @@ function RunsSection({
           })}
         </ul>
       )}
-      {runs.data?.nextBefore ? (
+      {/* A page that failed after rows were shown is reported under them, never in their place. */}
+      {runs.error && runs.data ? (
+        <JobsReadError error={runs.error} step="list-runs" what="more runs" />
+      ) : null}
+      {runs.hasNextPage ? (
         <div>
           <Button
             type="button"
             size="sm"
             variant="ghost"
-            onClick={() => {
-              setOlder(rows);
-              setBefore(runs.data?.nextBefore ?? undefined);
-            }}
+            disabled={runs.isFetchingNextPage}
+            onClick={() => void runs.fetchNextPage()}
           >
             Load more
           </Button>

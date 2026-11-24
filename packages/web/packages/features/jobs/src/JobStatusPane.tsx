@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, type ReactElement } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { type ReactElement } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
 
 import { jobStatusApi, jobsKeys, type JobRunStatusRow } from "@adh-sdk/data/jobs";
 import { Button } from "@adh-sdk/ui/components/button";
@@ -25,18 +25,20 @@ const preview = (s: string | null): string =>
  * first, with Load more. It never reads a run's inputs, steps, outputs or logs.
  */
 export function JobStatusPane({ ecosystemId }: JobStatusPaneProps): ReactElement {
-  const [before, setBefore] = useState<string | undefined>(undefined);
-  const [older, setOlder] = useState<JobRunStatusRow[]>([]);
-  const query = { before };
-  const page = useQuery({
-    queryKey: jobsKeys.status(ecosystemId, query),
-    queryFn: () => jobStatusApi.list(ecosystemId, query),
+  // Every loaded page in one query, so a refetch starts again from the newest run.
+  const page = useInfiniteQuery({
+    queryKey: jobsKeys.status(ecosystemId),
+    queryFn: ({ pageParam }) => jobStatusApi.list(ecosystemId, { before: pageParam }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last) => last.nextBefore ?? undefined,
   });
 
-  const rows = before ? [...older, ...(page.data?.runs ?? [])] : (page.data?.runs ?? []);
+  const rows: JobRunStatusRow[] = page.data?.pages.flatMap((p) => p.runs) ?? [];
 
-  if (page.error) return <JobsReadError error={page.error} step="list-status" what="the run status" />;
-  if (page.isPending && rows.length === 0) return <Loading />;
+  if (page.error && !page.data) {
+    return <JobsReadError error={page.error} step="list-status" what="the run status" />;
+  }
+  if (page.isPending) return <Loading />;
 
   return (
     <div className="flex flex-col gap-3">
@@ -78,17 +80,16 @@ export function JobStatusPane({ ecosystemId }: JobStatusPaneProps): ReactElement
           </table>
         </div>
       )}
-      {page.data?.nextBefore ? (
+      {/* A Load more that failed is reported under the rows already shown, never in their place. */}
+      {page.error ? <JobsReadError error={page.error} step="list-status" what="more runs" /> : null}
+      {page.hasNextPage ? (
         <div>
           <Button
             type="button"
             size="sm"
             variant="ghost"
             disabled={page.isFetching}
-            onClick={() => {
-              setOlder(rows);
-              setBefore(page.data?.nextBefore ?? undefined);
-            }}
+            onClick={() => void page.fetchNextPage()}
           >
             Load more
           </Button>
