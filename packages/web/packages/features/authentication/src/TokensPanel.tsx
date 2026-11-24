@@ -385,7 +385,7 @@ export function TokensPanel(): ReactElement {
             tone="error"
             title="Close without copying?"
             description="This token won’t be shown again. If you haven’t copied it, you’ll have to revoke it and create another."
-            confirmLabel="Close"
+            confirmLabel="Close without copying"
             cancelLabel="Keep open"
             onConfirm={() => {
               setConfirmingDropSecret(false);

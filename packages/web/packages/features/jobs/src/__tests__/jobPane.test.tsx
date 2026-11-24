@@ -97,7 +97,7 @@ describe("JobPane", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Done" }));
     expect(await screen.findByText("Close without copying?")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    fireEvent.click(screen.getByRole("button", { name: "Close without copying" }));
     await waitFor(() => expect(screen.queryByLabelText("Trigger secret")).toBeNull());
     // Shown once: nothing on the page carries it any more.
     expect(document.body.innerHTML).not.toContain(SECRET);

@@ -270,13 +270,15 @@ function JobSettings({
         <div className="flex flex-wrap gap-4">
           {NOTIFY_ON.map((on) => (
             <label key={on} className="flex items-center gap-2 text-sm text-apt-text">
+              {/* The wrapping label names the box (it is linked by aria-labelledby, which outranks
+                  an aria-label), so the label carries the full name for readers and the short one on screen. */}
               <Checkbox
-                aria-label={`Notify when a run ${on}`}
                 checked={notify.on.includes(on)}
                 disabled={disabled}
                 onCheckedChange={(c) => setNotify((n) => ({ ...n, on: toggle(n.on, on, c === true) }))}
               />
-              When a run {on}
+              <span className="sr-only">Notify when a run {on}</span>
+              <span aria-hidden="true">When a run {on}</span>
             </label>
           ))}
         </div>
@@ -284,14 +286,14 @@ function JobSettings({
           {NOTIFY_CHANNELS.map((ch) => (
             <label key={ch.id} className="flex items-center gap-2 text-sm text-apt-text">
               <Checkbox
-                aria-label={`Notify by ${ch.label}`}
                 checked={notify.channels.includes(ch.id)}
                 disabled={disabled}
                 onCheckedChange={(c) =>
                   setNotify((n) => ({ ...n, channels: toggle(n.channels, ch.id, c === true) }))
                 }
               />
-              {ch.label}
+              <span className="sr-only">Notify by {ch.label}</span>
+              <span aria-hidden="true">{ch.label}</span>
             </label>
           ))}
         </div>

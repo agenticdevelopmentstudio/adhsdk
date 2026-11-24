@@ -86,12 +86,14 @@ export function OnceShownSecretDialog({
             </Button>
           </DialogFooter>
         </div>
+        {/* The confirm is not labelled plain "Close": the modal's own ✕ is named that and does
+            the opposite (it keeps the secret open), as does the secret dialog's ✕ behind it. */}
         <AlertModal
           open={confirmingDrop}
           tone="error"
           title="Close without copying?"
           description="This won't be shown again. If you haven't copied it, you will have to make a new one."
-          confirmLabel="Close"
+          confirmLabel="Close without copying"
           cancelLabel="Keep open"
           onConfirm={close}
           onCancel={() => setConfirmingDrop(false)}
