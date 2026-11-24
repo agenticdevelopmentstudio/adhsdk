@@ -23,7 +23,7 @@
  *
  * What width could not do is be right in the other direction. The mint list is 41 words wider
  * than what the API refuses (`RESERVED_PRINCIPAL_SLUGS`: the rdid type prefixes plus the route
- * words — `teams`, `support`, `research`, `me` and 37 more are held back by the two forms on
+ * words — `teams`, `about`, `research`, `me` and 37 more are held back by the two forms on
  * taste alone), and both lists refuse only at MINT time, so every one of those is a slug a
  * principal can be holding right now. A workspace slugged any of them read as a hub route here:
  * `hubWorkspaceSlug` returned null, and `useSiteMenu` substituted the visitor's OWN slug into
