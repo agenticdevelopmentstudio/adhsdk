@@ -113,7 +113,7 @@ public final class WebContentHangMonitor {
 
     private func endHungProcess(of webView: WKWebView) {
         forgetOutstandingPing()
-        let host = webView.url?.host() ?? "(no page)"
+        let host = webView.url.map { $0.host() ?? "a \($0.scheme ?? "schemeless") URL" } ?? "(no page)"
         guard webView.terminateWebContentProcess() else {
             Self.logger.fault(
                 "Page on \(host, privacy: .public) is unresponsive, and this WebKit offers no way to end its process"
