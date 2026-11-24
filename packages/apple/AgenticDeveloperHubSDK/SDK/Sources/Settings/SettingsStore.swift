@@ -13,13 +13,11 @@ open class SettingsStore: SettingsStorageProvider {
     private var settingsProvider: SettingsStorageProvider
     private var secureSettingsProvider: SecureSettingsStorageProvider
 
-    /// One subject for the store's lifetime, fed from whichever providers are
+    /// One relay for the store's lifetime, fed from whichever providers are
     /// installed. Every `UserSetting` subscribes to `changes` once, when it is
     /// made, so swapping a provider must not hand out a new publisher: the
     /// settings made before the swap would never hear of a change again.
-    private let changeSubject = PassthroughSubject<String, Never>()
-    private var settingsChanges: AnyCancellable?
-    private var secureChanges: AnyCancellable?
+    private let relay = ChangeRelay()
 
     public init(
         with settingsProvider: SettingsStorageProvider = UserDefaultsSettingsStorageProvider(),
@@ -27,13 +25,20 @@ open class SettingsStore: SettingsStorageProvider {
     ) {
         self.settingsProvider = settingsProvider
         self.secureSettingsProvider = secureSettingsProvider
-        settingsChanges = forward(settingsProvider.changes)
-        secureChanges = forward(secureSettingsProvider.changes)
+        relay.settings = relay.forward(settingsProvider.changes)
+        relay.secure = relay.forward(secureSettingsProvider.changes)
     }
 
     /// Publishes the key name whenever any value changes in either backing provider.
+    ///
+    /// A subscriber keeps the relay alive, so it goes on hearing the providers'
+    /// changes after the store itself is released (a released
+    /// `LayeredSettingsStore` passes its fallback's changes through).
     public var changes: AnyPublisher<String, Never> {
-        changeSubject.eraseToAnyPublisher()
+        let relay = relay
+        return relay.subject
+            .handleEvents(receiveCancel: { withExtendedLifetime(relay) {} })
+            .eraseToAnyPublisher()
     }
 
     /// The provider non-secure keys go to now.
@@ -50,14 +55,14 @@ open class SettingsStore: SettingsStorageProvider {
     /// reads `settingsStorageProvider` before installing itself.
     public func installSettingsProvider(_ provider: SettingsStorageProvider) {
         settingsProvider = provider
-        settingsChanges = forward(provider.changes)
+        relay.settings = relay.forward(provider.changes)
     }
 
     /// Sends every secure key to `provider` from now on, as
     /// ``installSettingsProvider(_:)`` does for the non-secure keys.
     public func installSecureSettingsProvider(_ provider: SecureSettingsStorageProvider) {
         secureSettingsProvider = provider
-        secureChanges = forward(provider.changes)
+        relay.secure = relay.forward(provider.changes)
     }
 
     public func get<Value: Codable & Sendable>(_ key: any StorableSetting<Value>) -> Value {
@@ -89,9 +94,18 @@ extension SettingsStore {
     private func storageProvider<Value>(for key: any StorableSetting<Value>) -> SettingsStorageProvider {
         key.isSecure ? secureSettingsProvider : settingsProvider
     }
+}
 
-    private func forward(_ publisher: AnyPublisher<String, Never>) -> AnyCancellable {
-        let subject = changeSubject
+/// The subject `SettingsStore.changes` publishes and the subscriptions that
+/// feed it from the installed providers. Held by the store and by every
+/// subscriber's chain, so it outlives whichever goes first.
+private final class ChangeRelay {
+    let subject = PassthroughSubject<String, Never>()
+    var settings: AnyCancellable?
+    var secure: AnyCancellable?
+
+    func forward(_ publisher: AnyPublisher<String, Never>) -> AnyCancellable {
+        let subject = subject
         return publisher.sink { name in subject.send(name) }
     }
 }
