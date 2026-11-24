@@ -10,7 +10,7 @@ import {
   jobsKeys,
   type JobInputValues,
   type JobInstance,
-  type JobOptions,
+  type JobInstancePatch,
   type JobTrigger,
   type JobTriggerCreate,
 } from "@adh-sdk/data/jobs";
@@ -172,16 +172,20 @@ function JobSettings({
     channels: job.options.notify?.channels ?? DEFAULT_NOTIFY.channels,
   }));
 
+  // The inputs and defaults a template job has are its own version's. The catalog holds only each
+  // template's latest offered version, so it speaks for this job only when that is the job's version.
+  const template = catalog.data?.find((t) => t.id === job.templateId);
+  const pinned = template && template.version === job.templateVersion ? template : undefined;
+  const inputsLocked = job.templateId !== null && !pinned;
+
   const save = useMutation({
     mutationFn: () => {
-      const options: JobOptions = { ...job.options, notify };
-      return jobsApi.update(job.id, { inputs, environmentId, options }, scope);
+      const patch: JobInstancePatch = { environmentId, options: { ...job.options, notify } };
+      if (!inputsLocked) patch.inputs = inputs;
+      return jobsApi.update(job.id, patch, scope);
     },
     onSuccess: () => void qc.invalidateQueries({ queryKey: JOBS_KEY }),
   });
-
-  // The inputs a template job declares are its template's; the catalog holds them.
-  const template = catalog.data?.find((t) => t.id === job.templateId);
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -201,8 +205,10 @@ function JobSettings({
           <JobsReadError error={catalog.error} step="list-catalog" what="the template's inputs" />
         ) : catalog.isPending ? (
           <Loading />
-        ) : template && template.inputs.length > 0 ? (
-          <JobInputsForm specs={template.inputs} values={inputs} onChange={setInputs} disabled={disabled} />
+        ) : inputsLocked ? (
+          <PinnedInputs job={job} offered={template?.version} />
+        ) : pinned && pinned.inputs.length > 0 ? (
+          <JobInputsForm specs={pinned.inputs} values={inputs} onChange={setInputs} disabled={disabled} />
         ) : (
           <p className="text-sm text-apt-text-muted">This job takes no inputs.</p>
         )}
@@ -272,6 +278,34 @@ function JobSettings({
         </div>
       )}
     </form>
+  );
+}
+
+/**
+ * A template job whose version the catalog no longer offers (the template moved on, was retired or
+ * left the job's sets). The latest version's inputs are not this job's, so its saved values are
+ * shown, not edited.
+ */
+function PinnedInputs({ job, offered }: { job: JobInstance; offered?: number }): ReactElement {
+  const entries = Object.entries(job.inputs);
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="text-sm text-apt-text-muted">
+        {offered === undefined
+          ? `This job runs version ${job.templateVersion ?? "?"} of a template that is no longer offered, so its inputs can't be edited here.`
+          : `This job runs version ${job.templateVersion ?? "?"} of its template, and version ${offered} is the one offered now, so its inputs can't be edited here.`}
+      </p>
+      {entries.length > 0 ? (
+        <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
+          {entries.map(([k, v]) => (
+            <div key={k} className="contents">
+              <dt className="font-mono text-xs text-apt-text-muted">{k}</dt>
+              <dd className="text-apt-text">{typeof v === "string" ? v : JSON.stringify(v)}</dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
+    </div>
   );
 }
 
