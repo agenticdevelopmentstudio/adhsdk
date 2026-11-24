@@ -68,3 +68,26 @@ def test_copies_stay_unsigned_without_an_identity_or_when_signing_is_off():
     assert etf.signing_identity({}) is None
     assert etf.signing_identity({"EXPANDED_CODE_SIGN_IDENTITY": ""}) is None
     assert etf.signing_identity({"EXPANDED_CODE_SIGN_IDENTITY": "ABC123", "CODE_SIGNING_ALLOWED": "NO"}) is None
+
+
+def test_xcode_mode_reads_the_app_from_target_build_dir():
+    env = {"TARGET_BUILD_DIR": "/install/Applications", "WRAPPER_NAME": "Hub.app",
+           "BUILT_PRODUCTS_DIR": "/dd/Build/Products/Release"}
+    assert etf.xcode_paths(env) == (Path("/install/Applications/Hub.app"), Path("/dd/Build/Products/Release"))
+
+
+def test_xcode_mode_without_build_settings_is_an_error_not_a_skip():
+    message = etf.xcode_paths({"WRAPPER_NAME": "Hub.app"})
+    assert isinstance(message, str)
+    assert "TARGET_BUILD_DIR" in message and "BUILT_PRODUCTS_DIR" in message
+
+
+def test_xcode_mode_fails_the_build_when_the_app_is_missing(tmp_path: Path, monkeypatch, capsys):
+    products = tmp_path / "products"
+    products.mkdir()
+    monkeypatch.setenv("TARGET_BUILD_DIR", str(products))
+    monkeypatch.setenv("WRAPPER_NAME", "Hub.app")
+    monkeypatch.setenv("BUILT_PRODUCTS_DIR", str(products))
+    assert etf.main(["embed", "--xcode"]) == 1
+    assert "app binary not found" in capsys.readouterr().err
+

@@ -2,6 +2,12 @@
 """Copy transitive .framework bundles next to the app's direct frameworks.
 
 Usage: embed_transitive_frameworks.py <app-bundle> <products-dir>
+       embed_transitive_frameworks.py --xcode
+
+`--xcode` is the form a target's run-script build phase calls: it reads the
+app and products paths from the build settings Xcode exports to the phase
+(see `xcode_paths`), so every app's phase is one call and the guards live
+here rather than copied into each project.
 
 Starting from the app's main binary, this walks the real Mach-O dependency
 graph. Every dependency dyld would resolve *inside the app bundle* is
@@ -279,6 +285,23 @@ def signing_identity(env: dict[str, str]) -> str | None:
     return env.get("EXPANDED_CODE_SIGN_IDENTITY") or None
 
 
+def xcode_paths(env: dict[str, str]) -> tuple[Path, Path] | str:
+    """The app bundle and products directory of the build that is running,
+    from the settings Xcode exports to a run-script phase, or the error to
+    report. The app is read from `TARGET_BUILD_DIR`, which is where the
+    product is written under every action -- an archive or install build
+    (DEPLOYMENT_LOCATION=YES) writes it there and not under
+    `BUILT_PRODUCTS_DIR`. The frameworks to copy are looked up in
+    `BUILT_PRODUCTS_DIR`, where the build leaves them under every action. A
+    missing setting is an error, never a skip: a skipped embed is a bundle
+    dyld refuses to start, from a build that reported success."""
+    names = ("TARGET_BUILD_DIR", "WRAPPER_NAME", "BUILT_PRODUCTS_DIR")
+    absent = [name for name in names if not env.get(name)]
+    if absent:
+        return f"--xcode needs Xcode's build settings; not set: {', '.join(absent)}"
+    return Path(env["TARGET_BUILD_DIR"]) / env["WRAPPER_NAME"], Path(env["BUILT_PRODUCTS_DIR"])
+
+
 def verifies(framework: Path) -> bool:
     return subprocess.run(["codesign", "--verify", str(framework)], capture_output=True).returncode == 0
 
@@ -297,11 +320,18 @@ def sign(framework: Path, identity: str) -> bool:
 
 
 def main(argv: list[str]) -> int:
-    if len(argv) != 3:
+    if argv[1:] == ["--xcode"]:
+        paths = xcode_paths(dict(os.environ))
+        if isinstance(paths, str):
+            print(f"error: {paths}", file=sys.stderr)
+            return 1
+        app, products = Path(os.path.realpath(paths[0])), paths[1]
+    elif len(argv) == 3:
+        app = Path(os.path.realpath(argv[1]))
+        products = Path(argv[2])
+    else:
         print(__doc__, file=sys.stderr)
         return 2
-    app = Path(os.path.realpath(argv[1]))
-    products = Path(argv[2])
 
     if not products.is_dir():
         print(f"error: products directory not found: {products}", file=sys.stderr)
