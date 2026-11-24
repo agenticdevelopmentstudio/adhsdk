@@ -1,0 +1,21 @@
+/* Tailwind source self-registration for @adh-sdk/jobs.
+ *
+ * Tailwind does not scan node_modules, so a consumer app must tell it to scan
+ * this package's className-bearing components. The package OWNS its @source
+ * globs here and a host adds one line:
+ *
+ *   @import "@adh-sdk/jobs/sources.css";
+ *
+ * The paths are relative to THIS file (the package root), so they resolve the
+ * same through a dev pnpm link and a materialized prod copy. `src` covers
+ * `next dev`; `dist` covers prod builds, where `files` ships only `dist` + this
+ * file and the `src` glob matches nothing. Same shape as @adh-sdk/personas.
+ *
+ * This package registers what IT mounts: the services the AI step's model
+ * picker reads come through `ai-settings`, chained here because under pnpm's
+ * isolated node_modules only a declaring package can resolve the specifier.
+ * `auth`/`data`/`ui` ship no sources.css. */
+@import "@adh-sdk/ai-settings/sources.css";
+
+@source "./src/**/*.{ts,tsx}";
+@source "./dist/**/*.js";
