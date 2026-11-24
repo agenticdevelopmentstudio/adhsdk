@@ -201,6 +201,17 @@ export interface JobInstanceWire {
   updatedAt: string;
 }
 
+/** `GET /jobs/instances/{id}/version`: the version a job is pinned to, as its owner may read it. */
+export interface JobPinnedVersionWire {
+  /** Null for a job with inline steps. */
+  templateId: string | null;
+  templateVersion: number | null;
+  /** Empty for inline steps. */
+  inputs: unknown[] | null;
+  defaults: Record<string, unknown> | null;
+  steps: { id: string; name: string; kind: string }[] | null;
+}
+
 export interface JobRunStartedWire {
   runId: string;
   status: "running" | "failed";
@@ -242,13 +253,15 @@ export interface JobRunWire {
 export interface JobStepRunWire {
   id: string;
   position: number;
-  stepId: string;
-  kind: string;
+  stepId: string | null;
+  /** The step's name in the run's frozen steps (its pinned version's, or the job's inline steps). */
+  name: string | null;
+  kind: string | null;
   status: string;
   attempts: number;
   output: unknown;
-  /** The backend stores an array of short lines (the spec says string; both are read). */
-  log: string[] | string | null;
+  /** The latest lines the executor wrote. */
+  log: string[] | null;
   usage: Record<string, unknown> | null;
   errorCode: string | null;
   error: string | null;
@@ -364,6 +377,25 @@ export interface JobInstance {
   updatedAt: string;
 }
 
+/** A step of a job's pinned version, as the owner reads it. */
+export interface JobPinnedStep {
+  id: string;
+  name: string;
+  kind: string;
+}
+
+/**
+ * The version a job is pinned to: the declared inputs and defaults its settings are edited against,
+ * and its steps' names. A job with inline steps has no template, no declared inputs and its own steps.
+ */
+export interface JobPinnedVersion {
+  templateId: string | null;
+  templateVersion: number | null;
+  inputs: JobInputSpec[];
+  defaults: JobTemplateDefaults;
+  steps: JobPinnedStep[];
+}
+
 export interface JobRunStarted {
   runId: string;
   status: "running" | "failed";
@@ -419,7 +451,11 @@ export interface JobRun {
 export interface JobStepRun {
   id: string;
   position: number;
-  stepId: string;
+  /** Null when the run's step row names no step. */
+  stepId: string | null;
+  /** The step's name when the run's frozen steps hold it; null otherwise. */
+  name: string | null;
+  /** "" when the row names none. */
   kind: string;
   status: JobStepRunStatus;
   attempts: number;

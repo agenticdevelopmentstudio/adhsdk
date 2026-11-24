@@ -111,6 +111,20 @@ describe("owning", () => {
     expect(j.status).toBe("archived");
   });
 
+  it("reads a job's pinned version through the job (vector jobs-014)", async () => {
+    mockedJson.mockResolvedValueOnce({
+      templateId: "tpl-1",
+      templateVersion: 1,
+      inputs: [{ key: "topic", label: "Topic", type: "string" }],
+      defaults: null,
+      steps: [{ id: "fetch", name: "Fetch", kind: "action" }],
+    });
+    const v = await jobsApi.pinnedVersion("inst-1", { workspace: "acme" });
+    expect(mockedJson.mock.calls[0]![0]).toBe("/api/jobs/instances/inst-1/version?workspace=acme");
+    expect(v.inputs.map((i) => i.key)).toEqual(["topic"]);
+    expect(v.defaults).toEqual({});
+  });
+
   it("deletes a trigger and an environment without a body", async () => {
     mockedRequest.mockResolvedValue(undefined);
     await jobsApi.deleteTrigger("inst-1", "trg-1");

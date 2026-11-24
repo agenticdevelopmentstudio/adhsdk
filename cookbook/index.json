@@ -1046,18 +1046,18 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:87aced3a73e3a434a09b892681b3646788aba9aaeb9de17c3d6309d60f23bab8",
+            "hash": "sha256:6f837982c4c91415a88cde877fe5c2267204f265452f6b1549172659bb5b4262",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "1.4.0"
           },
           "location": "packages/web/packages/data/src/jobs/",
           "platform": "web"
         },
         {
           "conformance": {
-            "hash": "sha256:d0f90a4ab4e10b2804bfc7d8e4c3c49768232d18e5d8187e4e7510b80d0a0fcd",
+            "hash": "sha256:66ba9a402b565a443b9034386a3a611f8584cc8a120b712a9e85483ab550575d",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "1.4.0"
           },
           "location": "packages/web/packages/features/jobs/",
           "platform": "web"
@@ -1066,7 +1066,7 @@
           "conformance": {
             "hash": "sha256:32a344406827f4846a3791276a840777f8d2f7e6956a8062f24a2979244ccf43",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "1.4.0"
           },
           "location": "packages/web/packages/ui/src/blocks/once-shown-secret-dialog.tsx",
           "platform": "web"

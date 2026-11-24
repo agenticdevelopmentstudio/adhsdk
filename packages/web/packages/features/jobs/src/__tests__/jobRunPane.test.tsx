@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 // JobRunPane: a switched-off model reads as such (vector jobs-006), Retry and Cancel by status
 // (jobs-007), a live run followed until it finishes, then the stream closed (jobs-008), and a
-// template job's steps named by place (jobs-016). Mocks
+// step named by its frozen name, else by place and id (jobs-016). Mocks
 // the jobs data client and its stream.
 import { act, cleanup, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -104,20 +104,26 @@ describe("JobRunPane", () => {
     expect(screen.queryByRole("button", { name: "Cancel" })).toBeNull();
   });
 
-  it("names a template job's step by its place and id, not the id alone (vector jobs-016)", async () => {
-    // A template job carries no steps of its own, so the pane has no name for its step runs.
+  it("names a template job's step by the name its run froze (vector jobs-016)", async () => {
+    // A template job carries no steps of its own; the step run carries its step's name.
     api.get.mockResolvedValue(job());
     api.getRun.mockResolvedValue(
       runDetail({ status: "succeeded", stepRuns: [stepRun({ position: 1, status: "succeeded" })] }),
     );
     renderWithQuery(<JobRunPane runId="run-1" />);
-    await waitFor(() => expect(api.get).toHaveBeenCalled());
-    const row = await waitFor(() => {
-      const el = stepRow();
-      expect(el).toBeTruthy();
-      return el;
-    });
-    expect(within(row).getByText("Step 2")).toBeTruthy();
-    expect(within(row).getByText("summarize")).toBeTruthy();
+    await screen.findByText("Summarize");
+    const row = stepRow();
+    expect(within(row).queryByText("Step 2")).toBeNull();
+    expect(within(row).queryByText("summarize")).toBeNull();
+  });
+
+  it("names a step run with no name by its place and id (vector jobs-016)", async () => {
+    api.get.mockResolvedValue(job());
+    api.getRun.mockResolvedValue(
+      runDetail({ status: "succeeded", stepRuns: [stepRun({ position: 1, name: null, status: "succeeded" })] }),
+    );
+    renderWithQuery(<JobRunPane runId="run-1" />);
+    await screen.findByText("Step 2");
+    expect(within(stepRow()).getByText("summarize")).toBeTruthy();
   });
 });

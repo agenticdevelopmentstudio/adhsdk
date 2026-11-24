@@ -57,6 +57,7 @@ export function stepRun(over: Partial<JobStepRun> = {}): JobStepRun {
     id: "sr-1",
     position: 0,
     stepId: "summarize",
+    name: "Summarize",
     kind: "ai",
     status: "running",
     attempts: 1,

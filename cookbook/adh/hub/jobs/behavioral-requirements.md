@@ -33,11 +33,13 @@
   `?ecosystem=`; owner calls MUST pass `?workspace=<slug>` only when acting for an organization.
 - **mappers-own-the-wire**: Every call MUST return camelCase domain shapes, and `mappers.ts` MUST be the
   one place that reads the wire. It fills every nullable bag (lists `[]`, objects `{}`, usage zeroes) and
-  narrows every status to its union, so a pane reads a row without a guard.
+  narrows every status to its union, so a pane reads a row without a guard. A step run's `stepId` and
+  `name` stay null when the run has none, and its missing `kind` reads `""`.
 - **route-coverage**: The client MUST offer one call per `/jobs` route the panes use:
   - authoring: templates (list, create, read, update, publish, retire), a version read, and the offers
     write with a body of `{ setIds }`;
-  - owning: the catalog, jobs (list, create, read, update, delete), a manual run, triggers (list,
+  - owning: the catalog, jobs (list, create, read, update, delete), a job's pinned version (read,
+    `/jobs/instances/{id}/version`), a manual run, triggers (list,
     create, update, delete), runs (list, read, retry, cancel), and environments (list, create, delete,
     mint token);
   - the product admin's run status read.
@@ -85,9 +87,11 @@
 - **job-inputs-declared**: The inputs editor MUST offer exactly the inputs that the job's template version
   declares. A job with inline steps edits its steps instead.
 - **job-inputs-pinned-version**: The catalog holds only each template's latest version, so the editor MUST
-  take a template job's inputs and defaults from the catalog only when the catalog's version is the one the
-  job is pinned to. Otherwise it MUST show the pinned version and the saved inputs read-only, and a save
-  MUST NOT send `inputs`.
+  take a template job's inputs and defaults from the job's pinned-version read, never from the catalog. It
+  MUST say which version the job runs, and its inputs MUST be editable against that version (the backend
+  checks a save against the same version). While that read is pending or has failed (`template_missing`
+  when the version is no longer in the job's ecosystem), the pane MUST show no input fields, MUST report
+  the failure, and a save MUST NOT send `inputs`.
 - **job-environment-choice**: The environment choice MUST be "Hub" (no environment) or one of the
   owner's environments. A save the backend refuses with `step_needs_hub` or `step_needs_machine` MUST
   show which step needs which.
@@ -99,7 +103,7 @@
 - **job-run-now**: The pane MUST offer "Run now", which starts a manual run and opens the returned run.
 - **job-notifications**: The notifications editor MUST choose when to notify (failed, succeeded) and
   through which channels (email, SMS, hub). It MUST show what the engine resolves: the job's own notify,
-  else its pinned template version's defaults, else failures by email. A save MUST send `options.notify`
+  else its pinned template version's defaults (from the pinned-version read), else failures by email. A save MUST send `options.notify`
   only when the owner changed a notification choice, so saving another setting never replaces the
   version's defaults.
 - **job-runs-list**: The job's runs MUST be listed newest first with a "Load more" that passes `before`.
@@ -112,9 +116,9 @@
 
 - **run-steps**: `JobRunPane` MUST list the run's step runs in order, each with its name, kind and status
   (`pending`, `running`, `succeeded`, `failed`, `skipped` or `cancelled`), and with its output, log and
-  usage when it has them. The name comes from the job's own steps. A template job's steps are its pinned
-  version's, which no owner route reads and the step runs do not carry, so such a row MUST read
-  "Step N" (its position, from 1) with its step id beside it rather than showing the bare id as a name.
+  usage when it has them. The name MUST be the step run's own `name`, which the backend takes from the
+  run's frozen steps, for inline and template jobs alike. A step run with no name MUST read "Step N" (its
+  position, from 1) with its step id beside it rather than showing the bare id as a name.
 - **run-live**: While the run is `queued` or `running`, the pane MUST follow it through the run stream and
   MUST close the stream when the run ends or the pane unmounts.
 - **run-model-unavailable**: A step that failed with `error_code` `model_unavailable` MUST read "The model

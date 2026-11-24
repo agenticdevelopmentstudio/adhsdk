@@ -17,6 +17,7 @@
 //   /api/jobs/catalog                            templates offered to the caller (GET)
 //   /api/jobs/instances                          list (GET), create (POST)
 //   /api/jobs/instances/{id}                     read (GET), edit (PATCH), archive (DELETE)
+//   /api/jobs/instances/{id}/version             its pinned version: inputs, defaults, steps (GET)
 //   /api/jobs/instances/{id}/run                 manual run (POST, 202)
 //   /api/jobs/instances/{id}/triggers            list (GET), create (POST)
 //   /api/jobs/instances/{id}/triggers/{tid}      edit (PATCH), delete (DELETE)
@@ -43,6 +44,7 @@ import {
   toJobEnvironment,
   toJobEnvironmentWithToken,
   toJobInstance,
+  toJobPinnedVersion,
   toJobRun,
   toJobRunDetail,
   toJobRunPage,
@@ -65,6 +67,8 @@ import type {
   JobInstancePatch,
   JobInstanceStatus,
   JobInstanceWire,
+  JobPinnedVersion,
+  JobPinnedVersionWire,
   JobRun,
   JobRunDetail,
   JobRunDetailWire,
@@ -278,6 +282,17 @@ export const jobsApi = {
     );
   },
 
+  /**
+   * The version the job is pinned to: its declared inputs and defaults, and its steps' names. A job
+   * with inline steps answers its own steps and no inputs. 409 `template_missing` when the version
+   * is not in the job's ecosystem.
+   */
+  async pinnedVersion(instanceId: string, scope?: JobsOwnerScope): Promise<JobPinnedVersion> {
+    return toJobPinnedVersion(
+      await authedJson<JobPinnedVersionWire>(ownerUrl(`/instances/${enc(instanceId)}/version`, scope)),
+    );
+  },
+
   /** Inputs, environment, options, name, or pause and resume. */
   async update(instanceId: string, patch: JobInstancePatch, scope?: JobsOwnerScope): Promise<JobInstance> {
     return toJobInstance(
@@ -478,6 +493,8 @@ export const jobsKeys = {
     [...JOBS_KEY, "instances", workspace ?? "", status ?? ""] as const,
   instance: (instanceId: string, workspace?: string) =>
     [...JOBS_KEY, "instance", workspace ?? "", instanceId] as const,
+  pinnedVersion: (instanceId: string, workspace?: string) =>
+    [...JOBS_KEY, "pinned-version", workspace ?? "", instanceId] as const,
   triggers: (instanceId: string, workspace?: string) =>
     [...JOBS_KEY, "triggers", workspace ?? "", instanceId] as const,
   runs: (query: JobRunsQuery = {}, workspace?: string) =>

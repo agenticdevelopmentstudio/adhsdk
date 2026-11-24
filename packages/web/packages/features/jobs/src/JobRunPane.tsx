@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactElement } from "react";
+import { useEffect, useState, type ReactElement } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
@@ -78,15 +78,6 @@ export function JobRunPane({ runId, workspace }: JobRunPaneProps): ReactElement 
     },
   });
 
-  // A custom job's steps carry their names. A template job's steps are its pinned version's, which
-  // no owner route reads (the step runs carry no name either), so those rows fall back to their
-  // position and step id in StepRunRow.
-  const stepNames = useMemo(() => {
-    const out = new Map<string, string>();
-    for (const s of job.data?.steps ?? []) out.set(s.id, s.name);
-    return out;
-  }, [job.data]);
-
   if (run.error) return <JobsReadError error={run.error} step="read-run" what="this run" />;
   if (run.isPending) return <Loading />;
   const r = run.data;
@@ -126,7 +117,7 @@ export function JobRunPane({ runId, workspace }: JobRunPaneProps): ReactElement 
       ) : (
         <ol aria-label="Steps" className="flex flex-col gap-2">
           {r.stepRuns.map((s) => (
-            <StepRunRow key={s.id} step={s} name={stepNames.get(s.stepId)} />
+            <StepRunRow key={s.id} step={s} />
           ))}
         </ol>
       )}
@@ -152,15 +143,24 @@ export function JobRunPane({ runId, workspace }: JobRunPaneProps): ReactElement 
   );
 }
 
-/** A step run, under its step's name when that is known, else its place in the run and its id. */
-function StepRunRow({ step, name }: { step: JobStepRun; name: string | undefined }): ReactElement {
+/**
+ * A step run, under the name the run's frozen steps give it; a row whose step has no name there reads
+ * its place in the run, with its step id beside it.
+ */
+function StepRunRow({ step }: { step: JobStepRun }): ReactElement {
   const headline = step.errorCode ? STEP_ERROR_HEADLINE[step.errorCode] : undefined;
+  const { name } = step;
   return (
-    <li className="flex flex-col gap-2 rounded-md border border-apt-border p-3" data-step-id={step.stepId}>
+    <li
+      className="flex flex-col gap-2 rounded-md border border-apt-border p-3"
+      data-step-id={step.stepId ?? undefined}
+    >
       <div className="flex flex-wrap items-center gap-2">
         <span className="font-medium text-apt-text">{name ?? `Step ${step.position + 1}`}</span>
-        {name === undefined ? <span className="font-mono text-xs text-apt-text-muted">{step.stepId}</span> : null}
-        <span className="text-xs text-apt-text-muted">{step.kind}</span>
+        {name === null && step.stepId ? (
+          <span className="font-mono text-xs text-apt-text-muted">{step.stepId}</span>
+        ) : null}
+        {step.kind ? <span className="text-xs text-apt-text-muted">{step.kind}</span> : null}
         <StatusBadge status={step.status} />
         {step.attempts > 1 ? (
           <span className="text-xs text-apt-text-muted">{step.attempts} attempts</span>

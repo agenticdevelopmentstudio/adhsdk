@@ -228,7 +228,7 @@ button.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/copy-button.tsx` | confirmed (1.2.2) |
+| web | `packages/web/packages/ui/src/components/copy-button.tsx` | confirmed (1.3.0) |
 
 ## Design Decisions
 

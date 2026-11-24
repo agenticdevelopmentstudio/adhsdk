@@ -9,11 +9,13 @@ import {
   toJobEnvironmentWithToken,
   toJobInstance,
   toJobLog,
+  toJobPinnedVersion,
   toJobRun,
   toJobRunDetail,
   toJobRunPage,
   toJobRunStarted,
   toJobRunStatusPage,
+  toJobStepRun,
   toJobTemplate,
   toJobTemplateVersion,
   toJobUsage,
@@ -49,6 +51,7 @@ const stepWire = (over: Partial<JobStepRunWire> = {}): JobStepRunWire => ({
   id: "sr-1",
   position: 0,
   stepId: "fetch",
+  name: "Fetch",
   kind: "action",
   status: "succeeded",
   attempts: 1,
@@ -130,6 +133,33 @@ describe("toJobRunDetail (vector jobs-010)", () => {
 
   it("reads a missing stepRuns as none", () => {
     expect(toJobRunDetail({ ...runWire(), stepRuns: null }).stepRuns).toEqual([]);
+  });
+});
+
+describe("toJobStepRun (vector jobs-016)", () => {
+  it("keeps the frozen step's name, and reads a step run with no name, step id or kind as such", () => {
+    expect(toJobStepRun(stepWire()).name).toBe("Fetch");
+    const bare = toJobStepRun(stepWire({ name: null, stepId: null, kind: null }));
+    expect(bare).toMatchObject({ name: null, stepId: null, kind: "" });
+  });
+});
+
+describe("toJobPinnedVersion (vector jobs-014)", () => {
+  it("maps a template job's pinned version, and a missing bag as empty", () => {
+    const v = toJobPinnedVersion({
+      templateId: "tpl-1",
+      templateVersion: 2,
+      inputs: [{ key: "topic", label: "Topic", type: "string" }],
+      defaults: { notify: { on: ["succeeded"] } },
+      steps: [{ id: "fetch", name: "Fetch", kind: "action" }],
+    });
+    expect(v.templateVersion).toBe(2);
+    expect(v.inputs.map((i) => i.key)).toEqual(["topic"]);
+    expect(v.defaults.notify?.on).toEqual(["succeeded"]);
+    expect(v.steps).toEqual([{ id: "fetch", name: "Fetch", kind: "action" }]);
+    expect(
+      toJobPinnedVersion({ templateId: null, templateVersion: null, inputs: null, defaults: null, steps: null }),
+    ).toEqual({ templateId: null, templateVersion: null, inputs: [], defaults: {}, steps: [] });
   });
 });
 

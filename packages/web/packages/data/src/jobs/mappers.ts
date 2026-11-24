@@ -17,6 +17,8 @@ import type {
   JobInstanceStatus,
   JobInstanceWire,
   JobOptions,
+  JobPinnedVersion,
+  JobPinnedVersionWire,
   JobRun,
   JobRunDetail,
   JobRunDetailWire,
@@ -96,7 +98,10 @@ export function toJobUsage(w: Record<string, unknown> | null | undefined): JobUs
   };
 }
 
-/** A step run's log lines: the stored array, or a single string split on newlines. */
+/**
+ * A step run's log lines. The route answers an array; a single string (as an older document described
+ * it) is split on newlines.
+ */
 export function toJobLog(w: string[] | string | null | undefined): string[] {
   if (Array.isArray(w)) return w.filter((l): l is string => typeof l === "string");
   if (typeof w === "string") return w === "" ? [] : w.split("\n");
@@ -208,11 +213,20 @@ export const toJobRun = (w: JobRunWire): JobRun => ({
   updatedAt: w.updatedAt,
 });
 
+export const toJobPinnedVersion = (w: JobPinnedVersionWire): JobPinnedVersion => ({
+  templateId: w.templateId ?? null,
+  templateVersion: w.templateVersion ?? null,
+  inputs: inputs(w.inputs),
+  defaults: defaults(w.defaults),
+  steps: (w.steps ?? []).map((s) => ({ id: s.id, name: s.name, kind: s.kind })),
+});
+
 export const toJobStepRun = (w: JobStepRunWire): JobStepRun => ({
   id: w.id,
   position: w.position,
-  stepId: w.stepId,
-  kind: w.kind,
+  stepId: w.stepId ?? null,
+  name: w.name ?? null,
+  kind: w.kind ?? "",
   status: narrow(w.status, STEP_RUN_STATUSES, "pending"),
   attempts: w.attempts ?? 0,
   output: w.output ?? null,

@@ -170,10 +170,12 @@ function JobSettings({
 }): ReactElement {
   const qc = useQueryClient();
   const scope = { workspace };
-  const catalog = useQuery({
-    queryKey: jobsKeys.catalog(workspace),
-    queryFn: () => jobsApi.catalog(scope),
-    enabled: job.templateId !== null,
+  // A template job's inputs and defaults are its pinned version's, read through the job itself (the
+  // catalog holds only each template's latest offered version, which may not be this job's).
+  const version = useQuery({
+    queryKey: jobsKeys.pinnedVersion(job.id, workspace),
+    queryFn: () => jobsApi.pinnedVersion(job.id, scope),
+    enabled: job.steps === null,
   });
   const environments = useQuery({
     queryKey: jobsKeys.environments(workspace),
@@ -185,17 +187,15 @@ function JobSettings({
   // (its own, else its template version's defaults), and a save never writes that over.
   const [notifyEdit, setNotifyEdit] = useState<ShownNotify | null>(null);
 
-  // The inputs and defaults a template job has are its own version's. The catalog holds only each
-  // template's latest offered version, so it speaks for this job only when that is the job's version.
-  const template = catalog.data?.find((t) => t.id === job.templateId);
-  const pinned = template && template.version === job.templateVersion ? template : undefined;
-  const inputsLocked = job.templateId !== null && !pinned;
+  const pinned = version.data;
+  // Until the pinned version is read, its declared inputs are unknown, so a save leaves them alone.
+  const inputsKnown = job.steps === null && pinned !== undefined;
   const notify = notifyEdit ?? resolvedNotify(job.options, pinned?.defaults);
 
   const save = useMutation({
     mutationFn: () => {
       const patch: JobInstancePatch = { environmentId };
-      if (!inputsLocked) patch.inputs = inputs;
+      if (inputsKnown) patch.inputs = inputs;
       if (notifyEdit) patch.options = { ...job.options, notify: notifyEdit };
       return jobsApi.update(job.id, patch, scope);
     },
@@ -217,16 +217,28 @@ function JobSettings({
         <h3 className="text-sm font-medium text-apt-text">Inputs</h3>
         {job.steps ? (
           <InlineSteps job={job} />
-        ) : catalog.error ? (
-          <JobsReadError error={catalog.error} step="list-catalog" what="the template's inputs" />
-        ) : catalog.isPending ? (
+        ) : version.error ? (
+          <JobsReadError error={version.error} step="read-pinned-version" what="the job's template version" />
+        ) : version.isPending ? (
           <Loading />
-        ) : inputsLocked ? (
-          <PinnedInputs job={job} offered={template?.version} />
-        ) : pinned && pinned.inputs.length > 0 ? (
-          <JobInputsForm specs={pinned.inputs} values={inputs} onChange={setInputs} disabled={disabled} />
         ) : (
-          <p className="text-sm text-apt-text-muted">This job takes no inputs.</p>
+          <>
+            {version.data.templateVersion !== null ? (
+              <p className="text-xs text-apt-text-muted">
+                This job runs version {version.data.templateVersion} of its template.
+              </p>
+            ) : null}
+            {version.data.inputs.length > 0 ? (
+              <JobInputsForm
+                specs={version.data.inputs}
+                values={inputs}
+                onChange={setInputs}
+                disabled={disabled}
+              />
+            ) : (
+              <p className="text-sm text-apt-text-muted">This job takes no inputs.</p>
+            )}
+          </>
         )}
       </section>
 
@@ -294,34 +306,6 @@ function JobSettings({
         </div>
       )}
     </form>
-  );
-}
-
-/**
- * A template job whose version the catalog no longer offers (the template moved on, was retired or
- * left the job's sets). The latest version's inputs are not this job's, so its saved values are
- * shown, not edited.
- */
-function PinnedInputs({ job, offered }: { job: JobInstance; offered?: number }): ReactElement {
-  const entries = Object.entries(job.inputs);
-  return (
-    <div className="flex flex-col gap-2">
-      <p className="text-sm text-apt-text-muted">
-        {offered === undefined
-          ? `This job runs version ${job.templateVersion ?? "?"} of a template that is no longer offered, so its inputs can't be edited here.`
-          : `This job runs version ${job.templateVersion ?? "?"} of its template, and version ${offered} is the one offered now, so its inputs can't be edited here.`}
-      </p>
-      {entries.length > 0 ? (
-        <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
-          {entries.map(([k, v]) => (
-            <div key={k} className="contents">
-              <dt className="font-mono text-xs text-apt-text-muted">{k}</dt>
-              <dd className="text-apt-text">{typeof v === "string" ? v : JSON.stringify(v)}</dd>
-            </div>
-          ))}
-        </dl>
-      ) : null}
-    </div>
   );
 }
 

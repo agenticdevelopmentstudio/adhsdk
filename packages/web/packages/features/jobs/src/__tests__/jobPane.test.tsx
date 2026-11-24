@@ -1,18 +1,18 @@
 // @vitest-environment jsdom
 // JobPane: an inbound trigger's secret shown once, with a confirmation on a close without copying
 // (vector jobs-011), a save refused because a step needs the hub naming that step (jobs-012), a job
-// pinned to an older version (jobs-014), notify defaults kept on save (jobs-015), and the runs list
+// pinned to an older version edited against that version (jobs-014), notify defaults kept on save (jobs-015), and the runs list
 // after Load more and Run now (jobs-018).
 // Mocks the jobs data client.
 import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AuthHttpError } from "@adh-sdk/auth/client";
-import type { JobTrigger } from "@adh-sdk/data/jobs";
+import type { JobPinnedVersion, JobTrigger } from "@adh-sdk/data/jobs";
 
 const api = vi.hoisted(() => ({
   get: vi.fn(),
-  catalog: vi.fn(),
+  pinnedVersion: vi.fn(),
   environments: vi.fn(),
   triggers: vi.fn(),
   runs: vi.fn(),
@@ -27,9 +27,14 @@ vi.mock("@adh-sdk/data/jobs", async (importOriginal) => {
 });
 
 import { JobPane } from "../JobPane";
-import { catalogTemplate, job, renderWithQuery, runDetail } from "./fixtures";
+import { job, renderWithQuery, runDetail } from "./fixtures";
 
 const SECRET = "jtrg_once_only_secret_value";
+
+/** A job's pinned version, as `jobsApi.pinnedVersion` answers it. */
+function pinned(over: Partial<JobPinnedVersion> = {}): JobPinnedVersion {
+  return { templateId: "tpl-1", templateVersion: 1, inputs: [], defaults: {}, steps: [], ...over };
+}
 
 function inbound(over: Partial<JobTrigger> = {}): JobTrigger {
   return {
@@ -62,7 +67,7 @@ beforeEach(() => {
   api.get.mockReset().mockResolvedValue(
     job({ templateId: null, templateVersion: null, steps: [{ id: "summarize", name: "Summarize", kind: "ai" }] as never }),
   );
-  api.catalog.mockReset().mockResolvedValue([]);
+  api.pinnedVersion.mockReset().mockResolvedValue(pinned());
   api.environments.mockReset().mockResolvedValue([ENV]);
   api.triggers.mockReset().mockResolvedValue([]);
   api.runs.mockReset().mockResolvedValue({ runs: [], nextBefore: null });
@@ -124,16 +129,35 @@ describe("JobPane", () => {
     expect(refusal.textContent).toContain("summarize");
   });
 
-  it("shows a job pinned to an older version's inputs read-only and saves none (vector jobs-014)", async () => {
+  it("edits a job pinned to an older version against that version's inputs (vector jobs-014)", async () => {
     api.get.mockResolvedValue(job({ templateVersion: 2, inputs: { topic: "old topic" } }));
-    api.catalog.mockResolvedValue([
-      catalogTemplate({ version: 3, inputs: [{ key: "topic", label: "Topic", type: "text" }] }),
-    ]);
+    api.pinnedVersion.mockResolvedValue(
+      pinned({ templateVersion: 2, inputs: [{ key: "topic", label: "Topic", type: "text" }] }),
+    );
     api.update.mockResolvedValue(job());
     renderWithQuery(<JobPane jobId="job-1" />);
-    expect(await screen.findByText(/runs version 2 of its template, and version 3/)).toBeTruthy();
-    expect(screen.queryByRole("textbox", { name: "Topic" })).toBeNull();
+    expect(await screen.findByText(/runs version 2 of its template/)).toBeTruthy();
+    expect(api.pinnedVersion).toHaveBeenCalledWith("job-1", { workspace: undefined });
 
+    const topic = (await screen.findByRole("textbox", { name: "Topic" })) as HTMLInputElement;
+    expect(topic.value).toBe("old topic");
+    fireEvent.change(topic, { target: { value: "new topic" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(api.update).toHaveBeenCalled());
+    expect(savedPatch().inputs).toEqual({ topic: "new topic" });
+  });
+
+  it("saves no inputs when the pinned version can't be read", async () => {
+    api.get.mockResolvedValue(job({ templateVersion: 2, inputs: { topic: "old topic" } }));
+    api.pinnedVersion.mockRejectedValue(
+      new AuthHttpError(409, "The job's template version is gone.", "template_missing", {
+        error: { code: "template_missing", message: "The job's template version is gone." },
+      }),
+    );
+    api.update.mockResolvedValue(job());
+    renderWithQuery(<JobPane jobId="job-1" />);
+    await screen.findByRole("option", { name: "Studio Mac" });
+    await waitFor(() => expect(screen.queryByRole("textbox", { name: "Topic" })).toBeNull());
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
     await waitFor(() => expect(api.update).toHaveBeenCalled());
     expect(savedPatch()).not.toHaveProperty("inputs");
@@ -141,9 +165,9 @@ describe("JobPane", () => {
 
   it("shows the version's notify defaults and saves notify only once changed (vector jobs-015)", async () => {
     api.get.mockResolvedValue(job({ options: {} }));
-    api.catalog.mockResolvedValue([
-      catalogTemplate({ version: 3, defaults: { notify: { on: ["succeeded"], channels: ["hub"] } } }),
-    ]);
+    api.pinnedVersion.mockResolvedValue(
+      pinned({ templateVersion: 2, defaults: { notify: { on: ["succeeded"], channels: ["hub"] } } }),
+    );
     api.update.mockResolvedValue(job());
     renderWithQuery(<JobPane jobId="job-1" />);
     await waitFor(() =>
