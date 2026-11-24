@@ -156,7 +156,23 @@ function TemplateEditor({ ecosystemId, template: t }: { ecosystemId: string; tem
       {save.error ? <ErrorText error={refusalText(save.error)} /> : null}
       {publish.error && !problems ? <ErrorText error={refusalText(publish.error)} /> : null}
       {problems ? (
-        <ErrorText error="The draft could not be published. The problems are shown beside the steps and inputs." />
+        <div className="flex flex-col gap-1">
+          <ErrorText
+            error={
+              problems.steps.length > 0 || problems.inputs.length > 0
+                ? "The draft could not be published. The problems are shown beside the steps and inputs."
+                : "The draft could not be published."
+            }
+          />
+          {problems.defaults.length > 0 ? (
+            // The draft's defaults have no editor here, so their problems are listed under the banner.
+            <ul role="alert" aria-label="Defaults problems" className="text-sm text-apt-red">
+              {issueText(problems.defaults).map((p, i) => (
+                <li key={i}>Defaults: {p}</li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
       ) : null}
 
       <section aria-label="Details" className="flex flex-col gap-3">
