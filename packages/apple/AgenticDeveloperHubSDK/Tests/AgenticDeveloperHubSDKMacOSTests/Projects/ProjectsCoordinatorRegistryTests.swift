@@ -19,8 +19,15 @@ final class ProjectsCoordinatorRegistryTests: XCTestCase {
     override func setUpWithError() throws {
         try super.setUpWithError()
         let directory = TestTempDirectory.make(label: "projects-coordinator-registry-test")
-        root = directory.appendingPathComponent("code", isDirectory: true).standardizedFileURL
-        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let code = directory.appendingPathComponent("code", isDirectory: true)
+        try FileManager.default.createDirectory(at: code, withIntermediateDirectories: true)
+        // The real path, once it exists: the scanner reports what the file
+        // system lists (/private/var/...), and the temporary directory is
+        // under /var, a symlink. Not `resolvingSymlinksInPath()`, which turns
+        // /private/var back into /var.
+        let real = try XCTUnwrap(realpath(code.path, nil))
+        defer { free(real) }
+        root = URL(fileURLWithPath: String(cString: real), isDirectory: true)
         registry = try ProjectDatabase(path: directory.appendingPathComponent("Registry.db").path)
         windowState = try ProjectDatabase(path: directory.appendingPathComponent("Projects.db").path)
     }
@@ -61,6 +68,9 @@ final class ProjectsCoordinatorRegistryTests: XCTestCase {
         let tab = TabRecord(edge: .left, title: "tab", root: leaf)
         try windowState.saveTabs([tab], activeTabID: tab.id, repoID: local.id)
         coordinator = try makeCoordinator()
+        // As `start()` does: the registry's (empty) list replaces the local
+        // copy first, so the scan finds alpha new rather than known.
+        await coordinator.loadFromRegistry()
 
         coordinator.scan(showingProgress: false)
         try await waitUntil { !self.coordinator.isScanning }
@@ -181,7 +191,8 @@ final class ProjectsCoordinatorRegistryTests: XCTestCase {
             to: gitDirectory.appendingPathComponent("config"), atomically: true, encoding: .utf8)
         try "ref: refs/heads/main\n".write(
             to: gitDirectory.appendingPathComponent("HEAD"), atomically: true, encoding: .utf8)
-        return directory.standardizedFileURL
+        // Already real (`root` is), and `standardizedFileURL` would drop /private.
+        return directory
     }
 
     /// Polls `condition` on the main actor, yielding between looks so the
