@@ -236,6 +236,7 @@ account router, moved out of stenographerd so any daemon can host it:
 
 - **heal-after-clean-drain**: The `PipelineDrainer` worker MUST, after each drain that did not fail, send back through the pipeline the quarantined records whose reason starts with one of `PipelineDrainer.transientFailurePrefixes` (a sink or the events.db write failed), without a restart and without a caller asking.
 - **heal-keeps-record-failures**: The heal MUST NOT requeue a record quarantined for itself (invalid JSON, an archive conflict, any reason without a transient prefix); it stays in quarantine.
+- **record-store-failure-reason**: When the events.db write of a batch fails with an error that is not a store outage, the drainer MUST write each record on its own. A record refused while others in the batch were stored MUST be charged under `PipelineDrainer.recordStoreFailurePrefix` (`record not stored: `), which is not a transient prefix; when no record of the batch could be stored, every record MUST be charged under `storeFailurePrefix`, because the store, not the record, is at fault.
 - **heal-interval**: The heal MUST requeue at most once per `PipelineDrainer.quarantineHealInterval` (15 minutes), counted from the last heal that found anything in quarantine, so a record that keeps failing costs at most `ProviderSpool.maxAttempts` attempts per interval. A heal that finds the quarantine empty MUST NOT start the interval.
 - **heal-drains-promptly**: A heal that requeued records MUST wake the worker so they drain without waiting for the idle poll.
 - **heal-report**: The drainer MUST keep the last heal that requeued records or failed in `lastQuarantineHeal` (when, how many, the error); a failed heal MUST NOT stop draining.
@@ -295,6 +296,8 @@ Not applicable — this is a database access layer and storage-path helper, not 
 | sed-038 | heal-interval | a heal that requeued, then a second heal 1 minute later and a third after `quarantineHealInterval` | the second requeues nothing; the third requeues (`testHealRunsAtMostOncePerInterval`) |
 | sed-039 | heal-interval | a heal over an empty quarantine, then a sink-failure quarantine and a heal 1 second later | the second heal requeues (`testAnEmptyHealDoesNotStartTheInterval`) |
 | sed-040 | heal-after-clean-drain, heal-drains-promptly | a started worker whose sink fails until records are quarantined, then recovers | the quarantine empties and every record is stored with no manual retry (`testTheWorkerHealsAQuarantineOnItsOwn`) |
+| sed-041 | record-store-failure-reason, heal-keeps-record-failures | `k0`, `poison` (a record events.db refuses) and `k1`, drained `maxAttempts` times, then a heal | `poison` is quarantined under `record not stored: `; the heal requeues nothing (`testHealLeavesARecordTheStoreRefusedOnItsOwn`) |
+| sed-042 | record-store-failure-reason | three records, the events table hidden, drained `maxAttempts` times; then the table restored and a heal | every record is quarantined under `store write failed: `; the heal requeues all three and they are stored (`testABatchTheStoreRefusesWholeIsChargedAsAStoreFailureAndHealed`) |
 ## Edge Cases
 
 - **Empty display name**: The token-deriving operation applied to an empty string, or to a name made only of spaces or punctuation, MUST return `"AgenticDeveloperHubSDK"`; a missing or empty declared display name MUST make the display-name reader return `"AgenticDeveloperHubSDK"`.
@@ -484,7 +487,7 @@ The bounded database and the storage-location helper do not log; ejections surfa
 
 **Decision**: After every drain that did not fail, the worker requeues the quarantined records whose reason is a destination outage, at most once per 15 minutes; the requeue at daemon start stays.
 
-**Rationale**: A destination stall of a few minutes (a read lane held past its 30-second deadline) spends every record's attempts and parks the batch, and the start-time requeue alone left it parked for days on a daemon that never restarted. A clean drain is the evidence the destination is back. The interval bounds a record that fails for itself under a transient prefix (a per-record store write failure) to `maxAttempts` cheap attempts per interval instead of a loop, and still lets a fresh outage heal on the next clean drain, because an empty heal does not start the interval.
+**Rationale**: A destination stall of a few minutes (a read lane held past its 30-second deadline) spends every record's attempts and parks the batch, and the start-time requeue alone left it parked for days on a daemon that never restarted. A clean drain is the evidence the destination is back. A record the store refuses on its own while the rest of its batch is stored is charged under `record not stored: `, outside the transient prefixes, so the heal never retries it. The interval bounds any other record that fails for itself under a transient prefix to `maxAttempts` cheap attempts per interval instead of a loop, and still lets a fresh outage heal on the next clean drain, because an empty heal does not start the interval.
 
 **Approved**: pending
 ## Compliance

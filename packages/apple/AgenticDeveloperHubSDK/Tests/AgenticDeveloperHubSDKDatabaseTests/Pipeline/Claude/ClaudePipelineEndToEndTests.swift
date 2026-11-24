@@ -459,6 +459,8 @@ extension ClaudePipelineEndToEndTests {
         XCTAssertTrue(ClaudePipelineHandles.isTransientFailure("sink ClaudeMainDBSink failed: busy"))
         XCTAssertTrue(ClaudePipelineHandles.isTransientFailure("store write failed: disk I/O error"))
         XCTAssertFalse(ClaudePipelineHandles.isTransientFailure("invalid JSON"))
+        XCTAssertFalse(ClaudePipelineHandles.isTransientFailure(
+            "\(PipelineDrainer.recordStoreFailurePrefix)CHECK constraint failed"))
         XCTAssertFalse(ClaudePipelineHandles.isTransientFailure("dedup-key conflict: x"))
     }
 

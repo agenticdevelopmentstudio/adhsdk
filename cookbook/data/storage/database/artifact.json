@@ -40,7 +40,7 @@
     "approved-date": ""
   },
   "names_hosts": "The account router's subject is Claude account credentials: the source's type names (`ClaudeCredentialDTO`, `ClaudeCredentialKind`) and the Claude Code traffic it routes are stated as the source names them.",
-  "synced": "fa56840889b1b674",
+  "synced": "c55388c847166872",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -147,8 +147,13 @@ public final class PipelineDrainer: @unchecked Sendable {
 
     /// Prefix of a quarantine reason written when a sink failed.
     public static let sinkFailurePrefix = "sink "
-    /// Prefix of a quarantine reason written when the events.db write failed.
+    /// Prefix of a quarantine reason written when the events.db write failed as a
+    /// whole (``isStoreOutage(_:)``): the store, not the record, was at fault.
     public static let storeFailurePrefix = "store write failed: "
+    /// Prefix of a quarantine reason written when the events.db write refused one
+    /// record on its own while the store was up: the record is at fault, so it is
+    /// not a transient failure and the heal leaves it in quarantine.
+    public static let recordStoreFailurePrefix = "record not stored: "
     /// Quarantine reasons that name a destination outage rather than the record
     /// itself (invalid JSON, an archive conflict): those records are already in the
     /// archive and worth sending through again once the destination is back.
@@ -433,15 +438,19 @@ public final class PipelineDrainer: @unchecked Sendable {
         return merged
     }
 
-    /// After a failed batch write: writes each record's rows on its own, charges the
-    /// records that still fail, and returns the ones that are now stored. Throws the
-    /// original failure when nothing could be stored. A store outage met on the way
-    /// fails the pass there, charging no further record.
+    /// After a failed batch write: writes each record's rows on its own and returns
+    /// the ones that are now stored. When some were stored, each record that still
+    /// fails is charged under ``recordStoreFailurePrefix``: the store took its
+    /// neighbours, so the record is at fault. When none was stored, the store is at
+    /// fault: every record is charged under ``storeFailurePrefix`` and the original
+    /// failure is thrown. A store outage met on the way fails the pass there,
+    /// charging no record.
     private func isolateStoreFailure(
         _ batchError: Error, _ items: [(SpooledRecord, (ArchivedRecord, NormalizedBatch))],
         _ outcome: inout DrainOutcome
     ) throws -> [(spooled: SpooledRecord, archived: ArchivedRecord, batch: NormalizedBatch)] {
         var kept: [(spooled: SpooledRecord, archived: ArchivedRecord, batch: NormalizedBatch)] = []
+        var refused: [(SpooledRecord, Error)] = []
         for (item, (archived, batch)) in items {
             do {
                 _ = try store.write(batch, provider: normalizer.provider)
@@ -449,10 +458,12 @@ public final class PipelineDrainer: @unchecked Sendable {
             } catch where Self.isStoreOutage(error) {
                 throw StepFailure(description: "\(Self.storeFailurePrefix)\(error)")
             } catch {
-                try charge(item, reason: "\(Self.storeFailurePrefix)\(error)", &outcome)
+                refused.append((item, error))
             }
         }
-        if kept.isEmpty { throw StepFailure(description: "store write failed: \(batchError)") }
+        let prefix = kept.isEmpty ? Self.storeFailurePrefix : Self.recordStoreFailurePrefix
+        for (item, error) in refused { try charge(item, reason: "\(prefix)\(error)", &outcome) }
+        if kept.isEmpty { throw StepFailure(description: "\(Self.storeFailurePrefix)\(batchError)") }
         return kept
     }
 

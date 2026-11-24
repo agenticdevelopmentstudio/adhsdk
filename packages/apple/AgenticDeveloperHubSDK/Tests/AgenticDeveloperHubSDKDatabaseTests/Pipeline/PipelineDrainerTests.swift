@@ -301,9 +301,42 @@ final class PipelineDrainerTests: XCTestCase {
         XCTAssertEqual(try rig.spool.pendingCount(), 0)
         let quarantined = try rig.spool.quarantined(limit: 10)
         XCTAssertEqual(quarantined.map(\.record.dedupKey), ["poison"])
-        XCTAssertTrue(quarantined.first?.reason.hasPrefix("store write failed") ?? false,
+        XCTAssertTrue(quarantined.first?.reason.hasPrefix(PipelineDrainer.recordStoreFailurePrefix) ?? false,
                       quarantined.first?.reason ?? "")
         XCTAssertEqual(quarantined.first?.record.payload, record("poison").payload)
+    }
+
+    func testHealLeavesARecordTheStoreRefusedOnItsOwn() throws {
+        let rig = try makeRig()
+        try rig.spool.append([record("k0"), record("poison"), record("k1")])
+        let pipe = try PipelineDrainer(spool: rig.spool, archive: rig.archive,
+                                       normalizer: PoisonNormalizer(), store: rig.store)
+        for _ in 0..<ProviderSpool.maxAttempts { pipe.drainOnce() }
+        XCTAssertEqual(try rig.spool.quarantined(limit: 10).map(\.record.dedupKey), ["poison"])
+
+        XCTAssertEqual(pipe.healTransientQuarantine(), 0, "a record failure is not a destination outage")
+        XCTAssertEqual(try rig.spool.quarantined(limit: 10).map(\.record.dedupKey), ["poison"])
+        XCTAssertEqual(try rig.spool.pendingCount(), 0)
+        let reason = try XCTUnwrap(rig.spool.quarantined(limit: 10).first).reason
+        XCTAssertFalse(PipelineDrainer.transientFailurePrefixes.contains { reason.hasPrefix($0) }, reason)
+    }
+
+    func testABatchTheStoreRefusesWholeIsChargedAsAStoreFailureAndHealed() throws {
+        let rig = try makeRig()
+        try rig.spool.append((0..<3).map { record("k\($0)") })
+        let path = tmpDir.appendingPathComponent(EventStore.fileName).path
+        let saboteur = try DatabaseQueue(path: path)
+        try saboteur.write { try $0.execute(sql: "ALTER TABLE events RENAME TO events_hidden") }
+        let pipe = try drainer(rig)
+        for _ in 0..<ProviderSpool.maxAttempts { pipe.drainOnce() }
+        let reasons = try rig.spool.quarantined(limit: 10).map(\.reason)
+        XCTAssertEqual(reasons.count, 3)
+        XCTAssertTrue(reasons.allSatisfy { $0.hasPrefix(PipelineDrainer.storeFailurePrefix) }, "\(reasons)")
+
+        try saboteur.write { try $0.execute(sql: "ALTER TABLE events_hidden RENAME TO events") }
+        XCTAssertEqual(pipe.healTransientQuarantine(), 3, "nothing stored: the store, not the records, failed")
+        XCTAssertFalse(pipe.drainUntilEmpty().failed)
+        XCTAssertEqual(try rig.store.counts().events, 3)
     }
 
     func testDrainUntilEmptyStopsWithoutProgressAndDoesNotBurnAttempts() throws {
