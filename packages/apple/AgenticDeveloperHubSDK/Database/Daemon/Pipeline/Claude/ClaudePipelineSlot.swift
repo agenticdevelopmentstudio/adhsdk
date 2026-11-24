@@ -104,5 +104,7 @@ extension ClaudePipelineSlot: PipelineQuarantineControl {
 
     @discardableResult
     public func clearArchivedQuarantine() -> Int { current?.clearArchivedQuarantine() ?? 0 }
+
+    public func lastQuarantineHeal() -> QuarantineHealReport? { current?.lastQuarantineHeal() }
 }
 #endif

@@ -44,7 +44,9 @@ final class SessionFeatureRoutesTests: XCTestCase {
         private let lock = NSLock()
         private var calls: [String] = []
         let parked: Int
-        init(parked: Int) { self.parked = parked }
+        let heal: QuarantineHealReport?
+        init(parked: Int, heal: QuarantineHealReport? = nil) { self.parked = parked; self.heal = heal }
+        func lastQuarantineHeal() -> QuarantineHealReport? { heal }
         var log: [String] { lock.withLock { calls } }
         func quarantinedCount() -> Int { parked }
         func quarantinedErrors() -> [IngestionErrorDTO] {
@@ -263,6 +265,27 @@ final class SessionFeatureRoutesTests: XCTestCase {
         let body = try json(response)
         XCTAssertEqual(body["count"] as? Int, 3)
         XCTAssertEqual(body["exhausted"] as? Int, 3)
+    }
+
+    /// Review f8: the count carries the drainer's last heal, so a heal that keeps
+    /// failing shows without reading the log; the keys are absent until one ran.
+    func testErrorCountCarriesTheLastQuarantineHeal() async throws {
+        let quiet = try json(try await send(
+            "GET", "/ingestion/errors/count",
+            services: try makeServices(pipelineQuarantine: FakePipelineQuarantine(parked: 1))))
+        XCTAssertNil(quiet["last_heal_requeued"])
+        XCTAssertNil(quiet["last_heal_at"])
+        XCTAssertNil(quiet["last_heal_error"])
+
+        let failed = QuarantineHealReport(
+            finishedAt: Date(timeIntervalSince1970: 1_800_000_000), requeued: 0, error: "disk I/O error")
+        let body = try json(try await send(
+            "GET", "/ingestion/errors/count",
+            services: try makeServices(pipelineQuarantine: FakePipelineQuarantine(parked: 2, heal: failed))))
+        XCTAssertEqual(body["count"] as? Int, 2)
+        XCTAssertEqual(body["last_heal_requeued"] as? Int, 0)
+        XCTAssertEqual(body["last_heal_error"] as? String, "disk I/O error")
+        XCTAssertEqual(body["last_heal_at"] as? String, "2027-01-15T08:00:00Z")
     }
 
     /// Every record the count includes is in the list, with its reason.

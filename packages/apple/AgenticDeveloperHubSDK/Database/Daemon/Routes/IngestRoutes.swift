@@ -8,6 +8,24 @@ import Foundation
 /// retry, and the native `http` hook endpoint that feeds the spool.
 enum IngestRoutes {
 
+    /// `GET /ingestion/errors/count`: the badge's counts and the provider
+    /// drainer's last self-heal (the `last_heal_*` keys are absent until one
+    /// requeued records or failed).
+    struct ErrorCount: Encodable {
+        let count: Int
+        let exhausted: Int
+        let lastHealRequeued: Int?
+        let lastHealAt: Date?
+        let lastHealError: String?
+
+        enum CodingKeys: String, CodingKey {
+            case count, exhausted
+            case lastHealRequeued = "last_heal_requeued"
+            case lastHealAt = "last_heal_at"
+            case lastHealError = "last_heal_error"
+        }
+    }
+
     static func table(_ services: SessionFeatureServices) -> RouteTable {
         let database = services.database
         let quarantine = services.quarantine
@@ -22,11 +40,15 @@ enum IngestRoutes {
             },
             RouteTable.route("GET", where: { $0 == ["ingestion", "errors", "count"] }) { _, _ in
                 let counts = quarantine.counts()
-                // A provider spool's quarantined records count in both: nothing
-                // retries them on a timer (only a restart and the retry route do), so
-                // they are as stuck as an exhausted file and the badge must show them.
+                // A provider spool's quarantined records count in both: the drainer
+                // heals only records a destination outage parked, so what stays is
+                // as stuck as an exhausted file and the badge must show it.
                 let pipeline = services.pipelineQuarantine?.quarantinedCount() ?? 0
-                return .json(["count": counts.total + pipeline, "exhausted": counts.exhausted + pipeline])
+                let heal = services.pipelineQuarantine?.lastQuarantineHeal()
+                return .json(ErrorCount(
+                    count: counts.total + pipeline, exhausted: counts.exhausted + pipeline,
+                    lastHealRequeued: heal?.requeued, lastHealAt: heal?.finishedAt,
+                    lastHealError: heal?.error))
             },
             // Persistent ingestion-error log (DB-backed) for tracking recurring
             // failures — includes recovered/cleared history, unlike the live list.

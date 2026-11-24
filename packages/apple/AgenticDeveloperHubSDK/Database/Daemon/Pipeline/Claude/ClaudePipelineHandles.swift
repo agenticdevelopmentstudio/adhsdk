@@ -239,6 +239,9 @@ public struct ClaudePipelineHandles: Sendable {
 }
 
 extension ClaudePipelineHandles: PipelineQuarantineControl {
+    /// The drainer's last self-heal that requeued records or failed.
+    public func lastQuarantineHeal() -> QuarantineHealReport? { drainer.lastQuarantineHeal }
+
     /// Records the spool has quarantined; 0 when the spool cannot be read.
     public func quarantinedCount() -> Int {
         (try? spool.quarantinedCount()) ?? 0

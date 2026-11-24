@@ -1,5 +1,6 @@
 import Foundation
 import GRDB
+import os
 
 /// The points in a drain pass where a test can inject a failure.
 public enum DrainStep: String, Sendable, CaseIterable {
@@ -141,6 +142,9 @@ public struct QuarantineHealReport: Sendable, Equatable {
 }
 
 public final class PipelineDrainer: @unchecked Sendable {
+    private static let logger = Logger(
+        subsystem: Bundle.main.bundleIdentifier ?? "adhsdk", category: "PipelineDrainer")
+
     private struct StepFailure: Error, CustomStringConvertible {
         let description: String
     }
@@ -650,6 +654,11 @@ public final class PipelineDrainer: @unchecked Sendable {
             report = QuarantineHealReport(finishedAt: Date(), requeued: requeued, error: nil)
         } catch {
             report = QuarantineHealReport(finishedAt: Date(), requeued: 0, error: String(describing: error))
+        }
+        if let error = report.error {
+            Self.logger.error("Quarantine heal failed: \(error, privacy: .public)")
+        } else if report.requeued > 0 {
+            Self.logger.notice("Quarantine heal requeued \(report.requeued) record(s)")
         }
         lock.lock()
         lastHealAttempt = now

@@ -241,7 +241,8 @@ account router, moved out of stenographerd so any daemon can host it:
 - **heal-interval**: The heal MUST requeue at most once per `PipelineDrainer.quarantineHealInterval` (15 minutes, measured on the monotonic clock so a change to the wall clock neither stretches nor skips it), counted from the last heal that found anything in quarantine, so a record that keeps failing costs at most `ProviderSpool.maxAttempts` attempts per interval. A heal that finds the quarantine empty MUST NOT start the interval.
 - **heal-drains-promptly**: A heal that requeued records MUST wake the worker so they drain without waiting for the idle poll.
 - **heal-after-stop**: The worker MUST NOT heal once a stop has been asked for, including a stop asked for while it compacted the spool, so no record moves into the spool after its owner stopped it.
-- **heal-report**: The drainer MUST keep the last heal that requeued records or failed in `lastQuarantineHeal` (when, how many, the error); a failed heal MUST NOT stop draining.
+- **heal-report**: The drainer MUST keep the last heal that requeued records or failed in `lastQuarantineHeal` (when, how many, the error), and MUST log it; a failed heal MUST NOT stop draining.
+- **heal-report-served**: `GET /ingestion/errors/count` MUST carry the provider drainer's last heal as `last_heal_requeued`, `last_heal_at` (ISO 8601) and `last_heal_error`, and MUST omit those keys until a heal has requeued records or failed, so a heal that keeps failing is visible without reading the log.
 ## Appearance
 
 Not applicable — this is a database access layer and storage-path helper, not a visual component.
@@ -388,7 +389,7 @@ Not applicable: neither component emits events; the metrics snapshot is an in-pr
 - **Credential storage**: `KeychainAccountCredentialStore` keeps the relayed set in the Keychain, one item under the daemon's service; `InMemoryAccountCredentialStore` keeps nothing past the process.
 ## Logging
 
-The bounded database and the storage-location helper do not log; ejections surface as raised deadline-exceeded errors and as the evicted counters in the metrics snapshot. The quota probe logs through the unified logging system: a store it cannot read or write, the count of credentials a client relayed, and a one-time warning when no credentials are held. It never logs a token. The router's errors are scrubbed by `AccountRouterLog.scrub` before they reach a log or a route reply.
+The bounded database and the storage-location helper do not log; ejections surface as raised deadline-exceeded errors and as the evicted counters in the metrics snapshot. The quota probe logs through the unified logging system: a store it cannot read or write, the count of credentials a client relayed, and a one-time warning when no credentials are held. It never logs a token. The pipeline drainer logs each quarantine heal that requeued records (notice, with the count) and each heal that failed (error, with the reason), under the category `PipelineDrainer`. The router's errors are scrubbed by `AccountRouterLog.scrub` before they reach a log or a route reply.
 ## Platform Notes
 
 - **SwiftUI**: Source platform (`Database/BoundedDatabase.swift`, `Database/AppStorageLocation.swift`, module `AgenticDeveloperHubSDKDatabase`). It imports `Foundation`, `SQLite3` (for `sqlite3_progress_handler`) and GRDB; the per-op deadline and current connection live in `Thread.current.threadDictionary`, which works because GRDB runs each sync op on one thread; the handler is a capture-free `@convention(c)` closure; `DispatchTime` supplies the monotonic clock and `NSLock` guards the metrics. A SwiftUI app owns one instance per database file and should call it off the main actor, since every call blocks.

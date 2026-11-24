@@ -26,6 +26,13 @@ public protocol PipelineQuarantineControl: Sendable {
     /// deleted.
     @discardableResult
     func clearArchivedQuarantine() -> Int
+    /// The drainer's last self-heal that requeued records or failed; nil until
+    /// one has, or when nothing is open.
+    func lastQuarantineHeal() -> QuarantineHealReport?
+}
+
+extension PipelineQuarantineControl {
+    public func lastQuarantineHeal() -> QuarantineHealReport? { nil }
 }
 
 /// Everything the shared session-feature routes need from the daemon that mounts
