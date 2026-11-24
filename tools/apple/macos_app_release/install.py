@@ -12,6 +12,10 @@ running, and prints the one-time `sudo chown` that hands the bundle back, for th
 owner to run before installing again; it never runs sudo. (A second pkg install
 would not do: its payload is root's too.)
 
+`install_built_app` is the same swap for a bundle straight out of a local build
+(an app's `./install`), with no zip, release.json or layout gate. `remove_installed_app` reverses it (an app's `./uninstall`). `swap_in` and
+`destination_ok` are the pieces they share.
+
 `installed_failures` proves the copy in the apps directory is this version and
 build, signed Developer ID, layout-correct and running.
 """
@@ -100,23 +104,11 @@ def install(zip_path: Path, cfg: ReleaseConfig, *, apps_dir: Path | None = None,
     uid = os.getuid() if uid is None else uid
     app_name = f"{cfg.app_name}.app"
     dest = apps_dir / app_name
-    if dest.is_symlink():
-        say(f"error: {dest} is a symlink; remove it or install by hand.")
-        return 1
-    if dest.exists() and dest.lstat().st_uid != uid:
-        # Installing the pkg again would not help: pkgbuild's payload is root's, so
-        # it leaves the bundle root-owned and the next release refuses the same way.
-        # Handing the bundle back once is what makes every later install sudo-free.
-        say(f"error: {dest} is not owned by you (the installer package made it), so it "
-            "cannot be replaced without root.")
-        say("Hand it back to yourself once, then run install again; this and every "
-            "later release then swap in without sudo:")
-        say(f'  sudo chown -R "$(id -un)" {dest}')
+    if not destination_ok(dest, uid=uid, say=say):
         return 1
 
     # Staged inside the apps dir so the swap renames within one volume.
     staging = apps_dir / f".{cfg.app_name}-install-{pid}"
-    aside = apps_dir / f"{app_name}.old-{pid}"
     try:
         staging.mkdir(parents=True, exist_ok=True)
         unpacked = run(["ditto", "-x", "-k", str(zip_path), str(staging)])
@@ -131,34 +123,151 @@ def install(zip_path: Path, cfg: ReleaseConfig, *, apps_dir: Path | None = None,
                 say(f"  {problem}")
             return 1
 
-        quit_app(dest, pids=pids, kill=kill, sleep=sleep, monotonic=monotonic)
-
-        had_old = dest.exists()
-        try:
-            if had_old:
-                rename(dest, aside)
-        except OSError as exc:
-            say(f"error: could not move {dest} aside: {exc}")
+        if not swap_in(new, dest, aside=apps_dir / f"{app_name}.old-{pid}", pids=pids,
+                       kill=kill, sleep=sleep, monotonic=monotonic, rename=rename, say=say):
             return 1
-        try:
-            rename(new, dest)
-        except OSError as exc:
-            if had_old:
-                shutil.rmtree(dest, ignore_errors=True)  # any partial new copy
-                rename(aside, dest)
-            say(f"error: could not move the new app into place: {exc}")
-            return 1
-        if had_old:
-            shutil.rmtree(aside, ignore_errors=True)
     finally:
         shutil.rmtree(staging, ignore_errors=True)
 
+    if not open_installed(dest, run=run, say=say):
+        return 1
+    say(f"installed {dest} from {zip_path.name}")
+    return 0
+
+
+def destination_ok(dest: Path, *, uid: int, say: Callable[[str], None] = print) -> bool:
+    """Whether `dest` may be replaced without root. Says why not, and how to fix
+    it, when it may not: a symlink is refused, and so is a bundle another user owns."""
+    if dest.is_symlink():
+        say(f"error: {dest} is a symlink; remove it or install by hand.")
+        return False
+    if dest.exists() and dest.lstat().st_uid != uid:
+        # Installing the pkg again would not help: pkgbuild's payload is root's, so
+        # it leaves the bundle root-owned and the next release refuses the same way.
+        # Handing the bundle back once is what makes every later install sudo-free.
+        say(f"error: {dest} is not owned by you (the installer package made it), so it "
+            "cannot be replaced without root.")
+        say("Hand it back to yourself once, then run install again; this and every "
+            "later release then swap in without sudo:")
+        say(f'  sudo chown -R "$(id -un)" {dest}')
+        return False
+    return True
+
+
+def swap_in(new: Path, dest: Path, *, aside: Path,
+            pids: Callable[[Path], list[int]] = processes.bundle_pids,
+            kill: Callable[[int, int], None] = os.kill,
+            sleep: Callable[[float], None] = time.sleep,
+            monotonic: Callable[[], float] = time.monotonic,
+            rename: Callable[[Path, Path], object] = os.rename,
+            say: Callable[[str], None] = print) -> bool:
+    """Quit what runs from `dest`, then put the bundle at `new` in its place.
+
+    `new` and `aside` must be on `dest`'s volume, so both moves are renames. The
+    old bundle is moved to `aside` and deleted only once the new one is in place;
+    if the second move fails, the old one goes back. True when `new` is installed.
+    """
+    quit_app(dest, pids=pids, kill=kill, sleep=sleep, monotonic=monotonic)
+
+    had_old = dest.exists()
+    try:
+        if had_old:
+            rename(dest, aside)
+    except OSError as exc:
+        say(f"error: could not move {dest} aside: {exc}")
+        return False
+    try:
+        rename(new, dest)
+    except OSError as exc:
+        if had_old:
+            shutil.rmtree(dest, ignore_errors=True)  # any partial new copy
+            rename(aside, dest)
+        say(f"error: could not move the new app into place: {exc}")
+        return False
+    if had_old:
+        shutil.rmtree(aside, ignore_errors=True)
+    return True
+
+
+def open_installed(dest: Path, *, run: Runner = run_command,
+                   say: Callable[[str], None] = print) -> bool:
+    """Refresh Finder's icon for `dest` (best-effort) and open it. False when it
+    would not open."""
     refresh_finder_icon(dest, run=run, say=say)
     opened = run(["open", "-a", str(dest)])
     if opened.returncode != 0:
         say(f"error: installed {dest} but could not open it: {(opened.stderr or '').strip()}")
+        return False
+    return True
+
+
+def remove_installed_app(dest: Path, *,
+                         pids: Callable[[Path], list[int]] = processes.bundle_pids,
+                         kill: Callable[[int, int], None] = os.kill,
+                         sleep: Callable[[float], None] = time.sleep,
+                         monotonic: Callable[[], float] = time.monotonic,
+                         uid: int | None = None,
+                         say: Callable[[str], None] = print) -> int:
+    """Quit what runs from `dest` and delete the bundle: the reverse of
+    `install_built_app`. Nothing installed is a success. Only the bundle goes;
+    whatever the app itself wrote (preferences, Keychain items) is left alone.
+    Returns 0 on success, 1 on any refusal."""
+    uid = os.getuid() if uid is None else uid
+    if not dest.exists() and not dest.is_symlink():
+        say(f"{dest} is not installed; nothing to remove.")
+        return 0
+    if not destination_ok(dest, uid=uid, say=say):
         return 1
-    say(f"installed {dest} from {zip_path.name}")
+    left = quit_app(dest, pids=pids, kill=kill, sleep=sleep, monotonic=monotonic)
+    if left:
+        say(f"error: {dest} is still running (pids {', '.join(map(str, left))}); not removed.")
+        return 1
+    shutil.rmtree(dest)
+    say(f"removed {dest}")
+    return 0
+
+
+def install_built_app(app: Path, apps_dir: Path, *, run: Runner = run_command,
+                      pids: Callable[[Path], list[int]] = processes.bundle_pids,
+                      kill: Callable[[int, int], None] = os.kill,
+                      sleep: Callable[[float], None] = time.sleep,
+                      monotonic: Callable[[], float] = time.monotonic,
+                      rename: Callable[[Path, Path], object] = os.rename,
+                      pid: int | None = None, uid: int | None = None,
+                      say: Callable[[str], None] = print) -> int:
+    """Install a locally built `app` bundle (a build's products directory, say)
+    into `apps_dir` under its own name, with no release.json, zip or notarization.
+
+    The same order and guarantees as `install`: ownership check, copy beside the
+    install, quit, swap, Finder refresh, open. A failed copy leaves the installed
+    app running and untouched. Returns 0 on success, 1 on any refusal.
+    """
+    pid = os.getpid() if pid is None else pid
+    uid = os.getuid() if uid is None else uid
+    if not (app / "Contents" / "Info.plist").is_file():
+        say(f"error: {app} is not an app bundle (no Contents/Info.plist).")
+        return 1
+    dest = apps_dir / app.name
+    if not destination_ok(dest, uid=uid, say=say):
+        return 1
+
+    staging = apps_dir / f".{app.stem}-install-{pid}"
+    try:
+        staging.mkdir(parents=True, exist_ok=True)
+        new = staging / app.name
+        copied = run(["ditto", str(app), str(new)])
+        if copied.returncode != 0 or not new.is_dir():
+            say(f"error: ditto failed: {(copied.stderr or '').strip()}")
+            return 1
+        if not swap_in(new, dest, aside=apps_dir / f"{app.name}.old-{pid}", pids=pids,
+                       kill=kill, sleep=sleep, monotonic=monotonic, rename=rename, say=say):
+            return 1
+    finally:
+        shutil.rmtree(staging, ignore_errors=True)
+
+    if not open_installed(dest, run=run, say=say):
+        return 1
+    say(f"installed {dest} from {app}")
     return 0
 
 

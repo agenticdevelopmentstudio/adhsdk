@@ -462,6 +462,135 @@ def test_a_failed_ditto_stops_before_anything_is_touched(tmp_path):
     assert "ditto failed: bad zip" in "\n".join(env.out)
 
 
+# install_built_app ----------------------------------------------------------------
+
+
+class Built:
+    """A locally built bundle and an apps dir; `ditto` really copies (it is local)."""
+
+    def __init__(self, tmp_path):
+        self.apps = tmp_path / "Applications"
+        self.apps.mkdir()
+        self.app = tmp_path / "Build" / "Products" / "Release" / "Thing.app"
+        (self.app / "Contents").mkdir(parents=True)
+        (self.app / "Contents" / "Info.plist").write_text("plist")
+        (self.app / "Contents" / "marker").write_text("new")
+        self.calls: list[list[str]] = []
+        self.signals: list[tuple[int, int]] = []
+        self.alive = [222]
+        self.out: list[str] = []
+        self.ditto_fails = False
+
+    def run(self, argv):
+        self.calls.append(list(argv))
+        if argv[0] == "ditto":
+            if self.ditto_fails:
+                return subprocess.CompletedProcess(argv, 1, "", "no space")
+            import shutil
+            shutil.copytree(argv[1], argv[2])
+        return subprocess.CompletedProcess(argv, 0, "", "")
+
+    def kill(self, pid, sig):
+        self.signals.append((pid, sig))
+        self.alive = []
+
+    def go(self, uid=None, app=None):
+        return ins.install_built_app(app or self.app, self.apps, run=self.run,
+                                     pids=lambda app: list(self.alive), kill=self.kill,
+                                     sleep=lambda s: None, monotonic=lambda: 0.0, pid=7,
+                                     uid=os.getuid() if uid is None else uid,
+                                     say=self.out.append)
+
+    def make_old(self):
+        (self.apps / "Thing.app" / "Contents").mkdir(parents=True)
+        (self.apps / "Thing.app" / "Contents" / "marker").write_text("old")
+
+    def marker(self):
+        return (self.apps / "Thing.app" / "Contents" / "marker").read_text()
+
+
+def test_built_app_replaces_the_installed_copy_and_opens_it(tmp_path):
+    b = Built(tmp_path)
+    b.make_old()
+    assert b.go() == 0
+    assert b.marker() == "new"
+    assert b.signals == [(222, signal.SIGTERM)]
+    assert b.calls[-1] == ["open", "-a", str(b.apps / "Thing.app")]
+    assert sorted(p.name for p in b.apps.iterdir()) == ["Thing.app"]
+    assert (b.app / "Contents" / "marker").read_text() == "new"  # the build is left as it was
+
+
+def test_built_app_first_install(tmp_path):
+    b = Built(tmp_path)
+    assert b.go() == 0
+    assert b.marker() == "new"
+
+
+def test_built_app_failed_copy_leaves_the_installed_app_running(tmp_path):
+    b = Built(tmp_path)
+    b.make_old()
+    b.ditto_fails = True
+    assert b.go() == 1
+    assert b.marker() == "old" and b.signals == []
+    assert sorted(p.name for p in b.apps.iterdir()) == ["Thing.app"]
+    assert "ditto failed: no space" in "\n".join(b.out)
+
+
+def test_built_app_refuses_what_is_not_a_bundle(tmp_path):
+    b = Built(tmp_path)
+    empty = tmp_path / "Empty.app"
+    empty.mkdir()
+    assert b.go(app=empty) == 1
+    assert b.calls == [] and "not an app bundle" in "\n".join(b.out)
+
+
+def test_built_app_refuses_a_bundle_owned_by_someone_else(tmp_path):
+    b = Built(tmp_path)
+    b.make_old()
+    assert b.go(uid=os.getuid() + 1) == 1
+    assert b.calls == [] and b.signals == [] and b.marker() == "old"
+    assert 'sudo chown -R "$(id -un)"' in "\n".join(b.out)
+
+
+def test_remove_quits_and_deletes_the_installed_bundle(tmp_path):
+    b = Built(tmp_path)
+    b.make_old()
+    assert ins.remove_installed_app(b.apps / "Thing.app", pids=lambda app: list(b.alive),
+                                    kill=b.kill, sleep=lambda s: None,
+                                    monotonic=lambda: 0.0, say=b.out.append) == 0
+    assert not (b.apps / "Thing.app").exists()
+    assert b.signals == [(222, signal.SIGTERM)]
+
+
+def test_remove_with_nothing_installed_succeeds(tmp_path):
+    b = Built(tmp_path)
+    assert ins.remove_installed_app(b.apps / "Thing.app", pids=lambda app: [],
+                                    kill=b.kill, sleep=lambda s: None,
+                                    monotonic=lambda: 0.0, say=b.out.append) == 0
+    assert "nothing to remove" in "\n".join(b.out)
+
+
+def test_remove_refuses_a_bundle_owned_by_someone_else(tmp_path):
+    b = Built(tmp_path)
+    b.make_old()
+    assert ins.remove_installed_app(b.apps / "Thing.app", pids=lambda app: list(b.alive),
+                                    kill=b.kill, sleep=lambda s: None, monotonic=lambda: 0.0,
+                                    uid=os.getuid() + 1, say=b.out.append) == 1
+    assert b.marker() == "old" and b.signals == []
+
+
+def test_remove_keeps_a_bundle_whose_app_will_not_die(tmp_path):
+    b = Built(tmp_path)
+    b.make_old()
+    clock = [0.0]
+    assert ins.remove_installed_app(b.apps / "Thing.app", pids=lambda app: [222],
+                                    kill=lambda pid, sig: None,
+                                    sleep=lambda s: clock.__setitem__(0, clock[0] + s),
+                                    monotonic=lambda: clock[0], say=b.out.append) == 1
+    assert b.marker() == "old"
+    assert "still running" in "\n".join(b.out)
+
+
 # installed ------------------------------------------------------------------------
 
 
