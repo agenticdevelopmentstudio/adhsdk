@@ -577,6 +577,9 @@ def test_remove_refuses_a_bundle_owned_by_someone_else(tmp_path):
                                     kill=b.kill, sleep=lambda s: None, monotonic=lambda: 0.0,
                                     uid=os.getuid() + 1, say=b.out.append) == 1
     assert b.marker() == "old" and b.signals == []
+    said = "\n".join(b.out)
+    assert "cannot be removed without root" in said and "sudo rm -rf" in said
+    assert "install again" not in said
 
 
 def test_remove_keeps_a_bundle_whose_app_will_not_die(tmp_path):

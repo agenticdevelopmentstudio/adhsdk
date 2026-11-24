@@ -135,13 +135,21 @@ def install(zip_path: Path, cfg: ReleaseConfig, *, apps_dir: Path | None = None,
     return 0
 
 
-def destination_ok(dest: Path, *, uid: int, say: Callable[[str], None] = print) -> bool:
-    """Whether `dest` may be replaced without root. Says why not, and how to fix
-    it, when it may not: a symlink is refused, and so is a bundle another user owns."""
+def destination_ok(dest: Path, *, uid: int, say: Callable[[str], None] = print,
+                   removing: bool = False) -> bool:
+    """Whether `dest` may be replaced (or, `removing`, deleted) without root. Says
+    why not, and how to fix it, when it may not: a symlink is refused, and so is a
+    bundle another user owns."""
     if dest.is_symlink():
-        say(f"error: {dest} is a symlink; remove it or install by hand.")
+        how = "remove it by hand" if removing else "remove it or install by hand"
+        say(f"error: {dest} is a symlink; {how}.")
         return False
     if dest.exists() and dest.lstat().st_uid != uid:
+        if removing:
+            say(f"error: {dest} is not owned by you, so it cannot be removed without "
+                "root. Remove it with:")
+            say(f"  sudo rm -rf {dest}")
+            return False
         # Installing the pkg again would not help: pkgbuild's payload is root's, so
         # it leaves the bundle root-owned and the next release refuses the same way.
         # Handing the bundle back once is what makes every later install sudo-free.
@@ -216,7 +224,7 @@ def remove_installed_app(dest: Path, *,
     if not dest.exists() and not dest.is_symlink():
         say(f"{dest} is not installed; nothing to remove.")
         return 0
-    if not destination_ok(dest, uid=uid, say=say):
+    if not destination_ok(dest, uid=uid, say=say, removing=True):
         return 1
     left = quit_app(dest, pids=pids, kill=kill, sleep=sleep, monotonic=monotonic)
     if left:
