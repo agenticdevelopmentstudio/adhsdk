@@ -51,9 +51,15 @@ private struct PerturbedNormalizer: Normalizer {
     }
 }
 
-final class MockProviderConformanceTests: XCTestCase {
+/// The fixtures and helpers every conformance suite below shares. It holds no tests.
+///
+/// The tests are four classes, not one, because XCTest runs one class's tests one
+/// after another in a single worker: each check drains a few hundred records through
+/// two dozen fresh stores, and sixteen of them in one class were one queue that set
+/// the whole bundle's wall time.
+class MockProviderConformanceTestCase: XCTestCase {
 
-    private var tmpDir: URL!
+    fileprivate var tmpDir: URL!
 
     override func setUpWithError() throws {
         let suffix = String(UUID().uuidString.replacingOccurrences(of: "-", with: "").prefix(6))
@@ -94,11 +100,44 @@ final class MockProviderConformanceTests: XCTestCase {
         return out
     }
 
+    /// Failures from a perturbed adapter. `wellFormedOnly` drops `bad0` so no unrelated check fires first.
+    fileprivate func failures(_ mode: PerturbedNormalizer.Mode,
+                              wellFormedOnly: Bool = true) throws -> [ConformanceFailure] {
+        let fixtures = wellFormedOnly ? Self.fixtures().filter { $0.dedupKey != "bad0" } : Self.fixtures()
+        return try ProviderConformance.check(
+            normalizer: PerturbedNormalizer(mode: mode), fixtures: fixtures,
+            malformedKeys: wellFormedOnly ? [] : ["bad0"], workDirectory: tmpDir.appendingPathComponent("w"))
+    }
+
+    fileprivate func writeSourceFixture(_ count: Int = 60) throws -> URL {
+        let url = tmpDir.appendingPathComponent("source-\(UUID().uuidString).jsonl")
+        let ops = ["event", "session", "turn", "message"]
+        try MockSource.writeFixture((0..<count).map {
+            MockProvider.payload(op: ops[$0 % ops.count], session: "s\($0 % 3)", t: 1_800_000_000 + Double($0), n: $0)
+        }, to: url)
+        return url
+    }
+}
+
+/// The mock adapter conforms, and the purity and key checks catch an adapter that breaks them.
+final class MockProviderConformanceTests: MockProviderConformanceTestCase {
+
     func testMockProviderConforms() throws {
         let failures = try ProviderConformance.check(
             normalizer: MockProvider(), fixtures: Self.fixtures(), malformedKeys: ["bad0"],
             workDirectory: tmpDir.appendingPathComponent("w"))
         XCTAssertEqual(failures, [], "\(failures)")
+    }
+
+    func testConformanceNeverRemovesCallersDirectory() throws {
+        let work = tmpDir.appendingPathComponent("w")
+        try FileManager.default.createDirectory(at: work, withIntermediateDirectories: true)
+        let marker = work.appendingPathComponent("keep.txt")
+        try Data("x".utf8).write(to: marker)
+        _ = try ProviderConformance.check(normalizer: MockProvider(), fixtures: Self.fixtures(),
+                                          malformedKeys: ["bad0"], workDirectory: work)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: marker.path))
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: work.path), ["keep.txt"])
     }
 
     func testConformanceCatchesImpureNormalizer() throws {
@@ -114,15 +153,10 @@ final class MockProviderConformanceTests: XCTestCase {
             workDirectory: tmpDir.appendingPathComponent("w"))
         XCTAssertTrue(failures.contains { $0.check == "keys" }, "\(failures)")
     }
+}
 
-    /// Failures from a perturbed adapter. `wellFormedOnly` drops `bad0` so no unrelated check fires first.
-    private func failures(_ mode: PerturbedNormalizer.Mode,
-                          wellFormedOnly: Bool = true) throws -> [ConformanceFailure] {
-        let fixtures = wellFormedOnly ? Self.fixtures().filter { $0.dedupKey != "bad0" } : Self.fixtures()
-        return try ProviderConformance.check(
-            normalizer: PerturbedNormalizer(mode: mode), fixtures: fixtures,
-            malformedKeys: wellFormedOnly ? [] : ["bad0"], workDirectory: tmpDir.appendingPathComponent("w"))
-    }
+/// The checks catch an adapter whose rows are wrong, drift, throw, or are missing.
+final class MockProviderConformanceFailureTests: MockProviderConformanceTestCase {
 
     func testConformanceCatchesWrongRawRef() throws {
         let found = try failures(.wrongRawRef, wellFormedOnly: false)
@@ -144,6 +178,10 @@ final class MockProviderConformanceTests: XCTestCase {
         let found = try failures(.emptyBatches)
         XCTAssertTrue(found.contains { $0.check == "emptyBatch" && $0.detail.contains("yielded no rows") }, "\(found)")
     }
+}
+
+/// The checks catch fixtures and rows the store cannot hold.
+final class MockProviderConformanceFixtureTests: MockProviderConformanceTestCase {
 
     func testConformanceCatchesFixtureWhoseRowsNeverReachTheStore() throws {
         // A row stored under any key its record emits counts, whatever that key
@@ -181,17 +219,10 @@ final class MockProviderConformanceTests: XCTestCase {
                                                   workDirectory: tmpDir.appendingPathComponent("w"))
         XCTAssertTrue(found.contains { $0.check == "keys" && $0.detail.contains("k0#0") }, "\(found)")
     }
+}
 
-    // MARK: - Sources
-
-    private func writeSourceFixture(_ count: Int = 60) throws -> URL {
-        let url = tmpDir.appendingPathComponent("source-\(UUID().uuidString).jsonl")
-        let ops = ["event", "session", "turn", "message"]
-        try MockSource.writeFixture((0..<count).map {
-            MockProvider.payload(op: ops[$0 % ops.count], session: "s\($0 % 3)", t: 1_800_000_000 + Double($0), n: $0)
-        }, to: url)
-        return url
-    }
+/// The source-contract checks.
+final class MockSourceConformanceTests: MockProviderConformanceTestCase {
 
     func testMockSourceConforms() throws {
         let url = try writeSourceFixture()
@@ -233,17 +264,6 @@ final class MockProviderConformanceTests: XCTestCase {
         let checks = Set(failures.map(\.check))
         XCTAssertTrue(checks.contains("sourceEmpty"), "\(failures)")
         XCTAssertTrue(checks.contains("sourceCrash"), "a fault that never fires is reported")
-    }
-
-    func testConformanceNeverRemovesCallersDirectory() throws {
-        let work = tmpDir.appendingPathComponent("w")
-        try FileManager.default.createDirectory(at: work, withIntermediateDirectories: true)
-        let marker = work.appendingPathComponent("keep.txt")
-        try Data("x".utf8).write(to: marker)
-        _ = try ProviderConformance.check(normalizer: MockProvider(), fixtures: Self.fixtures(),
-                                          malformedKeys: ["bad0"], workDirectory: work)
-        XCTAssertTrue(FileManager.default.fileExists(atPath: marker.path))
-        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: work.path), ["keep.txt"])
     }
 }
 
