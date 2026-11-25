@@ -7,7 +7,9 @@ import { useContext, useEffect } from 'react'
 // sign-in gate. The data layer is stubbed at its hooks — the feed's job is the mapping.
 
 const route = { pathname: '/' }
-vi.mock('next/navigation', () => ({ usePathname: () => route.pathname }))
+const push = vi.fn()
+const router = { push }
+vi.mock('next/navigation', () => ({ usePathname: () => route.pathname, useRouter: () => router }))
 
 const subject = { current: null as string | null }
 vi.mock('@adh-sdk/auth/client', () => ({ useTokenSubject: () => subject.current }))
@@ -66,6 +68,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup()
   choose.mockReset()
+  push.mockReset()
   useWorkspaces.mockReset()
   seen.current = null
 })
@@ -127,14 +130,15 @@ describe('SiteWorkspacesMenuProvider (route, the hub)', () => {
     expect(menu().everyRoute).toBeUndefined()
   })
 
-  it('has no select until a workspace route registers its switch, then routes picks through it', () => {
+  it('follows /<slug> until a workspace route registers its switch, then routes picks through it', () => {
     const routeSelect = vi.fn()
     function Route() {
       useRegisterWorkspaceSelect(routeSelect)
       return null
     }
     render(<SiteWorkspacesMenuProvider switchBy="route">x</SiteWorkspacesMenuProvider>)
-    expect(menu().select).toBeUndefined()
+    act(() => menu().select!({ id: 'organization:acme' }))
+    expect(push).toHaveBeenCalledWith('/acme')
     cleanup()
     render(
       <SiteWorkspacesMenuProvider switchBy="route">
@@ -143,6 +147,33 @@ describe('SiteWorkspacesMenuProvider (route, the hub)', () => {
     )
     act(() => menu().select!({ id: 'team:crew' }))
     expect(routeSelect).toHaveBeenCalledWith('crew')
+    expect(push).toHaveBeenCalledTimes(1)
+  })
+
+  it('hands the menu no new value when a route registers a new switch', () => {
+    // The registration lives in a ref: a route handing up a new switch per navigation must not
+    // re-render the root or give menu consumers a new context value.
+    const first = vi.fn()
+    const second = vi.fn()
+    function Route({ select }: { select: (slug: string) => void }) {
+      useRegisterWorkspaceSelect(select)
+      return null
+    }
+    const { rerender } = render(
+      <SiteWorkspacesMenuProvider switchBy="route">
+        <Route select={first} />
+      </SiteWorkspacesMenuProvider>,
+    )
+    const before = menu()
+    rerender(
+      <SiteWorkspacesMenuProvider switchBy="route">
+        <Route select={second} />
+      </SiteWorkspacesMenuProvider>,
+    )
+    expect(menu().select).toBe(before.select)
+    act(() => menu().select!({ id: 'organization:acme' }))
+    expect(second).toHaveBeenCalledWith('acme')
+    expect(first).not.toHaveBeenCalled()
   })
 
   it('provides the registrar only in route mode', () => {

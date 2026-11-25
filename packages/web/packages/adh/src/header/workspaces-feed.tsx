@@ -15,14 +15,12 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
-  useState,
   type ReactNode,
 } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useTokenSubject } from '@adh-sdk/auth/client'
 import {
   firstWorkspacePerSlug,
@@ -56,25 +54,25 @@ export const WorkspaceSelectRegistrar = createContext<RegisterWorkspaceSelect>((
  * Remembering the pick is not what it adds: the route records ANY fresh arrival on a `/<slug>` it
  * did not seed itself as the preference (teams excepted) — `useWorkspaceRoute`'s documented rule.
  *
- * It registers ONE stable wrapper per mount, which calls whichever `select` the route rendered
- * last. `select` is a new function on every in-workspace navigation (it closes over the pathname),
- * and registering each new one set the provider's state at the app root, re-rendering the root a
- * second time per navigation and handing every menu consumer a new context value. Reading the
- * latest through a ref gives the menu a switch that does what the route would do NOW, with no new
- * identity to pass up.
+ * The provider keeps what is registered in a REF, never in state: nothing renders from it. The
+ * menu's `select` is one stable function that, at pick time, calls whichever switch is registered
+ * then, else follows `/<slug>`. So a registration re-renders nothing — not the app root, not a menu
+ * consumer — however often the route hands up a new `select` (one per in-workspace navigation; it
+ * closes over the pathname).
+ *
+ * The one effect here is a deliberate exception to the rule "Never use `useEffect` to sync state —
+ * derive it instead", and it syncs no state. The switch is a CALLBACK owned by a component below
+ * the provider; the provider cannot derive it, only be handed it, and handing a child's value to an
+ * ancestor without a render-time side effect takes an effect. It writes a ref and sets no state. A
+ * layout effect, so a render React discards never leaves its switch behind, and so the latest
+ * switch is in place before paint, ahead of any click.
  */
 export function useRegisterWorkspaceSelect(select: (slug: string) => void): void {
   const register = useContext(WorkspaceSelectRegistrar)
-  const latest = useRef(select)
-  // A layout effect rather than a render-time write: a render React discards must not leave its
-  // switch behind for the menu to call, and it runs before paint, so no click lands in between.
   useLayoutEffect(() => {
-    latest.current = select
-  })
-  useEffect(() => {
-    register((slug) => latest.current(slug))
+    register(select)
     return () => register(null)
-  }, [register])
+  }, [register, select])
 }
 
 export type SiteWorkspacesMenuProviderProps = {
@@ -91,8 +89,8 @@ export type SiteWorkspacesMenuProviderProps = {
    *   open-in-new-tab.
    * - `'route'` (the hub): every row the URL can reach, teams included, one per slug; the current
    *   row is the one whose slug is the URL's first segment, else none; a pick goes through the
-   *   switch a mounted workspace route registered ({@link useRegisterWorkspaceSelect}), else
-   *   follows `/<slug>`; and the menu shows on the hub's workspace routes only.
+   *   switch a mounted workspace route registered at pick time ({@link useRegisterWorkspaceSelect}),
+   *   else follows `/<slug>`; and the menu shows on the hub's workspace routes only.
    */
   switchBy?: 'preference' | 'route'
 }
@@ -173,19 +171,23 @@ function useRouteSwitch(data: WorkspaceRow[] | undefined): Feed & { register: Re
       })),
     [reachable, activeSlug],
   )
-  // State, because it changes only when a route mounts or unmounts (one stable wrapper per mount).
-  // Off a workspace route nothing registers and the menu follows each row's `href`, which loses
-  // only the feature you were on — and off a workspace route there is none.
-  const [routeSelect, setRouteSelect] = useState<((slug: string) => void) | null>(null)
-  const register = useCallback<RegisterWorkspaceSelect>((fn) => setRouteSelect(() => fn), [])
+  // A ref, not state: nothing renders from it (see useRegisterWorkspaceSelect). Read at pick time.
+  // Off a workspace route nothing is registered and a pick follows `/<slug>`, which loses only the
+  // feature you were on — and off a workspace route there is none.
+  const router = useRouter()
+  const routeSelect = useRef<((slug: string) => void) | null>(null)
+  const register = useCallback<RegisterWorkspaceSelect>((fn) => {
+    routeSelect.current = fn
+  }, [])
   const select = useMemo(() => {
-    if (!routeSelect) return undefined
     const slugById = new Map(reachable.map((w) => [workspaceCompositeId(w), w.slug]))
     return (w: MenuWorkspace) => {
       const slug = slugById.get(w.id)
-      if (slug) routeSelect(slug)
+      if (!slug) return
+      if (routeSelect.current) routeSelect.current(slug)
+      else router.push(`/${slug}`)
     }
-  }, [routeSelect, reachable])
+  }, [reachable, router])
   return { workspaces, select, register }
 }
 
