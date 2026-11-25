@@ -18,10 +18,9 @@ import {
   ARCHIVED_WORKSPACES_QUERY_KEY,
   type ArchivedWorkspace,
 } from "../api/archived-workspaces";
-import { WORKSPACES_QUERY_KEY } from "../api/workspaces";
 import { organizationsApi } from "../api/organizations";
 import { ORGANIZATIONS_QUERY_KEY } from "@adh-sdk/data/organizations";
-import { errMsg } from "@adh-sdk/data";
+import { errMsg, notifyWorkspacesChanged } from "@adh-sdk/data";
 
 /** A row the caller can actually bring back: its handle is still free AND they may restore it. */
 function isRestorable(row: ArchivedWorkspace): boolean {
@@ -97,9 +96,12 @@ export function ArchivedPanel() {
       // — the handle that was free when the list loaded has been taken, the org was restored or
       // purged from another tab — and the rows' badges only learn that from a re-read. Gating
       // this on "something succeeded" left a row offering a Restore that could never work.
+      // The workspace list is announced rather than invalidated on `qc`: it is cached on the
+      // toolkit's client (the header's workspace menu) and on the host's own, and only the
+      // announcement reaches both.
+      notifyWorkspacesChanged();
       await Promise.all([
         qc.invalidateQueries({ queryKey: ARCHIVED_WORKSPACES_QUERY_KEY }),
-        qc.invalidateQueries({ queryKey: WORKSPACES_QUERY_KEY }),
         qc.invalidateQueries({ queryKey: ORGANIZATIONS_QUERY_KEY }),
       ]);
     } catch (e) {

@@ -11,8 +11,8 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }))
 vi.mock('@adh-sdk/auth', () => ({ reportUnexpectedAuthError: vi.fn() }))
 
 const { checkWorkspaceSlugAvailable } = vi.hoisted(() => ({ checkWorkspaceSlugAvailable: vi.fn() }))
-// Only the probe is stubbed: `WORKSPACES_QUERY_KEY` is a real export of this module and the
-// form invalidates it, so a whole-module factory would replace the key the assertion checks.
+// Only the probe is stubbed: `notifyWorkspacesChanged` is a real export of this module and the
+// form calls it, so a whole-module factory would replace the announcement the assertion hears.
 vi.mock('@adh-sdk/data', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@adh-sdk/data')>()),
   checkWorkspaceSlugAvailable,
@@ -100,18 +100,21 @@ describe('a saved org rename reaches the rest of the UI', () => {
   // that shows the org name — the workspace bar, the chrome's WorkspaceContext — reads the
   // ["workspaces"] list, so without an invalidation a rename is invisible everywhere but the form
   // the user typed it into.
-  it('invalidates the workspaces list after a name-only save', async () => {
+  it('announces the workspaces list changed after a name-only save', async () => {
+    // Announced, not invalidated on the host's client: the list is also cached on the toolkit's
+    // client (the header's workspace menu), and only the announcement reaches both.
     rename.mockResolvedValue({ id: 'org-1', slug: 'fishlamp', name: 'FishLamp Studio', description: null })
-    const { invalidate } = renderForm()
+    const announced = vi.fn()
+    window.addEventListener('adh:workspaces-changed', announced)
+    renderForm()
 
     fireEvent.change(screen.getByLabelText('name'), { target: { value: 'FishLamp Studio' } })
     await waitFor(() => expect(saveButton()).toHaveProperty('disabled', false))
     fireEvent.click(saveButton())
     await waitFor(() => expect(rename).toHaveBeenCalled())
 
-    await waitFor(() =>
-      expect(invalidate).toHaveBeenCalledWith(expect.objectContaining({ queryKey: ['workspaces'] })),
-    )
+    await waitFor(() => expect(announced).toHaveBeenCalled())
+    window.removeEventListener('adh:workspaces-changed', announced)
   })
 })
 

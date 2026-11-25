@@ -16,8 +16,8 @@ import { validateLeaf } from "@adh-sdk/adh-ui/rdid";
 import { approveNavigation } from "@adh-sdk/ui/lib/navigation-guard";
 import {
   checkWorkspaceSlugAvailable,
+  notifyWorkspacesChanged,
   useResourceItemWriter,
-  WORKSPACES_QUERY_KEY,
 } from "@adh-sdk/data";
 import {
   organizationsApi,
@@ -366,9 +366,11 @@ export function OrgSettingsForm({
       onSaved({ ...org, ...renamed });
       // This pane is not the only place the org's name and handle are shown: the workspace
       // bar, the switcher and every rail reading the workspace list are fed by
-      // WORKSPACES_QUERY_KEY, which this save has just made stale. Without this the rename
-      // is visible only in the form the user typed it into.
-      void qc.invalidateQueries({ queryKey: WORKSPACES_QUERY_KEY });
+      // the workspace list, which this save has just made stale. Without this the rename
+      // is visible only in the form the user typed it into. Announced, not invalidated on
+      // `qc`: the list is cached on the toolkit's client (the header's workspace menu) AND on
+      // the host's own, and only the announcement reaches both.
+      notifyWorkspacesChanged();
       // BOTH lists, because they are two caches over two endpoints since organizations grew an
       // owning workspace: the switcher's membership list above, and the orgs rail's
       // owner-scoped list here. The rail is where a renamed org is most visibly the same row.
