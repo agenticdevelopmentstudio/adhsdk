@@ -5,7 +5,7 @@ import Testing
 
 /// Patches built from real `diff` output, parsed by the real parser, applied by `GitClient`
 /// to fixture repositories.
-@Suite("GitClient applying patches built from diff lines", .serialized)
+@Suite("GitClient applying patches built from diff lines")
 struct GitClientPatchTests {
     private let client = GitClient(configuration: GitClientConfiguration(
         extraEnvironment: ["GIT_CONFIG_GLOBAL": "/dev/null", "GIT_CONFIG_NOSYSTEM": "1"]

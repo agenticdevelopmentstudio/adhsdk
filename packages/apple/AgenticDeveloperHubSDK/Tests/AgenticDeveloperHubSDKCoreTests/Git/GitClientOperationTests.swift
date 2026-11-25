@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import AgenticDeveloperHubSDKCore
 
-@Suite("GitClient operations: merge, rebase, their steps and the operation state", .serialized)
+@Suite("GitClient operations: merge, rebase, their steps and the operation state")
 struct GitClientOperationTests {
     /// No global or system configuration, and `GIT_EDITOR=false`: an editor that fails at once.
     /// Every continue below would fail on it, so each one passing proves `perform` sets

@@ -121,22 +121,24 @@ struct ReadOnlyGitConformanceTests {
 
     @Test("V10: the child gets GIT_OPTIONAL_LOCKS=0 over the caller's value and the rest unchanged")
     func v010EnvironmentInherited() {
+        // The caller's environment is passed in, not `setenv`'d: the process
+        // environment is shared with every suite running beside this one.
         let probe = "ADH_READONLYGIT_PROBE_\(UUID().uuidString.prefix(8))"
-        let previousLocks = getenv("GIT_OPTIONAL_LOCKS").map { String(cString: $0) }
-        setenv("GIT_OPTIONAL_LOCKS", "1", 1)
-        setenv(probe, "inherited-value", 1)
-        defer {
-            unsetenv(probe)
-            if let previousLocks {
-                setenv("GIT_OPTIONAL_LOCKS", previousLocks, 1)
-            } else {
-                unsetenv("GIT_OPTIONAL_LOCKS")
-            }
-        }
-        let lines = ReadOnlyGit.git(["-c", "alias.showenv=!env", "showenv"]).split(separator: "\n")
+        var environment = ProcessInfo.processInfo.environment
+        environment["GIT_OPTIONAL_LOCKS"] = "1"
+        environment[probe] = "inherited-value"
+        let lines = ReadOnlyGit.git(["-c", "alias.showenv=!env", "showenv"], environment: environment)
+            .split(separator: "\n")
         #expect(lines.contains("GIT_OPTIONAL_LOCKS=0"))
         #expect(!lines.contains("GIT_OPTIONAL_LOCKS=1"))
         #expect(lines.contains(Substring("\(probe)=inherited-value")))
+    }
+
+    @Test("V10b: by default the child inherits this process's environment")
+    func v010bDefaultEnvironmentIsTheProcesss() {
+        guard let home = ProcessInfo.processInfo.environment["HOME"] else { return }
+        let lines = ReadOnlyGit.git(["-c", "alias.showenv=!env", "showenv"]).split(separator: "\n")
+        #expect(lines.contains(Substring("HOME=\(home)")))
     }
 
     // MARK: - Output handling

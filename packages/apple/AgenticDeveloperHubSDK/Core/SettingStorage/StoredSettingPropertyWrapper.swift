@@ -55,10 +55,9 @@ extension StoredSetting {
         private var cancellable: AnyCancellable?
 
         init(key: any StorableSetting<Value>) {
-            let store = UserSettings.shared
             self.value = key.value
-            self.cancellable = store.changes
-                .filter { $0 == key.name }
+            self.cancellable = UserSettings.sharedChanges
+                .filter { $0 == nil || $0 == key.name }
                 .sink { [weak self] _ in
                     guard let self else { return }
                     self.value = UserSettings.shared.get(key)

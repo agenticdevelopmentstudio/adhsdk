@@ -13,6 +13,7 @@ final class BillingUserSettingsConformanceTests: XCTestCase {
     private var provider: InMemorySettingsStorageProvider!
 
     override func setUp() async throws {
+        await ExclusiveAccess.Resource.userSettings.acquire()
         previousStore = UserSettings.shared
         provider = InMemorySettingsStorageProvider()
         UserSettings.shared = UserSettings(with: provider)
@@ -22,6 +23,7 @@ final class BillingUserSettingsConformanceTests: XCTestCase {
         UserSettings.shared = previousStore
         previousStore = nil
         provider = nil
+        await ExclusiveAccess.Resource.userSettings.release()
     }
 
     private func makeHolder(prefix: String = "conformance_billing_") -> BillingUserSettings {

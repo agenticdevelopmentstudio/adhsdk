@@ -13,11 +13,11 @@ private final class IdleWatcher: GitRepositoryWatching {
 
 /// The Git window's routing (recipe `workspace/git/git-window`, "Layout" and
 /// "Selection"), over a real repository and a real model.
-@Suite("GitWindowSession", .serialized)
+@Suite("GitWindowSession")
 @MainActor
 struct GitWindowSessionTests {
     private static let epoch = 1_767_268_800
-    private let client = GitClient(configuration: .default)
+    private let client = GitClient(configuration: .tests)
 
     private func commitFile(_ repository: GitTestRepository, _ name: String, _ text: String,
                             at offset: Int) async throws {

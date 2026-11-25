@@ -32,7 +32,7 @@ final class BranchControllerTests: XCTestCase {
         let checkout = ProjectCheckout(directory: tempRoot, branch: branch, isMain: true)
         return BranchController(
             checkout: checkout,
-            gitClient: GitClient(configuration: .default),
+            gitClient: GitClient(configuration: .tests),
             statusProvider: GitStatusProvider(repoRoot: tempRoot)
         )
     }
@@ -117,7 +117,7 @@ final class BranchControllerTests: XCTestCase {
         let main = makeController()
         let feature = BranchController(
             checkout: ProjectCheckout(directory: otherRoot, branch: "feature", isMain: false),
-            gitClient: GitClient(configuration: .default),
+            gitClient: GitClient(configuration: .tests),
             statusProvider: GitStatusProvider(repoRoot: otherRoot)
         )
 
@@ -152,7 +152,7 @@ final class BranchControllerTests: XCTestCase {
         let checkout = ProjectCheckout(directory: tempRoot, branch: "main", isMain: true)
         let controller = BranchController(
             checkout: checkout,
-            gitClient: GitClient(configuration: .default),
+            gitClient: GitClient(configuration: .tests),
             statusProvider: GitStatusProvider(repoRoot: tempRoot),
             commandRegistry: registry
         )

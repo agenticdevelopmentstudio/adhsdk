@@ -22,13 +22,17 @@ public final class PartnerSessionRegistry: ObservableObject {
     private let environment: () -> [String: String]
     private let detector: any PartnerSessionEventDetecting
     private let now: () -> Date
+    private let shell: String?
 
+    /// - Parameter shell: The shell each session runs; the user's `$SHELL` when nil.
     public init(store: PartnerStore, environment: @escaping () -> [String: String],
-                detector: any PartnerSessionEventDetecting, now: @escaping () -> Date = Date.init) {
+                detector: any PartnerSessionEventDetecting, now: @escaping () -> Date = Date.init,
+                shell: String? = nil) {
         self.store = store
         self.environment = environment
         self.detector = detector
         self.now = now
+        self.shell = shell
         detector.onIdle = { [weak self] id in self?.sessionWentIdle(id: id) }
         detector.onExit = { [weak self] id in self?.sessionExited(id: id) }
     }
@@ -51,7 +55,7 @@ public final class PartnerSessionRegistry: ObservableObject {
         // carry the same one.
         variables["TERM_SESSION_ID"] = id.uuidString
         variables[ComposableTabsViewRegistry.projectVariable] = directory
-        let manager = TerminalSessionManager(workingDirectory: directory, environment: variables)
+        let manager = TerminalSessionManager(workingDirectory: directory, environment: variables, shell: shell)
         let terminal = manager.addSession()
         let chat = TerminalChatSession()
         // Connecting reads the screen, which creates the terminal view, which

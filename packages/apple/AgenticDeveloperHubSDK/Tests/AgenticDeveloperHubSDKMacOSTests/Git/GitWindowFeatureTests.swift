@@ -6,7 +6,7 @@ import Testing
 
 /// The Git window feature: one window per repository, keyed by its canonical
 /// top level (recipe `workspace/git/git-window`).
-@Suite("GitWindowFeature", .serialized)
+@Suite("GitWindowFeature")
 @MainActor
 struct GitWindowFeatureTests {
 
@@ -32,7 +32,7 @@ struct GitWindowFeatureTests {
         let database = try ProjectDatabase(path: databaseURL.path)
         let windows = ProjectWindowManager()
         windows.attach(database: database)
-        windows.gitClient = GitClient(configuration: .default)
+        windows.gitClient = GitClient(configuration: .tests)
         return GitWindowFeature(
             commandRegistry: registry,
             database: database,
@@ -42,7 +42,7 @@ struct GitWindowFeatureTests {
                 .appendingPathComponent("git-window-grammars-\(UUID().uuidString)"),
             extensionGrammars: { nil },
             fileTypeOverride: { _ in nil },
-            client: GitClient(configuration: .default),
+            client: GitClient(configuration: .tests),
             openRoots: openRoots,
             notInRepository: notInRepository
         )

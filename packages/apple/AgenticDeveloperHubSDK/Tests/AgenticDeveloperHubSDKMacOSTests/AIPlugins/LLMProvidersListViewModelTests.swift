@@ -4,7 +4,7 @@ import Testing
 @testable import AgenticDeveloperHubSDKCore
 @testable import AgenticDeveloperHubSDKMacOS
 
-@Suite("LLMProvidersListViewModel")
+@Suite("LLMProvidersListViewModel", .exclusiveAccess(to: .userSettings))
 @MainActor
 struct LLMProvidersListViewModelTests {
 

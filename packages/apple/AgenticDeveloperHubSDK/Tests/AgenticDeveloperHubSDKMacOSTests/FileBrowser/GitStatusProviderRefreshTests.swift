@@ -22,7 +22,7 @@ final class GitStatusProviderRefreshTests: XCTestCase {
         git.waitUntilExit()
         try "x\n".write(to: root.appendingPathComponent("new.txt"), atomically: true, encoding: .utf8)
 
-        let provider = GitStatusProvider(repoRoot: root, client: GitClient(configuration: .default))
+        let provider = GitStatusProvider(repoRoot: root, client: GitClient(configuration: .tests))
         let delivered = expectation(description: "the observer is told")
         // The token *is* the registration: let it go and the observer goes
         // with it, so it is held until the wait returns.
@@ -52,7 +52,7 @@ final class GitStatusProviderRefreshTests: XCTestCase {
     func testAFailedStatusIsReportedAsUnavailableRatherThanAnEmptyStatus() {
         let missing = FileManager.default.temporaryDirectory
             .appendingPathComponent("missing-\(UUID().uuidString)")
-        let provider = GitStatusProvider(repoRoot: missing, client: GitClient(configuration: .default))
+        let provider = GitStatusProvider(repoRoot: missing, client: GitClient(configuration: .tests))
         let delivered = expectation(description: "the observer is told")
         let observation = provider.observe { result in
             guard case .unavailable = result else {
@@ -80,7 +80,7 @@ final class GitStatusProviderRefreshTests: XCTestCase {
         try git.run()
         git.waitUntilExit()
 
-        let provider = GitStatusProvider(repoRoot: root, client: GitClient(configuration: .default))
+        let provider = GitStatusProvider(repoRoot: root, client: GitClient(configuration: .tests))
         let cancelled = expectation(description: "the dropped observer is not told")
         cancelled.isInverted = true
         do {

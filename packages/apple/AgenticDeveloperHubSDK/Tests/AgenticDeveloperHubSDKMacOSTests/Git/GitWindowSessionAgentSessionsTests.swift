@@ -19,7 +19,7 @@ private struct FixedProvider: GitSessionsProviding {
 @Suite("GitWindowSession agent sessions", .serialized)
 @MainActor
 struct GitWindowSessionAgentSessionsTests {
-    private let client = GitClient(configuration: .default)
+    private let client = GitClient(configuration: .tests)
 
     private func window(_ repository: GitTestRepository,
                         sessions: (any GitSessionsProviding)?) async -> GitWindowSession {

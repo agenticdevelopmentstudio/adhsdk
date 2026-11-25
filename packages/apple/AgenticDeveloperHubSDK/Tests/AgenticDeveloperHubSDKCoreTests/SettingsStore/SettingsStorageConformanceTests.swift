@@ -57,6 +57,7 @@ final class SettingsStorageConformanceTests: XCTestCase {
 
     override func setUp() async throws {
         try await super.setUp()
+        await ExclusiveAccess.Resource.userSettings.acquire()
         originalShared = UserSettings.shared
         originalService = KeychainHelper.service
         originalAccessGroup = KeychainHelper.accessGroup
@@ -73,6 +74,7 @@ final class SettingsStorageConformanceTests: XCTestCase {
         originalShared = nil
         originalService = nil
         originalAccessGroup = nil
+        await ExclusiveAccess.Resource.userSettings.release()
         try await super.tearDown()
     }
 

@@ -4,7 +4,7 @@ import Testing
 @testable import AgenticDeveloperHubSDKCore
 @testable import AgenticDeveloperHubSDKMacOS
 
-@Suite("PluginChatConfigProvider")
+@Suite("PluginChatConfigProvider", .exclusiveAccess(to: .userSettings))
 @MainActor
 struct PluginChatConfigProviderTests {
 

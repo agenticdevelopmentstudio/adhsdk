@@ -47,7 +47,7 @@ final class TerminalSessionGitBranchTests: XCTestCase {
         let session = TerminalSession(
             name: "test",
             workingDirectory: directory,
-            gitClient: GitClient(configuration: .default)
+            gitClient: GitClient(configuration: .tests)
         )
         let published = expectation(description: "gitBranch is published")
         var observed: String?

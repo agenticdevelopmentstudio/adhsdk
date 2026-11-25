@@ -63,6 +63,7 @@ final class ComposableTabsActivePaneConformanceTests: XCTestCase {
     private var logs: [ChangeLog] = []
 
     override func setUp() async throws {
+        await ExclusiveAccess.Resource.userSettings.acquire()
         savedFollows = UserSettings.activePaneFollowsMouse.currentValue
         savedHighlight = UserSettings.highlightActivePane.currentValue
         UserSettings.shared.set(false, for: UserSettings.activePaneFollowsMouse)
@@ -81,6 +82,7 @@ final class ComposableTabsActivePaneConformanceTests: XCTestCase {
         UserSettings.shared.set(savedFollows, for: UserSettings.activePaneFollowsMouse)
         UserSettings.shared.set(savedHighlight, for: UserSettings.highlightActivePane)
         drain()
+        await ExclusiveAccess.Resource.userSettings.release()
     }
 
     // MARK: Helpers

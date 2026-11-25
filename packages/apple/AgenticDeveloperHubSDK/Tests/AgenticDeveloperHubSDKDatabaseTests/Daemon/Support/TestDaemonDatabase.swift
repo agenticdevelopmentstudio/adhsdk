@@ -71,6 +71,34 @@ enum TestDaemonDatabase {
         )
     }
 
+    /// A closed, fully migrated, empty feature database at a unique path, for
+    /// tests that open many fresh databases: copying it with
+    /// `copyDatabase(from:to:)` gives a database that opens without running a
+    /// migration. Remove it with `remove(path:)`.
+    static func migratedTemplate(prefix: String = "daemontemplate") throws -> String {
+        let path = uniquePath(prefix: prefix)
+        // Opened and released here, so SQLite's last close checkpoints the WAL
+        // into the main file before anyone copies it.
+        _ = try openFeatureDatabase(path: path)
+        return path
+    }
+
+    /// Copies a closed database (its main file, and its WAL if one survived
+    /// the close) to `destination`, which must not exist.
+    static func copyDatabase(from source: String, to destination: String) throws {
+        try FileManager.default.copyItem(atPath: source, toPath: destination)
+        if FileManager.default.fileExists(atPath: source + "-wal") {
+            try FileManager.default.copyItem(atPath: source + "-wal", toPath: destination + "-wal")
+        }
+    }
+
+    /// Removes the database file and its WAL siblings, leaving its directory.
+    static func removeFiles(path: String) {
+        for suffix in ["", "-wal", "-shm"] {
+            try? FileManager.default.removeItem(atPath: path + suffix)
+        }
+    }
+
     /// Removes the database file and its WAL siblings, and the directory
     /// `uniquePath` made for it.
     static func remove(path: String) {

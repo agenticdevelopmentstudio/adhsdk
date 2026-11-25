@@ -4,7 +4,7 @@ import Testing
 @testable import AgenticDeveloperHubSDKCore
 @testable import AgenticDeveloperHubSDKMacOS
 
-@Suite("AIProviderDefaults")
+@Suite("AIProviderDefaults", .exclusiveAccess(to: .userSettings))
 @MainActor
 struct AIProviderDefaultsTests {
 

@@ -7,7 +7,7 @@ import Testing
 /// Served from `StubbedRegistry` rather than the real `open-vsx.org`: the
 /// catalog there changes daily, so an assertion about a real extension would
 /// be an assertion about what someone else published this morning.
-@Suite(.serialized)
+@Suite(.serialized, .exclusiveAccess(to: .stubbedRegistry))
 struct OpenVSXClientTests {
 
     private func makeClient() -> OpenVSXClient {

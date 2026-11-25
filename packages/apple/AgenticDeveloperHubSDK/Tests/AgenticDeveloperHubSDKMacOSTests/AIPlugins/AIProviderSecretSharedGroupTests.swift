@@ -62,6 +62,16 @@ final class FakeCrossProcessSignal: CrossProcessSignal, @unchecked Sendable {
 
 @MainActor
 final class AIProviderSecretSharedGroupTests: XCTestCase {
+    override func setUp() async throws {
+        try await super.setUp()
+        // Writes UserSettings.shared, which suites in the other framework share.
+        await ExclusiveAccess.Resource.userSettings.acquire()
+    }
+
+    override func tearDown() async throws {
+        await ExclusiveAccess.Resource.userSettings.release()
+        try await super.tearDown()
+    }
 
     private let configID = UUID(uuidString: "6F1B1A7E-0000-4000-8000-000000000002")!
     private var apiKeyName: String { AIProviderConfigStore.fieldKey(config: configID, field: "apiKey") }

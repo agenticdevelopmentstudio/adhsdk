@@ -69,18 +69,25 @@ public enum GitContextFingerprint {
     /// The status output is read **untrimmed** (``ReadOnlyGit/rawGit(_:)``):
     /// porcelain's `XY` prefix is two significant columns, and an unstaged-only
     /// change on the alphabetically-first path starts with a literal space.
-    public static func sample(directory: String?) -> [String: Any]? {
+    ///
+    /// - Parameter environment: What each git child runs with; this process's
+    ///   own by default.
+    public static func sample(
+        directory: String?, environment: [String: String] = ProcessInfo.processInfo.environment
+    ) -> [String: Any]? {
         let scope: [String] = directory.map { ["-C", $0] } ?? []
-        let branch = ReadOnlyGit.git(scope + ["rev-parse", "--abbrev-ref", "HEAD"])
+        let branch = ReadOnlyGit.git(scope + ["rev-parse", "--abbrev-ref", "HEAD"], environment: environment)
         guard !branch.isEmpty else { return nil }
 
         let status = ReadOnlyGit.rawGit(
             ["-c", "core.quotePath=true"] + scope
-            + ["status", "--porcelain", "-unormal", "--no-renames"]
+            + ["status", "--porcelain", "-unormal", "--no-renames"],
+            environment: environment
         )
         let commits = ReadOnlyGit.git(
             ["-c", "log.showSignature=false"] + scope
-            + ["log", "--oneline", "--no-decorate", "-\(recentCommitCount)"]
+            + ["log", "--oneline", "--no-decorate", "-\(recentCommitCount)"],
+            environment: environment
         )
 
         return [

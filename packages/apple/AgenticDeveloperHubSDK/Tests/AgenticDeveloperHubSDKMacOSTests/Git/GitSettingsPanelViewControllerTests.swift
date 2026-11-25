@@ -5,11 +5,22 @@ import XCTest
 
 @MainActor
 final class GitSettingsPanelViewControllerTests: XCTestCase {
+    override func setUp() async throws {
+        try await super.setUp()
+        // Writes UserSettings.shared, which suites in the other framework share.
+        await ExclusiveAccess.Resource.userSettings.acquire()
+    }
+
+    override func tearDown() async throws {
+        await ExclusiveAccess.Resource.userSettings.release()
+        try await super.tearDown()
+    }
+
     /// Discriminates only the descriptor title literal `"Git"` passed to
     /// `super.init(with:)`. Nothing about the view, the queue, or help
     /// content is exercised here.
     func testPanelDescribesItselfAsGit() {
-        let panel = GitSettingsPanelViewController(client: GitClient(configuration: .default))
+        let panel = GitSettingsPanelViewController(client: GitClient(configuration: .tests))
         XCTAssertEqual(panel.descriptor.title, "Git")
     }
 
@@ -19,7 +30,7 @@ final class GitSettingsPanelViewControllerTests: XCTestCase {
     /// brief requires this id; it was previously set but never asserted
     /// here).
     func testLoadingTheViewInstallsTheThreeGroups() {
-        let panel = GitSettingsPanelViewController(client: GitClient(configuration: .default))
+        let panel = GitSettingsPanelViewController(client: GitClient(configuration: .tests))
         panel.loadViewIfNeeded()
         let identifiers = Self.accessibilityIdentifiers(in: panel.view)
         let expectedIdentifiers = [
@@ -53,7 +64,7 @@ final class GitSettingsPanelViewControllerTests: XCTestCase {
     func testExecutableStatusReflectsTheSetting() async {
         let (_, restore) = Self.freshGitDefaults()
         defer { restore() }
-        let panel = GitSettingsPanelViewController(client: GitClient(configuration: .default))
+        let panel = GitSettingsPanelViewController(client: GitClient(configuration: .tests))
         panel.loadViewIfNeeded()
         UserSettings.gitExecutablePath.value = "/nonexistent/git"
         await Self.drain()
@@ -75,7 +86,7 @@ final class GitSettingsPanelViewControllerTests: XCTestCase {
     /// (see `pendingWrites`' doc comment for why this seam, not a `GitClient`
     /// stub, is what makes the queue testable).
     func testEnqueuedWritesRunInFIFOOrder() async {
-        let panel = GitSettingsPanelViewController(client: GitClient(configuration: .default))
+        let panel = GitSettingsPanelViewController(client: GitClient(configuration: .tests))
         let recorder = Recorder()
 
         panel.enqueueWrite { recorder.record("unset old key") }
@@ -106,7 +117,7 @@ final class GitSettingsPanelViewControllerTests: XCTestCase {
     /// the first place -- see `pendingWrites`' doc comment). `gate` is an
     /// `actor`, so it is `Sendable` on its own.
     func testAWriteEnqueuedWhileAnotherIsRunningIsAppendedAfterAlreadyQueuedWrites() async {
-        let panel = GitSettingsPanelViewController(client: GitClient(configuration: .default))
+        let panel = GitSettingsPanelViewController(client: GitClient(configuration: .tests))
         let recorder = Recorder()
         let gate = Gate()
 
@@ -143,7 +154,7 @@ final class GitSettingsPanelViewControllerTests: XCTestCase {
     /// -- a rejected rename shows an error but does not wedge later,
     /// unrelated edits).
     func testAFailingWriteDoesNotHaltOrReorderTheQueue() async {
-        let panel = GitSettingsPanelViewController(client: GitClient(configuration: .default))
+        let panel = GitSettingsPanelViewController(client: GitClient(configuration: .tests))
         let recorder = Recorder()
         struct Boom: Error {}
 
@@ -242,7 +253,7 @@ final class GitSettingsPanelViewControllerTests: XCTestCase {
     /// afterward is what proves the restore's own throw does not wedge the
     /// queue (mirrors `testAFailingWriteDoesNotHaltOrReorderTheQueue`).
     func testRenameRestoresOldKeyValueWhenSetFails() async throws {
-        let panel = GitSettingsPanelViewController(client: GitClient(configuration: .default))
+        let panel = GitSettingsPanelViewController(client: GitClient(configuration: .tests))
         let recorder = Recorder()
         struct SetFailed: Error {}
 
@@ -302,7 +313,7 @@ final class GitSettingsPanelViewControllerTests: XCTestCase {
     /// wording `GitConfigRestoreFailedError.errorDescription` uses only
     /// when both failed.
     func testRenameReportsBothFailuresWhenSetAndRestoreBothFail() async throws {
-        let panel = GitSettingsPanelViewController(client: GitClient(configuration: .default))
+        let panel = GitSettingsPanelViewController(client: GitClient(configuration: .tests))
         let recorder = Recorder()
         struct SetFailed: LocalizedError {
             var errorDescription: String? { "SetFailedMarker" }

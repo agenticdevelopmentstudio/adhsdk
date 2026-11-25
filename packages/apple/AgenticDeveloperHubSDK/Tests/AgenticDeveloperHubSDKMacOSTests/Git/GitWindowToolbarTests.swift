@@ -39,7 +39,7 @@ private final class RecordingPresenter: GitActionPresenting {
 @Suite("GitWindowToolbar", .serialized)
 @MainActor
 struct GitWindowToolbarTests {
-    private let client = GitClient(configuration: .default)
+    private let client = GitClient(configuration: .tests)
 
     private func makeSession(
         _ repository: GitTestRepository, presenter: RecordingPresenter

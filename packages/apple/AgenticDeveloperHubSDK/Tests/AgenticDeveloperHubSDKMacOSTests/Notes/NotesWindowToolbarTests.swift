@@ -24,6 +24,7 @@ final class NotesWindowToolbarTests: XCTestCase {
 
     override func setUp() async throws {
         try await super.setUp()
+        await ExclusiveAccess.Resource.userSettings.acquire()
         UserSettings.notesFoldersVisible.value = true
         UserSettings.notesHelpVisible.value = false
     }
@@ -31,6 +32,7 @@ final class NotesWindowToolbarTests: XCTestCase {
     override func tearDown() async throws {
         UserSettings.notesFoldersVisible.value = true
         UserSettings.notesHelpVisible.value = false
+        await ExclusiveAccess.Resource.userSettings.release()
         try await super.tearDown()
     }
 

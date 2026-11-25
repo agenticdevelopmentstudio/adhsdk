@@ -10,7 +10,7 @@ import AppKit
 @testable import AgenticDeveloperHubSDKUI
 
 @MainActor
-@Suite(.serialized)
+@Suite(.serialized, .exclusiveAccess(to: .userSettings))
 struct ThemeManagerTests {
 
     init() {

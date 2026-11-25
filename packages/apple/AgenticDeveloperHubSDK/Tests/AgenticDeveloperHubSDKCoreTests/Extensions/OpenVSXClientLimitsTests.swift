@@ -11,7 +11,7 @@ import Testing
 /// Nothing in this file is hypothetical — every URL a download uses was named
 /// by a response, and a response is the one thing in this system that nobody
 /// here wrote.
-@Suite(.serialized)
+@Suite(.serialized, .exclusiveAccess(to: .stubbedRegistry))
 struct OpenVSXClientLimitsTests {
 
     private func makeClient(

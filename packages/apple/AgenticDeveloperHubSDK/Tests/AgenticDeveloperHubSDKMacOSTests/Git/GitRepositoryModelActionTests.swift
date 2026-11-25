@@ -9,12 +9,12 @@ private final class SilentWatcher: GitRepositoryWatching {
     func stop() {}
 }
 
-@Suite("GitRepositoryModel actions", .serialized)
+@Suite("GitRepositoryModel actions")
 @MainActor
 struct GitRepositoryModelActionTests {
     private static let epoch = 1_767_268_800
 
-    private func makeModel(_ repository: GitTestRepository, client: GitClient = GitClient(configuration: .default))
+    private func makeModel(_ repository: GitTestRepository, client: GitClient = GitClient(configuration: .tests))
         -> GitRepositoryModel {
         GitRepositoryModel(root: repository.root, client: client, watcher: SilentWatcher())
     }

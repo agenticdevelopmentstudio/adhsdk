@@ -1109,6 +1109,8 @@ final class BillingOwnershipTests: XCTestCase {
             XCTAssertTrue(failures.isEmpty, failures.joined(separator: "\n\n"))
             return
         }
+        let template = try TestDaemonDatabase.migratedTemplate(prefix: "billing-template")
+        defer { TestDaemonDatabase.remove(path: template) }
         let results = SeedResults()
         let workers = max(1, ProcessInfo.processInfo.activeProcessorCount)
         DispatchQueue.concurrentPerform(iterations: workers) { worker in
@@ -1119,7 +1121,7 @@ final class BillingOwnershipTests: XCTestCase {
                 defer { try? runner.tearDownWithError() }
                 for seed in stride(from: worker + 1, through: Self.sequences, by: workers) {
                     guard !results.enoughFailures else { break }
-                    if let failure = try runner.runSeed(seed, tally: &workerTally) {
+                    if let failure = try runner.runSeed(seed, from: template, tally: &workerTally) {
                         results.fail(seed: seed, failure)
                     }
                 }
@@ -1140,10 +1142,13 @@ final class BillingOwnershipTests: XCTestCase {
         }
     }
 
-    /// One seed on a fresh database at this instance's path.
-    private func runSeed(_ seed: Int, tally: inout [String: Int]) throws -> String? {
+    /// One seed on a fresh database at this instance's path: a copy of
+    /// `template` when given (an empty database already migrated, so 1,500
+    /// seeds do not run every migration 1,500 times), else a new one.
+    private func runSeed(_ seed: Int, from template: String? = nil, tally: inout [String: Int]) throws -> String? {
         database = nil
-        try? FileManager.default.removeItem(atPath: tmpPath)
+        TestDaemonDatabase.removeFiles(path: tmpPath)
+        if let template { try TestDaemonDatabase.copyDatabase(from: template, to: tmpPath) }
         database = try TestDaemonDatabase.openFeatureDatabase(path: tmpPath)
         return try runSequence(seed: UInt64(seed), tally: &tally)
     }

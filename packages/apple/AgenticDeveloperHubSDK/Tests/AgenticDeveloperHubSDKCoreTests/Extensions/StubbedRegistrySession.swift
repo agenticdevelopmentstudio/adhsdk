@@ -1,4 +1,5 @@
 import Foundation
+import Testing
 
 /// A `URLSession` that answers from a canned table instead of the network.
 ///
@@ -130,4 +131,10 @@ final class StubURLProtocol: URLProtocol {
     }
 
     override func stopLoading() {}
+}
+
+extension ExclusiveAccess.Resource {
+    /// The static stub table behind ``StubURLProtocol``: one suite's `reset()`
+    /// would wipe another's stubs part way through its test.
+    static let stubbedRegistry = ExclusiveAccess.Resource()
 }

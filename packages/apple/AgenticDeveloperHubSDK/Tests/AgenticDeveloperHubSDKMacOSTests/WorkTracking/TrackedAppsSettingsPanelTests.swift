@@ -34,12 +34,14 @@ final class TrackedAppsSettingsPanelTests: XCTestCase {
     private var previousSettings: UserSettings?
 
     override func setUp() async throws {
+        await ExclusiveAccess.Resource.userSettings.acquire()
         previousSettings = UserSettings.shared
         UserSettings.shared = UserSettings(with: InMemorySettingsStorageProvider())
     }
 
     override func tearDown() async throws {
         if let previousSettings { UserSettings.shared = previousSettings }
+        await ExclusiveAccess.Resource.userSettings.release()
     }
 
     func testRowsAreDefaultsPlusAddedWithRemovedUnchecked() {

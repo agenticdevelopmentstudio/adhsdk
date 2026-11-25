@@ -15,7 +15,7 @@ import Foundation
 /// Serialized, and the view is loaded but never put in a window — the same
 /// arrangement `ExtensionsSettingsPanelTests` uses, for the same reasons.
 @MainActor
-@Suite(.serialized)
+@Suite(.serialized, .exclusiveAccess(to: .userSettings))
 struct ExtensionsBrowsePanelTests {
 
     // MARK: - Fixtures

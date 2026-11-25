@@ -30,7 +30,7 @@ private final class WithdrawalSpy: ContributionPoint {
 ///
 /// Serialized: enabling and disabling writes `UserSettings.shared`.
 @MainActor
-@Suite(.serialized)
+@Suite(.serialized, .exclusiveAccess(to: .userSettings))
 struct ExtensionsSettingsPanelTests {
 
     // MARK: - Fixtures

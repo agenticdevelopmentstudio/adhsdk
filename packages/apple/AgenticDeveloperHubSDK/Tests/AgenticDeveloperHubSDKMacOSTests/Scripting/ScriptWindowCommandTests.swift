@@ -4,7 +4,7 @@ import Testing
 
 /// Review focus 1: a bad window name is a real script error that names the
 /// windows a script *can* use, never a quiet `false`.
-@Suite("ScriptWindowCommand", .serialized)
+@Suite("ScriptWindowCommand", .serialized, .exclusiveAccess(to: .scriptWindows))
 @MainActor
 struct ScriptWindowCommandTests {
 

@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import AgenticDeveloperHubSDKCore
 
-@Suite("GitClientConfiguration", .serialized)
+@Suite("GitClientConfiguration", .serialized, .exclusiveAccess(to: .userSettings))
 struct GitClientConfigurationTests {
 
     private let suiteName = "AgenticDeveloperHubSDKGitClientConfigurationTests"

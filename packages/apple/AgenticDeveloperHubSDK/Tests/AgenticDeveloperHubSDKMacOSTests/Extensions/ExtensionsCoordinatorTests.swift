@@ -45,7 +45,7 @@ private final class FakeLanguageModelProvider: ExtensionLanguageModelProviding {
 /// Serialized: `setEnabled` and `install()` both write process-wide state
 /// (`UserSettings.shared`, `CustomFileTypeMappings.contributedProvider`).
 @MainActor
-@Suite(.serialized)
+@Suite(.serialized, .exclusiveAccess(to: .userSettings))
 struct ExtensionsCoordinatorTests {
 
     // MARK: - Fixtures

@@ -3,7 +3,7 @@ import Testing
 @testable import AgenticDeveloperHubSDKScripting
 
 /// Review focus 3: the `window list` reply's process facts.
-@Suite("WindowScriptCommands", .serialized)
+@Suite("WindowScriptCommands", .serialized, .exclusiveAccess(to: .scriptWindows))
 @MainActor
 struct WindowScriptCommandsTests {
 

@@ -125,7 +125,7 @@ struct GitClientTests {
     func status() async throws {
         let fixture = try await Fixture.make()
         defer { fixture.tearDown() }
-        let client = GitClient(configuration: .default)
+        let client = GitClient(configuration: .tests)
         let status = try await client.status(in: fixture.root)
         #expect(status.files["a.txt"] == .modified)
     }
@@ -134,7 +134,7 @@ struct GitClientTests {
     func runUnmodelledVerb() async throws {
         let fixture = try await Fixture.make()
         defer { fixture.tearDown() }
-        let client = GitClient(configuration: .default)
+        let client = GitClient(configuration: .tests)
         let subject = try await client.run("log", ["-1", "--format=%s"], in: fixture.root)
         #expect(subject.trimmingCharacters(in: .whitespacesAndNewlines) == "initial")
     }
@@ -143,7 +143,7 @@ struct GitClientTests {
     func runFailureCarriesStatus() async throws {
         let fixture = try await Fixture.make()
         defer { fixture.tearDown() }
-        let client = GitClient(configuration: .default)
+        let client = GitClient(configuration: .tests)
         do {
             _ = try await client.run("merge-base", ["--is-ancestor", "feature", "HEAD~5"], in: fixture.root)
             Issue.record("expected a failure")
@@ -161,7 +161,7 @@ struct GitClientTests {
     func commandLogKeepsStandardErrorOfAFailure() async throws {
         let fixture = try await Fixture.make()
         defer { fixture.tearDown() }
-        let client = GitClient(configuration: .default)
+        let client = GitClient(configuration: .tests)
         _ = try? await client.run("rev-parse", ["--verify", "refs/heads/no-such-branch"], in: fixture.root)
         _ = try await client.run("rev-parse", ["HEAD"], in: fixture.root)
         // The shared ring takes every suite's calls; this fixture's directory is its own.
@@ -206,7 +206,7 @@ struct GitClientTests {
     func currentBranch() async throws {
         let fixture = try await Fixture.make()
         defer { fixture.tearDown() }
-        let client = GitClient(configuration: .default)
+        let client = GitClient(configuration: .tests)
         #expect(try await client.currentBranch(in: fixture.root) == "main")
         #expect(try await client.currentBranch(in: fixture.worktree) == "feature")
     }
@@ -215,7 +215,7 @@ struct GitClientTests {
     func branches() async throws {
         let fixture = try await Fixture.make()
         defer { fixture.tearDown() }
-        let client = GitClient(configuration: .default)
+        let client = GitClient(configuration: .tests)
         let branches = try await client.branches(in: fixture.root)
         #expect(Set(branches.map(\.name)) == ["main", "feature"])
         #expect(branches.first { $0.name == "main" }?.isCurrent == true)
@@ -225,7 +225,7 @@ struct GitClientTests {
     func worktrees() async throws {
         let fixture = try await Fixture.make()
         defer { fixture.tearDown() }
-        let client = GitClient(configuration: .default)
+        let client = GitClient(configuration: .tests)
         let trees = try await client.worktrees(in: fixture.root)
         #expect(trees.count == 2)
         #expect(trees[0].isMain)
@@ -239,7 +239,7 @@ struct GitClientTests {
     func resolveCommit() async throws {
         let fixture = try await Fixture.make()
         defer { fixture.tearDown() }
-        let client = GitClient(configuration: .default)
+        let client = GitClient(configuration: .tests)
         let main = try await client.resolveCommit("refs/heads/main", in: fixture.root)
         #expect(main?.count == 40)
         #expect(try await client.resolveCommit("refs/heads/nope", in: fixture.root) == nil)
@@ -264,7 +264,7 @@ struct GitClientTests {
     @Test("a failing command throws commandFailed with the verb and status")
     func commandFailed() async {
         let notARepo = FileManager.default.temporaryDirectory
-        let client = GitClient(configuration: .default)
+        let client = GitClient(configuration: .tests)
         await #expect(throws: GitClientError.self) {
             try await client.status(in: notARepo.appendingPathComponent("does-not-exist-\(UUID().uuidString)"))
         }

@@ -163,10 +163,10 @@ final class BrowserPaneTests: XCTestCase {
         )
     }
 
-    /// Settings changes reach the pane through `receive(on: .main)`; one turn
-    /// of the run loop delivers them.
+    /// Settings changes reach the pane through `receive(on: .main)`; draining
+    /// the main queue delivers them, however loaded the machine is.
     private func settle() {
-        RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+        pumpMainQueueUntilDrained()
     }
 
     func testPaneOverrideAffectsOnlyThatPane() {

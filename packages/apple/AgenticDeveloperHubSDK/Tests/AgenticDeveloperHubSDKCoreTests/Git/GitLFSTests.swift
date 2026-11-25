@@ -245,7 +245,7 @@ struct GitLFSFixtureTests {
         try await repository.run(["add", "--", ".gitattributes", "blob.bin"])
         try await repository.commit("lfs", at: 1_767_268_800)
 
-        let state = try await GitClient(configuration: .default).lfsState(in: repository.root)
+        let state = try await GitClient(configuration: .tests).lfsState(in: repository.root)
         #expect(state.isInstalled)
         #expect(state.trackedPatterns == ["*.bin"])
         #expect(state.files == ["blob.bin": true])

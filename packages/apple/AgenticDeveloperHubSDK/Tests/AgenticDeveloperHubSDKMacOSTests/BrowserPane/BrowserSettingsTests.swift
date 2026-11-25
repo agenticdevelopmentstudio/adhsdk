@@ -5,6 +5,16 @@ import AgenticDeveloperHubSDKCore
 
 @MainActor
 final class BrowserSettingsTests: XCTestCase {
+    override func setUp() async throws {
+        try await super.setUp()
+        // Writes UserSettings.shared, which suites in the other framework share.
+        await ExclusiveAccess.Resource.userSettings.acquire()
+    }
+
+    override func tearDown() async throws {
+        await ExclusiveAccess.Resource.userSettings.release()
+        try await super.tearDown()
+    }
 
     private func configuration(_ store: SettingsStore) -> WKWebViewConfiguration {
         WebKitBrowserEngine.makeConfiguration(settings: store, consoleLog: BrowserConsoleLog())

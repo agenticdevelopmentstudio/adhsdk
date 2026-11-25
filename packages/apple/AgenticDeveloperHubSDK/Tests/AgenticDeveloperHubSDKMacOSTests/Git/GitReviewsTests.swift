@@ -197,7 +197,7 @@ struct GitReviewsTests {
 
     // MARK: Session wiring
 
-    private let client = GitClient(configuration: .default)
+    private let client = GitClient(configuration: .tests)
 
     private func window(_ repository: GitTestRepository, reviews: (any GitReviewsProviding)?) async
         -> GitWindowSession {

@@ -5,7 +5,7 @@ import Testing
 @testable import AgenticDeveloperHubSDKCore
 @testable import AgenticDeveloperHubSDKMacOS
 
-@Suite("ProviderPicker")
+@Suite("ProviderPicker", .exclusiveAccess(to: .userSettings))
 @MainActor
 struct ProviderPickerTests {
 

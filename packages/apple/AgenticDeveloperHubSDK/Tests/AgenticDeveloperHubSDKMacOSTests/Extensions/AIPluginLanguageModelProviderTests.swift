@@ -20,7 +20,7 @@ import Testing
 /// live the first time that static was touched; swapping `UserSettings.shared`
 /// inside this suite would write to a store the setting's change publisher can
 /// never see fire, and `onAvailableChatModelsChanged` would never call back.
-@Suite("AIPluginLanguageModelProvider")
+@Suite("AIPluginLanguageModelProvider", .exclusiveAccess(to: .userSettings))
 @MainActor
 struct AIPluginLanguageModelProviderTests {
 

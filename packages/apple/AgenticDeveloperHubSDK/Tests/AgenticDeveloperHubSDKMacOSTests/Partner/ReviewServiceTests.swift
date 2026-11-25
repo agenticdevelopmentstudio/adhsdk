@@ -27,7 +27,8 @@ final class ReviewServiceTests: XCTestCase {
         repo = try PartnerGitFixture()
         store = try PartnerStore(path: directory.appendingPathComponent("Partner.db").path)
         detector = ManualSessionEventDetector()
-        registry = PartnerSessionRegistry(store: store, environment: { [:] }, detector: detector)
+        registry = PartnerSessionRegistry(store: store, environment: { [:] }, detector: detector,
+                                          shell: "/bin/sh")
         settings = SettingsStore(with: InMemorySettingsStorageProvider(),
                                  secureSettingsProvider: InMemorySecureSettingsStorageProvider())
         settings.set("opus", for: UserSettings.partnerReviewsReviewerModel)

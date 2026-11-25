@@ -14,7 +14,7 @@ private let noFireReason = Comment(
 /// The `KeyboardShortcuts` library delivers key-downs only from a real Carbon hotkey event and
 /// exposes no way to fire one, so the dispatch vectors are skipped with that reason.
 @MainActor
-@Suite("SystemWindowShortcutManager conformance", .serialized)
+@Suite("SystemWindowShortcutManager conformance", .serialized, .exclusiveAccess(to: .userSettings))
 struct ShortcutManagerConformanceTests {
 
     private static var windowContextsChord: KeyboardShortcuts.Shortcut {

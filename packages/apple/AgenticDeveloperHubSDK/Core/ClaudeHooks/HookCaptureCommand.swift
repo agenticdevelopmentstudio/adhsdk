@@ -58,11 +58,15 @@ public enum HookCaptureCommand {
     /// `--ppid` (the registered command does not; see `ProcessEnv.claudePid`).
     /// `oauthEmail` is the machine login's account, read now rather than when the
     /// daemon drains the file: see the comment where it is used.
+    /// `processEnvironment` is what `context.*` is read from: this process's
+    /// live environment by default, passed in so a caller (a test) can supply
+    /// one without `setenv`, which would change it for every thread at once.
     public static func buildEnvelope(
         eventType: String, ppidString: String?, stdin: Data, env: [String: String],
         claudePid: () -> Int32? = { ProcessEnv.claudePid(aboveHookParent: getppid()) },
         accountName: (String?) -> String,
-        oauthEmail: () -> String = { "" }
+        oauthEmail: () -> String = { "" },
+        processEnvironment: [String: String] = ProcessInfo.processInfo.environment
     ) -> [String: Any]? {
         // Mirror HookEnvelopeBuilder (socket path) and the shell hook: a
         // programmatic `claude` a daemon's own app runs (AI summaries) exports
@@ -103,7 +107,7 @@ public enum HookCaptureCommand {
             "event": eventType,
             "timestamp": iso8601UTC(),
             "hook_data": hookData,
-            "context": captureContext(ppid: ppid),
+            "context": captureContext(ppid: ppid, environment: processEnvironment),
             "account_email": accountName(token),
             // Resolved while the hook fires, as HookEnvelopeBuilder does for the
             // socket path. The file may sit in the drop directory through an
@@ -136,8 +140,12 @@ public enum HookCaptureCommand {
 
     /// Curated process-context snapshot. Only fields with values are included;
     /// absent env vars are omitted.
-    private static func captureContext(ppid: Int?) -> [String: Any] {
+    private static func captureContext(ppid: Int?, environment: [String: String]) -> [String: Any] {
         var ctx: [String: Any] = [:]
+        func env(_ key: String) -> String? {
+            guard let value = environment[key], !value.isEmpty else { return nil }
+            return value
+        }
 
         // claude.*
         var claude: [String: Any] = [:]
@@ -189,11 +197,6 @@ public enum HookCaptureCommand {
         if !terminal.isEmpty { ctx["terminal"] = terminal }
 
         return ctx
-    }
-
-    private static func env(_ key: String) -> String? {
-        guard let value = ProcessInfo.processInfo.environment[key], !value.isEmpty else { return nil }
-        return value
     }
 
     private static func currentWorkingDirectory() -> String {

@@ -39,7 +39,7 @@ private final class RecordingPoint: ContributionPoint {
 /// first is a pure function of the search paths and can run anywhere, the
 /// second is the registry's own state and stays where it belongs.
 @MainActor
-@Suite(.serialized)
+@Suite(.serialized, .exclusiveAccess(to: .userSettings))
 struct ExtensionRegistryRescanTests {
 
     private static let hostVersion = SemanticVersion(major: 1, minor: 95, patch: 0)

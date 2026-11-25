@@ -32,6 +32,7 @@ class AIChatBubbleConformanceCase: XCTestCase {
 
     override func setUp() async throws {
         try await super.setUp()
+        await ExclusiveAccess.Resource.userSettings.acquire()
         useTheme(BuiltInThemes.dracula)
     }
 
@@ -42,6 +43,7 @@ class AIChatBubbleConformanceCase: XCTestCase {
         // The terminal font is real user state, shared with the process.
         UserSettings.terminalFontName.value = UserSettings.terminalFontName.defaultValue
         UserSettings.terminalFontSize.value = UserSettings.terminalFontSize.defaultValue
+        await ExclusiveAccess.Resource.userSettings.release()
         try await super.tearDown()
     }
 
