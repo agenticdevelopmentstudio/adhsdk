@@ -74,6 +74,8 @@ LEGACY_FILES = {
     # Settings saved under the old plugin IDs.
     "packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/AIProviderMigration.swift",
     "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/AIPlugins/AIProviderMigrationTests.swift",
+    # Provider configurations saved under the old plugin IDs, routed like the new ones.
+    "packages/apple/AgenticDeveloperHubSDK/Database/Daemon/AccountRouter/ModelRouting/ModelProviderResolver.swift",
     # The window-contexts state directory the sample host used to write.
     "packages/apple/AgenticDeveloperHubSDKApp/AgenticDeveloperHubSDKApp/WindowContextsCoordinator.swift",
     # The localStorage key the color-mode choice used to live under, its test, and the
