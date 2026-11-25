@@ -20,10 +20,20 @@
 - **preference-current**: In preference mode the current row MUST be the one
   whose slug is the stored preference when that slug is among the rows (the
   browser's cached preference before the server's answer is in), else, once
-  the server's preference has settled, the individual row.
+  the server's preference has settled or the preference wait has run out
+  (preference-wait-bounded), the individual row.
 - **preference-current-waits**: In preference mode, while signed in, the
-  server's preference has not settled and the preference names none of the
-  rows, NO row MUST be current.
+  server's preference has not settled, the preference names none of the
+  rows and the preference wait has not run out, NO row MUST be current.
+- **preference-wait-bounded**: In preference mode the wait on the server's
+  preference MUST run out 3000 ms after it begins with no answer; the
+  individual row is then current while the preference still reads
+  unsettled, and a preference that answers later naming one of the rows
+  MUST become current.
+- **preference-wait-afresh**: In preference mode a wait that begins again
+  (signing back in, the subject changing straight to another user, a
+  settled preference dropping back to unsettled) MUST be timed afresh from
+  its start, never counted as already run out.
 - **preference-href-hub**: In preference mode each row's `href` MUST open
   that workspace (`/<slug>`) on the hub, built from the request host when
   one is known and from the hub's production URL otherwise.
@@ -34,8 +44,10 @@
 - **preference-every-route**: In preference mode `everyRoute` MUST be `true`
   while signed in and absent otherwise.
 - **preference-loading**: In preference mode `loading` MUST be `true` only
-  while signed in and either the read is loading or the current row waits
-  on the server's preference (preference-current-waits).
+  while signed in, unless the read has failed with no rows to show, and
+  either the read is loading or the current row waits on the server's
+  preference (preference-current-waits). Rows a failed background refetch
+  kept still count as rows to show.
 - **preference-enables-preference**: The preference read state MUST be
   enabled only in preference mode while signed in.
 - **route-rows**: In route mode the rows MUST be every row, teams included,

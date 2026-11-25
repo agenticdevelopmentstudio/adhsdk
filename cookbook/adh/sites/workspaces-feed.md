@@ -2,7 +2,7 @@
 id: 13339f1f-e815-4199-bdaa-dad533a94591
 title: "Workspaces Feed"
 type: ingredient
-version: 1.1.0
+version: 1.2.0
 status: review
 language: en
 created: 2026-11-25
@@ -86,10 +86,20 @@ nothing itself.
 - **preference-current**: In preference mode the current row MUST be the one
   whose slug is the stored preference when that slug is among the rows (the
   browser's cached preference before the server's answer is in), else, once
-  the server's preference has settled, the individual row.
+  the server's preference has settled or the preference wait has run out
+  (preference-wait-bounded), the individual row.
 - **preference-current-waits**: In preference mode, while signed in, the
-  server's preference has not settled and the preference names none of the
-  rows, NO row MUST be current.
+  server's preference has not settled, the preference names none of the
+  rows and the preference wait has not run out, NO row MUST be current.
+- **preference-wait-bounded**: In preference mode the wait on the server's
+  preference MUST run out 3000 ms after it begins with no answer; the
+  individual row is then current while the preference still reads
+  unsettled, and a preference that answers later naming one of the rows
+  MUST become current.
+- **preference-wait-afresh**: In preference mode a wait that begins again
+  (signing back in, the subject changing straight to another user, a
+  settled preference dropping back to unsettled) MUST be timed afresh from
+  its start, never counted as already run out.
 - **preference-href-hub**: In preference mode each row's `href` MUST open
   that workspace (`/<slug>`) on the hub, built from the request host when
   one is known and from the hub's production URL otherwise.
@@ -100,8 +110,10 @@ nothing itself.
 - **preference-every-route**: In preference mode `everyRoute` MUST be `true`
   while signed in and absent otherwise.
 - **preference-loading**: In preference mode `loading` MUST be `true` only
-  while signed in and either the read is loading or the current row waits
-  on the server's preference (preference-current-waits).
+  while signed in, unless the read has failed with no rows to show, and
+  either the read is loading or the current row waits on the server's
+  preference (preference-current-waits). Rows a failed background refetch
+  kept still count as rows to show.
 - **preference-enables-preference**: The preference read state MUST be
   enabled only in preference mode while signed in.
 - **route-rows**: In route mode the rows MUST be every row, teams included,
@@ -170,6 +182,12 @@ component.
 | workspaces-feed-018 | preference-current-waits, preference-current | preference mode, signed in; preference `null` and not settled, then settled | `loading: true`, then current `individual:me` and `loading: false` |
 | workspaces-feed-019 | preference-current, preference-loading | preference mode, signed in; cached preference `'acme'`, not settled | current `organization:acme`; `loading: false` |
 | workspaces-feed-020 | preference-current-waits, preference-loading | preference mode, signed in; cached preference `'gone'`, not settled | no row current; `loading: true` |
+| workspaces-feed-021 | preference-loading, feed-error-gated | preference mode, signed in; preference not settled; the read failed with no rows | rows `[]`; `loading: false`; `error: true` (`workspacesFeed.test.tsx`, "reads a failed list as failed while the preference is still in flight") |
+| workspaces-feed-022 | preference-loading, preference-current-waits | preference mode, signed in; preference not settled; the read failed but kept rows `me`/`acme` | ids `['individual:me', 'organization:acme']`; no row current; `loading: true`; `error: true` ("keeps loading over cached rows a failed refetch left while the preference is pending") |
+| workspaces-feed-023 | preference-wait-bounded, preference-current-waits | preference mode, signed in; preference `null` and never settled; 2999 ms, then 1 ms more | no row current and `loading: true`, then current `individual:me` and `loading: false` ("lets the personal workspace stand in when the preference read stalls") |
+| workspaces-feed-024 | preference-wait-bounded, preference-current | preference mode, signed in; preference not settled for 3000 ms, then `'acme'` and settled | current `individual:me`, then `organization:acme` ("still lets a preference that answers after the stand-in take over") |
+| workspaces-feed-025 | preference-wait-afresh, preference-wait-bounded | preference mode; preference not settled; subject `user-1` waits out 3000 ms, signs out, signs back in, then 3000 ms more | after sign-in no row current and `loading: true`, then current `individual:me` and `loading: false` ("waits afresh after signing out and back in") |
+| workspaces-feed-026 | preference-wait-afresh, preference-wait-bounded | preference mode; preference not settled; subject `user-1` waits out 3000 ms, then the subject becomes `user-2` directly; 2999 ms, then 1 ms more | no row current and `loading: true`, then current `individual:me` and `loading: false` ("waits afresh when the subject switches straight to another user") |
 ## Edge Cases
 
 - **Host auth ahead of the token**: The host can count the visitor signed in
@@ -190,6 +208,18 @@ component.
   workspaces-feed-018). A cached preference that names one of the rows is
   current at once (workspaces-feed-019); one that names none waits like no
   cache (workspaces-feed-020).
+- **A stalled preference read**: The account read has no timeout of its
+  own. After 3000 ms with no answer the personal workspace stands in, and an
+  answer that lands later still takes over (workspaces-feed-023,
+  workspaces-feed-024).
+- **Another user signs in mid-wait**: Another tab signing in as someone else
+  changes the subject with no signed-out render between; the new subject's
+  wait is timed from its own start (workspaces-feed-026), as is the wait
+  after signing back in (workspaces-feed-025).
+- **A failed list while the preference waits**: With nothing to show the
+  failure reads as `error`, not "Loading…" (workspaces-feed-021); rows a
+  failed background refetch kept stay listed under "Loading…" until a row is
+  current (workspaces-feed-022).
 - **Duplicate slugs**: An organization and one or more teams sharing a slug
   give one row, the one a bare `/<slug>` opens; two teams under different
   owners would otherwise share an id (workspaces-feed-010).
@@ -348,7 +378,8 @@ paint, ahead of any click".
 
 **Decision**: In route mode the current row comes from URL membership with
 no fallback; in preference mode an unknown preference falls back to the
-personal workspace, but only once the server's preference has settled.
+personal workspace, but only once the server's preference has settled or a
+3000 ms wait has run out without it.
 **Rationale**: From the source: the workspace route "is the BARE `/<slug>`,
 the same shape as `/login`, so the first segment is a workspace exactly when
 a row carries it", and "off a workspace route no row is current, and the
@@ -358,7 +389,10 @@ who has never chosen". Marking that fallback before the server answered
 showed a device with no cached pick the personal workspace and then swapped
 to the organization the server held, so until then the feed reports
 `loading` with no row current; a cached pick that names a row stays the
-first paint's fast path.
+first paint's fast path. The wait is bounded because the account read has
+no timeout of its own: unbounded, a stalled read held the trigger on
+"Loading…" for the life of the page. The bound stays in the feed, not the
+shared loader, so `settled` keeps meaning the server answered.
 **Approved**: pending
 
 **Decision**: A preference-mode pick records and stays put.
@@ -395,5 +429,6 @@ and current.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.0 | 2026-11-25 | Mike Fullerton | The preference wait is bounded at 3000 ms and timed afresh per wait and subject; a failed list suppresses loading only when it leaves no rows; test vectors 021-026. |
 | 1.1.0 | 2026-11-25 | Mike Fullerton | Preference mode marks the personal fallback current only once the server's preference has settled; until then loading, unless a cached preference names a row |
 | 1.0.0 | 2026-11-25 | Mike Fullerton | Initial recipe: the header workspace menu's shared feed, moved from the hub, in preference and route switch modes, and the workspaces-menu context contract. |

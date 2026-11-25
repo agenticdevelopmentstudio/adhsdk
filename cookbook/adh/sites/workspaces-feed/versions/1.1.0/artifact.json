@@ -1,0 +1,65 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "13339f1f-e815-4199-bdaa-dad533a94591",
+    "title": "Workspaces Feed",
+    "type": "ingredient",
+    "version": "1.1.0",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-25",
+    "modified": "2026-11-25",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "The shared provider that fills the header workspace menu with the signed-in user's workspaces, pre-resolved into menu rows, in one of two switch modes: a satellite's pick records the cross-site preference, the hub's pick goes through the mounted workspace route's switch.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "header",
+      "menu",
+      "workspace",
+      "provider",
+      "switcher"
+    ],
+    "depends-on": [
+      "14a8624d-5527-47e5-9513-1727910a5f47"
+    ],
+    "related": [
+      "f2d56415-ac36-4a27-bee5-b447c4186513",
+      "9069ccf9-0357-4311-9671-91ee2793adae"
+    ],
+    "references": [
+      "packages/web/packages/adh/src/header/workspaces-feed.tsx (adhsdk)",
+      "packages/web/packages/adh/src/header/workspaces-menu.tsx (adhsdk)",
+      "packages/web/packages/adh/src/header/__tests__/workspacesFeed.test.tsx (adhsdk)"
+    ],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "a193a9c6ebe9d53f",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

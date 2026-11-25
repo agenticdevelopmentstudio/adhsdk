@@ -56,7 +56,8 @@ paint, ahead of any click".
 
 **Decision**: In route mode the current row comes from URL membership with
 no fallback; in preference mode an unknown preference falls back to the
-personal workspace, but only once the server's preference has settled.
+personal workspace, but only once the server's preference has settled or a
+3000 ms wait has run out without it.
 **Rationale**: From the source: the workspace route "is the BARE `/<slug>`,
 the same shape as `/login`, so the first segment is a workspace exactly when
 a row carries it", and "off a workspace route no row is current, and the
@@ -66,7 +67,10 @@ who has never chosen". Marking that fallback before the server answered
 showed a device with no cached pick the personal workspace and then swapped
 to the organization the server held, so until then the feed reports
 `loading` with no row current; a cached pick that names a row stays the
-first paint's fast path.
+first paint's fast path. The wait is bounded because the account read has
+no timeout of its own: unbounded, a stalled read held the trigger on
+"Loading…" for the life of the page. The bound stays in the feed, not the
+shared loader, so `settled` keeps meaning the server answered.
 **Approved**: pending
 
 **Decision**: A preference-mode pick records and stays put.

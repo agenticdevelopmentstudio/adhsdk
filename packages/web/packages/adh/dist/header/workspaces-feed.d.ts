@@ -36,9 +36,11 @@ export type SiteWorkspacesMenuProviderProps = {
      * - `'preference'` (default; a satellite, which has no workspace routes): rows are the personal
      *   workspace and the organizations (a team owns nothing and is never a preference); the current
      *   row is the stored family preference, else the personal workspace — that fallback only once
-     *   the server's preference has settled (until then `loading`, unless the browser's cached
-     *   preference already names a row); a pick RECORDS the
-     *   preference (`useWorkspacePreference`) and marks it current, with no navigation; and the menu
+     *   the server's preference has settled or a bounded wait (`PREFERENCE_WAIT_MS`) has run out,
+     *   timed afresh for each wait and each subject (until then `loading`, unless the browser's
+     *   cached preference already names a row, or the list failed with no rows to show); a pick
+     *   RECORDS the preference (`useWorkspacePreference`) and marks it current, with no navigation;
+     *   and the menu
      *   shows on every route (`everyRoute`). A row's `href` opens that workspace on the hub, for
      *   open-in-new-tab.
      * - `'route'` (the hub): every row the URL can reach, teams included, one per slug; the current

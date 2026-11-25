@@ -17,6 +17,18 @@
   workspaces-feed-018). A cached preference that names one of the rows is
   current at once (workspaces-feed-019); one that names none waits like no
   cache (workspaces-feed-020).
+- **A stalled preference read**: The account read has no timeout of its
+  own. After 3000 ms with no answer the personal workspace stands in, and an
+  answer that lands later still takes over (workspaces-feed-023,
+  workspaces-feed-024).
+- **Another user signs in mid-wait**: Another tab signing in as someone else
+  changes the subject with no signed-out render between; the new subject's
+  wait is timed from its own start (workspaces-feed-026), as is the wait
+  after signing back in (workspaces-feed-025).
+- **A failed list while the preference waits**: With nothing to show the
+  failure reads as `error`, not "Loading…" (workspaces-feed-021); rows a
+  failed background refetch kept stay listed under "Loading…" until a row is
+  current (workspaces-feed-022).
 - **Duplicate slugs**: An organization and one or more teams sharing a slug
   give one row, the one a bare `/<slug>` opens; two teams under different
   owners would otherwise share an id (workspaces-feed-010).
