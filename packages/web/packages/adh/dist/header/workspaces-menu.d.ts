@@ -28,6 +28,10 @@ export type WorkspacesMenu = {
      *  the back button alike — as the preference (teams excepted; see `useWorkspaceRoute`), so a
      *  plain link is remembered too. Absent ⇒ the menu navigates to `href`. */
     select?: (workspace: MenuWorkspace) => void;
+    /** True when {@link select} leaves the visitor on the page they are on (a satellite's pick only
+     *  RECORDS the preference). The menu then skips the leave-this-page confirmation: nothing unsaved
+     *  is lost, and a refused prompt would drop the pick for no reason. Absent ⇒ a pick navigates. */
+    selectStaysOnPage?: boolean;
     /** Where the header swaps the site menu for the workspace menu, signed in. True: on EVERY route
      *  of this site — how a satellite, which has no workspace routes, opts in (the shared
      *  `SiteWorkspacesMenuProvider` sets it in its default `switchBy="preference"`). Absent: only on

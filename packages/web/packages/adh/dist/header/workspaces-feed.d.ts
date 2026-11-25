@@ -13,12 +13,18 @@ export declare const WorkspaceSelectRegistrar: import("react").Context<RegisterW
  * Remembering the pick is not what it adds: the route records ANY fresh arrival on a `/<slug>` it
  * did not seed itself as the preference (teams excepted) — `useWorkspaceRoute`'s documented rule.
  *
- * It registers ONE stable wrapper per mount, which calls whichever `select` the route rendered
- * last. `select` is a new function on every in-workspace navigation (it closes over the pathname),
- * and registering each new one set the provider's state at the app root, re-rendering the root a
- * second time per navigation and handing every menu consumer a new context value. Reading the
- * latest through a ref gives the menu a switch that does what the route would do NOW, with no new
- * identity to pass up.
+ * The provider keeps what is registered in a REF, never in state: nothing renders from it. The
+ * menu's `select` is one stable function that, at pick time, calls whichever switch is registered
+ * then, else follows `/<slug>`. So a registration re-renders nothing — not the app root, not a menu
+ * consumer — however often the route hands up a new `select` (one per in-workspace navigation; it
+ * closes over the pathname).
+ *
+ * The one effect here is a deliberate exception to the rule "Never use `useEffect` to sync state —
+ * derive it instead", and it syncs no state. The switch is a CALLBACK owned by a component below
+ * the provider; the provider cannot derive it, only be handed it, and handing a child's value to an
+ * ancestor without a render-time side effect takes an effect. It writes a ref and sets no state. A
+ * layout effect, so a render React discards never leaves its switch behind, and so the latest
+ * switch is in place before paint, ahead of any click.
  */
 export declare function useRegisterWorkspaceSelect(select: (slug: string) => void): void;
 export type SiteWorkspacesMenuProviderProps = {
@@ -35,8 +41,8 @@ export type SiteWorkspacesMenuProviderProps = {
      *   open-in-new-tab.
      * - `'route'` (the hub): every row the URL can reach, teams included, one per slug; the current
      *   row is the one whose slug is the URL's first segment, else none; a pick goes through the
-     *   switch a mounted workspace route registered ({@link useRegisterWorkspaceSelect}), else
-     *   follows `/<slug>`; and the menu shows on the hub's workspace routes only.
+     *   switch a mounted workspace route registered at pick time ({@link useRegisterWorkspaceSelect}),
+     *   else follows `/<slug>`; and the menu shows on the hub's workspace routes only.
      */
     switchBy?: 'preference' | 'route';
 };
@@ -46,7 +52,9 @@ export type SiteWorkspacesMenuProviderProps = {
  * the header workspace menu (see `SiteMenuSwitcher`).
  *
  * Gated on sign-in by the stored token's subject ({@link useTokenSubject}), so it works under any
- * host's auth context: signed out, no request fires and `loading`/`error` read false.
+ * host's auth context: signed out, no request fires and `loading`/`error` read false. In
+ * `'preference'` mode it asks for the swap (`everyRoute`) only while that same signal says signed
+ * in, so the menu and its feed never disagree about the visitor.
  */
 export declare function SiteWorkspacesMenuProvider({ children, switchBy, }: SiteWorkspacesMenuProviderProps): ReactNode;
 //# sourceMappingURL=workspaces-feed.d.ts.map

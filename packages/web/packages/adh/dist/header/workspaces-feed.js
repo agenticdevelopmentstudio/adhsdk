@@ -7,13 +7,11 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useLayoutEffect,
   useMemo,
-  useRef,
-  useState
+  useRef
 } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useTokenSubject } from "@adh-sdk/auth/client";
 import {
   firstWorkspacePerSlug,
@@ -32,14 +30,10 @@ var WorkspaceSelectRegistrar = createContext(() => {
 });
 function useRegisterWorkspaceSelect(select) {
   const register = useContext(WorkspaceSelectRegistrar);
-  const latest = useRef(select);
   useLayoutEffect(() => {
-    latest.current = select;
-  });
-  useEffect(() => {
-    register((slug) => latest.current(slug));
+    register(select);
     return () => register(null);
-  }, [register]);
+  }, [register, select]);
 }
 function SiteWorkspacesMenuProvider({
   children,
@@ -57,7 +51,9 @@ function SiteWorkspacesMenuProvider({
       loading: signedIn && isLoading,
       error: signedIn && isError,
       select: feed.select,
-      everyRoute: byRoute ? void 0 : true
+      // A preference pick records and stays put, so the menu asks no leave-this-page question.
+      selectStaysOnPage: byRoute ? void 0 : true,
+      everyRoute: !byRoute && signedIn ? true : void 0
     }),
     [feed.workspaces, feed.select, signedIn, isLoading, isError, byRoute]
   );
@@ -80,16 +76,20 @@ function useRouteSwitch(data) {
     })),
     [reachable, activeSlug]
   );
-  const [routeSelect, setRouteSelect] = useState(null);
-  const register = useCallback((fn) => setRouteSelect(() => fn), []);
+  const router = useRouter();
+  const routeSelect = useRef(null);
+  const register = useCallback((fn) => {
+    routeSelect.current = fn;
+  }, []);
   const select = useMemo(() => {
-    if (!routeSelect) return void 0;
     const slugById = new Map(reachable.map((w) => [workspaceCompositeId(w), w.slug]));
     return (w) => {
       const slug = slugById.get(w.id);
-      if (slug) routeSelect(slug);
+      if (!slug) return;
+      if (routeSelect.current) routeSelect.current(slug);
+      else router.push(`/${slug}`);
     };
-  }, [routeSelect, reachable]);
+  }, [reachable, router]);
   return { workspaces, select, register };
 }
 function usePreferenceSwitch(data, enabled) {

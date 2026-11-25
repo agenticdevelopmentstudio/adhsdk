@@ -2333,6 +2333,10 @@ function WorkspaceMenu({
         navigateSiteRow(item);
         return;
       }
+      if (menu.select && menu.selectStaysOnPage) {
+        menu.select(workspace);
+        return;
+      }
       void confirmNavigation3().then((ok) => {
         if (!ok) return;
         if (menu.select) menu.select(workspace);
