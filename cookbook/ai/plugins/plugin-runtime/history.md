@@ -10,3 +10,4 @@
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Inverted prohibitions (none/neither/no X MUST) restated as MUST NOT. |
 | 1.3.0 | 2026-11-19 | Mike Fullerton | AI Providers panel: Default Model row, editor title and subtitle, untitled connection group, secret reveal, model-only Test Chat |
 | 1.4.0 | 2026-11-25 | Mike Fullerton | Chat backend and local session drop thinking and usage events; withTools keeps the thinking budget; native tool specs reach the plugin as-is. |
+| 1.4.1 | 2026-11-25 | Mike Fullerton | AIPluginChatBackend, LocalChatSession and the provider config stack moved to AgenticDeveloperHubSDKAgents (Agents/Providers/); no behavior change. |

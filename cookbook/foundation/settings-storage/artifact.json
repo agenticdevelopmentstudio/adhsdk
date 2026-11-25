@@ -4,11 +4,11 @@
     "id": "6363b5ff-f511-4e21-9ba7-6850787dba62",
     "title": "Settings Storage",
     "type": "ingredient",
-    "version": "1.4.0",
+    "version": "1.4.1",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-11-23",
+    "modified": "2026-11-25",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -34,7 +34,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "c68f16e6bbb52b7e",
+  "synced": "428f79231049b71c",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

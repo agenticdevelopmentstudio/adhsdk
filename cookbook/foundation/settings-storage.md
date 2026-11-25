@@ -2,11 +2,11 @@
 id: 6363b5ff-f511-4e21-9ba7-6850787dba62
 title: "Settings Storage"
 type: ingredient
-version: 1.4.0
+version: 1.4.1
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-11-23
+modified: 2026-11-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -343,7 +343,7 @@ The in-memory provider, in-memory secure provider, plain persistent provider, an
 | apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SharedSettingsBackend.swift` | unverified |
 | apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/RoutedSettingsStorageProvider.swift` | unverified |
 | apple | `packages/apple/AgenticDeveloperHubSDK/Database/Daemon/SharedSettings/SharedSettingsStore.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/AIProviderSharedSecrets.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Agents/Providers/AIProviderSharedSecrets.swift` | unverified |
 
 ## Design Decisions
 
@@ -395,6 +395,7 @@ The `SettingsStorageProvider` contract cleanly separates the key/value contract 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.4.1 | 2026-11-25 | Mike Fullerton | LocalChatSession and AIProviderSharedSecretsProvider moved to AgenticDeveloperHubSDKAgents (Agents/Providers/); changeNotificationName is nonisolated. No behavior change. |
 | 1.4.0 | 2026-11-23 | Mike Fullerton | Apps suite Phase 4: shared settings: SharedSettingKeys, RoutedSettingsStorageProvider, SharedSettingsStore and AI provider secrets in the shared Keychain group. |
 | 1.3.0 | 2026-11-14 | Mike Fullerton | Storage base moved to the foundation SDK for every Apple platform |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Swift-only constructs in normative sections restated as platform-neutral behavior; the Apple mechanism is in Platform Notes; added confines-to-ui-thread and corrected the provider-concurrency claims to match the code. |

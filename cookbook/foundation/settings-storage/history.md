@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.4.1 | 2026-11-25 | Mike Fullerton | LocalChatSession and AIProviderSharedSecretsProvider moved to AgenticDeveloperHubSDKAgents (Agents/Providers/); changeNotificationName is nonisolated. No behavior change. |
 | 1.4.0 | 2026-11-23 | Mike Fullerton | Apps suite Phase 4: shared settings: SharedSettingKeys, RoutedSettingsStorageProvider, SharedSettingsStore and AI provider secrets in the shared Keychain group. |
 | 1.3.0 | 2026-11-14 | Mike Fullerton | Storage base moved to the foundation SDK for every Apple platform |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Swift-only constructs in normative sections restated as platform-neutral behavior; the Apple mechanism is in Platform Notes; added confines-to-ui-thread and corrected the provider-concurrency claims to match the code. |
