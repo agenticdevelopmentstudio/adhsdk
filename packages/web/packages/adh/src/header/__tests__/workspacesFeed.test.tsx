@@ -202,6 +202,10 @@ describe('SiteWorkspacesMenuProvider (preference, a satellite)', () => {
       rerender(<SiteWorkspacesMenuProvider>x</SiteWorkspacesMenuProvider>)
       expect(menu().workspaces.filter((w) => w.current)).toEqual([])
       expect(menu().loading).toBe(true)
+      // The second wait is bounded too: its timer is armed afresh, not left behind.
+      act(() => vi.advanceTimersByTime(3000))
+      expect(menu().workspaces.find((w) => w.current)?.id).toBe('individual:me')
+      expect(menu().loading).toBe(false)
     } finally {
       vi.useRealTimers()
     }
