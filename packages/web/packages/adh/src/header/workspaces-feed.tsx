@@ -83,7 +83,9 @@ export type SiteWorkspacesMenuProviderProps = {
    *
    * - `'preference'` (default; a satellite, which has no workspace routes): rows are the personal
    *   workspace and the organizations (a team owns nothing and is never a preference); the current
-   *   row is the stored family preference, else the personal workspace; a pick RECORDS the
+   *   row is the stored family preference, else the personal workspace — that fallback only once
+   *   the server's preference has settled (until then `loading`, unless the browser's cached
+   *   preference already names a row); a pick RECORDS the
    *   preference (`useWorkspacePreference`) and marks it current, with no navigation; and the menu
    *   shows on every route (`everyRoute`). A row's `href` opens that workspace on the hub, for
    *   open-in-new-tab.
@@ -122,7 +124,7 @@ export function SiteWorkspacesMenuProvider({
   const byRoute = switchBy === 'route'
   const route = useRouteSwitch(byRoute ? data : undefined)
   const pref = usePreferenceSwitch(byRoute ? undefined : data, signedIn && !byRoute)
-  const feed = byRoute ? route : pref
+  const feed: Feed = byRoute ? route : pref
 
   // `error`, so a list that failed to load reads as one rather than "No workspaces yet". Gated on
   // sign-in: signed out the query is disabled, and what it still holds is not this visitor's.
@@ -137,17 +139,22 @@ export function SiteWorkspacesMenuProvider({
   // so it closes the same gap through `loading`: no subject yet reads as the list not being here
   // yet, which is the truth for a visitor the host already counts as signed in. The two signals
   // still never meet in one condition; the menu reads one value either way.
+  //
+  // Preference mode is also `loading` while its current row waits on the server's preference (see
+  // usePreferenceSwitch): no row is current then, and the trigger reads "Loading…" rather than
+  // naming the personal workspace it may be about to replace.
+  const prefPending = !byRoute && pref.pending
   const value = useMemo<WorkspacesMenu>(
     () => ({
       workspaces: feed.workspaces,
-      loading: byRoute ? !signedIn || isLoading : signedIn && isLoading,
+      loading: byRoute ? !signedIn || isLoading : signedIn && (isLoading || prefPending),
       error: signedIn && isError,
       select: feed.select,
       // A preference pick records and stays put, so the menu asks no leave-this-page question.
       selectStaysOnPage: byRoute ? undefined : true,
       everyRoute: !byRoute && signedIn ? true : undefined,
     }),
-    [feed.workspaces, feed.select, signedIn, isLoading, isError, byRoute],
+    [feed.workspaces, feed.select, signedIn, isLoading, isError, byRoute, prefPending],
   )
 
   const menu = <WorkspacesMenuProvider value={value}>{children}</WorkspacesMenuProvider>
@@ -203,19 +210,35 @@ function useRouteSwitch(data: WorkspaceRow[] | undefined): Feed & { register: Re
   return { workspaces, select, register }
 }
 
-/** A satellite's feed: personal + orgs, current by the stored preference, a pick records it. */
-function usePreferenceSwitch(data: WorkspaceRow[] | undefined, enabled: boolean): Feed {
+/**
+ * A satellite's feed: personal + orgs, current by the stored preference, a pick records it.
+ * `pending` while the current row waits on the server's preference: the personal fallback is
+ * marked only once that answer is in.
+ */
+function usePreferenceSwitch(
+  data: WorkspaceRow[] | undefined,
+  enabled: boolean,
+): Feed & { pending: boolean } {
   const host = useClientHost()
-  const { slug: preferred, choose } = useWorkspacePreference({ enabled })
+  const { slug: preferred, settled, choose } = useWorkspacePreference({ enabled })
   const owners = useMemo(
     () => firstWorkspacePerSlug((data ?? NO_ROWS).filter((w) => w.type !== 'team')),
     [data],
   )
-  // A stored slug that is not one of the caller's rows (a previous user's, an org since left) is
-  // inert: the personal workspace stands in, as it does for a caller who has never chosen.
-  const currentSlug = owners.some((w) => w.slug === preferred)
+  // A preferred slug that names one of the caller's rows is current at once, even before the
+  // server answers: before then it is the browser's cached pick (`adh:home:workspace`), the first
+  // paint's fast path. Anything else waits for the server's answer before the personal workspace
+  // stands in: marked current straight away, a device with no cached pick showed the personal
+  // workspace and then swapped to the organization the server held. Once settled, a slug that is
+  // not one of the caller's rows (a previous user's, an org since left) is inert: the personal
+  // workspace stands in, as it does for a caller who has never chosen.
+  const preferredRow = owners.some((w) => w.slug === preferred)
+  const pending = enabled && !preferredRow && !settled
+  const currentSlug = preferredRow
     ? preferred
-    : owners.find((w) => w.type === 'individual')?.slug
+    : pending
+      ? undefined
+      : owners.find((w) => w.type === 'individual')?.slug
   const workspaces = useMemo<MenuWorkspace[]>(
     () =>
       owners.map((w) => {
@@ -236,5 +259,5 @@ function usePreferenceSwitch(data: WorkspaceRow[] | undefined, enabled: boolean)
       if (slug) choose(slug)
     }
   }, [owners, choose])
-  return { workspaces, select }
+  return { workspaces, select, pending }
 }

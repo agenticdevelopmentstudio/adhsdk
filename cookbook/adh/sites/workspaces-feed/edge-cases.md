@@ -10,6 +10,13 @@
 - **A stored preference outside the rows**: A previous user's slug or an
   organization since left is inert; the personal workspace stands in, as it
   does for a caller who never chose (workspaces-feed-002).
+- **No cached preference on this device**: Before the server's preference
+  arrives the feed marks no row current and reports `loading`, so the
+  trigger reads "Loading…" rather than naming the personal workspace and
+  then swapping to the organization the server holds (workspaces-feed-017,
+  workspaces-feed-018). A cached preference that names one of the rows is
+  current at once (workspaces-feed-019); one that names none waits like no
+  cache (workspaces-feed-020).
 - **Duplicate slugs**: An organization and one or more teams sharing a slug
   give one row, the one a bare `/<slug>` opens; two teams under different
   owners would otherwise share an id (workspaces-feed-010).

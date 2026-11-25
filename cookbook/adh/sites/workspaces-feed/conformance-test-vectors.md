@@ -17,4 +17,7 @@
 | workspaces-feed-014 | route-rows | route mode, the rows of vector 010, at `/mine` | only those three rows; no `Admin` label, no `/admin` href |
 | workspaces-feed-015 | route-loading, feed-reads-every-row | route mode, no subject, at `/acme` | the read is called with `{ enabled: false }`; `{ workspaces: [], loading: true, error: false }`; `everyRoute` absent |
 | workspaces-feed-016 | route-registrar-provided | a probe reading the registrar under a preference-mode feed and under a route-mode feed | two different registrars (the default no-op, then the feed's) |
-
+| workspaces-feed-017 | preference-current-waits, preference-loading, preference-current | preference mode, signed in; preference `null` and not settled, then `'acme'` and settled | no row current and `loading: true`, then current `organization:acme` and `loading: false` |
+| workspaces-feed-018 | preference-current-waits, preference-current | preference mode, signed in; preference `null` and not settled, then settled | `loading: true`, then current `individual:me` and `loading: false` |
+| workspaces-feed-019 | preference-current, preference-loading | preference mode, signed in; cached preference `'acme'`, not settled | current `organization:acme`; `loading: false` |
+| workspaces-feed-020 | preference-current-waits, preference-loading | preference mode, signed in; cached preference `'gone'`, not settled | no row current; `loading: true` |

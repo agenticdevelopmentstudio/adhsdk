@@ -56,13 +56,17 @@ paint, ahead of any click".
 
 **Decision**: In route mode the current row comes from URL membership with
 no fallback; in preference mode an unknown preference falls back to the
-personal workspace.
+personal workspace, but only once the server's preference has settled.
 **Rationale**: From the source: the workspace route "is the BARE `/<slug>`,
 the same shape as `/login`, so the first segment is a workspace exactly when
 a row carries it", and "off a workspace route no row is current, and the
 trigger reads 'Workspaces', which is true there". A stored slug outside the
 rows "is inert: the personal workspace stands in, as it does for a caller
-who has never chosen".
+who has never chosen". Marking that fallback before the server answered
+showed a device with no cached pick the personal workspace and then swapped
+to the organization the server held, so until then the feed reports
+`loading` with no row current; a cached pick that names a row stays the
+first paint's fast path.
 **Approved**: pending
 
 **Decision**: A preference-mode pick records and stays put.

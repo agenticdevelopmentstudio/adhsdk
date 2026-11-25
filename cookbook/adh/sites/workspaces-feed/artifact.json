@@ -4,7 +4,7 @@
     "id": "13339f1f-e815-4199-bdaa-dad533a94591",
     "title": "Workspaces Feed",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "status": "review",
     "language": "en",
     "created": "2026-11-25",
@@ -39,7 +39,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "a6ba57c3b68ffc8a",
+  "synced": "a193a9c6ebe9d53f",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

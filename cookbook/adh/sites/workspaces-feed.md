@@ -2,7 +2,7 @@
 id: 13339f1f-e815-4199-bdaa-dad533a94591
 title: "Workspaces Feed"
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: 2026-11-25
@@ -84,8 +84,12 @@ nothing itself.
 - **preference-rows**: In preference mode the rows MUST be the
   non-team rows, one per slug (first per slug), in the backend's order.
 - **preference-current**: In preference mode the current row MUST be the one
-  whose slug is the stored preference when that slug is among the rows, else
-  the individual row.
+  whose slug is the stored preference when that slug is among the rows (the
+  browser's cached preference before the server's answer is in), else, once
+  the server's preference has settled, the individual row.
+- **preference-current-waits**: In preference mode, while signed in, the
+  server's preference has not settled and the preference names none of the
+  rows, NO row MUST be current.
 - **preference-href-hub**: In preference mode each row's `href` MUST open
   that workspace (`/<slug>`) on the hub, built from the request host when
   one is known and from the hub's production URL otherwise.
@@ -96,7 +100,8 @@ nothing itself.
 - **preference-every-route**: In preference mode `everyRoute` MUST be `true`
   while signed in and absent otherwise.
 - **preference-loading**: In preference mode `loading` MUST be `true` only
-  while signed in and the read is loading.
+  while signed in and either the read is loading or the current row waits
+  on the server's preference (preference-current-waits).
 - **preference-enables-preference**: The preference read state MUST be
   enabled only in preference mode while signed in.
 - **route-rows**: In route mode the rows MUST be every row, teams included,
@@ -161,7 +166,10 @@ component.
 | workspaces-feed-014 | route-rows | route mode, the rows of vector 010, at `/mine` | only those three rows; no `Admin` label, no `/admin` href |
 | workspaces-feed-015 | route-loading, feed-reads-every-row | route mode, no subject, at `/acme` | the read is called with `{ enabled: false }`; `{ workspaces: [], loading: true, error: false }`; `everyRoute` absent |
 | workspaces-feed-016 | route-registrar-provided | a probe reading the registrar under a preference-mode feed and under a route-mode feed | two different registrars (the default no-op, then the feed's) |
-
+| workspaces-feed-017 | preference-current-waits, preference-loading, preference-current | preference mode, signed in; preference `null` and not settled, then `'acme'` and settled | no row current and `loading: true`, then current `organization:acme` and `loading: false` |
+| workspaces-feed-018 | preference-current-waits, preference-current | preference mode, signed in; preference `null` and not settled, then settled | `loading: true`, then current `individual:me` and `loading: false` |
+| workspaces-feed-019 | preference-current, preference-loading | preference mode, signed in; cached preference `'acme'`, not settled | current `organization:acme`; `loading: false` |
+| workspaces-feed-020 | preference-current-waits, preference-loading | preference mode, signed in; cached preference `'gone'`, not settled | no row current; `loading: true` |
 ## Edge Cases
 
 - **Host auth ahead of the token**: The host can count the visitor signed in
@@ -175,6 +183,13 @@ component.
 - **A stored preference outside the rows**: A previous user's slug or an
   organization since left is inert; the personal workspace stands in, as it
   does for a caller who never chose (workspaces-feed-002).
+- **No cached preference on this device**: Before the server's preference
+  arrives the feed marks no row current and reports `loading`, so the
+  trigger reads "Loading…" rather than naming the personal workspace and
+  then swapping to the organization the server holds (workspaces-feed-017,
+  workspaces-feed-018). A cached preference that names one of the rows is
+  current at once (workspaces-feed-019); one that names none waits like no
+  cache (workspaces-feed-020).
 - **Duplicate slugs**: An organization and one or more teams sharing a slug
   give one row, the one a bare `/<slug>` opens; two teams under different
   owners would otherwise share an id (workspaces-feed-010).
@@ -333,13 +348,17 @@ paint, ahead of any click".
 
 **Decision**: In route mode the current row comes from URL membership with
 no fallback; in preference mode an unknown preference falls back to the
-personal workspace.
+personal workspace, but only once the server's preference has settled.
 **Rationale**: From the source: the workspace route "is the BARE `/<slug>`,
 the same shape as `/login`, so the first segment is a workspace exactly when
 a row carries it", and "off a workspace route no row is current, and the
 trigger reads 'Workspaces', which is true there". A stored slug outside the
 rows "is inert: the personal workspace stands in, as it does for a caller
-who has never chosen".
+who has never chosen". Marking that fallback before the server answered
+showed a device with no cached pick the personal workspace and then swapped
+to the organization the server held, so until then the feed reports
+`loading` with no row current; a cached pick that names a row stays the
+first paint's fast path.
 **Approved**: pending
 
 **Decision**: A preference-mode pick records and stays put.
@@ -376,4 +395,5 @@ and current.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-11-25 | Mike Fullerton | Preference mode marks the personal fallback current only once the server's preference has settled; until then loading, unless a cached preference names a row |
 | 1.0.0 | 2026-11-25 | Mike Fullerton | Initial recipe: the header workspace menu's shared feed, moved from the hub, in preference and route switch modes, and the workspaces-menu context contract. |

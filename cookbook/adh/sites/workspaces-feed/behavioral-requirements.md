@@ -18,8 +18,12 @@
 - **preference-rows**: In preference mode the rows MUST be the
   non-team rows, one per slug (first per slug), in the backend's order.
 - **preference-current**: In preference mode the current row MUST be the one
-  whose slug is the stored preference when that slug is among the rows, else
-  the individual row.
+  whose slug is the stored preference when that slug is among the rows (the
+  browser's cached preference before the server's answer is in), else, once
+  the server's preference has settled, the individual row.
+- **preference-current-waits**: In preference mode, while signed in, the
+  server's preference has not settled and the preference names none of the
+  rows, NO row MUST be current.
 - **preference-href-hub**: In preference mode each row's `href` MUST open
   that workspace (`/<slug>`) on the hub, built from the request host when
   one is known and from the hub's production URL otherwise.
@@ -30,7 +34,8 @@
 - **preference-every-route**: In preference mode `everyRoute` MUST be `true`
   while signed in and absent otherwise.
 - **preference-loading**: In preference mode `loading` MUST be `true` only
-  while signed in and the read is loading.
+  while signed in and either the read is loading or the current row waits
+  on the server's preference (preference-current-waits).
 - **preference-enables-preference**: The preference read state MUST be
   enabled only in preference mode while signed in.
 - **route-rows**: In route mode the rows MUST be every row, teams included,

@@ -45,17 +45,18 @@ function SiteWorkspacesMenuProvider({
   const route = useRouteSwitch(byRoute ? data : void 0);
   const pref = usePreferenceSwitch(byRoute ? void 0 : data, signedIn && !byRoute);
   const feed = byRoute ? route : pref;
+  const prefPending = !byRoute && pref.pending;
   const value = useMemo(
     () => ({
       workspaces: feed.workspaces,
-      loading: byRoute ? !signedIn || isLoading : signedIn && isLoading,
+      loading: byRoute ? !signedIn || isLoading : signedIn && (isLoading || prefPending),
       error: signedIn && isError,
       select: feed.select,
       // A preference pick records and stays put, so the menu asks no leave-this-page question.
       selectStaysOnPage: byRoute ? void 0 : true,
       everyRoute: !byRoute && signedIn ? true : void 0
     }),
-    [feed.workspaces, feed.select, signedIn, isLoading, isError, byRoute]
+    [feed.workspaces, feed.select, signedIn, isLoading, isError, byRoute, prefPending]
   );
   const menu = /* @__PURE__ */ jsx(WorkspacesMenuProvider, { value, children });
   return byRoute ? /* @__PURE__ */ jsx(WorkspaceSelectRegistrar.Provider, { value: route.register, children: menu }) : menu;
@@ -94,12 +95,14 @@ function useRouteSwitch(data) {
 }
 function usePreferenceSwitch(data, enabled) {
   const host = useClientHost();
-  const { slug: preferred, choose } = useWorkspacePreference({ enabled });
+  const { slug: preferred, settled, choose } = useWorkspacePreference({ enabled });
   const owners = useMemo(
     () => firstWorkspacePerSlug((data ?? NO_ROWS).filter((w) => w.type !== "team")),
     [data]
   );
-  const currentSlug = owners.some((w) => w.slug === preferred) ? preferred : owners.find((w) => w.type === "individual")?.slug;
+  const preferredRow = owners.some((w) => w.slug === preferred);
+  const pending = enabled && !preferredRow && !settled;
+  const currentSlug = preferredRow ? preferred : pending ? void 0 : owners.find((w) => w.type === "individual")?.slug;
   const workspaces = useMemo(
     () => owners.map((w) => {
       const path = `/${w.slug}`;
@@ -119,7 +122,7 @@ function usePreferenceSwitch(data, enabled) {
       if (slug) choose(slug);
     };
   }, [owners, choose]);
-  return { workspaces, select };
+  return { workspaces, select, pending };
 }
 export {
   SiteWorkspacesMenuProvider,

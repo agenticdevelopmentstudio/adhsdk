@@ -21,13 +21,13 @@ const rows = [
 ]
 const useWorkspaces = vi.fn()
 const choose = vi.fn()
-const preference = { slug: null as string | null }
+const preference = { slug: null as string | null, settled: true }
 vi.mock('@adh-sdk/data', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@adh-sdk/data')>()
   return {
     ...actual,
     useWorkspaces: (opts: { enabled?: boolean }) => useWorkspaces(opts),
-    useWorkspacePreference: () => ({ slug: preference.slug, settled: true, choose }),
+    useWorkspacePreference: () => ({ slug: preference.slug, settled: preference.settled, choose }),
   }
 })
 
@@ -62,6 +62,7 @@ const menu = () => seen.current as Menu
 beforeEach(() => {
   subject.current = 'user-1'
   preference.slug = null
+  preference.settled = true
   route.pathname = '/'
   useWorkspaces.mockReturnValue({ data: rows, isLoading: false, isError: false })
 })
@@ -93,6 +94,47 @@ describe('SiteWorkspacesMenuProvider (preference, a satellite)', () => {
     expect(menu().workspaces.find((w) => w.current)?.id).toBe('individual:me')
   })
 
+  it('marks no row current, and reports loading, until the server preference settles', () => {
+    // With no cached pick, the personal fallback marked current at once showed the personal
+    // workspace and then swapped to the organization the server held.
+    preference.settled = false
+    const { rerender } = render(<SiteWorkspacesMenuProvider>x</SiteWorkspacesMenuProvider>)
+    expect(menu().workspaces.filter((w) => w.current)).toEqual([])
+    expect(menu().loading).toBe(true)
+    preference.slug = 'acme'
+    preference.settled = true
+    rerender(<SiteWorkspacesMenuProvider>x</SiteWorkspacesMenuProvider>)
+    expect(menu().workspaces.find((w) => w.current)?.id).toBe('organization:acme')
+    expect(menu().loading).toBe(false)
+  })
+
+  it('falls back to the personal workspace once the server has no preference for the caller', () => {
+    preference.settled = false
+    const { rerender } = render(<SiteWorkspacesMenuProvider>x</SiteWorkspacesMenuProvider>)
+    expect(menu().loading).toBe(true)
+    preference.settled = true
+    rerender(<SiteWorkspacesMenuProvider>x</SiteWorkspacesMenuProvider>)
+    expect(menu().workspaces.find((w) => w.current)?.id).toBe('individual:me')
+    expect(menu().loading).toBe(false)
+  })
+
+  it("marks a cached pick that names one of the caller's rows current before the server answers", () => {
+    // The browser cache (`adh:home:workspace`) seeds the first paint; it does not wait on the trip.
+    preference.slug = 'acme'
+    preference.settled = false
+    render(<SiteWorkspacesMenuProvider>x</SiteWorkspacesMenuProvider>)
+    expect(menu().workspaces.find((w) => w.current)?.id).toBe('organization:acme')
+    expect(menu().loading).toBe(false)
+  })
+
+  it('waits for the server when a cached pick names none of the caller rows', () => {
+    preference.slug = 'gone'
+    preference.settled = false
+    render(<SiteWorkspacesMenuProvider>x</SiteWorkspacesMenuProvider>)
+    expect(menu().workspaces.filter((w) => w.current)).toEqual([])
+    expect(menu().loading).toBe(true)
+  })
+
   it('a pick records the preference and does not navigate', () => {
     render(<SiteWorkspacesMenuProvider>x</SiteWorkspacesMenuProvider>)
     act(() => menu().select!({ id: 'organization:acme' }))
@@ -106,6 +148,7 @@ describe('SiteWorkspacesMenuProvider (preference, a satellite)', () => {
 
   it('asks for nothing and reports no loading or error signed out', () => {
     subject.current = null
+    preference.settled = false
     useWorkspaces.mockReturnValue({ data: undefined, isLoading: true, isError: true })
     render(<SiteWorkspacesMenuProvider>x</SiteWorkspacesMenuProvider>)
     expect(useWorkspaces).toHaveBeenCalledWith({ enabled: false })
