@@ -575,6 +575,36 @@
       ]
     },
     {
+      "path": "packages/apple/AgenticDeveloperHubSDK/Agents/Providers",
+      "platform": "apple",
+      "kind": "logic",
+      "group": "ai/plugins"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperHubSDK/Agents/Models",
+      "platform": "apple",
+      "kind": "logic",
+      "group": "ai/models"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperHubSDK/Agents/Agent",
+      "platform": "apple",
+      "kind": "logic",
+      "group": "ai/agents"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperHubSDK/Agents/Handlers",
+      "platform": "apple",
+      "kind": "logic",
+      "group": "ai/agents"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperHubSDK/Agents/MCP",
+      "platform": "apple",
+      "kind": "logic",
+      "group": "ai/mcp"
+    },
+    {
       "path": "packages/apple/AgenticDeveloperHubSDK/Core/Extensions",
       "platform": "apple",
       "kind": "logic",

@@ -20,7 +20,7 @@ Derived from `HostMCPServerTests` where named; the rest are traced to the source
 | host-mcp-server-015 | list-duplicates-kept | Two sources both advertising `a`; `tools/list` | Two entries named `a`; a call goes to the first source |
 | host-mcp-server-016 | registrations-survive-stop | Register a source, serve, stop, serve again over a new transport | The second connection lists the same tools without re-registering |
 | host-mcp-server-017 | stop-clears-server | Call `stop()` on a server that never served | Returns with no effect and no error |
-| host-mcp-server-018 | tools-capability, not-strict | A client calls `tools/call` over a stateless transport with no prior `initialize` | The call is answered, not refused |
+| host-mcp-server-018 | tools-capability, not-strict | A client calls `tools/call` over a stateless transport with no prior `initialize`; a second client connects normally and reads the `initialize` result | The call is answered, not refused; the initialize result's tools capability is present and its `listChanged` is false |
 | host-mcp-server-019 | register-appends, prefix-default | Register two sources with no prefix | Both are listed in the order registered |
 | host-mcp-server-020 | construction-parameters | Construct with app name `Test` and version `1`, connect a client | The client's initialize result names server `Test` version `1` |
 | host-mcp-server-021 | serve-throws-start-failure | Transport whose connect throws | `serve(over:)` throws and a following `stop()` does nothing |
@@ -28,4 +28,13 @@ Derived from `HostMCPServerTests` where named; the rest are traced to the source
 | host-mcp-server-023 | list-asks-sources-live, call-asks-definitions | Source whose definitions change between two `tools/list` requests | The second listing reflects the change |
 | host-mcp-server-024 | call-result-text | Source returns `hello` | One text item `hello`, no image |
 | host-mcp-server-025 | list-server-gone, call-server-gone, wait-until-completed | Server deallocated before a request; and `waitUntilServerCompleted()` with no server | Empty list and `server is gone`; the wait returns at once. `HostMCPServerConformanceTests` reaches both: it drops the server after serving, then lists and calls, and it waits on a server that never served. |
-
+| host-mcp-server-026 | bridge-definitions | `AgentToolSource` over `EchoTool` and `FailingTool`; `toolDefinitions()` (`AgentToolSourceTests.definitions`) | Names `echo`, `broken`; first definition's schema bytes equal the UTF-8 bytes of `EchoTool`'s `inputSchemaJSON` |
+| host-mcp-server-027 | bridge-result, bridge-caller-fixed, bridge-arguments | Source with caller `mcp`; call `echo` with `{"text":"x"}` and request caller `other` (`AgentToolSourceTests.callSucceeds`) | Not an error; content contains `"caller":"mcp"` |
+| host-mcp-server-028 | bridge-arguments | Same source; call `echo` with empty argument bytes and request caller nil (`AgentToolSourceTests.callSucceeds`) | Content contains `"echo":{}` |
+| host-mcp-server-029 | bridge-unknown-tool | Call `nope` (`AgentToolSourceTests.callFails`) | `isError` true; text `Unknown tool 'nope'` |
+| host-mcp-server-030 | bridge-failure | Call `broken`, whose run throws a failure with message `The tool broke` (`AgentToolSourceTests.callFails`) | `isError` true; content `The tool broke` |
+| host-mcp-server-031 | bridge-caller-default (`AgentToolSourceTests.defaultCaller`) | `AgentToolSource(tools:)` with no caller; read `caller` | `external` |
+| host-mcp-server-032 | bridge-arguments-undecodable (`AgentToolSourceTests.undecodableArguments`) | Call `echo` with argument bytes that are not valid UTF-8 | The tool receives an empty string as its arguments |
+| host-mcp-server-033 | bridge-name-first-match (`AgentToolSourceTests.firstNameMatch`) | Two tools named `echo` in one source; call `echo` | The first tool runs |
+| host-mcp-server-034 | bridge-result, bridge-ignores-policy (`AgentToolSourceTests.mutatingToolRuns`) | Call a mutating `ask` tool through an `AgentToolSource`, as `HostMCPServer` does for `tools/call` | The tool runs and its `resultJSON` is the content; no activity entry is written by the bridge |
+| host-mcp-server-035 | call-first-match-only | Two sources both advertising `b`; the first returns an error (`it failed`, error true), the second would return `echo:b`; call `b` | `isError` true, text `it failed`; the second source received no call |

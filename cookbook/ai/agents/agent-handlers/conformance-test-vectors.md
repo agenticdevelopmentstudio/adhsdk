@@ -1,0 +1,51 @@
+
+Vectors are derived from `AgentHandlersTests.swift` (suites `HandlerRequest`, `AgentHandlers`, `ModelHandlers`) and from the route table in the source. Fixtures come from `AgentsTestSupport.swift`: a host with one enabled agent `helper` (model role `smart`), tools `echo` (auto, read-only), `bump` (ask, mutating) and `broken` (never, always throws), and a scripted model runtime.
+
+| ID | Requirements | Input | Expected |
+|----|-------------|-------|----------|
+| agent-handlers-001 | request-method-uppercase, request-path-segments | `HandlerRequest(method: "get", path: "/tools//my%20tool/")` (test: segments) | method `GET`; path `["tools", "my tool"]` |
+| agent-handlers-002 | response-error-shape, response-error-codes, response-status | `HandlerResponse.error(409, "conflict", "Busy")` (test: errorBody) | status 409; body decodes to `HandlerError(error: "conflict", message: "Busy")` |
+| agent-handlers-003 | agents-list, agents-get | `GET agents`, then `GET agents/helper` (test: agents) | 200 with ids `["helper"]`; 200 |
+| agent-handlers-004 | agents-get | `GET agents/ghost` (test: agents) | 404, code `not_found`, message `No agent with id 'ghost'` |
+| agent-handlers-005 | agents-put-id-from-path, agents-put-save | `PUT agents/writer` body name Writer, prompt Write., model role smart (test: putAgent) | 200; host agent `writer` has name `Writer` |
+| agent-handlers-006 | agents-put-id-mismatch | `PUT agents/writer` body id `other` (test: putAgent) | 400, code `bad_request`, message `The body's id 'other' does not match the path's 'writer'` |
+| agent-handlers-007 | agents-put-decode | `PUT agents/writer` body with only `name` (test: putAgent) | 400, code `bad_request`, message starting `Malformed body: missing` |
+| agent-handlers-008 | sessions-create, sessions-list, sessions-get, sessions-delete | create with agent helper and title T; list with query agent helper; get; delete; delete again (test: sessionLifecycle) | 201 with title `T`; list holds that id; detail info id matches; 204; 404 |
+| agent-handlers-009 | sessions-create-agent-missing | `POST sessions` body agent `ghost` (test: sessionErrors) | 404, code `not_found`, message `No agent with id 'ghost'` |
+| agent-handlers-010 | sessions-id-parse, sessions-get | `GET sessions/not-a-uuid`; `GET sessions/<random uuid>` (test: sessionErrors) | 404, code `not_found`, message `No session with id 'not-a-uuid'`; 404, code `not_found`, message `No session with id <uuid>` |
+| agent-handlers-011 | messages-empty, messages-decode | `POST sessions/<id>/messages` with text of two spaces; with body `{}` (test: sessionErrors) | 400 `bad_request` `The message text is empty`; 400 `bad_request` starting `Malformed body: missing` |
+| agent-handlers-012 | messages-stream | script `textDelta "Hi"` then end `end_turn`; `POST .../messages` text Hello (test: messageStreams) | `events` reply; envelopes `textDelta("Hi")`, `turnFinished(stopReason: "end_turn")` |
+| agent-handlers-013 | messages-busy, interrupt | hanging runtime; first `POST .../messages`, second `POST .../messages`, then `POST .../interrupt` (test: interruptAndConflict) | second is 409; interrupt is 202; first stream ends with `turnFinished(stopReason: "interrupted")` |
+| agent-handlers-014 | tools-list, tools-list-schema, tools-list-permission | `GET tools` (test: listsTools) | names `["echo","bump","broken"]`; `input_schema` of echo is an object; bump has `mutating` true and `permission` `ask` |
+| agent-handlers-015 | tools-call-arguments, tools-call-caller, tools-call-outcome | `POST tools/echo` arguments object `{text: x}`, caller `cli` (test: runsTool) | `ToolOutcome.resultJSON` contains `"caller":"cli"` and `"text":"x"` |
+| agent-handlers-016 | tools-call-arguments, default-tool-caller | `POST tools/echo` arguments the string `{"text":"y"}`, no caller (test: runsTool) | resultJSON contains `"caller":"external"` |
+| agent-handlers-017 | tools-call-arguments-invalid | `POST tools/echo` arguments the string `not json` (test: runsTool) | 400, code `bad_request`, message `` `arguments` must be a JSON object or a string holding one `` |
+| agent-handlers-018 | tools-call-unknown | `POST tools/nope` (test: toolErrors) | 404, code `not_found`, message `Unknown tool 'nope'` |
+| agent-handlers-019 | tools-call-tool-error | `POST tools/broken` (test: toolErrors) | 422, error code `unprocessable`, message `The tool broke` |
+| agent-handlers-020 | route-top-level, route-method-fallthrough | `GET nowhere`; `PATCH agents` (test: noRoute) | 404 `not_found` `No such route`; 404 `not_found` `No such route` |
+| agent-handlers-021 | models-create, models-secrets-never-returned, models-create-conflict, models-list | `POST` empty path with entry (roles fast) and secrets apiKey `sk-secret`; same again; `GET` empty path (test: create) | 201, body lacks `sk-secret` and names `apiKey`, secret store holds it; 409; list holds the entry id |
+| agent-handlers-022 | models-create-invalid, models-create-decode | `POST` entry with empty name; `POST` body `{}` (test: invalid) | 400 `bad_request` with the registry's reason; 400 `bad_request` starting `Malformed body: missing` |
+| agent-handlers-023 | models-get, models-put, models-put-check-order, models-delete | get, put renamed entry, put to a random path id, put an absent entry, delete, get, delete (test: entryRoutes) | 200; 200 and registry shows `Renamed`; 400 `bad_request`; 404 `not_found`; 204 empty; 404 `not_found`; 404 `not_found` |
+| agent-handlers-024 | models-resolve-role, models-resolve | `GET resolve` no query; role `fast`; role `smart` (test: resolve) | 400 `bad_request` `` `role` is required ``; 404 `not_found` `No enabled model entry has the role 'fast'`; 200 with the entry id |
+| agent-handlers-025 | models-plugins, models-test, models-error-map | `GET plugins`; `POST <id>/test`; `POST <random uuid>/test` (test: pluginsAndTest) | one summary; decoded `ModelTestResult.isOK`; 404 `not_found` |
+| agent-handlers-026 | sessions-id-parse, sessions-sub-path | `GET sessions/<uuid>/nothing` for an existing session | 404 no-route reply (from the route table; no test) |
+| agent-handlers-027 | tools-call-object, tools-call-arguments | `POST tools/echo` with a JSON array body; with an empty body | 400 `Expected a JSON object`; 200 with arguments `{}` (from source; no test) |
+| agent-handlers-028 | json-dates, json-encoder-format | encode a value holding a date and a slash-containing string with `AgentsJSON.encode` | ISO-8601 date text, keys in sorted order, slash not escaped (from source; no test) |
+| agent-handlers-029 | host-error-map, messages-host-errors, messages-busy | `POST sessions/<id>/messages` for a disabled agent; for a session with a turn running (from source; no test for the disabled case) | 409 `conflict`, message `The agent 'helper' is disabled`; 409 `conflict`, message `Session <id> already has a turn running` |
+| agent-handlers-030 | sessions-list | `GET sessions?agent=helper`, then `GET sessions?agent=ghost` (from source; the existing test covers only a present agent) | the first holds the helper sessions; the second answers 200 with an empty array |
+| agent-handlers-031 | events-tail | `GET sessions/<id>/events` for an existing session; for a random session id (from source; no test) | an `events` reply; 404 `not_found`, message `No session with id <uuid>` |
+| agent-handlers-032 | sessions-collection-methods, tools-methods | `DELETE sessions`; `POST tools`; `GET tools/echo`; `GET tools/echo/extra` (from source; no test) | each 404 `not_found` `No such route` |
+| agent-handlers-033 | tools-call-tool-error | `POST tools/<name>` where the tool throws `AgentToolError.invalidArguments`; where it throws `AgentToolError.unknownTool` (from source; no test) | 400 `bad_request`, message `The arguments for '<name>' are not a JSON object`; 404 `not_found`, message `Unknown tool '<name>'` |
+| agent-handlers-034 | tools-call-no-permission-check, no-transport-auth | `POST tools/bump` (permission `ask`, mutating) with arguments `{}` (from source; no test) | 200 with the tool's `ToolOutcome`; the handler asks nothing and the response carries no prompt |
+| agent-handlers-035 | agents-empty-id-not-checked, agents-put-save | `PUT agents/writer` with a body whose `name` is empty (from source; no test) | 400 `bad_request`, message `An agent needs a name`, which is the host's reason; the handler added no check |
+| agent-handlers-036 | response-encoded-failure | `HandlerResponse.encoded` of a value whose encoding throws (from source; no test) | status 500, code `internal`, message the encoder's localized description |
+| agent-handlers-037 | decoding-error-description, decoding-error-400 | `POST sessions` with `{}`; with `{"agent": 1}` (from source; no test) | 400 ``Malformed body: missing `agent` ``; 400 ``Malformed body: `agent`: `` followed by the decoder's debug description |
+| agent-handlers-038 | uuid-case-insensitive, models-non-uuid | `GET sessions/<uuid in upper case>` for an existing session; `GET not-a-uuid`; `GET <uuid>/nothing` on the model routes (from source; no test) | 200; 404 `No such route`; 404 `No such route` |
+| agent-handlers-039 | segment-before-decode | `HandlerRequest(method: "GET", path: "/tools/a%2Fb/")` (from source; no test) | path `["tools", "a/b"]` |
+| agent-handlers-040 | models-list-models | `GET <id>/models` for an existing entry (from source; no test) | 200 with the registry's list of model names |
+| agent-handlers-041 | models-secrets-absent, models-put | `PUT <id>` with an entry and no `secrets` after a create that stored `apiKey` (from source; no test) | 200; the secret store still holds the earlier `apiKey` value |
+| agent-handlers-042 | models-error-map | the registry throws `pluginNotInstalled`; `unknownTemplate` (from source; no test) | 422 `unprocessable` with the error's localized description, for each |
+| agent-handlers-043 | tools-call-caller-fallback, tools-list-invalid-schema | `POST tools/echo` with `caller` null, `""` and `5`; `GET tools` with a tool whose schema text is `not json` (from source; no test) | each call's result carries `"caller":"external"`; the tool is listed with `input_schema` `{}` |
+
+SHOULD requirements: the component states none, so no SHOULD vectors are owed.
+

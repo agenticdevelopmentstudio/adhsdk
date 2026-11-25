@@ -15,7 +15,15 @@
 **Rationale**: the source's own comment documents this as an accepted tradeoff — a plugin installed after the daemon process started stays invisible until the daemon's next launch (which host installers perform anyway) — in exchange for never repeating discovery/`dlopen` work on the hot completion path.
 **Approved**: pending
 
-**Decision**: for a configuration with no stored model, whatever surfaces as "the model" in the AI-Log's ok-row column is the configuration's `pluginIdentifier`, not the descriptor-resolved default `completeViaPlugin` actually used.
-**Rationale**: the source's own inline comment labels this an "accepted residual," noting that fixing it would require changing `complete`'s return type (to carry the resolved model back out alongside the reply text) — a larger change than the source's author judged worthwhile for a log-display detail.
+**Decision**: `complete` does not return the resolved model; it returns only the reply string, so for a configuration with no stored model a caller cannot learn which descriptor-resolved default `completeViaPlugin` actually used.
+**Rationale**: the source's own inline comment labels this an "accepted residual," noting that fixing it would require changing `complete`'s return type (to carry the resolved model back out alongside the reply text) — a larger change than the source's author judged worthwhile. How a caller labels its own log is that caller's spec.
+**Approved**: pending
+
+**Decision**: the request-value assembly (ledger fields, template-scoped secrets, `model` last) lives on the plugin descriptor as shared helpers rather than inline in the plugin path.
+**Rationale**: the model registry resolves its entries into plugin requests too; one helper keeps the two value bags from drifting, which is exactly the failure the keyless-template rule guards against.
+**Approved**: pending
+
+**Decision**: in the Swift implementation, `ChatError` conforms to `Error, LocalizedError` only, with no explicit `Sendable` conformance, so it is treated as non-`Sendable` across a concurrency-domain boundary even though its sole associated value (`String`) is `Sendable`.
+**Rationale**: the source declares no `Sendable` conformance; this records the current behaviour rather than a deliberate guarantee.
 **Approved**: pending
 

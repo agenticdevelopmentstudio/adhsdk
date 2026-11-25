@@ -8,9 +8,14 @@
 - **Source throws or returns an error**: sources return a content string and an error flag and cannot throw through the contract; an error flag becomes an MCP error result, and no later registration is tried.
 - **Schema bytes that do not decode**: MUST fall back to an empty object schema; the failure is not logged.
 - **Concurrent calls**: the actor serialises its own state, but `tools/call` handlers run in separate tasks in the SDK and each awaits the source, so two calls to a slow source can overlap; the server adds no lock around source calls.
-- **Overlapping `serve` or `stop`**: see the open question on `serve-reentrancy`.
+- **Overlapping `serve` or `stop`**: `serve(over:)` and `stop()` are actor methods that suspend (on `stop()`, `installHandlers`, `start`) after reading the current server, and the source gives no ordering rule for two overlapping calls, so one call can replace or clear the connection another has just recorded. The behaviour is unspecified and untested; see the pending Design Decision on overlapping serve calls.
 - **Transport closes**: the message loop ends and `waitUntilServerCompleted()` returns; the server stays recorded as current until `stop()` is called.
 - **Stateless HTTP caller**: a `tools/call` with no `initialize` MUST be answered.
 - **Unreachable client or network loss mid-call**: the source call continues to completion and the reply is written to the transport; the server has no retry, timeout or cancellation of its own.
+- **Agent tool list empty**: an `AgentToolSource` with no tools MUST contribute no definitions and answer every call with `Unknown tool '<name>'`.
+- **Mutating or ask-permission tool through the bridge**: the bridge runs it without consulting `permissionDefault` or `isMutating` and returns its `resultJSON`; `ToolPermission`'s doc comment says it is "enforced in phase 2", so the bridge's silence on policy is the current contract, not a hidden check. The tool's inverse is dropped.
+- **Pane header versus bridge caller**: the pane id the server reads from the request reaches `callTool`, and `AgentToolSource` discards it for its own fixed caller; a tool that wants the pane cannot see it through this bridge.
+- **Argument bytes that are not UTF-8**: the tool receives an empty string and decides for itself whether that is valid; the bridge raises no error.
+- **Tool throws any error**: the error's `localizedDescription` becomes the answer text with the error flag true; nothing is rethrown.
 - **Caller header absent**: the caller MUST be nil, and sources that ignore it are unaffected.
 

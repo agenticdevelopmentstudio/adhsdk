@@ -72,8 +72,8 @@ LEGACY_FILES = {
     "cookbook/ai/plugins/secret-storing.md",
     "cookbook/ai/plugins/secret-storing/platform-notes.md",
     # Settings saved under the old plugin IDs.
-    "packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/AIProviderMigration.swift",
-    "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/AIPlugins/AIProviderMigrationTests.swift",
+    "packages/apple/AgenticDeveloperHubSDK/Agents/Providers/AIProviderMigration.swift",
+    "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKAgentsTests/AIProviderMigrationTests.swift",
     # Provider configurations saved under the old plugin IDs, which the daemon still routes.
     "packages/apple/AgenticDeveloperHubSDK/Database/Daemon/AccountRouter/ModelRouting/ModelProviderResolver.swift",
     # The window-contexts state directory the sample host used to write.

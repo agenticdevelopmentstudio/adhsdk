@@ -1,0 +1,57 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "86788f50-7b85-4659-b7df-8c560e082f76",
+    "title": "Agent Tool",
+    "type": "ingredient",
+    "version": "1.0.0",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-25",
+    "modified": "2026-11-25",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "The JSON-in, JSON-out tool contract a host offers its agents, its call and result types, and a client that loads a remote host's tools and runs each one over a handler transport.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "agents",
+      "tools",
+      "json-schema",
+      "mcp"
+    ],
+    "depends-on": [],
+    "related": [
+      "dac3e46e-2eeb-4ebd-b88d-4e4999870db7"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "3cc2a5e364f2f728",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

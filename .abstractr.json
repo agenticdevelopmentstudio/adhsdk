@@ -284,6 +284,19 @@
       "holds": "AgenticDeveloperHubSDKIntegrations. Third-party service integrations (Gmail): models, store, client, sync."
     },
     {
+      "name": "apple-agents",
+      "paths": [
+        "packages/apple/AgenticDeveloperHubSDK/Agents/"
+      ],
+      "depends_on": [
+        "apple-core",
+        "apple-pluginkit",
+        "apple-database"
+      ],
+      "shared": true,
+      "holds": "AgenticDeveloperHubSDKAgents. Headless AI: provider configuration and chat engine, model registry, agent host and turn loop, HTTP-shaped handlers, MCP bridge."
+    },
+    {
       "name": "apple-hubmailbridge",
       "paths": [
         "packages/apple/AgenticDeveloperHubSDK/HubMailBridge/"
@@ -333,7 +346,8 @@
         "apple-language",
         "apple-markdown",
         "apple-displays",
-        "apple-integrations"
+        "apple-integrations",
+        "apple-agents"
       ],
       "shared": true,
       "holds": "AgenticDeveloperHubSDKMacOS. The feature-rich framework the host app, plugins, Whippet and Stenographer all consume."
@@ -529,7 +543,8 @@
         "apple-hubsync",
         "apple-hubmail",
         "apple-hubmailbridge",
-        "apple-mail"
+        "apple-mail",
+        "apple-agents"
       ],
       "shared": false,
       "holds": "Test bundles. Nothing depends on these."

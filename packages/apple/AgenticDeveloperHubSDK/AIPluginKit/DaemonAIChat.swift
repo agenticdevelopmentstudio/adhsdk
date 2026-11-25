@@ -30,14 +30,21 @@ public enum DaemonAIChat {
             -> (any AIPlugin, AIPluginDescriptor)
         /// Drives one described request to completion, streaming decoded events.
         public var run: @Sendable (AIRequestSpec, any AIPlugin) -> AsyncThrowingStream<AIStreamEvent, Error>
+        /// Lists the installed plugins' descriptors without loading any code, for a
+        /// host that shows what can be configured (the model registry's `plugins()`).
+        public var discover: @Sendable (_ searchPaths: [URL]) async -> [AIPluginDescriptor]
 
         public init(
             load: @escaping @Sendable (_ identifier: String, _ searchPaths: [URL]) async throws
                 -> (any AIPlugin, AIPluginDescriptor),
-            run: @escaping @Sendable (AIRequestSpec, any AIPlugin) -> AsyncThrowingStream<AIStreamEvent, Error>
+            run: @escaping @Sendable (AIRequestSpec, any AIPlugin) -> AsyncThrowingStream<AIStreamEvent, Error>,
+            discover: @escaping @Sendable (_ searchPaths: [URL]) async -> [AIPluginDescriptor] = { paths in
+                AIPluginManager.scanDescriptors(in: paths).map(\.descriptor)
+            }
         ) {
             self.load = load
             self.run = run
+            self.discover = discover
         }
 
         public static let live = PluginRuntime.live(additionalSearchPaths: [])
@@ -54,7 +61,11 @@ public enum DaemonAIChat {
                         try LivePluginCache.load(identifier: identifier, searchPaths: paths)
                     }
                 },
-                run: PluginTransport.run
+                run: PluginTransport.run,
+                discover: { searchPaths in
+                    let paths = searchPaths + additionalSearchPaths.filter { !searchPaths.contains($0) }
+                    return AIPluginManager.scanDescriptors(in: paths).map(\.descriptor)
+                }
             )
         }
     }
@@ -266,41 +277,24 @@ public enum DaemonAIChat {
 
         // Rebuild the `AIPluginConfig` bag from exactly what the host forwarded and
         // stored — NOT by re-deriving from `descriptor.fields`. The host's non-secret
-        // `values` (recorded in the config's fields ledger) already carry the
+        // values (recorded in the config's fields ledger) already carry the
         // descriptor fields PLUS every template-level default (`baseURL`, `authMode`,
-        // and any other `ProviderTemplate.defaultValues` entry). Reading the ledger,
-        // rather than re-listing descriptor fields and special-casing baseURL/authMode
-        // by name, is what keeps a template default beyond those two from being
-        // dropped on the headless path.
-        var values: [String: String] = [:]
-        let ledgerKey = AIProviderConfigKeys.fieldsKey(config: config.id)
-        let fieldsLedger = settings(ledgerKey) ?? ""
+        // and any other `ProviderTemplate.defaultValues` entry), so a template
+        // default beyond those two is never dropped on the headless path.
+        var fields: [String: String] = [:]
+        let fieldsLedger = settings(AIProviderConfigKeys.fieldsKey(config: config.id)) ?? ""
         for field in fieldsLedger.split(separator: "\n").map(String.init) {
-            let key = AIProviderConfigKeys.fieldKey(config: config.id, field: field)
-            values[field] = settings(key) ?? ""
+            fields[field] = settings(AIProviderConfigKeys.fieldKey(config: config.id, field: field)) ?? ""
         }
-        // Secret fields come from the host's Keychain. Represent a declared secret
-        // even when empty so `buildRequest` can distinguish "this template requires a
-        // key and it's blank" from "keyless template with no secret field".
-        //
-        // Scope those secrets to the config's OWN template, not `descriptor.fields`
-        // (the union across every template). A keyless template — e.g. Ollama —
-        // overrides `fields` to drop the shared `apiKey`, so listing `descriptor.fields`
-        // would synthesize a phantom empty `apiKey`, and `buildRequest` then rejects the
-        // keyless provider with "An API key is required". Mirror the app's
-        // template-scoped resolution (`AIProviderResolver`); fall back to the full field
-        // list only when the template id no longer resolves.
-        let secretFields = descriptor.resolvedTemplates
-            .first { $0.id == config.templateId }
-            .map { descriptor.fields(for: $0) } ?? descriptor.fields
-        for field in secretFields where field.isSecret {
+        // Secret fields come from the host's Keychain, scoped to the config's own
+        // template (`secretFields(templateId:)` says why).
+        var secrets: [String: String] = [:]
+        for field in descriptor.secretFields(templateId: config.templateId) {
             let key = AIProviderConfigKeys.fieldKey(config: config.id, field: field.key)
-            values[field.key] = secretStore.get(forKey: key) ?? ""
+            secrets[field.key] = secretStore.get(forKey: key) ?? ""
         }
-        // `model` is a key reserved by `AIPluginConfig` (read back as `config.model`).
-        // Inject the resolved model last so it is authoritative over any same-named
-        // descriptor field — a plugin should not declare a field keyed `model`.
-        values["model"] = model
+        let values = descriptor.requestValues(
+            templateId: config.templateId, fields: fields, secrets: secrets, model: model)
 
         let context = AIChatContext(
             messages: [AIChatMessage(role: .user, content: userPrompt)],

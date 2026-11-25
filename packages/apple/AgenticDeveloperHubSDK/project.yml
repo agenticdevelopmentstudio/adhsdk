@@ -257,6 +257,9 @@ targets:
       - target: AgenticDeveloperHubSDKMarkdown-macOS
       - target: AgenticDeveloperHubSDKDatabase
       - target: AgenticDeveloperHubSDKIntegrations
+      # Re-exported (`@_exported import`), so callers of the moved AI provider
+      # types compile unchanged.
+      - target: AgenticDeveloperHubSDKAgents
       # `BrowserHistoryStore` sits on `BoundedDatabase` and reads GRDB rows.
       - package: GRDB
         product: GRDB
@@ -1092,6 +1095,60 @@ targets:
       - package: GRDB
         product: GRDB
 
+  # Headless agents and models: the AI provider stack, the model registry,
+  # the agent host and its turn loop, the HTTP-shaped handlers and the MCP
+  # bridge. No AppKit or SwiftUI, so a daemon links it.
+  AgenticDeveloperHubSDKAgents:
+    type: framework
+    platform: macOS
+    templates:
+      - SwiftLint
+    sources:
+      - Agents
+    dependencies:
+      - package: SharedRuntime
+        product: ADHSharedRuntime
+      - target: AgenticDeveloperHubSDKCore
+      - target: AIPluginKit
+      - target: AgenticDeveloperHubSDKDatabase
+      - package: GRDB
+        product: GRDB
+    settings:
+      base:
+        MACOSX_DEPLOYMENT_TARGET: "26.0"
+
+  AgenticDeveloperHubSDKAgentsTests:
+    type: bundle.unit-test
+    platform: macOS
+    templates:
+      - SwiftLint
+    sources:
+      - path: Tests/AgenticDeveloperHubSDKAgentsTests
+    dependencies:
+      - package: SharedRuntime
+        product: ADHSharedRuntime
+      - target: AgenticDeveloperHubSDKAgents
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKDatabase
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKCore
+        embed: true
+        codeSign: true
+      - target: AIPluginKit
+        embed: true
+        codeSign: true
+      # Closure completion -- see the note in AgenticDeveloperHubSDKLanguageTests.
+      - target: AgenticDeveloperHubSDK-macOS
+        embed: true
+        codeSign: true
+      - package: GRDB
+        product: GRDB
+    settings:
+      base:
+        MACOSX_DEPLOYMENT_TARGET: "26.0"
+
   # Third-party service integrations (Gmail first): models, store, client, sync.
   AgenticDeveloperHubSDKIntegrations:
     type: framework
@@ -1520,6 +1577,11 @@ targets:
       # The scripting tests import it directly (`@testable`), not through the
       # AgenticDeveloperHubSDKMacOS re-export, so its internal `reset()` is reachable.
       - target: AgenticDeveloperHubSDKIntegrations
+        embed: true
+        codeSign: true
+      # `@testable import AgenticDeveloperHubSDKAgents` reaches the moved
+      # AI provider types' internals.
+      - target: AgenticDeveloperHubSDKAgents
         embed: true
         codeSign: true
       - target: AgenticDeveloperHubSDKScripting
@@ -2185,6 +2247,7 @@ aggregateTargets:
       - AgenticDeveloperHubSDKHubUI-macOS
       - AgenticDeveloperHubSDKActivity-macOS
       - AgenticDeveloperHubSDKIntegrations
+      - AgenticDeveloperHubSDKAgents
 
   # The spec files this store under "macOS, iOS", and `AgenticDeveloperHubSDKMarkdown-iOS`
   # existed but was reachable from no aggregate and no scheme — so nothing ever
@@ -2286,6 +2349,8 @@ aggregateTargets:
       - AgenticDeveloperHubSDKActivityTests
       - AgenticDeveloperHubSDKIntegrations
       - AgenticDeveloperHubSDKIntegrationsTests
+      - AgenticDeveloperHubSDKAgents
+      - AgenticDeveloperHubSDKAgentsTests
 
 schemes:
   AgenticDeveloperHubSDKChromium:
@@ -2519,6 +2584,23 @@ schemes:
       config: Release
 
 
+
+  AgenticDeveloperHubSDKAgents:
+    build:
+      targets:
+        AgenticDeveloperHubSDKAgents: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - AgenticDeveloperHubSDKAgentsTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
 
   AgenticDeveloperHubSDKIntegrations:
     build:

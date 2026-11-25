@@ -4,11 +4,11 @@
     "id": "0f65ea61-3b0f-4a9b-842e-912555b7af62",
     "title": "Provider Configuration Keys",
     "type": "ingredient",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "status": "review",
     "language": "en",
     "created": "2026-09-23",
-    "modified": "2026-10-04",
+    "modified": "2026-11-25",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -27,7 +27,7 @@
     "references": [
       "packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIProviderConfigKeys.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/Tests/AIPluginKitTests/AIProviderConfigKeysTests.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/AIProviderConfigStore.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Agents/Providers/AIProviderConfigStore.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/AIPluginKit/DaemonProviderResolver.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/AIPluginKit/DaemonAIChat.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIProviderConfigSync.swift (adhsdk)",
@@ -40,7 +40,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "9f04a7991f5ada13",
+  "synced": "d208cc6fbc7cccc6",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

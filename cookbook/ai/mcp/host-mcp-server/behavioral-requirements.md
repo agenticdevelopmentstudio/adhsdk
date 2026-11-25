@@ -16,7 +16,6 @@ Serving
 - **serve-throws-start-failure**: `serve(over:)` MUST throw when starting the SDK server on the transport throws, and in that case MUST NOT record the new server as current.
 - **stop-clears-server**: `stop()` MUST stop the current SDK server and clear it; calling it with no server MUST do nothing.
 - **wait-until-completed**: The server MUST be able to report when the current connection's message loop ends, by waiting on the SDK server; with no server it MUST return at once.
-- **serve-reentrancy**: NEEDS REVIEW: Not implemented in source. `serve(over:)` and `stop()` are actor methods that suspend (on `stop()`, `installHandlers`, `start`) after reading `server`, and the source gives no ordering rule for two overlapping calls, so one call can replace or clear the connection another has just recorded; a test that issues two `serve(over:)` calls without awaiting the first would settle the intended behaviour.
 
 Listing
 
@@ -45,6 +44,19 @@ Calling
 - **call-unknown-tool**: When no registration matches, the server MUST return an error result with the text `unknown tool <name>`, as a normal result and not a protocol error.
 - **call-server-gone**: If the server has been deallocated when a call arrives, the handler MUST return an error result with the text `server is gone`.
 - **call-first-match-only**: Once a registration matches, the server MUST NOT try later registrations, even when the first source's result is an error.
+
+Agent tool bridge (`AgentToolSource`)
+
+- **bridge-definitions**: `AgentToolSource.toolDefinitions()` MUST return one definition per tool in its `tools` list, in list order, with the tool's `name` and `description` and the UTF-8 bytes of its `inputSchemaJSON` as the parameters schema.
+- **bridge-caller-default**: `AgentToolSource` MUST take its `caller` from the initializer, and when none is given it MUST use `AgentHandlers.defaultToolCaller`, the string `external`.
+- **bridge-caller-fixed**: `callTool` MUST run the tool with a `ToolCallContext` whose `caller` is the source's own `caller`, and MUST NOT pass on the caller the MCP request supplied; the context's `agentId` and `sessionId` MUST be nil.
+- **bridge-result**: When the tool returns, `callTool` MUST answer the outcome's `resultJSON` with the error flag false; the outcome's `summary` and `inverse` MUST NOT be part of the answer.
+- **bridge-arguments**: `callTool` MUST hand the tool the argument bytes decoded as UTF-8 text, and MUST hand it `{}` when the bytes are empty.
+- **bridge-arguments-undecodable**: When non-empty argument bytes are not valid UTF-8, `callTool` MUST hand the tool an empty string.
+- **bridge-unknown-tool**: When no tool in the list has the requested name, `callTool` MUST answer the text `Unknown tool '<name>'` with the error flag true and MUST NOT run any tool.
+- **bridge-name-first-match**: When two tools share a name, `callTool` MUST run the first in list order.
+- **bridge-failure**: When the tool throws, `callTool` MUST answer the error's `localizedDescription` with the error flag true.
+- **bridge-ignores-policy**: `callTool` MUST NOT read the tool's `permissionDefault` or `isMutating`, and MUST NOT record an activity entry; it runs every listed tool.
 
 Logging
 

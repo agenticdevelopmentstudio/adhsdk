@@ -4,18 +4,19 @@
     "id": "dac3e46e-2eeb-4ebd-b88d-4e4999870db7",
     "title": "HostMCPServer",
     "type": "ingredient",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
-    "modified": "2026-11-23",
+    "modified": "2026-11-25",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "One MCP server for the host app: advertises every registered tool source under tools/list and routes tools/call to the source that owns the name, over any transport.",
+    "summary": "One MCP server for the host app: advertises every registered tool source under tools/list and routes tools/call to the owner, over any transport; AgentToolSource bridges AgentTools.",
     "platforms": [
       "swift",
-      "macos"
+      "macos",
+      "ios"
     ],
     "tags": [
       "mcp",
@@ -25,13 +26,14 @@
     ],
     "depends-on": [],
     "related": [
-      "52650804-a096-4b71-b4eb-da3afa95ac56"
+      "52650804-a096-4b71-b4eb-da3afa95ac56",
+      "2affdc87-3c3b-4f7d-819d-f54ba947f2f1"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "20d1cc3b044dcd2e",
+  "synced": "4308a447b4d50940",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

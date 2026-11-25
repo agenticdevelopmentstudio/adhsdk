@@ -6,7 +6,7 @@
 | `maxTokens` | integer | none — required | Forwarded unvalidated into the request context's `maxTokens` field on the plugin path; unused on the CLI path |
 | `cliModel` | text | `"haiku"` | Model name for the CLI path only; an empty string is also treated as `"haiku"` by the CLI path |
 | `timeout` | duration (seconds) | `defaultTimeout` (`60`) | Governs only the CLI path's subprocess wait; ignored on the plugin path |
-| `settings` | settings-reader interface | none — required | Reads the host's synced provider-registry values, keyed by the provider-config-keys scheme |
+| `settings` | settings-reader interface | none — required (the only collaborator without a production default) | Reads the host's synced provider-registry values, keyed by the provider-config-keys scheme |
 | `runtime` | plugin runtime interface | live implementation | Injectable plugin-load/run seam |
 | `cliRunner` | CLI runner interface | live implementation | Injectable CLI-subprocess seam |
 | `secretStore` | secret store interface | Keychain-backed on Apple platforms | Source of a template's secret field values |

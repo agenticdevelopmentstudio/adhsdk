@@ -39,8 +39,8 @@
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/AIPluginLanguageModelProvider.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadLanguageModels.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Extensions/AIPluginLanguageModelProviderTests.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/AIProviderResolver.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/AIProviderConfiguration.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Agents/Providers/AIProviderResolver.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Agents/Providers/AIProviderConfiguration.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIPluginManager.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIPluginDescriptor.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIChatContext.swift (adhsdk)",
@@ -54,7 +54,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "c469ea3c203a9866",
+  "synced": "2350c1eaacb1b873",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

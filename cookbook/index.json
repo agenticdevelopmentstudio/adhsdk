@@ -1718,6 +1718,20 @@
       "path": "landing/blocks/chips",
       "rdid": "adhsdk.ingredient.landing.blocks.chips"
     },
+    "12d36a57-8d7d-454e-a2ee-44effbd9e93b": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Agents/Models/",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "ai/models/model-registry",
+      "rdid": "adhsdk.ingredient.ai.models.model-registry"
+    },
     "130fb0f2-e3a0-452a-bf7d-e49dbb56843e": {
       "implementations": [
         {
@@ -7101,6 +7115,13 @@
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/AIPluginKit/DaemonAIChat.swift",
           "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIPluginDescriptor+Request.swift",
+          "platform": "apple"
         }
       ],
       "kind": "ingredient",
@@ -9104,7 +9125,7 @@
           "conformance": {
             "state": "unverified"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/AIProviderSharedSecrets.swift",
+          "location": "packages/apple/AgenticDeveloperHubSDK/Agents/Providers/AIProviderSharedSecrets.swift",
           "platform": "apple"
         }
       ],
@@ -12308,6 +12329,27 @@
       "kind": "ingredient",
       "path": "foundation/claude-hooks/detached-process",
       "rdid": "adhsdk.ingredient.foundation.claude-hooks.detached-process"
+    },
+    "86788f50-7b85-4659-b7df-8c560e082f76": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Agents/Agent/AgentTool.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Agents/MCP/RemoteAgentTools.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "ai/agents/agent-tool",
+      "rdid": "adhsdk.ingredient.ai.agents.agent-tool"
     },
     "86aedf2f-b353-4770-a6dd-9e29b3d9b76a": {
       "implementations": [
@@ -20272,6 +20314,41 @@
       "path": "foundation/partner/attention",
       "rdid": "adhsdk.ingredient.foundation.partner.attention"
     },
+    "d711486e-1195-417b-9baf-7315354dae8d": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Agents/Agent/AgentHost.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Agents/Agent/AgentDefinition.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Agents/Agent/AgentEvent.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Agents/Agent/AgentStore.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "ai/agents/agent-host",
+      "rdid": "adhsdk.ingredient.ai.agents.agent-host"
+    },
     "d7171e41-4638-4243-9821-7a46cecf15c2": {
       "implementations": [
         {
@@ -20783,6 +20860,13 @@
             "state": "planned"
           },
           "platform": "windows"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Agents/MCP/AgentToolSource.swift",
+          "platform": "apple"
         }
       ],
       "kind": "ingredient",
@@ -21750,6 +21834,13 @@
             "hash": "sha256:04984a14d57a975bf2dfe38e0ef986a09f234a1da82fdf8b31bac6ce45186958",
             "state": "confirmed",
             "version": "1.4.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Agents/Providers/",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/",
           "platform": "apple"
@@ -23346,6 +23437,27 @@
       "kind": "ingredient",
       "path": "landing/blocks/cta",
       "rdid": "adhsdk.ingredient.landing.blocks.cta"
+    },
+    "f9f7ae23-0da9-41fb-a065-968a028d059e": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Agents/Handlers/",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Agents/Support/AgentsJSON.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "ai/agents/agent-handlers",
+      "rdid": "adhsdk.ingredient.ai.agents.agent-handlers"
     },
     "fa0fce58-5e17-41da-b3eb-0d2de9e89b46": {
       "implementations": [

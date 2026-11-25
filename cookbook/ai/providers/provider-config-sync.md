@@ -2,11 +2,11 @@
 id: 1d7812e7-28cb-4874-897f-43aab62fe009
 title: "Provider Configuration Synchronization"
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -30,7 +30,7 @@ references:
   - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/DaemonProviderResolver.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/DaemonAIChat.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Tests/AIPluginKitTests/DaemonAIChatTests.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/AIProviderConfigStore.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Agents/Providers/AIProviderConfigStore.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/project.yml (adhsdk)
 approved-by: ""
 approved-date: ""
@@ -382,6 +382,7 @@ Not applicable: this component contains no logging call of any kind.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.1 | 2026-11-25 | Mike Fullerton | Source paths follow the headless provider stack's move to AgenticDeveloperHubSDKAgents (Agents/Providers/). |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Restate unimplemented sync behaviors as current behavior with pending decisions; cite unit-test-coverage; reword no-error-domain as a MUST NOT. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ai/providers/. |
 | 1.0.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

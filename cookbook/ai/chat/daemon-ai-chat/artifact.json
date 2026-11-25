@@ -12,14 +12,13 @@
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "Headless one-shot completion entry point that resolves the host's selected AI provider, dispatches to its .aiplugin (gated by a local-inference RAM guard for loopback models) or falls back to a zero-config claude -p CLI call, and returns one accumulated reply string.",
+    "summary": "Headless one-shot completion via the selected .aiplugin (RAM-guarded for loopback models) or a `claude -p` fallback.",
     "platforms": [
       "swift",
       "macos"
     ],
     "tags": [
       "ai-plugin",
-      "ai-plugin-runtime",
       "daemon",
       "headless-completion",
       "inference-guard",
@@ -44,7 +43,7 @@
     "approved-date": ""
   },
   "names_hosts": "The component shells out to the `claude` CLI and passes the literal model alias `haiku`; both are values it sends.",
-  "synced": "c2d6a802024d2615",
+  "synced": "5ad7649b1ac923df",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -2,11 +2,11 @@
 id: a8054368-9885-4b83-90cf-5029728ab397
 title: "Provider Configuration"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -24,10 +24,10 @@ related:
   - 39de0dff-2b26-4d3d-97a3-ebdbdb38846a
 references:
   - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIProviderConfiguration.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/AIPlugins/AIProviderConfigurationTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKAgentsTests/AIProviderConfigurationTests.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Tests/AIPluginKitTests/AIProviderConfigKeysTests.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIProviderConfigKeys.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/AIProviderConfigStore.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Agents/Providers/AIProviderConfigStore.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/LLMProvidersListViewModel.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/project.yml (adhsdk)
 approved-by: ""
@@ -195,6 +195,7 @@ Not applicable: the record contains no logging call of any kind.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-25 | Mike Fullerton | Source paths follow the headless provider stack's move to AgenticDeveloperHubSDKAgents (Agents/Providers/). |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Cite unit-test-coverage in Compliance. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ai/providers/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

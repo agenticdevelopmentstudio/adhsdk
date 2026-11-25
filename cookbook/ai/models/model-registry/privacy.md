@@ -1,0 +1,6 @@
+
+- **Data collected**: Model configurations the user or an importing app supplies (name, plugin and template ids, non-secret fields, default model, roles, origin bundle id) and secret values such as API keys.
+- **Storage**: Entries in the SQLite file under the user's Application Support folder, which holds no secret value (`entry-no-secret-values`). Secret values in the Keychain (the shared group when entitled, else the process Keychain), under the account `AIProviderConfigKeys.fieldKey(config:field:)`.
+- **Transmission**: The registry itself sends nothing. `listModels` sends the entry's `baseURL` and `apiKey` to the provider's model-listing endpoint, and `test` sends the test prompt and the entry's configuration to the provider through its plugin.
+- **Retention**: Until `remove` deletes the row and its named secrets. The registry has no expiry, and a secret the Keychain refuses to delete stays named in the entry's `secretFields` (or keeps the entry stored), so a failed removal never orphans an untracked item (`secret-removal-failure`). A failed secret write partway through an `upsert` can leave earlier values of that call in the Keychain with no row naming them (`secret-write-orphan`).
+
