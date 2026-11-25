@@ -13,7 +13,8 @@
 // (The hub's own switcher shows teams because it navigates to team routes; this
 // client exists for owner-scoping, which is a strictly smaller set.)
 
-import { authedJson, listAllV1 } from "./http";
+import { authedJson } from "./http";
+import { v1List } from "./v1-case";
 import { sortByText } from "./client-helpers";
 import { getToolkitQueryClient } from "./query";
 import { revalidateResources } from "./use-resource-list";
@@ -128,11 +129,23 @@ export function checkWorkspaceSlugAvailable(slug: string): Promise<SlugAvailabil
   return authedJson<SlugAvailability>(`/api/v1/handles/${encodeURIComponent(slug)}`);
 }
 
-/** What a `/v1/workspaces` row is: a personal workspace, an organization's, or a team's. */
+/** What a `/v1/workspaces` row is: a personal workspace, an organization's, or a team's. Pinned
+ *  EXACTLY to the generated spec's enum by adh-api-types' `data-workspace-wire.test-d.ts`, so a
+ *  fourth type the backend adds fails that package's type-check instead of reaching the menu. */
 export type WorkspaceType = "individual" | "organization" | "team";
 
-/** One `/v1/workspaces` row, verbatim — teams included. The backend returns them priority-ordered
- *  (individual → organization → team), and a slug is unique only within a type. */
+/**
+ * One `/v1/workspaces` row as {@link fromV1} maps it (`FromV1` of the generated spec's `Workspace`
+ * list row, its `object` tag dropped) — teams included. The backend returns them priority-ordered
+ * (individual → organization → team), and a slug is unique only within a type.
+ *
+ * Written out rather than derived, because the spec lives in `@adh-sdk/adh-api-types`, the adh
+ * vocabulary tier above this portable package, and `tools/check_boundaries.py` refuses that import
+ * (it resolves inside adh's workspace and fails in every other consumer). The transcription is
+ * still held to the spec, the sanctioned way round: adh-api-types' `data-workspace-wire.test-d.ts`
+ * requires the generated row, through `FromV1`, to satisfy this interface, so a backend rename or
+ * retype regenerates its schema and fails that type-check.
+ */
 export interface WorkspaceRow {
   slug: string;
   name: string;
@@ -151,7 +164,7 @@ export const workspacesApi = {
    *  that NAVIGATES lists (the hub's, which has team routes); {@link workspacesApi.list} is the
    *  owner-scopable subset. */
   async listAll(): Promise<WorkspaceRow[]> {
-    return listAllV1<WorkspaceRow>("/api/v1/workspaces", {}, { cursorOf: workspaceCursor });
+    return v1List<WorkspaceRow>("/api/v1/workspaces", { cursorOf: workspaceCursor });
   },
   /** The caller's personal workspace first, then their organizations (A→Z). */
   async list(): Promise<Workspace[]> {

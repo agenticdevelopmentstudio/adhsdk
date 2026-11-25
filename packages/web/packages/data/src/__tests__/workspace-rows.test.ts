@@ -63,4 +63,11 @@ describe('workspacesApi.listAll', () => {
     expect(rows.map((r) => r.slug)).toEqual(['me', 'acme', 'crew'])
     expect(pathAt(0)).toContain('/api/v1/workspaces')
   })
+
+  it('reads each row through fromV1, as the drift gate measures it', async () => {
+    // adh-api-types' data-workspace-wire.test-d.ts holds WorkspaceRow to FromV1 of the generated
+    // row, so the runtime must be that mapping too: the /v1 `object` tag is dropped, not passed on.
+    respondOnce(v1List([{ object: 'workspace', slug: 'me', name: 'Me', type: 'individual' }]))
+    expect(await workspacesApi.listAll()).toEqual([{ slug: 'me', name: 'Me', type: 'individual' }])
+  })
 })
