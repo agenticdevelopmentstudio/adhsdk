@@ -1,5 +1,4 @@
 import Foundation
-import OSLog
 import Testing
 @testable import AgenticDeveloperHubSDKCore
 
@@ -229,18 +228,23 @@ struct GitClientPatchTests {
         defer { repository.tearDown() }
         let unstaged = try #require(try await onlyFile(.unstaged(paths: []), in: repository))
         let forward = try patch(selecting: "early", in: unstaged, .forward)
-        let started = Date()
         try await client.perform(.applyToIndex(patch: forward, reverse: false), in: repository.root)
 
-        let store = try OSLogStore(scope: .currentProcessIdentifier)
-        let entries = try store.getEntries(at: store.position(date: started.addingTimeInterval(-1)))
-            .compactMap { $0 as? OSLogEntryLog }
-            .filter { $0.category == "GitCommandLog" && $0.composedMessage.contains(repository.root.path) }
-            .map(\.composedMessage)
+        // The shared ring, read for this repository's calls only, and the OSLog line each
+        // of them produced. Reading the line back through `OSLogStore` decoded the whole
+        // process's log and took up to a minute under a parallel run; the line is built
+        // by `logLine` from the same spawned arguments the ring keeps, and `logLine` takes
+        // no output, so these are the lines that reached the unified log.
+        let ours = GitCommandLog.entries().filter { $0.directory == repository.root.path }
+        let lines = ours.map { entry in
+            GitCommandLog.logLine(tool: entry.tool, spawned: entry.arguments, directory: repository.root,
+                                  caller: GitCaller(), milliseconds: 0, status: "0")
+        }
         // The command line is the spawned argv: every write runs under `-c core.editor=true`.
-        let apply = entries.filter { $0.hasPrefix("git -c core.editor=true apply ") }
+        let apply = ours.filter { $0.commandLine.hasPrefix("git -c core.editor=true apply ") }
         #expect(apply.count == 1)
-        #expect(apply.first?.contains(" --cached --whitespace=nowarn - cwd=") == true)
-        #expect(!entries.contains { $0.contains("early") || $0.contains("@@") })
+        #expect(apply.first?.commandLine.hasSuffix(" --cached --whitespace=nowarn -") == true)
+        let recorded = lines + ours.compactMap(\.standardError)
+        #expect(!recorded.contains { $0.contains("early") || $0.contains("@@") })
     }
 }
