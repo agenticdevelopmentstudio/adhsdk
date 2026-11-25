@@ -1093,27 +1093,77 @@ final class BillingOwnershipTests: XCTestCase {
     /// be as they were when it froze. A failure prints the seed and the
     /// steps, which replay deterministically: `TEST_RUNNER_BILLING_SEED=<n>`
     /// on the `xcodebuild` line runs that seed alone and dumps its rows.
+    ///
+    /// The seeds are independent, so they run on one worker per core, each
+    /// worker its own instance of this class with its own database file: one
+    /// after another they took eight minutes. Every seed still runs and the
+    /// tally is summed across workers before the floors are checked.
     func testEverySecondBillsOnceInAnyOrder() throws {
         var failures: [String] = []
         var tally: [String: Int] = [:]
-        let only = ProcessInfo.processInfo.environment["BILLING_SEED"].flatMap { Int($0) }
-        for seed in only.map({ [$0] }) ?? Array(1...Self.sequences) {
-            database = nil
-            try? FileManager.default.removeItem(atPath: tmpPath)
-            database = try TestDaemonDatabase.openFeatureDatabase(path: tmpPath)
-            if let failure = try runSequence(seed: UInt64(seed), tally: &tally) {
+        if let only = ProcessInfo.processInfo.environment["BILLING_SEED"].flatMap({ Int($0) }) {
+            if let failure = try runSeed(only, tally: &tally) {
                 failures.append(failure)
-                if only != nil { try debugDump() }
+                try debugDump()
             }
-            if failures.count >= 5 { break }
+            XCTAssertTrue(failures.isEmpty, failures.joined(separator: "\n\n"))
+            return
         }
+        let results = SeedResults()
+        let workers = max(1, ProcessInfo.processInfo.activeProcessorCount)
+        DispatchQueue.concurrentPerform(iterations: workers) { worker in
+            let runner = BillingOwnershipTests()
+            var workerTally: [String: Int] = [:]
+            do {
+                try runner.setUpWithError()
+                defer { try? runner.tearDownWithError() }
+                for seed in stride(from: worker + 1, through: Self.sequences, by: workers) {
+                    guard !results.enoughFailures else { break }
+                    if let failure = try runner.runSeed(seed, tally: &workerTally) {
+                        results.fail(seed: seed, failure)
+                    }
+                }
+            } catch {
+                results.fail(seed: 0, "worker \(worker) threw: \(error)")
+            }
+            results.add(workerTally)
+        }
+        failures = results.failures
+        tally = results.tally
         XCTAssertTrue(failures.isEmpty, failures.joined(separator: "\n\n"))
-        guard failures.isEmpty, only == nil else { return }
+        guard failures.isEmpty else { return }
         print("billing ownership tally:", tally.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" })
         for (operation, minimum) in Self.minimumRuns.sorted(by: { $0.key < $1.key }) {
             XCTAssertGreaterThanOrEqual(
                 tally[operation, default: 0], minimum, "\(operation) ran \(tally[operation, default: 0]) times"
             )
+        }
+    }
+
+    /// One seed on a fresh database at this instance's path.
+    private func runSeed(_ seed: Int, tally: inout [String: Int]) throws -> String? {
+        database = nil
+        try? FileManager.default.removeItem(atPath: tmpPath)
+        database = try TestDaemonDatabase.openFeatureDatabase(path: tmpPath)
+        return try runSequence(seed: UInt64(seed), tally: &tally)
+    }
+
+    /// What the concurrent workers found, gathered under a lock. Failures
+    /// come back ordered by seed, so the message does not depend on which
+    /// worker finished first.
+    private final class SeedResults: @unchecked Sendable {
+        private let lock = NSLock()
+        private var found: [(seed: Int, failure: String)] = []
+        private var summed: [String: Int] = [:]
+
+        /// Five failing seeds are enough to report; the workers stop there.
+        var enoughFailures: Bool { lock.withLock { found.count >= 5 } }
+        var failures: [String] { lock.withLock { found.sorted { $0.seed < $1.seed }.map(\.failure) } }
+        var tally: [String: Int] { lock.withLock { summed } }
+
+        func fail(seed: Int, _ failure: String) { lock.withLock { found.append((seed, failure)) } }
+        func add(_ tally: [String: Int]) {
+            lock.withLock { summed.merge(tally, uniquingKeysWith: +) }
         }
     }
 
