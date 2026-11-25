@@ -1,0 +1,62 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "5f18890e-5473-4315-9e69-dde7c64778bc",
+    "title": "Prompted Tool Calling Plugin",
+    "type": "ingredient",
+    "version": "1.0.1",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-14",
+    "modified": "2026-11-14",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Wraps an AI plugin to give tools to a provider without native tool calling, by describing tools in the prompt and lifting tool_call blocks from the reply.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "ai",
+      "plugin",
+      "tool-calling",
+      "decoder"
+    ],
+    "depends-on": [
+      "47eb19ef-2c42-4a52-a60b-54b6f01c8791",
+      "2067e249-4f97-4575-b8ed-8f55f6dc96df",
+      "72829b3b-ce4a-4730-877f-da7b48e7b3dd",
+      "613d7a36-d0cd-4415-97be-d983b3d6c644"
+    ],
+    "related": [
+      "52650804-a096-4b71-b4eb-da3afa95ac56"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "db0d0bdc111c050d",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

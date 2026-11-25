@@ -36,9 +36,12 @@
   (`LocalChatSession.swift`, `AIPluginChatBackend.swift`,
   `AIPluginLanguageModelProvider.swift`, `DaemonAIChat.swift`) does so
   today. The unclamped-`maxTokens` edge case above traces to
-  `GooglePlugin.swift`, `OpenAICompatiblePlugin.swift`,
-  `ClaudeAPIPlugin.swift`, and `OpenAIPlugin.swift`, each of which forwards
-  `context.maxTokens` into its provider's request body with no clamping.
+  `GooglePlugin.swift`, `OpenAICompatiblePlugin.swift`, and
+  `OpenAIPlugin.swift`, each of which forwards `context.maxTokens` into its
+  provider's request body with no clamping. `ClaudeAPIPlugin.swift` does the
+  same unless it sends a thinking budget, in which case it raises
+  `max_tokens` to the budget plus the requested amount when the requested
+  amount is not already above the budget.
 - **Compose**: a Kotlin port would model `AIChatMessage`, `AIToolSpec`,
   `AIPluginConfig`, and `AIChatContext` as immutable `data class`es with
   `val` properties; `AIChatMessage.Role` as a `kotlinx.serialization`-backed

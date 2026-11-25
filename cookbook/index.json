@@ -3332,9 +3332,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:ba5c1bbe7ba02c708f4d0ea6bf3850768417de3af10e9d716e66c1e8737a1c31",
+            "hash": "sha256:bb60c9ef7e57daed245c27dee5a709e7c58f65e1686a069b1ef9a393f5937f28",
             "state": "confirmed",
-            "version": "1.2.0"
+            "version": "2.0.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIStreamEvent.swift",
           "platform": "apple"
@@ -7095,9 +7095,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:0895dd73c1ee85a4ee4a353ca6a6825c23fd82eab8dd95e5b33ded9855835262",
+            "hash": "sha256:539f40ff9394326cf2ba9d0ee1d3d95ccb11939f08c1257f0bc728cc9a4d03e0",
             "state": "confirmed",
-            "version": "1.1.2"
+            "version": "1.2.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/AIPluginKit/DaemonAIChat.swift",
           "platform": "apple"
@@ -8470,7 +8470,17 @@
       "rdid": "adhsdk.ingredient.status.service.monitor.types"
     },
     "5f18890e-5473-4315-9e69-dde7c64778bc": {
-      "implementations": [],
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:53d42f81f4135b3df5fd25b07716e7013c8d045befe8d13247424adf411a26c0",
+            "state": "confirmed",
+            "version": "1.1.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/AIPluginKit/PromptedToolCallingPlugin.swift",
+          "platform": "apple"
+        }
+      ],
       "kind": "ingredient",
       "path": "ai/prompted-tool-calling-plugin",
       "rdid": "adhsdk.ingredient.ai.prompted-tool-calling-plugin"
@@ -8589,9 +8599,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:5ad924c29832388376bdb87b72133a788b3fbc7f753a8576b298119d1aef5791",
+            "hash": "sha256:c6e83ecde2b993bce2bfc04b66d33635363c036653802d30c7afdaacd8c47653",
             "state": "confirmed",
-            "version": "1.1.2"
+            "version": "1.2.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIChatContext.swift",
           "platform": "apple"
@@ -11320,7 +11330,7 @@
           "conformance": {
             "hash": "sha256:346bd9a1790cb0798428bcd093ad713799b277a7703aa2c28d99b2bab2c71fc2",
             "state": "confirmed",
-            "version": "1.1.1"
+            "version": "1.2.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/AIPluginKit/PluginTransport.swift",
           "platform": "apple"
@@ -15675,9 +15685,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:59d1485830b7fb1c8a9ee160ad09b38c04f50592b4ef74ce5fd821b5aa9fa570",
+            "hash": "sha256:20be4d0c94ad199f360cc234c28dcae1ccaa3c2d7e80652bc370023f5a9401c8",
             "state": "confirmed",
-            "version": "1.1.1"
+            "version": "1.2.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/AIPluginLanguageModelProvider.swift",
           "platform": "apple"
@@ -21737,9 +21747,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:2ef0f4ccd9fd9f9feae3ecea4544358ce58ed0f2070a2214c53b4d6b2ffd31c6",
+            "hash": "sha256:04984a14d57a975bf2dfe38e0ef986a09f234a1da82fdf8b31bac6ce45186958",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "1.4.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/",
           "platform": "apple"

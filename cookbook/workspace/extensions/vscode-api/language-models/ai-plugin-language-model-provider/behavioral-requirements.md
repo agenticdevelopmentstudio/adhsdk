@@ -109,8 +109,11 @@
 - **response-part-mapping**: Mapping a stream event to a response part
   MUST map a text-delta event to a text part, a tool-use event to a
   tool-call part carrying the same id, name, and arguments, and an end
-  event to an end part carrying the same stop reason, with no case
-  dropped or merged.
+  event to an end part carrying the same stop reason, with none of those
+  cases dropped or merged.
+- **reasoning-usage-dropped**: A thinking-delta event and a usage event
+  MUST produce no response part, since the response-part type has no case
+  for either; streaming MUST skip them and continue with the next event.
 - **message-role-mapping**: Mapping a message MUST map a user-role
   message to a user-role chat message and MUST map an assistant-role
   message — the role's only other case — to an assistant-role chat

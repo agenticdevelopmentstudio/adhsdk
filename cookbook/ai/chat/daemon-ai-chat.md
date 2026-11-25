@@ -2,11 +2,11 @@
 id: 4d7ed9a3-c6d8-491b-911a-cf257fde1c38
 title: "Daemon AI Chat"
 type: ingredient
-version: 1.1.2
+version: 1.2.0
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -90,6 +90,7 @@ Every collaborator the entry point touches — the plugin runtime (plugin load +
 - **stream-accumulation**: the plugin path MUST accumulate every `.textDelta(text)` event's `text` by string concatenation, in event order, into the returned reply.
 - **stream-end-stops-consumption**: a `.end` event MUST terminate stream consumption immediately, regardless of `stopReason`, without treating any `stopReason` value as an error.
 - **stream-tooluse-ignored**: a `.toolUse` event MUST be ignored (no side effect, no error), since a one-shot completion request declares no tools.
+- **stream-thinking-usage-ignored**: a `.thinkingDelta` or `.usage` event MUST be ignored (no side effect, no error, nothing added to the reply), since a one-shot reply is the answer text alone.
 - **stream-error-wrapping**: any error thrown while consuming the plugin runtime's `run` stream MUST be wrapped as a provider-error carrying that error's description.
 - **empty-reply-guard**: after streaming completes, the plugin path MUST throw the completion error type's empty-reply case when the accumulated reply is empty or all-whitespace after trimming, and MUST NOT return that blank/whitespace string.
 - **timeout-cli-path-only**: the entry point's `timeout` parameter MUST govern only the CLI path's subprocess wait (forwarded verbatim); it MUST NOT be forwarded into the plugin path, whose own per-request budget is the plugin-supplied request spec's timeout and whose lock-hold budget is the guard's own exclusive-section deadline.
@@ -227,7 +228,7 @@ Not applicable: this component contains no logging call; it is orchestration log
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/DaemonAIChat.swift` | confirmed (1.1.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/DaemonAIChat.swift` | confirmed (1.2.0) |
 
 ## Design Decisions
 
@@ -270,6 +271,7 @@ Secure-storage passes because `DaemonAIChat.swift` never persists a credential i
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.0 | 2026-11-25 | Mike Fullerton | A one-shot reply ignores thinkingDelta and usage events (stream-thinking-usage-ignored). |
 | 1.1.2 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Added separation-of-concerns and unit-test-coverage compliance rows. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ai/chat/. |

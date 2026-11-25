@@ -49,6 +49,7 @@ Decoding
 - **decode-call-ids**: Call ids MUST be `prompted-1`, `prompted-2` and so on, in order, per decoder.
 - **decode-stop-reason**: The end event's stop reason MUST be `tool_use` when at least one call was lifted, and otherwise the wrapped decoder's stop reason.
 - **decode-native-tool-use-passes**: A tool-use event from the wrapped decoder (a provider that does call tools natively) MUST pass through immediately.
+- **decode-thinking-usage-pass**: A thinking-delta or usage event from the wrapped decoder MUST pass through immediately, in order, while the text is still held; neither is accumulated or parsed for tool calls.
 - **decode-finish-flushes**: `finish()` MUST absorb the wrapped decoder's final events and, if the reply has not been flushed (the wrapped decoder never reported an end), flush it with no stop reason.
 - **decode-flush-once**: The decoder MUST flush at most once; an end event after a flush is dropped.
 - **decode-no-tools-still-buffers**: NEEDS REVIEW: Not implemented in source. The type's doc comment says a context with no tools passes through untouched, and `buildRequest` honours that, but `makeDecoder()` takes no context, so it always buffers the reply and lifts `<tool_call>` blocks even when the request carried no tools. A decision on whether the decoder should be told when no tools were sent (and so pass text through as it streams) would settle it.

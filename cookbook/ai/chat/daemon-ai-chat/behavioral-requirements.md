@@ -34,6 +34,7 @@
 - **stream-accumulation**: the plugin path MUST accumulate every `.textDelta(text)` event's `text` by string concatenation, in event order, into the returned reply.
 - **stream-end-stops-consumption**: a `.end` event MUST terminate stream consumption immediately, regardless of `stopReason`, without treating any `stopReason` value as an error.
 - **stream-tooluse-ignored**: a `.toolUse` event MUST be ignored (no side effect, no error), since a one-shot completion request declares no tools.
+- **stream-thinking-usage-ignored**: a `.thinkingDelta` or `.usage` event MUST be ignored (no side effect, no error, nothing added to the reply), since a one-shot reply is the answer text alone.
 - **stream-error-wrapping**: any error thrown while consuming the plugin runtime's `run` stream MUST be wrapped as a provider-error carrying that error's description.
 - **empty-reply-guard**: after streaming completes, the plugin path MUST throw the completion error type's empty-reply case when the accumulated reply is empty or all-whitespace after trimming, and MUST NOT return that blank/whitespace string.
 - **timeout-cli-path-only**: the entry point's `timeout` parameter MUST govern only the CLI path's subprocess wait (forwarded verbatim); it MUST NOT be forwarded into the plugin path, whose own per-request budget is the plugin-supplied request spec's timeout and whose lock-hold budget is the guard's own exclusive-section deadline.

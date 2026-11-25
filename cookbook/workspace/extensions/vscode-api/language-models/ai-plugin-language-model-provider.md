@@ -2,11 +2,11 @@
 id: a602608c-c061-44b6-a7ab-829e798d6b0c
 title: "AI Plugin Language Model Provider"
 type: ingredient
-version: 1.1.1
+version: 1.2.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -185,8 +185,11 @@ stream.
 - **response-part-mapping**: Mapping a stream event to a response part
   MUST map a text-delta event to a text part, a tool-use event to a
   tool-call part carrying the same id, name, and arguments, and an end
-  event to an end part carrying the same stop reason, with no case
-  dropped or merged.
+  event to an end part carrying the same stop reason, with none of those
+  cases dropped or merged.
+- **reasoning-usage-dropped**: A thinking-delta event and a usage event
+  MUST produce no response part, since the response-part type has no case
+  for either; streaming MUST skip them and continue with the next event.
 - **message-role-mapping**: Mapping a message MUST map a user-role
   message to a user-role chat message and MUST map an assistant-role
   message — the role's only other case — to an assistant-role chat
@@ -343,7 +346,7 @@ No other event in this file is logged: neither the unknown-model error nor the p
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/AIPluginLanguageModelProvider.swift` | confirmed (1.1.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/AIPluginLanguageModelProvider.swift` | confirmed (1.2.0) |
 
 ## Design Decisions
 
@@ -379,6 +382,7 @@ No other event in this file is logged: neither the unknown-model error nor the p
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.0 | 2026-11-25 | Mike Fullerton | Thinking-delta and usage events produce no response part and are skipped (reasoning-usage-dropped). |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to workspace/extensions/vscode-api/language-models/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

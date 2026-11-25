@@ -357,9 +357,12 @@ Not applicable: this contract contains no logging call of any kind.
   (`LocalChatSession.swift`, `AIPluginChatBackend.swift`,
   `AIPluginLanguageModelProvider.swift`, `DaemonAIChat.swift`) does so
   today. The unclamped-`maxTokens` edge case above traces to
-  `GooglePlugin.swift`, `OpenAICompatiblePlugin.swift`,
-  `ClaudeAPIPlugin.swift`, and `OpenAIPlugin.swift`, each of which forwards
-  `context.maxTokens` into its provider's request body with no clamping.
+  `GooglePlugin.swift`, `OpenAICompatiblePlugin.swift`, and
+  `OpenAIPlugin.swift`, each of which forwards `context.maxTokens` into its
+  provider's request body with no clamping. `ClaudeAPIPlugin.swift` does the
+  same unless it sends a thinking budget, in which case it raises
+  `max_tokens` to the budget plus the requested amount when the requested
+  amount is not already above the budget.
 - **Compose**: a Kotlin port would model `AIChatMessage`, `AIToolSpec`,
   `AIPluginConfig`, and `AIChatContext` as immutable `data class`es with
   `val` properties; `AIChatMessage.Role` as a `kotlinx.serialization`-backed
@@ -395,7 +398,7 @@ Not applicable: this contract contains no logging call of any kind.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIChatContext.swift` | confirmed (1.1.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIChatContext.swift` | confirmed (1.2.0) |
 
 ## Design Decisions
 
@@ -417,10 +420,25 @@ will find `apiKey` returns nothing.
 **Decision**: the chat context's `maxTokens` defaults to `4096` with no
 enforced minimum or maximum.
 **Rationale**: this contract treats `maxTokens` as an opaque budget number
-to forward to whichever provider the plugin targets; per the Edge Cases
-entry above, no validation exists anywhere in the current call chain (this
-contract, the request-building step, or any of the plugins implemented
-today), so `4096` is a convenience default rather than a validated floor.
+to forward to whichever provider the plugin targets. Each provider sets its
+own limits, and they differ by model, so only the plugin that knows the
+provider can clamp it; this contract does not. `4096` is a convenience
+default rather than a validated floor. Per the Edge Cases entry above, the
+one adjustment any plugin makes today is the Anthropic API plugin raising
+it above `thinkingBudgetTokens`.
+**Approved**: pending
+
+**Decision**: the chat context carries an optional `thinkingBudgetTokens`,
+and its absence means no reasoning is requested.
+**Rationale**: reasoning costs tokens and time, so a caller has to ask for
+it; absence as the default keeps every existing caller's requests
+unchanged. The value is a budget in tokens rather than an on/off flag
+because the providers that take a budget need a number, and a provider
+that reasons adaptively can treat any budget as "on". This contract does
+not validate it, for the same reason it does not validate `maxTokens`: the
+legal range is the provider's. It sits after `tools` and before `config`
+in the initializer so that every existing call, which passes `config`
+last, keeps compiling.
 **Approved**: pending
 
 ## Compliance

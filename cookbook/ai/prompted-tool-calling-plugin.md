@@ -2,11 +2,11 @@
 id: 5f18890e-5473-4315-9e69-dde7c64778bc
 title: "Prompted Tool Calling Plugin"
 type: ingredient
-version: 1.0.1
+version: 1.1.0
 status: review
 language: en
 created: 2026-11-14
-modified: 2026-11-14
+modified: 2026-11-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -93,6 +93,7 @@ Decoding
 - **decode-call-ids**: Call ids MUST be `prompted-1`, `prompted-2` and so on, in order, per decoder.
 - **decode-stop-reason**: The end event's stop reason MUST be `tool_use` when at least one call was lifted, and otherwise the wrapped decoder's stop reason.
 - **decode-native-tool-use-passes**: A tool-use event from the wrapped decoder (a provider that does call tools natively) MUST pass through immediately.
+- **decode-thinking-usage-pass**: A thinking-delta or usage event from the wrapped decoder MUST pass through immediately, in order, while the text is still held; neither is accumulated or parsed for tool calls.
 - **decode-finish-flushes**: `finish()` MUST absorb the wrapped decoder's final events and, if the reply has not been flushed (the wrapped decoder never reported an end), flush it with no stop reason.
 - **decode-flush-once**: The decoder MUST flush at most once; an end event after a flush is dropped.
 - **decode-no-tools-still-buffers**: NEEDS REVIEW: Not implemented in source. The type's doc comment says a context with no tools passes through untouched, and `buildRequest` honours that, but `makeDecoder()` takes no context, so it always buffers the reply and lifts `<tool_call>` blocks even when the request carried no tools. A decision on whether the decoder should be told when no tools were sent (and so pass text through as it streams) would settle it.
@@ -195,6 +196,12 @@ Not applicable: the source makes no logging call.
 - **AppKit / UIKit**: Identical to the SwiftUI note; the type is UI-free, and the AppKit or UIKit chat surface only needs a pending indicator while the decoder holds the reply.
 - **WinUI 3**: Implement as a class decorating the plugin interface, with a per-reply decoder class. Use `string.IndexOf` with ordinal comparison for tags and `System.Text.Json.JsonDocument.Parse` in a `try` for block bodies, falling back to prose on `JsonException`. Bind a progress ring to the pending state until the end event arrives.
 
+## Reference Implementations
+
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/PromptedToolCallingPlugin.swift` | confirmed (1.1.0) |
+
 ## Design Decisions
 
 **Decision**: Tools are described in the system prompt and requested as `<tool_call>` JSON blocks in the reply text.
@@ -245,4 +252,5 @@ Not applicable: the source makes no logging call.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-11-25 | Mike Fullerton | Thinking-delta and usage events pass through immediately while text is held (decode-thinking-usage-pass). |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Platforms name macOS, the source platform |
