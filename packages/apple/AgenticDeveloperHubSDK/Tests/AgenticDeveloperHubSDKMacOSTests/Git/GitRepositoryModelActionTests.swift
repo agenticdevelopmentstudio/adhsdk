@@ -134,6 +134,7 @@ struct GitRepositoryModelActionTests {
         try await repository.commit("main", at: Self.epoch + 300)
         let theirs = try await repository.sha("topic")
         let client = GitClient(configuration: GitClientConfiguration(
+            executableURL: GitTestRepository.gitURL,
             extraEnvironment: ["GIT_CONFIG_GLOBAL": "/dev/null", "GIT_CONFIG_NOSYSTEM": "1"]
         ))
         let model = makeModel(repository, client: client)

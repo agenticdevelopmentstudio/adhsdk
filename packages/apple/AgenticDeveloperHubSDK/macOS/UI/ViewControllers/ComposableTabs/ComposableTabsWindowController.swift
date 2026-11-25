@@ -1306,8 +1306,16 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
 
     private func scheduleFocusPersist() {
         pendingFocusPersist?.cancel()
+        // A focus record refines a saved layout; it is never the first write
+        // of one. On a first open nothing is stored yet and the live tab set is
+        // the placeholder, and when the project's `git worktree list` outlasts
+        // this debounce (a loaded machine, a large repository) the write
+        // landed *before* the reconcile, which then kept the placeholder as
+        // the main checkout's tab for good. Checked when the item fires, not
+        // when it is armed, because the reconcile may have written meanwhile.
         let work = DispatchWorkItem { [weak self] in
-            self?.persistAllTabs()
+            guard let self, self.project.storedTabs() != nil else { return }
+            self.persistAllTabs()
         }
         pendingFocusPersist = work
         DispatchQueue.main.asyncAfter(deadline: .now() + Self.focusPersistDelay, execute: work)

@@ -78,7 +78,8 @@ struct GitClientTests {
         /// A `GitClientConfiguration` whose child processes see this redirected file as
         /// `GIT_CONFIG_GLOBAL`, via `extraEnvironment` rather than a process-wide `setenv`.
         var configuration: GitClientConfiguration {
-            GitClientConfiguration(extraEnvironment: ["GIT_CONFIG_GLOBAL": file.path])
+            GitClientConfiguration(
+                executableURL: GitTestRepository.gitURL, extraEnvironment: ["GIT_CONFIG_GLOBAL": file.path])
         }
 
         /// The developer's real global config, read only so a test can assert it was
@@ -275,7 +276,8 @@ struct GitClientTests {
         let fixture = try await Fixture.make()
         defer { fixture.tearDown() }
         // A one-millisecond budget: the process cannot finish in time.
-        let client = GitClient(configuration: GitClientConfiguration(timeout: 0.001))
+        let client = GitClient(configuration: GitClientConfiguration(
+            executableURL: GitTestRepository.gitURL, timeout: 0.001))
         await #expect(throws: GitClientError.timedOut(verb: "status")) {
             try await client.status(in: fixture.root)
         }
@@ -512,6 +514,7 @@ struct GitClientLocaleTests {
 @Suite("GitClient push destination", .serialized)
 struct GitClientPushDestinationTests {
     private let client = GitClient(configuration: GitClientConfiguration(
+        executableURL: GitTestRepository.gitURL,
         extraEnvironment: ["GIT_CONFIG_GLOBAL": "/dev/null", "GIT_CONFIG_NOSYSTEM": "1"]
     ))
 

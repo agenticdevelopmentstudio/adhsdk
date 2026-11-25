@@ -205,7 +205,7 @@ struct GitLFSTests {
     @Test("a configuration's PATH still outranks the repaired one")
     func configurationPathWins() {
         let configuration = GitClientConfiguration(
-            executableURL: GitClientConfiguration.default.executableURL, timeout: 10,
+            executableURL: GitTestRepository.gitURL, timeout: 10,
             extraEnvironment: ["PATH": "/custom"]
         )
         let environment = GitClient.childEnvironment(configuration: configuration, environment: [:], parent: [:])
@@ -216,7 +216,7 @@ struct GitLFSTests {
 /// Whether `/usr/bin/git lfs version` succeeds here, with the PATH a `GitClient` child gets.
 private let gitLFSInstalled: Bool = {
     let process = Process()
-    process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+    process.executableURL = GitTestRepository.gitURL
     process.arguments = ["lfs", "version"]
     process.environment = ProcessInfo.processInfo.environment
         .merging(GitClient.childEnvironment(configuration: .default, environment: [:])) { _, new in new }

@@ -110,6 +110,18 @@ public final class ProjectController: ComposableTabsTabItemDataSource {
         await task.value
     }
 
+    /// Returns once no reconcile is running or queued: every git call one
+    /// started, its branch refreshes included, has exited. Internal, reached
+    /// only through `@testable import`, so a test can take a git call count
+    /// that nothing still in flight will change — a count taken after a quiet
+    /// interval misses a git that was spawned but has not yet run.
+    func settled() async {
+        while let task = inFlightReconcile {
+            await task.value
+            if inFlightReconcile == task { return }
+        }
+    }
+
     /// Closes this controller to further work, synchronously. Separate from
     /// `shutdown()` because `shutdown()` is `async`: a caller reaching it
     /// through `Task { await … }` gets the flag set one main-actor hop later

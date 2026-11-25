@@ -8,6 +8,7 @@ struct GitClientOperationTests {
     /// Every continue below would fail on it, so each one passing proves `perform` sets
     /// `GIT_EDITOR=true` over the configuration's own environment.
     private let client = GitClient(configuration: GitClientConfiguration(
+        executableURL: GitTestRepository.gitURL,
         extraEnvironment: ["GIT_CONFIG_GLOBAL": "/dev/null", "GIT_CONFIG_NOSYSTEM": "1", "GIT_EDITOR": "false"]
     ))
 

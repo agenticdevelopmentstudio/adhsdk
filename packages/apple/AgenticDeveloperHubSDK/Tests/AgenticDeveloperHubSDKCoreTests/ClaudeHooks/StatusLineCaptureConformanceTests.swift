@@ -30,7 +30,7 @@ final class StatusLineCaptureConformanceTests: XCTestCase {
     private var dropPath: String { directory.appendingPathComponent("drop").path }
 
     private func lockFileNames() -> Set<String> {
-        let names = (try? FileManager.default.contentsOfDirectory(atPath: NSTemporaryDirectory())) ?? []
+        let names = (try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []
         return Set(names.filter { $0.hasPrefix("adkd-statusline-feed-") })
     }
 
@@ -54,16 +54,18 @@ final class StatusLineCaptureConformanceTests: XCTestCase {
 
     func testCapture006_feedOnceSkipsWhenTheSessionLockIsHeld() throws {
         let session = "held-\(UUID().uuidString)"
-        let lock = try XCTUnwrap(FeedLock.acquire(sessionID: session, name: "adkd"))
+        let lock = try XCTUnwrap(FeedLock.acquire(sessionID: session, name: "adkd", directory: directory))
         defer {
             lock.release()
-            try? FileManager.default.removeItem(at: FeedLock.fileURL(sessionID: session, name: "adkd"))
+            try? FileManager.default.removeItem(at: FeedLock.fileURL(sessionID: session, name: "adkd",
+                                                                     directory: directory))
         }
         nonisolated(unsafe) var posted = 0
         let body = Data("{\"session_id\":\"\(session)\"}".utf8)
         StatusLineCapture.feedOnce(
             payload: body, token: nil, environment: [:], configuration: config,
-            post: { _, _ in posted += 1; return true }, accountName: { _ in "" }, oauthEmail: { "" })
+            post: { _, _ in posted += 1; return true }, accountName: { _ in "" }, oauthEmail: { "" },
+            lockDirectory: directory)
         XCTAssertEqual(posted, 0)
     }
 
@@ -72,7 +74,8 @@ final class StatusLineCaptureConformanceTests: XCTestCase {
         nonisolated(unsafe) var events: [String] = []
         StatusLineCapture.feedOnce(
             payload: Data("not json".utf8), token: nil, environment: [:], configuration: config,
-            post: { event, _ in events.append(event); return true }, accountName: { _ in "" }, oauthEmail: { "" })
+            post: { event, _ in events.append(event); return true }, accountName: { _ in "" }, oauthEmail: { "" },
+            lockDirectory: directory)
         XCTAssertEqual(events, ["StatusLine"])
         XCTAssertEqual(lockFileNames(), before)
     }
@@ -306,7 +309,8 @@ final class StatusLineCaptureConformanceTests: XCTestCase {
                 feedThreadWasMain = Thread.isMainThread
                 sameThread = ObjectIdentifier(Thread.current) == caller
                 return true
-            }, accountName: { _ in "" }, oauthEmail: { "" })
+            }, accountName: { _ in "" }, oauthEmail: { "" },
+            lockDirectory: directory)
         XCTAssertFalse(feedThreadWasMain)
         XCTAssertFalse(sameThread)
     }

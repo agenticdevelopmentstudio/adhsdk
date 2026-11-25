@@ -38,7 +38,7 @@ final class ReviewWorktreeTests: XCTestCase {
     @discardableResult
     private func git(in directory: URL, _ arguments: String...) throws -> String {
         let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+        process.executableURL = GitTestRepository.gitURL
         process.arguments = ["-C", directory.path] + arguments
         // English output, so assertions on git's wording do not pass vacuously under another locale.
         process.environment = ProcessInfo.processInfo.environment.merging(["LC_ALL": "C"]) { _, new in new }

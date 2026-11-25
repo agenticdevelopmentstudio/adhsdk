@@ -7,6 +7,7 @@ struct GitClientWriteTests {
     /// The client under test sees no global or system configuration, so a developer's hooks
     /// path, signing or editor cannot reach the fixtures' commits.
     private let client = GitClient(configuration: GitClientConfiguration(
+        executableURL: GitTestRepository.gitURL,
         extraEnvironment: ["GIT_CONFIG_GLOBAL": "/dev/null", "GIT_CONFIG_NOSYSTEM": "1"]
     ))
 

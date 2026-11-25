@@ -127,18 +127,21 @@ public enum StatusLineCapture {
 
     /// One feed per session at a time, within `feedDeadline`. A feed that finds
     /// its session's previous one still running skips: the next render brings a
-    /// newer snapshot anyway.
+    /// newer snapshot anyway. The locks live in `lockDirectory`, the temporary
+    /// directory unless a test gives one of its own.
     static func feedOnce(
         payload: Data, token: String?, environment: [String: String],
         configuration: ClaudeHookConfiguration,
         post: @escaping @Sendable (String, Data) -> Bool,
         accountName: @escaping @Sendable (String?) -> String,
-        oauthEmail: @escaping @Sendable () -> String
+        oauthEmail: @escaping @Sendable () -> String,
+        lockDirectory: URL = URL(fileURLWithPath: NSTemporaryDirectory())
     ) {
         let object = (try? JSONSerialization.jsonObject(with: payload)) as? [String: Any]
         var lock: FeedLock?
         if let session = object?["session_id"] as? String {
-            guard let acquired = FeedLock.acquire(sessionID: session, name: configuration.name) else { return }
+            guard let acquired = FeedLock.acquire(sessionID: session, name: configuration.name,
+                                                  directory: lockDirectory) else { return }
             lock = acquired
         }
         defer { lock?.release() }

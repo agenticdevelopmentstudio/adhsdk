@@ -9,7 +9,8 @@ struct GitClientConflictTests {
     /// for the local-path submodule clone. It goes in `GIT_CONFIG_PARAMETERS`, the variable
     /// `-c` writes, because git hands that one on to a submodule's clone and strips
     /// `GIT_CONFIG_COUNT`.
-    private let client = GitClient(configuration: GitClientConfiguration(timeout: 60, extraEnvironment: [
+    private let client = GitClient(configuration: GitClientConfiguration(
+        executableURL: GitTestRepository.gitURL, timeout: 60, extraEnvironment: [
         "GIT_CONFIG_GLOBAL": "/dev/null", "GIT_CONFIG_NOSYSTEM": "1", "GIT_EDITOR": "false",
         "GIT_CONFIG_PARAMETERS": "'protocol.file.allow=always'"
     ]))

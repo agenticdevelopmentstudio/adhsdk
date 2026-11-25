@@ -19,11 +19,56 @@ struct GitTestRepository {
         var description: String { "git \(arguments.joined(separator: " ")) exited \(exitStatus): \(standardError)" }
     }
 
-    static let budget: TimeInterval = 10
+    /// The same budget as `GitClientConfiguration.tests`, for the same reason: a
+    /// suite of git tests runs every test at once, and a fixture call that is not
+    /// about the timeout must not fail on it. A real hang still fails, a minute in.
+    static let budget: TimeInterval = 60
+
+    /// The git binary itself, not `/usr/bin/git`.
+    ///
+    /// `/usr/bin/git` is the xcrun shim: every call looks the developer directory
+    /// up before it execs the real git, which costs about 30 ms a call on an idle
+    /// machine and far more when a suite's tests spawn git all at once. Resolved
+    /// once with `xcrun --find git`; `/usr/bin/git` when that fails.
+    static let gitURL: URL = {
+        let shim = URL(fileURLWithPath: "/usr/bin/git")
+        let process = Process()
+        let output = Pipe()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/xcrun")
+        process.arguments = ["--find", "git"]
+        process.standardOutput = output
+        process.standardError = FileHandle.nullDevice
+        do { try process.run() } catch { return shim }
+        let data = output.fileHandleForReading.readDataToEndOfFile()
+        process.waitUntilExit()
+        let path = (String(bytes: data, encoding: .utf8) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        guard process.terminationStatus == 0, FileManager.default.isExecutableFile(atPath: path) else { return shim }
+        return URL(fileURLWithPath: path)
+    }()
+
+    /// Housekeeping off: with `maintenance.auto` and `gc.auto` on, every commit,
+    /// fetch and push starts a detached `git maintenance run --auto`, a spawn the
+    /// test never asked for, and a git still running in the directory `tearDown`
+    /// removes.
+    static let housekeepingOff: KeyValuePairs<String, String> = [
+        "maintenance.auto": "false",
+        "gc.auto": "0"
+    ]
+
+    /// What `make` and `clone` set in every working repository: an identity, signing
+    /// off, and housekeeping off.
+    static let settings: KeyValuePairs<String, String> = [
+        "user.email": "test@example.com",
+        "user.name": "Test",
+        "commit.gpgsign": "false",
+        "tag.gpgsign": "false",
+        "maintenance.auto": "false",
+        "gc.auto": "0"
+    ]
 
     let root: URL
 
-    /// `git init -b main` with an identity and signing off.
+    /// `git init -b main` with `settings`: an identity, signing off, housekeeping off.
     static func make(prefix: String = "git-test-repository") async throws -> GitTestRepository {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("\(prefix)-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
@@ -32,10 +77,7 @@ struct GitTestRepository {
         // repository is removed before the error propagates.
         do {
             try await repository.run(["init", "-b", "main"])
-            try await repository.run(["config", "user.email", "test@example.com"])
-            try await repository.run(["config", "user.name", "Test"])
-            try await repository.run(["config", "commit.gpgsign", "false"])
-            try await repository.run(["config", "tag.gpgsign", "false"])
+            try repository.appendConfiguration(Self.settings)
             return repository
         } catch {
             repository.tearDown()
@@ -52,6 +94,7 @@ struct GitTestRepository {
         let repository = GitTestRepository(root: root)
         do {
             try await repository.run(["init", "--bare", "-b", "main"])
+            try repository.appendConfiguration(Self.housekeepingOff)
             return repository
         } catch {
             repository.tearDown()
@@ -67,20 +110,35 @@ struct GitTestRepository {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("\(prefix)-\(UUID().uuidString)")
         let repository = GitTestRepository(root: root)
         do {
-            try await repository.run(["clone", "--quiet", remote.root.path, root.path],
+            let tracking = ["branch.main.remote=origin", "branch.main.merge=refs/heads/main"]
+            let settings = (tracking + Self.settings.map { "\($0.key)=\($0.value)" }).flatMap { ["--config", $0] }
+            try await repository.run(["clone", "--quiet"] + settings + [remote.root.path, root.path],
                                      in: FileManager.default.temporaryDirectory)
             try await repository.run(["symbolic-ref", "HEAD", "refs/heads/main"])
-            try await repository.run(["config", "branch.main.remote", "origin"])
-            try await repository.run(["config", "branch.main.merge", "refs/heads/main"])
-            try await repository.run(["config", "user.email", "test@example.com"])
-            try await repository.run(["config", "user.name", "Test"])
-            try await repository.run(["config", "commit.gpgsign", "false"])
-            try await repository.run(["config", "tag.gpgsign", "false"])
             return repository
         } catch {
             repository.tearDown()
             throw error
         }
+    }
+
+    /// Appends `pairs` to the repository's own config file, which is what one
+    /// `git config <key> <value>` per pair would write, without a spawn per pair.
+    /// Keys are `section.name` or `section.subsection.name` with no quoting needed.
+    func appendConfiguration(_ pairs: KeyValuePairs<String, String>) throws {
+        let gitDirectory = FileManager.default.fileExists(atPath: url(".git").path) ? url(".git") : root
+        let file = gitDirectory.appendingPathComponent("config")
+        var text = ""
+        for (key, value) in pairs {
+            var parts = key.split(separator: ".").map(String.init)
+            let name = parts.removeLast()
+            let section = parts.count == 1 ? parts[0] : "\(parts[0]) \"\(parts.dropFirst().joined(separator: "."))\""
+            text += "[\(section)]\n\t\(name) = \(value)\n"
+        }
+        let handle = try FileHandle(forWritingTo: file)
+        defer { try? handle.close() }
+        try handle.seekToEnd()
+        try handle.write(contentsOf: Data(text.utf8))
     }
 
     func tearDown() {
@@ -98,7 +156,7 @@ struct GitTestRepository {
     func run(_ arguments: [String], in directory: URL? = nil, environment: [String: String] = [:]) async throws
         -> String {
         let configuration = SubprocessChannel.Configuration(
-            executableURL: URL(fileURLWithPath: "/usr/bin/git"),
+            executableURL: Self.gitURL,
             arguments: arguments,
             environment: ["GIT_TERMINAL_PROMPT": "0", "GIT_CONFIG_GLOBAL": "/dev/null", "GIT_CONFIG_NOSYSTEM": "1"]
                 .merging(environment) { _, override in override },
@@ -149,5 +207,5 @@ extension GitClientConfiguration {
     /// script) then outlasts it, so a test that is not about the timeout would
     /// fail on `.timedOut` instead of on what it checks. Tests of the timeout
     /// itself set their own.
-    static let tests = GitClientConfiguration(timeout: 60)
+    static let tests = GitClientConfiguration(executableURL: GitTestRepository.gitURL, timeout: 60)
 }

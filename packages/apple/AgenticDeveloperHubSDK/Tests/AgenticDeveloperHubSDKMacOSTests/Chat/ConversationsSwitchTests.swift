@@ -24,8 +24,12 @@ final class ConversationsSwitchTests: XCTestCase {
         controller.soloSessionID = "s3"
         await layout()
 
-        XCTAssertEqual(rowCount(of: controller), 0,
-                       "s1's rows stayed on screen under the s3 pick")
+        // Empty, or s3's own row when its read has already landed: the read
+        // is scheduled, not awaited, and `layout()`'s turns stretch long
+        // enough on a loaded machine for it to arrive. Either way nothing of
+        // s1 may be left.
+        XCTAssertTrue(Set(texts(of: controller)).isSubset(of: ["s3 one"]),
+                      "s1's rows stayed on screen under the s3 pick: \(texts(of: controller))")
     }
 
     func testASwitchToAConversationReadBeforeDrawsItAtOnce() async throws {

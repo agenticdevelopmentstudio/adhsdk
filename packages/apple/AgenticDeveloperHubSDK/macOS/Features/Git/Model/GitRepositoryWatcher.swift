@@ -30,7 +30,10 @@ public protocol GitRepositoryWatching: AnyObject {
 /// Confined to the main queue: `FileSystemWatcher` delivers there, and `start`/`stop`
 /// are called there.
 public final class GitRepositoryWatcher: GitRepositoryWatching, @unchecked Sendable {
-    static let quietPeriod: TimeInterval = 0.3
+    /// The app's quiet period. Tests pass a shorter one rather than sleeping through it.
+    public static let defaultQuietPeriod: TimeInterval = 0.3
+
+    private let quietPeriod: TimeInterval
 
     private let root: String
     private let gitDirectory: String
@@ -40,7 +43,9 @@ public final class GitRepositoryWatcher: GitRepositoryWatching, @unchecked Senda
     private var flush: DispatchWorkItem?
     var onChange: (@Sendable (Set<GitRepositoryChange>) -> Void)?
 
-    public init(root: URL, gitDirectory: URL, commonDirectory: URL) {
+    public init(root: URL, gitDirectory: URL, commonDirectory: URL,
+                quietPeriod: TimeInterval = GitRepositoryWatcher.defaultQuietPeriod) {
+        self.quietPeriod = quietPeriod
         // FSEvents reports canonical paths (`/private/var/...`, `/private/tmp/...`), so the
         // roots are canonicalised with realpath(3) or no reported path would ever match one.
         // Not `resolvingSymlinksInPath()`: it strips a leading `/private`, the opposite.
@@ -144,7 +149,7 @@ public final class GitRepositoryWatcher: GitRepositoryWatching, @unchecked Senda
             if !changes.isEmpty { self.onChange?(changes) }
         }
         flush = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + Self.quietPeriod, execute: work)
+        DispatchQueue.main.asyncAfter(deadline: .now() + quietPeriod, execute: work)
     }
 
     /// `path` relative to the working tree, with anything in the git directory or the

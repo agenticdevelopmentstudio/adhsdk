@@ -15,14 +15,20 @@ extension NSWindow {
     /// The width counterpart of `fitHeight(toContentHeight:)`, for content that
     /// can't give way — Stenographer's Sessions window keeps each row's breadcrumb
     /// whole this way.
-    public func ensureMinimumContentWidth(_ contentWidth: CGFloat) {
+    ///
+    /// - Parameter visibleFrame: The area to keep the window inside. `nil`, the
+    ///   default, is the window's own screen (the main screen while it has none).
+    ///   `NSScreen.main` is whichever screen holds the key window, so it moves as
+    ///   focus moves between displays; a caller that must know the bounds passes
+    ///   them.
+    public func ensureMinimumContentWidth(_ contentWidth: CGFloat, within visibleFrame: NSRect? = nil) {
         guard contentWidth > 0 else { return }
         let needed = frameRect(forContentRect: NSRect(x: 0, y: 0, width: contentWidth, height: 0)).width
         minSize.width = needed
         guard frame.width + 1 < needed else { return }
         var newFrame = frame
         newFrame.size.width = needed
-        if let visible = (screen ?? NSScreen.main)?.visibleFrame {
+        if let visible = visibleFrame ?? (screen ?? NSScreen.main)?.visibleFrame {
             if newFrame.maxX > visible.maxX {
                 newFrame.origin.x = visible.maxX - needed
             }

@@ -50,9 +50,13 @@ final class AccountResolverTests: XCTestCase {
         let resolver = AccountResolver(claudeJSONPath: path)
         XCTAssertEqual(resolver.currentEmail(), "old@b.com")
 
-        // Rewrite with a new mtime; resolver must pick up the change.
-        Thread.sleep(forTimeInterval: 1.1)
+        // Rewrite with a later mtime; resolver must pick up the change. The mtime is
+        // set rather than waited for: a rewrite within the same second can keep it.
+        let modified = try XCTUnwrap(
+            try FileManager.default.attributesOfItem(atPath: path)[.modificationDate] as? Date)
         _ = writeJSON(#"{"oauthAccount": {"emailAddress": "new@b.com"}}"#)
+        try FileManager.default.setAttributes([.modificationDate: modified.addingTimeInterval(2)],
+                                              ofItemAtPath: path)
         XCTAssertEqual(resolver.currentEmail(), "new@b.com")
     }
 }

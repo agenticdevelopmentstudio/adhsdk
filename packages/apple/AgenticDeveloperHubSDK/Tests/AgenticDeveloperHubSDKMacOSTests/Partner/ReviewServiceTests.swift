@@ -729,7 +729,7 @@ private extension ReviewGit {
     /// The fixture's commit's first parent, read with plain git so setup does not depend on the code under test.
     func parentSync(of sha: String, in repo: URL) throws -> String {
         let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+        process.executableURL = GitTestRepository.gitURL
         process.arguments = ["-C", repo.path, "rev-list", "--parents", "-n", "1", sha]
         let out = Pipe()
         process.standardOutput = out
