@@ -15,9 +15,11 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
+  useState,
   type ReactNode,
 } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
@@ -214,10 +216,15 @@ function useRouteSwitch(data: WorkspaceRow[] | undefined): Feed & { register: Re
   return { workspaces, select, register }
 }
 
+/** How long the satellite feed waits on the server's preference before the personal workspace
+ *  stands in: long enough for a healthy account read, short enough that a stalled one is not a
+ *  trigger stuck on "Loading…". */
+const PREFERENCE_WAIT_MS = 3000
+
 /**
  * A satellite's feed: personal + orgs, current by the stored preference, a pick records it.
  * `pending` while the current row waits on the server's preference: the personal fallback is
- * marked only once that answer is in.
+ * marked only once that answer is in, or once {@link PREFERENCE_WAIT_MS} has passed without one.
  */
 function usePreferenceSwitch(
   data: WorkspaceRow[] | undefined,
@@ -236,8 +243,29 @@ function usePreferenceSwitch(
   // workspace and then swapped to the organization the server held. Once settled, a slug that is
   // not one of the caller's rows (a previous user's, an org since left) is inert: the personal
   // workspace stands in, as it does for a caller who has never chosen.
+  //
+  // The wait is BOUNDED ({@link PREFERENCE_WAIT_MS}). The account read has no timeout of its own,
+  // so a stalled one held the trigger on "Loading…", with no row current, for the life of the
+  // page. Once the bound passes the personal workspace stands in as if the read had settled empty;
+  // `settled` itself stays honest, and an answer that lands later still takes over, because a
+  // preferred slug naming one of the caller's rows wins whatever the wait did.
   const preferredRow = owners.some((w) => w.slug === preferred)
-  const pending = enabled && !preferredRow && !settled
+  const waiting = enabled && !preferredRow && !settled
+  const [waitedOut, setWaitedOut] = useState(false)
+  // Signed out ends the wait that was timed: the next sign-in waits afresh. Adjusted during render
+  // (React's "storing information from previous renders"), not synced from an effect.
+  const [wasEnabled, setWasEnabled] = useState(enabled)
+  if (wasEnabled !== enabled) {
+    setWasEnabled(enabled)
+    if (!enabled) setWaitedOut(false)
+  }
+  // An effect because a timer is a subscription to the clock, not derived state.
+  useEffect(() => {
+    if (!waiting) return
+    const timer = setTimeout(() => setWaitedOut(true), PREFERENCE_WAIT_MS)
+    return () => clearTimeout(timer)
+  }, [waiting])
+  const pending = waiting && !waitedOut
   const currentSlug = preferredRow
     ? preferred
     : pending

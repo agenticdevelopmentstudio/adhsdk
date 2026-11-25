@@ -144,6 +144,58 @@ describe('SiteWorkspacesMenuProvider (preference, a satellite)', () => {
     expect(menu()).toMatchObject({ workspaces: [], loading: false, error: true })
   })
 
+  it('lets the personal workspace stand in when the preference read stalls', () => {
+    // The account read has no timeout: unbounded, a stalled one held the trigger on "Loading…"
+    // with no row current for the life of the page.
+    vi.useFakeTimers()
+    try {
+      preference.settled = false
+      render(<SiteWorkspacesMenuProvider>x</SiteWorkspacesMenuProvider>)
+      act(() => vi.advanceTimersByTime(2999))
+      expect(menu().workspaces.filter((w) => w.current)).toEqual([])
+      expect(menu().loading).toBe(true)
+      act(() => vi.advanceTimersByTime(1))
+      expect(menu().workspaces.find((w) => w.current)?.id).toBe('individual:me')
+      expect(menu().loading).toBe(false)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('still lets a preference that answers after the stand-in take over', () => {
+    vi.useFakeTimers()
+    try {
+      preference.settled = false
+      const { rerender } = render(<SiteWorkspacesMenuProvider>x</SiteWorkspacesMenuProvider>)
+      act(() => vi.advanceTimersByTime(3000))
+      expect(menu().workspaces.find((w) => w.current)?.id).toBe('individual:me')
+      preference.slug = 'acme'
+      preference.settled = true
+      rerender(<SiteWorkspacesMenuProvider>x</SiteWorkspacesMenuProvider>)
+      expect(menu().workspaces.find((w) => w.current)?.id).toBe('organization:acme')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('waits afresh after signing out and back in', () => {
+    vi.useFakeTimers()
+    try {
+      preference.settled = false
+      const { rerender } = render(<SiteWorkspacesMenuProvider>x</SiteWorkspacesMenuProvider>)
+      act(() => vi.advanceTimersByTime(3000))
+      expect(menu().loading).toBe(false)
+      subject.current = null
+      rerender(<SiteWorkspacesMenuProvider>x</SiteWorkspacesMenuProvider>)
+      subject.current = 'user-1'
+      rerender(<SiteWorkspacesMenuProvider>x</SiteWorkspacesMenuProvider>)
+      expect(menu().workspaces.filter((w) => w.current)).toEqual([])
+      expect(menu().loading).toBe(true)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('a pick records the preference and does not navigate', () => {
     render(<SiteWorkspacesMenuProvider>x</SiteWorkspacesMenuProvider>)
     act(() => menu().select!({ id: 'organization:acme' }))

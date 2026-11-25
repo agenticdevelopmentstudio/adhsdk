@@ -7,9 +7,11 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useLayoutEffect,
   useMemo,
-  useRef
+  useRef,
+  useState
 } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useTokenSubject } from "@adh-sdk/auth/client";
@@ -93,6 +95,7 @@ function useRouteSwitch(data) {
   }, [reachable, router]);
   return { workspaces, select, register };
 }
+var PREFERENCE_WAIT_MS = 3e3;
 function usePreferenceSwitch(data, enabled) {
   const host = useClientHost();
   const { slug: preferred, settled, choose } = useWorkspacePreference({ enabled });
@@ -101,7 +104,19 @@ function usePreferenceSwitch(data, enabled) {
     [data]
   );
   const preferredRow = owners.some((w) => w.slug === preferred);
-  const pending = enabled && !preferredRow && !settled;
+  const waiting = enabled && !preferredRow && !settled;
+  const [waitedOut, setWaitedOut] = useState(false);
+  const [wasEnabled, setWasEnabled] = useState(enabled);
+  if (wasEnabled !== enabled) {
+    setWasEnabled(enabled);
+    if (!enabled) setWaitedOut(false);
+  }
+  useEffect(() => {
+    if (!waiting) return;
+    const timer = setTimeout(() => setWaitedOut(true), PREFERENCE_WAIT_MS);
+    return () => clearTimeout(timer);
+  }, [waiting]);
+  const pending = waiting && !waitedOut;
   const currentSlug = preferredRow ? preferred : pending ? void 0 : owners.find((w) => w.type === "individual")?.slug;
   const workspaces = useMemo(
     () => owners.map((w) => {
