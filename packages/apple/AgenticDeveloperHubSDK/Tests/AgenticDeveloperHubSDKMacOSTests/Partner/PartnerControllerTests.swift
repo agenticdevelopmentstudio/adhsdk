@@ -153,7 +153,8 @@ final class PartnerControllerTests: XCTestCase {
                                  secureSettingsProvider: InMemorySecureSettingsStorageProvider())
         settings.set(true, for: UserSettings.partnerEnabled)
         notifier = PartnerNotifier(store: store, settings: settings, post: { _, _ in })
-        registry = PartnerSessionRegistry(store: store, environment: { [:] }, detector: ManualSessionEventDetector())
+        registry = PartnerSessionRegistry(store: store, environment: { [:] }, detector: ManualSessionEventDetector(),
+                                          shell: "/bin/sh")
         paths = PartnerPaths(home: directory, token: "kitchen-test")
         log = FakeProcessLog()
     }
@@ -189,9 +190,16 @@ final class PartnerControllerTests: XCTestCase {
         return made
     }
 
-    private func waitUntil(_ timeout: TimeInterval = 3, _ condition: () -> Bool) async {
+    /// Polls until `condition` holds, and fails the test at the call site
+    /// when it never does: a quiet timeout let the test go on to assert
+    /// against a state it had never reached.
+    private func waitUntil(_ timeout: TimeInterval = 15, file: StaticString = #filePath, line: UInt = #line,
+                           _ condition: () -> Bool) async {
         let deadline = Date().addingTimeInterval(timeout)
-        while !condition(), Date() < deadline {
+        while !condition() {
+            guard Date() < deadline else {
+                return XCTFail("timed out after \(timeout)s waiting for the condition", file: file, line: line)
+            }
             try? await Task.sleep(for: .milliseconds(20))
         }
     }
@@ -202,12 +210,17 @@ final class PartnerControllerTests: XCTestCase {
         ClaudeStreamMessage(kind: .assistant, blocks: [.init(kind: .text, text: text)])
     }
 
-    /// Starts, then answers the started notice so the partner is idle.
+    /// Starts, then answers the started notice, so the partner is idle, or
+    /// already on the next turn when an event was queued before the start.
+    ///
+    /// Waiting for `.idle` alone never ended for a queued event: the answer
+    /// moves the partner straight to that event's turn. The old wait gave up
+    /// quietly after three seconds and let the test go on, so it passed slowly.
     private func startIdle(_ controller: PartnerController) async {
         await controller.start()
         await waitUntil { process.sent.count == 1 }
         process.push(Self.result)
-        await waitUntil { controller.state == .idle }
+        await waitUntil { controller.state == .idle || process.sent.count > 1 }
     }
 
     func testStartWritesMcpConfigAndPromptThenSendsStartedLifecycle() async throws {
