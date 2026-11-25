@@ -274,6 +274,30 @@ final class BrowserPaneToolbarTests: XCTestCase {
     /// A hidden strip is not rebuilt, and a shown one only when its items
     /// change: a `browser.` setting the strip does not show leaves its views
     /// as they were.
+    /// The toolbar's labels give way before the window does: each item holds
+    /// its full width below `windowSizeStayPut` and truncates, down to a
+    /// floor that keeps its symbol. At `defaultHigh` the toolbar made its
+    /// project window wider than a 1920-point screen.
+    func test_stripItemsTruncateRatherThanGrowTheWindow() {
+        let pane = makePane(ownToolbar: false)
+        pane.settings.set(true, for: UserSettings.browserPrivacyShowToolbar)
+        pane.refreshAddressRowControls()
+        let buttons = pane.privacyStrip.arrangedSubviews
+            .flatMap { ($0 as? NSStackView)?.arrangedSubviews ?? [] }
+            .compactMap { $0 as? NSButton }
+        XCTAssertFalse(buttons.isEmpty)
+        for button in buttons {
+            XCTAssertLessThan(
+                button.contentCompressionResistancePriority(for: .horizontal).rawValue,
+                NSLayoutConstraint.Priority.windowSizeStayPut.rawValue, button.title)
+            XCTAssertEqual(button.cell?.lineBreakMode, .byTruncatingTail, button.title)
+            XCTAssertTrue(button.constraints.contains {
+                $0.firstAttribute == .width && $0.relation == .greaterThanOrEqual
+                    && $0.constant == BrowserPrivacyStripStyle.minimumWidth
+            }, button.title)
+        }
+    }
+
     func test_stripRebuildsOnlyWhenShownAndChanged() {
         let pane = makePane(ownToolbar: false)
         XCTAssertTrue(pane.privacyStrip.arrangedSubviews.isEmpty, "hidden by default, so never built")
