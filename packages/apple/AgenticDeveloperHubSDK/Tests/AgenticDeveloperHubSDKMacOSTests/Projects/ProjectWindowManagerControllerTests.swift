@@ -35,7 +35,7 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
         // symlink) once there is something on disk to resolve.
         repoRoot = repoRootPath.resolvingSymlinksInPath()
         let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+        process.executableURL = GitTestRepository.gitURL
         process.arguments = ["init", "-b", "main"]
         process.currentDirectoryURL = repoRoot
         try process.run()
@@ -185,14 +185,14 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
         let worktreeRoot = repoRoot.deletingLastPathComponent()
             .appendingPathComponent(repoRoot.lastPathComponent + "-wt")
         let commit = Process()
-        commit.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+        commit.executableURL = GitTestRepository.gitURL
         commit.arguments = ["-c", "user.email=t@t", "-c", "user.name=t", "commit", "--allow-empty", "-m", "init"]
         commit.currentDirectoryURL = repoRoot
         try commit.run()
         commit.waitUntilExit()
         XCTAssertEqual(commit.terminationStatus, 0, "git commit")
         let worktreeAdd = Process()
-        worktreeAdd.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+        worktreeAdd.executableURL = GitTestRepository.gitURL
         worktreeAdd.arguments = ["worktree", "add", "-b", "feature", worktreeRoot.path]
         worktreeAdd.currentDirectoryURL = repoRoot
         try worktreeAdd.run()
@@ -305,36 +305,33 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
         while manager.projectController(for: repo.id)?.workspace.storedTabs() == nil, Date() < secondDeadline {
             try await Task.sleep(for: .milliseconds(20))
         }
-        // Reopening starts its own reconcile — `open()`'s trailing
-        // `branchControllers` refresh loop can still be landing calls after
-        // `storedTabs()` is first written — so the baseline is taken only
-        // once the call count has gone quiet, not at the first sight of
-        // stored tabs.
+        // Reopening starts its own reconcile, and `open()`'s trailing
+        // `branchControllers` refreshes can still be landing calls after
+        // `storedTabs()` is first written, so the baseline is taken only once
+        // the controller has settled: every git call it started has exited.
         //
-        // Going quiet and running out of time are not the same outcome, and
-        // the loop has to report which one happened. Every counted call is a
-        // `python3` spawn, so on a machine that is also running a build the
-        // reconcile can still be landing calls many seconds in. Exit on the
-        // deadline and the baseline is a mid-flight number: the leftover
-        // call arrives inside the window below and is reported as a refresh
-        // the stale observer caused — the exact false red this loop exists
-        // to prevent, and one whose message names the wrong cause. So the
-        // budget is generous, and never going quiet fails on its own terms.
+        // Waiting for the call count to go quiet for 300ms was not enough.
+        // A call is counted when its `python3` has started, and on a loaded
+        // machine one already spawned can take longer than that to start:
+        // the baseline came out one short, and the leftover call was reported
+        // as a refresh the stale observer caused. `settled()` waits on the
+        // reconcile itself, so a spawned call is never missed. Two settled
+        // counts must agree, so a refresh the reopened window's own
+        // becoming key starts meanwhile is in the baseline too.
+        let controller = try XCTUnwrap(manager.projectController(for: repo.id))
+        await controller.settled()
         var callsAfterReopen = try callCount(in: logDir)
-        var quietSince = Date()
         let quiesceDeadline = Date().addingTimeInterval(60)
         var wentQuiet = false
         while Date() < quiesceDeadline {
-            if Date().timeIntervalSince(quietSince) >= 0.3 {
+            try await Task.sleep(for: .milliseconds(300))
+            await controller.settled()
+            let current = try callCount(in: logDir)
+            if current == callsAfterReopen {
                 wentQuiet = true
                 break
             }
-            try await Task.sleep(for: .milliseconds(50))
-            let current = try callCount(in: logDir)
-            if current != callsAfterReopen {
-                callsAfterReopen = current
-                quietSince = Date()
-            }
+            callsAfterReopen = current
         }
         guard wentQuiet else {
             manager.closeProject(repoID: repo.id)
@@ -350,8 +347,10 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
         // Posted against the *dead* window, not the reopened one.
         NotificationCenter.default.post(name: NSWindow.didBecomeKeyNotification, object: staleWindow)
 
-        // Long enough for a wrongly-triggered refresh to reach the fake git.
+        // Long enough for the handler's `Task` to start a wrongly-triggered
+        // refresh, which `settled()` then waits out to its last git call.
         try await Task.sleep(for: .milliseconds(300))
+        await controller.settled()
         let callsAfterStalePost = try callCount(in: logDir)
         XCTAssertEqual(
             callsAfterStalePost, callsAfterReopen,
@@ -717,14 +716,14 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
         let worktreeRoot = repoRoot.deletingLastPathComponent()
             .appendingPathComponent(repoRoot.lastPathComponent + "-wt")
         let commit = Process()
-        commit.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+        commit.executableURL = GitTestRepository.gitURL
         commit.arguments = ["-c", "user.email=t@t", "-c", "user.name=t", "commit", "--allow-empty", "-m", "init"]
         commit.currentDirectoryURL = repoRoot
         try commit.run()
         commit.waitUntilExit()
         XCTAssertEqual(commit.terminationStatus, 0, "git commit")
         let worktreeAdd = Process()
-        worktreeAdd.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+        worktreeAdd.executableURL = GitTestRepository.gitURL
         worktreeAdd.arguments = ["worktree", "add", "-b", "feature", worktreeRoot.path]
         worktreeAdd.currentDirectoryURL = repoRoot
         try worktreeAdd.run()

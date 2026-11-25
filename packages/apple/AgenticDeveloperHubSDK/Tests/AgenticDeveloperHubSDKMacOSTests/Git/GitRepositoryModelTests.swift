@@ -357,11 +357,11 @@ struct GitRepositoryModelTests {
         watcher.receive(paths: ["/r/wt/.git/refs/heads/main"])
         try await Task.sleep(for: .milliseconds(100))
         #expect(recorder.calls.isEmpty)
-        try await Task.sleep(for: .milliseconds(700))
+        try await waitForCalls(recorder, count: 1)
         #expect(recorder.calls == [[.workingCopy, .refs, .history]])
 
         watcher.receive(paths: ["/r/wt/.git/config"])
-        try await Task.sleep(for: .milliseconds(700))
+        try await Task.sleep(for: .seconds(GitRepositoryWatcher.defaultQuietPeriod * 2))
         #expect(recorder.calls.count == 1)
     }
 
@@ -369,37 +369,38 @@ struct GitRepositoryModelTests {
     func watcherReportsEverythingForARescan() async throws {
         let watcher = GitRepositoryWatcher(root: URL(fileURLWithPath: "/r/wt"),
                                            gitDirectory: URL(fileURLWithPath: "/r/main/.git/worktrees/wt"),
-                                           commonDirectory: URL(fileURLWithPath: "/r/main/.git"))
+                                           commonDirectory: URL(fileURLWithPath: "/r/main/.git"),
+                                           quietPeriod: Self.shortQuietPeriod)
         let recorder = ChangeRecorder()
         watcher.onChange = { recorder.record($0) }
 
         // fseventsd dropped the git directory's events: as an ordinary path it means nothing.
         watcher.receive(rescanOf: ["/r/main/.git/worktrees/wt/"])
-        try await Task.sleep(for: .milliseconds(700))
+        try await waitForCalls(recorder, count: 1)
         #expect(recorder.calls == [[.refs, .history, .workingCopy, .operation]])
 
         // A rescan of the whole volume, as after a kernel drop, covers the repository too.
         watcher.receive(rescanOf: ["/"])
-        try await Task.sleep(for: .milliseconds(700))
+        try await waitForCalls(recorder, count: 2)
         #expect(recorder.calls.count == 2)
         #expect(recorder.calls.last == [.refs, .history, .workingCopy, .operation])
 
         // One inside the working tree is still a rescan of part of it, but only
         // of the working copy: refs, history and operations live in the git directories.
         watcher.receive(rescanOf: ["/r/wt/src/"])
-        try await Task.sleep(for: .milliseconds(700))
+        try await waitForCalls(recorder, count: 3)
         #expect(recorder.calls.count == 3)
         #expect(recorder.calls.last == [.workingCopy])
 
         // The working tree's own root may cover anything in it: everything again.
         watcher.receive(rescanOf: ["/r/wt"])
-        try await Task.sleep(for: .milliseconds(700))
+        try await waitForCalls(recorder, count: 4)
         #expect(recorder.calls.count == 4)
         #expect(recorder.calls.last == [.refs, .history, .workingCopy, .operation])
 
         // A sibling whose name only starts the same, or anywhere else, is not the repository.
         watcher.receive(rescanOf: ["/r/wtx/", "/elsewhere/"])
-        try await Task.sleep(for: .milliseconds(700))
+        try await Task.sleep(for: .seconds(Self.shortQuietPeriod * 4))
         #expect(recorder.calls.count == 4)
     }
 
@@ -407,17 +408,18 @@ struct GitRepositoryModelTests {
     func watcherReloadsOnlyTheWorkingCopyForABuildFolderRescan() async throws {
         let watcher = GitRepositoryWatcher(root: URL(fileURLWithPath: "/r/wt"),
                                            gitDirectory: URL(fileURLWithPath: "/r/wt/.git"),
-                                           commonDirectory: URL(fileURLWithPath: "/r/wt/.git"))
+                                           commonDirectory: URL(fileURLWithPath: "/r/wt/.git"),
+                                           quietPeriod: Self.shortQuietPeriod)
         let recorder = ChangeRecorder()
         watcher.onChange = { recorder.record($0) }
 
         watcher.receive(rescanOf: ["/r/wt/build/", "/r/wt/build/Products/"])
-        try await Task.sleep(for: .milliseconds(700))
+        try await waitForCalls(recorder, count: 1)
         #expect(recorder.calls == [[.workingCopy]])
 
         // Inside the in-tree git directory is still everything.
         watcher.receive(rescanOf: ["/r/wt/.git/refs/"])
-        try await Task.sleep(for: .milliseconds(700))
+        try await waitForCalls(recorder, count: 2)
         #expect(recorder.calls.last == [.refs, .history, .workingCopy, .operation])
     }
 
@@ -476,6 +478,18 @@ struct GitRepositoryModelTests {
         try await repository.run(["checkout", "-b", "x"])
         try await waitForReport(from: recorder, after: caughtUp) { $0.contains(.refs) }
         #expect(recorder.calls.dropFirst(caughtUp).contains { $0.contains(.refs) })
+    }
+
+    /// The quiet period for watcher tests that are not about its length.
+    static let shortQuietPeriod: TimeInterval = 0.05
+
+    /// Waits until the recorder holds `count` reports. The bound is only a backstop
+    /// for a watcher that never reports; a passing run returns once the report lands.
+    private func waitForCalls(_ recorder: ChangeRecorder, count: Int) async throws {
+        let deadline = Date().addingTimeInterval(10)
+        while recorder.calls.count < count, Date() < deadline {
+            try await Task.sleep(for: .milliseconds(10))
+        }
     }
 
     /// Waits until a report after the first `skip` satisfies `matches`. The bound is

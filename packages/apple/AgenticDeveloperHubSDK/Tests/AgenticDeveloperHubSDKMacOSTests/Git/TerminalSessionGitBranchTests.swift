@@ -91,7 +91,7 @@ final class TerminalSessionGitBranchTests: XCTestCase {
     /// type under test. Only ever pointed at a throwaway directory this suite made.
     private func run(_ arguments: [String], in directory: URL) throws {
         let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+        process.executableURL = GitTestRepository.gitURL
         process.arguments = arguments
         process.currentDirectoryURL = directory
         process.standardOutput = Pipe()

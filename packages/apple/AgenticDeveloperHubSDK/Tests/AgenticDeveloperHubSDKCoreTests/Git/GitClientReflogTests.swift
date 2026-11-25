@@ -7,6 +7,7 @@ import Testing
 @Suite("GitClient reflog", .serialized)
 struct GitClientReflogTests {
     private let client = GitClient(configuration: GitClientConfiguration(
+        executableURL: GitTestRepository.gitURL,
         extraEnvironment: ["GIT_CONFIG_GLOBAL": "/dev/null", "GIT_CONFIG_NOSYSTEM": "1"]
     ))
 

@@ -23,7 +23,7 @@ final class GitProjectRootTests: XCTestCase {
     @discardableResult
     private func git(_ args: [String], in dir: String) -> (status: Int32, output: String) {
         let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+        process.executableURL = GitTestRepository.gitURL
         process.arguments = ["-C", dir] + args
         let pipe = Pipe()
         process.standardOutput = pipe

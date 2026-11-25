@@ -69,7 +69,8 @@ struct GitWindowSessionActionTests {
     private static let epoch = 1_767_268_800
     private let client = GitClient(configuration: .tests)
     /// Allows the local-path clone a submodule update makes (see `GitClientConflictTests`).
-    private let localFileClient = GitClient(configuration: GitClientConfiguration(timeout: 60, extraEnvironment: [
+    private let localFileClient = GitClient(configuration: GitClientConfiguration(
+        executableURL: GitTestRepository.gitURL, timeout: 60, extraEnvironment: [
         "GIT_CONFIG_GLOBAL": "/dev/null", "GIT_CONFIG_NOSYSTEM": "1",
         "GIT_CONFIG_PARAMETERS": "'protocol.file.allow=always'"
     ]))

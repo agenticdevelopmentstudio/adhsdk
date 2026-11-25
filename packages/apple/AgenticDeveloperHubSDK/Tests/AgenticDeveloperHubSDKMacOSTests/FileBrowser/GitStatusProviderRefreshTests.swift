@@ -1,4 +1,5 @@
 import AgenticDeveloperHubSDKCore
+import Synchronization
 import XCTest
 @testable import AgenticDeveloperHubSDKMacOS
 
@@ -15,7 +16,7 @@ final class GitStatusProviderRefreshTests: XCTestCase {
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
         let git = Process()
-        git.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+        git.executableURL = GitTestRepository.gitURL
         git.arguments = ["init", "-b", "main"]
         git.currentDirectoryURL = root
         try git.run()
@@ -74,20 +75,27 @@ final class GitStatusProviderRefreshTests: XCTestCase {
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
         let git = Process()
-        git.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+        git.executableURL = GitTestRepository.gitURL
         git.arguments = ["init", "-b", "main"]
         git.currentDirectoryURL = root
         try git.run()
         git.waitUntilExit()
 
         let provider = GitStatusProvider(repoRoot: root, client: GitClient(configuration: .tests))
-        let cancelled = expectation(description: "the dropped observer is not told")
-        cancelled.isInverted = true
+        let droppedWasTold = Mutex(false)
         do {
-            let observation = provider.observe { _ in cancelled.fulfill() }
+            let observation = provider.observe { _ in droppedWasTold.withLock { $0 = true } }
             withExtendedLifetime(observation) {}
         }
+        // A refresh tells every registered observer in one pass on the main actor, so
+        // once a retained observer has heard it, the dropped one would have too. That
+        // is a signal to wait on, where an inverted expectation could only wait out
+        // its whole timeout.
+        let retainedWasTold = expectation(description: "the retained observer is told")
+        let retained = provider.observe { _ in retainedWasTold.fulfill() }
         provider.refresh()
-        wait(for: [cancelled], timeout: 3)
+        wait(for: [retainedWasTold], timeout: 60)
+        withExtendedLifetime(retained) {}
+        XCTAssertFalse(droppedWasTold.withLock { $0 }, "the dropped observer is not told")
     }
 }

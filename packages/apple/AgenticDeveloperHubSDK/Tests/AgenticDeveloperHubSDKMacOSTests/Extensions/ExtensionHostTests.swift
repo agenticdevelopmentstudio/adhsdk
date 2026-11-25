@@ -4,6 +4,13 @@ import JavaScriptCore
 @testable import AgenticDeveloperHubSDKCore
 @testable import AgenticDeveloperHubSDKMacOS
 
+/// A flag the test raises and the extension's JavaScript polls, on the main
+/// thread both, through a defined `vscode` member.
+private final class ReleaseGate: @unchecked Sendable {
+    private(set) var isReleased = false
+    func release() { isReleased = true }
+}
+
 /// Collects what an extension wrote to `console`.
 ///
 /// A reference type rather than a captured `var`, because the closure that
@@ -1861,16 +1868,31 @@ struct ExtensionHostTests {
 
         let host = try makeHost(
             source: """
+            var vscode = require('vscode');
             exports.activate = function () {
                 console.log('waiting');
                 return new Promise(function (resolve) {
-                    setTimeout(function () { console.log('settled anyway'); resolve(); }, 60);
+                    var timer = setInterval(function () {
+                        if (!vscode.commands.executeCommand('released')) { return; }
+                        clearInterval(timer);
+                        console.log('settled anyway');
+                        resolve();
+                    }, 5);
                 });
             };
             """,
             in: directory
         )
         defer { host.dispose() }
+
+        // The promise settles when the test says so, never on a timer. A 60ms
+        // `setTimeout` raced the cancellation: on a loaded machine the
+        // activation finished before `cancel()` ran, and the test failed on a
+        // throw that never had the chance to happen.
+        let gate = ReleaseGate()
+        let released: @convention(block) (String) -> Bool = { _ in gate.isReleased }
+        try host.defineVSCodeMember(
+            namespacePath: "vscode.commands", name: "executeCommand", implementation: released)
 
         let recorder = ConsoleRecorder()
         recorder.attach(to: host)
@@ -1879,7 +1901,7 @@ struct ExtensionHostTests {
 
         // Bounded, so a regression that never reached the promise at all fails
         // here rather than hanging.
-        for _ in 0..<100 where recorder.texts.isEmpty {
+        for _ in 0..<2000 where recorder.texts.isEmpty {
             try await Task.sleep(for: .milliseconds(5))
         }
         #expect(recorder.texts == ["waiting"])
@@ -1891,7 +1913,8 @@ struct ExtensionHostTests {
         }
         #expect(!host.isActivated)
 
-        for _ in 0..<100 where recorder.texts.count < 2 {
+        gate.release()
+        for _ in 0..<2000 where recorder.texts.count < 2 {
             try await Task.sleep(for: .milliseconds(5))
         }
         #expect(recorder.texts == ["waiting", "settled anyway"])

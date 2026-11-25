@@ -8,6 +8,7 @@ import Testing
 @Suite("GitClient applying patches built from diff lines")
 struct GitClientPatchTests {
     private let client = GitClient(configuration: GitClientConfiguration(
+        executableURL: GitTestRepository.gitURL,
         extraEnvironment: ["GIT_CONFIG_GLOBAL": "/dev/null", "GIT_CONFIG_NOSYSTEM": "1"]
     ))
 

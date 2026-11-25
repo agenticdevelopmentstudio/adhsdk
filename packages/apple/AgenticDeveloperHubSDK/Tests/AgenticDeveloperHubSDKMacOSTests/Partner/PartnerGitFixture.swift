@@ -9,7 +9,7 @@ import AgenticDeveloperHubSDKCore
 final class PartnerGitFixture {
     let directory: URL
     let review = ReviewGit(client: GitClient(configuration: GitClientConfiguration(
-        executableURL: URL(fileURLWithPath: "/usr/bin/git"), timeout: 30, submoduleHandling: .include)))
+        executableURL: GitTestRepository.gitURL, timeout: 30, submoduleHandling: .include)))
 
     init() throws {
         directory = FileManager.default.temporaryDirectory
@@ -55,7 +55,7 @@ final class PartnerGitFixture {
     @discardableResult
     private func exec(_ arguments: [String], day: Int?, in directory: URL) throws -> String {
         let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+        process.executableURL = GitTestRepository.gitURL
         process.arguments = arguments
         process.currentDirectoryURL = directory
         var environment = ProcessInfo.processInfo.environment

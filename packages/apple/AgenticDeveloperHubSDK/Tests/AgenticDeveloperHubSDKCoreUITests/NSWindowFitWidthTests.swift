@@ -5,9 +5,9 @@ import Testing
 @MainActor
 @Suite("NSWindow.ensureMinimumContentWidth")
 struct NSWindowFitWidthTests {
-    private func makeWindow(left: CGFloat = 100, width: CGFloat) -> NSWindow {
+    private func makeWindow(left: CGFloat = 100, bottom: CGFloat = 100, width: CGFloat) -> NSWindow {
         let window = NSWindow(
-            contentRect: NSRect(x: left, y: 100, width: width, height: 200),
+            contentRect: NSRect(x: left, y: bottom, width: width, height: 200),
             styleMask: [.titled, .resizable],
             backing: .buffered,
             defer: true
@@ -49,10 +49,13 @@ struct NSWindowFitWidthTests {
     }
 
     @Test("a window at the screen's right edge grows leftwards")
-    func growsLeftAtRightEdge() throws {
-        let visible = try #require(NSScreen.main?.visibleFrame)
-        let window = makeWindow(left: visible.maxX - 300, width: 300)
-        window.ensureMinimumContentWidth(500)
+    func growsLeftAtRightEdge() {
+        // A visible frame of the test's own, passed in: `NSScreen.main` follows the
+        // key window between displays, so reading it here and again inside the call
+        // could name two different screens.
+        let visible = NSRect(x: 0, y: 0, width: 1440, height: 900)
+        let window = makeWindow(left: visible.maxX - 300, bottom: visible.minY + 100, width: 300)
+        window.ensureMinimumContentWidth(500, within: visible)
 
         #expect(abs(window.frame.maxX - visible.maxX) <= 1)
         #expect(window.frame.minX >= visible.minX)

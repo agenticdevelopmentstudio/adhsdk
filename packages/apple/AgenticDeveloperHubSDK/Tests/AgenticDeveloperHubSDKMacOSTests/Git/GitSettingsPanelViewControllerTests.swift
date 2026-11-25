@@ -234,6 +234,7 @@ final class GitSettingsPanelViewControllerTests: XCTestCase {
         let config = directory.appendingPathComponent("gitconfig")
         try "[user]\n\temail = tester@example.com\n".write(to: config, atomically: true, encoding: .utf8)
         return GitClient(configuration: GitClientConfiguration(
+            executableURL: GitTestRepository.gitURL,
             extraEnvironment: ["GIT_CONFIG_GLOBAL": config.path]
         ))
     }

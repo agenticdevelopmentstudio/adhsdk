@@ -64,7 +64,7 @@ final class ProjectControllerTests: XCTestCase {
 
     private func git(_ arguments: [String]) throws {
         let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+        process.executableURL = GitTestRepository.gitURL
         process.arguments = arguments
         process.currentDirectoryURL = repoRoot
         try process.run()
