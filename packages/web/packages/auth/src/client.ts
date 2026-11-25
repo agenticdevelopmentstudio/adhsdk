@@ -13,6 +13,8 @@ export {
   onSessionChange,
   type BackendTokenFields,
 } from './tokens'
+// The same subject as a hook — provider-agnostic sign-in for shared components.
+export { useTokenSubject } from './use-token-subject'
 
 export {
   listAllV1,
