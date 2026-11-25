@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   WORKSPACES_QUERY_KEY,
+  WORKSPACE_ROWS_QUERY_KEY,
   notifyWorkspacesChanged,
   onWorkspacesChanged,
 } from '../workspaces'
@@ -25,6 +26,8 @@ describe('notifyWorkspacesChanged', () => {
 
     // The switcher's list, by key.
     expect(invalidate).toHaveBeenCalledWith({ queryKey: WORKSPACES_QUERY_KEY })
+    // The header menu's all-rows list, which keeps its own key (a different shape).
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: WORKSPACE_ROWS_QUERY_KEY })
     // SiteHomeShell's chooser reads the SAME endpoint under a different entry
     // (`useResourceList('workspaces')`), so a key-only sweep would leave the fleet's picker stale.
     // `revalidateResources` matches by predicate; assert the predicate accepts that cache key and

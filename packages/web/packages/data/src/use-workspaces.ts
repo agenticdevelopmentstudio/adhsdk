@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 import { getToolkitQueryClient } from "./query";
 import {
-  WORKSPACES_QUERY_KEY,
+  WORKSPACE_ROWS_QUERY_KEY,
   onWorkspacesChanged,
   workspacesApi,
   type WorkspaceRow,
@@ -12,9 +12,10 @@ import {
 
 /**
  * Every workspace the caller can switch to, teams included ({@link workspacesApi.listAll}), cached
- * on the toolkit's query client under {@link WORKSPACES_QUERY_KEY}. Moved from the hub's own
+ * on the toolkit's query client under {@link WORKSPACE_ROWS_QUERY_KEY}. Moved from the hub's own
  * `useWorkspaces`; a caller that wants fewer rows (a satellite: no teams) filters what this returns,
- * so there is one cache entry for the endpoint and one thing for a change to invalidate.
+ * so every switcher shares one entry of all rows. (`workspacesApi.list()`'s owner subset is a
+ * different shape and keeps its own key, {@link WORKSPACES_QUERY_KEY}.)
  *
  * SUBSCRIBED to {@link onWorkspacesChanged} by the act of reading. `notifyWorkspacesChanged`
  * already invalidates this client's entry directly, but only the copy of this module that sent it:
@@ -29,13 +30,13 @@ export function useWorkspaces(opts?: { enabled?: boolean }): UseQueryResult<Work
   useEffect(
     () =>
       onWorkspacesChanged(() => {
-        void client.invalidateQueries({ queryKey: WORKSPACES_QUERY_KEY });
+        void client.invalidateQueries({ queryKey: WORKSPACE_ROWS_QUERY_KEY });
       }),
     [client],
   );
   return useQuery<WorkspaceRow[]>(
     {
-      queryKey: WORKSPACES_QUERY_KEY,
+      queryKey: WORKSPACE_ROWS_QUERY_KEY,
       queryFn: () => workspacesApi.listAll(),
       enabled: opts?.enabled ?? true,
       retry: false,

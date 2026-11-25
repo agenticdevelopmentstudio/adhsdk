@@ -78,6 +78,7 @@ export {
   checkWorkspaceSlugAvailable,
   workspaceCursor,
   WORKSPACES_QUERY_KEY,
+  WORKSPACE_ROWS_QUERY_KEY,
   WORKSPACES_CHANGED_EVENT,
   notifyWorkspacesChanged,
   onWorkspacesChanged,

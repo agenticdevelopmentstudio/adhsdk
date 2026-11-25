@@ -33,6 +33,15 @@ export interface Workspace {
  */
 export const WORKSPACES_QUERY_KEY = ["workspaces"] as const;
 
+/**
+ * The react-query key for {@link workspacesApi.listAll} — every row, teams included, as
+ * `WorkspaceRow[]` (`useWorkspaces`, the header's workspace menu). Its OWN key, not
+ * {@link WORKSPACES_QUERY_KEY}: that entry holds `list()`'s `Workspace[]` (`kind`, no teams), and
+ * two shapes under one key would hand each reader the other's array. Not a prefix of it either, so
+ * a sweep of one never silently means the other; {@link notifyWorkspacesChanged} names both.
+ */
+export const WORKSPACE_ROWS_QUERY_KEY = ["workspace-rows"] as const;
+
 /** The window event {@link notifyWorkspacesChanged} fires. Exported for tests and for a host that
  *  would rather listen directly than through {@link onWorkspacesChanged}. */
 export const WORKSPACES_CHANGED_EVENT = "adh:workspaces-changed";
@@ -58,9 +67,9 @@ export const WORKSPACES_CHANGED_EVENT = "adh:workspaces-changed";
  * host with its own cache subscribes with {@link onWorkspacesChanged}.
  */
 export function notifyWorkspacesChanged(): void {
-  void getToolkitQueryClient()
-    .invalidateQueries({ queryKey: WORKSPACES_QUERY_KEY })
-    .catch(() => {});
+  const client = getToolkitQueryClient();
+  void client.invalidateQueries({ queryKey: WORKSPACES_QUERY_KEY }).catch(() => {});
+  void client.invalidateQueries({ queryKey: WORKSPACE_ROWS_QUERY_KEY }).catch(() => {});
   revalidateResources((cacheKey) => cacheKey === "workspaces");
   if (typeof window === "undefined") return;
   window.dispatchEvent(new CustomEvent(WORKSPACES_CHANGED_EVENT));
