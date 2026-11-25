@@ -35,6 +35,7 @@ enum TestDaemonDatabase {
     ) throws -> (db: DaemonDatabase, path: String) {
         let path = explicitPath ?? uniquePath()
         do {
+            seedFromTemplate(at: path)
             let db = try DaemonDatabase(
                 path: path,
                 accountResolver: accountResolver,
@@ -60,7 +61,8 @@ enum TestDaemonDatabase {
         accountResolver: AccountResolver = AccountResolver(),
         deferMigrations: Bool = false
     ) throws -> DaemonDatabase {
-        try DaemonDatabase(
+        if !deferMigrations { seedFromTemplate(at: path) }
+        return try DaemonDatabase(
             path: path,
             accountResolver: accountResolver,
             deferMigrations: deferMigrations,
@@ -69,6 +71,40 @@ enum TestDaemonDatabase {
             statusLineIngest: DaemonDatabase.sessionStatusLineIngest,
             sessionUpsertHook: DaemonDatabase.sessionUpsertHook
         )
+    }
+
+    /// One migrated, empty, closed database per test process, built on first use.
+    ///
+    /// Every version-gated migration runs once here instead of once per test:
+    /// 52 of them, each its own commit, which is most of what opening a fresh
+    /// database costs when a parallel run keeps the disk busy. A database
+    /// seeded from it still opens through `DaemonDatabase.init`, which runs
+    /// every `postMigration` ensure as it would on a real daemon's database.
+    /// Nil when it cannot be built, and a fixture then migrates from scratch.
+    private static let processTemplate: String? = {
+        let path = uniquePath(prefix: "daemontest-template")
+        do {
+            _ = try DaemonDatabase(path: path, migrations: SessionSchema.migrations,
+                                   postMigration: SessionSchema.postMigration)
+            // Removed when the test process exits, like every other fixture's.
+            atexit { if let path = TestDaemonDatabase.processTemplate { TestDaemonDatabase.remove(path: path) } }
+            return path
+        } catch {
+            remove(path: path)
+            return nil
+        }
+    }()
+
+    /// Copies the process template to `path` when nothing is there yet, so a
+    /// fixture that names a fresh path opens an already migrated database. A
+    /// path that already holds a database (a test reopening one, or one built
+    /// at an older schema) is left alone and migrates as it is.
+    private static func seedFromTemplate(at path: String) {
+        guard path != ":memory:", !FileManager.default.fileExists(atPath: path),
+              let template = processTemplate else { return }
+        try? FileManager.default.createDirectory(
+            at: URL(fileURLWithPath: path).deletingLastPathComponent(), withIntermediateDirectories: true)
+        try? copyDatabase(from: template, to: path)
     }
 
     /// A closed, fully migrated, empty feature database at a unique path, for

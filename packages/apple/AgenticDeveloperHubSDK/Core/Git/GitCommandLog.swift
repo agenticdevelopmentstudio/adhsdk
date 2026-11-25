@@ -183,22 +183,23 @@ public enum GitCommandLog {
         // positional rules apply to the verb's arguments only; the URL rule to all of them.
         let overrides = configOverrides.flatMap { ["-c", redactedURLUserInfo($0)] }
         let spawned = overrides + [verb] + redactedArguments(tool: tool, verb: verb, arguments: arguments)
-        let joinedArguments = spawned.joined(separator: " ")
-        let path = directory?.path ?? "-"
-        logger.info(
-            """
-            \(tool, privacy: .public) \(joinedArguments, privacy: .public) \
-            cwd=\(path, privacy: .public) \
-            from=\(caller.file, privacy: .public):\(caller.function, privacy: .public) \
-            \(milliseconds, privacy: .public)ms status=\(status, privacy: .public)
-            """
-        )
+        let line = logLine(tool: tool, spawned: spawned, directory: directory, caller: caller,
+                           milliseconds: milliseconds, status: status)
+        logger.info("\(line, privacy: .public)")
         let failed = exitStatus.map { $0 != 0 } ?? false
         book.append(
             tool: tool, arguments: spawned, directory: directory?.path ?? "",
             caller: "\(caller.file):\(caller.function)",
             duration: .milliseconds(max(milliseconds, 0)), exitStatus: exitStatus,
             standardError: failed ? standardError.map(keptStandardError) : nil)
+    }
+
+    /// The one OSLog line for a call. It takes no output parameter on purpose:
+    /// nothing a git call printed can reach the unified log through it.
+    static func logLine(tool: String, spawned: [String], directory: URL?, caller: GitCaller,
+                        milliseconds: Int, status: String) -> String {
+        "\(tool) \(spawned.joined(separator: " ")) cwd=\(directory?.path ?? "-") "
+            + "from=\(caller.file):\(caller.function) \(milliseconds)ms status=\(status)"
     }
 
     /// Every entry the shared ring holds, oldest first.
