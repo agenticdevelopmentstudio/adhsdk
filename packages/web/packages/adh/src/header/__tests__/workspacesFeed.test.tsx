@@ -176,6 +176,19 @@ describe('SiteWorkspacesMenuProvider (route, the hub)', () => {
     expect(first).not.toHaveBeenCalled()
   })
 
+  it('reports loading, never an empty list, while the token has no subject yet', () => {
+    // The hub swaps to the workspace menu on its own auth, which can say signed in (a cached user
+    // during bootstrap, a silent SSO) before the token store has a subject. The query is disabled
+    // then, so its empty, settled result must not reach the menu as "No workspaces yet".
+    subject.current = null
+    useWorkspaces.mockReturnValue({ data: undefined, isLoading: false, isError: false })
+    route.pathname = '/acme'
+    render(<SiteWorkspacesMenuProvider switchBy="route">x</SiteWorkspacesMenuProvider>)
+    expect(useWorkspaces).toHaveBeenCalledWith({ enabled: false })
+    expect(menu()).toMatchObject({ workspaces: [], loading: true, error: false })
+    expect(menu().everyRoute).toBeUndefined()
+  })
+
   it('provides the registrar only in route mode', () => {
     const got: unknown[] = []
     function Probe() {

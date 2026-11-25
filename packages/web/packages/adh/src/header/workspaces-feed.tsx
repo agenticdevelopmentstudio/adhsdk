@@ -101,9 +101,17 @@ export type SiteWorkspacesMenuProviderProps = {
  * the header workspace menu (see `SiteMenuSwitcher`).
  *
  * Gated on sign-in by the stored token's subject ({@link useTokenSubject}), so it works under any
- * host's auth context: signed out, no request fires and `loading`/`error` read false. In
- * `'preference'` mode it asks for the swap (`everyRoute`) only while that same signal says signed
- * in, so the menu and its feed never disagree about the visitor.
+ * host's auth context: with no subject, no request fires and `error` reads false. The menu and its
+ * feed must never disagree about the visitor, and each mode settles that with this one signal:
+ *
+ * - `'preference'` asks for the swap (`everyRoute`) only while the token says signed in, so the
+ *   menu needs both the host's sign-in and this one; `loading` reads false with no subject.
+ * - `'route'` does not ask for the swap: the host swaps on its own `authenticated` on its workspace
+ *   routes. So with no subject it reports `loading`, never an empty list. The menu shows only to a
+ *   visitor the host counts as signed in, and to that visitor a token with no subject is one that
+ *   has not landed yet (the host's cached user during bootstrap or a silent SSO): "Loading…" is
+ *   true there, where "No workspaces yet" is a false statement about an account that has some.
+ *   Signed out on both sides the menu is not shown, so the `loading` it holds is never read.
  */
 export function SiteWorkspacesMenuProvider({
   children,
@@ -117,18 +125,22 @@ export function SiteWorkspacesMenuProvider({
   const feed = byRoute ? route : pref
 
   // `error`, so a list that failed to load reads as one rather than "No workspaces yet". Gated on
-  // sign-in like `loading`: signed out the query is disabled, and what it still holds is not this
-  // visitor's.
+  // sign-in: signed out the query is disabled, and what it still holds is not this visitor's.
   //
   // `everyRoute` only while THIS feed counts the visitor as signed in. SiteMenuSwitcher swaps on the
   // host's `authenticated`; the feed loads on the stored token's subject. Asking for the swap only
   // when the token says signed in makes the menu need BOTH, so a host whose auth says signed in while
   // the token store has no subject keeps its site menu rather than an empty "No workspaces yet"
   // menu for an account that has workspaces.
+  //
+  // Route mode has no swap to withhold (the hub swaps on its workspace routes, by the host's auth),
+  // so it closes the same gap through `loading`: no subject yet reads as the list not being here
+  // yet, which is the truth for a visitor the host already counts as signed in. The two signals
+  // still never meet in one condition; the menu reads one value either way.
   const value = useMemo<WorkspacesMenu>(
     () => ({
       workspaces: feed.workspaces,
-      loading: signedIn && isLoading,
+      loading: byRoute ? !signedIn || isLoading : signedIn && isLoading,
       error: signedIn && isError,
       select: feed.select,
       // A preference pick records and stays put, so the menu asks no leave-this-page question.

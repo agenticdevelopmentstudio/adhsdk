@@ -52,9 +52,17 @@ export type SiteWorkspacesMenuProviderProps = {
  * the header workspace menu (see `SiteMenuSwitcher`).
  *
  * Gated on sign-in by the stored token's subject ({@link useTokenSubject}), so it works under any
- * host's auth context: signed out, no request fires and `loading`/`error` read false. In
- * `'preference'` mode it asks for the swap (`everyRoute`) only while that same signal says signed
- * in, so the menu and its feed never disagree about the visitor.
+ * host's auth context: with no subject, no request fires and `error` reads false. The menu and its
+ * feed must never disagree about the visitor, and each mode settles that with this one signal:
+ *
+ * - `'preference'` asks for the swap (`everyRoute`) only while the token says signed in, so the
+ *   menu needs both the host's sign-in and this one; `loading` reads false with no subject.
+ * - `'route'` does not ask for the swap: the host swaps on its own `authenticated` on its workspace
+ *   routes. So with no subject it reports `loading`, never an empty list. The menu shows only to a
+ *   visitor the host counts as signed in, and to that visitor a token with no subject is one that
+ *   has not landed yet (the host's cached user during bootstrap or a silent SSO): "Loading…" is
+ *   true there, where "No workspaces yet" is a false statement about an account that has some.
+ *   Signed out on both sides the menu is not shown, so the `loading` it holds is never read.
  */
 export declare function SiteWorkspacesMenuProvider({ children, switchBy, }: SiteWorkspacesMenuProviderProps): ReactNode;
 //# sourceMappingURL=workspaces-feed.d.ts.map
