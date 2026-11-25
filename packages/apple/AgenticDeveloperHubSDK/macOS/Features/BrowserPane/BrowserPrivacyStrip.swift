@@ -301,12 +301,34 @@ enum BrowserPrivacyStripStyle {
         button.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
         button.symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 12, weight: .regular)
         button.contentTintColor = color
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.lineBreakMode = .byTruncatingTail
         button.attributedTitle = NSAttributedString(
             string: hasMenu ? "\(text) ▾" : text,
-            attributes: [.font: font, .foregroundColor: color])
+            attributes: [.font: font, .foregroundColor: color, .paragraphStyle: paragraph])
+        (button.cell as? NSButtonCell)?.lineBreakMode = .byTruncatingTail
         button.setContentHuggingPriority(.required, for: .horizontal)
-        button.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
+        button.setContentCompressionResistancePriority(labelCompressionResistance, for: .horizontal)
+        if !button.constraints.contains(where: { $0.identifier == minimumWidthIdentifier }) {
+            let floor = button.widthAnchor.constraint(greaterThanOrEqualToConstant: minimumWidth)
+            floor.identifier = minimumWidthIdentifier
+            floor.isActive = true
+        }
     }
+
+    /// How hard a label holds its full width: just under
+    /// `windowSizeStayPut`, so a row short of room truncates its labels
+    /// rather than growing the window. At `defaultHigh` the whole toolbar's
+    /// labels outranked the window's size, and on a 1920-point screen a
+    /// pane showing it made its project window 3028 points wide, with the
+    /// Agent view control off the screen's edge.
+    static let labelCompressionResistance = NSLayoutConstraint.Priority.dragThatCannotResizeWindow
+
+    /// The narrowest a button gets: its symbol on its bezel, with the label
+    /// truncated away. The tooltip and the accessibility label still carry
+    /// the whole "Title: State".
+    static let minimumWidth: CGFloat = 30
+    private static let minimumWidthIdentifier = "browser.privacy-strip.minimum-width"
 }
 
 /// One privacy toolbar item: a button that toggles its setting, or pops up
