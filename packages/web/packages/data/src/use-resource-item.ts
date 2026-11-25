@@ -206,6 +206,13 @@ export function useResourceItemQuery<T>(
  *
  * Writing the response beats invalidating: the caller is holding the server's own answer, so a
  * re-read would spend a request to arrive back at the bytes already in hand.
+ *
+ * A read of the same item still IN FLIGHT is cancelled first: it was sent before this write, so
+ * whatever it brings back is older than what the caller holds, and landing after the write it
+ * would put the old copy back (a workspace picked while the preference was still loading jumped
+ * back to the previous one). The cancel reverts the entry in a later microtask, so the write waits
+ * for it — only in that case; with nothing in flight the write is synchronous, as callers that
+ * seed a row and move the selection to it in the same tick rely on.
  */
 export function useResourceItemWriter<T>(cacheKey: string): (id: string, next: T | null) => void {
   const tenantId = useTenantId();
@@ -213,8 +220,15 @@ export function useResourceItemWriter<T>(cacheKey: string): (id: string, next: T
   return useCallback(
     (id: string, next: T | null) => {
       const key = resourceItemKey(cacheKey, tenantId, id);
-      if (next === null) client.removeQueries({ queryKey: key, exact: true });
-      else client.setQueryData<T>(key, next);
+      const write = () => {
+        if (next === null) client.removeQueries({ queryKey: key, exact: true });
+        else client.setQueryData<T>(key, next);
+      };
+      if (client.isFetching({ queryKey: key, exact: true }) > 0) {
+        void client.cancelQueries({ queryKey: key, exact: true }).then(write);
+      } else {
+        write();
+      }
     },
     [client, cacheKey, tenantId],
   );

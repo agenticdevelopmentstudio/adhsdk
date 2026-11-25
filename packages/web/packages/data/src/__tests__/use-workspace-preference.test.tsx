@@ -47,6 +47,17 @@ describe('useWorkspacePreference', () => {
     expect(result.current.slug).toBeNull()
   })
 
+  it('a pick made while the first read is in flight is not overwritten when that read lands', async () => {
+    let resolve!: (v: { slug?: string }) => void
+    get.mockReturnValue(new Promise((r) => (resolve = r)))
+    const { result } = renderHook(() => useWorkspacePreference())
+    act(() => result.current.choose('acme'))
+    await act(async () => resolve({ slug: 'me' }))
+    await waitFor(() => expect(result.current.slug).toBe('acme'))
+    await new Promise((r) => setTimeout(r, 0))
+    expect(result.current.slug).toBe('acme')
+  })
+
   it('choose() records the pick in the browser cache, the item cache and the server row', async () => {
     get.mockResolvedValue({ slug: 'me' })
     const { result } = renderHook(() => useWorkspacePreference())
