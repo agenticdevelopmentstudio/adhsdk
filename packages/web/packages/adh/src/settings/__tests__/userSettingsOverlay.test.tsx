@@ -30,6 +30,9 @@ vi.mock('../registry', () => ({
     { id: 'a', label: 'Topic A', href: '/a', content: <PanelA /> },
     { id: 'b', label: 'Topic B', href: '/b', content: <div>Topic B content</div> },
   ],
+  // The real rule, over the mocked default: the overlay asks it which topic to show.
+  visibleTopicId: (topics: readonly { id: string }[], id: string) =>
+    topics.some((t) => t.id === id) ? id : 'a',
 }))
 vi.mock('@adh-sdk/adh/settings/topics', () => ({ DEFAULT_SETTINGS_TOPIC: 'a' }))
 
