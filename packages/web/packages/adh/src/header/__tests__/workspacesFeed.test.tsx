@@ -144,6 +144,17 @@ describe('SiteWorkspacesMenuProvider (preference, a satellite)', () => {
     expect(menu()).toMatchObject({ workspaces: [], loading: false, error: true })
   })
 
+  it('keeps loading over cached rows a failed refetch left while the preference is pending', () => {
+    // react-query keeps the rows it held when a background refetch fails. Listed with none current,
+    // the trigger read "Workspaces" rather than "Loading…" until the preference answered.
+    preference.settled = false
+    useWorkspaces.mockReturnValue({ data: rows, isLoading: false, isError: true })
+    render(<SiteWorkspacesMenuProvider>x</SiteWorkspacesMenuProvider>)
+    expect(menu().workspaces.map((w) => w.id)).toEqual(['individual:me', 'organization:acme'])
+    expect(menu().workspaces.filter((w) => w.current)).toEqual([])
+    expect(menu()).toMatchObject({ loading: true, error: true })
+  })
+
   it('lets the personal workspace stand in when the preference read stalls', () => {
     // The account read has no timeout: unbounded, a stalled one held the trigger on "Loading…"
     // with no row current for the life of the page.

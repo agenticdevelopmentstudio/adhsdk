@@ -49,17 +49,18 @@ function SiteWorkspacesMenuProvider({
   const pref = usePreferenceSwitch(byRoute ? void 0 : data, signedIn && !byRoute, subject);
   const feed = byRoute ? route : pref;
   const prefPending = !byRoute && pref.pending;
+  const failedEmpty = isError && feed.workspaces.length === 0;
   const value = useMemo(
     () => ({
       workspaces: feed.workspaces,
-      loading: byRoute ? !signedIn || isLoading : signedIn && !isError && (isLoading || prefPending),
+      loading: byRoute ? !signedIn || isLoading : signedIn && !failedEmpty && (isLoading || prefPending),
       error: signedIn && isError,
       select: feed.select,
       // A preference pick records and stays put, so the menu asks no leave-this-page question.
       selectStaysOnPage: byRoute ? void 0 : true,
       everyRoute: !byRoute && signedIn ? true : void 0
     }),
-    [feed.workspaces, feed.select, signedIn, isLoading, isError, byRoute, prefPending]
+    [feed.workspaces, feed.select, signedIn, isLoading, isError, byRoute, prefPending, failedEmpty]
   );
   const menu = /* @__PURE__ */ jsx(WorkspacesMenuProvider, { value, children });
   return byRoute ? /* @__PURE__ */ jsx(WorkspaceSelectRegistrar.Provider, { value: route.register, children: menu }) : menu;
