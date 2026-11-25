@@ -124,10 +124,13 @@ public struct GitRepoScanner: Sendable {
                     currentPath: directory.path
                 ))
 
+                // Listed at its resolved path: Foundation refuses to list a
+                // symbolic link (`ENOTDIR`), and a root the user gave may be
+                // one. The children are re-spelled under `directory` below.
                 let children: [URL]
                 do {
                     children = try fileManager.contentsOfDirectory(
-                        at: directory,
+                        at: directory.resolvingSymlinksInPath(),
                         includingPropertiesForKeys: keys,
                         options: []
                     )

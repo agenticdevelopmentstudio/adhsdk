@@ -524,7 +524,21 @@ public final class ProjectsCoordinator: AppFeature {
     }
 
     private func finishScan(found: [ScannedGitRepo]) async {
-        let plan = ProjectReconciler.plan(existing: repos, scanned: found)
+        // The scan writes to the registry, so it plans against the registry's
+        // own list. `repos` can still be the local copy `init` seeded it from
+        // (a scan that beats `start()`'s first load), and planned against that
+        // a project the registry has never held is an update of a row that
+        // does not exist: it fails, and the project is never added. A registry
+        // that cannot be read gets no writes from this scan (`fail-fast`).
+        let existing: [GitRepo]
+        do {
+            existing = try await registry.projects()
+        } catch {
+            Self.logger.error("Could not read the project registry to scan into it: \(error)")
+            endScan()
+            return
+        }
+        let plan = ProjectReconciler.plan(existing: existing, scanned: found)
         var summary = plan.summary
 
         // Each row is applied on its own. One failed write used to abandon
@@ -571,14 +585,19 @@ public final class ProjectsCoordinator: AppFeature {
         }
 
         lastScanSummary = summary
+        Self.logger.info("Scan complete: \(summary.summaryText, privacy: .public)")
+        endScan()
+    }
+
+    /// Ends a scan, applied or not: the list reloads, a rescan asked for
+    /// meanwhile starts, and the progress window closes.
+    private func endScan() {
         isScanning = false
         reload()
         if rescanPending {
             rescanPending = false
             scan(showingProgress: false)
         }
-
-        Self.logger.info("Scan complete: \(summary.summaryText, privacy: .public)")
         progressWindow?.finish()
         progressWindow = nil
     }
