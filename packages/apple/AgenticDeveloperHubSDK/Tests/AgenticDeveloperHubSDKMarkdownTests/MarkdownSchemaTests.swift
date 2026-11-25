@@ -76,7 +76,9 @@ struct MarkdownSchemaTests {
         try expect("markdown", adds: [
             "title", "content", "frontmatter", "content_hash", "size_bytes",
             "current_version", "latest_version_id", "is_deleted", "public_route",
-            "visibility", "stage", "author_kind", "author_id"
+            "visibility", "stage", "author_kind", "author_id",
+            // LOCAL (markdown-v7): the per-row concurrency token; adh has no such column.
+            "local_version"
         ], in: try migrated())
     }
 
@@ -235,7 +237,16 @@ struct MarkdownSchemaTests {
             for table in MarkdownSchema.tables {
                 try conn.execute(sql: "CREATE TABLE \(table) (\(head), \(legacy[table] ?? ""), \(tail))")
             }
-            // v1 to v5 already ran on this database, so GRDB must only run v6.
+            // The outbox as v1, v2 and v5 left it, so the later migrations that
+            // alter it (v8) find it as a real pre-v6 database would have it.
+            try conn.execute(sql: """
+                CREATE TABLE _markdown_outbox (
+                    op_id TEXT PRIMARY KEY NOT NULL, document_id TEXT NOT NULL,
+                    intent TEXT NOT NULL, payload TEXT NOT NULL DEFAULT '{}',
+                    created_at TEXT NOT NULL, seq INTEGER NOT NULL DEFAULT 0, claimed_at TEXT
+                )
+                """)
+            // v1 to v5 already ran on this database, so GRDB must only run v6 onwards.
             try conn.execute(sql: "CREATE TABLE grdb_migrations (identifier TEXT NOT NULL PRIMARY KEY)")
             for id in ["markdown-v1", "markdown-v2-outbox-order", "markdown-v3-frontmatter-owner",
                        "markdown-v4-release-title-claims", "markdown-v5-outbox-claim"] {

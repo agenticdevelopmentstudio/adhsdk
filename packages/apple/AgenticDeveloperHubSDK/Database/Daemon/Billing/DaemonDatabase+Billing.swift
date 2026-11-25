@@ -1615,7 +1615,10 @@ extension DaemonDatabase {
     /// keeps the small `holding` set outside (SQLite never reorders one), and
     /// the `IS NOT NULL` lets the partial supplements index serve; the unary
     /// `+` stops the planner seeking those arms by project instead, which it
-    /// does on an un-ANALYZEd database. Parameters: project, segment
+    /// does on an un-ANALYZEd database. The untimed arm names its index
+    /// (`INDEXED BY`): left to itself, the planner on some machines served
+    /// it from `idx_billing_entry_project_day_all (project_id=?)`, a read of
+    /// every entry of the project. Parameters: project, segment
     /// lookback, until, from (segments); project, entry lookback, until, from
     /// (entries); project, until epoch, from epoch (untimed); project, from
     /// epoch, until epoch, until epoch, from epoch (frozen; the first bound
@@ -1630,7 +1633,7 @@ extension DaemonDatabase {
         WHERE e.project_id = ? AND e.started_at >= ? AND e.started_at < ?
           AND e.started_at <> '' AND e.ended_at > ?
         UNION
-        SELECT e.* FROM billing_entry e
+        SELECT e.* FROM billing_entry e INDEXED BY idx_billing_entry_project_started
         WHERE e.project_id = ? AND e.started_at = ''
           AND EXISTS (
             SELECT 1 FROM json_each(\(billedRangesJSON("e.billed_ranges"))) r
