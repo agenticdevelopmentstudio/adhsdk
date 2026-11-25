@@ -37,7 +37,13 @@ public actor GitClient {
 
     /// Resolved on every call rather than captured once, so `shared` follows
     /// the user's settings.
-    private let configurationProvider: @Sendable () async -> GitClientConfiguration
+    let configurationProvider: @Sendable () async -> GitClientConfiguration
+
+    /// The git executables `git lfs version` has already answered for. Whether
+    /// git-lfs is installed is the machine's, not the repository's, so it is
+    /// asked once per executable rather than on every refresh. Only a yes is
+    /// kept: git-lfs installed while the app runs is seen on the next look.
+    var lfsInstalledFor: Set<String> = []
 
     public init(configuration provider: @escaping @Sendable () async -> GitClientConfiguration) {
         self.configurationProvider = provider
@@ -418,7 +424,15 @@ public actor GitClient {
     }
 
     /// The submodules `git submodule status` reports; none without `.gitmodules`.
+    ///
+    /// `git submodule status` is a shell script that costs hundreds of
+    /// milliseconds, and the model asks on every refresh, so a working tree
+    /// with no `.gitmodules` at its top level is answered without it: git
+    /// would report nothing there, or refuse an orphan gitlink, which the
+    /// model shows as no submodules either way. Looking costs a stat, or a
+    /// `rev-parse` when `directory` is not the top level.
     public func submodules(in directory: URL, caller: GitCaller = GitCaller()) async throws -> [GitSubmodule] {
+        guard try await hasGitmodules(directory, caller: caller) else { return [] }
         let output = try await execute(
             verb: "submodule",
             arguments: ["status"],
@@ -428,6 +442,18 @@ public actor GitClient {
             configOverrides: ["core.quotePath=false"]
         )
         return GitSubmodule.parse(status: output)
+    }
+
+    /// Whether the working tree holding `directory` has a `.gitmodules` at its top level.
+    private func hasGitmodules(_ directory: URL, caller: GitCaller) async throws -> Bool {
+        let fileManager = FileManager.default
+        if fileManager.fileExists(atPath: directory.appendingPathComponent(".gitmodules").path) { return true }
+        let topLevel = try await run("rev-parse", ["--show-toplevel"], in: directory, caller: caller)
+            .trimmingCharacters(in: .newlines)
+        guard !topLevel.isEmpty,
+              URL(fileURLWithPath: topLevel).standardizedFileURL != directory.standardizedFileURL
+        else { return false }
+        return fileManager.fileExists(atPath: URL(fileURLWithPath: topLevel).appendingPathComponent(".gitmodules").path)
     }
 
     /// The patch `target` describes, parsed.
