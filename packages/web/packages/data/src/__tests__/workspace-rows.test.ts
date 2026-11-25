@@ -24,8 +24,20 @@ describe('workspaceListLabel', () => {
   it('is the trimmed name when there is one', () => {
     expect(workspaceListLabel({ name: '  Acme ', type: 'organization' })).toBe('Acme')
   })
-  it('names a nameless personal workspace "My Workspace" and any other "Workspace"', () => {
-    expect(workspaceListLabel({ name: ' ', type: 'individual' })).toBe('My Workspace')
+  it('reads every type by its own name, the personal one included', () => {
+    // The backend already names the individual workspace after its owner, so reading the name
+    // straight through is what puts the USER'S NAME on the row.
+    expect(workspaceListLabel({ name: 'Ada', type: 'individual' })).toBe('Ada')
+    expect(workspaceListLabel({ name: 'Acme', type: 'organization' })).toBe('Acme')
+  })
+  it('never renders a NAMELESS workspace, however blank the backend name is', () => {
+    // The backend builds the personal row as `displayName ?? slug` — NULLISH-coalescing, so a
+    // display name saved as the empty string sails through as `name: ''`. Downstream every
+    // consumer treats '' as a present value (the hub breadcrumb's `?? selectedId` fallback does
+    // not fire on it), so the refusal has to happen here or the row has no accessible name at all.
+    expect(workspaceListLabel({ name: '', type: 'individual' })).toBe('My Workspace')
+    expect(workspaceListLabel({ name: '   ', type: 'individual' })).toBe('My Workspace')
+    expect(workspaceListLabel({ name: '', type: 'organization' })).toBe('Workspace')
     expect(workspaceListLabel({ name: '', type: 'team' })).toBe('Workspace')
   })
 })
