@@ -72,8 +72,15 @@ export function notifyWorkspacesChanged(): void {
   void client.invalidateQueries({ queryKey: WORKSPACE_ROWS_QUERY_KEY }).catch(() => {});
   revalidateResources((cacheKey) => cacheKey === "workspaces");
   if (typeof window === "undefined") return;
-  window.dispatchEvent(new CustomEvent(WORKSPACES_CHANGED_EVENT));
+  const event = new CustomEvent(WORKSPACES_CHANGED_EVENT);
+  sentByThisCopy.add(event);
+  window.dispatchEvent(event);
 }
+
+/** The change events THIS copy of the module dispatched. Its own caches were already swept before
+ *  the dispatch, so a listener inside this copy that would sweep them again skips these (see
+ *  {@link onWorkspacesChangedElsewhere}). Weak, so a dispatched event is not kept alive by it. */
+const sentByThisCopy = new WeakSet<Event>();
 
 /** Subscribe a host's own cache to {@link notifyWorkspacesChanged}. Returns the unsubscribe, so it
  *  is an effect body on its own: `useEffect(() => onWorkspacesChanged(fn), [fn])`. */
@@ -81,6 +88,26 @@ export function onWorkspacesChanged(listener: () => void): () => void {
   if (typeof window === "undefined") return () => {};
   window.addEventListener(WORKSPACES_CHANGED_EVENT, listener);
   return () => window.removeEventListener(WORKSPACES_CHANGED_EVENT, listener);
+}
+
+/**
+ * {@link onWorkspacesChanged}, minus the announcements this copy of the module made itself. For a
+ * listener that sweeps a cache {@link notifyWorkspacesChanged} already sweeps directly (the
+ * toolkit client), so one change is one invalidation there, not two: react-query's
+ * `invalidateQueries` cancels a refetch in flight and starts another, so a second sweep is a
+ * second request. An event another copy sent (a host bundling its own `@adh-sdk/data`) still
+ * reaches it, because that copy's sweep reached that copy's client, not this one's.
+ *
+ * Internal to the package: a host's own cache is never swept by `notifyWorkspacesChanged`, so a
+ * host always wants every event and uses {@link onWorkspacesChanged}.
+ */
+export function onWorkspacesChangedElsewhere(listener: () => void): () => void {
+  if (typeof window === "undefined") return () => {};
+  const onChange = (event: Event) => {
+    if (!sentByThisCopy.has(event)) listener();
+  };
+  window.addEventListener(WORKSPACES_CHANGED_EVENT, onChange);
+  return () => window.removeEventListener(WORKSPACES_CHANGED_EVENT, onChange);
 }
 
 /** `GET /v1/handles/{handle}`, verbatim: `reason` says which test refused it. */

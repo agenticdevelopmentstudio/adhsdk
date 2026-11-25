@@ -49,7 +49,7 @@ describe('notifyWorkspacesChanged', () => {
     expect(heard).toHaveBeenCalledTimes(1)
 
     // The subscribe returns its own unsubscribe, so an effect body can be exactly
-    // `() => onWorkspacesChanged(fn)` — which is how the hub's `useWorkspaces` mounts it.
+    // `() => onWorkspacesChanged(fn)` — which is how a host with its own cache mounts it.
     stop()
     notifyWorkspacesChanged()
     expect(heard).toHaveBeenCalledTimes(1)
