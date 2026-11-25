@@ -84,15 +84,31 @@ struct ProcessExitWatchConformanceTests {
 
     @Test("V7: stop kills a child that ignores SIGTERM after the first grace")
     func v007StopKillsSecond() throws {
-        // `exec` keeps the ignored-SIGTERM disposition in the sleeping image.
-        let (process, watch) = try launch("/bin/sh", ["-c", "trap '' TERM; exec sleep 30"])
-        // Let the shell install the trap before the first signal lands.
-        Thread.sleep(forTimeInterval: 0.5)
+        // A short grace so the test does not wait out the production two
+        // seconds; the escalation it proves is the same at any length.
+        let grace: TimeInterval = 0.5
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/bin/sh")
+        // `exec` keeps the ignored-SIGTERM disposition in the sleeping image,
+        // and `echo` (a builtin, after the trap) says the trap is armed.
+        process.arguments = ["-c", "trap '' TERM; echo armed; exec sleep 30"]
+        let output = Pipe()
+        process.standardOutput = output
+        let watch = ProcessExitWatch(process, terminationGrace: grace)
+        try process.run()
+        // Wait for the shell to install the trap before the first signal lands.
+        var said = Data()
+        while !(String(bytes: said, encoding: .utf8) ?? "").contains("armed") {
+            let chunk = output.fileHandleForReading.availableData
+            if chunk.isEmpty { break }
+            said.append(chunk)
+        }
+        #expect(String(bytes: said, encoding: .utf8)?.contains("armed") == true)
         var stopped = false
         let took = elapsed { stopped = watch.stop(process) }
         #expect(stopped)
-        #expect(took >= ProcessExitWatch.terminationGrace - 0.2)
-        #expect(took < 2 * ProcessExitWatch.terminationGrace)
+        #expect(took >= grace * 0.9)
+        #expect(took < 2 * grace)
         #expect(!process.isRunning)
     }
 
@@ -112,8 +128,19 @@ struct ProcessExitWatchConformanceTests {
 
     @Test("V10: an exit nobody waited for yet is still reported by the next wait")
     func v010ExitRecordedOnceSeen() throws {
-        let (_, watch) = try launch("/usr/bin/true", [])
-        Thread.sleep(forTimeInterval: 1)
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/true")
+        let watch = ProcessExitWatch(process)
+        // Chain behind the watch's own handler, so the test knows the exit
+        // has been delivered to the watch without anyone having waited on it.
+        let delivered = DispatchSemaphore(value: 0)
+        let watchHandler = process.terminationHandler
+        process.terminationHandler = { finished in
+            watchHandler?(finished)
+            delivered.signal()
+        }
+        try process.run()
+        #expect(delivered.wait(timeout: .now() + 5) == .success)
         #expect(watch.waitForExit(timeout: 0))
     }
 

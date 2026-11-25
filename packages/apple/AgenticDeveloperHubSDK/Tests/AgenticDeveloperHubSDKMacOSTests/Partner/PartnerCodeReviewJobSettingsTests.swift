@@ -90,7 +90,7 @@ final class PartnerCodeReviewJobSettingsTests: XCTestCase {
 
     private func makeController() -> PartnerController {
         let sessions = PartnerSessionRegistry(store: store, environment: { [:] },
-                                              detector: ManualSessionEventDetector())
+                                              detector: ManualSessionEventDetector(), shell: PartnerTestShell.path)
         return PartnerController(
             store: store, sessions: sessions, notifier: PartnerNotifier(store: store), paths: makePaths(),
             endpoint: { nil })

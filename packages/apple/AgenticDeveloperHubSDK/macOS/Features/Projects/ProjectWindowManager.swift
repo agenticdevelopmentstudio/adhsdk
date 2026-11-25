@@ -369,6 +369,15 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         keyObservers[repoID] != nil
     }
 
+    /// Returns once the checkout scan `makeProjectWindow` started for
+    /// `repoID` has finished — the reconcile, the branch refresh behind it and
+    /// the repo-state cache refresh — or at once when none is running.
+    /// Internal and reached only through `@testable import`: it is what lets
+    /// a test wait for the open to land instead of sleeping a guessed budget.
+    func openTaskSettled(for repoID: UUID) async {
+        await openTasks[repoID]?.value
+    }
+
     // MARK: - ProjectOpening
 
     /// Opens `repo` in a project window.

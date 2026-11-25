@@ -308,50 +308,28 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
         // Reopening starts its own reconcile — `open()`'s trailing
         // `branchControllers` refresh loop can still be landing calls after
         // `storedTabs()` is first written — so the baseline is taken only
-        // once the call count has gone quiet, not at the first sight of
-        // stored tabs.
-        //
-        // Going quiet and running out of time are not the same outcome, and
-        // the loop has to report which one happened. Every counted call is a
-        // `python3` spawn, so on a machine that is also running a build the
-        // reconcile can still be landing calls many seconds in. Exit on the
-        // deadline and the baseline is a mid-flight number: the leftover
-        // call arrives inside the window below and is reported as a refresh
-        // the stale observer caused — the exact false red this loop exists
-        // to prevent, and one whose message names the wrong cause. So the
-        // budget is generous, and never going quiet fails on its own terms.
-        var callsAfterReopen = try callCount(in: logDir)
-        var quietSince = Date()
-        let quiesceDeadline = Date().addingTimeInterval(60)
-        var wentQuiet = false
-        while Date() < quiesceDeadline {
-            if Date().timeIntervalSince(quietSince) >= 0.3 {
-                wentQuiet = true
-                break
-            }
-            try await Task.sleep(for: .milliseconds(50))
-            let current = try callCount(in: logDir)
-            if current != callsAfterReopen {
-                callsAfterReopen = current
-                quietSince = Date()
-            }
-        }
-        guard wentQuiet else {
-            manager.closeProject(repoID: repo.id)
-            XCTFail("""
-                the reopened project's own reconcile was still calling git 60s \
-                after the window came back, so there is no quiet baseline to \
-                measure the stale post against. This says nothing either way \
-                about the key observer — it means the reconcile does not settle.
-                """)
-            return
-        }
+        // once that open has finished, not at the first sight of stored tabs.
+        // Awaited rather than watched for a quiet spell: a quiet spell is a
+        // guess, and a guess that a slow machine outlasts makes the leftover
+        // call look like a refresh the stale observer caused.
+        let reopened = try XCTUnwrap(manager.projectController(for: repo.id))
+        await manager.openTaskSettled(for: repo.id)
+        await reopened.reconcilesSettled()
+        let callsAfterReopen = try callCount(in: logDir)
 
         // Posted against the *dead* window, not the reopened one.
         NotificationCenter.default.post(name: NSWindow.didBecomeKeyNotification, object: staleWindow)
 
-        // Long enough for a wrongly-triggered refresh to reach the fake git.
-        try await Task.sleep(for: .milliseconds(300))
+        // The observer is registered with `queue: nil`, so a stale one would
+        // run inside `post` and enqueue its `Task { refreshCheckouts() }` on
+        // the main actor right there. A main-actor task created *after* the
+        // post runs behind it (the main executor is the serial main queue),
+        // and `refreshCheckouts()` files its reconcile synchronously, before
+        // its first suspension — so once this hop has run, any wrongly
+        // triggered reconcile is in `inFlightReconcile`, and
+        // `reconcilesSettled()` waits for its git calls to land.
+        await Task { @MainActor in }.value
+        await reopened.reconcilesSettled()
         let callsAfterStalePost = try callCount(in: logDir)
         XCTAssertEqual(
             callsAfterStalePost, callsAfterReopen,
@@ -475,9 +453,12 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
         manager.closeProject(repoID: repo.id)
         XCTAssertNil(manager.projectController(for: repo.id))
 
-        // The fake git sleeps 0.4s past the marker; wait well past that for
-        // the in-flight open() task to land.
-        try await Task.sleep(for: .milliseconds(900))
+        // The fake git holds its answer until `release` exists, so the close
+        // above provably landed while the call was in flight. Let it answer
+        // now, and wait for the open() task to finish with it.
+        FileManager.default.createFile(atPath: scriptDir.appendingPathComponent("release").path, contents: nil)
+        await manager.openTaskSettled(for: repo.id)
+        await controller.reconcilesSettled()
 
         // The database, which is the claim that matters: a window closed
         // mid-scan must leave the project's rows exactly as it found them.

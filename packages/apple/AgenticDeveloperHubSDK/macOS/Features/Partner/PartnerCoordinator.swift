@@ -86,7 +86,7 @@ public final class PartnerCoordinator: AppFeature {
          registerTools: @escaping @MainActor (any ChatToolSource) -> Void,
          projects: @escaping @MainActor () -> [PartnerToolSource.Project],
          commandRegistry: CommandRegistry, detector: (any PartnerSessionEventDetecting)?,
-         pluginManager: AIPluginManager? = nil, settings: SettingsStore,
+         shell: String? = nil, pluginManager: AIPluginManager? = nil, settings: SettingsStore,
          quitLimit: Duration = PartnerCoordinator.quitTurnLimit,
          quitStopLimit: Duration = PartnerCoordinator.quitStopAllowance,
          makeController: MakeController) {
@@ -101,7 +101,8 @@ public final class PartnerCoordinator: AppFeature {
             store: store, environment: { terminalEnvironment() },
             detector: detector ?? QuietPeriodDetector(settle: {
                 TimeInterval(settings.get(UserSettings.partnerIdleSettleSeconds))
-            }))
+            }),
+            shell: shell)
         let notifier = PartnerNotifier(store: store, settings: settings)
         controller = makeController(store, sessions, notifier, paths, {
             status.port.flatMap { port in status.token.map { PartnerController.Endpoint(port: port, token: $0) } }

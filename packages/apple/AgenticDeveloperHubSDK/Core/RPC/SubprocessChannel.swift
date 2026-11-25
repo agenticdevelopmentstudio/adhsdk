@@ -18,6 +18,10 @@ public actor SubprocessChannel {
         public var framing: MessageFraming
         /// Working directory for the child, or `nil` to inherit the parent's.
         public var currentDirectoryURL: URL?
+        /// SIGTERM grace period before `terminate()` escalates to SIGKILL;
+        /// `SubprocessChannel.defaultTerminationGraceSeconds` unless a caller
+        /// (a test of a child that ignores SIGTERM) chooses another.
+        public var terminationGraceSeconds: TimeInterval
 
         public init(
             executableURL: URL,
@@ -25,7 +29,8 @@ public actor SubprocessChannel {
             environment: [String: String] = [:],
             environmentPolicy: EnvironmentPolicy = .replace,
             framing: MessageFraming = .newlineDelimited,
-            currentDirectoryURL: URL? = nil
+            currentDirectoryURL: URL? = nil,
+            terminationGraceSeconds: TimeInterval = SubprocessChannel.defaultTerminationGraceSeconds
         ) {
             self.executableURL = executableURL
             self.arguments = arguments
@@ -33,6 +38,7 @@ public actor SubprocessChannel {
             self.environmentPolicy = environmentPolicy
             self.framing = framing
             self.currentDirectoryURL = currentDirectoryURL
+            self.terminationGraceSeconds = terminationGraceSeconds
         }
     }
 
@@ -101,10 +107,11 @@ public actor SubprocessChannel {
     /// instead of quadratic — the other half is the decoder's own scan cursor.
     private static let readChunkSize = 64 * 1024
 
-    /// SIGTERM grace period before `terminate()` escalates to SIGKILL. A
-    /// child that traps or ignores SIGTERM must not be able to hang
-    /// `terminate()`, or leak the process and its descriptors, forever.
-    private static let terminationGraceSeconds: TimeInterval = 2.0
+    /// The default SIGTERM grace period before `terminate()` escalates to
+    /// SIGKILL (`Configuration.terminationGraceSeconds`). A child that traps
+    /// or ignores SIGTERM must not be able to hang `terminate()`, or leak the
+    /// process and its descriptors, forever.
+    public static let defaultTerminationGraceSeconds: TimeInterval = 2.0
 
     /// How long `standardErrorText()` will wait for the stderr drain to reach
     /// EOF before answering with whatever it has buffered so far. EOF on
@@ -454,7 +461,7 @@ public actor SubprocessChannel {
     /// message stream itself.
     ///
     /// **Worst case this takes `terminationGraceSeconds` +
-    /// `messagePumpDrainGraceSeconds` — 2.5 s as configured — flat**, and a
+    /// `messagePumpDrainGraceSeconds` — 2.5 s with the default grace — flat**, and a
     /// later `standardErrorText()` can add `standardErrorDrainGraceSeconds`
     /// (0.5 s) on top of that. The child's own SIGTERM handler runs *inside*
     /// the first budget rather than after it: `withWallClockBudget` resumes at
@@ -582,7 +589,7 @@ public actor SubprocessChannel {
             process.terminate() // SIGTERM
 
             let exitWaiterBox = exitWaiterBox
-            _ = try? await withWallClockBudget(Self.terminationGraceSeconds) {
+            _ = try? await withWallClockBudget(configuration.terminationGraceSeconds) {
                 await exitWaiterBox.get()?.wait()
             }
 

@@ -39,12 +39,29 @@ public actor GitClient {
     /// the user's settings.
     private let configurationProvider: @Sendable () async -> GitClientConfiguration
 
+    /// Where every invocation is recorded: `GitCommandLog.book`, the process's ring,
+    /// unless a test hands in its own.
+    private let commandLog: GitCommandLogBook
+
     public init(configuration provider: @escaping @Sendable () async -> GitClientConfiguration) {
-        self.configurationProvider = provider
+        self.init(configuration: provider, commandLog: GitCommandLog.book)
     }
 
     public init(configuration: GitClientConfiguration) {
-        self.configurationProvider = { configuration }
+        self.init(configuration: { configuration }, commandLog: GitCommandLog.book)
+    }
+
+    /// As the public initialisers, recording into `commandLog` instead of the shared ring,
+    /// so a test reads only the calls it made.
+    init(configuration provider: @escaping @Sendable () async -> GitClientConfiguration,
+         commandLog: GitCommandLogBook) {
+        self.configurationProvider = provider
+        self.commandLog = commandLog
+    }
+
+    /// As `init(configuration:)`, recording into `commandLog` instead of the shared ring.
+    init(configuration: GitClientConfiguration, commandLog: GitCommandLogBook) {
+        self.init(configuration: { configuration }, commandLog: commandLog)
     }
 
     // MARK: - Read-only verbs
@@ -1106,8 +1123,9 @@ public actor GitClient {
             // Recorded even though nothing was spawned. A user who types a
             // wrong path into Settings makes every git call fail here, and an
             // empty log is the least useful thing to hand them.
-            GitCommandLog.record(verb: verb, arguments: verbArguments, configOverrides: configOverrides,
-                                 directory: directory, caller: caller, duration: 0, exitStatus: nil)
+            GitCommandLog.record(in: commandLog, tool: "git", verb: verb, arguments: verbArguments,
+                                 configOverrides: configOverrides, directory: directory, caller: caller,
+                                 duration: 0, exitStatus: nil, standardError: nil)
             throw GitClientError.executableNotFound(path: executablePath)
         }
         let channelConfiguration = SubprocessChannel.Configuration(
@@ -1132,29 +1150,29 @@ public actor GitClient {
                                                      budget: budget ?? configuration.timeout)
         } catch is WallClockBudgetExceeded {
             GitCommandLog.record(
-                verb: verb, arguments: verbArguments, configOverrides: configOverrides,
-                directory: directory, caller: caller,
-                duration: Date().timeIntervalSince(started), exitStatus: nil
+                in: commandLog, tool: "git", verb: verb, arguments: verbArguments,
+                configOverrides: configOverrides, directory: directory, caller: caller,
+                duration: Date().timeIntervalSince(started), exitStatus: nil, standardError: nil
             )
             throw GitClientError.timedOut(verb: verb)
         } catch let error as CancellationError {
             GitCommandLog.record(
-                verb: verb, arguments: verbArguments, configOverrides: configOverrides,
-                directory: directory, caller: caller,
-                duration: Date().timeIntervalSince(started), exitStatus: nil
+                in: commandLog, tool: "git", verb: verb, arguments: verbArguments,
+                configOverrides: configOverrides, directory: directory, caller: caller,
+                duration: Date().timeIntervalSince(started), exitStatus: nil, standardError: nil
             )
             throw error
         } catch {
             GitCommandLog.record(
-                verb: verb, arguments: verbArguments, configOverrides: configOverrides,
-                directory: directory, caller: caller,
-                duration: Date().timeIntervalSince(started), exitStatus: nil
+                in: commandLog, tool: "git", verb: verb, arguments: verbArguments,
+                configOverrides: configOverrides, directory: directory, caller: caller,
+                duration: Date().timeIntervalSince(started), exitStatus: nil, standardError: nil
             )
             throw GitClientError.launchFailed(verb: verb, reason: error.localizedDescription)
         }
         GitCommandLog.record(
-            verb: verb, arguments: verbArguments, configOverrides: configOverrides,
-            directory: directory, caller: caller,
+            in: commandLog, tool: "git", verb: verb, arguments: verbArguments,
+            configOverrides: configOverrides, directory: directory, caller: caller,
             duration: result.duration, exitStatus: result.exitStatus,
             // Kept by the log only for a status other than 0, in memory, never in OSLog.
             standardError: result.standardError

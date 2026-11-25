@@ -92,8 +92,9 @@ final class SerialAsyncGateTests: XCTestCase {
     func testAJobThatIgnoresCancellationIsLeftBehindAfterTheGrace() async {
         // A body that never resumes cannot be cancelled into leaving. The gate
         // waits out the timeout and a short grace, then moves on without it;
-        // the next job runs even though the first is still parked.
-        let gate = SerialAsyncGate(timeout: 0.2)
+        // the next job runs even though the first is still parked. A short
+        // grace, so the test does not wait out the default two seconds.
+        let gate = SerialAsyncGate(timeout: 0.2, grace: 0.2)
         let started = Date()
         let parked = NeverResumes()
 

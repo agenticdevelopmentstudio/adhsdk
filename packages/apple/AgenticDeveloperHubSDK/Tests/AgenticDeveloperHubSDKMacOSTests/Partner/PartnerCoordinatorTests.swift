@@ -45,6 +45,7 @@ final class PartnerCoordinatorTests: XCTestCase {
             store: store, paths: PartnerPaths(home: directory, token: "kitchen-test"), status: status,
             terminalEnvironment: { [:] }, registerTools: { [unowned self] in registered.append($0) },
             projects: { [] }, commandRegistry: CommandRegistry(), detector: ManualSessionEventDetector(),
+            shell: PartnerTestShell.path,
             settings: settings, quitLimit: quitLimit, quitStopLimit: quitStopLimit,
             makeController: { store, sessions, notifier, paths, endpoint in
                 PartnerController(

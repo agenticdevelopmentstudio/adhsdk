@@ -511,12 +511,12 @@ struct SubprocessChannelTests {
             arguments: [
                 "-c",
                 "trap 'sleep 0.3; echo BYE >&2; exit 7' TERM; "
-                    + "echo UP >&2; while :; do sleep 0.05; done"
+                    + "echo UP >&2; echo READY; while :; do sleep 0.05; done"
             ]
         )) { channel in
-            _ = try await channel.messages()
-            // Let the trap be installed and `UP` be written before signalling.
-            try await Task.sleep(nanoseconds: 500_000_000)
+            let stream = try await channel.messages()
+            // The trap is installed and `UP` written once `READY` arrives.
+            _ = try await collectFrames(from: stream, count: 1)
 
             await channel.terminate()
 
@@ -560,12 +560,12 @@ struct SubprocessChannelTests {
             ]
         )) { channel in
             let stream = try await channel.messages()
-            // Let the trap be installed and `UP` be written before signalling.
-            try await Task.sleep(nanoseconds: 500_000_000)
+            // The trap is installed once `UP` arrives.
+            let up = try await collectFrames(from: stream, count: 1)
 
             await channel.terminate()
 
-            let frames = try await drainToEOF(stream)
+            let frames = try await up + drainToEOF(stream)
             let text = frames.compactMap { String(bytes: $0, encoding: .utf8) }.joined()
             #expect(text.contains("UP"))
             #expect(
@@ -728,10 +728,12 @@ struct SubprocessChannelTests {
     @Test("terminate() still escalates to SIGKILL for a child that ignores SIGTERM")
     func terminateStillEscalatesForAnIgnoringChild() async throws {
         // The companion to the test above: making SIGTERM survivable must not
-        // make SIGKILL unreachable.
+        // make SIGKILL unreachable. A short grace, so the test does not wait
+        // out the default two seconds before the escalation it is about.
         try await withLaunchedChannel(.init(
             executableURL: URL(fileURLWithPath: "/bin/sh"),
-            arguments: ["-c", "trap '' TERM; while :; do sleep 0.05; done"]
+            arguments: ["-c", "trap '' TERM; while :; do sleep 0.05; done"],
+            terminationGraceSeconds: 0.2
         )) { channel in
             _ = try await channel.messages()
             try await Task.sleep(nanoseconds: 200_000_000)

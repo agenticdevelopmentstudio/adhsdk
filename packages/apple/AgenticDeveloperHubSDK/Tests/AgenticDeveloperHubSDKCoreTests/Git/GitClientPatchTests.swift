@@ -1,5 +1,4 @@
 import Foundation
-import OSLog
 import Testing
 @testable import AgenticDeveloperHubSDKCore
 
@@ -7,9 +6,15 @@ import Testing
 /// to fixture repositories.
 @Suite("GitClient applying patches built from diff lines", .serialized)
 struct GitClientPatchTests {
-    private let client = GitClient(configuration: GitClientConfiguration(
-        extraEnvironment: ["GIT_CONFIG_GLOBAL": "/dev/null", "GIT_CONFIG_NOSYSTEM": "1"]
-    ))
+    /// The client's command log: the suite's own, read by `commandLogOmitsThePatch`.
+    private let commandLog = GitCommandLogBook(capacity: GitCommandLog.capacity)
+    private let client: GitClient
+
+    init() {
+        client = GitClient(configuration: GitClientConfiguration(
+            extraEnvironment: ["GIT_CONFIG_GLOBAL": "/dev/null", "GIT_CONFIG_NOSYSTEM": "1"]
+        ), commandLog: commandLog)
+    }
 
     /// Twenty numbered lines.
     private static let original = (1...20).map { "line \($0)\n" }.joined()
@@ -228,18 +233,17 @@ struct GitClientPatchTests {
         defer { repository.tearDown() }
         let unstaged = try #require(try await onlyFile(.unstaged(paths: []), in: repository))
         let forward = try patch(selecting: "early", in: unstaged, .forward)
-        let started = Date()
         try await client.perform(.applyToIndex(patch: forward, reverse: false), in: repository.root)
 
-        let store = try OSLogStore(scope: .currentProcessIdentifier)
-        let entries = try store.getEntries(at: store.position(date: started.addingTimeInterval(-1)))
-            .compactMap { $0 as? OSLogEntryLog }
-            .filter { $0.category == "GitCommandLog" && $0.composedMessage.contains(repository.root.path) }
-            .map(\.composedMessage)
+        // The suite's own book, so no other git call in the process can crowd the entry out.
+        // The OSLog line is built from the same redacted argv as the entry's arguments.
+        let entries = commandLog.entries().filter { $0.directory.contains(repository.root.path) }
         // The command line is the spawned argv: every write runs under `-c core.editor=true`.
-        let apply = entries.filter { $0.hasPrefix("git -c core.editor=true apply ") }
+        let apply = entries.filter { $0.commandLine.hasPrefix("git -c core.editor=true apply ") }
         #expect(apply.count == 1)
-        #expect(apply.first?.contains(" --cached --whitespace=nowarn - cwd=") == true)
-        #expect(!entries.contains { $0.contains("early") || $0.contains("@@") })
+        #expect(apply.first?.commandLine.hasSuffix(" --cached --whitespace=nowarn -") == true)
+        #expect(!entries.contains { entry in
+            [entry.commandLine, entry.standardError ?? ""].contains { $0.contains("early") || $0.contains("@@") }
+        })
     }
 }

@@ -21,11 +21,15 @@ public final class PartnerSessionRegistry: ObservableObject {
     private let store: PartnerStore
     private let environment: () -> [String: String]
     private let detector: any PartnerSessionEventDetecting
+    private let shell: String?
     private let now: () -> Date
 
+    /// - Parameter shell: The shell each session runs; the user's `$SHELL` when nil.
     public init(store: PartnerStore, environment: @escaping () -> [String: String],
-                detector: any PartnerSessionEventDetecting, now: @escaping () -> Date = Date.init) {
+                detector: any PartnerSessionEventDetecting, shell: String? = nil,
+                now: @escaping () -> Date = Date.init) {
         self.store = store
+        self.shell = shell
         self.environment = environment
         self.detector = detector
         self.now = now
@@ -51,7 +55,7 @@ public final class PartnerSessionRegistry: ObservableObject {
         // carry the same one.
         variables["TERM_SESSION_ID"] = id.uuidString
         variables["ADKITCHEN_PROJECT"] = directory
-        let manager = TerminalSessionManager(workingDirectory: directory, environment: variables)
+        let manager = TerminalSessionManager(workingDirectory: directory, environment: variables, shell: shell)
         let terminal = manager.addSession()
         let chat = TerminalChatSession()
         // Connecting reads the screen, which creates the terminal view, which

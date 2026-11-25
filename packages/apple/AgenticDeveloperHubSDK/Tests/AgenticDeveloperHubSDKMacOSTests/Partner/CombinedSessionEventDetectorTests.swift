@@ -12,6 +12,13 @@ final class ManualSessionEventDetector: PartnerSessionEventDetecting {
     func unwatch(id: UUID) { watched.remove(id) }
 }
 
+/// The shell the partner tests' session registries run: `/bin/sh` starts in a few milliseconds, where the
+/// user's `$SHELL` (a login zsh) loads their whole profile for every session a test opens. Sessions start
+/// from a fresh environment, so no `ENV` file is inherited.
+enum PartnerTestShell {
+    static let path = "/bin/sh"
+}
+
 @MainActor
 final class CombinedSessionEventDetectorTests: XCTestCase {
 

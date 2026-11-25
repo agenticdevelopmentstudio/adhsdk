@@ -19,7 +19,8 @@ final class PartnerToolSourceTests: XCTestCase {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         databasePath = directory.appendingPathComponent("Partner.db").path
         store = try PartnerStore(path: databasePath)
-        registry = PartnerSessionRegistry(store: store, environment: { [:] }, detector: ManualSessionEventDetector())
+        registry = PartnerSessionRegistry(store: store, environment: { [:] }, detector: ManualSessionEventDetector(),
+                                          shell: PartnerTestShell.path)
         posts = []
         let settings = SettingsStore(with: InMemorySettingsStorageProvider(),
                                      secureSettingsProvider: InMemorySecureSettingsStorageProvider())

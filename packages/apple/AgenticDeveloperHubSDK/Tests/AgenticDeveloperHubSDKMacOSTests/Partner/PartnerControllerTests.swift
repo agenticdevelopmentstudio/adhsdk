@@ -153,7 +153,8 @@ final class PartnerControllerTests: XCTestCase {
                                  secureSettingsProvider: InMemorySecureSettingsStorageProvider())
         settings.set(true, for: UserSettings.partnerEnabled)
         notifier = PartnerNotifier(store: store, settings: settings, post: { _, _ in })
-        registry = PartnerSessionRegistry(store: store, environment: { [:] }, detector: ManualSessionEventDetector())
+        registry = PartnerSessionRegistry(store: store, environment: { [:] }, detector: ManualSessionEventDetector(),
+                                          shell: PartnerTestShell.path)
         paths = PartnerPaths(home: directory, token: "kitchen-test")
         log = FakeProcessLog()
     }
@@ -189,9 +190,14 @@ final class PartnerControllerTests: XCTestCase {
         return made
     }
 
-    private func waitUntil(_ timeout: TimeInterval = 3, _ condition: () -> Bool) async {
+    /// Polls `condition` until it holds; fails the caller's line if it still does not after `timeout`.
+    private func waitUntil(_ timeout: TimeInterval = 3, file: StaticString = #filePath, line: UInt = #line,
+                           _ condition: () -> Bool) async {
         let deadline = Date().addingTimeInterval(timeout)
-        while !condition(), Date() < deadline {
+        while !condition() {
+            guard Date() < deadline else {
+                return XCTFail("timed out after \(timeout) s waiting for the condition", file: file, line: line)
+            }
             try? await Task.sleep(for: .milliseconds(20))
         }
     }
@@ -203,11 +209,19 @@ final class PartnerControllerTests: XCTestCase {
     }
 
     /// Starts, then answers the started notice so the partner is idle.
-    private func startIdle(_ controller: PartnerController) async {
+    private func startIdle(_ controller: PartnerController, file: StaticString = #filePath,
+                           line: UInt = #line) async {
+        await answerStartedNotice(controller, file: file, line: line)
+        await waitUntil(file: file, line: line) { controller.state == .idle }
+    }
+
+    /// Starts, then answers the started notice. With nothing queued the partner is idle after it; with a
+    /// line queued it goes straight on to that turn and is never idle for a test to see.
+    private func answerStartedNotice(_ controller: PartnerController, file: StaticString = #filePath,
+                                     line: UInt = #line) async {
         await controller.start()
-        await waitUntil { process.sent.count == 1 }
+        await waitUntil(file: file, line: line) { process.sent.count == 1 }
         process.push(Self.result)
-        await waitUntil { controller.state == .idle }
     }
 
     func testStartWritesMcpConfigAndPromptThenSendsStartedLifecycle() async throws {
@@ -357,10 +371,14 @@ final class PartnerControllerTests: XCTestCase {
         let item = AttentionItem(kind: .question, text: "Ship it?", createdBy: "partner")
         try store.insert(item)
         try controller.performButton(.confirm, itemID: item.id)
-        await startIdle(controller)
+        await controller.start()
         XCTAssertEqual(try store.attentionItem(id: item.id)?.state, .sent, "its line is still queued")
+        await waitUntil { process.sent.count == 1 }
+        process.push(Self.result)
         await waitUntil { process.sent.contains("Confirmed: Ship it?") }
         XCTAssertEqual(process.sent.last, "Confirmed: Ship it?")
+        XCTAssertEqual(controller.state, .thinking, "the queued line is the turn after the started notice")
+        XCTAssertEqual(try store.attentionItem(id: item.id)?.state, .sent, "sent, and not yet answered")
     }
 
     func testAnEventQueuedWhileStoppingWaitsForTheNextStart() async throws {
@@ -375,9 +393,10 @@ final class PartnerControllerTests: XCTestCase {
         gate.open()
         await stopping.value
         XCTAssertEqual(first.sent.count, 1, "the stopping process was sent \(first.sent)")
-        await startIdle(controller)
+        await answerStartedNotice(controller)
         await waitUntil { process.sent.contains("late") }
         XCTAssertTrue(process.sent.contains("late"), "\(process.sent)")
+        XCTAssertEqual(controller.state, .thinking, "the late event is the turn after the started notice")
     }
 
     func testAButtonLineCutOffByACrashReopensTheItem() async throws {
@@ -628,8 +647,9 @@ final class PartnerControllerTests: XCTestCase {
     }
 
     /// The fresh process got the started notice, answered it, and the partner is idle on the new session.
-    private func assertFreshSessionAfterLost(_ lost: UUID, _ controller: PartnerController) async throws {
-        await waitUntil { log.all.count == 2 && process.sent.count == 1 }
+    private func assertFreshSessionAfterLost(_ lost: UUID, _ controller: PartnerController,
+                                             file: StaticString = #filePath, line: UInt = #line) async throws {
+        await waitUntil(file: file, line: line) { log.all.count == 2 && process.sent.count == 1 }
         XCTAssertEqual(log.all.count, 2)
         XCTAssertEqual(log.all.first?.configuration.resume, true)
         XCTAssertEqual(log.all.first?.configuration.sessionID, lost)

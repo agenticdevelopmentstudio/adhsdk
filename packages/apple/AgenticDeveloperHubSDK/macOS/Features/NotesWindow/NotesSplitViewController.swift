@@ -416,12 +416,18 @@ public final class NotesSplitViewController: ThemedSplitViewController {
         }
     }
 
+    /// The most recent delete `performDelete(_:)` started, `nil` until the
+    /// first. Nothing in the controller reads it; it is the deterministic
+    /// signal a test needs to tell "no delete was ever started" apart from
+    /// "a delete is still in flight" without waiting out a timeout.
+    private(set) var latestDelete: Task<Void, Never>?
+
     /// The underlying mutation, split out of `deleteSelectedNote()` so a test
     /// can drive it directly — the same shape
     /// `NotesFolderListViewController.deleteFolder(_:)` already uses, since
     /// an `NSAlert` sheet cannot be answered from a headless test run.
     func performDelete(_ note: Note) {
-        Task { @MainActor in
+        latestDelete = Task { @MainActor in
             await notesManager.deleteNote(id: note.id)
             // Read before the reload below overwrites it: the user may have
             // changed the selection during the `await` above, and only

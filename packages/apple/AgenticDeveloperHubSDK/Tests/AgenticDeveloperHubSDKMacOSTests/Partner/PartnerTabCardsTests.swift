@@ -20,7 +20,8 @@ final class PartnerTabCardsTests: XCTestCase {
         store = try PartnerStore(path: directory.appendingPathComponent("Partner.db").path)
         settings = SettingsStore(with: InMemorySettingsStorageProvider(),
                                  secureSettingsProvider: InMemorySecureSettingsStorageProvider())
-        registry = PartnerSessionRegistry(store: store, environment: { [:] }, detector: ManualSessionEventDetector())
+        registry = PartnerSessionRegistry(store: store, environment: { [:] }, detector: ManualSessionEventDetector(),
+                                          shell: PartnerTestShell.path)
         let notifier = PartnerNotifier(store: store, settings: settings, post: { _, _ in })
         controller = PartnerController(
             store: store, sessions: registry, notifier: notifier,

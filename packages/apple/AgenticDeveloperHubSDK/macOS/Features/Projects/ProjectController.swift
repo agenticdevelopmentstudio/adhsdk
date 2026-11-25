@@ -93,6 +93,16 @@ public final class ProjectController: ComposableTabsTabItemDataSource {
         await serializedReconcile()
     }
 
+    /// Returns once every reconcile started before this call has finished,
+    /// branch refreshes included; at once when none is in flight. Each
+    /// reconcile chains onto the one before it, so waiting on the latest
+    /// waits on all of them. Internal and reached only through `@testable
+    /// import`: a test that must show a reconcile did *not* happen needs a
+    /// point at which every one that did has landed.
+    func reconcilesSettled() async {
+        await inFlightReconcile?.value
+    }
+
     /// Waits for whatever reconcile is already in flight, then runs this
     /// caller's own — see `inFlightReconcile`.
     private func serializedReconcile() async {

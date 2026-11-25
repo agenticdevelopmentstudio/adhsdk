@@ -118,11 +118,6 @@ public enum CommandRunner {
         }
     }
 
-    /// How long the drains and the stdin writer are given to finish once the
-    /// process is gone — waits on an EOF or an EPIPE that has already been
-    /// posted, bounded anyway in case a grandchild inherited a descriptor.
-    private static let settleGrace: TimeInterval = ProcessExitWatch.terminationGrace
-
     /// `Outcome.status` for a process that never exited at all.
     ///
     /// Distinct from any real exit status, which is 0...255 for an ordinary
@@ -147,11 +142,16 @@ public enum CommandRunner {
     /// inherited, as `Process` does. A child that exits without reading its
     /// input is fine: the writer gets `EPIPE`, not `SIGPIPE`, and the run
     /// reports the exit as usual.
+    ///
+    /// `terminationGrace` is how long a run that is given up on waits after
+    /// each of `SIGTERM` and `SIGKILL`, and how long the drains and the
+    /// stdin writer are given to settle once the process is gone.
     public static func runToCompletion(
         _ process: Process,
         input: Data? = nil,
         timeout: TimeInterval,
-        watchdog: Watchdog? = nil
+        watchdog: Watchdog? = nil,
+        terminationGrace: TimeInterval = ProcessExitWatch.terminationGrace
     ) throws -> Outcome {
         let output = Pipe()
         let errors = Pipe()
@@ -163,7 +163,7 @@ public enum CommandRunner {
         let outputDrained = drain(output, into: collected, as: .standardOutput)
         let errorsDrained = drain(errors, into: collected, as: .standardError)
 
-        let watch = ProcessExitWatch(process)
+        let watch = ProcessExitWatch(process, terminationGrace: terminationGrace)
         do {
             try process.run()
         } catch {
@@ -204,7 +204,10 @@ public enum CommandRunner {
         }
         // Both write ends are closed once the process is gone, so these are
         // waits on an EOF that has already been posted; the writer, likewise,
-        // has either finished or been handed EPIPE by the dead read end.
+        // has either finished or been handed EPIPE by the dead read end. The
+        // grace bounds them anyway, in case a grandchild inherited a
+        // descriptor.
+        let settleGrace = terminationGrace
         _ = outputDrained.wait(timeout: .now() + settleGrace)
         _ = errorsDrained.wait(timeout: .now() + settleGrace)
         _ = inputWritten?.wait(timeout: .now() + settleGrace)

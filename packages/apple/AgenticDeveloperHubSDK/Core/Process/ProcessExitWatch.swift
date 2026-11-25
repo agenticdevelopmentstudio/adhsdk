@@ -32,13 +32,19 @@ public final class ProcessExitWatch: @unchecked Sendable {
     /// an honest cleanup handler and short enough that nobody notices.
     public static let terminationGrace: TimeInterval = 2
 
+    /// The grace `stop` gives each of its two signals; `terminationGrace`
+    /// unless the creator chose another (a test that must not wait two
+    /// seconds for a child it knows ignores `SIGTERM`).
+    public let grace: TimeInterval
+
     private let exited = DispatchSemaphore(value: 0)
     private let lock = NSLock()
     private var seenExit = false
 
     /// Installs the handler on `process`, which must not have been launched.
-    public init(_ process: Process) {
+    public init(_ process: Process, terminationGrace: TimeInterval = ProcessExitWatch.terminationGrace) {
         precondition(!process.isRunning, "ProcessExitWatch must be installed before run()")
+        self.grace = terminationGrace
         process.terminationHandler = { [exited] _ in exited.signal() }
     }
 
@@ -52,7 +58,7 @@ public final class ProcessExitWatch: @unchecked Sendable {
         return true
     }
 
-    /// Ends `process`: `SIGTERM`, a grace, then `SIGKILL` and a second grace.
+    /// Ends `process`: `SIGTERM`, a `grace`, then `SIGKILL` and a second one.
     ///
     /// `true` when it is gone. `false` is not hypothetical: a process blocked
     /// in an uninterruptible kernel wait — a read against a hung network
@@ -61,9 +67,9 @@ public final class ProcessExitWatch: @unchecked Sendable {
     public func stop(_ process: Process) -> Bool {
         if hasExited { return true }
         process.terminate()
-        if waitForExit(timeout: Self.terminationGrace) { return true }
+        if waitForExit(timeout: grace) { return true }
         kill(process.processIdentifier, SIGKILL)
-        return waitForExit(timeout: Self.terminationGrace)
+        return waitForExit(timeout: grace)
     }
 
     private var hasExited: Bool { lock.withLock { seenExit } }

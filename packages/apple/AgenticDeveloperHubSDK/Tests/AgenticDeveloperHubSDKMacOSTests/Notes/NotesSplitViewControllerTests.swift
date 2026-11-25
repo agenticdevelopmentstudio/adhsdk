@@ -542,10 +542,12 @@ final class NotesSplitViewControllerTests: XCTestCase {
     /// created, so a bug that removed it would delete asynchronously, inside
     /// `performDelete(_:)`'s own `Task`. An assertion taken immediately after
     /// the call cannot tell "the guard held" apart from "the delete just
-    /// hasn't finished yet" — so this waits out the same budget `pollUntil`
-    /// gives a real async settle elsewhere in this file, and asserts the
-    /// delete never happens in that window, rather than asserting it hasn't
-    /// happened yet.
+    /// hasn't finished yet" — so this reads `latestDelete`, which
+    /// `performDelete(_:)` sets synchronously: `nil` proves no delete was
+    /// started at all, and if one ever is, it is awaited to completion before
+    /// the note count is checked, so the count reflects the finished delete
+    /// rather than a race. (It used to wait out a full `pollUntil` budget,
+    /// two seconds on every run, to prove a negative.)
     func testDeleteSelectedNoteWithNoWindowDoesNothing() async throws {
         let store = try store()
         _ = try store.createDocument(content: "hello", markers: [.note])
@@ -553,8 +555,8 @@ final class NotesSplitViewControllerTests: XCTestCase {
 
         split.deleteSelectedNote()
 
-        let deleted = try await pollUntil { notesManager.notes.isEmpty }
-        XCTAssertFalse(deleted, "no window means no sheet, and no deletion")
+        XCTAssertNil(split.latestDelete, "no window means no sheet, and no deletion")
+        await split.latestDelete?.value
         XCTAssertEqual(notesManager.notes.count, 1)
     }
 

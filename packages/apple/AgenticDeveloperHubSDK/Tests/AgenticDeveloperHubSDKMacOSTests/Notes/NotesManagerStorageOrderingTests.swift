@@ -19,8 +19,19 @@ import XCTest
 final class NotesManagerStorageOrderingTests: XCTestCase {
 
     /// Records how many storage calls were ever inside it at once, and the
-    /// order the notes arrived in. Each call dwells long enough that genuinely
-    /// parallel callers overlap rather than merely appearing to.
+    /// order the notes arrived in. Each update dwells long enough that
+    /// genuinely parallel callers overlap rather than merely appearing to.
+    ///
+    /// Only updates dwell. The inserts are the seeding phase, which the test
+    /// awaits one at a time, so they cannot overlap whatever the manager does;
+    /// a dwell there measured nothing and cost 24 × the dwell. The update
+    /// dwell is 10 ms rather than the 50 ms it was: all twenty-four toggles
+    /// are issued from one main-actor loop in well under a millisecond, so
+    /// with no write chain every detached call starts inside the first call's
+    /// dwell — the pool (one thread per core, fewer than 24) saturates and the
+    /// rest queue behind blocked threads, which is the pressure both
+    /// assertions need. The dwell only has to outlast that issuing loop, and
+    /// 10 ms outlasts it by more than an order of magnitude.
     private final class OverlapProbeStorage: NoteStorage, @unchecked Sendable {
         private let lock = NSLock()
         private var inFlight = 0
@@ -40,14 +51,14 @@ final class NotesManagerStorageOrderingTests: XCTestCase {
             return arrivals
         }
 
-        private func dwell(recording content: String? = nil) {
+        private func dwell(for seconds: TimeInterval, recording content: String? = nil) {
             lock.lock()
             inFlight += 1
             peak = max(peak, inFlight)
             if let content { arrivals.append(content) }
             lock.unlock()
 
-            Thread.sleep(forTimeInterval: 0.05)
+            if seconds > 0 { Thread.sleep(forTimeInterval: seconds) }
 
             lock.lock()
             inFlight -= 1
@@ -55,9 +66,9 @@ final class NotesManagerStorageOrderingTests: XCTestCase {
         }
 
         func fetchAllNotes() throws -> [Note] { [] }
-        func insertNote(_ note: Note) throws { dwell() }
-        func updateNote(_ note: Note) throws { dwell(recording: note.content) }
-        func deleteNote(id: UUID) throws { dwell() }
+        func insertNote(_ note: Note) throws { dwell(for: 0) }
+        func updateNote(_ note: Note) throws { dwell(for: 0.01, recording: note.content) }
+        func deleteNote(id: UUID) throws { dwell(for: 0) }
     }
 
     /// Issue order, recorded by the test rather than assumed from the order

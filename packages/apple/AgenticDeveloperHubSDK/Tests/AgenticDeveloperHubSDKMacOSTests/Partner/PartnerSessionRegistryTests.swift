@@ -22,7 +22,8 @@ final class PartnerSessionRegistryTests: XCTestCase {
         detector = ManualSessionEventDetector()
         registry = PartnerSessionRegistry(store: store,
                                           environment: { ["PARTNER_TEST": "1", "TERM_SESSION_ID": "inherited"] },
-                                          detector: detector, now: { [unowned self] in clock })
+                                          detector: detector, shell: PartnerTestShell.path,
+                                          now: { [unowned self] in clock })
         events = []
         registry.onEvent = { [unowned self] in events.append($0) }
     }

@@ -125,15 +125,21 @@ struct CommandRunnerTests {
             "trap '' TERM; echo armed; while :; do sleep 1 >/dev/null 2>&1; done"
         ]
 
+        // A short grace so the test does not wait out the production two
+        // seconds; the escalation is the same at any length.
+        let timeout: TimeInterval = 1
+        let grace: TimeInterval = 0.2
         let started = Date()
-        let outcome = try CommandRunner.runToCompletion(process, timeout: 1)
+        let outcome = try CommandRunner.runToCompletion(
+            process, timeout: timeout, terminationGrace: grace)
         let elapsed = Date().timeIntervalSince(started)
 
         #expect(outcome.timedOut)
-        // 1s timeout, then SIGTERM is ignored through a 2s grace, then SIGKILL.
-        // Comfortably inside the 1 + 2 + 2 budget, and well past it would mean
-        // the escalation never happened.
-        #expect(elapsed < 8)
+        // The timeout, then SIGTERM is ignored through one grace, then
+        // SIGKILL. Comfortably inside the timeout + 2 × grace budget plus
+        // slack for a loaded machine, and well past it would mean the
+        // escalation never happened.
+        #expect(elapsed < timeout + 2 * grace + 5)
         // What it managed to write before being killed is still collected —
         // the drain does not depend on a clean exit.
         #expect(outcome.diagnostics.isEmpty)
