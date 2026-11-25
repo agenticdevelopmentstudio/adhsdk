@@ -102,6 +102,8 @@ const PREVIEW_WORKSPACES: WorkspacesMenu = {
   loading: false,
   select: () => {},
 }
+// The same canned list for a page whose menu shows on every route (a satellite that opted in).
+const PREVIEW_WORKSPACES_EVERY_ROUTE: WorkspacesMenu = { ...PREVIEW_WORKSPACES, everyRoute: true }
 
 function HeaderPreview() {
   // Unlike `SiteMenuPreview` below, this DOES render a path to the Debug console: `SiteHeader`
@@ -134,11 +136,16 @@ function HeaderPreview() {
     />
   )
   // The canned workspaces (PREVIEW_WORKSPACES) replace the page's, and only where the page
-  // has some: a host without them (every satellite) shows the site menu in that slot, so
-  // its preview must too. What the editor styles here is what the page shows.
-  const pageHasWorkspaces = useWorkspacesMenu() != null
-  return pageHasWorkspaces ? (
-    <WorkspacesMenuProvider value={PREVIEW_WORKSPACES}>{header}</WorkspacesMenuProvider>
+  // has some: a host without them shows the site menu in that slot, so its preview must too.
+  // `everyRoute` is the page's too, so a satellite that opted in previews the workspace menu on
+  // every route, as its page shows it. What the editor styles here is what the page shows.
+  const pageMenu = useWorkspacesMenu()
+  return pageMenu ? (
+    <WorkspacesMenuProvider
+      value={pageMenu.everyRoute ? PREVIEW_WORKSPACES_EVERY_ROUTE : PREVIEW_WORKSPACES}
+    >
+      {header}
+    </WorkspacesMenuProvider>
   ) : (
     header
   )

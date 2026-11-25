@@ -86,6 +86,7 @@ var FLEET_MENU_GROUPS = [
     iconKey: "build",
     links: [
       { site: "devteam", label: "Dev Team" },
+      { site: "myagenticdevteam" },
       { site: "codereviews", description: "Review your code" },
       { site: "cookbook" },
       { site: "recipes" },

@@ -8,22 +8,22 @@ import {
   workspacePrefsApi,
   readCachedWorkspace,
   writeCachedWorkspace,
+  loadWorkspacePrefs,
+  WORKSPACE_PREFS_CACHE_KEY,
+  WORKSPACE_PREFS_ID,
   type WorkspacePrefs,
 } from '@adh-sdk/data'
 import type { WorkspaceOption } from './WorkspaceOption'
 
 /**
- * The preference row's identity in the shared cache. A collection of exactly one member — the
- * signed-in caller's own row — so the id is a constant rather than anything derived: there is no
- * second row to tell it apart from, and `useTenantId` inside the hook already separates one
- * signed-in caller from the next.
- *
- * The fetcher is module scope because the item hook holds `load` in a dependency array; a fresh
- * closure per render would re-read on every render.
+ * The preference row's identity in the shared cache — `@adh-sdk/data`'s, so a pick recorded by a
+ * satellite's header workspace menu (`useWorkspacePreference`) is the row this route reads, not a
+ * second entry for the same server row. A collection of exactly one member, so the id is a
+ * constant; the fetcher is module scope because the item hook holds `load` in a dependency array.
  */
-const PREFS_CACHE_KEY = 'workspace-prefs'
-const PREFS_ID = 'me'
-const loadPrefs = (): Promise<WorkspacePrefs> => workspacePrefsApi.get()
+const PREFS_CACHE_KEY = WORKSPACE_PREFS_CACHE_KEY
+const PREFS_ID = WORKSPACE_PREFS_ID
+const loadPrefs = loadWorkspacePrefs
 
 /**
  * The slug this hook last wrote into the URL itself, i.e. a SEED rather than anyone's instruction.

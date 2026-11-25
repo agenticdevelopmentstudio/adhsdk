@@ -30,6 +30,12 @@ export default defineConfig({
     // put the auth package in front of every consumer of a nav link. Reaches
     // AdhHeader/AvatarMenu by TYPE only, so no relative-inlining hazard (see the file).
     'header/header-auth': 'src/header/header-auth.ts',
+    // The header workspace menu's shared FEED (SiteWorkspacesMenuProvider + the route-switch
+    // registrar), published as `./header/workspaces-feed`. Its own entry for header-auth's reason
+    // above, one layer down: it value-imports `@adh-sdk/data`, which a nav-link consumer of the
+    // barrel must not pull in. It reaches the menu context by the package path
+    // `@adh-sdk/adh/header` (external below), so it fills the context the switcher reads.
+    'header/workspaces-feed': 'src/header/workspaces-feed.tsx',
     'flags/index': 'src/flags/index.ts',
     'footer/index': 'src/footer/index.ts',
     // The page shell (AdhAppShell) plus the generic error family — the boundaries, the
@@ -564,6 +570,9 @@ export default defineConfig({
     // shipped before the merge. `theme-editor` and `header` both carry module state the console must share.
     '@adh-sdk/adh/header',
     '@adh-sdk/adh/header-auth',
+    // The workspace-menu feed's entry holds a React context (the route-switch registrar), so a
+    // future in-package reach for it must stay one copy.
+    '@adh-sdk/adh/header/workspaces-feed',
     '@adh-sdk/adh/footer',
     '@adh-sdk/adh/layout',
     // The slide navigation's module state (entry above), shared by the `layout` entry's

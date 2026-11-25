@@ -428,11 +428,14 @@ import {
   useResourceItemWriter,
   workspacePrefsApi,
   readCachedWorkspace,
-  writeCachedWorkspace
+  writeCachedWorkspace,
+  loadWorkspacePrefs,
+  WORKSPACE_PREFS_CACHE_KEY,
+  WORKSPACE_PREFS_ID
 } from "@adh-sdk/data";
-var PREFS_CACHE_KEY = "workspace-prefs";
-var PREFS_ID = "me";
-var loadPrefs = () => workspacePrefsApi.get();
+var PREFS_CACHE_KEY = WORKSPACE_PREFS_CACHE_KEY;
+var PREFS_ID = WORKSPACE_PREFS_ID;
+var loadPrefs = loadWorkspacePrefs;
 var seededByUs = null;
 var SEED_HANDOFF_MS = 1e4;
 function withUrlExtras(href) {

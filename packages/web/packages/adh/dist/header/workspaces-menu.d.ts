@@ -28,6 +28,11 @@ export type WorkspacesMenu = {
      *  the back button alike — as the preference (teams excepted; see `useWorkspaceRoute`), so a
      *  plain link is remembered too. Absent ⇒ the menu navigates to `href`. */
     select?: (workspace: MenuWorkspace) => void;
+    /** Where the header swaps the site menu for the workspace menu, signed in. True: on EVERY route
+     *  of this site — how a satellite, which has no workspace routes, opts in (the shared
+     *  `SiteWorkspacesMenuProvider` sets it in its default `switchBy="preference"`). Absent: only on
+     *  the hub's workspace routes (`isWorkspaceMenuRoute`), which is the hub's rule. */
+    everyRoute?: boolean;
 };
 /** Provide the site menu's Workspaces data (hub-only). Absent off the hub, so the
  *  menu hides the Workspaces row there. */

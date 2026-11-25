@@ -33,8 +33,13 @@ export type SiteMenuSwitcherProps = SiteMenuChromeProps
  * {@link WorkspaceMenu} instead — inside the product, switching workspace is the everyday move.
  * Everywhere else — the landing `/` and the other marketing routes, even signed in — keeps the
  * site menu: the swap once ignored the route and took the site menu off `/` for every signed-in
- * visitor (Mike, 2026-09-24). A host with no provider (every satellite) keeps the site menu at
- * every auth state: it has no workspaces to offer.
+ * visitor (Mike, 2026-09-24). A host with no provider keeps the site menu at every auth state: it
+ * has no workspaces to offer.
+ *
+ * A SATELLITE opts in by mounting the shared `SiteWorkspacesMenuProvider`
+ * (`@adh-sdk/adh/header/workspaces-feed`), whose value says `everyRoute`: it has no workspace
+ * routes, so signed in the workspace menu holds the slot on every route, and signed out the site
+ * menu does, as before.
  *
  * The swap drops what is about SITES (the family tree, Home, Recents), the signed-out rows (which
  * cannot apply) and `triggerContent` (the WorkspaceMenu's trigger is its own). Everything else
@@ -45,7 +50,8 @@ export function SiteMenuSwitcher(props: SiteMenuSwitcherProps): ReactElement {
   const pathname = usePathname() ?? '/'
   const onWorkspaceRoute = isWorkspaceMenuRoute(props.currentSiteId, pathname)
   const workspacesMenu = useWorkspacesMenu()
-  if (props.authenticated && onWorkspaceRoute && workspacesMenu) {
+  // A site opts in by mounting a provider; the provider says where (WorkspacesMenu.everyRoute).
+  if (props.authenticated && workspacesMenu && (workspacesMenu.everyRoute || onWorkspaceRoute)) {
     return (
       <WorkspaceMenu
         menu={workspacesMenu}

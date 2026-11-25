@@ -60,6 +60,11 @@
       "development": "./src/header/hub-preferences.ts",
       "import": "./dist/header/hub-preferences.js"
     },
+    "./header/workspaces-feed": {
+      "types": "./dist/header/workspaces-feed.d.ts",
+      "development": "./src/header/workspaces-feed.tsx",
+      "import": "./dist/header/workspaces-feed.js"
+    },
     "./header-auth": {
       "types": "./dist/header/header-auth.d.ts",
       "development": "./src/header/header-auth.ts",

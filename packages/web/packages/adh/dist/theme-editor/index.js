@@ -33,6 +33,7 @@ var PREVIEW_WORKSPACES = {
   select: () => {
   }
 };
+var PREVIEW_WORKSPACES_EVERY_ROUTE = { ...PREVIEW_WORKSPACES, everyRoute: true };
 function HeaderPreview() {
   const header = /* @__PURE__ */ jsx(
     SiteHeader,
@@ -48,8 +49,14 @@ function HeaderPreview() {
       }
     }
   );
-  const pageHasWorkspaces = useWorkspacesMenu() != null;
-  return pageHasWorkspaces ? /* @__PURE__ */ jsx(WorkspacesMenuProvider, { value: PREVIEW_WORKSPACES, children: header }) : header;
+  const pageMenu = useWorkspacesMenu();
+  return pageMenu ? /* @__PURE__ */ jsx(
+    WorkspacesMenuProvider,
+    {
+      value: pageMenu.everyRoute ? PREVIEW_WORKSPACES_EVERY_ROUTE : PREVIEW_WORKSPACES,
+      children: header
+    }
+  ) : header;
 }
 function FooterPreview() {
   return /* @__PURE__ */ jsxs("div", { className: "tep-preview", children: [

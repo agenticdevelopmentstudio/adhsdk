@@ -1392,6 +1392,9 @@ var ICONS = {
   // matches FEATURE_META `teams`
   myagenticteams: Sparkles,
   // matches the myagenticteams landing
+  // The "My Agentic" consumer brands share one glyph, so the family reads as one; NOT
+  // devteam's UsersRound, which its row sits directly beneath in Build.
+  myagenticdevteam: Sparkles,
   narratives: ScrollText,
   // matches FEATURE_META `narratives`
   help: CircleHelp,
@@ -1474,8 +1477,9 @@ var ICONS = {
   signup: UserPlus,
   // --- Remaining MAIN family sites (websites/main/), for the admin section's
   //     consoles and the fleet tree's operations rows. The rest of the family
-  //     (hub, bitbag, community, cookbook, devteam, help, myagenticteams, news,
-  //     personaregistry, toolkit) is mapped among the Hub-core rows above. ---
+  //     (hub, bitbag, community, cookbook, devteam, help, myagenticdevteam,
+  //     myagenticteams, news, personaregistry, toolkit) is mapped among the
+  //     Hub-core rows above. ---
   admin: ShieldCheck,
   // operations console
   api: Code,
@@ -1908,6 +1912,7 @@ var FLEET_MENU_GROUPS = [
     iconKey: "build",
     links: [
       { site: "devteam", label: "Dev Team" },
+      { site: "myagenticdevteam" },
       { site: "codereviews", description: "Review your code" },
       { site: "cookbook" },
       { site: "recipes" },
@@ -2403,7 +2408,7 @@ function SiteMenuSwitcher(props) {
   const pathname = usePathname5() ?? "/";
   const onWorkspaceRoute = isWorkspaceMenuRoute(props.currentSiteId, pathname);
   const workspacesMenu = useWorkspacesMenu3();
-  if (props.authenticated && onWorkspaceRoute && workspacesMenu) {
+  if (props.authenticated && workspacesMenu && (workspacesMenu.everyRoute || onWorkspaceRoute)) {
     return /* @__PURE__ */ jsx19(
       WorkspaceMenu,
       {
