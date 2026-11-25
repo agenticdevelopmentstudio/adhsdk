@@ -47,6 +47,19 @@ describe('useWorkspacePreference', () => {
     expect(result.current.slug).toBeNull()
   })
 
+  it('seeds from the browser cache as it is when it turns on, not as it was at mount', () => {
+    // Mounted signed out, then a sign-in writes a different user's cached slug: the hook must not
+    // keep the one it saw at mount.
+    get.mockReturnValue(new Promise(() => {}))
+    writeCachedWorkspace('previous-user')
+    const { result, rerender } = renderHook(({ enabled }) => useWorkspacePreference({ enabled }), {
+      initialProps: { enabled: false },
+    })
+    writeCachedWorkspace('this-user')
+    rerender({ enabled: true })
+    expect(result.current.slug).toBe('this-user')
+  })
+
   it('a pick made while the first read is in flight is not overwritten when that read lands', async () => {
     let resolve!: (v: { slug?: string }) => void
     get.mockReturnValue(new Promise((r) => (resolve = r)))

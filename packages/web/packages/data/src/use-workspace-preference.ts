@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useReducer } from "react";
 import { useResourceItemQuery, useResourceItemWriter } from "./use-resource-item";
 import {
   readCachedWorkspace,
@@ -45,8 +45,13 @@ export interface WorkspacePreference {
  */
 export function useWorkspacePreference(opts?: { enabled?: boolean }): WorkspacePreference {
   const enabled = opts?.enabled ?? true;
-  // The first paint does not wait on a round trip: the browser cache seeds it.
-  const [cached, setCached] = useState<string | null>(() => readCachedWorkspace());
+  // The first paint does not wait on a round trip: the browser cache seeds it. Read on every
+  // render, not captured once at mount: the cache is written by sign-in, sign-out and other tabs
+  // over this hook's lifetime, and a copy taken at mount would keep showing a previous session's
+  // slug after the caller changed. One localStorage read is cheap; `choose` re-renders through
+  // `rerender` so its own write shows at once.
+  const [, rerender] = useReducer((n: number) => n + 1, 0);
+  const cached = enabled ? readCachedWorkspace() : null;
   const { item, error } = useResourceItemQuery<WorkspacePrefs>(
     WORKSPACE_PREFS_CACHE_KEY,
     enabled ? WORKSPACE_PREFS_ID : null,
@@ -56,7 +61,7 @@ export function useWorkspacePreference(opts?: { enabled?: boolean }): WorkspaceP
   const choose = useCallback(
     (slug: string) => {
       writeCachedWorkspace(slug);
-      setCached(slug);
+      rerender();
       writePrefs(WORKSPACE_PREFS_ID, { slug });
       workspacePrefsApi.put({ slug }).catch(() => {
         // Silent, deliberately: the caches already carry the choice.
