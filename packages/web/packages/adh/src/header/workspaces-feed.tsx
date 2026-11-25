@@ -142,12 +142,16 @@ export function SiteWorkspacesMenuProvider({
   //
   // Preference mode is also `loading` while its current row waits on the server's preference (see
   // usePreferenceSwitch): no row is current then, and the trigger reads "Loading…" rather than
-  // naming the personal workspace it may be about to replace.
+  // naming the personal workspace it may be about to replace. Never over a failed list, though: the
+  // menu checks `loading` before `error`, so a pending preference would hide the failure behind
+  // "Loading…" for as long as the preference took.
   const prefPending = !byRoute && pref.pending
   const value = useMemo<WorkspacesMenu>(
     () => ({
       workspaces: feed.workspaces,
-      loading: byRoute ? !signedIn || isLoading : signedIn && (isLoading || prefPending),
+      loading: byRoute
+        ? !signedIn || isLoading
+        : signedIn && !isError && (isLoading || prefPending),
       error: signedIn && isError,
       select: feed.select,
       // A preference pick records and stays put, so the menu asks no leave-this-page question.

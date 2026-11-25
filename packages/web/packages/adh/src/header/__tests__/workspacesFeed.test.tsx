@@ -135,6 +135,15 @@ describe('SiteWorkspacesMenuProvider (preference, a satellite)', () => {
     expect(menu().loading).toBe(true)
   })
 
+  it('reads a failed list as failed while the preference is still in flight', () => {
+    // The menu checks `loading` before `error`: a pending preference held the trigger on
+    // "Loading…" over a list request that had already failed.
+    preference.settled = false
+    useWorkspaces.mockReturnValue({ data: undefined, isLoading: false, isError: true })
+    render(<SiteWorkspacesMenuProvider>x</SiteWorkspacesMenuProvider>)
+    expect(menu()).toMatchObject({ workspaces: [], loading: false, error: true })
+  })
+
   it('a pick records the preference and does not navigate', () => {
     render(<SiteWorkspacesMenuProvider>x</SiteWorkspacesMenuProvider>)
     act(() => menu().select!({ id: 'organization:acme' }))

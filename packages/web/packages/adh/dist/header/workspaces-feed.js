@@ -49,7 +49,7 @@ function SiteWorkspacesMenuProvider({
   const value = useMemo(
     () => ({
       workspaces: feed.workspaces,
-      loading: byRoute ? !signedIn || isLoading : signedIn && (isLoading || prefPending),
+      loading: byRoute ? !signedIn || isLoading : signedIn && !isError && (isLoading || prefPending),
       error: signedIn && isError,
       select: feed.select,
       // A preference pick records and stays put, so the menu asks no leave-this-page question.
