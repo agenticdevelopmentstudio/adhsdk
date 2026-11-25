@@ -98,17 +98,36 @@ final class UsageSummaryTests: XCTestCase {
         }
     }
 
-    /// `seedSessionAcross(edge)`'s rows: one per cut, where the cuts are the edge and every
-    /// UTC midnight inside the session (rows are per UTC day, and `now` is the wall clock,
-    /// so an edge can fall within half an hour of midnight), plus the first; and the row
-    /// that starts at the edge, `"<edge>|<turns from the edge to the next cut>"`.
+    /// The turn times `seedSessionAcross(edge)` writes.
+    private func turnsAcross(_ edge: Double) -> [Double] {
+        stride(from: -20.0, through: 30, by: 5).map { edge + $0 * 60 }
+    }
+
+    /// How many rows `turns` make when cut at `cuts`: one per run of turns
+    /// between two cuts. A cut with no turn before the next one makes no row,
+    /// so a cut that lands on another cut, or a few minutes after it, before
+    /// the next turn, adds nothing.
+    private func rowCount(_ turns: [Double], cutAt cuts: Set<Double>) -> Int {
+        Set(turns.map { turn in cuts.filter { $0 <= turn }.count }).count
+    }
+
+    /// The UTC midnights inside `seedSessionAcross(edge)`'s session (rows are
+    /// per UTC day, and `now` is the wall clock, so an edge can fall within
+    /// half an hour of midnight, or on it).
+    private func midnightsAcross(_ edge: Double) -> Set<Double> {
+        let turns = turnsAcross(edge)
+        return Set(turns.map { ($0 / 86400).rounded(.down) * 86400 }.filter { $0 > turns[0] })
+    }
+
+    /// `seedSessionAcross(edge)`'s rows once it is cut at the edge as well as
+    /// at its midnights; and the row that starts at the edge,
+    /// `"<edge>|<turns from the edge to the next cut>"`.
     private func expectedSegmentsAcross(_ edge: Double) -> (count: Int, atEdge: String) {
-        let turns = stride(from: -20.0, through: 30, by: 5).map { edge + $0 * 60 }
-        let midnights = turns.map { ($0 / 86400).rounded(.down) * 86400 }.filter { $0 > turns[0] }
-        let cuts = Set([edge] + midnights)
+        let turns = turnsAcross(edge)
+        let cuts = midnightsAcross(edge).union([edge])
         let next = cuts.filter { $0 > edge }.min() ?? .infinity
         let atEdge = turns.filter { $0 >= edge && $0 < next }.count
-        return (cuts.count + 1, "\(edge)|\(atEdge)")
+        return (rowCount(turns, cutAt: cuts), "\(edge)|\(atEdge)")
     }
 
     /// The UTC midnight a 7-day trim cuts at (Task 3's cutoff is day-aligned).
@@ -346,9 +365,19 @@ final class UsageSummaryTests: XCTestCase {
         XCTAssertEqual(try dump("usage_bursts"), burstsBefore)
 
         // Both edge days are gone from events.db, so their partial windows
-        // come from the summary's segments.
+        // come from the summary's segments. An instant that is itself a UTC
+        // midnight (`now` is the wall clock) leaves no partial day: the
+        // window is whole summarised days.
         let lastWeek = try database.usageWindowParts(since: lastStart, until: weekStart)
-        XCTAssertTrue(lastWeek.contains { if case .summarySegments = $0 { return true } else { return false } })
+        if lastStart.truncatingRemainder(dividingBy: 86400) == 0 {
+            guard case .summaryDays(let first, _)? = lastWeek.first else {
+                return XCTFail("whole days are read from the summary: \(lastWeek)")
+            }
+            XCTAssertEqual(first, utcDay(lastStart))
+        } else {
+            XCTAssertTrue(lastWeek.contains { if case .summarySegments = $0 { return true } else { return false } },
+                          "\(lastWeek)")
+        }
         let after = try freshRows(.summary)
         XCTAssertEqual(after.week, untrimmed.week)
         XCTAssertEqual(after.hours, untrimmed.hours)
@@ -737,8 +766,13 @@ final class UsageSummaryTests: XCTestCase {
         let week = 7 * 86400
         XCTAssertEqual(Set(try database.usageResetPhases()), [Int(weekStart) % week, Int(weekStartB) % week])
         // The new phase restarted the walk: both held days are cut at B's instant.
-        XCTAssertEqual(try segmentCount("b-last"), uncutLast + 1)
-        XCTAssertEqual(try segmentCount("b-prev"), uncutPrev + 1)
+        // That adds a row unless the instant is a midnight already cut, or no
+        // turn lies between the midnight just before it and the instant.
+        for (session, edge, uncut) in [("b-last", weekStartB - 7 * 86400, uncutLast),
+                                       ("b-prev", weekStartB - 14 * 86400, uncutPrev)] {
+            XCTAssertEqual(uncut, rowCount(turnsAcross(edge), cutAt: midnightsAcross(edge)), session)
+            XCTAssertEqual(try segmentCount(session), expectedSegmentsAcross(edge).count, session)
+        }
 
         let live = try rows(.liveTurns, weekStart: weekStartB)
         let untrimmed = try freshRows(.summary, weekStart: weekStartB)
