@@ -188,6 +188,28 @@ describe('WorkspaceMenu', () => {
     expect(push).not.toHaveBeenCalled()
   })
 
+  it('asks no leave-this-page question for a pick that stays on the page', async () => {
+    // A satellite's pick only records the preference: an unsaved-changes guard must not fire, and
+    // a refusal must not drop the pick.
+    const { registerNavigationGuard } = await import('@adh-sdk/ui/lib/navigation-guard')
+    const guard = vi.fn(() => false)
+    const off = registerNavigationGuard(guard)
+    try {
+      const select = vi.fn()
+      render(
+        <WorkspaceMenu
+          currentSiteId="myagenticdevteam"
+          menu={{ workspaces: WORKSPACES, loading: false, select, selectStaysOnPage: true }}
+        />,
+      )
+      props().onChoose(workspaceItems().find((i) => i.label === 'Temporal')!)
+      expect(select).toHaveBeenCalledWith(WORKSPACES[1])
+      expect(guard).not.toHaveBeenCalled()
+    } finally {
+      off()
+    }
+  })
+
   it("follows the row's href when the host supplies no switch", async () => {
     render(<WorkspaceMenu currentSiteId="hub" menu={{ workspaces: WORKSPACES, loading: false }} />)
     props().onChoose(workspaceItems().find((i) => i.label === 'Temporal')!)

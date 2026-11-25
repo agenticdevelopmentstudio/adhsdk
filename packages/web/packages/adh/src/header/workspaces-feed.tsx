@@ -133,6 +133,8 @@ export function SiteWorkspacesMenuProvider({
       loading: signedIn && isLoading,
       error: signedIn && isError,
       select: feed.select,
+      // A preference pick records and stays put, so the menu asks no leave-this-page question.
+      selectStaysOnPage: byRoute ? undefined : true,
       everyRoute: !byRoute && signedIn ? true : undefined,
     }),
     [feed.workspaces, feed.select, signedIn, isLoading, isError, byRoute],

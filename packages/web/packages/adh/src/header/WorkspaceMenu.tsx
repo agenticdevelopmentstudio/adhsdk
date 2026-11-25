@@ -172,6 +172,11 @@ export function WorkspaceMenu({
         navigateSiteRow(item)
         return
       }
+      // A pick that stays on the page leaves nothing unsaved behind, so it asks nothing.
+      if (menu.select && menu.selectStaysOnPage) {
+        menu.select(workspace)
+        return
+      }
       void confirmNavigation().then((ok) => {
         if (!ok) return
         if (menu.select) menu.select(workspace)
