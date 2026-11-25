@@ -182,7 +182,7 @@ public final class AIPluginLanguageModelProvider: ExtensionLanguageModelProvidin
             let task = Task {
                 do {
                     for try await event in source {
-                        continuation.yield(Self.responsePart(for: event))
+                        if let part = Self.responsePart(for: event) { continuation.yield(part) }
                     }
                     continuation.finish()
                 } catch {
@@ -276,10 +276,13 @@ public final class AIPluginLanguageModelProvider: ExtensionLanguageModelProvidin
         )
     }
 
-    /// The 1:1 map `ExtensionLanguageModelResponsePart`'s own doc specifies —
-    /// three cases there, three here, nothing lost and nothing invented.
-    private static func responsePart(for event: AIStreamEvent) -> ExtensionLanguageModelResponsePart {
+    /// The 1:1 map `ExtensionLanguageModelResponsePart`'s own doc specifies for
+    /// its three cases, nothing invented. Reasoning and usage have no part
+    /// there, so they map to `nil` and are dropped.
+    private static func responsePart(for event: AIStreamEvent) -> ExtensionLanguageModelResponsePart? {
         switch event {
+        case .thinkingDelta, .usage:
+            return nil
         case .textDelta(let text):
             return .text(text)
         case .toolUse(let id, let name, let argumentsJSON):

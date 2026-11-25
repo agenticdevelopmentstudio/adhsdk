@@ -136,7 +136,7 @@ public final class AIPluginChatBackend: ChatBackend, @unchecked Sendable {
         let inputs = await makeInputs(messages: messages, tools: tools)
         return AsyncThrowingStream { continuation in
             let task = Self.drive(inputs: inputs) { event in
-                continuation.yield(Self.chatEvent(for: event))
+                if let chatEvent = Self.chatEvent(for: event) { continuation.yield(chatEvent) }
             } onFinish: { error in
                 continuation.finish(throwing: error)
             }
@@ -235,8 +235,10 @@ public final class AIPluginChatBackend: ChatBackend, @unchecked Sendable {
         }
     }
 
-    private static func chatEvent(for event: AIStreamEvent) -> ChatStreamEvent {
+    /// `nil` for reasoning and usage, which `ChatStreamEvent` has no case for.
+    private static func chatEvent(for event: AIStreamEvent) -> ChatStreamEvent? {
         switch event {
+        case .thinkingDelta, .usage: return nil
         case .textDelta(let text): return .textDelta(text)
         case .toolUse(let id, let name, let argumentsJSON):
             return .toolUse(id: id, name: name, argumentsJSON: argumentsJSON)

@@ -1,0 +1,5 @@
+
+Not applicable: this component checks no feature-flag value; every
+behavioral branch (migration, default-seeding, the tool loop) is
+unconditional given its own stated preconditions, not gated by a flag.
+

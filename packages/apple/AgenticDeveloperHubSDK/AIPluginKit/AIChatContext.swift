@@ -98,6 +98,9 @@ public struct AIChatContext: Sendable {
     public let systemPrompt: String?
     public let maxTokens: Int
     public let tools: [AIToolSpec]
+    /// Tokens the model may spend reasoning before it answers. `nil` requests
+    /// no reasoning; a plugin whose provider cannot reason ignores it.
+    public let thinkingBudgetTokens: Int?
     public let config: AIPluginConfig
 
     public init(
@@ -106,6 +109,7 @@ public struct AIChatContext: Sendable {
         systemPrompt: String? = nil,
         maxTokens: Int = 4096,
         tools: [AIToolSpec] = [],
+        thinkingBudgetTokens: Int? = nil,
         config: AIPluginConfig
     ) {
         self.messages = messages
@@ -113,6 +117,7 @@ public struct AIChatContext: Sendable {
         self.systemPrompt = systemPrompt
         self.maxTokens = maxTokens
         self.tools = tools
+        self.thinkingBudgetTokens = thinkingBudgetTokens
         self.config = config
     }
 }

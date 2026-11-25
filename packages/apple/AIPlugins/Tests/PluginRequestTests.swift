@@ -262,4 +262,245 @@ struct PluginRequestTests {
             }
         }
     }
+
+    // MARK: - Native tools and thinking
+
+    private let listTool = AIToolSpec(
+        name: "list_notices",
+        description: "List notices",
+        parametersJSONSchema: Data(#"{"type":"object","properties":{"limit":{"type":"integer"}}}"#.utf8)
+    )
+
+    /// A tool loop: the user asks, the assistant says something and calls a
+    /// tool, and the tool answers.
+    private let toolLoop = [
+        AIChatMessage(role: .user, content: "What is pending?"),
+        AIChatMessage(role: .assistant, content: "Checking."),
+        AIChatMessage(
+            role: .toolUse,
+            content: "",
+            toolUseId: "call_1",
+            toolName: "list_notices",
+            toolArgumentsJSON: Data(#"{"limit":5}"#.utf8)
+        ),
+        AIChatMessage(role: .toolResult, content: "3 notices", toolUseId: "call_1", toolIsError: false)
+    ]
+
+    private func fullContext(
+        messages: [AIChatMessage] = [AIChatMessage(role: .user, content: "Hello")],
+        model: String = "",
+        maxTokens: Int = 256,
+        tools: [AIToolSpec] = [],
+        thinkingBudgetTokens: Int? = nil,
+        config: AIPluginConfig
+    ) -> AIChatContext {
+        AIChatContext(
+            messages: messages,
+            model: model,
+            maxTokens: maxTokens,
+            tools: tools,
+            thinkingBudgetTokens: thinkingBudgetTokens,
+            config: config
+        )
+    }
+
+    private func body(_ spec: AIRequestSpec) throws -> [String: Any] {
+        let (_, _, _, body) = try #require(httpParts(spec))
+        return try jsonBody(body)
+    }
+
+    @Test("ClaudeAPI sends tools with their input_schema")
+    func claudeAPITools() throws {
+        let json = try body(ClaudeAPIPlugin().buildRequest(fullContext(tools: [listTool], config: config())))
+        let tools = try #require(json["tools"] as? [[String: Any]])
+        #expect(tools.count == 1)
+        #expect(tools[0]["name"] as? String == "list_notices")
+        #expect(tools[0]["description"] as? String == "List notices")
+        let schema = try #require(tools[0]["input_schema"] as? [String: Any])
+        #expect(schema["type"] as? String == "object")
+    }
+
+    @Test("ClaudeAPI omits tools when the context has none")
+    func claudeAPINoTools() throws {
+        let json = try body(ClaudeAPIPlugin().buildRequest(fullContext(config: config())))
+        #expect(json["tools"] == nil)
+        #expect(json["thinking"] == nil)
+    }
+
+    @Test("ClaudeAPI refuses a tool whose schema is not a JSON object")
+    func claudeAPIBadToolSchema() {
+        let bad = AIToolSpec(name: "bad", description: "", parametersJSONSchema: Data("[]".utf8))
+        #expect(throws: ClaudeAPIPlugin.PluginError.self) {
+            _ = try ClaudeAPIPlugin().buildRequest(fullContext(tools: [bad], config: config()))
+        }
+    }
+
+    @Test("ClaudeAPI folds a tool call into the assistant turn and its result into a user turn")
+    func claudeAPIToolBlocks() throws {
+        let json = try body(ClaudeAPIPlugin().buildRequest(fullContext(messages: toolLoop, config: config())))
+        let messages = try #require(json["messages"] as? [[String: Any]])
+        #expect(messages.count == 3)
+        #expect(messages[0]["content"] as? String == "What is pending?")
+
+        #expect(messages[1]["role"] as? String == "assistant")
+        let assistant = try #require(messages[1]["content"] as? [[String: Any]])
+        #expect(assistant.map { $0["type"] as? String } == ["text", "tool_use"])
+        #expect(assistant[1]["id"] as? String == "call_1")
+        #expect(assistant[1]["name"] as? String == "list_notices")
+        #expect((assistant[1]["input"] as? [String: Any])?["limit"] as? Int == 5)
+
+        #expect(messages[2]["role"] as? String == "user")
+        let user = try #require(messages[2]["content"] as? [[String: Any]])
+        #expect(user[0]["type"] as? String == "tool_result")
+        #expect(user[0]["tool_use_id"] as? String == "call_1")
+        #expect(user[0]["content"] as? String == "3 notices")
+        #expect(user[0]["is_error"] == nil)
+    }
+
+    @Test("ClaudeAPI marks a failed tool result as an error")
+    func claudeAPIToolError() throws {
+        let messages = [
+            AIChatMessage(role: .user, content: "Go"),
+            AIChatMessage(role: .toolUse, content: "", toolUseId: "t1", toolName: "x"),
+            AIChatMessage(role: .toolResult, content: "boom", toolUseId: "t1", toolIsError: true)
+        ]
+        let json = try body(ClaudeAPIPlugin().buildRequest(fullContext(messages: messages, config: config())))
+        let apiMessages = try #require(json["messages"] as? [[String: Any]])
+        let result = try #require((apiMessages.last?["content"] as? [[String: Any]])?.first)
+        #expect(result["is_error"] as? Bool == true)
+        // A call with no arguments goes out as an empty input object.
+        let call = try #require((apiMessages[1]["content"] as? [[String: Any]])?.first)
+        #expect((call["input"] as? [String: Any])?.isEmpty == true)
+    }
+
+    @Test("ClaudeAPI sends a fixed thinking budget to a 4.5 model and raises max_tokens above it")
+    func claudeAPIThinkingBudget() throws {
+        let json = try body(ClaudeAPIPlugin().buildRequest(fullContext(
+            model: "claude-sonnet-4-5-20250929",
+            maxTokens: 1000,
+            thinkingBudgetTokens: 2000,
+            config: config()
+        )))
+        let thinking = try #require(json["thinking"] as? [String: Any])
+        #expect(thinking["type"] as? String == "enabled")
+        #expect(thinking["budget_tokens"] as? Int == 2000)
+        #expect(json["max_tokens"] as? Int == 3000)
+    }
+
+    @Test("ClaudeAPI raises a budget below the API minimum to 1024")
+    func claudeAPIThinkingMinimum() throws {
+        let json = try body(ClaudeAPIPlugin().buildRequest(fullContext(
+            model: "claude-haiku-4-5",
+            maxTokens: 4096,
+            thinkingBudgetTokens: 100,
+            config: config()
+        )))
+        let thinking = try #require(json["thinking"] as? [String: Any])
+        #expect(thinking["budget_tokens"] as? Int == 1024)
+        #expect(json["max_tokens"] as? Int == 4096)
+    }
+
+    @Test("ClaudeAPI asks newer models for adaptive, summarized thinking")
+    func claudeAPIAdaptiveThinking() throws {
+        let json = try body(ClaudeAPIPlugin().buildRequest(fullContext(
+            model: "claude-opus-4-7",
+            thinkingBudgetTokens: 4000,
+            config: config()
+        )))
+        let thinking = try #require(json["thinking"] as? [String: Any])
+        #expect(thinking["type"] as? String == "adaptive")
+        #expect(thinking["display"] as? String == "summarized")
+        #expect(thinking["budget_tokens"] == nil)
+    }
+
+    @Test("ClaudeAPI tells fixed-budget models from adaptive ones")
+    func claudeAPIThinkingModelFamilies() {
+        for model in ["claude-3-7-sonnet-20250219", "claude-sonnet-4-20250514", "claude-opus-4-1-20250805",
+                      "claude-haiku-4-5-20251001", "claude-opus-4-5", "us.anthropic.claude-sonnet-4-5-v1:0"] {
+            #expect(ClaudeAPIThinking.takesFixedBudget(model), "\(model)")
+        }
+        for model in ["claude-opus-4-6", "claude-sonnet-4-6", "claude-opus-4-7", "claude-opus-5-5", "claude-fable-5"] {
+            #expect(!ClaudeAPIThinking.takesFixedBudget(model), "\(model)")
+        }
+    }
+
+    @Test("ClaudeAPI leaves thinking off when continuing a tool loop")
+    func claudeAPIThinkingOffInToolLoop() throws {
+        let json = try body(ClaudeAPIPlugin().buildRequest(fullContext(
+            messages: toolLoop,
+            thinkingBudgetTokens: 2000,
+            config: config()
+        )))
+        #expect(json["thinking"] == nil)
+        #expect(json["max_tokens"] as? Int == 256)
+    }
+
+    @Test("OpenAI sends function tools and maps tool calls and results")
+    func openAIToolMessages() throws {
+        let json = try body(OpenAIPlugin().buildRequest(fullContext(
+            messages: toolLoop,
+            tools: [listTool],
+            config: config()
+        )))
+        let tools = try #require(json["tools"] as? [[String: Any]])
+        #expect(tools[0]["type"] as? String == "function")
+        let function = try #require(tools[0]["function"] as? [String: Any])
+        #expect(function["name"] as? String == "list_notices")
+        #expect((function["parameters"] as? [String: Any])?["type"] as? String == "object")
+
+        let messages = try #require(json["messages"] as? [[String: Any]])
+        #expect(messages.map { $0["role"] as? String } == ["user", "assistant", "tool"])
+        #expect(messages[1]["content"] as? String == "Checking.")
+        let call = try #require((messages[1]["tool_calls"] as? [[String: Any]])?.first)
+        #expect(call["id"] as? String == "call_1")
+        #expect(call["type"] as? String == "function")
+        let callFunction = try #require(call["function"] as? [String: Any])
+        #expect(callFunction["name"] as? String == "list_notices")
+        #expect(callFunction["arguments"] as? String == #"{"limit":5}"#)
+        #expect(messages[2]["tool_call_id"] as? String == "call_1")
+        #expect(messages[2]["content"] as? String == "3 notices")
+    }
+
+    @Test("OpenAI opens an assistant message for a tool call that follows no assistant text")
+    func openAIToolCallAlone() throws {
+        let messages = [
+            AIChatMessage(role: .user, content: "Go"),
+            AIChatMessage(role: .toolUse, content: "", toolUseId: "a", toolName: "x"),
+            AIChatMessage(role: .toolUse, content: "", toolUseId: "b", toolName: "y")
+        ]
+        let json = try body(OpenAIPlugin().buildRequest(fullContext(messages: messages, config: config())))
+        let apiMessages = try #require(json["messages"] as? [[String: Any]])
+        #expect(apiMessages.count == 2)
+        #expect(apiMessages[1]["content"] is NSNull)
+        let calls = try #require(apiMessages[1]["tool_calls"] as? [[String: Any]])
+        #expect(calls.map { $0["id"] as? String } == ["a", "b"])
+        #expect((calls[0]["function"] as? [String: Any])?["arguments"] as? String == "{}")
+    }
+
+    @Test("OpenAICompatible sends function tools and maps tool calls and results")
+    func openAICompatibleToolMessages() throws {
+        let json = try body(OpenAICompatiblePlugin().buildRequest(fullContext(
+            messages: toolLoop,
+            tools: [listTool],
+            config: config(apiKey: nil, baseURL: "http://localhost:11434/v1")
+        )))
+        let tools = try #require(json["tools"] as? [[String: Any]])
+        #expect((tools[0]["function"] as? [String: Any])?["name"] as? String == "list_notices")
+        let messages = try #require(json["messages"] as? [[String: Any]])
+        #expect(messages.map { $0["role"] as? String } == ["user", "assistant", "tool"])
+        #expect((messages[1]["tool_calls"] as? [[String: Any]])?.count == 1)
+        #expect(messages[2]["tool_call_id"] as? String == "call_1")
+    }
+
+    @Test("OpenAI and OpenAICompatible ignore a thinking budget")
+    func openAIIgnoresThinking() throws {
+        let openAI = try body(OpenAIPlugin().buildRequest(fullContext(thinkingBudgetTokens: 2000, config: config())))
+        #expect(openAI["thinking"] == nil)
+        #expect(openAI["max_tokens"] as? Int == 256)
+        let compatible = try body(OpenAICompatiblePlugin().buildRequest(fullContext(
+            thinkingBudgetTokens: 2000,
+            config: config(apiKey: nil, baseURL: "http://localhost:11434/v1")
+        )))
+        #expect(compatible["thinking"] == nil)
+    }
 }

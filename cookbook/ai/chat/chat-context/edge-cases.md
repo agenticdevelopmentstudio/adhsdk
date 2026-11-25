@@ -3,12 +3,19 @@
   empty message list; nothing in this contract requires a non-empty
   history. What a plugin's request-building step does with zero
   conversation turns is outside this contract's scope.
+- **`thinkingBudgetTokens` non-positive**: constructing a chat context
+  does not reject `0` or a negative budget; this contract performs no
+  validation on it, and what a provider does with such a value is the
+  request-building step's concern.
 - **Empty `model` string**: constructing a chat context MUST NOT reject
   `model: ""`; this contract performs no content validation on `model`.
 - **`maxTokens` non-positive**: constructing a chat context does not
   reject `0` or a negative `maxTokens`; there is no lower-bound check, and
   every plugin currently implemented forwards `context.maxTokens` verbatim
-  into its provider's request body with no clamping either (see Platform
+  into its provider's request body with no clamping either (the one
+  exception: the Anthropic API plugin raises it above
+  `thinkingBudgetTokens` when a budget is set, because that provider
+  requires the answer budget to exceed the reasoning budget) (see Platform
   Notes for which plugins), so a non-positive value reaches the network
   layer unvalidated. Per the Design Decisions section below, this is
   deliberate: `maxTokens` is treated as an opaque budget number, and

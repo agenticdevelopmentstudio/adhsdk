@@ -4,11 +4,11 @@
     "id": "e886e448-6aa5-4359-979d-49fba713ab2a",
     "title": "Plugin Runtime",
     "type": "ingredient",
-    "version": "1.3.0",
+    "version": "1.4.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-23",
-    "modified": "2026-11-19",
+    "modified": "2026-11-25",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -32,7 +32,7 @@
     "approved-date": ""
   },
   "names_hosts": "`claude-local` is the literal id of the default plugin template the runtime seeds.",
-  "synced": "9869866dd5bd7565",
+  "synced": "58ab962b121623f0",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

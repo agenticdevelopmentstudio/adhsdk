@@ -65,3 +65,12 @@
   mcp-tool-source-argument-validation records the current behavior.
   **Approved**: pending.
 
+- **Decision**: The tool-calling chat session and the chat-backend adapter
+  drop thinking-delta and usage events rather than surfacing them.
+  **Rationale**: neither the chat-session event vocabulary nor the
+  chat-backend stream event has a case for reasoning text or token usage,
+  and adding one changes a contract every chat surface renders. A host that
+  needs both consumes the plugin transport's stream directly; these two
+  runtimes stay answer-only until one of their consumers needs more.
+  **Approved**: pending.
+

@@ -2,11 +2,11 @@
 id: 2067e249-4f97-4575-b8ed-8f55f6dc96df
 title: "Stream Event"
 type: ingredient
-version: 1.2.0
+version: 2.0.0
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -41,10 +41,11 @@ typed event sequence.
 
 ## Behavioral Requirements
 
-- **case-set**: The stream event type MUST have exactly three cases — a
-  text-delta case carrying a text chunk, a tool-use case carrying an
-  identifier, a name, and the raw arguments payload, and an end case
-  carrying an optional stop reason.
+- **case-set**: The stream event type MUST have exactly five cases — a
+  text-delta case carrying a text chunk, a thinking-delta case carrying a
+  chunk of the model's reasoning text, a tool-use case carrying an
+  identifier, a name, and the raw arguments payload, a usage case carrying a
+  token-usage value, and an end case carrying an optional stop reason.
 - **event-concurrent-share-safety**: The stream event type MUST be safe to
   share across concurrent execution contexts, so a decoded value MAY cross
   concurrency domains — e.g. yielded from a background streaming operation
@@ -57,6 +58,27 @@ typed event sequence.
   and a raw arguments payload, where the arguments payload MUST be the raw,
   undecoded JSON arguments the model supplied — a decoder MUST NOT parse or
   validate that JSON before emitting the event.
+- **thinking-delta-payload**: thinking-delta's payload MUST be a chunk of
+  the model's reasoning ("thinking") text and nothing else; it MUST be kept
+  distinct from text-delta so a consumer that only renders the answer can
+  ignore it. A decoder MUST emit thinking-delta only for content the
+  provider marks as reasoning, never for ordinary answer text.
+- **usage-payload**: usage's payload MUST be a token-usage value holding
+  four whole-number counts — input tokens, output tokens, cache-read tokens,
+  and cache-write tokens — where a count the provider does not report is
+  zero, never absent.
+- **usage-cumulative**: Each usage event MUST carry the cumulative usage for
+  the request so far, not an increment; a later usage event in the same
+  stream supersedes an earlier one, so a consumer keeps only the last one it
+  saw.
+- **usage-value-semantics**: The token-usage value MUST be a plain value
+  that is safe to share across concurrent execution contexts, supports
+  equality comparison, and round-trips through a structured encoding
+  unchanged.
+- **consumers-ignore-unwanted-cases**: A consumer that only wants answer
+  text MUST be able to ignore thinking-delta and usage events without
+  affecting its handling of the other three cases; neither case changes
+  what text-delta, tool-use, or end mean.
 - **end-stop-reason-optional**: end's stop-reason value MUST be optional, so
   a decoder MAY report none when the provider gives no reason for stopping.
 - **decoder-reference-semantics**: The decoder role MUST require reference
@@ -137,7 +159,7 @@ stream-decoding role, not a visual component.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| ai-stream-event-001 | case-set, event-concurrent-share-safety | Inspect the stream event type's declaration. | Exactly three cases — text-delta, tool-use, end — and the declaration itself states safety for sharing across concurrent execution contexts. |
+| ai-stream-event-001 | case-set, event-concurrent-share-safety | Inspect the stream event type's declaration. | Exactly five cases — text-delta, thinking-delta, tool-use, usage, end — and the declaration itself states safety for sharing across concurrent execution contexts. |
 | ai-stream-event-002 | text-delta-payload | Construct a text-delta event with text "Hello", then pattern-match it. | The matched text equals "Hello", with no other payload carried. |
 | ai-stream-event-003 | tool-use-payload | Construct a tool-use event with id "call_1", name "search", and raw arguments payload {"q":"cats"}, then pattern-match it. | id equals "call_1", name equals "search", and the arguments payload equals the exact bytes given, byte for byte, unparsed. |
 | ai-stream-event-004 | end-stop-reason-optional | Construct an end event with stop-reason none. | Constructs without error; stop-reason is none. |
@@ -152,7 +174,9 @@ stream-decoding role, not a visual component.
 | ai-stream-event-013 | decoder-reference-semantics | Attempt to conform a value-semantics type to the decoder role. | Fails: the decoder role requires reference semantics. |
 | ai-stream-event-014 | sequential-delivery, host-framing-contract | Feed bytes for "hello\n" to the transport's byte pump one byte at a time. | consume is invoked only once the newline byte (the final byte) is appended — i.e. once per complete line, not once per byte — and finish follows only after the loop over all bytes ends. |
 | ai-stream-event-015 | stream-decoder-isolation-domain, fresh-decoder-per-request | Inspect the plugin transport's HTTP and command paths: the decoder-construction operation is called inside the same execution context that later calls consume/finish on the result. | The decoder is never constructed outside, or handed across, the execution context that consumes it — consistent with the decoder role carrying no cross-context sharing safety. |
-
+| ai-stream-event-016 | thinking-delta-payload | Construct a thinking-delta event with text "Let me check", then pattern-match it. | The matched text equals "Let me check"; it does not match as a text-delta. |
+| ai-stream-event-017 | usage-payload, usage-value-semantics | Construct a usage value with input 12, output 34, cache-read 5, cache-write 0; encode it and decode it back. | The decoded value equals the original; all four counts are present. |
+| ai-stream-event-018 | usage-cumulative | Feed the Anthropic Messages server-sent-event decoder a message-start frame reporting 10 input tokens, then a message-delta frame reporting 7 output tokens. | Two usage events: the first carries input 10, output 0; the second carries input 10, output 7 — each is the running total, not an increment. |
 ## Edge Cases
 
 - **Null / empty input**: consume with no bytes SHOULD return an empty
@@ -253,11 +277,11 @@ data-and-role declaration with no side effects of its own.
 
 ## Platform Notes
 
-- **SwiftUI**: The source is `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIStreamEvent.swift`. Nothing here is SwiftUI-specific — `AIStreamEvent` and `AIStreamDecoder` are Foundation-only and consumed identically by a SwiftUI or AppKit host through `PluginTransport`'s `AsyncThrowingStream<AIStreamEvent, Error>`. Concretely, `AIStreamEvent` is a `Sendable` enum (`public enum AIStreamEvent: Sendable`) with cases `textDelta(String)`, `toolUse(id: String, name: String, argumentsJSON: Data)`, and `end(stopReason: String?)` — the event-concurrent-share-safety requirement above is this `Sendable` conformance. `AIStreamDecoder` is declared `public protocol AIStreamDecoder: AnyObject` with no `Sendable` conformance: the `AnyObject` bound is the decoder-reference-semantics requirement (only a `class` may conform), and the absent `Sendable` is the decoder-single-context-state requirement, enforced by Swift's strict concurrency checking (`SWIFT_STRICT_CONCURRENCY: complete`) rejecting a non-`Sendable` value crossing an `await` boundary.
-- **Compose**: Model `AiStreamEvent` as a Kotlin `sealed interface` with data classes `TextDelta(val text: String)`, `ToolUse(val id: String, val name: String, val argumentsJson: ByteArray)`, and `End(val stopReason: String?)`; enumerate over it with a `when` expression, which the compiler treats as exhaustive the way Swift's `switch` does. `AiStreamDecoder` becomes an interface with `fun consume(data: ByteArray): List<AiStreamEvent>` and a default `fun finish(): List<AiStreamEvent> = emptyList()`, mirroring the Swift protocol extension's default.
-- **React/Web**: Represent `AIStreamEvent` as a discriminated union — `{ kind: 'textDelta', text: string } | { kind: 'toolUse', id: string, name: string, argumentsJSON: Uint8Array } | { kind: 'end', stopReason?: string }` — and `AIStreamDecoder` as an interface with `consume(data: Uint8Array): AIStreamEvent[]` and an optional `finish?(): AIStreamEvent[]`. A web port could instead lean on the platform's native streaming primitive, a `TransformStream<Uint8Array, AIStreamEvent>`, rather than the manual `consume`/`finish` pair, since the browser's `ReadableStream` already models incremental delivery plus an explicit close.
+- **SwiftUI**: The source is `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIStreamEvent.swift`. Nothing here is SwiftUI-specific — `AIStreamEvent` and `AIStreamDecoder` are Foundation-only and consumed identically by a SwiftUI or AppKit host through `PluginTransport`'s `AsyncThrowingStream<AIStreamEvent, Error>`. Concretely, `AIStreamEvent` is a `Sendable` enum (`public enum AIStreamEvent: Sendable`) with cases `textDelta(String)`, `thinkingDelta(String)`, `toolUse(id: String, name: String, argumentsJSON: Data)`, `usage(AIUsage)`, and `end(stopReason: String?)`; `AIUsage` is a `Sendable, Codable, Equatable` struct with `inputTokens`, `outputTokens`, `cacheReadTokens`, and `cacheWriteTokens` (`Int`, each defaulting to 0) — the event-concurrent-share-safety requirement above is this `Sendable` conformance. `AIStreamDecoder` is declared `public protocol AIStreamDecoder: AnyObject` with no `Sendable` conformance: the `AnyObject` bound is the decoder-reference-semantics requirement (only a `class` may conform), and the absent `Sendable` is the decoder-single-context-state requirement, enforced by Swift's strict concurrency checking (`SWIFT_STRICT_CONCURRENCY: complete`) rejecting a non-`Sendable` value crossing an `await` boundary.
+- **Compose**: Model `AiStreamEvent` as a Kotlin `sealed interface` with data classes `TextDelta(val text: String)`, `ThinkingDelta(val text: String)`, `Usage(val usage: AiUsage)`, `ToolUse(val id: String, val name: String, val argumentsJson: ByteArray)`, and `End(val stopReason: String?)`; enumerate over it with a `when` expression, which the compiler treats as exhaustive the way Swift's `switch` does. `AiStreamDecoder` becomes an interface with `fun consume(data: ByteArray): List<AiStreamEvent>` and a default `fun finish(): List<AiStreamEvent> = emptyList()`, mirroring the Swift protocol extension's default.
+- **React/Web**: Represent `AIStreamEvent` as a discriminated union — `{ kind: 'textDelta', text: string } | { kind: 'thinkingDelta', text: string } | { kind: 'usage', usage: AIUsage } | { kind: 'toolUse', id: string, name: string, argumentsJSON: Uint8Array } | { kind: 'end', stopReason?: string }` — and `AIStreamDecoder` as an interface with `consume(data: Uint8Array): AIStreamEvent[]` and an optional `finish?(): AIStreamEvent[]`. A web port could instead lean on the platform's native streaming primitive, a `TransformStream<Uint8Array, AIStreamEvent>`, rather than the manual `consume`/`finish` pair, since the browser's `ReadableStream` already models incremental delivery plus an explicit close.
 - **AppKit / UIKit**: Identical to the SwiftUI note — this component is UI-framework-agnostic; only the application embedding `AIPluginKit` differs, never this contract.
-- **WinUI 3**: Model `AiStreamEvent` as an abstract `record` with three sealed derived records — `TextDelta(string Text)`, `ToolUse(string Id, string Name, byte[] ArgumentsJson)`, `End(string? StopReason)` — enabling exhaustive `switch` pattern matching over `is` patterns, the closest .NET analogue to Swift's closed enum. Declare `IAiStreamDecoder` as `IReadOnlyList<AiStreamEvent> Consume(byte[] data);` plus a C# 8+ default interface method `IReadOnlyList<AiStreamEvent> Finish() => Array.Empty<AiStreamEvent>();` to mirror the Swift protocol extension's default `finish()`. Because `AIStreamDecoder` is deliberately non-`Sendable` and holds mutable per-response state, a WinUI 3 port MUST construct a fresh `IAiStreamDecoder` per request and MUST NOT register one as a singleton or reuse it across `HttpClient` calls, matching `fresh-decoder-per-request` and `single-response-isolation` above. Use `System.Text.Json`'s `Utf8JsonReader`/`JsonDocument` in place of `JSONSerialization` inside a concrete decoder, and drive `Consume` from `HttpClient.GetStreamAsync`/`Stream.CopyToAsync` with a manual byte-buffer loop (or `System.IO.Pipelines.PipeReader` for a more idiomatic incremental read) in place of `URLSession.shared.bytes(for:)` as the byte source `PluginTransport`'s pump supplies.
+- **WinUI 3**: Model `AiStreamEvent` as an abstract `record` with five sealed derived records — `TextDelta(string Text)`, `ThinkingDelta(string Text)`, `Usage(AiUsage Usage)`, `ToolUse(string Id, string Name, byte[] ArgumentsJson)`, `End(string? StopReason)` — enabling exhaustive `switch` pattern matching over `is` patterns, the closest .NET analogue to Swift's closed enum. Declare `IAiStreamDecoder` as `IReadOnlyList<AiStreamEvent> Consume(byte[] data);` plus a C# 8+ default interface method `IReadOnlyList<AiStreamEvent> Finish() => Array.Empty<AiStreamEvent>();` to mirror the Swift protocol extension's default `finish()`. Because `AIStreamDecoder` is deliberately non-`Sendable` and holds mutable per-response state, a WinUI 3 port MUST construct a fresh `IAiStreamDecoder` per request and MUST NOT register one as a singleton or reuse it across `HttpClient` calls, matching `fresh-decoder-per-request` and `single-response-isolation` above. Use `System.Text.Json`'s `Utf8JsonReader`/`JsonDocument` in place of `JSONSerialization` inside a concrete decoder, and drive `Consume` from `HttpClient.GetStreamAsync`/`Stream.CopyToAsync` with a manual byte-buffer loop (or `System.IO.Pipelines.PipeReader` for a more idiomatic incremental read) in place of `URLSession.shared.bytes(for:)` as the byte source `PluginTransport`'s pump supplies.
 
 ## Reference Implementations
 
@@ -268,11 +292,11 @@ data-and-role declaration with no side effects of its own.
 ## Design Decisions
 
 **Decision**: `consume(_:)` and `finish()` are both non-throwing; a frame that cannot be decoded simply yields no event, with no distinct error signal.
-**Rationale**: This keeps every conforming decoder simple — none of the five shipped decoders (`ClaudeSSEDecoder`, `OpenAIReplyDecoder`, `GeminiReplyDecoder`, `ChatReplyDecoder`, `PlainTextDecoder`) needs error-propagation plumbing — but it means a genuinely malformed, unrecoverable frame is indistinguishable from one that is merely incomplete and awaiting more bytes; both currently vanish silently. This is the same gap the behavior described under decode-failure-signal documents.
+**Rationale**: This keeps every conforming decoder simple — none of the five shipped decoders (`ClaudeSSEDecoder`, `OpenAIReplyDecoder`, `GeminiReplyDecoder`, `OpenAICompatibleReplyDecoder`, `PlainTextDecoder`) needs error-propagation plumbing — but it means a genuinely malformed, unrecoverable frame is indistinguishable from one that is merely incomplete and awaiting more bytes; both currently vanish silently. This is the same gap the behavior described under decode-failure-signal documents.
 **Approved**: pending
 
-**Decision**: `AIStreamEvent` declares three cases — `textDelta`, `toolUse`, `end` — even though no `AIStreamDecoder` shipped in this repository (`ClaudeSSEDecoder`, `OpenAIReplyDecoder`, `GeminiReplyDecoder`, `ChatReplyDecoder`, `PlainTextDecoder`) ever returns a `.toolUse` event.
-**Rationale**: Every consumer's `switch` over `AIStreamEvent` (`LocalChatSession.swift`, `AIPluginChatBackend.swift`, `AIPluginLanguageModelProvider.swift`, `ChatBackendSession.swift`) already handles `.toolUse` exhaustively, so the case is part of the declared contract in preparation for a future tool-calling-capable decoder, not dead code — a source-fidelity note rather than a gap, since nothing here needs `.toolUse` to be produced today.
+**Decision**: `AIStreamEvent` declares five cases — `textDelta`, `thinkingDelta`, `toolUse`, `usage`, `end` — and reasoning and token usage are first-class events rather than metadata on `end`.
+**Rationale**: An agent host streams the model's thinking separately from its answer and accounts for cost per request, so both must arrive while the response is still streaming. Reporting usage as a cumulative running total (not an increment) lets a consumer keep only the last value and makes a dropped or repeated usage event harmless. `ClaudeSSEDecoder` emits all five; `OpenAIReplyDecoder` and `OpenAICompatibleReplyDecoder` emit `toolUse`, `thinkingDelta` (from `reasoning_content`), and `usage` from their buffered replies. Consumers that only want text (`DaemonAIChat`, `AIPluginChatBackend`, `AIPluginLanguageModelProvider`) ignore the two new cases.
 **Approved**: pending
 
 **Decision**: `AIStreamDecoder` deliberately omits `Sendable`, unlike the sibling `AIPlugin` protocol, which requires it. (Apple platform implementation.)
@@ -308,3 +332,4 @@ Notes: separation-of-concerns passes because the event enum (`AIStreamEvent`) is
 | 1.0.4 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ai/plugins/. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolved the decode-failure-signal NEEDS REVIEW marker as current behavior plus a pending Design Decision. |
+| 2.0.0 | 2026-11-25 | Mike Fullerton | Five cases: added thinkingDelta and usage (AIUsage, cumulative per request); case-set no longer says three. |

@@ -79,6 +79,23 @@ struct AIPluginKitTests {
         }
         #expect(texts == ["hello", "world"])
     }
+
+    @Test("AIUsage round-trips through Codable and zeroes what it is not given")
+    func usageCodable() throws {
+        let usage = AIUsage(inputTokens: 10, outputTokens: 7, cacheReadTokens: 3)
+        #expect(usage.cacheWriteTokens == 0)
+        let decoded = try JSONDecoder().decode(AIUsage.self, from: JSONEncoder().encode(usage))
+        #expect(decoded == usage)
+    }
+
+    @Test("a chat context asks for no thinking unless given a budget")
+    func thinkingBudgetDefault() {
+        let plain = AIChatContext(messages: [], model: "m", config: AIPluginConfig([:]))
+        #expect(plain.thinkingBudgetTokens == nil)
+        let thinking = AIChatContext(messages: [], model: "m", thinkingBudgetTokens: 2048,
+                                     config: AIPluginConfig([:]))
+        #expect(thinking.thinkingBudgetTokens == 2048)
+    }
 }
 
 /// A trivial in-test plugin: posts to a fixed URL with the API key as a header

@@ -66,11 +66,12 @@
   chunks — tool-use and end events from the underlying stream MUST be dropped
   for this form.
 - **chat-backend-send-messages-tools**: Sending messages (with tools) MUST
-  map every decoded stream event 1:1 onto a chat-backend stream event (a
-  text-delta event stays a text-delta event; a tool-use event carrying an id,
-  name, and arguments-JSON stays a tool-use event with the same fields; an
-  end event carrying a stop reason stays an end event with the same field)
-  with no other transformation.
+  map each text-delta, tool-use, and end event 1:1 onto a chat-backend
+  stream event (a text-delta event stays a text-delta event; a tool-use event
+  carrying an id, name, and arguments-JSON stays a tool-use event with the
+  same fields; an end event carrying a stop reason stays an end event with
+  the same field) with no other transformation, and MUST drop thinking-delta
+  and usage events, which the chat-backend stream event has no case for.
 - **chat-backend-cancellation**: Cancelling either returned stream's
   consuming task MUST cancel the backing unit of work created to drive the
   request.
@@ -335,7 +336,8 @@
   text-delta chunk; it MUST collect every tool-use event into the
   pending-tools list and emit a tool-call event marked started for it; it
   MUST ignore end events from the stream (never surfacing the provider's stop
-  reason for that event).
+  reason for that event), and it MUST ignore thinking-delta and usage events
+  (neither opens the response nor contributes to the turn's text).
 - **local-session-cooperative-cancellation**: Running a turn MUST check for
   cancellation between stream events and break out of the inner event loop
   when cancelled, without cancelling mid-event.
@@ -364,7 +366,9 @@
 - **local-session-with-tools**: Attaching tools to a chat request context
   MUST return a copy of the context with its tools replaced by the mapped
   tool specs and every other field (messages, model, system prompt, max
-  tokens, config) unchanged.
+  tokens, thinking budget, config) unchanged. The mapped tool specs reach
+  the plugin's request-building step as-is, so a plugin with native tool
+  calling sends them as the provider's own tool definitions.
 
 ### MCP Tool Source
 

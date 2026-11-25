@@ -5,6 +5,7 @@
 | `model` | string | none (required) | The chat context's chosen model identifier, forwarded to the plugin. |
 | `systemPrompt` | optional string | absent | The chat context's optional system prompt. |
 | `maxTokens` | whole number | `4096` | The chat context's token budget for the response; unvalidated (see Edge Cases). |
+| `thinkingBudgetTokens` | optional whole number | absent | Tokens the model may spend reasoning before it answers; absent requests no reasoning. Plugins that cannot reason ignore it. |
 | `tools` | list of tool specifications | empty | The chat context's tools the host wants exposed to the model for this turn. |
 | `config` | plugin configuration value | none (required) | The chat context's resolved, host-supplied configuration values (including any secret). |
 | `role` | role value | none (required) | The chat message's speaker/kind: `system`, `user`, `assistant`, `toolUse`, or `toolResult`. |

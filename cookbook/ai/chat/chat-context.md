@@ -2,11 +2,11 @@
 id: 613d7a36-d0cd-4415-97be-d983b3d6c644
 title: "Chat Context"
 type: ingredient
-version: 1.1.2
+version: 1.2.0
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -92,6 +92,12 @@ data, not an implementation of it.
   `maxTokens` to `4096` when the caller omits it.
 - **context-tools-default-empty**: the chat context MUST default `tools`
   to an empty list when the caller omits it.
+- **context-thinking-budget-optional**: the chat context MUST carry an
+  optional `thinkingBudgetTokens` whole number and MUST default it to
+  absent when the caller omits it; absent means no reasoning ("thinking")
+  is requested. A plugin whose provider cannot reason MUST ignore it, and
+  every initializer that existed before this field MUST keep compiling
+  unchanged at its call sites.
 - **context-config-required**: the chat context MUST require a `config`
   (a plugin configuration value) with no default value.
 - **immutability**: the chat message, the tool specification, the plugin
@@ -132,7 +138,10 @@ data, not an implementation of it.
   context's `tools` into a specific provider's tool/function schema MUST
   happen inside the consuming plugin's request-building step, not in this
   contract; the tool specification's role is limited to carrying `name`,
-  `description`, and `parametersJSONSchema` unchanged.
+  `description`, and `parametersJSONSchema` unchanged. A plugin whose
+  provider has native tool calling MUST send these as the provider's own
+  tool definitions; a plugin without one MAY instead be wrapped by the
+  prompted tool-calling adapter, which describes them in the prompt.
 
 ## Appearance
 
@@ -154,6 +163,7 @@ Not applicable — this is a data-only contract, not a visual component.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
+| ai-chat-context-009 | context-thinking-budget-optional | A chat context constructed with an empty message list, model `"m"`, and an empty-valued plugin configuration, with `thinkingBudgetTokens` omitted; and a second one passing `thinkingBudgetTokens: 2048` | The first reads `thinkingBudgetTokens` as absent; the second reads `2048` |
 | ai-chat-context-001 | context-max-tokens-default | A chat context constructed with an empty message list, model `"m"`, and an empty-valued plugin configuration, with `maxTokens` omitted | `maxTokens` reads `4096` |
 | ai-chat-context-002 | context-tools-default-empty | Same construction as 001, with `tools` omitted | `tools` reads empty |
 | ai-chat-context-003 | context-system-prompt-optional | Same construction as 001, with `systemPrompt` omitted | `systemPrompt` reads absent |
@@ -169,12 +179,19 @@ Not applicable — this is a data-only contract, not a visual component.
   empty message list; nothing in this contract requires a non-empty
   history. What a plugin's request-building step does with zero
   conversation turns is outside this contract's scope.
+- **`thinkingBudgetTokens` non-positive**: constructing a chat context
+  does not reject `0` or a negative budget; this contract performs no
+  validation on it, and what a provider does with such a value is the
+  request-building step's concern.
 - **Empty `model` string**: constructing a chat context MUST NOT reject
   `model: ""`; this contract performs no content validation on `model`.
 - **`maxTokens` non-positive**: constructing a chat context does not
   reject `0` or a negative `maxTokens`; there is no lower-bound check, and
   every plugin currently implemented forwards `context.maxTokens` verbatim
-  into its provider's request body with no clamping either (see Platform
+  into its provider's request body with no clamping either (the one
+  exception: the Anthropic API plugin raises it above
+  `thinkingBudgetTokens` when a budget is set, because that provider
+  requires the answer budget to exceed the reasoning budget) (see Platform
   Notes for which plugins), so a non-positive value reaches the network
   layer unvalidated. Per the Design Decisions section below, this is
   deliberate: `maxTokens` is treated as an opaque budget number, and
@@ -225,6 +242,7 @@ Not applicable — this is a data-only contract, not a visual component.
 | `model` | string | none (required) | The chat context's chosen model identifier, forwarded to the plugin. |
 | `systemPrompt` | optional string | absent | The chat context's optional system prompt. |
 | `maxTokens` | whole number | `4096` | The chat context's token budget for the response; unvalidated (see Edge Cases). |
+| `thinkingBudgetTokens` | optional whole number | absent | Tokens the model may spend reasoning before it answers; absent requests no reasoning. Plugins that cannot reason ignore it. |
 | `tools` | list of tool specifications | empty | The chat context's tools the host wants exposed to the model for this turn. |
 | `config` | plugin configuration value | none (required) | The chat context's resolved, host-supplied configuration values (including any secret). |
 | `role` | role value | none (required) | The chat message's speaker/kind: `system`, `user`, `assistant`, `toolUse`, or `toolResult`. |
@@ -319,7 +337,10 @@ Not applicable: this contract contains no logging call of any kind.
   computed properties over `values[...]`, plus a keyed `subscript`), and
   `AIChatContext` itself (`messages: [AIChatMessage]`, `model: String`,
   `systemPrompt: String?`, `maxTokens: Int = 4096`, `tools: [AIToolSpec] =
-  []`, `config: AIPluginConfig`). All four are `struct`s
+  []`, `thinkingBudgetTokens: Int? = nil`, `config: AIPluginConfig`). The
+  initializer takes `thinkingBudgetTokens` between `tools` and `config` with
+  a `nil` default, so every call site written before the field existed
+  still compiles. All four are `struct`s
   (`AIChatMessage.Role` is an `enum`) with every stored property declared
   `let`, so immutability and `Sendable` conformance are both
   compiler-enforced; none declares a throwing initializer, matching
@@ -434,3 +455,4 @@ section).
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ai/chat/. |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Added unit-test-coverage compliance row. |
 | 1.1.2 | 2026-10-04 | Mike Fullerton | Inverted prohibitions (none/neither/no X MUST) restated as MUST NOT. |
+| 1.2.0 | 2026-11-25 | Mike Fullerton | thinkingBudgetTokens (optional, default absent); native tool definitions are the plugin's job. |

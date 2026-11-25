@@ -2,11 +2,11 @@
 id: e886e448-6aa5-4359-979d-49fba713ab2a
 title: "Plugin Runtime"
 type: ingredient
-version: 1.3.0
+version: 1.4.0
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-11-19
+modified: 2026-11-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -120,11 +120,12 @@ Settings panel: [adhsdk.ingredient.ai.plugins.ai-providers-panel](cookbook:d3863
   chunks — tool-use and end events from the underlying stream MUST be dropped
   for this form.
 - **chat-backend-send-messages-tools**: Sending messages (with tools) MUST
-  map every decoded stream event 1:1 onto a chat-backend stream event (a
-  text-delta event stays a text-delta event; a tool-use event carrying an id,
-  name, and arguments-JSON stays a tool-use event with the same fields; an
-  end event carrying a stop reason stays an end event with the same field)
-  with no other transformation.
+  map each text-delta, tool-use, and end event 1:1 onto a chat-backend
+  stream event (a text-delta event stays a text-delta event; a tool-use event
+  carrying an id, name, and arguments-JSON stays a tool-use event with the
+  same fields; an end event carrying a stop reason stays an end event with
+  the same field) with no other transformation, and MUST drop thinking-delta
+  and usage events, which the chat-backend stream event has no case for.
 - **chat-backend-cancellation**: Cancelling either returned stream's
   consuming task MUST cancel the backing unit of work created to drive the
   request.
@@ -389,7 +390,8 @@ Settings panel: [adhsdk.ingredient.ai.plugins.ai-providers-panel](cookbook:d3863
   text-delta chunk; it MUST collect every tool-use event into the
   pending-tools list and emit a tool-call event marked started for it; it
   MUST ignore end events from the stream (never surfacing the provider's stop
-  reason for that event).
+  reason for that event), and it MUST ignore thinking-delta and usage events
+  (neither opens the response nor contributes to the turn's text).
 - **local-session-cooperative-cancellation**: Running a turn MUST check for
   cancellation between stream events and break out of the inner event loop
   when cancelled, without cancelling mid-event.
@@ -418,7 +420,9 @@ Settings panel: [adhsdk.ingredient.ai.plugins.ai-providers-panel](cookbook:d3863
 - **local-session-with-tools**: Attaching tools to a chat request context
   MUST return a copy of the context with its tools replaced by the mapped
   tool specs and every other field (messages, model, system prompt, max
-  tokens, config) unchanged.
+  tokens, thinking budget, config) unchanged. The mapped tool specs reach
+  the plugin's request-building step as-is, so a plugin with native tool
+  calling sends them as the provider's own tool definitions.
 
 ### MCP Tool Source
 
@@ -503,7 +507,9 @@ Not applicable: the runtime types render no UI.
 | aiplugins-012 | defaults-only-when-empty | The provider-configurations list already holds one entry; seed defaults when needed | The list is unchanged (still exactly the pre-existing entry); the default-seeded guard is now true |
 | aiplugins-013 | mcp-tool-source-unknown-tool | Call the tool named "fs__nonexistent" where no registered pair namespaces to that name | Returns a result of "Unknown tool: fs__nonexistent" marked as an error |
 | aiplugins-014 | mcp-tool-source-namespacing | The registry returns one pair (server name "fs", tool name "read") with an encodable input schema | Listing tool definitions returns exactly one tool definition named "fs__read" |
-
+| aiplugins-015 | local-session-stream-mapping | A plugin stream yielding a thinking-delta "hmm", a usage value, a text-delta "hi", and an end event, during one turn | The session emits a response-started event and one response-delta "hi"; nothing is emitted for the thinking-delta or usage event, and the assistant history entry reads "hi" |
+| aiplugins-016 | chat-backend-send-messages-tools | Sending messages with tools while the plugin stream yields a thinking-delta, a usage value, a text-delta "x", and an end event | The returned stream yields exactly a text-delta "x" and an end event |
+| aiplugins-017 | local-session-with-tools | A chat context with `thinkingBudgetTokens` 1024, given one tool definition | The copy carries the one mapped tool spec and `thinkingBudgetTokens` 1024 |
 ## Edge Cases
 
 - **Null/empty input**: An empty selected plugin identifier MUST make the
@@ -805,6 +811,15 @@ but unused.
   mcp-tool-source-argument-validation records the current behavior.
   **Approved**: pending.
 
+- **Decision**: The tool-calling chat session and the chat-backend adapter
+  drop thinking-delta and usage events rather than surfacing them.
+  **Rationale**: neither the chat-session event vocabulary nor the
+  chat-backend stream event has a case for reasoning text or token usage,
+  and adding one changes a contract every chat surface renders. A host that
+  needs both consumes the plugin transport's stream directly; these two
+  runtimes stay answer-only until one of their consumers needs more.
+  **Approved**: pending.
+
 ## Compliance
 
 | Check | Status | Category |
@@ -850,3 +865,4 @@ under Localization are English literals with no localization mechanism.
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolved the mcp-tool-source-argument-validation NEEDS REVIEW marker as current behavior plus a pending Design Decision. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Inverted prohibitions (none/neither/no X MUST) restated as MUST NOT. |
 | 1.3.0 | 2026-11-19 | Mike Fullerton | AI Providers panel: Default Model row, editor title and subtitle, untitled connection group, secret reveal, model-only Test Chat |
+| 1.4.0 | 2026-11-25 | Mike Fullerton | Chat backend and local session drop thinking and usage events; withTools keeps the thinking budget; native tool specs reach the plugin as-is. |

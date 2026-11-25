@@ -1,7 +1,7 @@
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| ai-stream-event-001 | case-set, event-concurrent-share-safety | Inspect the stream event type's declaration. | Exactly three cases — text-delta, tool-use, end — and the declaration itself states safety for sharing across concurrent execution contexts. |
+| ai-stream-event-001 | case-set, event-concurrent-share-safety | Inspect the stream event type's declaration. | Exactly five cases — text-delta, thinking-delta, tool-use, usage, end — and the declaration itself states safety for sharing across concurrent execution contexts. |
 | ai-stream-event-002 | text-delta-payload | Construct a text-delta event with text "Hello", then pattern-match it. | The matched text equals "Hello", with no other payload carried. |
 | ai-stream-event-003 | tool-use-payload | Construct a tool-use event with id "call_1", name "search", and raw arguments payload {"q":"cats"}, then pattern-match it. | id equals "call_1", name equals "search", and the arguments payload equals the exact bytes given, byte for byte, unparsed. |
 | ai-stream-event-004 | end-stop-reason-optional | Construct an end event with stop-reason none. | Constructs without error; stop-reason is none. |
@@ -16,4 +16,6 @@
 | ai-stream-event-013 | decoder-reference-semantics | Attempt to conform a value-semantics type to the decoder role. | Fails: the decoder role requires reference semantics. |
 | ai-stream-event-014 | sequential-delivery, host-framing-contract | Feed bytes for "hello\n" to the transport's byte pump one byte at a time. | consume is invoked only once the newline byte (the final byte) is appended — i.e. once per complete line, not once per byte — and finish follows only after the loop over all bytes ends. |
 | ai-stream-event-015 | stream-decoder-isolation-domain, fresh-decoder-per-request | Inspect the plugin transport's HTTP and command paths: the decoder-construction operation is called inside the same execution context that later calls consume/finish on the result. | The decoder is never constructed outside, or handed across, the execution context that consumes it — consistent with the decoder role carrying no cross-context sharing safety. |
-
+| ai-stream-event-016 | thinking-delta-payload | Construct a thinking-delta event with text "Let me check", then pattern-match it. | The matched text equals "Let me check"; it does not match as a text-delta. |
+| ai-stream-event-017 | usage-payload, usage-value-semantics | Construct a usage value with input 12, output 34, cache-read 5, cache-write 0; encode it and decode it back. | The decoded value equals the original; all four counts are present. |
+| ai-stream-event-018 | usage-cumulative | Feed the Anthropic Messages server-sent-event decoder a message-start frame reporting 10 input tokens, then a message-delta frame reporting 7 output tokens. | Two usage events: the first carries input 10, output 0; the second carries input 10, output 7 — each is the running total, not an increment. |

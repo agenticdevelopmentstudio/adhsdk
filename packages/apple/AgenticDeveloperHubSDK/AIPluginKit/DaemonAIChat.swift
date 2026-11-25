@@ -331,6 +331,9 @@ public enum DaemonAIChat {
                 case .toolUse:
                     // A one-shot request declares no tools; ignore any stray tool call.
                     break
+                case .thinkingDelta, .usage:
+                    // A one-shot reply is the answer text alone.
+                    break
                 }
             }
         } catch {

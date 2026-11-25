@@ -1,6 +1,7 @@
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
+| ai-chat-context-009 | context-thinking-budget-optional | A chat context constructed with an empty message list, model `"m"`, and an empty-valued plugin configuration, with `thinkingBudgetTokens` omitted; and a second one passing `thinkingBudgetTokens: 2048` | The first reads `thinkingBudgetTokens` as absent; the second reads `2048` |
 | ai-chat-context-001 | context-max-tokens-default | A chat context constructed with an empty message list, model `"m"`, and an empty-valued plugin configuration, with `maxTokens` omitted | `maxTokens` reads `4096` |
 | ai-chat-context-002 | context-tools-default-empty | Same construction as 001, with `tools` omitted | `tools` reads empty |
 | ai-chat-context-003 | context-system-prompt-optional | Same construction as 001, with `systemPrompt` omitted | `systemPrompt` reads absent |

@@ -39,6 +39,7 @@ public final class PromptedToolCallingPlugin: AIPlugin, @unchecked Sendable {
             systemPrompt: systemPrompt,
             maxTokens: context.maxTokens,
             tools: [],
+            thinkingBudgetTokens: context.thinkingBudgetTokens,
             // The tools described above are the only ones this turn may use.
             config: context.config.setting(AIPluginConfig.builtInToolsKey, to: "none")
         ))
@@ -178,8 +179,9 @@ final class PromptedToolCallDecoder: AIStreamDecoder {
             switch event {
             case .textDelta(let text):
                 reply += text
-            case .toolUse:
-                // A provider that does call tools natively still gets through.
+            case .toolUse, .thinkingDelta, .usage:
+                // A provider that does call tools natively still gets through,
+                // and reasoning and usage are not the reply this adapter parses.
                 out.append(event)
             case .end(let stopReason):
                 if !flushed { out += flush(stopReason: stopReason) }

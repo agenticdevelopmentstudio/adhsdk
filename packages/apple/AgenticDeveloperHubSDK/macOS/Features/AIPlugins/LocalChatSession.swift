@@ -130,7 +130,7 @@ public final class LocalChatSession: ChatSession, @unchecked Sendable {
                     case .toolUse(let id, let name, let args):
                         pendingTools.append((id, name, args))
                         emit(.toolCall(messageID: assistantID, name: name, phase: .started))
-                    case .end:
+                    case .end, .thinkingDelta, .usage:
                         continue
                     }
                 }
@@ -197,6 +197,7 @@ private extension AIChatContext {
             tools: defs.map {
                 AIToolSpec(name: $0.name, description: $0.description, parametersJSONSchema: $0.parametersJSONSchema)
             },
+            thinkingBudgetTokens: thinkingBudgetTokens,
             config: config
         )
     }

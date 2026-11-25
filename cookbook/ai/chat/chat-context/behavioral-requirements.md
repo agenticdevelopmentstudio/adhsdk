@@ -47,6 +47,12 @@
   `maxTokens` to `4096` when the caller omits it.
 - **context-tools-default-empty**: the chat context MUST default `tools`
   to an empty list when the caller omits it.
+- **context-thinking-budget-optional**: the chat context MUST carry an
+  optional `thinkingBudgetTokens` whole number and MUST default it to
+  absent when the caller omits it; absent means no reasoning ("thinking")
+  is requested. A plugin whose provider cannot reason MUST ignore it, and
+  every initializer that existed before this field MUST keep compiling
+  unchanged at its call sites.
 - **context-config-required**: the chat context MUST require a `config`
   (a plugin configuration value) with no default value.
 - **immutability**: the chat message, the tool specification, the plugin
@@ -87,5 +93,8 @@
   context's `tools` into a specific provider's tool/function schema MUST
   happen inside the consuming plugin's request-building step, not in this
   contract; the tool specification's role is limited to carrying `name`,
-  `description`, and `parametersJSONSchema` unchanged.
+  `description`, and `parametersJSONSchema` unchanged. A plugin whose
+  provider has native tool calling MUST send these as the provider's own
+  tool definitions; a plugin without one MAY instead be wrapped by the
+  prompted tool-calling adapter, which describes them in the prompt.
 

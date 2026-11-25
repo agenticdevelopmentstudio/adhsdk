@@ -25,6 +25,12 @@
 - **stream-completion-on-success**: Running a request specification MUST
   finish the stream with no error once the dispatched transport path returns
   without throwing.
+- **event-passthrough**: Running a request specification MUST yield every
+  event the plugin's decoder returns — text-delta, thinking-delta, tool-use,
+  usage, and end alike — unchanged and in the order the decoder returned
+  them; the transport MUST NOT filter, merge, reorder, or synthesize events,
+  so reasoning text, native tool calls, and cumulative token usage reach the
+  consumer exactly as the decoder produced them.
 - **consumer-cancellation-propagation**: Running a request specification MUST
   cancel its internal unit of work when the returned stream's consumer stops
   iterating or is cancelled.

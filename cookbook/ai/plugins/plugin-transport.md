@@ -2,11 +2,11 @@
 id: 7d5c5a1f-30df-460e-b6c4-7cfe9ab42784
 title: "Plugin Transport"
 type: ingredient
-version: 1.1.1
+version: 1.2.0
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -76,6 +76,12 @@ subprocess channel.
 - **stream-completion-on-success**: Running a request specification MUST
   finish the stream with no error once the dispatched transport path returns
   without throwing.
+- **event-passthrough**: Running a request specification MUST yield every
+  event the plugin's decoder returns — text-delta, thinking-delta, tool-use,
+  usage, and end alike — unchanged and in the order the decoder returned
+  them; the transport MUST NOT filter, merge, reorder, or synthesize events,
+  so reasoning text, native tool calls, and cumulative token usage reach the
+  consumer exactly as the decoder produced them.
 - **consumer-cancellation-propagation**: Running a request specification MUST
   cancel its internal unit of work when the returned stream's consumer stops
   iterating or is cancelled.
@@ -226,7 +232,7 @@ of its own.
 | plugin-transport-011 | http-error-body-drain, http-error-message-fallback | An HTTP request that receives a 500 response whose body is a JSON error payload, against a plugin whose error-description operation returns "rate limited" when it recognizes that shape. | Throws an HTTP-failure error carrying status 500 and message "rate limited" — the full body reached the plugin's error-description operation before the throw. |
 | plugin-transport-012 | consumer-cancellation-propagation, subprocess-cancellation-eager-kill | A command request running a 30-second sleep with a 60-second timeout; the consuming loop's enclosing task is cancelled shortly after starting. | The child process is terminated well before its natural 30-second sleep completes and before the 60-second budget would otherwise expire. |
 | plugin-transport-013 | timeout-error-mapping, error-passthrough | Running a request specification whose internal operation throws a plugin-defined error unrelated to the budget-exceeded condition. | The returned stream finishes with that exact error instance, not a transport-error case. |
-
+| plugin-transport-014 | event-passthrough | A command request whose plugin's decoder returns, for one frame, a thinking-delta "plan", a usage value (input 3, output 1), a text-delta "ok", and an end event. | The stream yields exactly those four events in that order, each unchanged. |
 ## Edge Cases
 
 - **Null/empty input**: An empty headers map MUST leave the request with no
@@ -409,3 +415,4 @@ I/O and control-flow logic with no diagnostic side effects of its own.
 | 1.0.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ai/plugins/. |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Added unit-test-coverage compliance row. |
+| 1.2.0 | 2026-11-25 | Mike Fullerton | event-passthrough: thinking, native tool-use and usage events reach the consumer unchanged and in order. |

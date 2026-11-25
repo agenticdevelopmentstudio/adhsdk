@@ -15,4 +15,6 @@
 | aiplugins-012 | defaults-only-when-empty | The provider-configurations list already holds one entry; seed defaults when needed | The list is unchanged (still exactly the pre-existing entry); the default-seeded guard is now true |
 | aiplugins-013 | mcp-tool-source-unknown-tool | Call the tool named "fs__nonexistent" where no registered pair namespaces to that name | Returns a result of "Unknown tool: fs__nonexistent" marked as an error |
 | aiplugins-014 | mcp-tool-source-namespacing | The registry returns one pair (server name "fs", tool name "read") with an encodable input schema | Listing tool definitions returns exactly one tool definition named "fs__read" |
-
+| aiplugins-015 | local-session-stream-mapping | A plugin stream yielding a thinking-delta "hmm", a usage value, a text-delta "hi", and an end event, during one turn | The session emits a response-started event and one response-delta "hi"; nothing is emitted for the thinking-delta or usage event, and the assistant history entry reads "hi" |
+| aiplugins-016 | chat-backend-send-messages-tools | Sending messages with tools while the plugin stream yields a thinking-delta, a usage value, a text-delta "x", and an end event | The returned stream yields exactly a text-delta "x" and an end event |
+| aiplugins-017 | local-session-with-tools | A chat context with `thinkingBudgetTokens` 1024, given one tool definition | The copy carries the one mapped tool spec and `thinkingBudgetTokens` 1024 |

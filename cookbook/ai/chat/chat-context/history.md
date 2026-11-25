@@ -7,3 +7,4 @@
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ai/chat/. |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Added unit-test-coverage compliance row. |
 | 1.1.2 | 2026-10-04 | Mike Fullerton | Inverted prohibitions (none/neither/no X MUST) restated as MUST NOT. |
+| 1.2.0 | 2026-11-25 | Mike Fullerton | thinkingBudgetTokens (optional, default absent); native tool definitions are the plugin's job. |

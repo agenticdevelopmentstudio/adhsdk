@@ -90,4 +90,33 @@ struct PromptedToolCallingPluginTests {
         #expect(parsed.calls.isEmpty)
         #expect(parsed.text == "oops <tool_call>not json</tool_call> done")
     }
+
+    /// Emits reasoning and usage around its text, as a native provider would.
+    private final class ReasoningDecoder: AIStreamDecoder {
+        func consume(_ data: Data) -> [AIStreamEvent] {
+            [.thinkingDelta("hmm"), .textDelta(String(bytes: data, encoding: .utf8) ?? ""),
+             .usage(AIUsage(inputTokens: 4, outputTokens: 2))]
+        }
+        func finish() -> [AIStreamEvent] { [.end(stopReason: "end_turn")] }
+    }
+
+    @Test("reasoning and usage pass straight through while the text is held")
+    func passesThinkingAndUsage() {
+        let decoder = PromptedToolCallDecoder(wrapping: ReasoningDecoder())
+        let early = decoder.consume(Data("Hello".utf8))
+        guard early.count == 2,
+              case .thinkingDelta(let thought) = early[0],
+              case .usage(let usage) = early[1] else {
+            Issue.record("unexpected events: \(early)")
+            return
+        }
+        #expect(thought == "hmm")
+        #expect(usage == AIUsage(inputTokens: 4, outputTokens: 2))
+        let late = decoder.finish()
+        guard late.count == 2, case .textDelta(let text) = late[0], case .end = late[1] else {
+            Issue.record("unexpected events: \(late)")
+            return
+        }
+        #expect(text == "Hello")
+    }
 }

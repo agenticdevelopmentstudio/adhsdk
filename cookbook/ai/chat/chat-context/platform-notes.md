@@ -16,7 +16,10 @@
   computed properties over `values[...]`, plus a keyed `subscript`), and
   `AIChatContext` itself (`messages: [AIChatMessage]`, `model: String`,
   `systemPrompt: String?`, `maxTokens: Int = 4096`, `tools: [AIToolSpec] =
-  []`, `config: AIPluginConfig`). All four are `struct`s
+  []`, `thinkingBudgetTokens: Int? = nil`, `config: AIPluginConfig`). The
+  initializer takes `thinkingBudgetTokens` between `tools` and `config` with
+  a `nil` default, so every call site written before the field existed
+  still compiles. All four are `struct`s
   (`AIChatMessage.Role` is an `enum`) with every stored property declared
   `let`, so immutability and `Sendable` conformance are both
   compiler-enforced; none declares a throwing initializer, matching

@@ -1,8 +1,9 @@
 
-- **case-set**: The stream event type MUST have exactly three cases — a
-  text-delta case carrying a text chunk, a tool-use case carrying an
-  identifier, a name, and the raw arguments payload, and an end case
-  carrying an optional stop reason.
+- **case-set**: The stream event type MUST have exactly five cases — a
+  text-delta case carrying a text chunk, a thinking-delta case carrying a
+  chunk of the model's reasoning text, a tool-use case carrying an
+  identifier, a name, and the raw arguments payload, a usage case carrying a
+  token-usage value, and an end case carrying an optional stop reason.
 - **event-concurrent-share-safety**: The stream event type MUST be safe to
   share across concurrent execution contexts, so a decoded value MAY cross
   concurrency domains — e.g. yielded from a background streaming operation
@@ -15,6 +16,27 @@
   and a raw arguments payload, where the arguments payload MUST be the raw,
   undecoded JSON arguments the model supplied — a decoder MUST NOT parse or
   validate that JSON before emitting the event.
+- **thinking-delta-payload**: thinking-delta's payload MUST be a chunk of
+  the model's reasoning ("thinking") text and nothing else; it MUST be kept
+  distinct from text-delta so a consumer that only renders the answer can
+  ignore it. A decoder MUST emit thinking-delta only for content the
+  provider marks as reasoning, never for ordinary answer text.
+- **usage-payload**: usage's payload MUST be a token-usage value holding
+  four whole-number counts — input tokens, output tokens, cache-read tokens,
+  and cache-write tokens — where a count the provider does not report is
+  zero, never absent.
+- **usage-cumulative**: Each usage event MUST carry the cumulative usage for
+  the request so far, not an increment; a later usage event in the same
+  stream supersedes an earlier one, so a consumer keeps only the last one it
+  saw.
+- **usage-value-semantics**: The token-usage value MUST be a plain value
+  that is safe to share across concurrent execution contexts, supports
+  equality comparison, and round-trips through a structured encoding
+  unchanged.
+- **consumers-ignore-unwanted-cases**: A consumer that only wants answer
+  text MUST be able to ignore thinking-delta and usage events without
+  affecting its handling of the other three cases; neither case changes
+  what text-delta, tool-use, or end mean.
 - **end-stop-reason-optional**: end's stop-reason value MUST be optional, so
   a decoder MAY report none when the provider gives no reason for stopping.
 - **decoder-reference-semantics**: The decoder role MUST require reference
