@@ -131,7 +131,10 @@ describe("ModelsTable Available column", () => {
   it("unticking calls setModelAvailability and revalidates the services cache", async () => {
     const before = withModels([{ id: "m1", available: true, offered: true }]);
     const after = withModels([{ id: "m1", available: false, offered: true }]);
-    list.mockResolvedValue([before]);
+    // The first read is the state before; the revalidation re-reads the list, and the server then
+    // answers with the state after. Returning `before` again raced the assertion below: a re-read
+    // that landed first put the box back to ticked.
+    list.mockResolvedValueOnce([before]).mockResolvedValue([after]);
     setModelAvailability.mockResolvedValue(after);
     renderSection();
 
