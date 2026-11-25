@@ -196,6 +196,29 @@ describe('SiteWorkspacesMenuProvider (preference, a satellite)', () => {
     }
   })
 
+  it('waits afresh when the subject switches straight to another user', () => {
+    // Another tab signing in as someone else changes the subject with no signed-out render
+    // between: the expired wait was user-1's, and user-2's personal row marked current at once
+    // brought back the personal-then-organization flash.
+    vi.useFakeTimers()
+    try {
+      preference.settled = false
+      const { rerender } = render(<SiteWorkspacesMenuProvider>x</SiteWorkspacesMenuProvider>)
+      act(() => vi.advanceTimersByTime(3000))
+      expect(menu().loading).toBe(false)
+      subject.current = 'user-2'
+      rerender(<SiteWorkspacesMenuProvider>x</SiteWorkspacesMenuProvider>)
+      act(() => vi.advanceTimersByTime(2999))
+      expect(menu().workspaces.filter((w) => w.current)).toEqual([])
+      expect(menu().loading).toBe(true)
+      act(() => vi.advanceTimersByTime(1))
+      expect(menu().workspaces.find((w) => w.current)?.id).toBe('individual:me')
+      expect(menu().loading).toBe(false)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('a pick records the preference and does not navigate', () => {
     render(<SiteWorkspacesMenuProvider>x</SiteWorkspacesMenuProvider>)
     act(() => menu().select!({ id: 'organization:acme' }))

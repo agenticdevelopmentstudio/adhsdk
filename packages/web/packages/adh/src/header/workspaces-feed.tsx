@@ -121,11 +121,12 @@ export function SiteWorkspacesMenuProvider({
   children,
   switchBy = 'preference',
 }: SiteWorkspacesMenuProviderProps): ReactNode {
-  const signedIn = useTokenSubject() != null
+  const subject = useTokenSubject()
+  const signedIn = subject != null
   const { data, isLoading, isError } = useWorkspaces({ enabled: signedIn })
   const byRoute = switchBy === 'route'
   const route = useRouteSwitch(byRoute ? data : undefined)
-  const pref = usePreferenceSwitch(byRoute ? undefined : data, signedIn && !byRoute)
+  const pref = usePreferenceSwitch(byRoute ? undefined : data, signedIn && !byRoute, subject)
   const feed: Feed = byRoute ? route : pref
 
   // `error`, so a list that failed to load reads as one rather than "No workspaces yet". Gated on
@@ -229,6 +230,7 @@ const PREFERENCE_WAIT_MS = 3000
 function usePreferenceSwitch(
   data: WorkspaceRow[] | undefined,
   enabled: boolean,
+  subject: string | null,
 ): Feed & { pending: boolean } {
   const host = useClientHost()
   const { slug: preferred, settled, choose } = useWorkspacePreference({ enabled })
@@ -251,21 +253,24 @@ function usePreferenceSwitch(
   // preferred slug naming one of the caller's rows wins whatever the wait did.
   const preferredRow = owners.some((w) => w.slug === preferred)
   const waiting = enabled && !preferredRow && !settled
-  const [waitedOut, setWaitedOut] = useState(false)
-  // Signed out ends the wait that was timed: the next sign-in waits afresh. Adjusted during render
-  // (React's "storing information from previous renders"), not synced from an effect.
-  const [wasEnabled, setWasEnabled] = useState(enabled)
-  if (wasEnabled !== enabled) {
-    setWasEnabled(enabled)
-    if (!enabled) setWaitedOut(false)
+  // The expiry belongs to the wait it timed, so it records whose wait that was: a subject that
+  // changes straight from one user to another (another tab signing in as someone else) is a new
+  // wait, not one already over. And any wait that starts again — signed back in, or a settled
+  // answer the cache has since dropped — starts unexpired. Adjusted during render (React's
+  // "storing information from previous renders"), not synced from an effect.
+  const [expiredFor, setExpiredFor] = useState<string | null>(null)
+  const [wasWaiting, setWasWaiting] = useState(waiting)
+  if (wasWaiting !== waiting) {
+    setWasWaiting(waiting)
+    if (waiting) setExpiredFor(null)
   }
   // An effect because a timer is a subscription to the clock, not derived state.
   useEffect(() => {
     if (!waiting) return
-    const timer = setTimeout(() => setWaitedOut(true), PREFERENCE_WAIT_MS)
+    const timer = setTimeout(() => setExpiredFor(subject), PREFERENCE_WAIT_MS)
     return () => clearTimeout(timer)
-  }, [waiting])
-  const pending = waiting && !waitedOut
+  }, [waiting, subject])
+  const pending = waiting && expiredFor !== subject
   const currentSlug = preferredRow
     ? preferred
     : pending

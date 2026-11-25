@@ -41,11 +41,12 @@ function SiteWorkspacesMenuProvider({
   children,
   switchBy = "preference"
 }) {
-  const signedIn = useTokenSubject() != null;
+  const subject = useTokenSubject();
+  const signedIn = subject != null;
   const { data, isLoading, isError } = useWorkspaces({ enabled: signedIn });
   const byRoute = switchBy === "route";
   const route = useRouteSwitch(byRoute ? data : void 0);
-  const pref = usePreferenceSwitch(byRoute ? void 0 : data, signedIn && !byRoute);
+  const pref = usePreferenceSwitch(byRoute ? void 0 : data, signedIn && !byRoute, subject);
   const feed = byRoute ? route : pref;
   const prefPending = !byRoute && pref.pending;
   const value = useMemo(
@@ -96,7 +97,7 @@ function useRouteSwitch(data) {
   return { workspaces, select, register };
 }
 var PREFERENCE_WAIT_MS = 3e3;
-function usePreferenceSwitch(data, enabled) {
+function usePreferenceSwitch(data, enabled, subject) {
   const host = useClientHost();
   const { slug: preferred, settled, choose } = useWorkspacePreference({ enabled });
   const owners = useMemo(
@@ -105,18 +106,18 @@ function usePreferenceSwitch(data, enabled) {
   );
   const preferredRow = owners.some((w) => w.slug === preferred);
   const waiting = enabled && !preferredRow && !settled;
-  const [waitedOut, setWaitedOut] = useState(false);
-  const [wasEnabled, setWasEnabled] = useState(enabled);
-  if (wasEnabled !== enabled) {
-    setWasEnabled(enabled);
-    if (!enabled) setWaitedOut(false);
+  const [expiredFor, setExpiredFor] = useState(null);
+  const [wasWaiting, setWasWaiting] = useState(waiting);
+  if (wasWaiting !== waiting) {
+    setWasWaiting(waiting);
+    if (waiting) setExpiredFor(null);
   }
   useEffect(() => {
     if (!waiting) return;
-    const timer = setTimeout(() => setWaitedOut(true), PREFERENCE_WAIT_MS);
+    const timer = setTimeout(() => setExpiredFor(subject), PREFERENCE_WAIT_MS);
     return () => clearTimeout(timer);
-  }, [waiting]);
-  const pending = waiting && !waitedOut;
+  }, [waiting, subject]);
+  const pending = waiting && expiredFor !== subject;
   const currentSlug = preferredRow ? preferred : pending ? void 0 : owners.find((w) => w.type === "individual")?.slug;
   const workspaces = useMemo(
     () => owners.map((w) => {
