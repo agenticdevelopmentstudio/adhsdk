@@ -393,6 +393,15 @@ open class WebBrowserPaneViewController: NSViewController {
         stack.spacing = 0
         stack.detachesHiddenViews = true
         stack.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        // Past the point where every label is truncated to its symbol, the
+        // strip clips its trailing items rather than widen the window: just
+        // above the labels' `BrowserPrivacyStripStyle.labelCompressionResistance`,
+        // so they truncate first, and below `windowSizeStayPut`. At the
+        // default `.required` the truncated items' floors summed to about
+        // 700 points, which still pushed a centred project window past the
+        // right edge of a 1920-point screen.
+        stack.setClippingResistancePriority(
+            .init(BrowserPrivacyStripStyle.labelCompressionResistance.rawValue + 5), for: .horizontal)
         // Takes the row's spare width, which its spacers share out.
         stack.setHuggingPriority(.init(1), for: .horizontal)
         stack.distribution = .fill

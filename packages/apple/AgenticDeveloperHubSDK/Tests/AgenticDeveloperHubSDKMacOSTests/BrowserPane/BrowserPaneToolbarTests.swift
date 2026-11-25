@@ -286,6 +286,11 @@ final class BrowserPaneToolbarTests: XCTestCase {
             .flatMap { ($0 as? NSStackView)?.arrangedSubviews ?? [] }
             .compactMap { $0 as? NSButton }
         XCTAssertFalse(buttons.isEmpty)
+        let clipping = pane.privacyStrip.clippingResistancePriority(for: .horizontal).rawValue
+        XCTAssertLessThan(clipping, NSLayoutConstraint.Priority.windowSizeStayPut.rawValue,
+                          "the strip clips before the window grows")
+        XCTAssertGreaterThan(clipping, BrowserPrivacyStripStyle.labelCompressionResistance.rawValue,
+                             "labels truncate before the strip clips")
         for button in buttons {
             XCTAssertLessThan(
                 button.contentCompressionResistancePriority(for: .horizontal).rawValue,
