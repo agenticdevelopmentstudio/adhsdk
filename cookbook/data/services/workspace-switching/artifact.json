@@ -1,0 +1,66 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "14a8624d-5527-47e5-9513-1727910a5f47",
+    "title": "Workspace Switching",
+    "type": "ingredient",
+    "version": "1.0.0",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-25",
+    "modified": "2026-11-25",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "The shared data every workspace switcher reads: every workspace row in one cached, change-subscribed entry per query client, the cross-site workspace preference, and the pure helpers that name, label and de-duplicate workspace rows.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "data",
+      "workspace",
+      "cache",
+      "preference",
+      "switcher"
+    ],
+    "depends-on": [
+      "ec6e6ca5-8780-4ce2-8b3a-087adc50ed35",
+      "0fcd16c1-a8da-4184-b63f-97b68ed6378d"
+    ],
+    "related": [],
+    "references": [
+      "packages/web/packages/data/src/use-workspaces.ts (adhsdk)",
+      "packages/web/packages/data/src/workspace-rows.ts (adhsdk)",
+      "packages/web/packages/data/src/use-workspace-preference.ts (adhsdk)",
+      "packages/web/packages/data/src/__tests__/use-workspaces.test.tsx (adhsdk)",
+      "packages/web/packages/data/src/__tests__/workspace-rows.test.ts (adhsdk)",
+      "packages/web/packages/data/src/__tests__/use-workspace-preference.test.tsx (adhsdk)"
+    ],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "10fcca92d88715ee",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

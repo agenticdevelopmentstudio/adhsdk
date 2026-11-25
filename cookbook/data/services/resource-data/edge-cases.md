@@ -41,4 +41,17 @@
   and view-mode operation and the cached-workspace operations MUST swallow a
   thrown storage exception rather than propagate it, degrading to the
   documented default (no value/`'cards'`) rather than crashing a render.
+- **More than one copy of the package**: A host that bundles its own copy of
+  this package announces a workspace change with an event this copy did not
+  send, so this copy's subscription for announcements made elsewhere hears it
+  and sweeps this copy's caches, while this copy's own announcements reach
+  that subscription without calling it (resource-data-090, resource-data-091).
+- **Paging workspaces**: A workspace row carries no `id`, so the all-rows
+  operation pages by `slug`; a row whose `slug` is not a string yields no
+  cursor (resource-data-089), and the shared /v1 list reader refuses to
+  truncate a list it cannot page further rather than return a partial one.
+- **Backend row drift**: A renamed, removed or retyped workspace column, or
+  a fourth workspace type, regenerates the API spec and fails the
+  workspace-row wire-fit gate's type-check rather than reaching a switcher
+  as `undefined` (resource-data-092).
 

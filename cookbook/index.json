@@ -1734,6 +1734,31 @@
       "path": "status/service/monitor/issues",
       "rdid": "adhsdk.ingredient.status.service.monitor.issues"
     },
+    "13339f1f-e815-4199-bdaa-dad533a94591": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:eff87d4af12db17dd2f3595d5b2dd0a4df8fdcbc69d4b7c74b266c34f5138904",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/web/packages/adh/src/header/workspaces-feed.tsx",
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:4d06044c010f66cef72ca26a85ca93d318dfca1486875fd0fdede9de5fa43ebc",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/web/packages/adh/src/header/workspaces-menu.tsx",
+          "platform": "web"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "adh/sites/workspaces-feed",
+      "rdid": "adhsdk.ingredient.adh.sites.workspaces-feed"
+    },
     "143b0352-49d4-46a9-a922-bb45c4cc0e7e": {
       "implementations": [
         {
@@ -1765,6 +1790,40 @@
       "kind": "ingredient",
       "path": "workspace/projects/git-repo",
       "rdid": "adhsdk.ingredient.workspace.projects.git-repo"
+    },
+    "14a8624d-5527-47e5-9513-1727910a5f47": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:c6a8c14d9d8e8b344a413455f6febc23749d10e054de824fc309d626864439f2",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/web/packages/data/src/use-workspaces.ts",
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:8780b05d903c403a3e8dce56d42c98c93912152feeca15380f73dd0de3e0c188",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/web/packages/data/src/workspace-rows.ts",
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:2a5a28fbf99f66ff8c9829ee046edd7179dc9cc7c3352814380ff95ddcb371c8",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/web/packages/data/src/use-workspace-preference.ts",
+          "platform": "web"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "data/services/workspace-switching",
+      "rdid": "adhsdk.ingredient.data.services.workspace-switching"
     },
     "14abf162-be65-4a58-9ffd-31f2145a50d3": {
       "implementations": [
@@ -22118,7 +22177,7 @@
           "conformance": {
             "hash": "sha256:e0a0665c5d3f890a48a3ee7882651eae3ec8f79bb074c83db84e65d6cad55cdb",
             "state": "confirmed",
-            "version": "1.2.2"
+            "version": "1.3.0"
           },
           "location": "packages/web/packages/data/src/client-helpers.ts",
           "platform": "web"
@@ -22127,7 +22186,7 @@
           "conformance": {
             "hash": "sha256:86cefd5a142c6408055aac2304b6d7ac64f779090e1d0ab0a5f48b0cebd999b9",
             "state": "confirmed",
-            "version": "1.2.2"
+            "version": "1.3.0"
           },
           "location": "packages/web/packages/data/src/config.ts",
           "platform": "web"
@@ -22136,16 +22195,16 @@
           "conformance": {
             "hash": "sha256:3522f0b8e875539651f2203f18e8bd8e9c511153c0ca00846c0e2e3755d68eb9",
             "state": "confirmed",
-            "version": "1.2.2"
+            "version": "1.3.0"
           },
           "location": "packages/web/packages/data/src/ftd-storage.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "hash": "sha256:0f21482e760c7d7c6067fb5e4f473e4086e7482e7f0d9f524653f733e243f845",
+            "hash": "sha256:9ecb782c0b2ba700acf9b81d2e707df8f434b1b57dbc220b2fbaceb6c1c9bf69",
             "state": "confirmed",
-            "version": "1.2.2"
+            "version": "1.3.0"
           },
           "location": "packages/web/packages/data/src/http.ts",
           "platform": "web"
@@ -22154,16 +22213,16 @@
           "conformance": {
             "hash": "sha256:07151177d881a4d3c34ea0f1e464bb7dfa982641998f61d13d2b91dc86aff8d3",
             "state": "confirmed",
-            "version": "1.2.2"
+            "version": "1.3.0"
           },
           "location": "packages/web/packages/data/src/tenant.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "hash": "sha256:a393ac2a2e955c6e716d0a9b6c5c64db62819deb06000317a1ef55b6416e8612",
+            "hash": "sha256:7e1c0449c77f9f6901630e9b904764fc1646869e984c614167ebdfd634190652",
             "state": "confirmed",
-            "version": "1.2.2"
+            "version": "1.3.0"
           },
           "location": "packages/web/packages/data/src/use-resource-item.ts",
           "platform": "web"
@@ -22172,7 +22231,7 @@
           "conformance": {
             "hash": "sha256:13a6e6a4378203cda2a243fb3f7293f350aa737369d94f7c683fdd64e04b97b7",
             "state": "confirmed",
-            "version": "1.2.2"
+            "version": "1.3.0"
           },
           "location": "packages/web/packages/data/src/use-resource-list.ts",
           "platform": "web"
@@ -22181,16 +22240,16 @@
           "conformance": {
             "hash": "sha256:f9d4c465afa9bccbd99814bb2da3ba6b105ae6c628cd94e2cbde0888179c627d",
             "state": "confirmed",
-            "version": "1.2.2"
+            "version": "1.3.0"
           },
           "location": "packages/web/packages/data/src/workspace-prefs.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "hash": "sha256:00dee329e738729a1b30e51703a0c5b5fb23d6e3798222b896f57953a0c6f8bb",
+            "hash": "sha256:483d433ed68df781a15c12b922e35211cf8a63ecaf8892b6af0d41f5761c3fcf",
             "state": "confirmed",
-            "version": "1.2.2"
+            "version": "1.3.0"
           },
           "location": "packages/web/packages/data/src/workspaces.ts",
           "platform": "web"

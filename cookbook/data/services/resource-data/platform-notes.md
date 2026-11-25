@@ -4,8 +4,15 @@
   backs the resource-list/resource-item cache; `window.localStorage` backs
   FTD and the cached workspace slug; `window.CustomEvent`/
   `window.addEventListener`/`window.dispatchEvent` back the
-  `workspaces-changed` cross-module announcement; `String.prototype
+  `workspaces-changed` cross-module announcement, and a module-scope
+  `WeakSet<Event>` marks the events this copy dispatched so
+  `onWorkspacesChangedElsewhere` can skip them; `String.prototype
   .localeCompare` (via `sortByText`) provides locale-aware ordering.
+  `workspacesApi.listAll` reads through `v1List` (`v1-case.ts`, which maps
+  rows with `fromV1`) with `workspaceCursor` as its `cursorOf`; the
+  `WorkspaceRow` wire-fit gate is
+  `packages/web/packages/adh-api-types/src/data-workspace-wire.test-d.ts`,
+  which reads `data`'s built `dist/*.d.ts` and the generated `schema.ts`.
 - **SwiftUI / AppKit / UIKit**: An `ObservableObject`/actor-backed
   dictionary cache keyed identically (tenant, then cache key, then id) is
   the idiomatic replacement for the react-query cache; `UserDefaults`

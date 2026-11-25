@@ -79,11 +79,18 @@
 | resource-data-076 | workspace-prefs-get-unwraps | reading workspace preferences when the account answer's workspace-preferences include holds `{ prefs: { slug: 'acme' } }` | resolves to `{ slug: 'acme' }` |
 | resource-data-077 | workspace-prefs-put-full-replace | writing preferences `{ slug: 'acme' }` | issues a POST request to `/api/v1/account` with body `{ "workspace_prefs": { "slug": "acme" } }` |
 | resource-data-078 | workspace-list-cache-key-constant | the workspace-list cache key | `('workspaces')` |
-| resource-data-079 | notify-workspaces-changed-dual-invalidate | announcing that the workspace list changed | the workspace-list cache entry is invalidated directly, and a matching invalidation accepts a resource-list entry keyed `'workspaces'` while rejecting one keyed `'organizations'` |
+| resource-data-079 | notify-workspaces-changed-dual-invalidate | announcing that the workspace list changed | the workspace-list and workspace-rows cache entries are invalidated directly, and a matching invalidation accepts a resource-list entry keyed `'workspaces'` while rejecting one keyed `'organizations'` |
 | resource-data-080 | notify-workspaces-changed-swallows | announcing a change when the underlying invalidation fails | does not raise or produce an unhandled failure |
 | resource-data-081 | notify-workspaces-changed-dispatches-event | subscribing a listener, then announcing a change | the listener is called exactly once |
 | resource-data-082 | on-workspaces-changed-subscribe | subscribing, unsubscribing, then announcing a change again | the listener is not called again |
-| resource-data-083 | check-workspace-slug-available | checking availability of slug `'a b'` | issues a GET request to `/api/auth/slug-available/a%20b` |
+| resource-data-083 | check-workspace-slug-available | checking availability of slug `'a b'` | issues a GET request to `/api/v1/handles/a%20b` and resolves to the answer `{ available: true }` unchanged |
 | resource-data-084 | workspace-list-drops-team-rows | the workspace list includes one row of type `'team'` | that row is excluded from the result |
 | resource-data-085 | workspace-list-ordering | the workspace list has one individual row and two organization rows named `'Zeta'` and `'Acme'` | order is `[individual, 'Acme', 'Zeta']` |
+| resource-data-086 | workspace-rows-cache-key-constant | the workspace-rows cache key | `('workspace-rows')`, which is neither the workspace-list key nor a prefix of it |
+| resource-data-087 | workspace-list-all | the backend returns rows `me` (individual), `acme` (organization), `crew` (team) | the all-rows operation resolves to slugs `['me', 'acme', 'crew']` in that order, read from `/api/v1/workspaces` |
+| resource-data-088 | workspace-list-all-maps-from-v1 | the backend returns `{ object: 'workspace', slug: 'me', name: 'Me', type: 'individual' }` | the all-rows operation resolves to `[{ slug: 'me', name: 'Me', type: 'individual' }]` |
+| resource-data-089 | workspace-cursor-slug | rows `{ slug: 'acme' }`, `{ id: 'x' }`, and no row | `'acme'`, absent, absent |
+| resource-data-090 | on-workspaces-changed-elsewhere-skips-own, notify-workspaces-changed-marks-own-event | a listener subscribed for announcements made elsewhere, then this copy announces a change | the listener is not called; the workspace-rows entry is invalidated exactly once (by the direct invalidation) |
+| resource-data-091 | on-workspaces-changed-elsewhere-skips-own | a listener subscribed for announcements made elsewhere, then a workspaces-changed event another copy broadcast | the listener is called exactly once |
+| resource-data-092 | workspace-row-wire-fit | the generated `/v1/workspaces` row, read through the /v1 mapping | assignable to the workspace row; its `type` equals the row's `type` set both ways; the row names no key the generated row lacks |
 

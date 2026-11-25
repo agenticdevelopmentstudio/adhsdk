@@ -203,29 +203,70 @@
   preferences rather than merging into them.
 - **workspace-list-cache-key-constant**: The workspace-list cache key MUST
   be the constant `('workspaces')`.
+- **workspace-rows-cache-key-constant**: The workspace-rows cache key (the
+  entry every-row readers share, holding the all-rows operation's result)
+  MUST be the constant `('workspace-rows')`: its own key, never the
+  workspace-list key and never a prefix of it, because the two entries hold
+  differently shaped rows and a sweep of one must never silently reach the
+  other.
 - **notify-workspaces-changed-dual-invalidate**: The
   workspace-list-changed announcement operation MUST invalidate the
-  workspace-list cache entry directly, AND MUST invalidate, via the
-  resource-list cache invalidation operation, every resource-list cache
-  entry whose cache key is `'workspaces'`.
-- **notify-workspaces-changed-swallows**: Both invalidations the
-  workspace-list-changed announcement performs MUST swallow any failure
+  workspace-list cache entry and the workspace-rows cache entry directly,
+  AND MUST invalidate, via the resource-list cache invalidation operation,
+  every resource-list cache entry whose cache key is `'workspaces'`.
+- **notify-workspaces-changed-swallows**: Both direct cache invalidations
+  the workspace-list-changed announcement performs MUST swallow any failure
   they produce.
 - **notify-workspaces-changed-dispatches-event**: The
   workspace-list-changed announcement operation MUST broadcast an event
   named by the workspaces-changed event name (see Configuration for its
-  shipped default), and MUST be a no-op when no environment capable of
-  receiving it is available.
+  shipped default), after its direct invalidations, and MUST be a no-op when
+  no environment capable of receiving it is available.
+- **notify-workspaces-changed-marks-own-event**: The announcement operation
+  MUST record each event it broadcasts as sent by this copy of the module,
+  without keeping the event alive once nothing else holds it.
 - **on-workspaces-changed-subscribe**: The workspace-list-changed
   subscription operation, given a listener, MUST subscribe it to that event
   and MUST return an unsubscribe function; both MUST be no-ops when no
   environment capable of delivering the event is available.
+- **on-workspaces-changed-elsewhere-skips-own**: The package-internal
+  subscription for announcements made elsewhere, given a listener, MUST NOT
+  call it for an event this copy of the module broadcast (its direct
+  invalidations already covered this copy's caches, and a second
+  invalidation cancels the refetch in flight and starts another request),
+  MUST call it for a workspaces-changed event anyone else broadcast (a host
+  bundling its own copy of the package), and MUST return an unsubscribe
+  function; both MUST be no-ops when no environment capable of delivering
+  the event is available. A host's own cache uses the plain subscription,
+  never this one.
 - **check-workspace-slug-available**: The workspace-slug availability
   check, given a slug, MUST issue a GET request to
-  `/api/auth/slug-available/<percent-encoded slug>` and return a
-  slug-availability result.
+  `/api/v1/handles/<percent-encoded slug>` and return its slug-availability
+  result (`available`, and a `reason` of `'format'` or `'taken'` naming the
+  test that refused it) verbatim.
+- **workspace-list-all**: The all-rows operation MUST read every page of
+  `GET /api/v1/workspaces` through the shared /v1 list reader and return
+  every row, teams included, in the order the backend returned them.
+- **workspace-list-all-maps-from-v1**: The all-rows operation MUST map each
+  row through the shared /v1-to-client mapping, so the /v1 `object` tag is
+  dropped and the row carries only `slug`, `name` and `type`.
+- **workspace-cursor-slug**: The workspace row cursor MUST be the row's
+  `slug` when that is a string, and MUST be absent for any other row
+  (including no row at all); the all-rows operation MUST page by it, because
+  a workspace row carries no `id`.
+- **workspace-row-type-closed**: A workspace row's `type` MUST be exactly
+  one of `'individual'`, `'organization'` or `'team'`.
+- **workspace-row-wire-fit**: The hand-written workspace row MUST be held to
+  the generated API spec by a type-check gate kept beside that spec (the
+  adh API types package), not derived from it, because the portable data
+  package may not import that vocabulary tier. The gate MUST fail when the
+  generated row, as the /v1 mapping reads it, is no longer assignable to the
+  workspace row; MUST fail unless the generated `type` and the row's `type`
+  are the same set, both ways; and MUST fail when the row names a key the
+  generated row no longer has. The gate MUST fail closed: a path that
+  resolves to nothing, or to an untyped value, fails it.
 - **workspace-list-drops-team-rows**: The workspace-list operation MUST
-  exclude any row whose type is `'team'`.
+  read the all-rows operation and exclude any row whose type is `'team'`.
 - **workspace-list-ordering**: The workspace-list operation MUST order the
   caller's own individual workspace first, followed by every organization
   sorted by name via the text-sorting helper.

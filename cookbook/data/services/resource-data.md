@@ -2,11 +2,11 @@
 id: ec6e6ca5-8780-4ce2-8b3a-087adc50ed35
 title: "Resource Data"
 type: ingredient
-version: 1.2.2
+version: 1.3.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-11-14
+modified: 2026-11-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -23,7 +23,8 @@ tags:
   - http
 depends-on:
   - 3ea9329e-5acc-4c43-b5ce-bb8c50570104
-related: []
+related:
+  - 92720f75-89b0-484f-8c0c-403fadc40179
 references:
   - packages/web/packages/data/src/client-helpers.ts (adhsdk)
   - packages/web/packages/data/src/config.ts (adhsdk)
@@ -41,6 +42,10 @@ references:
   - packages/web/packages/data/src/__tests__/workspaces-changed.test.ts (adhsdk)
   - packages/web/packages/data/src/__tests__/use-resource-item.test.tsx (adhsdk)
   - packages/web/packages/data/src/__tests__/use-resource-list.test.tsx (adhsdk)
+  - packages/web/packages/data/src/__tests__/workspaces.test.ts (adhsdk)
+  - packages/web/packages/data/src/__tests__/workspace-rows.test.ts (adhsdk)
+  - packages/web/packages/data/src/__tests__/use-workspaces.test.tsx (adhsdk)
+  - packages/web/packages/adh-api-types/src/data-workspace-wire.test-d.ts (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -54,7 +59,8 @@ dependency-light modules that together give every per-domain feature area a
 shared tenant-scoped resource cache, persisted last-shown/view-mode state
 (FTD: which id a collection last showed, and whether it renders as cards or a
 list), a cached workspace-preferences round-trip, and workspace
-listing/switching. It builds directly on the shared authenticated request
+listing (the owner-scopable list and every row, teams included) and its
+change announcements. It builds directly on the shared authenticated request
 layer, token/subject reading, and base64url decoding documented separately as
 the Auth Client recipe (`depends-on`), and re-exports several of those
 operations unchanged rather than re-implementing them. It has no visual
@@ -267,29 +273,70 @@ app is a consumer of this contract, not part of it.
   preferences rather than merging into them.
 - **workspace-list-cache-key-constant**: The workspace-list cache key MUST
   be the constant `('workspaces')`.
+- **workspace-rows-cache-key-constant**: The workspace-rows cache key (the
+  entry every-row readers share, holding the all-rows operation's result)
+  MUST be the constant `('workspace-rows')`: its own key, never the
+  workspace-list key and never a prefix of it, because the two entries hold
+  differently shaped rows and a sweep of one must never silently reach the
+  other.
 - **notify-workspaces-changed-dual-invalidate**: The
   workspace-list-changed announcement operation MUST invalidate the
-  workspace-list cache entry directly, AND MUST invalidate, via the
-  resource-list cache invalidation operation, every resource-list cache
-  entry whose cache key is `'workspaces'`.
-- **notify-workspaces-changed-swallows**: Both invalidations the
-  workspace-list-changed announcement performs MUST swallow any failure
+  workspace-list cache entry and the workspace-rows cache entry directly,
+  AND MUST invalidate, via the resource-list cache invalidation operation,
+  every resource-list cache entry whose cache key is `'workspaces'`.
+- **notify-workspaces-changed-swallows**: Both direct cache invalidations
+  the workspace-list-changed announcement performs MUST swallow any failure
   they produce.
 - **notify-workspaces-changed-dispatches-event**: The
   workspace-list-changed announcement operation MUST broadcast an event
   named by the workspaces-changed event name (see Configuration for its
-  shipped default), and MUST be a no-op when no environment capable of
-  receiving it is available.
+  shipped default), after its direct invalidations, and MUST be a no-op when
+  no environment capable of receiving it is available.
+- **notify-workspaces-changed-marks-own-event**: The announcement operation
+  MUST record each event it broadcasts as sent by this copy of the module,
+  without keeping the event alive once nothing else holds it.
 - **on-workspaces-changed-subscribe**: The workspace-list-changed
   subscription operation, given a listener, MUST subscribe it to that event
   and MUST return an unsubscribe function; both MUST be no-ops when no
   environment capable of delivering the event is available.
+- **on-workspaces-changed-elsewhere-skips-own**: The package-internal
+  subscription for announcements made elsewhere, given a listener, MUST NOT
+  call it for an event this copy of the module broadcast (its direct
+  invalidations already covered this copy's caches, and a second
+  invalidation cancels the refetch in flight and starts another request),
+  MUST call it for a workspaces-changed event anyone else broadcast (a host
+  bundling its own copy of the package), and MUST return an unsubscribe
+  function; both MUST be no-ops when no environment capable of delivering
+  the event is available. A host's own cache uses the plain subscription,
+  never this one.
 - **check-workspace-slug-available**: The workspace-slug availability
   check, given a slug, MUST issue a GET request to
-  `/api/auth/slug-available/<percent-encoded slug>` and return a
-  slug-availability result.
+  `/api/v1/handles/<percent-encoded slug>` and return its slug-availability
+  result (`available`, and a `reason` of `'format'` or `'taken'` naming the
+  test that refused it) verbatim.
+- **workspace-list-all**: The all-rows operation MUST read every page of
+  `GET /api/v1/workspaces` through the shared /v1 list reader and return
+  every row, teams included, in the order the backend returned them.
+- **workspace-list-all-maps-from-v1**: The all-rows operation MUST map each
+  row through the shared /v1-to-client mapping, so the /v1 `object` tag is
+  dropped and the row carries only `slug`, `name` and `type`.
+- **workspace-cursor-slug**: The workspace row cursor MUST be the row's
+  `slug` when that is a string, and MUST be absent for any other row
+  (including no row at all); the all-rows operation MUST page by it, because
+  a workspace row carries no `id`.
+- **workspace-row-type-closed**: A workspace row's `type` MUST be exactly
+  one of `'individual'`, `'organization'` or `'team'`.
+- **workspace-row-wire-fit**: The hand-written workspace row MUST be held to
+  the generated API spec by a type-check gate kept beside that spec (the
+  adh API types package), not derived from it, because the portable data
+  package may not import that vocabulary tier. The gate MUST fail when the
+  generated row, as the /v1 mapping reads it, is no longer assignable to the
+  workspace row; MUST fail unless the generated `type` and the row's `type`
+  are the same set, both ways; and MUST fail when the row names a key the
+  generated row no longer has. The gate MUST fail closed: a path that
+  resolves to nothing, or to an untyped value, fails it.
 - **workspace-list-drops-team-rows**: The workspace-list operation MUST
-  exclude any row whose type is `'team'`.
+  read the all-rows operation and exclude any row whose type is `'team'`.
 - **workspace-list-ordering**: The workspace-list operation MUST order the
   caller's own individual workspace first, followed by every organization
   sorted by name via the text-sorting helper.
@@ -391,13 +438,20 @@ component.
 | resource-data-076 | workspace-prefs-get-unwraps | reading workspace preferences when the account answer's workspace-preferences include holds `{ prefs: { slug: 'acme' } }` | resolves to `{ slug: 'acme' }` |
 | resource-data-077 | workspace-prefs-put-full-replace | writing preferences `{ slug: 'acme' }` | issues a POST request to `/api/v1/account` with body `{ "workspace_prefs": { "slug": "acme" } }` |
 | resource-data-078 | workspace-list-cache-key-constant | the workspace-list cache key | `('workspaces')` |
-| resource-data-079 | notify-workspaces-changed-dual-invalidate | announcing that the workspace list changed | the workspace-list cache entry is invalidated directly, and a matching invalidation accepts a resource-list entry keyed `'workspaces'` while rejecting one keyed `'organizations'` |
+| resource-data-079 | notify-workspaces-changed-dual-invalidate | announcing that the workspace list changed | the workspace-list and workspace-rows cache entries are invalidated directly, and a matching invalidation accepts a resource-list entry keyed `'workspaces'` while rejecting one keyed `'organizations'` |
 | resource-data-080 | notify-workspaces-changed-swallows | announcing a change when the underlying invalidation fails | does not raise or produce an unhandled failure |
 | resource-data-081 | notify-workspaces-changed-dispatches-event | subscribing a listener, then announcing a change | the listener is called exactly once |
 | resource-data-082 | on-workspaces-changed-subscribe | subscribing, unsubscribing, then announcing a change again | the listener is not called again |
-| resource-data-083 | check-workspace-slug-available | checking availability of slug `'a b'` | issues a GET request to `/api/auth/slug-available/a%20b` |
+| resource-data-083 | check-workspace-slug-available | checking availability of slug `'a b'` | issues a GET request to `/api/v1/handles/a%20b` and resolves to the answer `{ available: true }` unchanged |
 | resource-data-084 | workspace-list-drops-team-rows | the workspace list includes one row of type `'team'` | that row is excluded from the result |
 | resource-data-085 | workspace-list-ordering | the workspace list has one individual row and two organization rows named `'Zeta'` and `'Acme'` | order is `[individual, 'Acme', 'Zeta']` |
+| resource-data-086 | workspace-rows-cache-key-constant | the workspace-rows cache key | `('workspace-rows')`, which is neither the workspace-list key nor a prefix of it |
+| resource-data-087 | workspace-list-all | the backend returns rows `me` (individual), `acme` (organization), `crew` (team) | the all-rows operation resolves to slugs `['me', 'acme', 'crew']` in that order, read from `/api/v1/workspaces` |
+| resource-data-088 | workspace-list-all-maps-from-v1 | the backend returns `{ object: 'workspace', slug: 'me', name: 'Me', type: 'individual' }` | the all-rows operation resolves to `[{ slug: 'me', name: 'Me', type: 'individual' }]` |
+| resource-data-089 | workspace-cursor-slug | rows `{ slug: 'acme' }`, `{ id: 'x' }`, and no row | `'acme'`, absent, absent |
+| resource-data-090 | on-workspaces-changed-elsewhere-skips-own, notify-workspaces-changed-marks-own-event | a listener subscribed for announcements made elsewhere, then this copy announces a change | the listener is not called; the workspace-rows entry is invalidated exactly once (by the direct invalidation) |
+| resource-data-091 | on-workspaces-changed-elsewhere-skips-own | a listener subscribed for announcements made elsewhere, then a workspaces-changed event another copy broadcast | the listener is called exactly once |
+| resource-data-092 | workspace-row-wire-fit | the generated `/v1/workspaces` row, read through the /v1 mapping | assignable to the workspace row; its `type` equals the row's `type` set both ways; the row names no key the generated row lacks |
 
 ## Edge Cases
 
@@ -443,13 +497,27 @@ component.
   and view-mode operation and the cached-workspace operations MUST swallow a
   thrown storage exception rather than propagate it, degrading to the
   documented default (no value/`'cards'`) rather than crashing a render.
+- **More than one copy of the package**: A host that bundles its own copy of
+  this package announces a workspace change with an event this copy did not
+  send, so this copy's subscription for announcements made elsewhere hears it
+  and sweeps this copy's caches, while this copy's own announcements reach
+  that subscription without calling it (resource-data-090, resource-data-091).
+- **Paging workspaces**: A workspace row carries no `id`, so the all-rows
+  operation pages by `slug`; a row whose `slug` is not a string yields no
+  cursor (resource-data-089), and the shared /v1 list reader refuses to
+  truncate a list it cannot page further rather than return a partial one.
+- **Backend row drift**: A renamed, removed or retyped workspace column, or
+  a fourth workspace type, regenerates the API spec and fails the
+  workspace-row wire-fit gate's type-check rather than reaching a switcher
+  as `undefined` (resource-data-092).
 
 ## Configuration
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | storage-key prefix | `string` (via the data-configuration setter) | the host's namespace (the web implementation ships `'adh'`; see Platform Notes) | Prefix for every FTD key (`<prefix>:ftd:...`) and the cached-workspace key (`<prefix>:home:workspace`) |
-| workspace-list cache key | exported constant | `('workspaces')` | Cache key the workspace switcher's own list is cached under |
+| workspace-list cache key | exported constant | `('workspaces')` | Cache key the workspace-list operation's owner-scopable rows are cached under |
+| workspace-rows cache key | exported constant | `('workspace-rows')` | Cache key the all-rows operation's rows, teams included, are cached under (read by the Workspace Switching ingredient's every-row read state) |
 | workspace-list-changed event name | exported constant | a fixed name, `<namespace>:workspaces-changed` (see Platform Notes) | Name of the event the workspace-list-changed announcement operation broadcasts |
 | resource cache-retention period | imported constant (defined alongside the shared cache, not one of this component's own files) | `1,800,000` ms (30 min) | Retention period every resource-list/resource-item entry this component mints uses |
 | `reportErrors` | caller-supplied option, per call to the resource-item/resource-list read state | `true` | Gates whether a load failure is sent to the failure-reporting sink |
@@ -540,8 +608,15 @@ Auth Client recipe's own Logging section documents, not duplicated here.
   backs the resource-list/resource-item cache; `window.localStorage` backs
   FTD and the cached workspace slug; `window.CustomEvent`/
   `window.addEventListener`/`window.dispatchEvent` back the
-  `workspaces-changed` cross-module announcement; `String.prototype
+  `workspaces-changed` cross-module announcement, and a module-scope
+  `WeakSet<Event>` marks the events this copy dispatched so
+  `onWorkspacesChangedElsewhere` can skip them; `String.prototype
   .localeCompare` (via `sortByText`) provides locale-aware ordering.
+  `workspacesApi.listAll` reads through `v1List` (`v1-case.ts`, which maps
+  rows with `fromV1`) with `workspaceCursor` as its `cursorOf`; the
+  `WorkspaceRow` wire-fit gate is
+  `packages/web/packages/adh-api-types/src/data-workspace-wire.test-d.ts`,
+  which reads `data`'s built `dist/*.d.ts` and the generated `schema.ts`.
 - **SwiftUI / AppKit / UIKit**: An `ObservableObject`/actor-backed
   dictionary cache keyed identically (tenant, then cache key, then id) is
   the idiomatic replacement for the react-query cache; `UserDefaults`
@@ -583,15 +658,15 @@ Auth Client recipe's own Logging section documents, not duplicated here.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/data/src/client-helpers.ts` | confirmed (1.2.2) |
-| web | `packages/web/packages/data/src/config.ts` | confirmed (1.2.2) |
-| web | `packages/web/packages/data/src/ftd-storage.ts` | confirmed (1.2.2) |
-| web | `packages/web/packages/data/src/http.ts` | confirmed (1.2.2) |
-| web | `packages/web/packages/data/src/tenant.ts` | confirmed (1.2.2) |
-| web | `packages/web/packages/data/src/use-resource-item.ts` | confirmed (1.2.2) |
-| web | `packages/web/packages/data/src/use-resource-list.ts` | confirmed (1.2.2) |
-| web | `packages/web/packages/data/src/workspace-prefs.ts` | confirmed (1.2.2) |
-| web | `packages/web/packages/data/src/workspaces.ts` | confirmed (1.2.2) |
+| web | `packages/web/packages/data/src/client-helpers.ts` | confirmed (1.3.0) |
+| web | `packages/web/packages/data/src/config.ts` | confirmed (1.3.0) |
+| web | `packages/web/packages/data/src/ftd-storage.ts` | confirmed (1.3.0) |
+| web | `packages/web/packages/data/src/http.ts` | confirmed (1.3.0) |
+| web | `packages/web/packages/data/src/tenant.ts` | confirmed (1.3.0) |
+| web | `packages/web/packages/data/src/use-resource-item.ts` | confirmed (1.3.0) |
+| web | `packages/web/packages/data/src/use-resource-list.ts` | confirmed (1.3.0) |
+| web | `packages/web/packages/data/src/workspace-prefs.ts` | confirmed (1.3.0) |
+| web | `packages/web/packages/data/src/workspaces.ts` | confirmed (1.3.0) |
 
 ## Design Decisions
 
@@ -637,9 +712,10 @@ operation that in fact succeeded.
 **Approved**: pending
 
 **Decision**: `notifyWorkspacesChanged()` invalidates the toolkit's own
-`['workspaces']` cache entry directly, revalidates the
-`resource-list`-keyed `'workspaces'` entry via a predicate, AND dispatches a
-`CustomEvent` on `window` — three mechanisms to announce one fact.
+`['workspaces']` and `['workspace-rows']` cache entries directly,
+revalidates the `resource-list`-keyed `'workspaces'` entry via a predicate,
+AND dispatches a `CustomEvent` on `window` — three mechanisms to announce
+one fact.
 **Rationale**: The workspace list is read through at least two distinct
 react-query cache entries inside this package (the switcher's key-only
 entry and a consumer's `useResourceList('workspaces')` entry), and, per
@@ -699,6 +775,42 @@ Requirements.
 **Rationale**: The implementation hands the reload straight to the underlying query refetch, which ignores the enabled gate, so the load call runs with an absent id that is only asserted by a cast; the documentation says otherwise. Closing it takes either a guard that makes reload a no-op without an id (matching the documentation) or correcting the documentation, plus a test vector for the no-id case.
 **Approved**: pending
 
+**Decision**: `workspacesApi.listAll()`'s rows live under their own key,
+`WORKSPACE_ROWS_QUERY_KEY` (`['workspace-rows']`), not under
+`WORKSPACES_QUERY_KEY`, and not under a key that is a prefix of it.
+**Rationale**: The source's doc comment: `WORKSPACES_QUERY_KEY` holds
+`list()`'s `Workspace[]` (`kind`, no teams), "and two shapes under one key
+would hand each reader the other's array"; not a prefix either, "so a sweep
+of one never silently means the other". `notifyWorkspacesChanged` names
+both.
+**Approved**: pending
+
+**Decision**: `notifyWorkspacesChanged` records each event it dispatches in
+a module-scope `WeakSet`, and `onWorkspacesChangedElsewhere` skips those
+events; the package's own every-row reader subscribes through it, a host
+through `onWorkspacesChanged`.
+**Rationale**: The source's doc comment: the announcement has already swept
+this copy's client directly, and "react-query's `invalidateQueries` cancels
+a refetch in flight and starts another, so a second sweep is a second
+request". An event another copy sent still reaches the listener, "because
+that copy's sweep reached that copy's client, not this one's". Weak, "so a
+dispatched event is not kept alive by it". A host's own cache is never swept
+by the announcement, so a host wants every event.
+**Approved**: pending
+
+**Decision**: `WorkspaceRow` is written out by hand in this package and held
+to the generated spec by `adh-api-types`' `data-workspace-wire.test-d.ts`,
+rather than derived from the spec with `FromV1`.
+**Rationale**: The source's doc comment: the spec lives in
+`@adh-sdk/adh-api-types`, "the adh vocabulary tier above this portable
+package, and `tools/check_boundaries.py` refuses that import". The gate
+points the sanctioned way: the generated row, through `FromV1`, must
+satisfy the interface, and `type` is pinned exactly both ways, "so a fourth
+type the backend adds fails that package's type-check instead of reaching
+the menu". The runtime matches what the gate measures because `listAll`
+reads through `v1List`, which maps every row with `fromV1`.
+**Approved**: pending
+
 ## Compliance
 
 | Check | Status | Category |
@@ -741,12 +853,13 @@ lookup table or locale parameter anywhere in this component (see
 Localization) — a plain, honestly-reported gap in the source, not a hidden
 one.
 
-`separation-of-concerns` passes because each of the nine source files owns one concern — `http.ts` request helpers, `tenant.ts` the tenant-id read state, `ftd-storage.ts` and `workspace-prefs.ts` browser persistence, `use-resource-item.ts` and `use-resource-list.ts` the read states over the shared cache, `workspaces.ts` the workspace announcements, `config.ts` the host-injectable prefix, `client-helpers.ts` pure list helpers — with no presentation code. `unit-test-coverage` passes: the data package's `__tests__` directory (`client-helpers.test.ts`, `config.test.ts`, `ftd-storage.test.ts`, `http.test.ts`, `tenant.test.ts`, `use-resource-item.test.tsx`, `use-resource-list.test.tsx`, `workspace-prefs.test.ts`, `workspaces.test.ts` and `workspaces-changed.test.ts`) holds one passing test for each of the 85 conformance vectors, the reload-without-id behavior included.
+`separation-of-concerns` passes because each of the nine source files owns one concern — `http.ts` request helpers, `tenant.ts` the tenant-id read state, `ftd-storage.ts` and `workspace-prefs.ts` browser persistence, `use-resource-item.ts` and `use-resource-list.ts` the read states over the shared cache, `workspaces.ts` the workspace client and its change announcements (the every-row read state and the row helpers built on it are the Workspace Switching ingredient's), `config.ts` the host-injectable prefix, `client-helpers.ts` pure list helpers — with no presentation code. `unit-test-coverage` passes: the data package's `__tests__` directory (`client-helpers.test.ts`, `config.test.ts`, `ftd-storage.test.ts`, `http.test.ts`, `tenant.test.ts`, `use-resource-item.test.tsx`, `use-resource-list.test.tsx`, `workspace-prefs.test.ts`, `workspaces.test.ts` and `workspaces-changed.test.ts`) holds one passing test for each of the 85 conformance vectors, the reload-without-id behavior included. Vector 086 is the exported constant, whose sweep `workspaces-changed.test.ts` asserts beside the list key's; vectors 087-091 are pinned by `workspace-rows.test.ts` (`workspacesApi.listAll` in backend order and through `fromV1`, `workspaceCursor`) and `use-workspaces.test.tsx` (one sweep per change, and one for another copy's event); vector 092 is the type-level gate `adh-api-types/src/data-workspace-wire.test-d.ts`, run by `tsc --noEmit`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.0 | 2026-11-25 | Mike Fullerton | Workspace client follows the branch: workspacesApi.listAll reads through v1List (fromV1, slug cursor) under its own workspace-rows key, notifyWorkspacesChanged sweeps both keys and marks its own event for onWorkspacesChangedElsewhere, the slug check reads /api/v1/handles, and the hand-written WorkspaceRow is held to the spec by the adh-api-types wire-fit gate. |
 | 1.2.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (client-helpers, config, workspaces, ftd-storage, http, tenant, use-resource-item, use-resource-list, workspace-prefs, workspaces-changed; 85 of 85 vectors); vectors 075-077 and their two requirements corrected to the source's real /api/v1/account endpoints; unit-test-coverage now passed. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Hub framing removed: vector ids take this spec's own name, and the ADH host's default names move to Platform Notes as the web implementation's shipped values. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Key prefixes and event name are configuration; reload-without-id restated as current behavior with pending decision; add separation-of-concerns and unit-test-coverage. |

@@ -41,9 +41,10 @@ operation that in fact succeeded.
 **Approved**: pending
 
 **Decision**: `notifyWorkspacesChanged()` invalidates the toolkit's own
-`['workspaces']` cache entry directly, revalidates the
-`resource-list`-keyed `'workspaces'` entry via a predicate, AND dispatches a
-`CustomEvent` on `window` — three mechanisms to announce one fact.
+`['workspaces']` and `['workspace-rows']` cache entries directly,
+revalidates the `resource-list`-keyed `'workspaces'` entry via a predicate,
+AND dispatches a `CustomEvent` on `window` — three mechanisms to announce
+one fact.
 **Rationale**: The workspace list is read through at least two distinct
 react-query cache entries inside this package (the switcher's key-only
 entry and a consumer's `useResourceList('workspaces')` entry), and, per
@@ -101,5 +102,41 @@ Requirements.
 
 **Decision**: The item read state's reload operation does not honor its documented no-op when there is no item id.
 **Rationale**: The implementation hands the reload straight to the underlying query refetch, which ignores the enabled gate, so the load call runs with an absent id that is only asserted by a cast; the documentation says otherwise. Closing it takes either a guard that makes reload a no-op without an id (matching the documentation) or correcting the documentation, plus a test vector for the no-id case.
+**Approved**: pending
+
+**Decision**: `workspacesApi.listAll()`'s rows live under their own key,
+`WORKSPACE_ROWS_QUERY_KEY` (`['workspace-rows']`), not under
+`WORKSPACES_QUERY_KEY`, and not under a key that is a prefix of it.
+**Rationale**: The source's doc comment: `WORKSPACES_QUERY_KEY` holds
+`list()`'s `Workspace[]` (`kind`, no teams), "and two shapes under one key
+would hand each reader the other's array"; not a prefix either, "so a sweep
+of one never silently means the other". `notifyWorkspacesChanged` names
+both.
+**Approved**: pending
+
+**Decision**: `notifyWorkspacesChanged` records each event it dispatches in
+a module-scope `WeakSet`, and `onWorkspacesChangedElsewhere` skips those
+events; the package's own every-row reader subscribes through it, a host
+through `onWorkspacesChanged`.
+**Rationale**: The source's doc comment: the announcement has already swept
+this copy's client directly, and "react-query's `invalidateQueries` cancels
+a refetch in flight and starts another, so a second sweep is a second
+request". An event another copy sent still reaches the listener, "because
+that copy's sweep reached that copy's client, not this one's". Weak, "so a
+dispatched event is not kept alive by it". A host's own cache is never swept
+by the announcement, so a host wants every event.
+**Approved**: pending
+
+**Decision**: `WorkspaceRow` is written out by hand in this package and held
+to the generated spec by `adh-api-types`' `data-workspace-wire.test-d.ts`,
+rather than derived from the spec with `FromV1`.
+**Rationale**: The source's doc comment: the spec lives in
+`@adh-sdk/adh-api-types`, "the adh vocabulary tier above this portable
+package, and `tools/check_boundaries.py` refuses that import". The gate
+points the sanctioned way: the generated row, through `FromV1`, must
+satisfy the interface, and `type` is pinned exactly both ways, "so a fourth
+type the backend adds fails that package's type-check instead of reaching
+the menu". The runtime matches what the gate measures because `listAll`
+reads through `v1List`, which maps every row with `fromV1`.
 **Approved**: pending
 

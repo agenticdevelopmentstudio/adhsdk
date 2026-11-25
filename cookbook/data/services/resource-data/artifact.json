@@ -4,11 +4,11 @@
     "id": "ec6e6ca5-8780-4ce2-8b3a-087adc50ed35",
     "title": "Resource Data",
     "type": "ingredient",
-    "version": "1.2.2",
+    "version": "1.3.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-11-14",
+    "modified": "2026-11-25",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -28,7 +28,9 @@
     "depends-on": [
       "3ea9329e-5acc-4c43-b5ce-bb8c50570104"
     ],
-    "related": [],
+    "related": [
+      "92720f75-89b0-484f-8c0c-403fadc40179"
+    ],
     "references": [
       "packages/web/packages/data/src/client-helpers.ts (adhsdk)",
       "packages/web/packages/data/src/config.ts (adhsdk)",
@@ -45,12 +47,16 @@
       "packages/web/packages/data/src/__tests__/workspace-prefs.test.ts (adhsdk)",
       "packages/web/packages/data/src/__tests__/workspaces-changed.test.ts (adhsdk)",
       "packages/web/packages/data/src/__tests__/use-resource-item.test.tsx (adhsdk)",
-      "packages/web/packages/data/src/__tests__/use-resource-list.test.tsx (adhsdk)"
+      "packages/web/packages/data/src/__tests__/use-resource-list.test.tsx (adhsdk)",
+      "packages/web/packages/data/src/__tests__/workspaces.test.ts (adhsdk)",
+      "packages/web/packages/data/src/__tests__/workspace-rows.test.ts (adhsdk)",
+      "packages/web/packages/data/src/__tests__/use-workspaces.test.tsx (adhsdk)",
+      "packages/web/packages/adh-api-types/src/data-workspace-wire.test-d.ts (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "ff4f5c6864740478",
+  "synced": "e587f999f76f5c79",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
