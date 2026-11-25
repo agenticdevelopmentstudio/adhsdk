@@ -103,7 +103,9 @@ export type SiteWorkspacesMenuProviderProps = {
  * the header workspace menu (see `SiteMenuSwitcher`).
  *
  * Gated on sign-in by the stored token's subject ({@link useTokenSubject}), so it works under any
- * host's auth context: signed out, no request fires and `loading`/`error` read false.
+ * host's auth context: signed out, no request fires and `loading`/`error` read false. In
+ * `'preference'` mode it asks for the swap (`everyRoute`) only while that same signal says signed
+ * in, so the menu and its feed never disagree about the visitor.
  */
 export function SiteWorkspacesMenuProvider({
   children,
@@ -119,13 +121,19 @@ export function SiteWorkspacesMenuProvider({
   // `error`, so a list that failed to load reads as one rather than "No workspaces yet". Gated on
   // sign-in like `loading`: signed out the query is disabled, and what it still holds is not this
   // visitor's.
+  //
+  // `everyRoute` only while THIS feed counts the visitor as signed in. SiteMenuSwitcher swaps on the
+  // host's `authenticated`; the feed loads on the stored token's subject. Asking for the swap only
+  // when the token says signed in makes the menu need BOTH, so a host whose auth says signed in while
+  // the token store has no subject keeps its site menu rather than an empty "No workspaces yet"
+  // menu for an account that has workspaces.
   const value = useMemo<WorkspacesMenu>(
     () => ({
       workspaces: feed.workspaces,
       loading: signedIn && isLoading,
       error: signedIn && isError,
       select: feed.select,
-      everyRoute: byRoute ? undefined : true,
+      everyRoute: !byRoute && signedIn ? true : undefined,
     }),
     [feed.workspaces, feed.select, signedIn, isLoading, isError, byRoute],
   )

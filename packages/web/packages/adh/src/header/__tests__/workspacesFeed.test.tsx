@@ -109,6 +109,13 @@ describe('SiteWorkspacesMenuProvider (preference, a satellite)', () => {
     expect(menu().loading).toBe(false)
     expect(menu().error).toBe(false)
   })
+
+  it('does not ask for the header swap while its token signal says signed out', () => {
+    // The host's auth may still say signed in; the menu needs both, so no empty "No workspaces yet".
+    subject.current = null
+    render(<SiteWorkspacesMenuProvider>x</SiteWorkspacesMenuProvider>)
+    expect(menu().everyRoute).toBeUndefined()
+  })
 })
 
 describe('SiteWorkspacesMenuProvider (route, the hub)', () => {
