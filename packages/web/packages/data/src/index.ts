@@ -76,13 +76,26 @@ export {
 export {
   workspacesApi,
   checkWorkspaceSlugAvailable,
+  workspaceCursor,
   WORKSPACES_QUERY_KEY,
   WORKSPACES_CHANGED_EVENT,
   notifyWorkspacesChanged,
   onWorkspacesChanged,
   type SlugAvailability,
   type Workspace,
+  type WorkspaceRow,
+  type WorkspaceType,
 } from "./workspaces";
+
+// Every workspace row (teams included) on the toolkit client, subscribed to the change event, and
+// the pure helpers every workspace switcher names, labels and de-duplicates rows with — moved from
+// the hub so the hub's header menu and a satellite's are fed by one copy.
+export { useWorkspaces } from "./use-workspaces";
+export {
+  workspaceCompositeId,
+  workspaceListLabel,
+  firstWorkspacePerSlug,
+} from "./workspace-rows";
 
 // Which of those workspaces the user last chose — the server row that makes the choice follow
 // them across the family's many domains, plus its per-browser localStorage cache.
@@ -92,3 +105,12 @@ export {
   writeCachedWorkspace,
   type WorkspacePrefs,
 } from "./workspace-prefs";
+// The same preference as one shared cache entry, for a surface that records a pick without
+// navigating (a satellite's header workspace menu); its key is what /home's route reads too.
+export {
+  useWorkspacePreference,
+  loadWorkspacePrefs,
+  WORKSPACE_PREFS_CACHE_KEY,
+  WORKSPACE_PREFS_ID,
+  type WorkspacePreference,
+} from "./use-workspace-preference";

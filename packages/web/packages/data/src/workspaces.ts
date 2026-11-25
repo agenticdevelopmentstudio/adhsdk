@@ -92,16 +92,34 @@ export function checkWorkspaceSlugAvailable(slug: string): Promise<SlugAvailabil
   return authedJson<SlugAvailability>(`/api/v1/handles/${encodeURIComponent(slug)}`);
 }
 
-interface WorkspaceRow {
+/** What a `/v1/workspaces` row is: a personal workspace, an organization's, or a team's. */
+export type WorkspaceType = "individual" | "organization" | "team";
+
+/** One `/v1/workspaces` row, verbatim — teams included. The backend returns them priority-ordered
+ *  (individual → organization → team), and a slug is unique only within a type. */
+export interface WorkspaceRow {
   slug: string;
   name: string;
-  type: "individual" | "organization" | "team";
+  type: WorkspaceType;
+}
+
+/** The cursor a /v1 workspace row pages by: its slug, the only key the row carries. With the
+ *  default `id` cursor, anyone with more than one page of workspaces got an error, not a list. */
+export function workspaceCursor(row: unknown): string | undefined {
+  const slug = (row as { slug?: unknown } | null)?.slug;
+  return typeof slug === "string" ? slug : undefined;
 }
 
 export const workspacesApi = {
+  /** Every row the caller can switch to, teams included, in the backend's order. What a switcher
+   *  that NAVIGATES lists (the hub's, which has team routes); {@link workspacesApi.list} is the
+   *  owner-scopable subset. */
+  async listAll(): Promise<WorkspaceRow[]> {
+    return listAllV1<WorkspaceRow>("/api/v1/workspaces", {}, { cursorOf: workspaceCursor });
+  },
   /** The caller's personal workspace first, then their organizations (A→Z). */
   async list(): Promise<Workspace[]> {
-    const rows = await listAllV1<WorkspaceRow>("/api/v1/workspaces");
+    const rows = await workspacesApi.listAll();
     const own = rows.filter((r) => r.type === "individual");
     const orgs = rows.filter((r) => r.type === "organization");
     return [...own, ...sortByText(orgs, (o) => o.name)].map((r) => ({
