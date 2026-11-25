@@ -236,6 +236,23 @@ final class GitRepoScannerTests: XCTestCase {
         XCTAssertNil(GitRepoScanner.originRemote(inGitDirectory: gitDirectory))
     }
 
+    /// A project's path is spelled under the root as it was given, never as
+    /// the filesystem resolves it: the temporary directory is `/var/...`,
+    /// which Foundation lists as `/private/var/...`, and a root reached
+    /// through a symbolic link resolves elsewhere too. The paths are compared
+    /// as they come back, unstandardized, because a stored project row is.
+    func testAProjectPathKeepsTheRootsSpelling() throws {
+        try makeRepo("real/dev/alpha")
+        let link = root.appendingPathComponent("link", isDirectory: true)
+        try FileManager.default.createSymbolicLink(at: link, withDestinationURL: dir("real"))
+
+        let viaTemp = GitRepoScanner(roots: [dir("real")]).scan().map(\.path)
+        let viaLink = GitRepoScanner(roots: [link]).scan().map(\.path)
+
+        XCTAssertEqual(viaTemp, [dir("real/dev/alpha").standardizedFileURL.path])
+        XCTAssertEqual(viaLink, [link.appendingPathComponent("dev/alpha").standardizedFileURL.path])
+    }
+
     // MARK: - Helpers
 
     /// Records progress from whatever thread the walk runs on.

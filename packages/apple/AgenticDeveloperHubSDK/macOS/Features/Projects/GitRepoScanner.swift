@@ -158,8 +158,14 @@ public struct GitRepoScanner: Sendable {
                     // repositories are usually the folders directly underneath.
                 }
 
-                for child in children where shouldDescend(into: child) {
-                    stack.append(child)
+                // Foundation hands the children back under the directory's
+                // resolved path (`/var/...` comes back as `/private/var/...`),
+                // so each is re-spelled under the root as it was given: a
+                // project's path, and every skip comparison, use the user's
+                // spelling of the root, never the one the filesystem resolves.
+                for child in children {
+                    let spelled = directory.appendingPathComponent(child.lastPathComponent, isDirectory: true)
+                    if shouldDescend(into: child, spelled: spelled) { stack.append(spelled) }
                 }
             }
         }
@@ -174,11 +180,14 @@ public struct GitRepoScanner: Sendable {
         return found.sorted { $0.path < $1.path }.filter { seen.insert($0.path).inserted }
     }
 
-    private func shouldDescend(into url: URL) -> Bool {
+    /// `url` is the child as Foundation listed it, whose resource values say
+    /// what it is; `spelled` is the same child under the root's spelling,
+    /// which is what a skipped directory is compared with.
+    private func shouldDescend(into url: URL, spelled: URL) -> Bool {
         let name = url.lastPathComponent
         guard name != ".git", !Self.prunedDirectoryNames.contains(name) else { return false }
         if skipsHiddenDirectories, name.hasPrefix(".") { return false }
-        let path = url.standardizedFileURL.path
+        let path = spelled.standardizedFileURL.path
         if skippedDirectories.contains(where: { $0.path == path }) { return false }
         guard !isSymbolicLink(url) else { return false }
         return isDirectory(url)
