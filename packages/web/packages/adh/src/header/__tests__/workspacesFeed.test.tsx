@@ -176,6 +176,75 @@ describe('SiteWorkspacesMenuProvider (route, the hub)', () => {
     expect(first).not.toHaveBeenCalled()
   })
 
+  // Ported from the hub's HubWorkspacesMenuProvider tests when the hub moved onto this feed.
+  //
+  // In GET /workspaces order (individual → organization → team). `rocket` is an org and TWO teams:
+  // a team's slug is unique only within its owner, so both teams also share the id `team:rocket`.
+  const ROCKETS = [
+    { slug: 'mine', name: 'Mike Fullerton', type: 'individual' },
+    { slug: 'rocket', name: 'Rocket', type: 'organization' },
+    { slug: 'temporal', name: 'Temporal', type: 'organization' },
+    { slug: 'rocket', name: 'Rocket', type: 'team' },
+    { slug: 'rocket', name: 'Rocket', type: 'team' },
+  ]
+
+  it('lists each slug once, the row a bare /<slug> opens, and marks only that one current', () => {
+    // The hub opens `/rocket` as the FIRST `rocket` row. The two team rows could only ever open the
+    // org: marked current by slug they were three highlighted rows, and the two teams were React
+    // siblings with one key.
+    useWorkspaces.mockReturnValue({ data: ROCKETS, isLoading: false, isError: false })
+    route.pathname = '/rocket/teams'
+    render(<SiteWorkspacesMenuProvider switchBy="route">x</SiteWorkspacesMenuProvider>)
+    const ids = menu().workspaces.map((w) => w.id)
+    expect(ids).toEqual(['individual:mine', 'organization:rocket', 'organization:temporal'])
+    expect(new Set(ids).size).toBe(ids.length)
+    expect(menu().workspaces.filter((w) => w.current).map((w) => w.id)).toEqual([
+      'organization:rocket',
+    ])
+  })
+
+  it('tells the menu a signed-in list failed to load', () => {
+    // Handed only `workspaces: []`, the menu drew "No workspaces yet" over a request that never
+    // came back.
+    useWorkspaces.mockReturnValue({ data: undefined, isLoading: false, isError: true })
+    route.pathname = '/settings'
+    render(<SiteWorkspacesMenuProvider switchBy="route">x</SiteWorkspacesMenuProvider>)
+    expect(menu()).toMatchObject({ workspaces: [], loading: false, error: true })
+  })
+
+  it('is not an error while the list loads or once it has', () => {
+    useWorkspaces.mockReturnValue({ data: undefined, isLoading: true, isError: false })
+    route.pathname = '/settings'
+    const { rerender } = render(<SiteWorkspacesMenuProvider switchBy="route">x</SiteWorkspacesMenuProvider>)
+    expect(menu()).toMatchObject({ loading: true, error: false })
+    useWorkspaces.mockReturnValue({ data: rows, isLoading: false, isError: false })
+    rerender(<SiteWorkspacesMenuProvider switchBy="route">x</SiteWorkspacesMenuProvider>)
+    expect(menu()).toMatchObject({ loading: false, error: false })
+  })
+
+  it('marks NO row current off a workspace route', () => {
+    // The trigger reads the current row as its label. Falling back to the user's own slug here made
+    // `/settings` claim to be the personal workspace; with nothing current it reads "Workspaces".
+    route.pathname = '/settings'
+    render(<SiteWorkspacesMenuProvider switchBy="route">x</SiteWorkspacesMenuProvider>)
+    expect(menu().workspaces.filter((w) => w.current)).toEqual([])
+  })
+
+  it('lists no Admin row: only the rows the backend returned', () => {
+    // Admin work happens only on the admin site now, so the hub lists no Admin row for anyone, not
+    // even a viewer holding `admin`, and its old `/admin` path redirects there (the hub's site.json).
+    useWorkspaces.mockReturnValue({ data: ROCKETS, isLoading: false, isError: false })
+    route.pathname = '/mine'
+    render(<SiteWorkspacesMenuProvider switchBy="route">x</SiteWorkspacesMenuProvider>)
+    expect(menu().workspaces.map((w) => w.id)).toEqual([
+      'individual:mine',
+      'organization:rocket',
+      'organization:temporal',
+    ])
+    expect(menu().workspaces.map((w) => w.label)).not.toContain('Admin')
+    expect(menu().workspaces.map((w) => w.href)).not.toContain('/admin')
+  })
+
   it('reports loading, never an empty list, while the token has no subject yet', () => {
     // The hub swaps to the workspace menu on its own auth, which can say signed in (a cached user
     // during bootstrap, a silent SSO) before the token store has a subject. The query is disabled
