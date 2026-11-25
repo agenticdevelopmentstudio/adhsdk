@@ -224,6 +224,14 @@ vi.mock("@adh-sdk/data", async () => {
         return prefsPutResult();
       },
     },
+    // The preference row's shared identity and loader live in `@adh-sdk/data` (so a satellite's
+    // header menu and this route read ONE cache entry). The loader is the network door here: it
+    // calls the package's own `workspacePrefsApi` from inside the package, which the stub above
+    // cannot reach, so it is replaced on the same terms. One function for the whole file, so its
+    // identity is as stable as the real module-scope one the item hook's dependency array sees.
+    WORKSPACE_PREFS_CACHE_KEY: "workspace-prefs",
+    WORKSPACE_PREFS_ID: "me",
+    loadWorkspacePrefs: () => prefsGet(),
     readCachedWorkspace: () => readCached(),
     writeCachedWorkspace: (s: string) => writeCached(s),
   };

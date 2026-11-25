@@ -52,8 +52,8 @@ const prefsPut = vi.fn();
 const readCached = vi.fn();
 const writeCached = vi.fn();
 
-// `importOriginal`, NOT an object literal — that is the whole point of this file. Only the four
-// doors to the network and to localStorage are replaced; `useResourceList`,
+// `importOriginal`, NOT an object literal — that is the whole point of this file. Only the doors
+// to the network and to localStorage are replaced; `useResourceList`,
 // `useResourceItemQuery` and `useResourceItemWriter` are the shipped implementations, reading and
 // writing the one module-scope QueryClient. The cache that client holds outlives `cleanup()`,
 // which is exactly the property under test — and exactly the property `../data/vitest-setup.ts`
@@ -71,6 +71,10 @@ vi.mock("@adh-sdk/data", async (importOriginal) => {
         return Promise.resolve();
       },
     },
+    // The route reads the row through `@adh-sdk/data`'s shared loader, which calls the package's
+    // own `workspacePrefsApi` from inside the package — out of reach of the stub above. So the
+    // loader is the GET's door now, and it is replaced; the query hooks reading it stay real.
+    loadWorkspacePrefs: () => prefsGet(),
     readCachedWorkspace: () => readCached(),
     writeCachedWorkspace: (s: string) => writeCached(s),
   };
