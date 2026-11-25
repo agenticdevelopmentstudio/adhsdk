@@ -75,7 +75,7 @@ final class ProjectControllerTests: XCTestCase {
     /// A registered workspace over the throwaway repo. Same database shape as
     /// `ProjectWindowTestSupport.makeProject`, but rooted at a real git
     /// checkout so `worktrees(in:)` has something to list.
-    private func makeWorkspace(gitClient: GitClient = GitClient(configuration: .default)) throws -> ProjectWorkspace {
+    private func makeWorkspace(gitClient: GitClient = GitClient(configuration: .tests)) throws -> ProjectWorkspace {
         let database = try ProjectDatabase(path: repoRoot.appendingPathComponent(".test-project.db").path)
         let repo = GitRepo(path: repoRoot.path, name: "fixture")
         try database.insert(repo)
@@ -84,7 +84,7 @@ final class ProjectControllerTests: XCTestCase {
 
     private func makeController(
         registry: CommandRegistry? = nil,
-        gitClient: GitClient = GitClient(configuration: .default)
+        gitClient: GitClient = GitClient(configuration: .tests)
     ) throws -> ProjectController {
         ProjectController(
             workspace: try makeWorkspace(gitClient: gitClient),

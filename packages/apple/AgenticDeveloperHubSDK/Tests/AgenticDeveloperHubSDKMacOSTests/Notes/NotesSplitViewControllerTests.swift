@@ -30,6 +30,7 @@ final class NotesSplitViewControllerTests: XCTestCase {
     /// *own* default behavior, asserted below, from depending on run order.
     override func setUp() async throws {
         try await super.setUp()
+        await ExclusiveAccess.Resource.userSettings.acquire()
         UserSettings.notesFoldersVisible.value = true
         UserSettings.notesHelpVisible.value = false
     }
@@ -37,6 +38,7 @@ final class NotesSplitViewControllerTests: XCTestCase {
     override func tearDown() async throws {
         UserSettings.notesFoldersVisible.value = true
         UserSettings.notesHelpVisible.value = false
+        await ExclusiveAccess.Resource.userSettings.release()
         try await super.tearDown()
     }
 

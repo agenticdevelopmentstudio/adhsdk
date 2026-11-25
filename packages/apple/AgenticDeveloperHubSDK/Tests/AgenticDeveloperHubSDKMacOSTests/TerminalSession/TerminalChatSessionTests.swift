@@ -165,7 +165,9 @@ final class TerminalChatSessionTests: XCTestCase {
         let reader = #"/usr/bin/python3 -c 'import os,termios,tty; o=termios.tcgetattr(0); tty.setraw(0); "#
             + #"print("RAW"+"READY",flush=True); "# + body + "'"
         var seen = await chat.run(reader, settle: .milliseconds(300), timeout: .seconds(3))
-        let deadline = ContinuousClock.now + .seconds(20)
+        // /usr/bin/python3 is the xcode-select shim, whose start-up alone can run
+        // past twenty seconds while a parallel test run holds every core.
+        let deadline = ContinuousClock.now + .seconds(60)
         while !seen.contains("RAWREADY") {
             guard ContinuousClock.now < deadline else { throw RawReaderNeverStarted(output: seen) }
             seen += await chat.waitForOutput(settle: .milliseconds(300), timeout: .seconds(2))

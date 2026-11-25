@@ -2,14 +2,14 @@ import Foundation
 import Testing
 @testable import AgenticDeveloperHubSDKCore
 
-@Suite("GitClient conflicts, interactive rebase, worktrees and submodules", .serialized, .timeLimit(.minutes(2)))
+@Suite("GitClient conflicts, interactive rebase, worktrees and submodules", .timeLimit(.minutes(2)))
 struct GitClientConflictTests {
     /// No global or system configuration, `GIT_EDITOR=false` (so a squash that kept its
     /// combined message proves `perform` set `GIT_EDITOR=true`), and `protocol.file.allow`
     /// for the local-path submodule clone. It goes in `GIT_CONFIG_PARAMETERS`, the variable
     /// `-c` writes, because git hands that one on to a submodule's clone and strips
     /// `GIT_CONFIG_COUNT`.
-    private let client = GitClient(configuration: GitClientConfiguration(extraEnvironment: [
+    private let client = GitClient(configuration: GitClientConfiguration(timeout: 60, extraEnvironment: [
         "GIT_CONFIG_GLOBAL": "/dev/null", "GIT_CONFIG_NOSYSTEM": "1", "GIT_EDITOR": "false",
         "GIT_CONFIG_PARAMETERS": "'protocol.file.allow=always'"
     ]))

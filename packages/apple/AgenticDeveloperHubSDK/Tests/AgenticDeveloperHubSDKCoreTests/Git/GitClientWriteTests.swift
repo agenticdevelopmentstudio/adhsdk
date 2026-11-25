@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import AgenticDeveloperHubSDKCore
 
-@Suite("GitClient write verbs against fixture repositories", .serialized)
+@Suite("GitClient write verbs against fixture repositories")
 struct GitClientWriteTests {
     /// The client under test sees no global or system configuration, so a developer's hooks
     /// path, signing or editor cannot reach the fixtures' commits.

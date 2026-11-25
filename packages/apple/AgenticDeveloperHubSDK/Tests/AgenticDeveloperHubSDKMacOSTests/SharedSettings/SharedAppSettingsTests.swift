@@ -47,6 +47,7 @@ final class SharedAppSettingsTests: XCTestCase {
 
     override func setUp() async throws {
         try await super.setUp()
+        await ExclusiveAccess.Resource.userSettings.acquire()
         previousSettings = UserSettings.shared
         ownProvider = InMemorySettingsStorageProvider()
         UserSettings.shared = UserSettings(
@@ -55,6 +56,7 @@ final class SharedAppSettingsTests: XCTestCase {
 
     override func tearDown() async throws {
         UserSettings.shared = previousSettings
+        await ExclusiveAccess.Resource.userSettings.release()
         try await super.tearDown()
     }
 

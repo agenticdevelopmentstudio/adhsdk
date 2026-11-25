@@ -39,11 +39,11 @@ private final class ChangeRecorder: @unchecked Sendable {
     }
 }
 
-@Suite("GitRepositoryModel and its watcher", .serialized)
+@Suite("GitRepositoryModel and its watcher")
 @MainActor
 struct GitRepositoryModelTests {
     private static let epoch = 1_767_268_800
-    private let client = GitClient(configuration: .default)
+    private let client = GitClient(configuration: .tests)
 
     private func makeModel(_ repository: GitTestRepository) -> (GitRepositoryModel, FakeWatcher) {
         let watcher = FakeWatcher()
@@ -175,6 +175,10 @@ struct GitRepositoryModelTests {
         try await commitFile(repository, "one.txt", at: 100)
         let tip = try await repository.sha("HEAD")
         // A gitlink with no .gitmodules entry: `git submodule status` exits non-zero on it.
+        // The .gitmodules (naming some other submodule) has to exist, or the client knows
+        // there are no submodules without asking git.
+        try repository.write("[submodule \"other\"]\n\tpath = other\n\turl = ./other\n", to: ".gitmodules")
+        try await repository.run(["add", ".gitmodules"])
         try await repository.run(["update-index", "--add", "--cacheinfo", "160000,\(tip),vendor/orphan"])
         try await repository.commit("orphan", at: Self.epoch + 200)
         try await repository.run(["tag", "v1"])

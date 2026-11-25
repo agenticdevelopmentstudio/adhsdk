@@ -7,7 +7,7 @@ import Testing
 
 /// The AI Providers panel's names for a configuration and its editor's rows
 /// (ai-providers-panel vectors ai-providers-panel-001 to 005).
-@Suite("AI Providers editor", .serialized)
+@Suite("AI Providers editor", .serialized, .exclusiveAccess(to: .userSettings))
 @MainActor
 struct ProviderEditorTests {
 

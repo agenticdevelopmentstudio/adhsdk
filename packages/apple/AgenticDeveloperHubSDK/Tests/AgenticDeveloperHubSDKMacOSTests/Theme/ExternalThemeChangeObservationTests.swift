@@ -24,7 +24,7 @@ import AppKit
 /// is never invoked by anything, so it can't prove the wiring that makes
 /// `ThemeChoiceViewModel` and the panel's fallback branch actually repaint.
 @MainActor
-@Suite(.serialized)
+@Suite(.serialized, .exclusiveAccess(to: .userSettings))
 struct ExternalThemeChangeObservationTests {
 
     private let suiteName = "AgenticDeveloperHubSDKExternalThemeChangeObservationTests"

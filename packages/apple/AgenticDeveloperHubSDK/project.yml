@@ -1507,6 +1507,8 @@ targets:
       - path: Tests/AgenticDeveloperHubSDKCoreTests/Billing/FakeBillingClient.swift
       # The throwaway git repository fixture, shared with the Core git tests.
       - path: Tests/AgenticDeveloperHubSDKCoreTests/Git/GitTestRepository.swift
+      # The trait that takes turns with process-wide state, shared with the Core tests.
+      - path: Tests/AgenticDeveloperHubSDKCoreTests/Support/ExclusiveAccess.swift
       # Real claude output, shared with the Core stream-json tests.
       - path: Tests/AgenticDeveloperHubSDKCoreTests/Partner/ClaudeStreamFixtures.swift
       - path: Tests/AgenticDeveloperHubSDKCoreTests/Partner/Fixtures
@@ -2741,16 +2743,28 @@ schemes:
       config: Debug
     test:
       config: Debug
+      # Parallel: XCTest classes spread over runner clones, and Swift Testing runs
+      # its suites side by side in-process (a `.serialized` suite stays in order
+      # within itself). Serial, the suites took 37 minutes on a 24-core machine.
       targets:
-        - AgenticDeveloperHubSDKCoreTests
-        - AgenticDeveloperHubSDKCoreUITests
-        - AgenticDeveloperHubSDKCoreMacOSTests
-        - AIPluginKitTests
-        - AgenticDeveloperHubSDKPermissionsTests
-        - AgenticDeveloperHubSDKPermissionsUITests
-        - AgenticDeveloperHubSDKDisplaysTests
-        - AgenticDeveloperHubSDKMacOSTests
-        - AgenticDeveloperHubSDKDatabaseTests
+        - name: AgenticDeveloperHubSDKCoreTests
+          parallelizable: true
+        - name: AgenticDeveloperHubSDKCoreUITests
+          parallelizable: true
+        - name: AgenticDeveloperHubSDKCoreMacOSTests
+          parallelizable: true
+        - name: AIPluginKitTests
+          parallelizable: true
+        - name: AgenticDeveloperHubSDKPermissionsTests
+          parallelizable: true
+        - name: AgenticDeveloperHubSDKPermissionsUITests
+          parallelizable: true
+        - name: AgenticDeveloperHubSDKDisplaysTests
+          parallelizable: true
+        - name: AgenticDeveloperHubSDKMacOSTests
+          parallelizable: true
+        - name: AgenticDeveloperHubSDKDatabaseTests
+          parallelizable: true
     profile:
       config: Release
     analyze:

@@ -16,9 +16,13 @@ final class PartnerGitFixture {
             .appendingPathComponent("PartnerGitFixture-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         try git("init", "-b", "main")
-        try git("config", "user.name", "Ann")
-        try git("config", "user.email", "ann@example.com")
-        try git("config", "commit.gpgsign", "false")
+        // The identity, written into the repo's config in one go rather than
+        // by three `git config` processes per test.
+        let config = try FileHandle(forWritingTo: directory.appendingPathComponent(".git/config"))
+        defer { try? config.close() }
+        try config.seekToEnd()
+        let identity = "[user]\n\tname = Ann\n\temail = ann@example.com\n[commit]\n\tgpgsign = false\n"
+        try config.write(contentsOf: Data(identity.utf8))
     }
 
     deinit { try? FileManager.default.removeItem(at: directory) }

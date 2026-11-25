@@ -5,6 +5,11 @@ import AgenticDeveloperHubSDKCore
 
 @MainActor
 final class StenographerPrefsPushTests: XCTestCase {
+    override func setUp() async throws {
+        try await super.setUp()
+        // Writes UserSettings.shared, which suites in the other framework share.
+        await ExclusiveAccess.Resource.userSettings.acquire()
+    }
 
     override func tearDown() async throws {
         StenographerOversightPrefsPush.stopObserving()
@@ -27,6 +32,7 @@ final class StenographerPrefsPushTests: XCTestCase {
             settings.resetTuning()
             settings.seeded.remove()
         }
+        await ExclusiveAccess.Resource.userSettings.release()
     }
 
     private static let configId = UUID(uuidString: "0A1B2C3D-0000-4000-8000-000000000001")!
@@ -260,6 +266,11 @@ private extension StubDaemonService {
 /// The seeding engine in `SettingsSnapshotPush` itself, with a short retry delay.
 @MainActor
 final class SettingsSnapshotPushSeedTests: XCTestCase {
+    override func setUp() async throws {
+        try await super.setUp()
+        // Writes UserSettings.shared, which suites in the other framework share.
+        await ExclusiveAccess.Resource.userSettings.acquire()
+    }
 
     private final class Counter: @unchecked Sendable {
         private let lock = NSLock()
@@ -272,6 +283,7 @@ final class SettingsSnapshotPushSeedTests: XCTestCase {
 
     override func tearDown() async throws {
         setting.remove()
+        await ExclusiveAccess.Resource.userSettings.release()
     }
 
     /// A push whose seed succeeds once `reachable` says so; the reconnect handler is never fired.

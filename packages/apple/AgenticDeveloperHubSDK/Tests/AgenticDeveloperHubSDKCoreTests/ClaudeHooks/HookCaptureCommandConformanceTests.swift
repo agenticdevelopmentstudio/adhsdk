@@ -26,11 +26,12 @@ final class HookCaptureCommandConformanceTests: XCTestCase {
     private func build(
         event: String = "Stop", ppid: String? = nil, stdin: String = "{}", env: [String: String] = [:],
         claudePid: @escaping () -> Int32? = { nil },
-        accountName: @escaping (String?) -> String = { _ in "" }
+        accountName: @escaping (String?) -> String = { _ in "" },
+        processEnvironment: [String: String] = ProcessInfo.processInfo.environment
     ) -> [String: Any]? {
         HookCaptureCommand.buildEnvelope(
             eventType: event, ppidString: ppid, stdin: Data(stdin.utf8), env: env,
-            claudePid: claudePid, accountName: accountName)
+            claudePid: claudePid, accountName: accountName, processEnvironment: processEnvironment)
     }
 
     private func run(_ arguments: [String], drop: URL) -> Int32 {
@@ -47,18 +48,14 @@ final class HookCaptureCommandConformanceTests: XCTestCase {
             .compactMap { try JSONSerialization.jsonObject(with: Data(contentsOf: $0)) as? [String: Any] }
     }
 
-    /// Sets (or unsets, for nil) live environment variables around `body`, then restores them.
-    private func withLiveEnvironment(_ values: [String: String?], _ body: () throws -> Void) rethrows {
-        var saved: [String: String?] = [:]
-        for key in values.keys { saved[key] = ProcessInfo.processInfo.environment[key] }
-        func apply(_ map: [String: String?]) {
-            for (key, value) in map {
-                if let value { setenv(key, value, 1) } else { unsetenv(key) }
-            }
-        }
-        apply(values)
-        defer { apply(saved) }
-        try body()
+    /// This process's environment with `values` set (or removed, for nil): the
+    /// live environment the context is read from, supplied rather than
+    /// `setenv`'d, since the real one is shared with every suite running beside
+    /// this one (an empty `TMPDIR` there sends their temp files to the wrong place).
+    private func liveEnvironment(_ values: [String: String?]) -> [String: String] {
+        var environment = ProcessInfo.processInfo.environment
+        for (key, value) in values { environment[key] = value }
+        return environment
     }
 
     private func context(_ envelope: [String: Any]?, _ group: String) -> [String: Any]? {
@@ -160,19 +157,16 @@ final class HookCaptureCommandConformanceTests: XCTestCase {
     // MARK: - Live environment
 
     func testV014_claudeBooleansFollowTheLiveEnvironment() {
-        withLiveEnvironment(["CLAUDECODE": "TRUE", "CLAUDE_YOLO": "0"]) {
-            let claude = context(build(), "claude")
-            XCTAssertEqual(claude?["running"] as? Bool, true)
-            XCTAssertEqual(claude?["yolo"] as? Bool, false)
-        }
+        let claude = context(build(processEnvironment: liveEnvironment(["CLAUDECODE": "TRUE", "CLAUDE_YOLO": "0"])),
+                             "claude")
+        XCTAssertEqual(claude?["running"] as? Bool, true)
+        XCTAssertEqual(claude?["yolo"] as? Bool, false)
     }
 
     func testV015_unsetAndEmptyVariablesAreOmittedFromTheContext() {
-        withLiveEnvironment(["LC_TERMINAL": nil, "TMPDIR": ""]) {
-            let envelope = build()
-            XCTAssertNil(context(envelope, "terminal")?["lc_terminal"])
-            XCTAssertNil(context(envelope, "session")?["tmpdir"])
-        }
+        let envelope = build(processEnvironment: liveEnvironment(["LC_TERMINAL": nil, "TMPDIR": ""]))
+        XCTAssertNil(context(envelope, "terminal")?["lc_terminal"])
+        XCTAssertNil(context(envelope, "session")?["tmpdir"])
     }
 
     // MARK: - Token recovery

@@ -11,11 +11,19 @@ import Foundation
 /// Commands run in this process's inherited working directory unless the
 /// caller passes an explicit `-C <dir>`. Failures (a non-zero exit, a hang past
 /// the timeout, or a spawn error) collapse to `""`.
+///
+/// The child's environment is `environment` (this process's own by default),
+/// with the two overrides below applied over it. A caller that needs a
+/// different environment passes it rather than calling `setenv`: `environ` is
+/// one table for the whole process, so a `setenv` races every other thread
+/// that is spawning a child at the same moment.
 public enum ReadOnlyGit {
 
     /// Run a read-only git command, returning trimmed stdout or "" on failure.
-    public static func git(_ args: [String]) -> String {
-        rawGit(args).trimmingCharacters(in: .whitespacesAndNewlines)
+    public static func git(
+        _ args: [String], environment: [String: String] = ProcessInfo.processInfo.environment
+    ) -> String {
+        rawGit(args, environment: environment).trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     /// Run a read-only git command, returning stdout **byte-for-byte** (still ""
@@ -28,13 +36,15 @@ public enum ReadOnlyGit {
     /// it, turning a 24-byte status into a 22-byte one that git never emitted
     /// and that hashes differently for a purely cosmetic reason. Every
     /// *displayed* value wants the trim, which is why ``git(_:)`` is the default.
-    public static func rawGit(_ args: [String]) -> String {
+    public static func rawGit(
+        _ args: [String], environment: [String: String] = ProcessInfo.processInfo.environment
+    ) -> String {
         let process = Process()
         // `/usr/bin/env` resolves `git` on PATH without a shell.
         process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
         process.arguments = ["git"] + args
 
-        var env = ProcessInfo.processInfo.environment
+        var env = environment
         env["GIT_OPTIONAL_LOCKS"] = "0"
         env["PATH"] = repairedPath(env["PATH"])
         process.environment = env

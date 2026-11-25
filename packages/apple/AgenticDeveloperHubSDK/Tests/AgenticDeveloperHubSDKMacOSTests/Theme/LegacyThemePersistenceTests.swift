@@ -18,7 +18,7 @@ import AppKit
 /// older build would have, entirely outside today's code path, then confirms the
 /// previously-selected theme survives being read back through the new seam.
 @MainActor
-@Suite(.serialized)
+@Suite(.serialized, .exclusiveAccess(to: .userSettings))
 struct LegacyThemePersistenceTests {
 
     private let suiteName = "AgenticDeveloperHubSDKLegacyThemePersistenceTests"

@@ -22,7 +22,8 @@ final class PartnerSessionRegistryTests: XCTestCase {
         detector = ManualSessionEventDetector()
         registry = PartnerSessionRegistry(store: store,
                                           environment: { ["PARTNER_TEST": "1", "TERM_SESSION_ID": "inherited"] },
-                                          detector: detector, now: { [unowned self] in clock })
+                                          detector: detector, now: { [unowned self] in clock },
+                                          shell: "/bin/sh")
         events = []
         registry.onEvent = { [unowned self] in events.append($0) }
     }
@@ -34,9 +35,16 @@ final class PartnerSessionRegistryTests: XCTestCase {
         try? FileManager.default.removeItem(at: directory)
     }
 
-    private func waitUntil(_ timeout: TimeInterval = 3, _ condition: () -> Bool) async {
+    /// Polls until `condition` holds, and fails the test at the call site
+    /// when it never does: a quiet timeout let the test go on to assert
+    /// against a state it had never reached.
+    private func waitUntil(_ timeout: TimeInterval = 3, file: StaticString = #filePath, line: UInt = #line,
+                           _ condition: () -> Bool) async {
         let deadline = Date().addingTimeInterval(timeout)
-        while !condition(), Date() < deadline {
+        while !condition() {
+            guard Date() < deadline else {
+                return XCTFail("timed out after \(timeout)s waiting for the condition", file: file, line: line)
+            }
             try? await Task.sleep(for: .milliseconds(50))
         }
     }

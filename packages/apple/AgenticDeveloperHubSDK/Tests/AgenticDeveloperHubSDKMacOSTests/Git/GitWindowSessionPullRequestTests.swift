@@ -71,11 +71,11 @@ private actor GitHubCallRecorder {
 /// `workspace/git/git-views`, "Pull requests"), against a real repository and a bare
 /// remote in the temp directory, with `gh` replaced by a stub runner: nothing here
 /// spawns `gh` or reaches GitHub. The JSON is `gh … --json` output written by hand.
-@Suite("GitWindowSession pull requests", .serialized)
+@Suite("GitWindowSession pull requests")
 @MainActor
 struct GitWindowSessionPullRequestTests {
     private static let epoch = 1_767_268_800
-    private let client = GitClient(configuration: .default)
+    private let client = GitClient(configuration: .tests)
 
     /// `gh pr list --json …` for one open pull request, #7 from `feature`.
     nonisolated static let listJSON = """

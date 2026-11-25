@@ -33,7 +33,7 @@ private func dormantSnapshot(
 }
 
 @MainActor
-@Suite("SystemWindowContextManager conformance")
+@Suite("SystemWindowContextManager conformance", .exclusiveAccess(to: .userSettings))
 struct ContextManagerConformanceTests {
 
     // MARK: - Helpers
@@ -418,7 +418,7 @@ struct ContextManagerConformanceTests {
 }
 
 @MainActor
-@Suite("SystemWindowContextsModel conformance", .serialized)
+@Suite("SystemWindowContextsModel conformance", .serialized, .exclusiveAccess(to: .userSettings))
 struct ContextsModelConformanceTests {
 
     // MARK: - Helpers

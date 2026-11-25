@@ -4,7 +4,7 @@ import AppKit
 @testable import AgenticDeveloperHubSDKMacOS
 
 @MainActor
-@Suite(.serialized)
+@Suite(.serialized, .exclusiveAccess(to: .userSettings))
 struct ThemeUITests {
 
     init() {

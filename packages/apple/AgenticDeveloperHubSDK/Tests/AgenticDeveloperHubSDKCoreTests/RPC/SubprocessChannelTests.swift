@@ -511,12 +511,13 @@ struct SubprocessChannelTests {
             arguments: [
                 "-c",
                 "trap 'sleep 0.3; echo BYE >&2; exit 7' TERM; "
-                    + "echo UP >&2; while :; do sleep 0.05; done"
+                    + "echo UP >&2; echo READY; while :; do sleep 0.05; done"
             ]
         )) { channel in
-            _ = try await channel.messages()
-            // Let the trap be installed and `UP` be written before signalling.
-            try await Task.sleep(nanoseconds: 500_000_000)
+            // `READY` on stdout comes after the trap is installed and `UP` is
+            // written. A fixed sleep here was a race: on a loaded machine the
+            // signal could beat the trap, and the child died of SIGTERM (15).
+            _ = try await collectFrames(from: try await channel.messages(), count: 1)
 
             await channel.terminate()
 
@@ -560,12 +561,13 @@ struct SubprocessChannelTests {
             ]
         )) { channel in
             let stream = try await channel.messages()
-            // Let the trap be installed and `UP` be written before signalling.
-            try await Task.sleep(nanoseconds: 500_000_000)
+            // `UP` comes after the trap is installed; waiting for it rather
+            // than a fixed sleep keeps the signal from beating the trap.
+            let first = try await collectFrames(from: stream, count: 1)
 
             await channel.terminate()
 
-            let frames = try await drainToEOF(stream)
+            let frames = try await first + drainToEOF(stream)
             let text = frames.compactMap { String(bytes: $0, encoding: .utf8) }.joined()
             #expect(text.contains("UP"))
             #expect(
@@ -731,10 +733,11 @@ struct SubprocessChannelTests {
         // make SIGKILL unreachable.
         try await withLaunchedChannel(.init(
             executableURL: URL(fileURLWithPath: "/bin/sh"),
-            arguments: ["-c", "trap '' TERM; while :; do sleep 0.05; done"]
+            arguments: ["-c", "trap '' TERM; echo READY; while :; do sleep 0.05; done"]
         )) { channel in
-            _ = try await channel.messages()
-            try await Task.sleep(nanoseconds: 200_000_000)
+            // `READY` comes after the trap; a signal sent before it would kill
+            // the child with SIGTERM (15) and say nothing about the escalation.
+            _ = try await collectFrames(from: try await channel.messages(), count: 1)
 
             await channel.terminate()
 

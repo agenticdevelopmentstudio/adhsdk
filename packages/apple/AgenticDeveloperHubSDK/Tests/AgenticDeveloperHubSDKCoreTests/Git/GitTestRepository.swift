@@ -140,3 +140,14 @@ struct GitTestRepository {
         ["GIT_AUTHOR_DATE": "@\(epoch) +0000", "GIT_COMMITTER_DATE": "@\(epoch) +0000"]
     }
 }
+
+extension GitClientConfiguration {
+    /// The default configuration with a timeout a loaded test run can afford.
+    ///
+    /// Five seconds is the app's budget for an interactive refresh. A parallel
+    /// test run keeps every core busy, and `git submodule status` (a shell
+    /// script) then outlasts it, so a test that is not about the timeout would
+    /// fail on `.timedOut` instead of on what it checks. Tests of the timeout
+    /// itself set their own.
+    static let tests = GitClientConfiguration(timeout: 60)
+}

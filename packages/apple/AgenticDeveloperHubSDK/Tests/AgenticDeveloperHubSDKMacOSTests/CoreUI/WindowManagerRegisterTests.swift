@@ -10,6 +10,11 @@ import AgenticDeveloperHubSDKCore
 /// unconditional: no policy or system preference keeps a window shut.
 @MainActor
 final class WindowManagerRegisterTests: XCTestCase {
+    override func setUp() async throws {
+        try await super.setUp()
+        // Writes UserSettings.shared, which suites in the other framework share.
+        await ExclusiveAccess.Resource.userSettings.acquire()
+    }
 
     private final class FakeVC: NSViewController {
         override func loadView() {
@@ -41,6 +46,7 @@ final class WindowManagerRegisterTests: XCTestCase {
             manager.frames.clearVisibility(for: id)
         }
         UserSettings.shared.remove(UserSettings.reopenOnLaunchPolicy)
+        await ExclusiveAccess.Resource.userSettings.release()
         try await super.tearDown()
     }
 

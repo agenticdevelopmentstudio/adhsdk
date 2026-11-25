@@ -13,19 +13,25 @@ final class GitContextFingerprintTests: XCTestCase {
 
     private var repo: URL!
 
+    /// The machine's git config neutered, for the fixture and the sample alike.
+    /// Without it the suite is at the mercy of the developer's `~/.gitconfig`:
+    /// `status.showUntrackedFiles=no` makes an untracked file invisible (the
+    /// assertion that the status hash *moves* then fails on a correct
+    /// fingerprint), `core.excludesFile` can ignore `scratch.txt` outright, and
+    /// `commit.gpgsign=true` turns every fixture commit into a keychain prompt.
+    ///
+    /// Passed to every git child rather than `setenv`'d: the process
+    /// environment is shared with every suite running beside this one, and a
+    /// `setenv` races any thread spawning a child at that moment.
+    private let environment: [String: String] = {
+        var env = ProcessInfo.processInfo.environment
+        env["GIT_CONFIG_GLOBAL"] = "/dev/null"
+        env["GIT_CONFIG_SYSTEM"] = "/dev/null"
+        return env
+    }()
+
     override func setUpWithError() throws {
         try super.setUpWithError()
-        // Neuter the machine's git config for this process, fixture and sample
-        // alike. `ReadOnlyGit` inherits this process's environment, so these
-        // two variables are the only way to pin what the code under test sees.
-        // Without them the whole suite is at the mercy of the developer's
-        // `~/.gitconfig`: `status.showUntrackedFiles=no` makes an untracked file
-        // invisible (the assertion that the status hash *moves* then fails on a
-        // correct fingerprint), `core.excludesFile` can ignore `scratch.txt`
-        // outright, and `commit.gpgsign=true` turns every fixture commit into a
-        // keychain prompt.
-        setenv("GIT_CONFIG_GLOBAL", "/dev/null", 1)
-        setenv("GIT_CONFIG_SYSTEM", "/dev/null", 1)
         repo = URL(fileURLWithPath: NSTemporaryDirectory())
             .appendingPathComponent("gitctx-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: repo, withIntermediateDirectories: true)
@@ -36,8 +42,6 @@ final class GitContextFingerprintTests: XCTestCase {
     }
 
     override func tearDownWithError() throws {
-        unsetenv("GIT_CONFIG_GLOBAL")
-        unsetenv("GIT_CONFIG_SYSTEM")
         if let repo { try? FileManager.default.removeItem(at: repo) }
         try super.tearDownWithError()
     }
@@ -52,11 +56,11 @@ final class GitContextFingerprintTests: XCTestCase {
 
         // No git block in the system prompt to fingerprint ⇒ no fields, rather
         // than a row of zeros that would read as "clean tree".
-        XCTAssertNil(GitContextFingerprint.sample(directory: plain.path))
+        XCTAssertNil(GitContextFingerprint.sample(directory: plain.path, environment: environment))
     }
 
     func testSampleReportsTheBranchAndACleanTree() throws {
-        let sample = try XCTUnwrap(GitContextFingerprint.sample(directory: repo.path))
+        let sample = try XCTUnwrap(GitContextFingerprint.sample(directory: repo.path, environment: environment))
         XCTAssertEqual(sample["branch"] as? String, "fingerprint-branch")
         XCTAssertEqual(sample["status_char_count"] as? Int, 0)
         XCTAssertEqual(sample["status_entry_count"] as? Int, 0)
@@ -69,9 +73,9 @@ final class GitContextFingerprintTests: XCTestCase {
     }
 
     func testAnUntrackedFileMovesTheStatusHashButNotTheCommitHash() throws {
-        let before = try XCTUnwrap(GitContextFingerprint.sample(directory: repo.path))
+        let before = try XCTUnwrap(GitContextFingerprint.sample(directory: repo.path, environment: environment))
         try write("scratch.txt", "hello\n")
-        let after = try XCTUnwrap(GitContextFingerprint.sample(directory: repo.path))
+        let after = try XCTUnwrap(GitContextFingerprint.sample(directory: repo.path, environment: environment))
 
         XCTAssertNotEqual(after["status_sha256"] as? String, before["status_sha256"] as? String)
         XCTAssertEqual(after["status_entry_count"] as? Int, 1)
@@ -83,11 +87,11 @@ final class GitContextFingerprintTests: XCTestCase {
     }
 
     func testANewCommitMovesTheCommitHashButNotTheStatusHash() throws {
-        let before = try XCTUnwrap(GitContextFingerprint.sample(directory: repo.path))
+        let before = try XCTUnwrap(GitContextFingerprint.sample(directory: repo.path, environment: environment))
         try write("second.md", "two\n")
         XCTAssertEqual(git("add", "second.md"), 0)
         XCTAssertEqual(commit("second"), 0)
-        let after = try XCTUnwrap(GitContextFingerprint.sample(directory: repo.path))
+        let after = try XCTUnwrap(GitContextFingerprint.sample(directory: repo.path, environment: environment))
 
         XCTAssertNotEqual(after["recent_commits_sha256"] as? String,
                           before["recent_commits_sha256"] as? String)
@@ -102,7 +106,7 @@ final class GitContextFingerprintTests: XCTestCase {
         // `ReadOnlyGit.git` does, and what `rawGit` exists to avoid) yields
         // 11 and a different digest for a purely cosmetic reason.
         try write("README.md", "one\ntwo\n")
-        let sample = try XCTUnwrap(GitContextFingerprint.sample(directory: repo.path))
+        let sample = try XCTUnwrap(GitContextFingerprint.sample(directory: repo.path, environment: environment))
         XCTAssertEqual(sample["status_char_count"] as? Int, 13,
                        "the leading status column must survive into the hash")
         XCTAssertEqual(sample["status_entry_count"] as? Int, 1)
@@ -196,13 +200,13 @@ final class GitContextFingerprintTests: XCTestCase {
     func testV013_entryCountCountsTwoUntrackedFilesAsTwo() throws {
         try write("one.txt", "1\n")
         try write("two.txt", "2\n")
-        let sample = try XCTUnwrap(GitContextFingerprint.sample(directory: repo.path))
+        let sample = try XCTUnwrap(GitContextFingerprint.sample(directory: repo.path, environment: environment))
         XCTAssertEqual(sample["status_entry_count"] as? Int, 2)
         XCTAssertEqual(sample["status_char_count"] as? Int, "?? one.txt\n?? two.txt\n".count)
     }
 
     func testV014_sampledAtIsUTCSecondsWithLiteralZ() throws {
-        let sample = try XCTUnwrap(GitContextFingerprint.sample(directory: repo.path))
+        let sample = try XCTUnwrap(GitContextFingerprint.sample(directory: repo.path, environment: environment))
         let stamp = try XCTUnwrap(sample["sampled_at"] as? String)
         XCTAssertNotNil(stamp.range(of: #"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$"#,
                                     options: .regularExpression),
@@ -215,7 +219,7 @@ final class GitContextFingerprintTests: XCTestCase {
             XCTAssertEqual(git("add", "file\(index).md"), 0)
             XCTAssertEqual(commit("commit number \(index)"), 0)
         }
-        let sample = try XCTUnwrap(GitContextFingerprint.sample(directory: repo.path))
+        let sample = try XCTUnwrap(GitContextFingerprint.sample(directory: repo.path, environment: environment))
         let fiveNewest = ReadOnlyGit.git(
             ["-C", repo.path, "log", "--oneline", "--no-decorate", "-5"])
         let everything = ReadOnlyGit.git(
@@ -247,7 +251,7 @@ final class GitContextFingerprintTests: XCTestCase {
     func testV017_aDirectoryArgumentScopesTheSampleToThatRepository() throws {
         let original = FileManager.default.currentDirectoryPath
         XCTAssertNotEqual(original, repo.path)
-        let sample = try XCTUnwrap(GitContextFingerprint.sample(directory: repo.path))
+        let sample = try XCTUnwrap(GitContextFingerprint.sample(directory: repo.path, environment: environment))
         XCTAssertEqual(sample["branch"] as? String, "fingerprint-branch")
     }
 
@@ -283,7 +287,7 @@ final class GitContextFingerprintTests: XCTestCase {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
         process.arguments = ["git", "-C", repo.path] + args
-        var env = ProcessInfo.processInfo.environment
+        var env = environment
         env["PATH"] = ReadOnlyGit.repairedPath(env["PATH"])
         process.environment = env
         process.standardOutput = FileHandle.nullDevice

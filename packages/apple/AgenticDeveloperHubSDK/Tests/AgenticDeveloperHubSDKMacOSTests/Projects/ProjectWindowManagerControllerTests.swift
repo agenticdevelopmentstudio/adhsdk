@@ -71,7 +71,7 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
         // that touches it.
         let manager = ProjectWindowManager()
         manager.attach(to: coordinator)
-        manager.gitClient = GitClient(configuration: .default)
+        manager.gitClient = GitClient(configuration: .tests)
 
         manager.openProject(repo)
         await ProjectWindowTestSupport.awaitDeferredProjectBuild()
@@ -130,7 +130,7 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
         let coordinator = try ProjectsCoordinator(database: database, scanner: nil, commandRegistry: CommandRegistry())
         let manager = ProjectWindowManager()
         manager.attach(to: coordinator)
-        manager.gitClient = GitClient(configuration: .default)
+        manager.gitClient = GitClient(configuration: .tests)
         var activations = 0
         manager.activateApp = { activations += 1 }
 
@@ -170,7 +170,7 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
         let coordinator = try ProjectsCoordinator(database: database, scanner: nil, commandRegistry: CommandRegistry())
         let manager = ProjectWindowManager()
         manager.attach(to: coordinator)
-        manager.gitClient = GitClient(configuration: .default)
+        manager.gitClient = GitClient(configuration: .tests)
 
         manager.openProject(repo)
         await ProjectWindowTestSupport.awaitDeferredProjectBuild()
@@ -239,7 +239,7 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
         let coordinator = try ProjectsCoordinator(database: database, scanner: nil, commandRegistry: CommandRegistry())
         let manager = ProjectWindowManager()
         manager.attach(to: coordinator)
-        manager.gitClient = GitClient(configuration: .default)
+        manager.gitClient = GitClient(configuration: .tests)
 
         manager.openProject(openedRepo)
         await ProjectWindowTestSupport.awaitDeferredProjectBuild()
@@ -375,7 +375,7 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
         let coordinator = try ProjectsCoordinator(database: database, scanner: nil, commandRegistry: CommandRegistry())
         let manager = ProjectWindowManager()
         manager.attach(to: coordinator)
-        manager.gitClient = GitClient(configuration: .default)
+        manager.gitClient = GitClient(configuration: .tests)
 
         let openedServices = makeLanguageServices()
         manager.languageServicesFactory = { [openedServices] _ in openedServices }
@@ -560,9 +560,17 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
         // ordering the bug needs.
         try armFocusPersist(on: windowController)
 
-        // Past the 250 ms debounce and past the checkout scan, but nowhere
-        // near the sleeping `rev-parse` calls behind it.
-        try await Task.sleep(for: .milliseconds(900))
+        // Wait for the reconcile's write rather than a fixed 900 ms: the fake
+        // git is a Python script, whose start-up alone outlasts that on a loaded
+        // machine. The debounce was armed above, before the reconcile could
+        // write, so a placeholder write that wins shows up as a poll that never
+        // sees the checkouts, or in the re-read below, well past the debounce.
+        let reconciled: Set<String> = ["main", "feature"]
+        let deadline = Date().addingTimeInterval(30)
+        while Set(controller.workspace.storedTabs()?.tabs.map(\.title) ?? []) != reconciled, Date() < deadline {
+            try await Task.sleep(for: .milliseconds(50))
+        }
+        try await Task.sleep(for: .milliseconds(600))
 
         let stored = try XCTUnwrap(
             controller.workspace.storedTabs(),
@@ -593,7 +601,7 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
         let coordinator = try ProjectsCoordinator(database: database, scanner: nil, commandRegistry: CommandRegistry())
         let manager = ProjectWindowManager()
         manager.attach(to: coordinator)
-        manager.gitClient = GitClient(configuration: .default)
+        manager.gitClient = GitClient(configuration: .tests)
 
         manager.openProject(repo)
         await ProjectWindowTestSupport.awaitDeferredProjectBuild()
@@ -663,7 +671,7 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
         let coordinator = try ProjectsCoordinator(database: database, scanner: nil, commandRegistry: CommandRegistry())
         let manager = ProjectWindowManager()
         manager.attach(to: coordinator)
-        manager.gitClient = GitClient(configuration: .default)
+        manager.gitClient = GitClient(configuration: .tests)
 
         manager.openProject(repo)
         await ProjectWindowTestSupport.awaitDeferredProjectBuild()
@@ -694,7 +702,7 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
         let coordinator = try ProjectsCoordinator(database: database, scanner: nil, commandRegistry: CommandRegistry())
         let manager = ProjectWindowManager()
         manager.attach(to: coordinator)
-        manager.gitClient = GitClient(configuration: .default)
+        manager.gitClient = GitClient(configuration: .tests)
 
         manager.openProject(repo)
         await ProjectWindowTestSupport.awaitDeferredProjectBuild()

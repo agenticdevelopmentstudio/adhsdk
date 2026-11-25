@@ -63,13 +63,13 @@ private final class StubPresenter: GitActionPresenting {
 /// The Git window's actions (recipe `workspace/git/git-window`, "Actions"), each run
 /// through the session against a real repository in the temp directory, with a
 /// presenter that answers from a script. Remotes are bare repositories beside it.
-@Suite("GitWindowSession actions", .serialized)
+@Suite("GitWindowSession actions")
 @MainActor
 struct GitWindowSessionActionTests {
     private static let epoch = 1_767_268_800
-    private let client = GitClient(configuration: .default)
+    private let client = GitClient(configuration: .tests)
     /// Allows the local-path clone a submodule update makes (see `GitClientConflictTests`).
-    private let localFileClient = GitClient(configuration: GitClientConfiguration(extraEnvironment: [
+    private let localFileClient = GitClient(configuration: GitClientConfiguration(timeout: 60, extraEnvironment: [
         "GIT_CONFIG_GLOBAL": "/dev/null", "GIT_CONFIG_NOSYSTEM": "1",
         "GIT_CONFIG_PARAMETERS": "'protocol.file.allow=always'"
     ]))

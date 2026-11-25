@@ -48,8 +48,10 @@ final class BrowserJarTests: XCTestCase {
         )
     }
 
+    /// Settings changes reach the pane through `receive(on: .main)`; draining
+    /// the main queue delivers them, however loaded the machine is.
     private func settle() {
-        RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+        pumpMainQueueUntilDrained()
     }
 
     private func context(

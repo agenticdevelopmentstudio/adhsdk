@@ -15,9 +15,13 @@ public final class TerminalSessionManager: ObservableObject {
     /// Extra shell variables every session this manager opens gets.
     public let environment: [String: String]
 
-    public init(workingDirectory: String? = nil, environment: [String: String] = [:]) {
+    /// The shell every session this manager opens runs; the user's `$SHELL` when nil.
+    public let shell: String?
+
+    public init(workingDirectory: String? = nil, environment: [String: String] = [:], shell: String? = nil) {
         self.workingDirectory = workingDirectory
         self.environment = environment
+        self.shell = shell
     }
 
     public var selectedSession: TerminalSession? {
@@ -29,7 +33,8 @@ public final class TerminalSessionManager: ObservableObject {
     public func addSession() -> TerminalSession {
         sessionCounter += 1
         let session = TerminalSession(
-            name: "Session \(sessionCounter)", workingDirectory: workingDirectory, environment: environment)
+            name: "Session \(sessionCounter)", workingDirectory: workingDirectory, shell: shell,
+            environment: environment)
         sessions.append(session)
         selectedSessionID = session.id
         logger.info("Added session '\(session.name)' (\(session.id)), total: \(self.sessions.count)")

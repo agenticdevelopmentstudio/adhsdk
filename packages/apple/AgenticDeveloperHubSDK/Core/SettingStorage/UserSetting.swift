@@ -31,10 +31,11 @@ public final class UserSetting<Value: Codable & Sendable>: StorableSetting, Obse
         self.defaultValue = defaultValue
         self.currentValue = defaultValue
 
-        let store = UserSettings.shared
-        self.currentValue = store.get(self)
-        self.cancellable = store.changes
-            .filter { [name] in $0 == name }
+        self.currentValue = UserSettings.shared.get(self)
+        // `sharedChanges` follows `shared` when it is replaced; a store's own
+        // `changes` would leave this mirror on a store no longer in use.
+        self.cancellable = UserSettings.sharedChanges
+            .filter { [name] in $0 == nil || $0 == name }
             .sink { [weak self] _ in
                 guard let self else { return }
                 self.currentValue = UserSettings.shared.get(self)

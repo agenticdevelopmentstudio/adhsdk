@@ -14,7 +14,7 @@ import Testing
 /// `.serialized` because the registry test swaps `UserSettings.shared`, which
 /// the disabled-extension set lives in.
 @MainActor
-@Suite(.serialized)
+@Suite(.serialized, .exclusiveAccess(to: .userSettings))
 struct GrammarContributionPointTests {
 
     // MARK: - Fixtures

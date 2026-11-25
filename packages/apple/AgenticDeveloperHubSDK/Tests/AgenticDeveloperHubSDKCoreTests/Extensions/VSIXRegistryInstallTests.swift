@@ -13,7 +13,7 @@ import Testing
 /// URL fetched here was named by a registry response, the archive's digest was
 /// named by the same response, and so was the key the signature is checked
 /// against. That is the fact the assertions below are about.
-@Suite(.serialized)
+@Suite(.serialized, .exclusiveAccess(to: .stubbedRegistry))
 struct VSIXRegistryInstallTests {
 
     private static let host = SemanticVersion(major: 1, minor: 138, patch: 0)

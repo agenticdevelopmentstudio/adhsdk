@@ -99,7 +99,7 @@ private actor RecordingFileSystemService: FileSystemServicing {
 /// — the collaborator that brings extension hosts up, and the two small
 /// types either side of it. None of the three had a test before this task.
 @MainActor
-@Suite(.serialized)
+@Suite(.serialized, .exclusiveAccess(to: .userSettings))
 struct ExtensionHostInstallerTests {
 
     // MARK: - Fixtures

@@ -12,6 +12,7 @@ final class UserSettingsFileBrowserTests: XCTestCase {
     private var suiteName: String?
 
     override func setUp() async throws {
+        await ExclusiveAccess.Resource.userSettings.acquire()
         savedStore = UserSettings.shared
         savedSetting = UserSettings.fileBrowserExcludedPatterns
         installStore(InMemorySettingsStorageProvider())
@@ -22,6 +23,7 @@ final class UserSettingsFileBrowserTests: XCTestCase {
         if let savedSetting { UserSettings.fileBrowserExcludedPatterns = savedSetting }
         if let suiteName { UserDefaults(suiteName: suiteName)?.removePersistentDomain(forName: suiteName) }
         suiteName = nil
+        await ExclusiveAccess.Resource.userSettings.release()
     }
 
     /// Swaps in a private store and rebuilds the declaration against it, so `currentValue` mirrors that store.

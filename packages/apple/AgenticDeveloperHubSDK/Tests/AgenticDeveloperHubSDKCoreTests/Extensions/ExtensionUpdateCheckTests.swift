@@ -9,7 +9,7 @@ import Testing
 /// refusal, so a candidate that fails the same installability check the
 /// installer applies is not an update — it is the end of that extension's
 /// updates for now. Most of what is pinned here is that distinction.
-@Suite(.serialized)
+@Suite(.serialized, .exclusiveAccess(to: .stubbedRegistry))
 struct ExtensionUpdateCheckTests {
 
     private static let host = SemanticVersion(major: 1, minor: 138, patch: 0)

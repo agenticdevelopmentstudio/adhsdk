@@ -7,6 +7,16 @@ import AgenticDeveloperHubSDKUI
 /// Conformance vectors for `ComposableTabsArrangeOverlayView` (the arrange-overlay-view recipe).
 @MainActor
 final class ArrangeOverlayViewConformanceTests: XCTestCase {
+    override func setUp() async throws {
+        try await super.setUp()
+        // Writes UserSettings.shared, which suites in the other framework share.
+        await ExclusiveAccess.Resource.userSettings.acquire()
+    }
+
+    override func tearDown() async throws {
+        await ExclusiveAccess.Resource.userSettings.release()
+        try await super.tearDown()
+    }
 
     private typealias Overlay = ComposableTabsArrangeOverlayView
     private let prefix = "composable-tabs.arrange"

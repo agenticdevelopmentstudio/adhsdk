@@ -13,6 +13,11 @@ import XCTest
 /// opens the whole message until you read it.
 @MainActor
 final class BubbleTruncationTests: XCTestCase {
+    override func setUp() async throws {
+        try await super.setUp()
+        // Writes UserSettings.shared, which suites in the other framework share.
+        await ExclusiveAccess.Resource.userSettings.acquire()
+    }
 
     /// Every window a test made, kept alive for its duration — a view whose
     /// window has gone is a view whose layout nobody is maintaining.
@@ -25,6 +30,7 @@ final class BubbleTruncationTests: XCTestCase {
         // the process and with the developer running them.
         UserSettings.terminalFontName.value = UserSettings.terminalFontName.defaultValue
         UserSettings.terminalFontSize.value = UserSettings.terminalFontSize.defaultValue
+        await ExclusiveAccess.Resource.userSettings.release()
         try await super.tearDown()
     }
 

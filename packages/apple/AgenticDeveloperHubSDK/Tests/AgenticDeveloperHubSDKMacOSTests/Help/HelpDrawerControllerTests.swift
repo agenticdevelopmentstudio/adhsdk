@@ -15,6 +15,7 @@ final class HelpDrawerControllerTests: XCTestCase {
 
     override func setUp() async throws {
         try await super.setUp()
+        await ExclusiveAccess.Resource.userSettings.acquire()
         self.window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 600, height: 400),
             styleMask: [.titled, .closable, .resizable],
@@ -26,6 +27,7 @@ final class HelpDrawerControllerTests: XCTestCase {
     override func tearDown() async throws {
         UserSettings.settingsHelpDrawerVisible.value = false
         self.window = nil
+        await ExclusiveAccess.Resource.userSettings.release()
         try await super.tearDown()
     }
 

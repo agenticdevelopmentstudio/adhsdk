@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import AgenticDeveloperHubSDKCore
 
-@Suite("GitClient history, diff, blame and ref verbs", .serialized)
+@Suite("GitClient history, diff, blame and ref verbs")
 struct GitClientHistoryTests {
     /// `café` as ISO Latin-1 bytes: not valid UTF-8, so only the Latin-1 fallback reads it.
     private static let latin1Cafe = Data([0x63, 0x61, 0x66, 0xE9, 0x0A])
@@ -79,7 +79,7 @@ struct GitClientHistoryTests {
         }
     }
 
-    private let client = GitClient(configuration: .default)
+    private let client = GitClient(configuration: .tests)
 
     // MARK: - log
 

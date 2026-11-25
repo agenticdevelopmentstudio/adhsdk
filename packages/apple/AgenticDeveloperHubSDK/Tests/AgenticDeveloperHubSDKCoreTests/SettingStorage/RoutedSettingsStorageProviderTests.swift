@@ -70,6 +70,16 @@ final class FakeSharedSettingsBackend: SharedSettingsBackend, @unchecked Sendabl
 
 @MainActor
 final class RoutedSettingsStorageProviderTests: XCTestCase {
+    override func setUp() async throws {
+        try await super.setUp()
+        // Writes UserSettings.shared, which suites in the other framework share.
+        await ExclusiveAccess.Resource.userSettings.acquire()
+    }
+
+    override func tearDown() async throws {
+        await ExclusiveAccess.Resource.userSettings.release()
+        try await super.tearDown()
+    }
 
     private let fontSize = UserSetting<Double>(SharedSettingKeys.terminalFontSize, default: 13)
     private let themeID = UserSetting<String>(SharedSettingKeys.activeThemeID, default: "default-theme")

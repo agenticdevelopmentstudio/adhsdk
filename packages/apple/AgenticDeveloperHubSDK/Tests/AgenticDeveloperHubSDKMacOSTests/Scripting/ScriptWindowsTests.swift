@@ -5,7 +5,7 @@ import Testing
 /// `ScriptWindows` is the host's list of windows a script may name. Review
 /// focus 1 and 2: how a name a human typed is matched, and what a second
 /// registration under one name does.
-@Suite("ScriptWindows", .serialized)
+@Suite("ScriptWindows", .serialized, .exclusiveAccess(to: .scriptWindows))
 @MainActor
 struct ScriptWindowsTests {
 
@@ -63,4 +63,9 @@ struct ScriptWindowsTests {
     func processFactsDefaultEmpty() {
         #expect(ScriptWindows.processFacts().isEmpty)
     }
+}
+
+extension ExclusiveAccess.Resource {
+    /// `ScriptWindows`, the one registry every scripting suite resets in its `init`.
+    static let scriptWindows = ExclusiveAccess.Resource()
 }

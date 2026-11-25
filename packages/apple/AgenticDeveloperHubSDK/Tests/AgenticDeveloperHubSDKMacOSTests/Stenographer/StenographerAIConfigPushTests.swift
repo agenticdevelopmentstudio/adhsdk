@@ -8,6 +8,7 @@ import AIPluginKit
 final class StenographerAIConfigPushTests: XCTestCase {
 
     override func setUp() async throws {
+        await ExclusiveAccess.Resource.userSettings.acquire()
         StenographerAIConfigPush.stopObserving()
         UserSettings.aiProviderConfigurations.value = []
         UserSettings.selectedAIProviderConfigurationId.value = ""
@@ -17,6 +18,7 @@ final class StenographerAIConfigPushTests: XCTestCase {
         StenographerAIConfigPush.stopObserving()
         UserSettings.aiProviderConfigurations.value = []
         UserSettings.selectedAIProviderConfigurationId.value = ""
+        await ExclusiveAccess.Resource.userSettings.release()
     }
 
     private func config(_ name: String) -> AIProviderConfiguration {
