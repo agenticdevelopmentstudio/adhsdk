@@ -77,6 +77,16 @@ SKIP_DIRS = {"node_modules", "dist", ".turbo", ".git", "coverage", ".next", "wor
 # by design. It is skipped as a citing site only: a live doc citing an archived one is
 # still checked, so moving a doc into an archive cannot strand the links to it.
 ARCHIVE_DIR = "archive"
+# A cookr version snapshot (`cookbook/<spec>/versions/<x.y.z>/`) is the same kind of
+# record: `cookr bump` freezes the recipe as it stood, so a coordinate the bump itself
+# corrected stays in the snapshot. Skipped as a citing site, like an archive.
+VERSION_SNAPSHOT = re.compile(r"\d+\.\d+\.\d+")
+
+
+def is_version_snapshot(parts: tuple[str, ...]) -> bool:
+    return parts[:1] == ("cookbook",) and any(
+        a == "versions" and VERSION_SNAPSHOT.fullmatch(b) for a, b in zip(parts[:-2], parts[1:-1])
+    )
 SKIP_SUFFIXES = {".png", ".jpg", ".jpeg", ".svg", ".woff2", ".map", ".lock"}
 SKIP_NAMES = {"pnpm-lock.yaml", "package-lock.json"}
 # The resolve-check's own self-test writes synthetic doc citations into temp
@@ -147,7 +157,8 @@ def main() -> None:
         if not path.is_file() or path.suffix.lower() in SKIP_SUFFIXES:
             continue
         rel = path.relative_to(root)
-        if SKIP_DIRS & set(rel.parts) or path.name in SKIP_NAMES or ARCHIVE_DIR in rel.parts[:-1]:
+        if SKIP_DIRS & set(rel.parts) or path.name in SKIP_NAMES or ARCHIVE_DIR in rel.parts[:-1] \
+                or is_version_snapshot(rel.parts):
             continue
         try:
             lines = path.read_text(encoding="utf-8").splitlines()

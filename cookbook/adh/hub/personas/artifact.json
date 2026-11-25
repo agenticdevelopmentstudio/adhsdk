@@ -4,11 +4,11 @@
     "id": "4af83bb1-0178-462a-b0fc-ae009b63133f",
     "title": "Personas",
     "type": "ingredient",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-11-23",
+    "modified": "2026-11-25",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -70,7 +70,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "1d4fd39f5c5718f5",
+  "synced": "155341c6efd182a1",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

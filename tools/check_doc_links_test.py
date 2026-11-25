@@ -199,6 +199,20 @@ with tempfile.TemporaryDirectory() as tmp:
     check("a live citation of a missing archived doc fails", bad.returncode, 1)
     check("names the archived target", "docs/archive/plans/moved.md" in bad.stderr, True)
 
+    # (15b) A cookr version snapshot is a record too: a coordinate the bump corrected
+    #       stays in `versions/<x.y.z>/`, while the live part is still checked.
+    root = Path(tmp) / "snapshot"
+    (root / "cookbook" / "spec" / "versions" / "1.2.0").mkdir(parents=True)
+    (root / "cookbook" / "spec" / "versions" / "1.2.0" / "part.md").write_text("see docs/gone.md\n")
+    (root / "cookbook" / "spec" / "part.md").write_text("fine\n")
+    check("a version snapshot's own citations are skipped", run(root).returncode, 0)
+    (root / "cookbook" / "spec" / "part.md").write_text("see docs/gone.md\n")
+    check("the live part is still checked", run(root).returncode, 1)
+    (root / "cookbook" / "spec" / "part.md").write_text("fine\n")
+    (root / "cookbook" / "spec" / "versions" / "notes").mkdir()
+    (root / "cookbook" / "spec" / "versions" / "notes" / "x.md").write_text("see docs/gone.md\n")
+    check("a versions/ dir that is not a snapshot is still checked", run(root).returncode, 1)
+
     # (16) A glob or placeholder INSIDE the filename segment names no single file
     #      either. The path pattern stops at `*` and `<`, so `pre_*_test.py` reaches
     #      the check as the half-name `packages/x/pre_`, which is not a coordinate.

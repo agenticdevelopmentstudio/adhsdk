@@ -302,11 +302,23 @@ private struct ToolbarProbe {
     func tapSegment(_ index: Int) {
         let control = modeControl
         control.selectedSegmentIndex = index
-        control.sendActions(for: .valueChanged)
+        Self.deliver(.valueChanged, from: control)
     }
 
     func tapButton(titled title: String) throws {
-        try button(titled: title).sendActions(for: .touchUpInside)
+        Self.deliver(.touchUpInside, from: try button(titled: title))
+    }
+
+    /// Calls each target-action pair the control registered for `event`, as
+    /// UIKit's dispatch would. `sendActions(for:)` routes through
+    /// `UIApplication.shared`, which a hostless unit-test bundle does not
+    /// have, so there it reaches no target at all and the callback never fires.
+    private static func deliver(_ event: UIControl.Event, from control: UIControl) {
+        for target in control.allTargets {
+            for name in control.actions(forTarget: target, forControlEvent: event) ?? [] {
+                _ = (target as NSObject).perform(NSSelectorFromString(name), with: control)
+            }
+        }
     }
     #endif
 }

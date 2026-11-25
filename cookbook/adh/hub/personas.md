@@ -2,11 +2,11 @@
 id: 4af83bb1-0178-462a-b0fc-ae009b63133f
 title: "Personas"
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-11-23
+modified: 2026-11-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -606,7 +606,7 @@ switched back on.
 **Decision**: the provider UI moves to `@adh-sdk/ai-settings`, and the personas package re-exports
 `ServicesSection`, `useUserServices` and `PERSONA_SERVICES_CACHE_KEY` for existing hosts until the
 hub foundation's Cleanup phase (the "Cleanup (after the owner deploys)" section of
-`docs/planning/2026-11-18-hub-foundation-phase-checklist.md` in the planning repo) removes them.
+`2026-11-18-hub-foundation-phase-checklist.md`, in the planning repo's `docs/planning/`) removes them.
 **Rationale**: AI Settings is no longer a personas concern, but hosts import these names from
 personas today; the re-exports (the same objects) keep them working. The cache key keeps its name
 and value so the admin host that shares the cache entry is untouched.
@@ -735,6 +735,7 @@ with what these sources provide.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.1 | 2026-11-25 | Mike Fullerton | Name the hub foundation checklist as a file in the planning repo, not a path in this one |
 | 1.2.0 | 2026-11-23 | Mike Fullerton | Phase 8: services.setModelAvailability, ModelInfo available/offered, Apple optional available, provider UI moved to ai-settings with re-exports, editor filters unavailable models |
 | 1.1.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (conformance-vectors.test.ts, 4 of 14 vectors passing, 10 Swift-only skipped); unit-test-coverage now partial. |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Design Decisions keep the Decision / Rationale / Approved triple; each decision's platform line is folded into its rationale. |
