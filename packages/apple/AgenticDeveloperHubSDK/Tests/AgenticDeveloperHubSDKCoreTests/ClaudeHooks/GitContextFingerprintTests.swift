@@ -115,8 +115,8 @@ final class GitContextFingerprintTests: XCTestCase {
     func testRawGitKeepsWhitespaceThatGitTrimsAway() throws {
         try write("README.md", "one\ntwo\n")
         let args = ["-C", repo.path, "status", "--porcelain", "-unormal", "--no-renames"]
-        XCTAssertEqual(ReadOnlyGit.rawGit(args), " M README.md\n")
-        XCTAssertEqual(ReadOnlyGit.git(args), "M README.md",
+        XCTAssertEqual(ReadOnlyGit.rawGit(args, environment: environment), " M README.md\n")
+        XCTAssertEqual(ReadOnlyGit.git(args, environment: environment), "M README.md",
                        "the trimming wrapper is still the default for displayed values")
     }
 
@@ -220,10 +220,13 @@ final class GitContextFingerprintTests: XCTestCase {
             XCTAssertEqual(commit("commit number \(index)"), 0)
         }
         let sample = try XCTUnwrap(GitContextFingerprint.sample(directory: repo.path, environment: environment))
+        // The reference logs see the same isolated config as the sample: a
+        // developer's `core.abbrev` or `color.ui=always` would otherwise change
+        // their length and fail the comparison on a correct fingerprint.
         let fiveNewest = ReadOnlyGit.git(
-            ["-C", repo.path, "log", "--oneline", "--no-decorate", "-5"])
+            ["-C", repo.path, "log", "--oneline", "--no-decorate", "-5"], environment: environment)
         let everything = ReadOnlyGit.git(
-            ["-C", repo.path, "log", "--oneline", "--no-decorate"])
+            ["-C", repo.path, "log", "--oneline", "--no-decorate"], environment: environment)
         XCTAssertEqual(fiveNewest.split(separator: "\n").count, 5)
         XCTAssertEqual(everything.split(separator: "\n").count, 7)
         XCTAssertEqual(GitContextFingerprint.recentCommitCount, 5)

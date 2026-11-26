@@ -207,5 +207,32 @@ extension GitClientConfiguration {
     /// script) then outlasts it, so a test that is not about the timeout would
     /// fail on `.timedOut` instead of on what it checks. Tests of the timeout
     /// itself set their own.
-    static let tests = GitClientConfiguration(executableURL: GitTestRepository.gitURL, timeout: 60)
+    ///
+    /// The developer's own git setup is hidden from the client too, as it is
+    /// from the fixture: `GIT_CONFIG_GLOBAL=/dev/null` and `GIT_CONFIG_NOSYSTEM`
+    /// drop `~/.gitconfig` and the system config (a `core.abbrev`, a
+    /// `color.ui=always`), and `XDG_CONFIG_HOME` at an empty directory drops
+    /// `~/.config/git/attributes` and `ignore`, which `GIT_CONFIG_GLOBAL` leaves
+    /// in force: a global `*.psd filter=lfs` there would otherwise reach every
+    /// LFS test's repository.
+    static let tests = GitClientConfiguration(
+        executableURL: GitTestRepository.gitURL, timeout: 60,
+        extraEnvironment: isolatedEnvironment
+    )
+
+    /// The overrides `.tests` applies, for a test that builds its own
+    /// configuration and wants the same isolation.
+    static let isolatedEnvironment: [String: String] = [
+        "GIT_CONFIG_GLOBAL": "/dev/null",
+        "GIT_CONFIG_NOSYSTEM": "1",
+        "XDG_CONFIG_HOME": emptyConfigHome.path
+    ]
+
+    /// An empty directory, made once per test process, for `XDG_CONFIG_HOME`.
+    private static let emptyConfigHome: URL = {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("git-tests-xdg-\(UUID().uuidString)")
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        return directory
+    }()
 }
