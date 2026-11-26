@@ -12,14 +12,33 @@ import Testing
 /// leave the resource alone still run in parallel with all of them.
 ///
 /// The wait suspends; it never blocks a thread.
+///
+/// Holding is re-entrant within the task that holds: a nested suite or test
+/// that names a resource its enclosing scope already holds, or a test that
+/// calls `acquire()` on it directly, goes straight through instead of waiting
+/// on its own hold, which would park forever (a time limit cannot cancel the
+/// continuation) and stall every later user of the resource in the bundle.
 struct ExclusiveAccess: SuiteTrait, TestTrait, TestScoping {
+
+    /// The resources the current task holds through a trait scope. Child
+    /// tasks of the test inherit it, so work the test starts is inside the hold.
+    @TaskLocal static var heldByCurrentTask: Set<ObjectIdentifier> = []
 
     /// One process-wide resource that tests take turns with.
     actor Resource {
         private var held = false
         private var waiters: [CheckedContinuation<Void, Never>] = []
+        /// Direct `acquire()` calls made while the current task already held
+        /// the resource through a trait scope; each one's `release()` only
+        /// unwinds this count. Only the holder can make one, so one count
+        /// serves.
+        private var reentrantAcquires = 0
 
         func acquire() async {
+            if ExclusiveAccess.heldByCurrentTask.contains(ObjectIdentifier(self)) {
+                reentrantAcquires += 1
+                return
+            }
             guard held else {
                 held = true
                 return
@@ -29,6 +48,10 @@ struct ExclusiveAccess: SuiteTrait, TestTrait, TestScoping {
 
         /// Hands the resource straight to the next waiter, in arrival order.
         func release() {
+            if reentrantAcquires > 0 {
+                reentrantAcquires -= 1
+                return
+            }
             if waiters.isEmpty {
                 held = false
             } else {
@@ -53,9 +76,19 @@ struct ExclusiveAccess: SuiteTrait, TestTrait, TestScoping {
             try await function()
             return
         }
+        let id = ObjectIdentifier(resource)
+        let alreadyHeld = Self.heldByCurrentTask
+        // Swift Testing does not dedupe trait occurrences: an inner suite or
+        // test naming the same resource runs inside the outer hold.
+        guard !alreadyHeld.contains(id) else {
+            try await function()
+            return
+        }
         await resource.acquire()
         do {
-            try await function()
+            try await Self.$heldByCurrentTask.withValue(alreadyHeld.union([id])) {
+                try await function()
+            }
         } catch {
             await resource.release()
             throw error
