@@ -580,9 +580,14 @@ final class NotesSplitViewControllerTests: XCTestCase {
 
         split.deleteSelectedNote()
 
-        let deleted = try await pollUntil { notesManager.notes.isEmpty }
-        XCTAssertFalse(deleted, "no window means no sheet, and no deletion")
-        XCTAssertEqual(notesManager.notes.count, 1)
+        // A delete that got past the guard runs in a main-actor task, and
+        // `NotesManager.deleteNote` drops the note from `notes` before its
+        // first suspension. One hop of the main queue, which runs after any
+        // task the call enqueued, is when that would show, so the test
+        // waits for that and asserts, instead of polling two seconds for a
+        // deletion it expects never to see.
+        await withCheckedContinuation { done in DispatchQueue.main.async { done.resume() } }
+        XCTAssertEqual(notesManager.notes.count, 1, "no window means no sheet, and no deletion")
     }
 
     func testShareSelectedNoteDoesNothingWithNoSelection() {
