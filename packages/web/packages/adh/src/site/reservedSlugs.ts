@@ -348,7 +348,7 @@ export function reservedWorkspaceSlugs(): ReadonlySet<string> {
  * product handled `api` or `help` would collide with a record that already answers there. That is
  * why the list is wider than any route list: it names hosts, not paths.
  *
- * The backend's `RESERVED_PRODUCT_SITE_HANDLES` (`adhbackend src/adh/src/lib/rdid.ts`) is the
+ * The backend's `RESERVED_PRODUCT_SITE_HANDLES` (`backend/src/adh/src/lib/rdid.ts`) is the
  * authority the API enforces. This copy exists so the hub pane can refuse a reserved handle
  * before it is sent; a word missing here is still refused on submit.
  */
