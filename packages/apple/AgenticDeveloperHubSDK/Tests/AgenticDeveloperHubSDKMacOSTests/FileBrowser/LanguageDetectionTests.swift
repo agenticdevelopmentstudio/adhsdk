@@ -3,20 +3,8 @@ import XCTest
 import CodeEditLanguages
 
 final class LanguageDetectionTests: XCTestCase {
-    // swiftlint:disable:next static_over_final_class
-    override class func setUp() {
-        super.setUp()
-        // CodeEditLanguages ships a resource bundle via SwiftPM. When the
-        // framework is statically bundled into a test binary, the
-        // Bundle.module accessor can't locate the resource bundle through
-        // its default search path. Set the override env var to the test
-        // bundle's Resources directory, which is where the build copies
-        // CodeEditLanguages_CodeEditLanguages.bundle.
-        let testBundle = Bundle(for: LanguageDetectionTests.self)
-        if let resourceURL = testBundle.resourceURL {
-            setenv("PACKAGE_RESOURCE_BUNDLE_PATH", resourceURL.path, 1)
-        }
-    }
+    // CodeEditLanguages' resource bundle is located for the whole bundle by
+    // `TestBundleSetup` (`ensureEditorLanguageResourcesLocated()`).
 
     override func setUp() {
         CustomFileTypeMappings.activeDefaultsKey = "AgenticFileBrowserTests.customMappings"

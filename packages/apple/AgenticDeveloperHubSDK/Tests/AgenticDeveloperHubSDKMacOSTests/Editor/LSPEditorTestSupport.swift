@@ -650,11 +650,9 @@ private final class EditorTestBundleFinder {}
 /// `AgenticDeveloperHubSDKMacOSTests.xctest/Contents/Resources`. `Bundle.main` is
 /// `xctest` itself and helps nobody.
 ///
-/// The same workaround, for the same reason, as `LanguageDetectionTests.setUp`.
-/// A global `let` rather than a `setUp`, because Swift Testing has no
-/// bundle-wide hook and these suites run in parallel: `Bundle.module` is a lazy
-/// static, so the override only has to be in place before the *first*
-/// construction, and a `let` gives that exactly once.
+/// `TestBundleSetup` calls it before any test runs, so every suite has it.
+/// A global `let`, so `Bundle.module`, a lazy static, sees the override
+/// before its *first* construction, set exactly once.
 private let editorLanguageResourcesLocated: Bool = {
     guard let resourceURL = Bundle(for: EditorTestBundleFinder.self).resourceURL else { return false }
     setenv("PACKAGE_RESOURCE_BUNDLE_PATH", resourceURL.path, 1)

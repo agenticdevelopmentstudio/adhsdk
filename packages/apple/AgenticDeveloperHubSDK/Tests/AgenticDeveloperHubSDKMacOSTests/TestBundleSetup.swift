@@ -25,6 +25,13 @@ import Foundation
 /// CTA15 and CTA16). `ExclusiveAccess` orders the tests inside one process; it
 /// cannot see another. In memory, nothing is left on disk either (a defaults
 /// suite leaves an empty plist behind after its domain is removed).
+///
+/// And it points CodeEditLanguages' `Bundle.module` at this bundle's
+/// resources (``ensureEditorLanguageResourcesLocated()``) before any test
+/// constructs a `CodeLanguage`. Without it, whichever suite first detected a
+/// file's language decided whether the process crashed: `FileEditorStateTests`
+/// passed in a full run behind a suite that set the override, and crashed
+/// every test when run alone.
 @objc(AgenticDeveloperHubSDKMacOSTestBundleSetup)
 final class TestBundleSetup: NSObject {
     override init() {
@@ -32,6 +39,7 @@ final class TestBundleSetup: NSObject {
         arguments["NSAutomaticWindowAnimationsEnabled"] = false
         UserDefaults.standard.setVolatileDomain(arguments, forName: UserDefaults.argumentDomain)
         super.init()
+        ensureEditorLanguageResourcesLocated()
         MainActor.assumeIsolated { Self.isolateUserSettings() }
     }
 
