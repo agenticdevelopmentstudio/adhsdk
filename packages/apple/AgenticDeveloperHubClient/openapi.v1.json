@@ -132,6 +132,9 @@
       "name": "product-admin"
     },
     {
+      "name": "product-site"
+    },
+    {
       "name": "project"
     },
     {
@@ -781,12 +784,14 @@
             "description": "A short-lived acting token for an acting job (its persona and subject), bound to the job and this lease. It expires with the lease, and each heartbeat answers a fresh one. Null for a job that does not act."
           },
           "llm": {
-            "allOf": [
+            "anyOf": [
               {
                 "$ref": "#/components/schemas/AiProcessingJobLlm"
+              },
+              {
+                "type": "null"
               }
             ],
-            "nullable": true,
             "description": "The LLM target this job runs under (its config set, else the default set); null for a machine's claim, which runs its own provider and is never sent a key"
           }
         }
@@ -2747,16 +2752,19 @@
         "properties": {
           "name": {
             "type": "string",
-            "minLength": 1
+            "minLength": 1,
+            "maxLength": 255
           },
           "email": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 255
           },
           "phone": {
             "type": "string"
           },
           "source": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 120
           },
           "note": {
             "type": "string"
@@ -10667,8 +10675,9 @@
             "nullable": true,
             "enum": [
               "customer",
+              "application",
               "persona",
-              "team"
+              null
             ]
           },
           "author_id": {
@@ -15549,7 +15558,8 @@
             "enum": [
               "advance",
               "arrival",
-              "verify"
+              "verify",
+              null
             ],
             "nullable": true
           },
@@ -17129,12 +17139,14 @@
         ],
         "properties": {
           "site": {
-            "allOf": [
+            "anyOf": [
               {
                 "$ref": "#/components/schemas/AdminSite"
+              },
+              {
+                "type": "null"
               }
-            ],
-            "nullable": true
+            ]
           },
           "enabled": {
             "type": "boolean",
@@ -17181,6 +17193,105 @@
           "client_id": {
             "type": "string",
             "description": "The client the site starts a sign-in with."
+          },
+          "issuer": {
+            "type": "string",
+            "nullable": true,
+            "description": "The Hydra issuer URL."
+          }
+        }
+      },
+      "ProductSite": {
+        "type": "object",
+        "required": [
+          "ecosystem_id",
+          "handle",
+          "primary_origin",
+          "admin_enabled",
+          "admin_client_id"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "ecosystem_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "handle": {
+            "type": "string",
+            "description": "The product site handle: the first label of `<handle>.<base>`."
+          },
+          "primary_origin": {
+            "type": "string",
+            "nullable": true,
+            "description": "`https://<handle>.<base>`; null while PRODUCT_SITES_BASE_DOMAIN is unset."
+          },
+          "admin_enabled": {
+            "type": "boolean",
+            "description": "Whether the site's `/admin` console is on."
+          },
+          "admin_client_id": {
+            "type": "string",
+            "nullable": true,
+            "description": "The console's login registration, once one has been made. It stays when the console is turned off, so turning it back on is one write."
+          }
+        }
+      },
+      "ProductSitePatch": {
+        "type": "object",
+        "additionalProperties": false,
+        "minProperties": 1,
+        "properties": {
+          "handle": {
+            "type": "string",
+            "maxLength": 253,
+            "description": "A new handle: 2 to 63 lower-case letters, digits and hyphens, starting and ending with a letter or digit, and not a reserved word. Trimmed and lower-cased first."
+          },
+          "admin_enabled": {
+            "type": "boolean",
+            "description": "Turn the `/admin` console on or off."
+          }
+        }
+      },
+      "ProductSiteLookup": {
+        "type": "object",
+        "required": [
+          "ecosystem_id",
+          "name",
+          "handle",
+          "primary_origin",
+          "admin_client_id",
+          "admin_enabled",
+          "admin_console_available",
+          "issuer"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "ecosystem_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "The product's name."
+          },
+          "handle": {
+            "type": "string"
+          },
+          "primary_origin": {
+            "type": "string",
+            "description": "`https://<handle>.<base>`."
+          },
+          "admin_client_id": {
+            "type": "string",
+            "nullable": true,
+            "description": "The console's client to sign in with; null while the console is off."
+          },
+          "admin_enabled": {
+            "type": "boolean"
+          },
+          "admin_console_available": {
+            "type": "boolean",
+            "description": "The `product_admin_site` switch, whatever `adminEnabled` is. False: the site answers 404 for every `/admin` path."
           },
           "issuer": {
             "type": "string",
@@ -17496,7 +17607,8 @@
             "type": "string",
             "enum": [
               "approved",
-              "denied"
+              "denied",
+              null
             ],
             "nullable": true
           },
@@ -17522,7 +17634,8 @@
               "grantee",
               "operator",
               "manager",
-              "system"
+              "system",
+              null
             ],
             "nullable": true
           },
@@ -18831,7 +18944,9 @@
           },
           "usage": {
             "type": "object",
-            "additionalProperties": true
+            "additionalProperties": true,
+            "nullable": true,
+            "description": "The token totals the node reported for this step; null until it reports any."
           },
           "error_code": {
             "type": "string",
@@ -36356,6 +36471,7 @@
         "summary": "WebAuthn 2nd-factor: assertion options bound to the pending challenge",
         "description": "Replaces POST /auth/login/mfa/webauthn/options, POST /auth/login/webauthn/options.",
         "operationId": "postV1AuthPasskeyChallenges",
+        "security": [],
         "requestBody": {
           "required": true,
           "content": {
@@ -36490,6 +36606,7 @@
         "summary": "Create an account (email + password)",
         "description": "Replaces POST /auth/register.",
         "operationId": "postV1AuthRegistrations",
+        "security": [],
         "requestBody": {
           "required": true,
           "content": {
@@ -36604,6 +36721,7 @@
         "summary": "Sign in (may require a second factor)",
         "description": "Replaces POST /auth/login, POST /auth/login/mfa, POST /auth/login/mfa/webauthn, POST /auth/login/webauthn.",
         "operationId": "postV1AuthSessions",
+        "security": [],
         "requestBody": {
           "required": true,
           "content": {
@@ -36777,6 +36895,7 @@
         "summary": "Rotate refresh token → new JWT",
         "description": "Replaces POST /auth/refresh.",
         "operationId": "postV1AuthSessionsRefresh",
+        "security": [],
         "responses": {
           "200": {
             "description": "token + refreshToken",
@@ -36826,6 +36945,7 @@
         "summary": "Sign out (revoke refresh token)",
         "description": "Replaces POST /auth/revoke.",
         "operationId": "postV1AuthSessionsRevoke",
+        "security": [],
         "responses": {
           "200": {
             "description": "OK",
@@ -36895,6 +37015,7 @@
         "summary": "Send the SMS login code to the verified primary phone",
         "description": "Replaces POST /auth/login/mfa/sms/send.",
         "operationId": "postV1AuthSmsCodes",
+        "security": [],
         "requestBody": {
           "required": true,
           "content": {
@@ -81536,7 +81657,8 @@
         "security": [
           {
             "bearerAuth": []
-          }
+          },
+          {}
         ],
         "parameters": [
           {
@@ -84021,6 +84143,7 @@
         "summary": "One artifact — anonymous when it is public, plus the caller’s own when signed in",
         "description": "No `security` because an anonymous caller is a supported caller: without a bearer token this serves any PUBLIC, non-withdrawn artifact by id, in any ecosystem (the id is the scope on a by-id read). WITH a bearer token it additionally serves the caller’s own private artifacts. A token that is present but invalid is 401, not a silent downgrade to the anonymous path — otherwise a caller could not tell a revoked session from a working one. The `body` bytea is never serialised here.\n\nReplaces GET /game/artifacts/{id}.",
         "operationId": "getV1GameArtifactsById",
+        "security": [],
         "parameters": [
           {
             "name": "id",
@@ -86199,6 +86322,7 @@
         "summary": "One game’s public artifact feed (anonymous, read replica)",
         "description": "The hot path, and it carries no `security`: it serves published artifacts to signed-out visitors and runs on the read replica so it does not contend with authenticated traffic. Three predicates are the entire boundary — `visibility = 'public'`, `deleted_at is null`, and `ecosystem_id`, which is taken from the resolved game row and never used as a caller-supplied filter. `ecosystem` only disambiguates which game a bare `slug` names — ecosystem slugs are unique under a parent, so two products really can both own a game called `chess`, and an unqualified ambiguous slug is a 409. A retired game is 404, and so is a product that is not in `game` mode.\n\nReplaces GET /game/feed.",
         "operationId": "getV1GameFeed",
+        "security": [],
         "parameters": [
           {
             "name": "game_id",
@@ -87669,7 +87793,8 @@
         "security": [
           {
             "bearerAuth": []
-          }
+          },
+          {}
         ],
         "parameters": [
           {
@@ -92412,6 +92537,7 @@
         "summary": "Public hub league cohort of the current season board (surface-gated)",
         "description": "Replaces GET /public/boards/{statKey}/leagues.",
         "operationId": "getV1GamificationLeaderboardsByStatKeyLeagues",
+        "security": [],
         "parameters": [
           {
             "name": "stat_key",
@@ -104856,6 +104982,7 @@
         "summary": "Fetch a Google Photos image by signed URL (public)",
         "description": "No bearer: an `<img>` cannot send one. The token is the credential. It names one connection, one media item and one size, and expires after five minutes. Returns the image bytes with the upstream content type. Errors are opaque: 401 for a bad, expired or forged token, 404 for an unknown item, 502 when the image could not be fetched, 504 when the fetch timed out.\n\nReplaces GET /integrations/media-content/{token}.",
         "operationId": "getV1IntegrationsMediaContentByToken",
+        "security": [],
         "parameters": [
           {
             "name": "token",
@@ -108188,6 +108315,7 @@
         "summary": "Request to join an ecosystem (unauthenticated). Optionally addressed by ecosystem rdid/uuid; defaults to the hub.",
         "description": "Replaces POST /public/invitations.",
         "operationId": "postV1InvitationRequests",
+        "security": [],
         "requestBody": {
           "required": true,
           "content": {
@@ -108256,6 +108384,7 @@
         "summary": "Complete an invite-backed account by verifying its email link.",
         "description": "Replaces POST /public/invitations/verify.",
         "operationId": "postV1InvitationRequestsVerify",
+        "security": [],
         "requestBody": {
           "required": true,
           "content": {
@@ -108834,6 +108963,7 @@
         "summary": "Preview an invitation by token (state + masked destination + ecosystem name).",
         "description": "Replaces GET /public/invitations/preview.",
         "operationId": "getV1InvitationsPreview",
+        "security": [],
         "parameters": [
           {
             "name": "token",
@@ -134325,6 +134455,7 @@
         "summary": "Mint an anonymous visitor token for a public persona",
         "description": "Unauthenticated, and the only way to obtain a visitor token. The token is returned once and never again — nothing server-side can reproduce it.\n\nSlugs are unique per owner, not globally, so a slug shared by two *public* personas is a 409 rather than an arbitrary pick. A persona that is not public, does not exist, or whose owner cannot be resolved is uniformly a 404.\n\nRefused with 403 when the owning ecosystem has not enabled visitor chat, 503 when visitor chat is switched off globally, and 429 past the per-IP hourly mint limit.\n\nReplaces POST /public/personas/{slug}/visitor-tokens.",
         "operationId": "postV1PersonasByIdVisitorTokens",
+        "security": [],
         "parameters": [
           {
             "name": "id",
@@ -138704,6 +138835,7 @@
         "summary": "Which product an admin site host belongs to (unauthenticated)",
         "description": "Replaces GET /public/product-admin-sites/{host}.",
         "operationId": "getV1ProductAdminSitesByHost",
+        "security": [],
         "parameters": [
           {
             "name": "host",
@@ -138766,6 +138898,282 @@
         "x-adh-object": "product_admin_site",
         "x-adh-replaces": [
           "GET /public/product-admin-sites/{host}"
+        ]
+      }
+    },
+    "/v1/product_site": {
+      "get": {
+        "tags": [
+          "product-site"
+        ],
+        "summary": "A product's site: its handle, its address and its console",
+        "description": "Replaces GET /ecosystem/product-site.",
+        "operationId": "getV1ProductSite",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "expand[]",
+            "in": "query",
+            "required": false,
+            "description": "Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The product's site",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "const": "product_site"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/ProductSite"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "product_site",
+        "x-adh-replaces": [
+          "GET /ecosystem/product-site"
+        ]
+      },
+      "post": {
+        "tags": [
+          "product-site"
+        ],
+        "summary": "Rename a product's site or turn its console on or off",
+        "description": "Takes `handle`, `adminEnabled` or both, and nothing else. 400 for a malformed or reserved handle; 409 `product_site_handle_taken` when another product holds the handle; 409 `product_sites_unconfigured` when the console is turned on with no base domain set. Turning it on the first time makes the product's staff `admin-site` application and a login registration whose redirect is `https://<handle>.<base>/admin/auth/callback`; a rename re-registers it so the redirect follows the handle.\n\nReplaces PATCH /ecosystem/product-site.",
+        "operationId": "postV1ProductSite",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductSitePatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The site after the change",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "const": "product_site"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/ProductSite"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "product_site",
+        "x-adh-replaces": [
+          "PATCH /ecosystem/product-site"
+        ]
+      }
+    },
+    "/v1/product_sites/{host}": {
+      "get": {
+        "tags": [
+          "product-site"
+        ],
+        "summary": "Which product a product site host belongs to (unauthenticated)",
+        "description": "Replaces GET /public/product-sites/{host}.",
+        "operationId": "getV1ProductSitesByHost",
+        "security": [],
+        "parameters": [
+          {
+            "name": "host",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expand[]",
+            "in": "query",
+            "required": false,
+            "description": "Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The product, its address and its console",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "const": "product_site"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/ProductSiteLookup"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "product_site",
+        "x-adh-replaces": [
+          "GET /public/product-sites/{host}"
         ]
       }
     },
@@ -144081,7 +144489,8 @@
         "security": [
           {
             "bearerAuth": []
-          }
+          },
+          {}
         ],
         "parameters": [
           {
@@ -144576,7 +144985,8 @@
         "security": [
           {
             "bearerAuth": []
-          }
+          },
+          {}
         ],
         "parameters": [
           {
@@ -145004,6 +145414,7 @@
         "summary": "A support request, by its email link",
         "description": "The grant and the reads under it, while it is pending or live. 409 `decided` for a grant denied, ended or revoked; 410 `lapsed` for one not decided within seven days.\n\nReplaces GET /public/support/grants/{id}.",
         "operationId": "getV1PublicSupportGrantsById",
+        "security": [],
         "parameters": [
           {
             "name": "id",
@@ -145116,6 +145527,7 @@
         "summary": "Approve a support request by its email link",
         "description": "Needs the emailed code: 403 `code_invalid` for a wrong, expired or missing one. 409 `decided` once decided or revoked; 410 `lapsed` for a request not decided within seven days.\n\nReplaces POST /public/support/grants/{id}/approve.",
         "operationId": "postV1PublicSupportGrantsByIdApprove",
+        "security": [],
         "parameters": [
           {
             "name": "id",
@@ -145235,6 +145647,7 @@
         "summary": "Email a code that approves a support request",
         "description": "The code goes to the target's primary verified email. 429 within 30 seconds of the last code; 422 when there is no verified email or the send failed. 409 `decided` once decided or revoked; 410 `lapsed` for a request not decided within seven days.\n\nReplaces POST /public/support/grants/{id}/approve/code.",
         "operationId": "postV1PublicSupportGrantsByIdApproveCode",
+        "security": [],
         "parameters": [
           {
             "name": "id",
@@ -145364,6 +145777,7 @@
         "summary": "Deny a support request by its email link",
         "description": "The token alone; no code. 409 `decided` once decided or revoked; 410 `lapsed` for a request not decided within seven days.\n\nReplaces POST /public/support/grants/{id}/deny.",
         "operationId": "postV1PublicSupportGrantsByIdDeny",
+        "security": [],
         "parameters": [
           {
             "name": "id",
@@ -145473,6 +145887,7 @@
         "summary": "Revoke a support grant by its email link",
         "description": "The token alone; no code. The link revokes for the grant's life, pending or live, and the revoke is recorded as the target's. 409 `not_live` once the grant is denied, lapsed, expired or already revoked.\n\nReplaces POST /public/support/grants/{id}/revoke.",
         "operationId": "postV1PublicSupportGrantsByIdRevoke",
+        "security": [],
         "parameters": [
           {
             "name": "id",
@@ -147855,6 +148270,7 @@
         "summary": "List every public entry slug in a registry, for a sitemap",
         "description": "Replaces GET /public/registries/{registrySlug}/sitemap.",
         "operationId": "getV1RegistriesByIdSitemap",
+        "security": [],
         "parameters": [
           {
             "name": "id",
@@ -148340,6 +148756,7 @@
         "summary": "Full-text search a registry’s published, public entries",
         "description": "Replaces GET /public/registries/{registrySlug}/search.",
         "operationId": "getV1RegistryEntriesSearch",
+        "security": [],
         "parameters": [
           {
             "name": "registry",
@@ -149913,7 +150330,8 @@
         "security": [
           {
             "bearerAuth": []
-          }
+          },
+          {}
         ],
         "parameters": [
           {
@@ -155776,6 +156194,7 @@
         "summary": "A signup list's public display config plus a fresh submit nonce",
         "description": "Replaces GET /public/signup-lists/{publicKey}.",
         "operationId": "getV1SignupListsByPublicKey",
+        "security": [],
         "parameters": [
           {
             "name": "public_key",
@@ -155849,6 +156268,7 @@
         "summary": "Join a signup list (unauthenticated; nonce + honeypot + per-IP cap)",
         "description": "Replaces POST /public/signup-lists/{publicKey}/signups.",
         "operationId": "postV1SignupListsByPublicKeySignups",
+        "security": [],
         "parameters": [
           {
             "name": "public_key",
@@ -158332,6 +158752,7 @@
         "summary": "Env vars the backend reads (local-only, masked; 404 on deployed envs)",
         "description": "Replaces GET /system/debug-env.",
         "operationId": "getV1SystemDebugEnv",
+        "security": [],
         "parameters": [
           {
             "name": "limit",
@@ -161765,6 +162186,7 @@
         "summary": "List every live theme (suite-wide; empty in production)",
         "description": "Replaces GET /public/themes.",
         "operationId": "getV1Themes",
+        "security": [],
         "parameters": [
           {
             "name": "limit",
@@ -162060,6 +162482,7 @@
         "summary": "Get one live theme by key",
         "description": "Replaces GET /public/themes/{key}.",
         "operationId": "getV1ThemesByKey",
+        "security": [],
         "parameters": [
           {
             "name": "key",
@@ -169399,6 +169822,7 @@
         "summary": "Get a user's creator gamification character sheet",
         "description": "Replaces GET /public/users/{slug}/sheet (include sheet).",
         "operationId": "getV1UsersById",
+        "security": [],
         "parameters": [
           {
             "name": "id",
@@ -173105,6 +173529,7 @@
         "summary": "Build / version info",
         "description": "Replaces GET /system/version.",
         "operationId": "getVersion",
+        "security": [],
         "responses": {
           "200": {
             "description": "Version info",
@@ -173148,6 +173573,7 @@
         "summary": "Deliverability events from Postmark (per-ecosystem secret header, not a JWT)",
         "description": "Replaces POST /public/webhooks/postmark/{ecosystemId}.",
         "operationId": "postWebhooksPostmarkByEcosystemId",
+        "security": [],
         "parameters": [
           {
             "name": "ecosystem_id",
@@ -173231,6 +173657,7 @@
         "summary": "Stripe event receiver (HMAC over the raw body, not a JWT)",
         "description": "The only writer of `billing.accounts`. The signature is computed over the EXACT raw bytes, so the body is read as text and never re-serialized. Every stored secret for the ecosystem is tried in turn, which is what makes a secret rotation a non-event.\n\nIt STORES the event before it does anything that can fail, keyed uniquely on `(ecosystem_id, stripe_event_id)` — one Stripe account can serve two ecosystems under BYOK, so the Stripe event id alone is not a deduplication key. A replay of an already-stored event short-circuits to the same 200 without re-applying it.\n\nReplaces POST /public/webhooks/stripe/{ecosystemId}.",
         "operationId": "postWebhooksStripeByEcosystemId",
+        "security": [],
         "parameters": [
           {
             "name": "ecosystem_id",
