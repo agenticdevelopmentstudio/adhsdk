@@ -47,7 +47,9 @@ final class NotesManagerStorageOrderingTests: XCTestCase {
             if let content { arrivals.append(content) }
             lock.unlock()
 
-            Thread.sleep(forTimeInterval: 0.05)
+            // 20 ms is thousands of times longer than starting the next task,
+            // so callers that run in parallel are certain to overlap in here.
+            Thread.sleep(forTimeInterval: 0.02)
 
             lock.lock()
             inFlight -= 1
@@ -55,7 +57,9 @@ final class NotesManagerStorageOrderingTests: XCTestCase {
         }
 
         func fetchAllNotes() throws -> [Note] { [] }
-        @discardableResult func insertNote(_ note: Note) throws -> Int64 { dwell(); return 1 }
+        /// No dwell: the test seeds notes one at a time and waits for each, so
+        /// these calls can never overlap and a dwell would only add time.
+        @discardableResult func insertNote(_ note: Note) throws -> Int64 { 1 }
         @discardableResult func updateNote(_ note: Note) throws -> Int64 {
             dwell(recording: note.content)
             return note.version + 1
