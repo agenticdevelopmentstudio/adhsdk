@@ -210,6 +210,7 @@ final class JSONLScannerTests: XCTestCase {
         let dir = URL(fileURLWithPath: NSTemporaryDirectory())
             .appendingPathComponent("scanner-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        addTeardownBlock { try? FileManager.default.removeItem(at: dir) }
         let url = dir.appendingPathComponent("\(stem).jsonl")
         try (lines.joined(separator: "\n") + "\n").write(to: url, atomically: true, encoding: .utf8)
         return url
