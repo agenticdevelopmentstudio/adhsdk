@@ -74,6 +74,30 @@ struct AgentEventTests {
         #expect(try AgentsJSON.decode(AgentEnvelope.self, from: data) == envelope)
     }
 
+    @Test("text deltas of one session merge, keeping the later seq")
+    func mergesDeltas() {
+        let session = UUID()
+        let first = AgentEnvelope(sessionId: session, seq: 1, event: .textDelta("Hel"))
+        let second = AgentEnvelope(sessionId: session, seq: 2, event: .textDelta("lo"))
+        #expect(AgentEnvelope.merging(first, second)
+            == AgentEnvelope(sessionId: session, seq: 2, event: .textDelta("Hello")))
+        let thinkA = AgentEnvelope(sessionId: session, seq: 3, event: .thinkingDelta("a"))
+        let thinkB = AgentEnvelope(sessionId: session, seq: 4, event: .thinkingDelta("b"))
+        #expect(AgentEnvelope.merging(thinkA, thinkB)?.event == .thinkingDelta("ab"))
+    }
+
+    @Test("mixed kinds, other events and other sessions never merge")
+    func refusesOtherMerges() {
+        let session = UUID()
+        let text = AgentEnvelope(sessionId: session, seq: 1, event: .textDelta("a"))
+        let thinking = AgentEnvelope(sessionId: session, seq: 2, event: .thinkingDelta("b"))
+        let done = AgentEnvelope(sessionId: session, seq: 3, event: .turnFinished(stopReason: nil))
+        let elsewhere = AgentEnvelope(sessionId: UUID(), seq: 2, event: .textDelta("b"))
+        #expect(AgentEnvelope.merging(text, thinking) == nil)
+        #expect(AgentEnvelope.merging(text, done) == nil)
+        #expect(AgentEnvelope.merging(text, elsewhere) == nil)
+    }
+
     private func object(_ event: AgentEvent) throws -> [String: Any] {
         try #require(try JSONSerialization.jsonObject(with: AgentsJSON.encode(event)) as? [String: Any])
     }

@@ -2,7 +2,7 @@
 id: 12d36a57-8d7d-454e-a2ee-44effbd9e93b
 title: "Model Registry"
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: 2026-11-25
@@ -291,6 +291,8 @@ configurations and the catalog stores shared facts about model ids.
 - **concurrent-upsert**: Two `upsert` calls of one id, from one process or several, MUST be last-writer-wins for the row: each reads the stored row and writes its own in one database write transaction, so neither loses the stored `createdAt`. Secret values are written field by field before that transaction and are not part of it, so concurrent calls MAY interleave: the secret store MAY hold a mix of both calls' values, and the surviving row's `secretFields` MAY come from the other writer than some of the Keychain values (`upsert-stale-read`). The registry guarantees nothing about secrets beyond each field holding some call's value.
 - **list-models-main-actor**: `listModels(_:)` MUST resolve the provider's model
   source on the main actor and MUST load it off the main actor.
+- **app-import**: `ModelRegistryImport.run(_:into:origin:)` MUST upsert each source as an entry with the source configuration's id, its non-secret fields, its model and the given `origin`, passing its secrets to `upsert(_:secrets:)`. It MUST skip a source when the registry already holds an entry with its id, or an entry of the same plugin identifier with equal non-secret fields, and MUST report each source as imported, skipped or failed by id without any secret value. A failed upsert MUST NOT stop the remaining sources.
+- **app-import-once**: `ModelRegistryImport.runIfNeeded` MUST read the app's `aiplugin.configurations` with their field values (secret fields through the app's own Keychain provider) on the main actor, MUST do nothing when `models_registry_imported_v1` is set in the given defaults, and MUST set that flag only when no upsert failed, so a failure is retried at the next launch. A configuration whose template no longer resolves MUST be reported unresolved and not imported.
 
 ## Appearance
 
@@ -366,6 +368,8 @@ derived from the source and are not covered by a test there.
 | MR-048 | resolve-role, list-decode-failure | Insert a row whose `json` is invalid, plus a valid enabled entry holding `fast`; resolve role `fast` | `resolve(role:)` throws, as does `resolve(.role("fast"))`; `get` of the valid entry still succeeds |
 | MR-049 | secret-write-orphan, upsert-secret-write-failure | Upsert a new entry with secrets `a`, `b` where the store's `set` for the second written field throws | The upsert throws; no row exists; the first written value remains in the store (no rollback) |
 | MR-050 | test-round-trip, effective-model-order | `test` for entries with model `m`, then model absent with a template default, then model absent with no template default | The request model is `m`, the template's default model, the descriptor's default model respectively |
+| MR-051 | app-import (`ModelRegistryImportTests.importsOne`) | Import one source with field `baseURL`, secret `apiKey`, model `m1`, origin `com.example.app` | The entry keeps the source's id, fields, model and origin; `secretFields` is `["apiKey"]` and the secret store holds the value |
+| MR-052 | app-import (`ModelRegistryImportTests.skipsDuplicates`, `reportsFailure`) | Import a source twice; import a same-plugin source with equal fields and one with different fields; import a blank-named source before a valid one | Skipped by id; the twin is skipped and the other imported; the blank one fails, the valid one is imported and no failure message holds a secret |
 
 ## Edge Cases
 
@@ -486,6 +490,7 @@ Not applicable: the source calls no logger; failures are thrown or returned as a
 | Platform | Location | Conformance |
 |----------|----------|-------------|
 | apple | `packages/apple/AgenticDeveloperHubSDK/Agents/Models/` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Agents/Providers/ModelRegistryImport.swift` | unverified |
 
 ## Design Decisions
 
@@ -555,4 +560,5 @@ localization mechanism.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-11-25 | Mike Fullerton | Add app-import and app-import-once: ModelRegistryImport copies an app's provider configurations into the registry once (MR-051, 052) |
 | 1.0.0 | 2026-11-25 | Mike Fullerton | Initial creation |

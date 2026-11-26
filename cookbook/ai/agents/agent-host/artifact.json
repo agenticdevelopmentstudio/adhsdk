@@ -4,7 +4,7 @@
     "id": "d711486e-1195-417b-9baf-7315354dae8d",
     "title": "Agent Host",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "status": "review",
     "language": "en",
     "created": "2026-11-25",
@@ -36,7 +36,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "9bb943ba49869807",
+  "synced": "7b9196e5f32a7a56",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

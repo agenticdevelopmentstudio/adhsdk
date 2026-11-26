@@ -129,4 +129,5 @@
 - **store-session-skip**: A stored session row whose id is not a UUID MUST be skipped by session reads.
 - **store-delete-order**: `AgentStore.deleteSession` MUST delete the session's messages and then the session row; the tables declare no foreign key.
 - **persistence-durability**: Definitions, sessions and messages MUST survive a host restart because they live in the handed database; the running-turn map, the per-turn streams, the tails and the `seq` counters MUST NOT survive it.
+- **envelope-merge**: `AgentEnvelope.merging(_:_:)` MUST return one envelope when both are `text_delta`, or both `thinking_delta`, of the same session: the texts joined in order, with the later envelope's `seq`. It MUST return nil for any other pair, including a text and a thinking delta, a delta and any other event, and two envelopes of different sessions.
 

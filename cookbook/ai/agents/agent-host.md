@@ -2,7 +2,7 @@
 id: d711486e-1195-417b-9baf-7315354dae8d
 title: "Agent Host"
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: 2026-11-25
@@ -171,6 +171,7 @@ The host is an `actor`. It covers four concerns that this ingredient specifies t
 - **store-session-skip**: A stored session row whose id is not a UUID MUST be skipped by session reads.
 - **store-delete-order**: `AgentStore.deleteSession` MUST delete the session's messages and then the session row; the tables declare no foreign key.
 - **persistence-durability**: Definitions, sessions and messages MUST survive a host restart because they live in the handed database; the running-turn map, the per-turn streams, the tails and the `seq` counters MUST NOT survive it.
+- **envelope-merge**: `AgentEnvelope.merging(_:_:)` MUST return one envelope when both are `text_delta`, or both `thinking_delta`, of the same session: the texts joined in order, with the later envelope's `seq`. It MUST return nil for any other pair, including a text and a thinking delta, a delta and any other event, and two envelopes of different sessions.
 
 ## Appearance
 
@@ -233,6 +234,8 @@ Not applicable — this is a headless agent host, not a visual component.
 | agent-host-042 | persistence-durability (derived from the initializer; no test asserts it) | Save an agent, create a session and send a turn; recreate the host on the same database | `agents()`, `sessions(nil)` and `session(_:)` return the stored rows; the new host has no running turn and `seq` starts at 0 |
 | agent-host-043 | create-session-ignores-enabled (derived from `createSession`; no test asserts it) | `createSession` for an agent saved with `enabled` false; then `send` to it | The session is created; `send` throws `agentDisabled` |
 | agent-host-044 | save-requires-id, save-requires-name (`AgentHostTests.agentManagement`) | `save` with id `"\n\t"`; `save` with name `"\n"` | `invalidAgent("An agent needs an id")`; `invalidAgent("An agent needs a name")` |
+| agent-host-045 | envelope-merge (`AgentEventTests.mergesDeltas`) | Merge `text_delta("Hel")` seq 1 with `text_delta("lo")` seq 2 of one session; merge `thinking_delta("a")` with `thinking_delta("b")` | `text_delta("Hello")` with seq 2; `thinking_delta("ab")` |
+| agent-host-046 | envelope-merge (`AgentEventTests.refusesOtherMerges`) | Merge a text delta with a thinking delta; with `turn_finished`; with a text delta of another session | nil each time |
 ## Edge Cases
 
 - **Null and empty input**: `send` with empty text MUST store it and run a turn (`send-stores-user-message`). A nil `title` MUST be stored as no title. An empty agent `prompt` MUST give a nil system prompt. A tool-argument string that is not a JSON object MUST give a nil `reason` and MUST NOT fail the run. A round with no text MUST store no assistant message.
@@ -381,4 +384,5 @@ Separation-of-concerns passes: the host owns turn orchestration and event fan-ou
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-11-25 | Mike Fullerton | Add envelope-merge: AgentEnvelope.merging folds a session's consecutive text or thinking deltas (agent-host-045, 046) |
 | 1.0.0 | 2026-11-25 | Mike Fullerton | Initial creation |

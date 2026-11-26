@@ -167,3 +167,23 @@ public struct AgentEnvelope: Codable, Sendable, Equatable {
         case sessionId = "session_id"
     }
 }
+
+extension AgentEnvelope {
+    /// `next` folded into `last` when both are text deltas, or both thinking
+    /// deltas, of one session: the texts joined in order, with `next`'s `seq`.
+    /// Nil for anything else, so a tool call, usage or turn end is never
+    /// merged. A relay that batches a turn's events (an XPC push through a
+    /// coalescing publisher) passes this as its merge, so a burst of tokens
+    /// crosses as one event.
+    public static func merging(_ last: AgentEnvelope, _ next: AgentEnvelope) -> AgentEnvelope? {
+        guard last.sessionId == next.sessionId else { return nil }
+        switch (last.event, next.event) {
+        case let (.textDelta(first), .textDelta(second)):
+            return AgentEnvelope(sessionId: next.sessionId, seq: next.seq, event: .textDelta(first + second))
+        case let (.thinkingDelta(first), .thinkingDelta(second)):
+            return AgentEnvelope(sessionId: next.sessionId, seq: next.seq, event: .thinkingDelta(first + second))
+        default:
+            return nil
+        }
+    }
+}
