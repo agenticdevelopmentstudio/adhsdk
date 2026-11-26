@@ -48,13 +48,14 @@ final class TerminalChatSessionTests: XCTestCase {
     func testOutputAfterARunGaveUpGoesToWaitNotToTheNextRun() async throws {
         let (chat, terminal) = try await connectedShell()
         defer { withExtendedLifetime(terminal) {} }
+        let reported = ReportedLines(chat)
         _ = await chat.run("sleep 1; echo late-one", settle: .milliseconds(300), timeout: .milliseconds(600))
-        try await Task.sleep(for: .seconds(2))
+        try await reported.awaitLine("late-one")
         let waited = await chat.waitForOutput(settle: .milliseconds(300), timeout: .seconds(2))
         XCTAssertTrue(waited.contains("late-one"), waited)
 
         _ = await chat.run("sleep 1; echo late-two", settle: .milliseconds(300), timeout: .milliseconds(600))
-        try await Task.sleep(for: .seconds(2))
+        try await reported.awaitLine("late-two")
         let next = await chat.run("echo next", settle: .milliseconds(300), timeout: .seconds(3))
         XCTAssertTrue(next.contains("next"), next)
         XCTAssertFalse(next.contains("late-two"), "a new command's reply is its own output only: \(next)")
@@ -174,6 +175,42 @@ final class TerminalChatSessionTests: XCTestCase {
         }
     }
 
+    /// Every line the chat has reported as output, so a test can wait until a
+    /// late line has been reported with no caller waiting — and so been kept for
+    /// the next ``TerminalChatSession/waitForOutput(settle:timeout:)`` — instead
+    /// of sleeping for longer than that usually takes. The session keeps the
+    /// output in the same main-actor turn it reports it, so a line seen here is
+    /// already kept.
+    @MainActor
+    private final class ReportedLines {
+        private var lines: [String] = []
+        private var listener: Task<Void, Never>?
+
+        init(_ chat: TerminalChatSession) {
+            let events = chat.events()
+            listener = Task { @MainActor [weak self] in
+                for await event in events {
+                    guard case .responseDelta(_, let text) = event else { continue }
+                    self?.lines += text.split(whereSeparator: \.isNewline)
+                        .map { $0.trimmingCharacters(in: .whitespaces) }
+                }
+            }
+        }
+
+        deinit { listener?.cancel() }
+
+        /// Returns once `line` has been reported on a line of its own (so not
+        /// as part of the echoed command that prints it); throws after 20 s.
+        func awaitLine(_ line: String) async throws {
+            let deadline = ContinuousClock.now + .seconds(20)
+            while !lines.contains(line) {
+                guard ContinuousClock.now < deadline else { throw LineNeverReported(line: line, seen: lines) }
+                try await Task.sleep(for: .milliseconds(20))
+            }
+        }
+    }
+
+    private struct LineNeverReported: Error { let line: String; let seen: [String] }
     private struct ShellNeverStarted: Error {}
     private struct RawReaderNeverStarted: Error { let output: String }
 }
