@@ -312,13 +312,16 @@ public enum CommandRunner {
         let finished = DispatchSemaphore(value: 0)
         let descriptor = pipe.fileHandleForReading.fileDescriptor
         let source = DispatchSource.makeReadSource(fileDescriptor: descriptor, queue: queue)
-        source.setEventHandler { [unowned source] in
+        // Weak, not unowned: an event already dequeued when the run cancels
+        // the source and drops its last reference would otherwise touch a
+        // freed object.
+        source.setEventHandler { [weak source] in
             var buffer = [UInt8](repeating: 0, count: 64 * 1024)
             let count = read(descriptor, &buffer, buffer.count)
             if count > 0 {
                 collected.append(Data(buffer[0..<count]), to: stream)
             } else if count == 0 || (errno != EAGAIN && errno != EINTR) {
-                source.cancel()
+                source?.cancel()
             }
         }
         // The pipe is held until here, so its descriptor outlives the source.
