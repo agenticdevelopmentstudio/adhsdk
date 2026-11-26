@@ -312,6 +312,15 @@ struct MCPClientRaceTests {
     /// against a 0.25 ceiling with the fix in place. One thread's share is
     /// what a spin changes and concurrent tests do not: they spread across
     /// the pool and finish in milliseconds.
+    ///
+    /// One window is not enough on its own, because the suite shares the
+    /// process: a test in another suite whose synchronous body holds a pool
+    /// thread for most of a second (a large decode) reads as a spin too. What
+    /// tells them apart is how long it lasts. The spin runs for the life of the
+    /// process, so it fills every window; anything else ends. A window over the
+    /// ceiling is therefore followed by another, up to
+    /// `abandonedConnectBurnWindows`, and `burn` is the quietest of them: a
+    /// real spin still fails, and a neighbour's one busy second does not.
     @Test("an abandoned connect is freed rather than left spinning a core")
     func teardownFreesTheAbandonedConnectRatherThanSpinning() async throws {
         let marker = "MCPClientAbandonedConnectProbe-\(UUID().uuidString)"
@@ -335,9 +344,7 @@ struct MCPClientRaceTests {
         let returned = await Self.completes(disconnecting, within: 8)
 
         // Whatever step 6 was supposed to stop is running right now.
-        let before = Self.threadCPUSeconds()
-        try await Task.sleep(for: .seconds(1))
-        let burn = Self.busiestThreadCPUSeconds(since: before)
+        let burn = try await Self.quietestBusiestThreadCPUSeconds()
 
         let freed = await Self.completes(connecting, within: 5)
 
@@ -352,7 +359,8 @@ struct MCPClientRaceTests {
             burn < Self.abandonedConnectCPUCeiling,
             """
             an abandoned connect is still burning CPU after disconnect() returned \
-            (one thread spent \(burn) CPU-seconds of a 1.0 s window; ceiling \(Self.abandonedConnectCPUCeiling))
+            (the busiest thread spent \(burn) CPU-seconds in the quietest of up to \(Self.abandonedConnectBurnWindows) \
+            consecutive 1.0 s windows; ceiling \(Self.abandonedConnectCPUCeiling))
             """
         )
     }
@@ -360,6 +368,25 @@ struct MCPClientRaceTests {
     /// The most CPU one thread may spend in the test's 1.0 s window. A spin
     /// pins a thread at close to 1.0; with the fix, no thread comes near half.
     private static let abandonedConnectCPUCeiling = 0.5
+
+    /// How many consecutive windows must all read over the ceiling before the
+    /// test calls it a spin. A spin fills every one of them; another suite's
+    /// busy thread would have to stay busy for all five seconds.
+    private static let abandonedConnectBurnWindows = 5
+
+    /// The busiest thread's CPU in a 1.0 s window, measured again in a fresh
+    /// window while it reads over the ceiling, up to
+    /// `abandonedConnectBurnWindows` windows; the lowest reading.
+    private static func quietestBusiestThreadCPUSeconds() async throws -> Double {
+        var quietest = Double.infinity
+        for _ in 0..<abandonedConnectBurnWindows {
+            let before = threadCPUSeconds()
+            try await Task.sleep(for: .seconds(1))
+            quietest = min(quietest, busiestThreadCPUSeconds(since: before))
+            if quietest < abandonedConnectCPUCeiling { break }
+        }
+        return quietest
+    }
 
     /// User+system CPU each live thread of this process has consumed, keyed by
     /// its system-wide thread id, so a pool thread is matched across the two
