@@ -2,11 +2,11 @@
 id: 0bcb370d-a44f-48a8-a313-0266c2f86e51
 title: "Jobs"
 type: ingredient
-version: 1.4.1
+version: 1.4.2
 status: draft
 language: en
 created: 2026-11-23
-modified: 2026-11-23
+modified: 2026-11-26
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -57,7 +57,7 @@ The package holds seven panes:
 - `JobStatusPane` is the product admin's run status table. It shows no content.
 
 The package also exports two topic sets: `jobsTopics` for the hub workspace and
-`jobsProductAdminTopics` for the product admin site's Jobs pages.
+`jobsProductAdminTopics` for the product admin console's Jobs pages, under `/admin`.
 
 The model the panes show is the phase 9 design's:
 
@@ -70,7 +70,7 @@ The model the panes show is the phase 9 design's:
 - An **environment** is a machine the owner runs.
 
 The routes the client calls are the backend's `/jobs` routes. The `jobs` hub segment and the
-`/jobs` and `/jobs/templates` pages of the product admin site are specified by [adhsdk.ingredient.adh.sites.site-registry](cookbook:9069ccf9-0357-4311-9671-91ee2793adae). The Jobs row on
+`/admin/jobs` and `/admin/jobs/templates` pages of the product admin console are specified by [adhsdk.ingredient.adh.sites.site-registry](cookbook:9069ccf9-0357-4311-9671-91ee2793adae). The Jobs row on
 the product admin rail is specified by [adhsdk.ingredient.adh.hub.product-admin.product-admin-site](cookbook:2cb51edd-84c5-448a-a5dc-134d3f8b6c1c), and the menu icon by [adhsdk.recipe.adh.sites.site-menu](cookbook:f2d56415-ac36-4a27-bee5-b447c4186513). The feature requires the
 AI Settings feature ([adhsdk.ingredient.adh.hub.ai-settings](cookbook:5fdf4ce9-cb7e-4490-a6d6-066690ef07ca)), whose connections and models an AI step names.
 
@@ -136,9 +136,10 @@ AI Settings feature ([adhsdk.ingredient.adh.hub.ai-settings](cookbook:5fdf4ce9-c
   (segment `jobs`), Templates (segment `jobs/templates`) and Environments (segment `jobs/environments`).
   Each entry is `{ id, label, href }`, and its `href` is the segment the host prefixes with the
   workspace.
-- **jobs-product-admin-topics**: `jobsProductAdminTopics` MUST list the product admin site's two Jobs
-  topics in this order: Status (`/jobs`) and Templates (`/jobs/templates`). Each entry is
-  `{ id, label, href }`, and its `href` is a page route of the product admin site.
+- **jobs-product-admin-topics**: `jobsProductAdminTopics` MUST list the product admin console's two Jobs
+  topics in this order: Status (`/admin/jobs`) and Templates (`/admin/jobs/templates`). Each
+  entry is `{ id, label, href }`, and its `href` is a page route of the `product-sites` site,
+  where the console lives under `/admin`.
 - **topic-ids-unique**: The ids within each topic set MUST be unique.
 
 ### JobsPane
@@ -306,7 +307,7 @@ client's `jobs/__tests__/` MUST carry. The data client, the package and their te
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
 | jobs-001 | jobs-topics, topic-ids-unique | `jobsTopics` | Three entries in order: Jobs `jobs`, Templates `jobs/templates`, Environments `jobs/environments`; the ids are unique. |
-| jobs-002 | jobs-product-admin-topics, topic-ids-unique | `jobsProductAdminTopics` | Two entries in order: Status `/jobs`, Templates `/jobs/templates`; the ids are unique. |
+| jobs-002 | jobs-product-admin-topics, topic-ids-unique | `jobsProductAdminTopics` (test: "is Status and Templates in order, under the console's /admin") | Two entries in order: Status `/admin/jobs`, Templates `/admin/jobs/templates`; the ids are unique. |
 | jobs-003 | topics-subpath-plain-data | Import `@adh-sdk/jobs/topics` in a module with no React | Both topic sets load; the module imports nothing from React. |
 | jobs-004 | jobs-customer-catalog-only | Render `JobsPane side="customer"` with a catalog of one template | Creation is offered from the catalog entry only; no inline-steps or template authoring action is shown. |
 | jobs-005 | jobs-side-prop, jobs-catalog | Render `JobsPane side="account"` with a catalog of one template; create a job from it | The create call names that template's latest version. |
@@ -354,8 +355,9 @@ client's `jobs/__tests__/` MUST carry. The data client, the package and their te
 ## Deep Linking
 
 The panes own no URL. The hub serves them under the workspace segment `jobs`, whose catch-all line
-carries the `jobs/templates` and `jobs/environments` sub-paths, and the product admin site serves
-`JobStatusPane` at `/jobs` and `JobTemplatesPane` at `/jobs/templates`. Both are specified by [adhsdk.ingredient.adh.sites.site-registry](cookbook:9069ccf9-0357-4311-9671-91ee2793adae). A
+carries the `jobs/templates` and `jobs/environments` sub-paths, and the product admin console (under
+`/admin` on each product's own site) serves `JobStatusPane` at `/admin/jobs` and `JobTemplatesPane` at
+`/admin/jobs/templates`. Both are specified by [adhsdk.ingredient.adh.sites.site-registry](cookbook:9069ccf9-0357-4311-9671-91ee2793adae). A
 host makes the open row deep-linkable through the `onOpen*` callbacks.
 
 ## Localization
@@ -492,6 +494,7 @@ Each check was read against the package and the data client:
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.4.2 | 2026-11-26 | Mike Fullerton | jobsProductAdminTopics hrefs under the console's /admin: /admin/jobs, /admin/jobs/templates |
 | 1.4.1 | 2026-11-23 | Mike Fullerton | Accessibility: the notify boxes, the Offered-by boxes and the once-shown secret's confirm carry names that say what they do. |
 | 1.4.0 | 2026-11-23 | Mike Fullerton | A template job's inputs and defaults come from its pinned-version read and are editable against that version; a step run shows the name its run froze, else Step N. |
 | 1.3.0 | 2026-11-23 | Mike Fullerton | Review fixes: a template job's inputs and defaults come from the catalog only at its pinned version (job-inputs-pinned-version); notify shows the resolved value and saves only when changed; the job's runs and the status table hold every page in one query, and a failed Load more keeps the rows; a step run with no known name reads Step N with its id; defaults problems on publish are listed (vectors jobs-014 to jobs-018) |

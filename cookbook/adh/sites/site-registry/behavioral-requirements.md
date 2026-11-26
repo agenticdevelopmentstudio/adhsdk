@@ -31,7 +31,7 @@
 - **admin-only-derives-admin-ids-and-drops-footer**: The admin-only id set MUST be
   exactly the identifiers of every site definition marked `adminOnly`, and every such
   entry MUST be excluded from the footer site list.
-- **support-routes-in-shares**: The hub's generated route shares MUST list the hosted `/support` page in the `hub` share, the `/support` topic in the `product-admin` share, and the operator admin site's three pages, `/break-glass`, `/support-access` and `/support-grants`, in the `admin` share, each in the sorted place [route-list-per-site-is-normalized](#requirements/route-list-per-site-is-normalized) gives it.
+- **support-routes-in-shares**: The hub's generated route shares MUST list the hosted `/support` page in the `hub` share, the console's `/admin/support` topic in the `product-sites` share, and the operator admin site's three pages, `/break-glass`, `/support-access` and `/support-grants`, in the `admin` share, each in the sorted place [route-list-per-site-is-normalized](#requirements/route-list-per-site-is-normalized) gives it.
 - **ai-settings-extra-segment**: The hub-only extra segments MUST include `ai-settings`, the hub knob that holds the workspace's AI Settings (services and their models).
 - **ai-settings-hub-route-line**: The hub route share MUST carry one workspace line for `ai-settings`, `/[workspace]/ai-settings/[[...path]]`, matching its one `llm-providers` workspace line, in sorted place (after `/[workspace]/admin-site/[[...path]]`). The share MUST keep its `/[workspace]/llm-providers/[[...path]]` and `/[workspace]/persona-services/[[...path]]` lines, which serve the redirects (legacy-provider-segments-redirect-only).
 - **admin-share-no-ai-settings**: The admin route share MUST NOT gain an `ai-settings` line. Its `/llm-providers` line is the operator console's own provider page, whose identifier stays.
@@ -39,17 +39,22 @@
 - **jobs-extra-segment**: The hub-only extra segments MUST include `jobs` (phase 9), the hub knob that holds the workspace's jobs, templates and environments.
 - **jobs-sub-paths-not-segments**: `jobs/templates` and `jobs/environments` MUST be sub-paths served by the `jobs` workspace line, and MUST NOT be added to the hub-only extra segments, because a workspace segment is one path segment.
 - **jobs-hub-route-line**: The hub route share MUST carry one workspace line for `jobs`, `/[workspace]/jobs/[[...path]]`, in sorted place [route-list-per-site-is-normalized](#requirements/route-list-per-site-is-normalized).
-- **product-admin-share-jobs**: The `product-admin` route share MUST list the site's three Jobs pages, `/jobs`, `/jobs/templates` and a template's own page `/jobs/templates/[templateId]`, in sorted place. It has no Environments page: environments belong to a job's owner, and a product admin only reads run status.
+- **product-sites-share-jobs**: The `product-sites` route share MUST list the console's three Jobs pages, `/admin/jobs`, `/admin/jobs/templates` and a template's own page `/admin/jobs/templates/[templateId]`, in sorted place. It has no Environments page: environments belong to a job's owner, and a product admin only reads run status.
 - **admin-share-no-jobs**: The admin route share MUST NOT gain a `/jobs` line: the operator's dead jobs list is a section of its AI Nodes page.
-- **product-admin-site-registered**: The roster MUST define a `product-admin` site (a
-  product's own admin site, phase 6) that is `adminOnly`, not `crawlable`, and has no home
-  route (`hasHome` false), with `product-admin.agenticdeveloperhub.com` as its production
-  host; because it is `adminOnly` it MUST be absent from the footer site list. It MUST be in
-  the main-family roster, MUST sit in the console section of the family roster between
-  `admin` and `builds`, and MUST be hand-rolled in the per-site build table
-  (`handRolledConfig`), since its root app holds the site's own `/auth/*` route handlers.
-  The one deployed app serves every product's admin site and picks the product by host, so
-  the registry's host is only the default.
+- **product-sites-site-registered**: The roster MUST define a `product-sites` site (every
+  product's own site, `<handle>.agenticdeveloperhub.com`, with the product's admin console
+  under `/admin`) that is a wildcard site (`wildcardHost` `*.agenticdeveloperhub.com`), not
+  `crawlable`, `listed: false`, NOT `adminOnly` (a product's admins are not ADH's), and has
+  no home route (`hasHome` false). Its `prodHost`, `product-sites.agenticdeveloperhub.com`,
+  is only its folder's name, which the directory lookup maps back to `product-sites`, and is
+  never served. Because it is unlisted it MUST be absent from the listed-sites set and the
+  footer site list, and it MUST NOT be in the admin-only ids. It MUST be in the main-family
+  roster, sits in `SITES` between `admin` and `builds`, and MUST be hand-rolled in the
+  per-site build table (`handRolledConfig`), since its app holds the console's own
+  `/admin/auth/*` route handlers. The listed family roster's console section therefore ends
+  `status`, `admin`, `builds`.
+- **single-wildcard-site**: `product-sites` MUST be the only wildcard site (the one entry with
+  a `wildcardHost`); every other site is a single-host site.
 - **listed-sites-filter**: The listed-sites set MUST be exactly the roster entries
   whose `listed` field is not literally `false`; a `listed: false` entry MUST remain
   resolvable by site lookup and identifier validation and MUST only be excluded from
@@ -113,7 +118,18 @@
   `'local'` when it is exactly `localhost`, starts with `127.`, is `::1`, or ends in
   `.local`, `.test`, or `.localhost`; MUST classify a hostname starting with
   `testing.` as `'testing'` and one starting with `staging.` as `'staging'`; and MUST
-  classify every other hostname as `'production'`.
+  classify every other hostname as `'production'`. Before the leading-label check, for each
+  wildcard site (its `wildcardHost` minus the `*.` being `<domain>`) it MUST classify a
+  hostname ending in `.testing.<domain>` as `'testing'` and one ending in `.staging.<domain>`
+  as `'staging'`, so a wildcard site's env is the label after the handle
+  (`acme.staging.agenticdeveloperhub.com` is staging, and a handle named `testing` on staging
+  still reads as staging).
+- **host-for-env-wildcard-pattern**: Environment host resolution (exported as `hostForEnv`)
+  MUST answer a wildcard site with the host pattern it serves, the env after the `*.`:
+  `*.testing.<domain>` for testing, `*.staging.<domain>` for staging, and the `wildcardHost`
+  itself for production and local, with the same testing, staging, production fallback as a
+  single-host site. It MUST never answer `<env>.<prodHost>` for a wildcard site, whose
+  `prodHost` is a folder's name.
 - **host-for-env-fallback**: Environment host resolution MUST resolve
   `testing.<prodHost>` when the target environment is `'testing'` and the site has a
   testing deploy; otherwise for `'testing'` it MUST fall back to `staging.<prodHost>`
@@ -135,6 +151,12 @@
   otherwise; for a deeper `/home/*` path it MUST return the same path with a
   `#site-switch` marker appended (so the target's not-found page knows to walk the
   path up), or `/` when the target has no home route at all.
+- **wildcard-site-has-no-single-url**: Cross-site link construction, the cross-site URL
+  builder, the production URL builder and the local-origin builder MUST throw
+  `"<id> is a wildcard site; it has no single URL"` for a wildcard site, in every env,
+  rather than answer a host nothing serves. The local-server check MUST answer false for a
+  wildcard site whatever `NEXT_PUBLIC_LOCAL_SITES` names, since the local suite serves one
+  host per child and no wildcard host.
 - **build-site-href-env-aware**: Cross-site link construction MUST classify the
   current environment via environment detection; for `'local'` and a target the local
   server runs it MUST return the local origin concatenated with the carried path; for
@@ -157,10 +179,12 @@
 
 - **sso-return-origins-partitioned-by-env**: The return-origin list MUST return, for
   `env === 'production'`, the bare `https://<prodHost>` origin of every roster entry
-  that is neither external nor `nativeApp`; for `env === 'staging'`, only the
+  that is neither external, `nativeApp`, nor a wildcard site; for `env === 'staging'`, only the
   `https://staging.<prodHost>` origin of every such entry with a staging deploy; for
   `env === 'testing'`, only the `https://testing.<prodHost>` origin of every such entry
-  with a testing deploy.
+  with a testing deploy. A wildcard site's origins MUST NOT appear for any env, and no
+  origin in any env may contain `*`: each `<handle>.agenticdeveloperhub.com` host signs in
+  through its product's own client, and the site's `prodHost` is a folder's name.
 - **sso-origins-grant-nothing-by-themselves**: A caller MUST NOT treat membership in the
   return-origin list as a grant of sign-in return or cross-origin access; the backend
   no longer trusts this list for either, and its one reader uses the list to decide

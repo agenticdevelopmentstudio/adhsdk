@@ -16,9 +16,9 @@ depends-on:
   - 2eff6ca4-5479-44b3-8636-04e455009a10
   - 150bf00e-6c6b-4f91-a323-d307ebd5700d
   - 3ea9329e-5acc-4c43-b5ce-bb8c50570104
-version: 2.1.0
+version: 2.2.0
 created: 2026-11-23
-modified: 2026-11-23
+modified: 2026-11-26
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -29,7 +29,7 @@ references: []
 
 ## Overview
 
-This is the feature layer of a product's admin site (phase 6). A product's own admins sign in to a separate host, the product admin site, and manage the people of that one product. The hub's managers set the site up from the Admin site page of the product's workspace. The data calls are in the product admin client ([adhsdk.ingredient.adh.hub.product-admin.product-admin-client](cookbook:150bf00e-6c6b-4f91-a323-d307ebd5700d)); the sign-in is the product admin session in the authentication client ([adhsdk.ingredient.data.services.auth.auth-client](cookbook:3ea9329e-5acc-4c43-b5ce-bb8c50570104)); the people panes it reuses are the ecosystem configuration panes and the ecosystem invitation panes. This recipe covers what ties them into a site: the page list, the users pane, the manager's Admin site page and the rule for which hub pages move to the site.
+This is the feature layer of a product's admin site (phase 6). A product's own admins sign in to the admin console under `/admin` on the product's own site (`<handle>.agenticdeveloperhub.com`, the `product-sites` site), and manage the people of that one product. The hub's managers set the site up from the Admin site page of the product's workspace. The data calls are in the product admin client ([adhsdk.ingredient.adh.hub.product-admin.product-admin-client](cookbook:150bf00e-6c6b-4f91-a323-d307ebd5700d)); the sign-in is the product admin session in the authentication client ([adhsdk.ingredient.data.services.auth.auth-client](cookbook:3ea9329e-5acc-4c43-b5ce-bb8c50570104)); the people panes it reuses are the ecosystem configuration panes and the ecosystem invitation panes. This recipe covers what ties them into a site: the page list, the users pane, the manager's Admin site page and the rule for which hub pages move to the site.
 
 The pieces:
 
@@ -38,13 +38,13 @@ The pieces:
 - `@adh-sdk/adh-products` (`topics.ts`, `ProductsFeature.tsx`): the Admin site topic row and `visibleProductTopics`, which hides the hub's people pages once a site carries them.
 - `@adh-sdk/ecosystems`: the requests, pending and invites panes take `hideAdminRecords`.
 - `@adh-sdk/jobs` ([adhsdk.ingredient.adh.hub.jobs](cookbook:0bcb370d-a44f-48a8-a313-0266c2f86e51), phase 9): `JobStatusPane` and `JobTemplatesPane`, shown on the site's Jobs pages.
-- `@adh-sdk/site-registry`: the `product-admin` site and the `admin-site` hub segment (see the site registry recipe).
+- `@adh-sdk/site-registry`: the `product-sites` site (a wildcard site; the console's pages are its `/admin/*` share) and the `admin-site` hub segment (see the site registry recipe).
 
 ## Behavioral Requirements
 
 ### Pages
 
-- **topics-list**: `PRODUCT_ADMIN_TOPICS` MUST list ten pages in this order, with these ids and paths: users (`/users`), requests, pending, invites, roles, signup-list, sets, jobs (`/jobs`, labeled "Jobs"), totals and support (`/support`, labeled "Support"), each with a label and an `href` of `/` plus its id. The ids are unique.
+- **topics-list**: `PRODUCT_ADMIN_TOPICS` MUST list ten pages in this order, with these ids and paths: users (`/admin/users`), requests, pending, invites, roles, signup-list, sets, jobs (`/admin/jobs`, labeled "Jobs"), totals and support (`/admin/support`, labeled "Support"), each with a label and an `href` of `/admin/` plus its id: the console lives under `/admin` on the product's own site (the `product-sites` site), and no href is under the console's auth routes, `/admin/auth`. The ids are unique.
 - **topics-importable-server-side**: the topic list MUST be importable without the client barrel, through `@adh-sdk/product-admin/topics`.
 
 ### Users pane
@@ -63,14 +63,14 @@ The pieces:
 
 ### Support page
 
-- **support-page**: the Support page MUST render `SupportGrantsPane` ([adhsdk.ingredient.adh.hub.support.support-panes](cookbook:2eff6ca4-5479-44b3-8636-04e455009a10)) for the product it is given, at `/support`, and MUST be listed in `PRODUCT_ADMIN_TOPICS` (see [topics-list](#requirements/topics-list)).
-- **support-step-up**: when the Support page's request for access, or its revoke of a grant, is refused as `step_up_required`, the page MUST send the admin through `stepUp('/support')` of the product admin session ([adhsdk.ingredient.data.services.auth.auth-client](cookbook:3ea9329e-5acc-4c43-b5ce-bb8c50570104)) and bring them back to `/support`, with no error shown; the sign-in parameters of that second pass are the authentication client's.
+- **support-page**: the Support page MUST render `SupportGrantsPane` ([adhsdk.ingredient.adh.hub.support.support-panes](cookbook:2eff6ca4-5479-44b3-8636-04e455009a10)) for the product it is given, at `/admin/support`, and MUST be listed in `PRODUCT_ADMIN_TOPICS` (see [topics-list](#requirements/topics-list)).
+- **support-step-up**: when the Support page's request for access, or its revoke of a grant, is refused as `step_up_required`, the page MUST send the admin through `stepUp` of the product admin session ([adhsdk.ingredient.data.services.auth.auth-client](cookbook:3ea9329e-5acc-4c43-b5ce-bb8c50570104)) with the page's own path and bring them back to it (the pane's `returnPath` defaults to `/support`; the product site passes `/admin/support`), with no error shown; the sign-in parameters of that second pass are the authentication client's.
 - **support-switch-off**: when the backend answers the grants read with 404 (consented access is off), the page MUST say that support access is not available instead of showing an error, and MUST NOT show the request form.
 
 ### Jobs pages
 
-- **jobs-pages**: the Jobs row (phase 9) MUST open `/jobs`, which renders `JobStatusPane` ([adhsdk.ingredient.adh.hub.jobs](cookbook:0bcb370d-a44f-48a8-a313-0266c2f86e51)) for the product it is given; `/jobs/templates` MUST render `JobTemplatesPane`. Both are reached from the Jobs row's own topics, `jobsProductAdminTopics`, so the rail keeps one Jobs row and does not list `/jobs/templates`.
-- **jobs-status-no-content**: the `/jobs` page MUST show only run status, never a run's inputs, outputs or logs; reading those needs a support grant (see [support-page](#requirements/support-page)).
+- **jobs-pages**: the Jobs row (phase 9) MUST open `/admin/jobs`, which renders `JobStatusPane` ([adhsdk.ingredient.adh.hub.jobs](cookbook:0bcb370d-a44f-48a8-a313-0266c2f86e51)) for the product it is given; `/admin/jobs/templates` MUST render `JobTemplatesPane`. Both are reached from the Jobs row's own topics, `jobsProductAdminTopics`, so the rail keeps one Jobs row and does not list `/admin/jobs/templates`.
+- **jobs-status-no-content**: the `/admin/jobs` page MUST show only run status, never a run's inputs, outputs or logs; reading those needs a support grant (see [support-page](#requirements/support-page)).
 
 ### Which pages move
 
@@ -102,7 +102,7 @@ Vectors marked with a test name are asserted in `features/product-admin/src/__te
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| product-admin-site-001 | topics-list | `PRODUCT_ADMIN_TOPICS` (test: "names the ten pages in rail order, ids unique") | Ten rows in the order above, `jobs` with `/jobs` between `sets` and `totals`, the last `support` with `/support`, unique ids |
+| product-admin-site-001 | topics-list | `PRODUCT_ADMIN_TOPICS` (test: "names the ten pages in rail order, ids unique") | Ten rows in the order above, `jobs` with `/admin/jobs` between `sets` and `totals`, the last `support` with `/admin/support`, unique ids |
 | product-admin-site-002 | users-roster | The pane given a product, over a roster of customers (test: "lists the roster for the product it is given, with roles, storage and paused") | One row each, with roles, storage and the paused mark |
 | product-admin-site-003 | users-search-paging | Next, then Previous; then a search (tests: "pages forward by the cursor and back again", "searches from the first page") | The next page is read by the cursor, Previous returns to the first; a search reads from the first page |
 | product-admin-site-004 | users-confirm-writes | Pause chosen and confirmed; then chosen and cancelled (tests: "pauses only after the confirmation", "sends nothing when the confirmation is cancelled") | One pause request; then none |
@@ -121,11 +121,12 @@ Vectors marked with a test name are asserted in `features/product-admin/src/__te
 | product-admin-site-017 | visible-topics | The site not known yet, with and without the URL naming Admin site; then a known switch-off naming it (tests: "not known yet: every pane, and no Admin site row unless the URL names it", "a known switch-off drops the Admin site row even when the URL names it") | As the requirement states |
 | product-admin-site-018 | visible-topics | Switch on and a site (test: "switch on and a site: Users keeps Email Signup and Authentication, and nothing else") | The Users row carries members `email-signup` and `auth` |
 | product-admin-site-019 | run-at-admin-site | Each moved topic and four others, with each switch and site state (test: "runAtAdminSite: the moved topics, only with the switch on and a site") | True for the moved topics with the switch on and a site; false otherwise |
-| product-admin-site-020 | support-page, support-step-up | The Support page for a product; a request refused as `step_up_required`, then a revoke refused the same way (test, for the request: "sends a step_up_required refusal through stepUp('/support')"; the revoke follows from the source) | `SupportGrantsPane` renders for the product; each refusal calls `stepUp('/support')`, which returns to `/support`, and no error is shown |
+| product-admin-site-020 | support-page, support-step-up | The Support page for a product; a request refused as `step_up_required`, then a revoke refused the same way (test, for the request: "sends a step_up_required refusal through stepUp('/support')"; the revoke follows from the source) | `SupportGrantsPane` renders for the product; each refusal calls `stepUp` with the pane's `returnPath` (`/support` by default, `/admin/support` on the product site), which returns there, and no error is shown |
 | product-admin-site-021 | totals-pane | Totals carrying `jobsByStatus` of `{ failed: 2, done: 9 }`, then an empty map | A "Jobs" total of 11, then "Jobs done" 9 and "Jobs failed" 2; then "Jobs" 0 and no status count |
 | product-admin-site-022 | support-switch-off | The grants read answered 404 (test: "says support access is off when the grants read answers 404") | A note that support access is not available, no error and no request form |
-| product-admin-site-023 | jobs-pages | The `/jobs` and `/jobs/templates` pages for a product (derived from the phase 9 design; the site's e2e `jobs.spec.ts`) | `/jobs` mounts `JobStatusPane` and `/jobs/templates` mounts `JobTemplatesPane`, each for that product; the rail has one Jobs row |
-| product-admin-site-024 | jobs-status-no-content | The `/jobs` page over a product with a failed run | The run's status and error code show; no input, output or log is requested or shown |
+| product-admin-site-023 | jobs-pages | The `/admin/jobs` and `/admin/jobs/templates` pages for a product (derived from the phase 9 design; the site's e2e `jobs.spec.ts`) | `/admin/jobs` mounts `JobStatusPane` and `/admin/jobs/templates` mounts `JobTemplatesPane`, each for that product; the rail has one Jobs row |
+| product-admin-site-024 | jobs-status-no-content | The `/admin/jobs` page over a product with a failed run | The run's status and error code show; no input, output or log is requested or shown |
+| product-admin-site-025 | topics-list | Every `PRODUCT_ADMIN_TOPICS` href (test: "keeps every page under /admin and off the console's auth routes") | Each starts with `/admin/` and none with `/admin/auth` |
 ## Edge Cases
 
 - **No product selected (MUST)**: the Admin site page and the totals page say so and make no request.
@@ -136,8 +137,8 @@ Vectors marked with a test name are asserted in `features/product-admin/src/__te
 - **A cancelled confirmation (MUST NOT)**: nothing is sent.
 - **Quota above the default (MUST NOT send)**: refused before any request.
 - **A step-up refusal (MUST)**: a request or a revoke refused as `step_up_required` is handled as [support-step-up](#requirements/support-step-up) says.
-- **A product with no runs (MUST)**: `/jobs` says there are no runs yet, and is not an error.
-- **Jobs off (MUST)**: a 404 from a `/jobs` read while the `jobs_feature` switch is off says Jobs is not available, as the Jobs ingredient's switch-off-404 says.
+- **A product with no runs (MUST)**: `/admin/jobs` says there are no runs yet, and is not an error.
+- **Jobs off (MUST)**: a 404 from an `/admin/jobs` read while the `jobs_feature` switch is off says Jobs is not available, as the Jobs ingredient's switch-off-404 says.
 - **Support access off (MUST)**: a 404 on the grants read is handled as [support-switch-off](#requirements/support-switch-off) says.
 ## Configuration
 
@@ -150,7 +151,7 @@ Vectors marked with a test name are asserted in `features/product-admin/src/__te
 
 ## Deep Linking
 
-The pages are `/users`, `/requests`, `/pending`, `/invites`, `/roles`, `/signup-list`, `/sets`, `/jobs` (with `/jobs/templates` beneath it), `/totals` and `/support` on the admin site's own host. On the hub the page is the product's `admin-site` topic, under the `admin-site` hub segment.
+The pages are `/admin/users`, `/admin/requests`, `/admin/pending`, `/admin/invites`, `/admin/roles`, `/admin/signup-list`, `/admin/sets`, `/admin/jobs` (with `/admin/jobs/templates` beneath it), `/admin/totals` and `/admin/support` on the product's own host (`<handle>.agenticdeveloperhub.com`), where `/` is the product's own page. On the hub the page is the product's `admin-site` topic, under the `admin-site` hub segment.
 
 ## Localization
 
@@ -173,7 +174,7 @@ Not applicable: the panes emit no event.
 
 The users pane shows customers' emails, names, roles and storage to the product's own admins only. The roster is existence, not content. Who may read it is the backend's decision, made per request.
 - **Consented support access**: the Support page lets a product admin, once a customer approves, read that customer's content in a read-only viewer. The customer grants it, for a length they were told, every read is logged, and the backend requires a second factor from a recent sign-in for each request and opening.
-- **Jobs status only**: the `/jobs` page shows a product's run status, never a run's inputs, outputs or logs ([jobs-status-no-content](#requirements/jobs-status-no-content)); reading those needs a support grant.
+- **Jobs status only**: the `/admin/jobs` page shows a product's run status, never a run's inputs, outputs or logs ([jobs-status-no-content](#requirements/jobs-status-no-content)); reading those needs a support grant.
 
 ## Logging
 
@@ -183,7 +184,7 @@ Not applicable: no file contains a log call.
 
 - **SwiftUI**: A table with a cursor stack for paging and a confirmation dialog for each write; the topic list is a static array.
 - **Compose**: A lazy list, a cursor stack in the view model and an alert dialog per write.
-- **React/Web**: The source platform. `packages/web/packages/features/product-admin/src/` holds `ProductUsersPane.tsx` and `product-admin-topics.ts`; `packages/web/packages/features/ecosystem-config/src/` holds `AdminSitePane.tsx` and `ProductTotalsPane.tsx`; `packages/web/packages/features/adh-products/src/topics.ts` and `ProductsFeature.tsx` hold the Admin site row and `visibleProductTopics`. The `/jobs` and `/jobs/templates` pages mount `JobStatusPane` and `JobTemplatesPane` from `packages/web/packages/features/jobs/` (phase 9). The page routes themselves live in the hub website. The package's `sideEffects` and `exports` publish the `./topics` entry beside the barrel.
+- **React/Web**: The source platform. `packages/web/packages/features/product-admin/src/` holds `ProductUsersPane.tsx` and `product-admin-topics.ts`; `packages/web/packages/features/ecosystem-config/src/` holds `AdminSitePane.tsx` and `ProductTotalsPane.tsx`; `packages/web/packages/features/adh-products/src/topics.ts` and `ProductsFeature.tsx` hold the Admin site row and `visibleProductTopics`. The `/admin/jobs` and `/admin/jobs/templates` pages mount `JobStatusPane` and `JobTemplatesPane` from `packages/web/packages/features/jobs/` (phase 9). The page routes themselves live in the hub website's product-sites app, under `app/admin/`. The package's `sideEffects` and `exports` publish the `./topics` entry beside the barrel.
 - **AppKit / UIKit**: As SwiftUI, with a table view and an alert per write.
 - **WinUI 3**: A data grid and a content dialog per write.
 
@@ -224,6 +225,7 @@ The panes keep the data calls in the client and the page list in a plain module,
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 2.2.0 | 2026-11-26 | Mike Fullerton | The console under /admin on each product's own site (the product-sites site): every topic href under /admin, the Jobs and Support pages' paths |
 | 2.1.0 | 2026-11-23 | Mike Fullerton | Phase 9: a Jobs row between Sets and Totals (ten pages); /jobs renders JobStatusPane and /jobs/templates JobTemplatesPane, status only. |
 | 2.0.0 | 2026-11-23 | Mike Fullerton | Phase 7: consented support access |
 | 1.0.1 | 2026-11-23 | Mike Fullerton | Admin site removal confirmed; adding an admin keeps a listed address's set and refreshes the Sign-up list; an emptied later Users page steps back; Users keeps Email Signup and Authentication once a site is up; a routed Admin site row is kept while the site is unknown; runAtAdminSite |

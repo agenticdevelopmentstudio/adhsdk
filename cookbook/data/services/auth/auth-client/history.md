@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 2.2.0 | 2026-11-26 | Mike Fullerton | ProductAdminAuthProvider: the required authBase prop builds every auth URL (<authBase>/session, /signin, /signout); stepUpSigninUrl(authBase, returnPath) |
 | 2.1.1 | 2026-11-23 | Mike Fullerton | The public reads use the shared token-free publicJson from the Auth v1 Wire Conventions; behaviour unchanged. |
 | 2.1.0 | 2026-11-23 | Mike Fullerton | Phase 7: consented support access |
 | 2.0.0 | 2026-11-23 | Mike Fullerton | Phase 6: the access-token source seam and ProductAdminAuthProvider, the product admin site's in-memory session |

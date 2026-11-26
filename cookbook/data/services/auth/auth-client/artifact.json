@@ -4,11 +4,11 @@
     "id": "3ea9329e-5acc-4c43-b5ce-bb8c50570104",
     "title": "Authentication Client",
     "type": "ingredient",
-    "version": "2.1.1",
+    "version": "2.2.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-23",
-    "modified": "2026-11-23",
+    "modified": "2026-11-26",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -52,7 +52,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "96b9ef422966b0f6",
+  "synced": "19f0168da241f161",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

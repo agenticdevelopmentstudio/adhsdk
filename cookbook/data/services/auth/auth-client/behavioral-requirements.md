@@ -437,12 +437,20 @@ in with the product's customer login, managing that product at its own host. It
 is a sibling of the hub's session provider, not a mode of it: a page under one
 MUST NOT mount the other.
 
+- **product-admin-session-auth-base**: the provider MUST take a required `authBase`
+  prop, the path where the site's auth route handlers are mounted, with no trailing slash
+  (the product site passes `/admin/auth`). Every auth URL it requests or navigates to MUST be
+  built from it: `<authBase>/session`, `<authBase>/signout`, `<authBase>/signin` and
+  `<authBase>/signin?return=...`, with no request to any other auth path. It is required,
+  not defaulted, so a host that forgets it fails to compile rather than calling the wrong
+  path. The one in-flight session request at module scope is shared by every mount, since
+  one site has one auth base.
 - **product-admin-session-start**: on mount the provider MUST install a token
   source (a ref-held in-memory token, never storage or a URL) before any child's
   first effect runs, so a child's first request never reads a stored hub token,
-  and `POST` `/auth/session` with credentials included, the site's own route
+  and `POST` `<authBase>/session` with credentials included, the site's own route
   handler, whose refresh token is an HttpOnly cookie on the site's origin. A `401` MUST clear the
-  token and navigate to `/auth/signin?return=<current path and query,
+  token and navigate to `<authBase>/signin?return=<current path and query,
   URL-encoded>`. Any other non-OK status, or an answer with no `accessToken`
   string, is a failure, handled as in **product-admin-session-account**.
 - **product-admin-session-account**: once a token is held, the provider MUST read
@@ -459,10 +467,10 @@ MUST NOT mount the other.
   else the token's own `exp` claim; with neither, nothing is scheduled and a `401`
   still refreshes on demand through the token source. Concurrent refreshes MUST
   share one in-flight promise, and so MUST a remount's (React StrictMode's mount,
-  unmount and mount): `POST /auth/session` spends the rotating refresh cookie, so
+  unmount and mount): `POST <authBase>/session` spends the rotating refresh cookie, so
   two requests with one cookie end the session.
 - **product-admin-session-cross-tab**: every request that spends the refresh
-  cookie (`POST /auth/session` and `POST /auth/signout`) MUST run under one Web
+  cookie (`POST <authBase>/session` and `POST <authBase>/signout`) MUST run under one Web
   Lock (`navigator.locks`, name `adh-product-admin-session`) shared by every tab of
   the site, so two tabs never present the same cookie at once. Where Web Locks are
   unavailable the request runs without it.
@@ -472,16 +480,16 @@ MUST NOT mount the other.
   source only if it is still the installed one.
 - **product-admin-session-signout**: sign-out MUST cancel the timer and drop any
   refresh in flight (see **product-admin-session-stale-answers**), wait for a
-  `POST /auth/session` already sent to settle, `POST` `/auth/signout` with
+  `POST <authBase>/session` already sent to settle, `POST` `<authBase>/signout` with
   credentials included, and then, whether or not that request failed, clear the
-  token and account and navigate to `/auth/signin`.
+  token and account and navigate to `<authBase>/signin`.
 - **product-admin-session-hook**: the session hook MUST return the status, the
   account, the access token and sign-out, and MUST throw outside the provider.
   Navigation MUST go through the provider's `navigate` prop when given, else
   `window.location.assign`; a new `navigate` on each render MUST NOT restart the
   session.
 
-- **product-admin-session-step-up**: the product admin session hook MUST also return `stepUp(returnPath?)`, which MUST navigate (through the provider's `navigate`, else `window.location.assign`) to `/auth/signin?return=<returnPath, or the current path and query, URL-encoded>&prompt=login&max_age=600`, the URL the package also exports as `stepUpSigninUrl(returnPath)` so a page outside the provider can build the same link. It MUST NOT clear the token or the account, since the person is still signed in when it is called, and MUST NOT call `/auth/signout`. The site's own sign-in route turns `prompt` and `max_age` into the authorize request, so the second factor runs again.
+- **product-admin-session-step-up**: the product admin session hook MUST also return `stepUp(returnPath?)`, which MUST navigate (through the provider's `navigate`, else `window.location.assign`) to `<authBase>/signin?return=<returnPath, or the current path and query, URL-encoded>&prompt=login&max_age=600`, the URL the package also exports as `stepUpSigninUrl(authBase, returnPath)` so a page outside the provider can build the same link. It MUST NOT clear the token or the account, since the person is still signed in when it is called, and MUST NOT call `<authBase>/signout`. The site's own sign-in route turns `prompt` and `max_age` into the authorize request, so the second factor runs again.
 
 ### Security
 

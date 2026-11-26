@@ -1,0 +1,65 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "0bcb370d-a44f-48a8-a313-0266c2f86e51",
+    "title": "Jobs",
+    "type": "ingredient",
+    "version": "1.4.1",
+    "status": "draft",
+    "language": "en",
+    "created": "2026-11-23",
+    "modified": "2026-11-23",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "The Jobs feature package and its data client: the owner's jobs and catalog, a job, a run, template authoring, machine environments and the product admin's run status, plus the hub and product admin topic sets.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "hub",
+      "jobs",
+      "workflows",
+      "scheduling",
+      "data-client"
+    ],
+    "depends-on": [
+      "5fdf4ce9-cb7e-4490-a6d6-066690ef07ca"
+    ],
+    "related": [
+      "9069ccf9-0357-4311-9671-91ee2793adae",
+      "2eff6ca4-5479-44b3-8636-04e455009a10",
+      "2cb51edd-84c5-448a-a5dc-134d3f8b6c1c",
+      "0bba1f5b-bc8d-4f76-b1c9-329b627f7ee8",
+      "f2d56415-ac36-4a27-bee5-b447c4186513"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "names_hosts": "An AI step's model value `claude-code` (a machine environment's own model) is product data, not host wording.",
+  "synced": "e41edf29fbfe4c8e",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

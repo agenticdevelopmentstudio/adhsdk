@@ -21,16 +21,16 @@
       "150bf00e-6c6b-4f91-a323-d307ebd5700d",
       "3ea9329e-5acc-4c43-b5ce-bb8c50570104"
     ],
-    "version": "2.1.0",
+    "version": "2.2.0",
     "created": "2026-11-23",
-    "modified": "2026-11-23",
+    "modified": "2026-11-26",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
     "related": [],
     "references": []
   },
-  "synced": "fbd7f52510567e28",
+  "synced": "71ac49c28762d811",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

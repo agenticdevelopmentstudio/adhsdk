@@ -19,7 +19,7 @@ The package holds seven panes:
 - `JobStatusPane` is the product admin's run status table. It shows no content.
 
 The package also exports two topic sets: `jobsTopics` for the hub workspace and
-`jobsProductAdminTopics` for the product admin site's Jobs pages.
+`jobsProductAdminTopics` for the product admin console's Jobs pages, under `/admin`.
 
 The model the panes show is the phase 9 design's:
 
@@ -32,7 +32,7 @@ The model the panes show is the phase 9 design's:
 - An **environment** is a machine the owner runs.
 
 The routes the client calls are the backend's `/jobs` routes. The `jobs` hub segment and the
-`/jobs` and `/jobs/templates` pages of the product admin site are specified by [adhsdk.ingredient.adh.sites.site-registry](cookbook:9069ccf9-0357-4311-9671-91ee2793adae). The Jobs row on
+`/admin/jobs` and `/admin/jobs/templates` pages of the product admin console are specified by [adhsdk.ingredient.adh.sites.site-registry](cookbook:9069ccf9-0357-4311-9671-91ee2793adae). The Jobs row on
 the product admin rail is specified by [adhsdk.ingredient.adh.hub.product-admin.product-admin-site](cookbook:2cb51edd-84c5-448a-a5dc-134d3f8b6c1c), and the menu icon by [adhsdk.recipe.adh.sites.site-menu](cookbook:f2d56415-ac36-4a27-bee5-b447c4186513). The feature requires the
 AI Settings feature ([adhsdk.ingredient.adh.hub.ai-settings](cookbook:5fdf4ce9-cb7e-4490-a6d6-066690ef07ca)), whose connections and models an AI step names.
 

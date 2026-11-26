@@ -10,7 +10,9 @@
   "no interactive host environment" guards resolve to in source — they gate
   every operation that would otherwise run during server-side rendering.
   `ProductAdminAuthProvider.tsx` (React context, the one file in this ingredient
-  that is not framework-free) is the product admin site's session: it sets itself
+  that is not framework-free) is the product site's admin-console session, its auth URLs built from the required
+  `authBase` prop (`/admin/auth` on the product site, and `stepUpSigninUrl(authBase, returnPath)`
+  for a link built outside it): it sets itself
   as the token source (`AccessTokenSource`, `setAccessTokenSource` and
   `accessTokenSource` in `tokens.ts`) so every `@adh-sdk/data` client sends its
   in-memory bearer through `authedJson`, and `refreshAccessToken` in `refresh.ts`

@@ -26,13 +26,17 @@
   workspace-slug round trip (`siteWorkspaceHref` and `siteWorkspaceSlug` plus
   `SITE_LANDING_SEGMENTS` and `HUB_ROUTE_SEGMENTS`), the per-site build table
   (`SITE_BUILD` and `siteBuildConfig`) kept outside the file's `<gen:sites>` region, and
-  `ssoReturnOrigins`. The phase-6 `product-admin` site is one `SITES` row (`adminOnly`,
-  `crawlable: false`), one `SITE_BUILD` entry (`handRolledConfig: true`), one entry in
-  `MAIN_SITE_IDS`, one `SITE_STORIES` entry in `story.ts` (a `chapter` of the `backend`
-  pillar, like `admin`), and `admin-site` in `HUB_EXTRA_FEATURE_SEGMENTS`, which phase 8 extends with `ai-settings` (keeping `llm-providers` and `persona-services` as redirect-only segments, with a source comment beside them saying they redirect until Cleanup), and the `hub` share in `routes.hub.generated.ts` carries its `/[workspace]/ai-settings/[[...path]]` line;
-  phase 9 adds `jobs` to `HUB_EXTRA_FEATURE_SEGMENTS` (its `templates` and `environments` pages are sub-paths of the one `/[workspace]/jobs/[[...path]]` line), `/jobs`, `/jobs/templates` and `/jobs/templates/[templateId]` to the `product-admin` share, and `jobs` to the `UNIVERSAL` reserved list; its
-  `devDependencies` carry `@adh-sdk/product-admin` for the one test that holds that
-  package's rail equal to the site's share of the route table. `reserved-slugs.ts` holds `RESERVED_SLUGS`, `isReservedSlug`, and
+  `ssoReturnOrigins`. The `product-sites` site (phase 6's `product-admin` site, renamed
+  when every product got its own site) is one `SITES` row (`wildcardHost`, `listed: false`,
+  `crawlable: false`, kept on one line because the shared build closure's `registry_ids.py`
+  reads the file a line at a time), one `SITE_BUILD` entry (`handRolledConfig: true`), one
+  entry in `MAIN_SITE_IDS`, one `SITE_STORIES` entry in `story.ts` (a `chapter` of the
+  `backend` pillar, like `admin`); `isWildcardSite` and the private `wildcardSiteError` back
+  every single-URL helper's refusal, and `hostForEnv` is exported as the one place a
+  wildcard site's host patterns can be read; and `admin-site` in `HUB_EXTRA_FEATURE_SEGMENTS`, which phase 8 extends with `ai-settings` (keeping `llm-providers` and `persona-services` as redirect-only segments, with a source comment beside them saying they redirect until Cleanup), and the `hub` share in `routes.hub.generated.ts` carries its `/[workspace]/ai-settings/[[...path]]` line;
+  phase 9 adds `jobs` to `HUB_EXTRA_FEATURE_SEGMENTS` (its `templates` and `environments` pages are sub-paths of the one `/[workspace]/jobs/[[...path]]` line), `/admin/jobs`, `/admin/jobs/templates` and `/admin/jobs/templates/[templateId]` to the `product-sites` share, and `jobs` to the `UNIVERSAL` reserved list; its
+  `devDependencies` carry `@adh-sdk/product-admin` for the one test (`src/sites/__tests__/product-sites-topics.test.ts`) that holds that
+  package's rail equal to the `product-sites` share of the route table. `reserved-slugs.ts` holds `RESERVED_SLUGS`, `isReservedSlug`, and
   `isReservedSlugAnywhere`. The support routes of
   **support-routes-in-shares** sit in `routes.hub.generated.ts` and are written in the
   SDK by hand, because the generator runs only in the website, which proves them with

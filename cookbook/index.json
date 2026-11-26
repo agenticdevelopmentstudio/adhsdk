@@ -13731,9 +13731,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:157cd1c834b4fd3a4827eb88e875386bb325ffc56cf13dc328006b767d2a553f",
+            "hash": "sha256:b50ca9b0087d88a3385f58df8a53147bf3310e5d69f32bd312e73f05390d2b4b",
             "state": "confirmed",
-            "version": "1.6.1"
+            "version": "1.7.0"
           },
           "location": "packages/web/packages/adh-registry/src/sites/",
           "platform": "web"
