@@ -1,8 +1,9 @@
 import Foundation
 
 /// Claude Code's one `statusLine` slot, shared through claudehelpers'
-/// dispatcher (`external/claudehelpers/scripts/statuslinedispatcher/docs/statusline.md`
-/// is the contract). The slot runs `~/.claude/claudehelpers/statusline/dispatch.sh`;
+/// dispatcher, which adtoolkit installs (its
+/// `tools/claudehelpers/lib/statuslinedispatcher/docs/statusline.md` is the
+/// contract). The slot runs `python3 ~/.claude/claudehelpers/statusline/dispatch.py`;
 /// each tool owns one file beside it, `renderers/<name>` (its output is shown)
 /// or `taps/<name>` (it only reads the payload), whose whole content is one
 /// shell command. A broken tool drops out of the line instead of blanking it,
@@ -30,6 +31,9 @@ struct ClaudeStatusLine: Sendable {
         /// The dispatcher this build carries has no version line, so it can
         /// never be ordered against an installed copy.
         case dispatcherUnversioned(String)
+        /// The dispatcher this build carries is the shell one (version 5 or
+        /// lower), which cannot be installed as `dispatch.py`.
+        case dispatcherShell(String)
 
         var errorDescription: String? {
             switch self {
@@ -37,6 +41,9 @@ struct ClaudeStatusLine: Sendable {
                 "The status-line dispatcher this build carries is missing at \(path)."
             case .dispatcherUnversioned(let path):
                 "The status-line dispatcher this build carries has no version line at \(path)."
+            case .dispatcherShell(let path):
+                "The status-line dispatcher this build carries at \(path) is the shell one; "
+                    + "dispatch.py is version 6 or later."
             }
         }
     }
@@ -53,6 +60,13 @@ struct ClaudeStatusLine: Sendable {
     /// as `renderers/adopted` (then `adopted-2`, …), so it keeps showing.
     static let adoptedName = "adopted"
 
+    /// The first dispatcher version that is `dispatch.py`. Up to 5 it was the
+    /// shell `dispatch.sh`.
+    static let firstPythonVersion = 6
+    /// The interpreters a dispatcher command may start with: `python3` is the
+    /// one written, `sh` ran the shell dispatcher an older install left.
+    static let runners = ["python3", "sh"]
+
     private static let versionPrefix = "# claudehelpers-statusline-dispatch "
     private static let nameCharacters = CharacterSet(charactersIn:
         "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-")
@@ -61,26 +75,32 @@ struct ClaudeStatusLine: Sendable {
 
     /// `~/.claude`, the directory holding `settings.json`.
     let claudeDirectory: URL
-    /// The dispatcher this build carries (`Contents/Resources/dispatch.sh`).
+    /// The dispatcher this build carries (`Contents/Resources/dispatch.py`).
     let bundledDispatcher: URL
 
     var directory: URL { claudeDirectory.appendingPathComponent("claudehelpers/statusline", isDirectory: true) }
-    var dispatcherURL: URL { directory.appendingPathComponent("dispatch.sh") }
+    var dispatcherURL: URL { directory.appendingPathComponent("dispatch.py") }
+    /// Where versions up to 5 installed the shell dispatcher.
+    var legacyDispatcherURL: URL { directory.appendingPathComponent("dispatch.sh") }
 
     /// The `statusLine.command` that runs the dispatcher: the same string
     /// claudehelpers' Python writes (`ShellQuoting.quoteIfNeeded` matches `shlex.quote`),
     /// so the two never fight over the slot.
     var dispatcherCommand: String {
-        "sh \(ShellQuoting.quoteIfNeeded(dispatcherURL.path)) \(Self.marker)"
+        "\(Self.runners[0]) \(ShellQuoting.quoteIfNeeded(dispatcherURL.path)) \(Self.marker)"
     }
 
-    /// A command shaped like the dispatcher's, `sh <path> # claudehelpers-statusline`,
-    /// whichever directory it runs from. A command that only mentions the
-    /// marker somewhere else is some tool's own, and is adopted, not replaced.
+    /// A command shaped like the dispatcher's, `python3 <path> # claudehelpers-statusline`
+    /// (or `sh <path> …`, the shell dispatcher's), whichever directory it runs
+    /// from. A command that only mentions the marker somewhere else is some
+    /// tool's own, and is adopted, not replaced.
     static func isDispatcherCommand(_ command: String) -> Bool {
         let trimmed = command.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.hasPrefix("sh ") && trimmed.hasSuffix(" \(marker)")
-            && trimmed.count > "sh ".count + " \(marker)".count
+        let suffix = " \(marker)"
+        return runners.contains { runner in
+            trimmed.hasPrefix("\(runner) ") && trimmed.hasSuffix(suffix)
+                && trimmed.count > runner.count + 1 + suffix.count
+        }
     }
 
     /// The names `adopt` gives: `adopted` and `adopted-<N>`. Another tool's
@@ -125,8 +145,8 @@ struct ClaudeStatusLine: Sendable {
     /// Writes the bundled dispatcher unless the installed one is the same
     /// version or newer: a newer copy came from a newer tool, and replacing it
     /// would take away what that tool relies on. A bundle whose own copy is
-    /// missing or unversioned still works with a versioned dispatcher already
-    /// in place, and fails only when there is none.
+    /// missing, unversioned or the shell one still works with a versioned
+    /// dispatcher already in place, and fails only when there is none.
     @discardableResult
     func installDispatcher() throws -> DispatcherInstall {
         let installed = (try? String(contentsOf: dispatcherURL, encoding: .utf8)).flatMap(Self.dispatcherVersion)
@@ -138,11 +158,23 @@ struct ClaudeStatusLine: Sendable {
             if installed != nil { return DispatcherInstall(installed: installed, offered: nil, wrote: false) }
             throw Failure.dispatcherUnversioned(bundledDispatcher.path)
         }
+        guard offered >= Self.firstPythonVersion else {
+            if installed != nil { return DispatcherInstall(installed: installed, offered: offered, wrote: false) }
+            throw Failure.dispatcherShell(bundledDispatcher.path)
+        }
         if let installed, installed >= offered {
             return DispatcherInstall(installed: installed, offered: offered, wrote: false)
         }
         try write(text, to: dispatcherURL, mode: 0o755)
         return DispatcherInstall(installed: installed, offered: offered, wrote: true)
+    }
+
+    /// Deletes the shell dispatcher an older install left beside `dispatch.py`.
+    /// Call only once the slot runs `dispatch.py`: left there, it reads as the
+    /// one in use. True when there was one.
+    @discardableResult
+    func removeLegacyDispatcher() throws -> Bool {
+        try removeIfPresent(legacyDispatcherURL)
     }
 
     /// The dispatcher's record of `name`'s last failure (`errors/<name>`): it

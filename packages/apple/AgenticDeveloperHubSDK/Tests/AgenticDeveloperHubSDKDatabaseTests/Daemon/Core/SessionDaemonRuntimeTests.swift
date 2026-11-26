@@ -33,8 +33,8 @@ final class SessionDaemonRuntimeTests: XCTestCase {
         claudeOpenBackoff: SessionDaemonRuntime.ClaudeOpenBackoff = .standard
     ) throws -> SessionDaemonRuntime {
         let configuration = SessionDaemonConfiguration.test(port: 0, root: root)
-        let dispatcher = root.appendingPathComponent("dispatch.sh")
-        try "#!/bin/sh\n# claudehelpers-statusline-dispatch 1\n"
+        let dispatcher = root.appendingPathComponent("dispatch.py")
+        try "#!/usr/bin/env python3\n# claudehelpers-statusline-dispatch 7\n"
             .write(to: dispatcher, atomically: true, encoding: .utf8)
         var hook = configuration.hook
         hook.bundledDispatcher = dispatcher

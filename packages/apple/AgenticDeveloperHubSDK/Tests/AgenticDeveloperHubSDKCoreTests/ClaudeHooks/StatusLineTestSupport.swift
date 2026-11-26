@@ -7,59 +7,66 @@ import Foundation
 enum StatusLineTestSupport {
 
     /// A stand-in for the dispatcher a bundle carries: a script whose second
-    /// line is the version line.
-    static func makeBundledDispatcher(in directory: URL, version: Int = 1) throws -> URL {
+    /// line is the version line. The default is the first `dispatch.py`.
+    static func makeBundledDispatcher(in directory: URL,
+                                      version: Int = ClaudeStatusLine.firstPythonVersion) throws -> URL {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        let url = directory.appendingPathComponent("bundled-dispatch-\(version).sh")
-        try "#!/bin/sh\n# claudehelpers-statusline-dispatch \(version)\n"
+        let url = directory.appendingPathComponent("bundled-dispatch-\(version).py")
+        try "#!/usr/bin/env python3\n# claudehelpers-statusline-dispatch \(version)\n"
             .write(to: url, atomically: true, encoding: .utf8)
         return url
     }
 
-    /// The checkout that carries `external/claudehelpers`, found by walking up
-    /// from this file. The toolkit builds standalone too, where there is no
-    /// such checkout; `requireSubmodule` then fails with a message naming the fix.
-    static var repositoryRoot: URL {
-        var directory = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
-        while directory.path != "/" {
-            if FileManager.default.fileExists(
-                atPath: directory.appendingPathComponent("external/claudehelpers").path) {
-                return directory
-            }
-            directory.deleteLastPathComponent()
+    /// The adtoolkit checkout, which owns claudehelpers' status-line
+    /// dispatcher and its contract. `ADTOOLKIT_CHECKOUT` names one; otherwise
+    /// it is the checkout adtoolkit's `./install` recorded in `~/.adtoolkitrc`
+    /// (`# Checkout: <path>`). Nil when neither says, and `requireAdtoolkit`
+    /// then fails naming the fix.
+    static var adtoolkitRoot: URL? {
+        if let named = ProcessInfo.processInfo.environment["ADTOOLKIT_CHECKOUT"], !named.isEmpty {
+            return URL(fileURLWithPath: named, isDirectory: true)
         }
-        return URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+        let rcFile = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".adtoolkitrc")
+        guard let text = try? String(contentsOf: rcFile, encoding: .utf8) else { return nil }
+        let prefix = "# Checkout: "
+        for line in text.split(separator: "\n").prefix(10) where line.hasPrefix(prefix) {
+            let path = line.dropFirst(prefix.count).trimmingCharacters(in: .whitespaces)
+            if !path.isEmpty { return URL(fileURLWithPath: path, isDirectory: true) }
+        }
+        return nil
     }
 
-    /// The claudehelpers submodule's status-line directory, which holds the
-    /// dispatcher this build bundles and the settings contract.
-    static var dispatcherSource: URL {
-        repositoryRoot.appendingPathComponent("external/claudehelpers/scripts/statuslinedispatcher")
+    /// adtoolkit's path to claudehelpers, under its checkout.
+    private static func inAdtoolkit(_ relative: String) -> URL {
+        (adtoolkitRoot ?? URL(fileURLWithPath: "/nonexistent-adtoolkit", isDirectory: true))
+            .appendingPathComponent("tools/claudehelpers").appendingPathComponent(relative)
     }
 
-    /// The dispatcher this build bundles (project.yml copies the same file).
-    static var realDispatcher: URL { dispatcherSource.appendingPathComponent("dispatch.sh") }
+    /// claudehelpers' status-line directory in adtoolkit, which holds the
+    /// dispatcher and the settings contract.
+    static var dispatcherSource: URL { inAdtoolkit("lib/statuslinedispatcher") }
+
+    /// The dispatcher adtoolkit installs and a bundle carries.
+    static var realDispatcher: URL { dispatcherSource.appendingPathComponent("dispatch.py") }
 
     /// The conformance fixtures both claudehelpers' pytest suite and these
     /// tests run, so the Swift and Python halves agree case for case.
-    static var conformanceFixtures: URL {
-        repositoryRoot.appendingPathComponent("external/claudehelpers/tests/fixtures/statusline_conformance.json")
-    }
+    static var conformanceFixtures: URL { inAdtoolkit("tests/fixtures/statusline_conformance.json") }
 
-    /// Fails with a message that names the fix when the claudehelpers
-    /// submodule was never checked out, instead of a bare missing-file error.
-    static func requireSubmodule(_ url: URL) throws -> URL {
+    /// Fails with a message that names the fix when adtoolkit is not
+    /// installed, instead of a bare missing-file error.
+    static func requireAdtoolkit(_ url: URL) throws -> URL {
         guard FileManager.default.fileExists(atPath: url.path) else {
-            throw SubmoduleMissing(path: url.path)
+            throw AdtoolkitMissing(path: url.path)
         }
         return url
     }
 
-    struct SubmoduleMissing: Error, CustomStringConvertible {
+    struct AdtoolkitMissing: Error, CustomStringConvertible {
         let path: String
         var description: String {
-            "\(path) is missing: check out the claudehelpers submodule "
-                + "(git submodule update --init external/claudehelpers)"
+            "\(path) is missing: install adtoolkit (run ./install in its checkout, which records it "
+                + "in ~/.adtoolkitrc), or name a checkout with ADTOOLKIT_CHECKOUT"
         }
     }
 }
@@ -96,7 +103,7 @@ struct StatusLineConformance: Decodable {
     let release: [ReleaseCase]
 
     static func load() throws -> StatusLineConformance {
-        let url = try StatusLineTestSupport.requireSubmodule(StatusLineTestSupport.conformanceFixtures)
+        let url = try StatusLineTestSupport.requireAdtoolkit(StatusLineTestSupport.conformanceFixtures)
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
         return try decoder.decode(StatusLineConformance.self, from: Data(contentsOf: url))

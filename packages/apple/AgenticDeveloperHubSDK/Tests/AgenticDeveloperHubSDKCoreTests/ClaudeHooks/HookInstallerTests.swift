@@ -6,7 +6,7 @@ final class HookInstallerTests: XCTestCase {
     var tmpDir: URL!
     var settingsURL: URL!
     var installer: ClaudeHookInstaller!
-    /// The version-1 dispatcher every installer here carries, made once in
+    /// The dispatch.py every installer here carries, made once in
     /// setUp so a fixture that cannot be written fails there, at the cause.
     var bundledDispatcher: URL!
 
@@ -24,7 +24,7 @@ final class HookInstallerTests: XCTestCase {
     }
 
     /// An installer rendering `Self.steno`, never whatever bundle is running,
-    /// carrying a version-1 dispatcher of its own.
+    /// carrying a dispatch.py of its own.
     private func makeInstaller(settingsURL: URL, lockTimeout: TimeInterval = 5) -> ClaudeHookInstaller {
         ClaudeHookInstaller(settingsURL: settingsURL, dropDirectory: "/tmp/test-events",
                       stenoPath: Self.steno, bundledDispatcher: bundledDispatcher,
@@ -89,6 +89,35 @@ final class HookInstallerTests: XCTestCase {
         installer.installHooks()
         assertDispatching()
         XCTAssertTrue(adopted.isEmpty, "an empty slot adopts nothing")
+    }
+
+    func testInstallRemovesTheShellDispatcherOnceTheSlotRunsThePythonOne() throws {
+        let legacy = installer.statusLine.legacyDispatcherURL
+        try FileManager.default.createDirectory(at: legacy.deletingLastPathComponent(),
+                                                withIntermediateDirectories: true)
+        try "#!/bin/sh\n# claudehelpers-statusline-dispatch 5\n".write(to: legacy, atomically: true, encoding: .utf8)
+        try writeSettings(["statusLine": ["type": "command",
+                                          "command": "sh \(legacy.path) # claudehelpers-statusline"]])
+        XCTAssertEqual(installer.installHooks(), .installed)
+        assertDispatching("the shell dispatcher's slot now runs dispatch.py")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: legacy.path))
+        XCTAssertTrue(adopted.isEmpty, "the old dispatcher's slot is not adopted: \(adopted)")
+    }
+
+    func testTheShellDispatcherStaysWhileTheSlotIsNotOurs() throws {
+        let legacy = installer.statusLine.legacyDispatcherURL
+        try FileManager.default.createDirectory(at: legacy.deletingLastPathComponent(),
+                                                withIntermediateDirectories: true)
+        try "#!/bin/sh\n# claudehelpers-statusline-dispatch 5\n".write(to: legacy, atomically: true, encoding: .utf8)
+        try writeSettings(["statusLine": ["type": "command",
+                                          "command": "sh \(legacy.path) # claudehelpers-statusline"]])
+        // A read-only settings directory: the save fails, so the slot still
+        // names dispatch.sh, which must therefore stay.
+        try FileManager.default.setAttributes([.posixPermissions: 0o555], ofItemAtPath: tmpDir.path)
+        defer { try? FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: tmpDir.path) }
+        _ = installer.installHooks()
+        XCTAssertTrue(FileManager.default.fileExists(atPath: legacy.path),
+                      "the slot still names dispatch.sh, so it must stay")
     }
 
     func testInstallReplacesLegacyCSLStatusLine() throws {
@@ -351,8 +380,8 @@ final class HookInstallerTests: XCTestCase {
     }
 
     func testTheSharedLockIsTheOneClaudeHelpersTakes() throws {
-        let source = try String(contentsOf: StatusLineTestSupport.dispatcherSource
-            .appendingPathComponent("settings.py"), encoding: .utf8)
+        let source = try String(contentsOf: StatusLineTestSupport.requireAdtoolkit(
+            StatusLineTestSupport.dispatcherSource.appendingPathComponent("settings.py")), encoding: .utf8)
         let declared = source.split(separator: "\n").first { $0.hasPrefix("LOCK_NAME = ") }
         XCTAssertEqual(declared.map(String.init), "LOCK_NAME = \"\(ClaudeStatusLine.settingsLockName)\"",
                        "a different name would let the two edit settings.json at once")

@@ -40,7 +40,7 @@ public struct ClaudeHookConfiguration: Sendable, Equatable {
     /// or `taps` directory.
     public var statusLineEntryName: String
     /// The dispatcher a bundle carries; nil means
-    /// `<helper>/../../Resources/dispatch.sh`.
+    /// `<helper>/../../Resources/dispatch.py`.
     public var bundledDispatcher: URL?
     /// Event types registered for passive observation.
     public var hookedEvents: [HookEventType]
@@ -102,11 +102,11 @@ public struct ClaudeHookConfiguration: Sendable, Equatable {
     }
 
     /// The dispatcher a bundle carries, beside the helper's `Contents/Helpers`:
-    /// `Contents/Resources/dispatch.sh`.
+    /// `Contents/Resources/dispatch.py`.
     public var resolvedBundledDispatcher: URL {
         bundledDispatcher ?? URL(fileURLWithPath: hookBinaryPath)
             .deletingLastPathComponent().deletingLastPathComponent()
-            .appendingPathComponent("Resources/dispatch.sh")
+            .appendingPathComponent("Resources/dispatch.py")
     }
 }
 

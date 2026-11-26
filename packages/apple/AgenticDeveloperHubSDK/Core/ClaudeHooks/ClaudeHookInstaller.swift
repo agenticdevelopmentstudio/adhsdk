@@ -304,6 +304,29 @@ public final class ClaudeHookInstaller: Sendable {
     }
 
     private func reconcileLocked() throws -> InstallResult {
+        let result = try reconcileSettingsLocked()
+        removeLegacyDispatcherOnceUnused()
+        return result
+    }
+
+    /// Deletes the shell `dispatch.sh` an older install left, once the saved
+    /// slot runs `dispatch.py`: never before, so a save that failed cannot
+    /// leave the slot naming a script that is gone.
+    private func removeLegacyDispatcherOnceUnused() {
+        guard let saved = try? loadSettings(),
+              Self.statusLineSlotCommand(saved).trimmingCharacters(in: .whitespacesAndNewlines)
+                == statusLine.dispatcherCommand else { return }
+        do {
+            if try statusLine.removeLegacyDispatcher() {
+                logger.info("Removed the old shell status-line dispatcher")
+            }
+        } catch {
+            let reason = error.localizedDescription
+            logger.error("Old shell status-line dispatcher left in place: \(reason, privacy: .public)")
+        }
+    }
+
+    private func reconcileSettingsLocked() throws -> InstallResult {
         var settings = try loadSettings()
         var mutated = false
 

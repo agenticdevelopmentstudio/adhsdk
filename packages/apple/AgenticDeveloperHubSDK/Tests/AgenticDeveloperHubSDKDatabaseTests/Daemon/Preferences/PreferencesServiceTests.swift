@@ -31,9 +31,9 @@ final class PreferencesServiceTests: XCTestCase {
     }
 
     private func makeInstaller() throws -> ClaudeHookInstaller {
-        let dispatcher = tmpDir.appendingPathComponent("dispatch.sh")
+        let dispatcher = tmpDir.appendingPathComponent("dispatch.py")
         // swiftlint:disable:next line_length
-        try "#!/bin/sh\n# claudehelpers-statusline-dispatch 1\n".write(to: dispatcher, atomically: true, encoding: .utf8)
+        try "#!/usr/bin/env python3\n# claudehelpers-statusline-dispatch 7\n".write(to: dispatcher, atomically: true, encoding: .utf8)
         let configuration = ClaudeHookConfiguration(
             name: "prefs-test",
             marker: "# prefs-test-hook",
@@ -238,8 +238,8 @@ final class PreferencesServiceTests: XCTestCase {
     }
 
     func testV010_failedInstallThrowsAndProducesNoResponse() throws {
-        let dispatcher = tmpDir.appendingPathComponent("dispatch.sh")
-        let script = "#!/bin/sh\n# claudehelpers-statusline-dispatch 1\n"
+        let dispatcher = tmpDir.appendingPathComponent("dispatch.py")
+        let script = "#!/usr/bin/env python3\n# claudehelpers-statusline-dispatch 7\n"
         try script.write(to: dispatcher, atomically: true, encoding: .utf8)
         let configuration = ClaudeHookConfiguration(
             name: "prefs-test",

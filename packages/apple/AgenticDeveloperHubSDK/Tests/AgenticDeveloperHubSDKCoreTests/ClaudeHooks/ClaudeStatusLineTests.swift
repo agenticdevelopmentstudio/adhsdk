@@ -4,8 +4,8 @@ import XCTest
 // ClaudeStatusLine is compiled into this test target with the rest of
 // stenographerd/Sources, so no @testable import.
 
-/// The file side of claudehelpers' status-line contract
-/// (`external/claudehelpers/scripts/statuslinedispatcher/docs/statusline.md`).
+/// The file side of claudehelpers' status-line contract, which adtoolkit
+/// owns (`tools/claudehelpers/lib/statuslinedispatcher/docs/statusline.md`).
 final class ClaudeStatusLineTests: XCTestCase {
 
     private var claudeDir: URL!
@@ -20,7 +20,7 @@ final class ClaudeStatusLineTests: XCTestCase {
         try? FileManager.default.removeItem(at: claudeDir)
     }
 
-    private func makeStatusLine(version: Int = 1) throws -> ClaudeStatusLine {
+    private func makeStatusLine(version: Int = ClaudeStatusLine.firstPythonVersion) throws -> ClaudeStatusLine {
         ClaudeStatusLine(claudeDirectory: claudeDir,
                          bundledDispatcher: try StatusLineTestSupport.makeBundledDispatcher(in: claudeDir,
                                                                                             version: version))
@@ -37,42 +37,45 @@ final class ClaudeStatusLineTests: XCTestCase {
     // MARK: - The dispatcher
 
     func testTheBundledDispatcherCarriesAVersion() throws {
-        let url = try StatusLineTestSupport.requireSubmodule(StatusLineTestSupport.realDispatcher)
-        XCTAssertNotNil(ClaudeStatusLine.dispatcherVersion(try String(contentsOf: url, encoding: .utf8)),
-                        "installDispatcher refuses a dispatcher without its version line")
+        let url = try StatusLineTestSupport.requireAdtoolkit(StatusLineTestSupport.realDispatcher)
+        let version = ClaudeStatusLine.dispatcherVersion(try String(contentsOf: url, encoding: .utf8))
+        XCTAssertNotNil(version, "installDispatcher refuses a dispatcher without its version line")
+        XCTAssertGreaterThanOrEqual(version ?? 0, ClaudeStatusLine.firstPythonVersion,
+                                    "installDispatcher refuses the shell dispatcher as dispatch.py")
     }
 
     func testInstallWritesAnExecutableDispatcher() throws {
         let statusLine = try makeStatusLine()
         XCTAssertTrue(try statusLine.installDispatcher().wrote)
-        XCTAssertEqual(installedVersion(statusLine), 1)
+        XCTAssertEqual(installedVersion(statusLine), ClaudeStatusLine.firstPythonVersion)
         XCTAssertEqual(try mode(statusLine.dispatcherURL), 0o755)
         XCTAssertEqual(try mode(statusLine.directory), 0o700)
         XCTAssertFalse(try statusLine.installDispatcher().wrote, "the same version is not rewritten")
     }
 
     func testInstallUpgradesButNeverDowngrades() throws {
-        XCTAssertEqual(try makeStatusLine(version: 2).installDispatcher(),
-                       .init(installed: nil, offered: 2, wrote: true))
-        XCTAssertEqual(try makeStatusLine(version: 1).installDispatcher(),
-                       .init(installed: 2, offered: 1, wrote: false), "a newer tool's dispatcher stays")
-        XCTAssertEqual(installedVersion(try makeStatusLine()), 2)
-        XCTAssertEqual(try makeStatusLine(version: 3).installDispatcher(),
-                       .init(installed: 2, offered: 3, wrote: true))
-        XCTAssertEqual(installedVersion(try makeStatusLine()), 3)
+        XCTAssertEqual(try makeStatusLine(version: 7).installDispatcher(),
+                       .init(installed: nil, offered: 7, wrote: true))
+        XCTAssertEqual(try makeStatusLine(version: 6).installDispatcher(),
+                       .init(installed: 7, offered: 6, wrote: false), "a newer tool's dispatcher stays")
+        XCTAssertEqual(installedVersion(try makeStatusLine()), 7)
+        XCTAssertEqual(try makeStatusLine(version: 8).installDispatcher(),
+                       .init(installed: 7, offered: 8, wrote: true))
+        XCTAssertEqual(installedVersion(try makeStatusLine()), 8)
     }
 
     func testAnUnversionedInstalledDispatcherIsReplaced() throws {
-        let statusLine = try makeStatusLine(version: 2)
+        let statusLine = try makeStatusLine(version: 7)
         try FileManager.default.createDirectory(at: statusLine.directory, withIntermediateDirectories: true)
-        try "#!/bin/sh\necho hand-edited\n".write(to: statusLine.dispatcherURL, atomically: true, encoding: .utf8)
+        try "#!/usr/bin/env python3\nprint('hand-edited')\n"
+            .write(to: statusLine.dispatcherURL, atomically: true, encoding: .utf8)
         XCTAssertTrue(try statusLine.installDispatcher().wrote, "a copy no installer can order is replaced")
-        XCTAssertEqual(installedVersion(statusLine), 2)
+        XCTAssertEqual(installedVersion(statusLine), 7)
     }
 
     func testAMissingBundledDispatcherThrowsOnlyWhenNoneIsInstalled() throws {
         let missing = ClaudeStatusLine(claudeDirectory: claudeDir,
-                                       bundledDispatcher: claudeDir.appendingPathComponent("nope.sh"))
+                                       bundledDispatcher: claudeDir.appendingPathComponent("nope.py"))
         XCTAssertThrowsError(try missing.installDispatcher()) { error in
             XCTAssertEqual(error as? ClaudeStatusLine.Failure, .dispatcherMissing(missing.bundledDispatcher.path))
         }
@@ -81,24 +84,51 @@ final class ClaudeStatusLineTests: XCTestCase {
     }
 
     func testAnUnversionedBundledDispatcherThrowsOnlyWhenNoneIsInstalled() throws {
-        let unversioned = claudeDir.appendingPathComponent("plain.sh")
-        try "#!/bin/sh\n".write(to: unversioned, atomically: true, encoding: .utf8)
+        let unversioned = claudeDir.appendingPathComponent("plain.py")
+        try "#!/usr/bin/env python3\n".write(to: unversioned, atomically: true, encoding: .utf8)
         let statusLine = ClaudeStatusLine(claudeDirectory: claudeDir, bundledDispatcher: unversioned)
         XCTAssertThrowsError(try statusLine.installDispatcher()) { error in
-            XCTAssertTrue(error.localizedDescription.contains("plain.sh"), error.localizedDescription)
+            XCTAssertTrue(error.localizedDescription.contains("plain.py"), error.localizedDescription)
         }
         try makeStatusLine().installDispatcher()
         XCTAssertFalse(try statusLine.installDispatcher().wrote, "the installed one serves")
-        XCTAssertEqual(installedVersion(statusLine), 1)
+        XCTAssertEqual(installedVersion(statusLine), ClaudeStatusLine.firstPythonVersion)
+    }
+
+    func testAShellBundledDispatcherIsNeverInstalledAsThePythonOne() throws {
+        let shell = try makeStatusLine(version: ClaudeStatusLine.firstPythonVersion - 1)
+        XCTAssertThrowsError(try shell.installDispatcher()) { error in
+            XCTAssertEqual(error as? ClaudeStatusLine.Failure, .dispatcherShell(shell.bundledDispatcher.path))
+        }
+        XCTAssertFalse(FileManager.default.fileExists(atPath: shell.dispatcherURL.path))
+        try makeStatusLine().installDispatcher()
+        XCTAssertEqual(try shell.installDispatcher(),
+                       .init(installed: ClaudeStatusLine.firstPythonVersion,
+                             offered: ClaudeStatusLine.firstPythonVersion - 1, wrote: false),
+                       "the installed dispatch.py serves")
+    }
+
+    func testRemoveLegacyDispatcherDeletesOnlyTheShellOne() throws {
+        let statusLine = try makeStatusLine()
+        try statusLine.installDispatcher()
+        XCTAssertFalse(try statusLine.removeLegacyDispatcher(), "nothing to remove")
+        try "#!/bin/sh\n# claudehelpers-statusline-dispatch 5\n"
+            .write(to: statusLine.legacyDispatcherURL, atomically: true, encoding: .utf8)
+        XCTAssertTrue(try statusLine.removeLegacyDispatcher())
+        XCTAssertFalse(FileManager.default.fileExists(atPath: statusLine.legacyDispatcherURL.path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: statusLine.dispatcherURL.path))
     }
 
     func testTheDispatcherCommandMatchesClaudeHelpers() throws {
         let statusLine = try makeStatusLine()
-        let expected = claudeDir.appendingPathComponent("claudehelpers/statusline/dispatch.sh")
+        let expected = claudeDir.appendingPathComponent("claudehelpers/statusline/dispatch.py")
         XCTAssertEqual(statusLine.dispatcherURL.standardizedFileURL.path, expected.standardizedFileURL.path)
-        XCTAssertEqual(statusLine.dispatcherCommand,
-                       "sh \(ShellQuoting.quoteIfNeeded(statusLine.dispatcherURL.path)) # claudehelpers-statusline")
+        let quoted = ShellQuoting.quoteIfNeeded(statusLine.dispatcherURL.path)
+        XCTAssertEqual(statusLine.dispatcherCommand, "python3 \(quoted) # claudehelpers-statusline")
         XCTAssertTrue(ClaudeStatusLine.isDispatcherCommand(statusLine.dispatcherCommand))
+        let legacy = "sh \(ShellQuoting.quoteIfNeeded(statusLine.legacyDispatcherURL.path)) # claudehelpers-statusline"
+        XCTAssertTrue(ClaudeStatusLine.isDispatcherCommand(legacy), "an older install's slot is still the dispatcher's")
+        XCTAssertFalse(ClaudeStatusLine.isDispatcherCommand("bash /x/dispatch.sh # claudehelpers-statusline"))
     }
 
     // MARK: - Entries
@@ -187,7 +217,7 @@ final class ClaudeStatusLineTests: XCTestCase {
     // MARK: - End to end with the real dispatcher
 
     func testTheDispatcherRunsAdoptedAndOwnRenderersInNameOrder() throws {
-        let dispatcher = try StatusLineTestSupport.requireSubmodule(StatusLineTestSupport.realDispatcher)
+        let dispatcher = try StatusLineTestSupport.requireAdtoolkit(StatusLineTestSupport.realDispatcher)
         let statusLine = ClaudeStatusLine(claudeDirectory: claudeDir, bundledDispatcher: dispatcher)
         try statusLine.installDispatcher()
         try statusLine.adopt("echo foreign")

@@ -67,9 +67,9 @@ final class SessionFeatureRoutesTests: XCTestCase {
         database: DaemonDatabase? = nil
     ) throws -> SessionFeatureServices {
         let store = database ?? db!
-        let dispatcher = tmpDir.appendingPathComponent("dispatch.sh")
+        let dispatcher = tmpDir.appendingPathComponent("dispatch.py")
         // swiftlint:disable:next line_length
-        try "#!/bin/sh\n# claudehelpers-statusline-dispatch 1\n".write(to: dispatcher, atomically: true, encoding: .utf8)
+        try "#!/usr/bin/env python3\n# claudehelpers-statusline-dispatch 7\n".write(to: dispatcher, atomically: true, encoding: .utf8)
         let installer = ClaudeHookInstaller(
             configuration: ClaudeHookConfiguration(
                 name: "routes-test",

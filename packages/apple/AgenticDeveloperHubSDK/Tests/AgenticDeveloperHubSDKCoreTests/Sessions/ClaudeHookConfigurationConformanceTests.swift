@@ -102,7 +102,7 @@ struct ClaudeHookConfigurationConformanceTests {
         let config = stenographer(hookBinaryPath: "/Applications/Stenographer.app/Contents/Helpers/steno")
 
         #expect(config.resolvedBundledDispatcher
-                == URL(fileURLWithPath: "/Applications/Stenographer.app/Contents/Resources/dispatch.sh"))
+                == URL(fileURLWithPath: "/Applications/Stenographer.app/Contents/Resources/dispatch.py"))
     }
 
     @Test("V8: an explicit dispatcher wins")
@@ -240,6 +240,6 @@ struct ClaudeHookConfigurationConformanceTests {
     func testV22_dispatcherFromShallowPath() {
         let config = stenographer(hookBinaryPath: "/steno")
 
-        #expect(config.resolvedBundledDispatcher == URL(fileURLWithPath: "/Resources/dispatch.sh"))
+        #expect(config.resolvedBundledDispatcher == URL(fileURLWithPath: "/Resources/dispatch.py"))
     }
 }
