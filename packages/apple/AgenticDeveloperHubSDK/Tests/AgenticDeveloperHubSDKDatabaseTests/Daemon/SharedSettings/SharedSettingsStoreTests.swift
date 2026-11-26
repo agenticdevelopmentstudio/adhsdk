@@ -99,6 +99,63 @@ final class SharedSettingsStoreTests: XCTestCase {
         XCTAssertNotNil(try store.value(forKey: "terminal_font_size"))
     }
 
+    // MARK: - Removal keeps the version going (no ABA)
+
+    func testRemoveAnswersTheVersionItLeftAndAKeyNotSetAnswersNil() throws {
+        try store.set(json("13"), forKey: "terminal_font_size")
+        XCTAssertEqual(try store.remove(forKey: "terminal_font_size"), 2)
+        XCTAssertNil(try store.remove(forKey: "terminal_font_size"))
+        XCTAssertNil(try store.remove(forKey: "never_set"))
+    }
+
+    func testASetAfterARemoveGoesOnFromTheRemovedVersion() throws {
+        try store.set(json("13"), forKey: "terminal_font_size")
+        try store.remove(forKey: "terminal_font_size")
+        XCTAssertEqual(try store.set(json("14"), forKey: "terminal_font_size").version, 3)
+    }
+
+    func testAWriterHoldingAVersionFromBeforeARemoveAndSetIsRefused() throws {
+        // A reads version 1; B removes the key and sets it again.
+        try store.set(json("13"), forKey: "terminal_font_size")
+        try store.remove(forKey: "terminal_font_size", expectedVersion: 1)
+        try store.set(json("20"), forKey: "terminal_font_size", expectedVersion: 0)
+
+        XCTAssertThrowsError(try store.set(json("99"), forKey: "terminal_font_size", expectedVersion: 1)) { error in
+            XCTAssertEqual(
+                error as? SharedSettingsStoreError,
+                .versionConflict(key: "terminal_font_size", expected: 1, actual: 3))
+        }
+        XCTAssertEqual(try store.value(forKey: "terminal_font_size")?.value, json("20"))
+    }
+
+    func testARemovedKeyAcceptsZeroOrItsTombstoneVersion() throws {
+        try store.set(json("13"), forKey: "a")
+        try store.remove(forKey: "a")
+        XCTAssertEqual(try store.set(json("1"), forKey: "a", expectedVersion: 0).version, 3)
+
+        try store.set(json("13"), forKey: "b")
+        try store.remove(forKey: "b")
+        XCTAssertEqual(try store.set(json("1"), forKey: "b", expectedVersion: 2).version, 3)
+        XCTAssertThrowsError(try store.set(json("1"), forKey: "b", expectedVersion: 0))
+    }
+
+    func testTheTombstoneSurvivesReopening() throws {
+        try store.set(json("13"), forKey: "terminal_font_size")
+        try store.remove(forKey: "terminal_font_size")
+        let path = store.databasePath
+        store = nil
+        let reopened = try SharedSettingsStore(path: path)
+        XCTAssertNil(try reopened.value(forKey: "terminal_font_size"))
+        XCTAssertEqual(try reopened.set(json("14"), forKey: "terminal_font_size").version, 3)
+    }
+
+    func testImportIfAbsentAfterARemoveGoesOnFromTheRemovedVersion() throws {
+        try store.set(json("13"), forKey: "terminal_font_size")
+        try store.remove(forKey: "terminal_font_size")
+        XCTAssertTrue(try store.importIfAbsent(json("20"), forKey: "terminal_font_size"))
+        XCTAssertEqual(try store.value(forKey: "terminal_font_size")?.version, 3)
+    }
+
     // MARK: - Import
 
     func testImportIfAbsentNeverOverwrites() throws {
