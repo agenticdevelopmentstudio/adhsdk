@@ -93,12 +93,17 @@ public final class WindowTitlebarTitle: NSTitlebarAccessoryViewController {
     /// Puts the title in `window`'s title bar and hides the one AppKit draws.
     public func install(in window: NSWindow) {
         window.titleVisibility = .hidden
-        window.addTitlebarAccessoryViewController(self)
         if text.isEmpty {
             titleLabel.stringValue = window.title
         } else {
             window.title = text
         }
+        // Sized before it joins the title bar: once it has, the window's
+        // content layout rect is stale until the title bar is laid out, and
+        // forcing that layout here kept the main queue from draining for
+        // seconds in a window not yet on screen.
+        resize(in: window)
+        window.addTitlebarAccessoryViewController(self)
         titleObservation = window.observe(\.title, options: [.new]) { [weak self] window, _ in
             MainActor.assumeIsolated {
                 guard let self, self.titleLabel.stringValue != window.title else { return }
@@ -111,7 +116,6 @@ public final class WindowTitlebarTitle: NSTitlebarAccessoryViewController {
         ) { [weak self] _ in
             MainActor.assumeIsolated { self?.resize() }
         }
-        resize()
     }
 
     deinit {
@@ -130,11 +134,33 @@ public final class WindowTitlebarTitle: NSTitlebarAccessoryViewController {
     /// the bottom of the title bar, so one shorter than a unified toolbar's
     /// 52pt sat its title 12pt below the traffic lights; filling the bar puts
     /// the stack's centre on theirs.
-    private func resize() {
-        let fitting = stack.fittingSize
-        let available = (view.window?.frame.width ?? .greatestFiniteMagnitude) - Self.reservedWidth
-        let height = max(fitting.height, Self.titlebarHeight(of: view.window))
-        stack.setFrameSize(NSSize(width: max(0, min(fitting.width, available)), height: height))
+    ///
+    /// `window` is the one being installed into, before the view is in it;
+    /// otherwise the view's own.
+    private func resize(in window: NSWindow? = nil) {
+        let window = window ?? view.window
+        let fitting = Self.contentSize(label: titleLabel.intrinsicContentSize, showsIcon: !iconView.isHidden,
+                                       insets: stack.edgeInsets, spacing: stack.spacing)
+        // Only the label truncates: the insets, the icon and the gap after it
+        // are required, so a window narrower than the reserve (as one is
+        // while its default frame is applied) still leaves the stack room for
+        // them. A width below that broke the icon's own constraints.
+        let minimum = Self.contentSize(label: NSSize(width: 0, height: titleLabel.intrinsicContentSize.height),
+                                       showsIcon: !iconView.isHidden, insets: stack.edgeInsets,
+                                       spacing: stack.spacing).width
+        let available = (window?.frame.width ?? .greatestFiniteMagnitude) - Self.reservedWidth
+        let height = max(fitting.height, Self.titlebarHeight(of: window))
+        stack.setFrameSize(NSSize(width: max(minimum, min(fitting.width, available)), height: height))
+    }
+
+    /// What the stack's `fittingSize` would answer, from its two views'
+    /// intrinsic sizes. Asking the stack itself once it is in the title bar
+    /// forces a layout pass of the whole title bar, which in a window not yet
+    /// on screen kept the main queue from draining for seconds.
+    static func contentSize(label: NSSize, showsIcon: Bool, insets: NSEdgeInsets, spacing: CGFloat) -> NSSize {
+        let icon = showsIcon ? iconSize + spacing : 0
+        let height = max(showsIcon ? iconSize : 0, label.height) + insets.top + insets.bottom
+        return NSSize(width: ceil(insets.left + icon + label.width + insets.right), height: ceil(height))
     }
 
     /// The height of `window`'s title bar, toolbar included: what lies above
