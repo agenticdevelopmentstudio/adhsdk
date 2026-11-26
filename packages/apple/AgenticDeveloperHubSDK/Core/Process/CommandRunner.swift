@@ -160,19 +160,21 @@ public enum CommandRunner {
         let stdin = try input.map { _ in try guardedStandardInput(for: process) }
 
         let collected = Collector()
-        let outputDrained = drain(output, into: collected, as: .standardOutput)
-        let errorsDrained = drain(errors, into: collected, as: .standardError)
+        let qos = callerQoS()
+        let readers = DispatchQueue(label: "CommandRunner.drain", qos: DispatchQoS(qosClass: qos, relativePriority: 0))
+        let outputDrained = drain(output, into: collected, as: .standardOutput, on: readers)
+        let errorsDrained = drain(errors, into: collected, as: .standardError, on: readers)
 
         let watch = ProcessExitWatch(process)
         do {
             try process.run()
         } catch {
-            output.fileHandleForReading.readabilityHandler = nil
-            errors.fileHandleForReading.readabilityHandler = nil
+            outputDrained.source.cancel()
+            errorsDrained.source.cancel()
             process.terminationHandler = nil
             throw error
         }
-        let inputWritten = stdin.map { feed($0, with: input ?? Data()) }
+        let inputWritten = stdin.map { feed($0, with: input ?? Data(), qos: qos) }
 
         var timedOut = false
         var aborted = false
@@ -205,11 +207,11 @@ public enum CommandRunner {
         // Both write ends are closed once the process is gone, so these are
         // waits on an EOF that has already been posted; the writer, likewise,
         // has either finished or been handed EPIPE by the dead read end.
-        _ = outputDrained.wait(timeout: .now() + settleGrace)
-        _ = errorsDrained.wait(timeout: .now() + settleGrace)
+        _ = outputDrained.finished.wait(timeout: .now() + settleGrace)
+        _ = errorsDrained.finished.wait(timeout: .now() + settleGrace)
         _ = inputWritten?.wait(timeout: .now() + settleGrace)
-        output.fileHandleForReading.readabilityHandler = nil
-        errors.fileHandleForReading.readabilityHandler = nil
+        outputDrained.source.cancel()
+        errorsDrained.source.cancel()
 
         // **Only when it actually exited.** `Process.terminationStatus` is
         // documented to raise `NSInvalidArgumentException` on a process that
@@ -261,10 +263,10 @@ public enum CommandRunner {
     /// blocked filling stdin. The parent's copy of the read end is closed
     /// first so the pipe dies with the child, which is what turns a write to
     /// a departed reader into `EPIPE` instead of a wait that never ends.
-    private static func feed(_ pipe: Pipe, with input: Data) -> DispatchSemaphore {
+    private static func feed(_ pipe: Pipe, with input: Data, qos: DispatchQoS.QoSClass) -> DispatchSemaphore {
         let written = DispatchSemaphore(value: 0)
         try? pipe.fileHandleForReading.close()
-        DispatchQueue.global(qos: .default).async {
+        DispatchQueue.global(qos: qos).async {
             let writer = pipe.fileHandleForWriting
             if !input.isEmpty { try? writer.write(contentsOf: input) }
             try? writer.close()
@@ -273,33 +275,65 @@ public enum CommandRunner {
         return written
     }
 
-    /// Reads `pipe` on Foundation's reader queue until EOF, appending into
-    /// `collected`, and signals the returned semaphore when EOF arrives.
+    /// The calling thread's QoS class, which the readers and the writer run
+    /// at.
+    ///
+    /// The caller blocks on their semaphores, so work signalled from a lower
+    /// class than the waiter is a priority inversion — the main thread
+    /// (user-interactive) waiting on Foundation's default-QoS reader queue.
+    /// The Thread Performance Checker reports every one, and under XCTest
+    /// each report is symbolicated on the spot, about four seconds a time.
+    private static func callerQoS() -> DispatchQoS.QoSClass {
+        DispatchQoS.QoSClass(rawValue: qos_class_self()) ?? .default
+    }
+
+    /// One stream's drain: the semaphore EOF signals, and the source to
+    /// cancel when the run stops waiting for it.
+    private struct Drain {
+        let finished: DispatchSemaphore
+        let source: DispatchSourceRead
+    }
+
+    /// Reads `pipe` on `queue` until EOF, appending into `collected`, and
+    /// signals `finished` when EOF arrives or the source is cancelled.
     ///
     /// Draining *while* the tool writes is the point: a read that waits for
     /// the process to exit first is the deadlock this type exists to avoid.
+    /// A read source rather than `readabilityHandler`, so the reads run at
+    /// the caller's QoS (see `callerQoS`) and never block a thread: a
+    /// grandchild that keeps the pipe open past the settle grace leaves a
+    /// cancelled source, not a parked reader.
     private static func drain(
         _ pipe: Pipe,
         into collected: Collector,
-        as stream: Stream
-    ) -> DispatchSemaphore {
+        as stream: Stream,
+        on queue: DispatchQueue
+    ) -> Drain {
         let finished = DispatchSemaphore(value: 0)
-        pipe.fileHandleForReading.readabilityHandler = { handle in
-            let chunk = handle.availableData
-            guard !chunk.isEmpty else {
-                handle.readabilityHandler = nil
-                finished.signal()
-                return
+        let descriptor = pipe.fileHandleForReading.fileDescriptor
+        let source = DispatchSource.makeReadSource(fileDescriptor: descriptor, queue: queue)
+        source.setEventHandler { [unowned source] in
+            var buffer = [UInt8](repeating: 0, count: 64 * 1024)
+            let count = read(descriptor, &buffer, buffer.count)
+            if count > 0 {
+                collected.append(Data(buffer[0..<count]), to: stream)
+            } else if count == 0 || (errno != EAGAIN && errno != EINTR) {
+                source.cancel()
             }
-            collected.append(chunk, to: stream)
         }
-        return finished
+        // The pipe is held until here, so its descriptor outlives the source.
+        source.setCancelHandler { [pipe] in
+            _ = pipe
+            finished.signal()
+        }
+        source.resume()
+        return Drain(finished: finished, source: source)
     }
 
     /// The two buffers, behind one lock.
     ///
-    /// Foundation delivers both streams on its own queue, so every append here
-    /// is off the calling thread and the two can arrive at once.
+    /// Both streams are read off the calling thread, so every append here is
+    /// too, behind the lock.
     private final class Collector: @unchecked Sendable {
 
         private let lock = NSLock()
