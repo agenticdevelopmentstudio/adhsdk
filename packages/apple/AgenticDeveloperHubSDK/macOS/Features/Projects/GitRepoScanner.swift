@@ -49,6 +49,11 @@ public struct GitRepoScanner: Sendable {
     /// The same roots standardized, for `skips(path:)`, which standardizes
     /// the path it is asked about and must compare like with like.
     private let standardizedRoots: [URL]
+    /// The roots and skipped directories as `canonicalPath` resolves them, so a
+    /// path spelled through another route to the same directory (`/private/tmp`
+    /// for `/tmp`, a symbolic link's target) is compared as the directory it is.
+    private let canonicalRoots: [URL]
+    private let canonicalSkippedDirectories: [URL]
     public let skippedDirectories: [URL]
     public let skipsHiddenDirectories: Bool
     public let skipsSubmodules: Bool
@@ -62,6 +67,8 @@ public struct GitRepoScanner: Sendable {
         self.roots = roots
         self.standardizedRoots = roots.map(\.standardizedFileURL)
         self.skippedDirectories = skippedDirectories.map(\.standardizedFileURL)
+        self.canonicalRoots = roots.map { URL(fileURLWithPath: Self.canonicalPath($0.path)) }
+        self.canonicalSkippedDirectories = skippedDirectories.map { URL(fileURLWithPath: Self.canonicalPath($0.path)) }
         self.skipsHiddenDirectories = skipsHiddenDirectories
         self.skipsSubmodules = skipsSubmodules
     }
@@ -75,16 +82,26 @@ public struct GitRepoScanner: Sendable {
     /// is still a repository, and deleting it would take its layout with it —
     /// so the list has to be able to leave it out on the same rules the walk
     /// applies, rather than a second copy of them (`dry`).
+    ///
+    /// Roots and skipped directories are matched by spelling first and then by
+    /// `canonicalPath`, so a row stored under another spelling of a root's
+    /// directory is judged as the walk would judge it.
     public func skips(path: String) -> Bool {
         let url = URL(fileURLWithPath: path).standardizedFileURL
         let components = url.pathComponents
-        guard let root = standardizedRoots.first(where: { Self.components(components, areWithin: $0) }) else {
+        let canonical = URL(fileURLWithPath: Self.canonicalPath(path)).pathComponents
+        let below: ArraySlice<String>
+        if let root = standardizedRoots.first(where: { Self.components(components, areWithin: $0) }) {
+            below = components.dropFirst(root.pathComponents.count)
+        } else if let root = canonicalRoots.first(where: { Self.components(canonical, areWithin: $0) }) {
+            below = canonical.dropFirst(root.pathComponents.count)
+        } else {
             return true
         }
-        if skippedDirectories.contains(where: { Self.components(components, areWithin: $0) }) {
+        if skippedDirectories.contains(where: { Self.components(components, areWithin: $0) })
+            || canonicalSkippedDirectories.contains(where: { Self.components(canonical, areWithin: $0) }) {
             return true
         }
-        let below = components.dropFirst(root.pathComponents.count)
         if skipsHiddenDirectories, below.contains(where: { $0.hasPrefix(".") }) { return true }
         if below.dropLast().contains(where: { Self.prunedDirectoryNames.contains($0) }) { return true }
         // A `.git` file is a submodule or a linked worktree: the walk reports
@@ -172,11 +189,17 @@ public struct GitRepoScanner: Sendable {
                 // Foundation hands the children back under the directory's
                 // resolved path (`/var/...` comes back as `/private/var/...`),
                 // so each is re-spelled under the root as it was given: a
-                // project's path, and every skip comparison, use the user's
-                // spelling of the root, never the one the filesystem resolves.
+                // project's path uses the user's spelling of the root, never
+                // the one the filesystem resolves. A skip is compared with both
+                // (see `shouldDescend`), so the directory is resolved once here
+                // when there is a skip to compare, never per child.
+                let canonicalDirectory = canonicalSkippedDirectories.isEmpty
+                    ? nil : URL(fileURLWithPath: Self.canonicalPath(directory.path), isDirectory: true)
                 for child in children {
                     let spelled = directory.appendingPathComponent(child.lastPathComponent, isDirectory: true)
-                    if shouldDescend(into: child, spelled: spelled) { stack.append(spelled) }
+                    let canonical = canonicalDirectory?.appendingPathComponent(child.lastPathComponent,
+                                                                                isDirectory: true)
+                    if shouldDescend(into: child, spelled: spelled, canonical: canonical) { stack.append(spelled) }
                 }
             }
         }
@@ -184,24 +207,43 @@ public struct GitRepoScanner: Sendable {
         return Self.unique(found)
     }
 
-    /// Sorted by path, each path once: two roots that overlap — `~/Development`
-    /// and `~/Development/ios` — would otherwise report the inner one twice.
+    /// Sorted by path, each directory once: two roots that overlap —
+    /// `~/Development` and `~/Development/ios`, or `/tmp/work` and
+    /// `/private/tmp/work` — would otherwise report the inner one twice. One
+    /// directory is one `canonicalPath`; the spelling kept is the first the
+    /// walk found, so the first root's.
     private static func unique(_ found: [ScannedGitRepo]) -> [ScannedGitRepo] {
         var seen = Set<String>()
-        return found.sorted { $0.path < $1.path }.filter { seen.insert($0.path).inserted }
+        return found.filter { seen.insert(canonicalPath($0.path)).inserted }.sorted { $0.path < $1.path }
     }
 
     /// `url` is the child as Foundation listed it, whose resource values say
-    /// what it is; `spelled` is the same child under the root's spelling,
-    /// which is what a skipped directory is compared with.
-    private func shouldDescend(into url: URL, spelled: URL) -> Bool {
+    /// what it is; `spelled` is the same child under the root's spelling, and
+    /// `canonical` under its directory's `canonicalPath` (`nil` when nothing is
+    /// skipped). A skipped directory is compared with both, so a skip recorded
+    /// under a symbolic link's target, or as `/private/tmp/...`, still prunes.
+    private func shouldDescend(into url: URL, spelled: URL, canonical: URL?) -> Bool {
         let name = url.lastPathComponent
         guard name != ".git", !Self.prunedDirectoryNames.contains(name) else { return false }
         if skipsHiddenDirectories, name.hasPrefix(".") { return false }
         let path = spelled.standardizedFileURL.path
         if skippedDirectories.contains(where: { $0.path == path }) { return false }
+        if let canonical, canonicalSkippedDirectories.contains(where: { $0.path == canonical.path }) { return false }
         guard !isSymbolicLink(url) else { return false }
         return isDirectory(url)
+    }
+
+    /// `path` as the filesystem resolves it (`realpath(3)`): every symbolic link
+    /// followed, `/tmp` and `/var` as `/private/tmp` and `/private/var`, `.` and
+    /// `..` gone. Two spellings of one directory have one canonical path, which
+    /// is what the walk dedupes on and what `ProjectReconciler` matches rows
+    /// by. `path` unchanged when it cannot be resolved (it is gone, say).
+    /// Not `resolvingSymlinksInPath()`, which strips a leading `/private`
+    /// instead and so answers differently for a path that no longer exists.
+    public static func canonicalPath(_ path: String) -> String {
+        guard let resolved = realpath(path, nil) else { return path }
+        defer { free(resolved) }
+        return String(cString: resolved)
     }
 
     /// The checked-out submodules of the repository at `repository`, and

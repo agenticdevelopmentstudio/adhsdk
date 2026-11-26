@@ -76,6 +76,48 @@ final class ProjectReconcilerTests: XCTestCase {
         XCTAssertEqual(plan.summary.unchanged, 1)
     }
 
+    /// An older scan stored the filesystem's spelling (`/private/tmp/...`);
+    /// a scan of the root `/tmp/work` now reports `/tmp/...`. They are one
+    /// directory, so the row is kept and re-spelled, never inserted again.
+    func testARowUnderAnotherSpellingOfTheSameDirectoryIsMatchedAndRespelled() throws {
+        let existing = [repo(path: "/private/tmp/work/app", name: "app", remote: "origin-url")]
+        let plan = ProjectReconciler.plan(
+            existing: existing,
+            scanned: [scan("/tmp/work/app", remote: "origin-url")],
+            now: now,
+            isStillARepository: { _ in true },
+            canonicalPath: Self.privateTmp
+        )
+        XCTAssertTrue(plan.inserts.isEmpty, "the same directory must not become a second project")
+        XCTAssertTrue(plan.deletes.isEmpty)
+        let updated = try XCTUnwrap(plan.updates.first)
+        XCTAssertEqual(updated.id, existing[0].id)
+        XCTAssertEqual(updated.path, "/tmp/work/app")
+        XCTAssertEqual(updated.name, "app")
+        XCTAssertEqual(plan.summary.unchanged, 1)
+        XCTAssertEqual(plan.summary.skipped, 0)
+    }
+
+    /// Two spellings of one directory in a scan are one project, not one
+    /// matched row and one insert.
+    func testTwoSpellingsOfOneDirectoryInAScanAreOneProject() {
+        let existing = [repo(path: "/tmp/work/app", name: "app")]
+        let plan = ProjectReconciler.plan(
+            existing: existing,
+            scanned: [scan("/private/tmp/work/app"), scan("/tmp/work/app")],
+            now: now,
+            isStillARepository: { _ in true },
+            canonicalPath: Self.privateTmp
+        )
+        XCTAssertTrue(plan.inserts.isEmpty)
+        XCTAssertEqual(plan.summary.unchanged, 1)
+    }
+
+    /// `/tmp` resolved as macOS resolves it, without a filesystem.
+    private static func privateTmp(_ path: String) -> String {
+        path.hasPrefix("/tmp/") ? "/private" + path : path
+    }
+
     // MARK: - Moves
 
     func testAMovedRepoIsMatchedByItsRemote() throws {

@@ -40,27 +40,43 @@ public enum ProjectReconciler {
     ///
     /// The cost is still real and accepted for a genuinely absent path: a
     /// project on an unmounted volume is forgotten and comes back as new.
+    ///
+    /// A row is the scan's when their paths are one directory, not only one
+    /// spelling: `canonicalPath` (the filesystem's `realpath`) is compared
+    /// when the spellings differ. A row stored as `/private/tmp/work/app` by an
+    /// older scan is the same project as the `/tmp/work/app` a scan of the root
+    /// `/tmp/work` reports, and inserting it again would leave the project
+    /// listed twice with its windows and settings stranded on the old row. Such
+    /// a row is re-spelled to the scan's path, an update, so the next scan
+    /// matches it exactly. A second spelling of a row already matched adds
+    /// nothing.
     public static func plan(
         existing: [GitRepo],
         scanned: [ScannedGitRepo],
         now: Date = Date(),
-        isStillARepository: (String) -> Bool = ProjectReconciler.repositoryExists
+        isStillARepository: (String) -> Bool = ProjectReconciler.repositoryExists,
+        canonicalPath: (String) -> String = GitRepoScanner.canonicalPath
     ) -> Plan {
         var plan = Plan()
         var byPath: [String: GitRepo] = [:]
         for repo in existing { byPath[repo.path] = repo }
+        var byCanonicalPath: [String: GitRepo] = [:]
+        for repo in existing where byCanonicalPath[canonicalPath(repo.path)] == nil {
+            byCanonicalPath[canonicalPath(repo.path)] = repo
+        }
 
         var unmatchedScans: [ScannedGitRepo] = []
         var seenIDs = Set<UUID>()
 
         for scan in scanned {
-            guard var known = byPath[scan.path] else {
+            guard var known = byPath[scan.path] ?? byCanonicalPath[canonicalPath(scan.path)] else {
                 unmatchedScans.append(scan)
                 continue
             }
-            seenIDs.insert(known.id)
-            if known.remote != scan.remote {
+            guard seenIDs.insert(known.id).inserted else { continue }
+            if known.remote != scan.remote || known.path != scan.path {
                 known.remote = scan.remote
+                known.path = scan.path
                 known.lastSeen = now
                 plan.updates.append(known)
             }

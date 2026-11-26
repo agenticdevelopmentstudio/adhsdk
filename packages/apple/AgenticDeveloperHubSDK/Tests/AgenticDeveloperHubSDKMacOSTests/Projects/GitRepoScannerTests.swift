@@ -253,6 +253,36 @@ final class GitRepoScannerTests: XCTestCase {
         XCTAssertEqual(viaLink, [link.appendingPathComponent("dev/alpha").standardizedFileURL.path])
     }
 
+    /// Two roots that are one directory by two routes report each project
+    /// once, under the first root's spelling.
+    func testTwoSpellingsOfOneRootReportEachProjectOnce() throws {
+        try makeRepo("real/dev/alpha")
+        let link = root.appendingPathComponent("link", isDirectory: true)
+        try FileManager.default.createSymbolicLink(at: link, withDestinationURL: dir("real"))
+
+        let found = GitRepoScanner(roots: [link, dir("real")]).scan().map(\.path)
+
+        XCTAssertEqual(found, [link.appendingPathComponent("dev/alpha").standardizedFileURL.path])
+    }
+
+    /// A skip recorded under the directory's resolved spelling still prunes a
+    /// walk that reaches it through a symbolic link, and `skips(path:)`
+    /// agrees, as it does for a row stored under the resolved spelling.
+    func testASkipUnderTheResolvedSpellingStillPrunes() throws {
+        try makeRepo("real/dev/alpha")
+        try makeRepo("real/dev/archive/old")
+        let link = root.appendingPathComponent("link", isDirectory: true)
+        try FileManager.default.createSymbolicLink(at: link, withDestinationURL: dir("real"))
+        let resolvedArchive = URL(fileURLWithPath: GitRepoScanner.canonicalPath(dir("real/dev/archive").path))
+
+        let scanner = GitRepoScanner(roots: [link], skippedDirectories: [resolvedArchive])
+
+        XCTAssertEqual(scanner.scan().map(\.path), [link.appendingPathComponent("dev/alpha").standardizedFileURL.path])
+        XCTAssertTrue(scanner.skips(path: link.appendingPathComponent("dev/archive/old").path))
+        XCTAssertFalse(scanner.skips(path: GitRepoScanner.canonicalPath(dir("real/dev/alpha").path)),
+                       "a row under the resolved spelling of a root is still inside it")
+    }
+
     // MARK: - Helpers
 
     /// Records progress from whatever thread the walk runs on.
