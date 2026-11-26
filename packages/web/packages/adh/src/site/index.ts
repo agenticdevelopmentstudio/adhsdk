@@ -19,6 +19,10 @@ export {
   SITE_ROUTE_SEGMENTS,
   GRAMMAR_SEGMENTS,
   RESERVED_HANDLE_WORDS,
+} from './reservedSlugs'
+// Which handles a PRODUCT SITE (`<handle>.<base domain>`) may not take. A DNS label, not a
+// `/<workspace>` path segment, so a list of its own; from the same module, for the same reason.
+export {
   PRODUCT_SITE_HANDLE_WORDS,
   reservedProductSiteHandles,
   isReservedProductSiteHandle,
