@@ -126,10 +126,23 @@ import Testing
 
     @Test("V11: the child gets the given environment only")
     func testV11_environmentReplace() async throws {
-        setenv("PARTNERPROC_BAR", "parent", 1)
-        defer { unsetenv("PARTNERPROC_BAR") }
+        // A variable the parent already has, read rather than `setenv`'d: the
+        // process environment is one table shared with every suite running
+        // beside this one, and a `setenv` reallocates it under any thread that
+        // is copying it to spawn a child. `HOME` when set (`/bin/sh` never
+        // sets it itself); otherwise any shell-safe name `sh` does not set.
+        let parent = ProcessInfo.processInfo.environment
+        let shellSet: Set<String> = [
+            "FOO", "PATH", "PWD", "OLDPWD", "SHLVL", "_", "IFS", "PS1", "PS2", "PS4", "OPTIND", "PPID"
+        ]
+        let candidates = parent.keys.filter { key in
+            !shellSet.contains(key)
+                && key.range(of: #"^[A-Za-z_][A-Za-z0-9_]*$"#, options: .regularExpression) != nil
+        }
+        let preferred: String? = parent["HOME"] != nil ? "HOME" : candidates.sorted().first
+        let inherited = try #require(preferred, "the test process has no environment variable to withhold")
         let script = #"echo "{\"type\":\"result\",\"subtype\":\"success\",\"is_error\":false,"#
-            + #"\"result\":\"$FOO-${PARTNERPROC_BAR-unset}\",\"session_id\":\"s\"}""#
+            + #"\"result\":\"$FOO-${"# + inherited + #"-unset}\",\"session_id\":\"s\"}""#
         let process = PartnerProcess(executable: "/bin/sh", arguments: ["-c", script],
                                      environment: ["FOO": "a", "PATH": "/bin:/usr/bin"])
         try await process.start()
