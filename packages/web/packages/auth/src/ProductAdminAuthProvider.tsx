@@ -4,9 +4,10 @@
 // product's customer login, managing that product at its own host.
 //
 // It is not AuthProvider. The site's refresh token is an HttpOnly cookie (`pa_refresh`) on the
-// site's own origin, set and rotated by the site's `/auth/*` route handlers, and the access token
-// is held here, in memory, never in storage or a URL. On mount it asks `POST /auth/session` for an
-// access token; a 401 there means no session, and the browser goes to `/auth/signin?return=<path>`.
+// site's own origin, set and rotated by the site's auth route handlers (mounted at the `authBase`
+// prop, e.g. `/admin/auth`), and the access token is held here, in memory, never in storage or a
+// URL. On mount it asks `POST <authBase>/session` for an access token; a 401 there means no
+// session, and the browser goes to `<authBase>/signin?return=<path>`.
 // Every request that spends the refresh cookie holds a Web Lock, so the site's tabs take turns.
 // It refreshes a minute before the token expires, then reads `GET /api/v1/account`: an account
 // without the product's `admin` role is `no-access`.
@@ -63,12 +64,18 @@ export interface ProductAdminAuthValue {
  * The sign-in URL for a step-up: `prompt=login` makes the login ask again even with a live
  * session, and `max_age=600` matches the backend's ten-minute window.
  */
-export function stepUpSigninUrl(returnPath: string): string {
-  return `/auth/signin?return=${encodeURIComponent(returnPath)}&prompt=login&max_age=600`
+export function stepUpSigninUrl(authBase: string, returnPath: string): string {
+  return `${authBase}/signin?return=${encodeURIComponent(returnPath)}&prompt=login&max_age=600`
 }
 
 export interface ProductAdminAuthProviderProps {
   children: ReactNode
+  /**
+   * Where the site's auth route handlers are mounted, e.g. `/admin/auth`. No trailing slash.
+   * Required, not defaulted, so a host that forgets it fails to compile rather than calling the
+   * wrong path.
+   */
+  authBase: string
   /** Where the browser goes; a seam for tests. Defaults to `window.location.assign`. */
   navigate?: (url: string) => void
 }
@@ -80,7 +87,7 @@ const MIN_REFRESH_DELAY_MS = 5_000
 
 const ProductAdminAuthContext = createContext<ProductAdminAuthValue | null>(null)
 
-/** The `/auth/session` answer's `expiresAt` in ms: unix seconds, unix ms or ISO 8601; else the
+/** The `<authBase>/session` answer's `expiresAt` in ms: unix seconds, unix ms or ISO 8601; else the
  *  token's own `exp`; else null (no scheduled refresh; a 401 still refreshes on demand). */
 function expiryMs(expiresAt: unknown, token: string): number | null {
   if (typeof expiresAt === 'number' && Number.isFinite(expiresAt)) {
@@ -107,11 +114,12 @@ function toAccount(w: ProductAdminAccountWire): ProductAdminAccount {
   }
 }
 
-/** A session from `POST /auth/session`; null is its 401, no session. */
+/** A session from `POST <authBase>/session`; null is its 401, no session. */
 type SessionAnswer = { accessToken: string; expiresAt: unknown } | null
 
-// The one `POST /auth/session` in flight in this page, shared by every caller until it answers.
-// It lives at module scope, not in a mount, because the site's `/auth/*` handlers ROTATE the
+// The one `POST <authBase>/session` in flight in this page, shared by every caller until it
+// answers. One site has one auth base, so one request serves every mount. It lives at module
+// scope, not in a mount, because the site's auth handlers ROTATE the
 // refresh cookie: a second POST sent before the first answers presents a cookie that has just
 // been spent, and the server takes that as a lost session. A StrictMode remount, or an unmount
 // and a new provider while a request is out, therefore joins this request; each mount decides for
@@ -128,7 +136,7 @@ const PRODUCT_ADMIN_SESSION_LOCK = 'adh-product-admin-session'
  * refusal signs the admin out. Serialised, the second tab's POST leaves after the first's answer
  * has set the rotated cookie, so it presents that one. Sign-out takes the lock too, so it never
  * revokes a cookie another tab is in the middle of rotating. A browser without Web Locks runs `fn`
- * unguarded; the site's `/auth/session` route is the other half of this guard.
+ * unguarded; the site's `<authBase>/session` route is the other half of this guard.
  */
 function withSessionLock<T>(fn: () => Promise<T>): Promise<T> {
   const locks = typeof navigator !== 'undefined' ? navigator.locks : undefined
@@ -138,17 +146,18 @@ function withSessionLock<T>(fn: () => Promise<T>): Promise<T> {
   return locks.request(PRODUCT_ADMIN_SESSION_LOCK, fn) as unknown as Promise<T>
 }
 
-function requestSession(): Promise<SessionAnswer> {
+function requestSession(authBase: string): Promise<SessionAnswer> {
   if (sessionRequest) return sessionRequest
+  const url = `${authBase}/session`
   const req = (async (): Promise<SessionAnswer> => {
     const res = await withSessionLock(() =>
-      fetch('/auth/session', { method: 'POST', credentials: 'include' }),
+      fetch(url, { method: 'POST', credentials: 'include' }),
     )
     if (res.status === 401) return null
-    if (!res.ok) throw new Error(`HTTP ${res.status} from /auth/session`)
+    if (!res.ok) throw new Error(`HTTP ${res.status} from ${url}`)
     const body = (await res.json()) as { accessToken?: unknown; expiresAt?: unknown }
     if (typeof body.accessToken !== 'string' || !body.accessToken) {
-      throw new Error('/auth/session answered without an accessToken')
+      throw new Error(`${url} answered without an accessToken`)
     }
     return { accessToken: body.accessToken, expiresAt: body.expiresAt }
   })().finally(() => {
@@ -163,7 +172,7 @@ function currentPath(): string {
   return `${window.location.pathname}${window.location.search}`
 }
 
-export function ProductAdminAuthProvider({ children, navigate }: ProductAdminAuthProviderProps) {
+export function ProductAdminAuthProvider({ children, authBase, navigate }: ProductAdminAuthProviderProps) {
   // `navigate` is read through a ref, never as a dependency: a host that passes an inline arrow
   // hands in a new function every render, and since every refresh re-renders (it adopts a
   // token), a dependency on it would re-run the mount effect and refresh again, forever.
@@ -199,11 +208,11 @@ export function ProductAdminAuthProvider({ children, navigate }: ProductAdminAut
     if (inFlightRef.current) return inFlightRef.current
     const gen = genRef.current
     const run = (async (): Promise<string | null> => {
-      const answer = await requestSession()
+      const answer = await requestSession(authBase)
       if (gen !== genRef.current) return null
       if (!answer) {
         adopt(null)
-        go(`/auth/signin?return=${encodeURIComponent(currentPath())}`)
+        go(`${authBase}/signin?return=${encodeURIComponent(currentPath())}`)
         return null
       }
       adopt(answer.accessToken)
@@ -222,7 +231,7 @@ export function ProductAdminAuthProvider({ children, navigate }: ProductAdminAut
     })
     inFlightRef.current = run
     return run
-  }, [adopt, go])
+  }, [adopt, go, authBase])
 
   // A LAYOUT effect, so the token source is in place before any child's passive effect runs: React
   // runs a child's effects before its parent's, so from a plain effect a page's first queries went
@@ -246,7 +255,7 @@ export function ProductAdminAuthProvider({ children, navigate }: ProductAdminAut
       } catch {
         // A session or account read that fails for any reason but a 401 leaves no usable session:
         // start the sign-in again rather than render a page that cannot load anything.
-        if (!cancelled) go(`/auth/signin?return=${encodeURIComponent(currentPath())}`)
+        if (!cancelled) go(`${authBase}/signin?return=${encodeURIComponent(currentPath())}`)
       }
     })()
     return () => {
@@ -257,7 +266,7 @@ export function ProductAdminAuthProvider({ children, navigate }: ProductAdminAut
       timerRef.current = null
       if (accessTokenSource() === source) setAccessTokenSource(null)
     }
-  }, [refresh, go])
+  }, [refresh, go, authBase])
 
   const signOut = useCallback(async () => {
     // A refresh already out (the timer's, or a 401 retry's) must not land after sign-out and bring
@@ -267,20 +276,20 @@ export function ProductAdminAuthProvider({ children, navigate }: ProductAdminAut
     if (timerRef.current) clearTimeout(timerRef.current)
     timerRef.current = null
     try {
-      // Let that refresh finish at the server first, so /auth/signout revokes the refresh cookie
-      // it rotated to rather than the one it spent.
+      // Let that refresh finish at the server first, so <authBase>/signout revokes the refresh
+      // cookie it rotated to rather than the one it spent.
       await sessionRequest?.catch(() => undefined)
-      await withSessionLock(() => fetch('/auth/signout', { method: 'POST', credentials: 'include' }))
+      await withSessionLock(() => fetch(`${authBase}/signout`, { method: 'POST', credentials: 'include' }))
     } finally {
       adopt(null)
       setAccount(null)
-      go('/auth/signin')
+      go(`${authBase}/signin`)
     }
-  }, [adopt, go])
+  }, [adopt, go, authBase])
 
   const stepUp = useCallback(
-    (returnPath?: string) => go(stepUpSigninUrl(returnPath ?? currentPath())),
-    [go],
+    (returnPath?: string) => go(stepUpSigninUrl(authBase, returnPath ?? currentPath())),
+    [go, authBase],
   )
 
   const value = useMemo<ProductAdminAuthValue>(
