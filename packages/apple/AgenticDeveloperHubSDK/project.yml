@@ -2753,8 +2753,13 @@ schemes:
       # 467 s with forty tests timing out at 50 to 180 s each, where four wide
       # took 335 s with none. Each bundle is its own process, so four is per
       # bundle, and the bundles still run side by side.
+      #
+      # HOOKDROPCONFORMANCE_DROP_DIR is a value the process starts with, so
+      # HookDropWriterConformanceTests can check that the default environment is
+      # the process's without a setenv racing the parallel suites.
       environmentVariables:
         SWT_EXPERIMENTAL_MAXIMUM_PARALLELIZATION_WIDTH: "4"
+        HOOKDROPCONFORMANCE_DROP_DIR: /tmp/from-process-env
       targets:
         - name: AgenticDeveloperHubSDKCoreTests
           parallelizable: true
