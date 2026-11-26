@@ -382,11 +382,17 @@ export const PRODUCT_SITE_HANDLE_WORDS: readonly string[] = [
  * Lowercased for the same reason `reservedWorkspaceSlugs` lowercases.
  */
 export function reservedProductSiteHandles(): ReadonlySet<string> {
-  const all = [...PRODUCT_SITE_HANDLE_WORDS, ...Object.values(RESERVED_SLUGS).flat()]
-  return new Set(all.map((s) => s.toLowerCase()))
+  return PRODUCT_SITE_HANDLES
 }
+
+// Built once: both inputs are module constants, and a form checks the handle on every keystroke.
+const PRODUCT_SITE_HANDLES: ReadonlySet<string> = new Set(
+  [...PRODUCT_SITE_HANDLE_WORDS, ...Object.values(RESERVED_SLUGS).flat()].map((s) =>
+    s.toLowerCase(),
+  ),
+)
 
 /** Whether `handle`, trimmed and lowercased, is a reserved product site handle. */
 export function isReservedProductSiteHandle(handle: string): boolean {
-  return reservedProductSiteHandles().has(handle.trim().toLowerCase())
+  return PRODUCT_SITE_HANDLES.has(handle.trim().toLowerCase())
 }
