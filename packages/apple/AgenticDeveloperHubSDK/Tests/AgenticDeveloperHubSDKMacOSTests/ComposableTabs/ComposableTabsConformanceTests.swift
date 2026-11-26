@@ -210,10 +210,6 @@ final class ComposableTabsConformanceTests: XCTestCase {
         Notification(name: NSSplitView.didResizeSubviewsNotification, object: root.splitView)
     }
 
-    private func wait(_ seconds: TimeInterval) {
-        RunLoop.current.run(until: Date().addingTimeInterval(seconds))
-    }
-
     // MARK: - Construction and the split view
 
     func testComposableTabs001() throws {
@@ -578,14 +574,38 @@ final class ComposableTabsConformanceTests: XCTestCase {
         XCTAssertEqual(writes, 1)
     }
 
+    /// Captures the debounced writes instead of handing them to the main
+    /// queue, so a test runs the timer's work itself: under a loaded run a
+    /// 0.1 s wait overran the 300 ms delay, and the first write landed early.
+    private final class ScheduledPersists {
+        var items: [(delay: DispatchTimeInterval, work: DispatchWorkItem)] = []
+    }
+
+    private func capturingRoot(
+        changes: @escaping (LayoutNode) -> Void
+    ) throws -> (ComposableTabsViewController, ScheduledPersists) {
+        let root = try sideBySide()
+        let scheduled = ScheduledPersists()
+        root.thicknessPersistScheduler = { scheduled.items.append(($0, $1)) }
+        size(root)
+        // The first layout pass armed a persist of its own; nothing has been
+        // written yet, so the next notification supersedes it, as in the app.
+        scheduled.items.removeAll()
+        root.onLayoutDidChange = changes
+        return (root, scheduled)
+    }
+
     func testComposableTabs032ResizesDebounceIntoOneWrite() throws {
         var writes = 0
-        let root = try armedRoot { _ in writes += 1 }
+        let (root, scheduled) = try capturingRoot { _ in writes += 1 }
         root.splitViewDidResizeSubviews(resizeNotification(root))
-        wait(0.1)
         root.splitViewDidResizeSubviews(resizeNotification(root))
+        XCTAssertEqual(scheduled.items.count, 2)
+        XCTAssertEqual(scheduled.items.map(\.delay), [.milliseconds(300), .milliseconds(300)])
+        XCTAssertTrue(scheduled.items[0].work.isCancelled, "the second notification cancels the first write")
+        XCTAssertFalse(scheduled.items[1].work.isCancelled)
         XCTAssertEqual(writes, 0)
-        wait(0.6)
+        scheduled.items.forEach { if !$0.work.isCancelled { $0.work.perform() } }
         XCTAssertEqual(writes, 1, "two notifications collapse into one write")
     }
 
@@ -616,11 +636,12 @@ final class ComposableTabsConformanceTests: XCTestCase {
 
     func testComposableTabs094FlushWritesNowAndNoTimerWriteFollows() throws {
         var writes = 0
-        let root = try armedRoot { _ in writes += 1 }
+        let (root, scheduled) = try capturingRoot { _ in writes += 1 }
         root.splitViewDidResizeSubviews(resizeNotification(root))
         root.flushPendingThicknessPersist()
         XCTAssertEqual(writes, 1, "written immediately")
-        wait(0.6)
+        XCTAssertTrue(scheduled.items.allSatisfy(\.work.isCancelled), "the flush cancels the timer's write")
+        scheduled.items.forEach { if !$0.work.isCancelled { $0.work.perform() } }
         XCTAssertEqual(writes, 1, "the cancelled timer never writes")
     }
 
