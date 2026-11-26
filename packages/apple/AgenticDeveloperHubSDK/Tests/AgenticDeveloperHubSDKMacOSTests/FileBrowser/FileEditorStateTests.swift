@@ -45,8 +45,17 @@ struct FileEditorStateTests {
         }
     }
 
-    /// Long enough for a `Task` spawned by an eviction or a deinit to have run.
-    private static let settleDelay: Duration = .milliseconds(200)
+    /// Waits for the `Task` an eviction or a deinit spawns to have done what
+    /// `condition` looks for, polling the main actor. A fixed 200 ms was not
+    /// always enough on a loaded parallel run (the deinit's flush had not yet
+    /// run, so `writer.events` was still empty); the test's own expectations
+    /// still decide pass or fail once this returns.
+    private func settle(timeout: Duration = .seconds(10), until condition: () -> Bool) async throws {
+        let deadline = ContinuousClock.now + timeout
+        while !condition(), ContinuousClock.now < deadline {
+            try await Task.sleep(for: .milliseconds(10))
+        }
+    }
 
     private func makeTemporaryDirectory() throws -> URL {
         let url = FileManager.default.temporaryDirectory
@@ -189,7 +198,7 @@ struct FileEditorStateTests {
 
         // Its reference on the shared store is released too — a tick later,
         // because releasing flushes first and a flush is async.
-        try await Task.sleep(for: Self.settleDelay)
+        try await settle { store.document(for: urls[0].documentUri) == nil }
         #expect(store.document(for: urls[0].documentUri) == nil)
         #expect(store.document(for: urls[bound].documentUri) != nil)
     }
@@ -232,7 +241,7 @@ struct FileEditorStateTests {
 
         #expect(state.openOrder.contains(firstURL.documentUri) == false)
 
-        try await Task.sleep(for: Self.settleDelay)
+        try await settle { !writer.events.isEmpty && scheduler.pendingURIs.isEmpty }
         #expect(writer.events == ["write:\(firstURL.documentUri)"])
         #expect(scheduler.pendingURIs.isEmpty)
     }
@@ -303,7 +312,7 @@ struct FileEditorStateTests {
 
         // The tab or window closes inside the debounce window.
         state = nil
-        try await Task.sleep(for: Self.settleDelay)
+        try await settle { !writer.events.isEmpty && store.document(for: uri) == nil }
 
         #expect(writer.events == ["write:\(uri)"])
         #expect(store.document(for: uri) == nil)
@@ -346,7 +355,7 @@ struct FileEditorStateTests {
         #expect(scheduler.pendingURIs == [uri])
 
         paneOne = nil
-        try await Task.sleep(for: Self.settleDelay)
+        try await settle { !writer.events.isEmpty }
 
         // Pane one flushed what was pending rather than cancelling it, and the
         // document is still open for pane two.
