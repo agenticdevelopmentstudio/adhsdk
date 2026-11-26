@@ -155,6 +155,12 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
     /// not each cost a transaction (`idempotency`).
     private var lastPersistedThicknesses = ""
     private static let thicknessPersistDelay: DispatchTimeInterval = .milliseconds(300)
+    /// Root only: runs the debounced write after the delay. The main queue in
+    /// the app; a test hands in its own so it can run the pending write itself
+    /// rather than race a wall-clock timer (`dependency-injection`).
+    var thicknessPersistScheduler: (DispatchTimeInterval, DispatchWorkItem) -> Void = { delay, work in
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
+    }
 
     /// Keeps the gutters live: `dividerThickness` is computed from the setting,
     /// so something has to tell AppKit the answer moved.
@@ -874,7 +880,7 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
             self?.persistThicknessesIfChanged()
         }
         pendingThicknessPersist = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + Self.thicknessPersistDelay, execute: work)
+        thicknessPersistScheduler(Self.thicknessPersistDelay, work)
     }
 
     /// Writes a divider the user has already let go of, instead of waiting out
