@@ -2746,6 +2746,15 @@ schemes:
       # Parallel: XCTest classes spread over runner clones, and Swift Testing runs
       # its suites side by side in-process (a `.serialized` suite stays in order
       # within itself). Serial, the suites took 37 minutes on a 24-core machine.
+      #
+      # Swift Testing's width is capped at four. Its default is one test per core,
+      # and on a 24-core machine the MacOS bundle's main-actor tests and the git
+      # children they spawn then starve each other: a run at the default took
+      # 467 s with forty tests timing out at 50 to 180 s each, where four wide
+      # took 335 s with none. Each bundle is its own process, so four is per
+      # bundle, and the bundles still run side by side.
+      environmentVariables:
+        SWT_EXPERIMENTAL_MAXIMUM_PARALLELIZATION_WIDTH: "4"
       targets:
         - name: AgenticDeveloperHubSDKCoreTests
           parallelizable: true
