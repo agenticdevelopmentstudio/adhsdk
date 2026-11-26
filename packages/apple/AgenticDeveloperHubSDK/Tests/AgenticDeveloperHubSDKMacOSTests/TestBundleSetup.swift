@@ -23,8 +23,11 @@ import Foundation
 /// mouse" write landed in another worker's test part way through it
 /// (`KeyCommandMenuBridgeTests`, `ComposableTabsActivePaneConformanceTests`
 /// CTA15 and CTA16). `ExclusiveAccess` orders the tests inside one process; it
-/// cannot see another. In memory, nothing is left on disk either (a defaults
-/// suite leaves an empty plist behind after its domain is removed).
+/// cannot see another. Its secure store is in memory too: the default one is
+/// the login keychain, where a test writing a secret field through `shared`
+/// left an item behind for every config id it made. In memory, nothing is
+/// left on disk either (a defaults suite leaves an empty plist behind after
+/// its domain is removed).
 ///
 /// And it points CodeEditLanguages' `Bundle.module` at this bundle's
 /// resources (``ensureEditorLanguageResourcesLocated()``) before any test
@@ -45,6 +48,9 @@ final class TestBundleSetup: NSObject {
 
     @MainActor
     private static func isolateUserSettings() {
-        UserSettings.shared = UserSettings(with: InMemorySettingsStorageProvider())
+        UserSettings.shared = UserSettings(
+            with: InMemorySettingsStorageProvider(),
+            secureSettingsProvider: InMemorySecureSettingsStorageProvider()
+        )
     }
 }

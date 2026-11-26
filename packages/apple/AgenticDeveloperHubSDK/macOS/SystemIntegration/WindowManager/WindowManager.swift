@@ -14,6 +14,15 @@ import AgenticDeveloperHubSDKCore
 /// `WindowManager.shared.registry.controller(forID:)`. Recents recording
 /// happens automatically — `SingleWindowController` lifecycle hooks call
 /// `windowDidInteract(_:kind:)` and the manager routes from there.
+/// The one write `WindowManager` makes to AppKit's recent-documents limit.
+/// `UserDefaults` is the production conformer; a test passes an in-memory
+/// recorder so nothing reaches a shared or on-disk defaults domain.
+public protocol RecentDocumentsLimitWriting: AnyObject {
+    func set(_ value: Int, forKey defaultName: String)
+}
+
+extension UserDefaults: RecentDocumentsLimitWriting {}
+
 @MainActor
 public final class WindowManager {
 
@@ -73,17 +82,19 @@ public final class WindowManager {
     private var recentCountCancellable: AnyCancellable?
 
     /// Where the recent-documents limit is written. AppKit reads it from
-    /// `.standard`, which is the production value; a test passes a suite of its
-    /// own, because `.standard` is one defaults domain for every process of a
-    /// parallel test run, and another worker's manager writing its own count
-    /// there lands between a test's write and its read.
-    private let recentDocumentsDefaults: UserDefaults
+    /// `UserDefaults.standard`, which is the production value; a test passes an
+    /// in-memory recorder, because `.standard` is one defaults domain for every
+    /// process of a parallel test run (another worker's manager writing its own
+    /// count there lands between a test's write and its read), and a defaults
+    /// suite of the test's own leaves an empty plist behind after its domain
+    /// is removed.
+    private let recentDocumentsDefaults: RecentDocumentsLimitWriting
 
     public init(
         screenProvider: ScreenProvider = RealScreenProvider(),
         storage: WindowStateStorage = SettingsStoreWindowStateStorage(settings: UserSettings.shared),
         screenManager: ScreenManager? = nil,
-        recentDocumentsDefaults: UserDefaults = .standard
+        recentDocumentsDefaults: RecentDocumentsLimitWriting = UserDefaults.standard
     ) {
         self.recentDocumentsDefaults = recentDocumentsDefaults
         // Exactly one ScreenManager owns the persisted screen-set list and the
