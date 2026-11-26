@@ -350,18 +350,24 @@ struct FileEditorStateTests {
 
         // One document, two references.
         #expect(paneOne?.document(for: uri) === paneTwo.document(for: uri))
+        #expect(store.openCount(for: uri) == 2)
 
         typeText("pane two is typing\n", into: try #require(paneTwo.storage(for: uri)))
         #expect(scheduler.pendingURIs == [uri])
 
         paneOne = nil
-        try await settle { !writer.events.isEmpty }
+        // Waits for pane one's close itself, not only its flush: the deinit's
+        // task records the write and only closes after it, so a wait on the
+        // write alone could assert before the close it is meant to survive.
+        // A close that dropped the document outright never reaches 1.
+        try await settle { !writer.events.isEmpty && store.openCount(for: uri) == 1 }
 
         // Pane one flushed what was pending rather than cancelling it, and the
-        // document is still open for pane two.
+        // document is still open in the store for pane two.
         #expect(writer.events == ["write:\(uri)"])
+        #expect(store.openCount(for: uri) == 1)
+        #expect(store.document(for: uri) === paneTwo.document(for: uri))
         #expect(store.document(for: uri) != nil)
-        #expect(paneTwo.document(for: uri) != nil)
     }
 
     // MARK: - An eviction's write must land before the same file is reopened

@@ -1,4 +1,5 @@
 import Foundation
+import os
 import Testing
 @testable import AgenticDeveloperHubSDKCore
 
@@ -228,22 +229,25 @@ struct GitClientPatchTests {
         defer { repository.tearDown() }
         let unstaged = try #require(try await onlyFile(.unstaged(paths: []), in: repository))
         let forward = try patch(selecting: "early", in: unstaged, .forward)
+        // Every line `GitCommandLog` hands the unified log, captured as it is
+        // logged — not read back through `OSLogStore`, which decoded the whole
+        // process's log and took up to a minute under a parallel run, and not
+        // rebuilt from the ring, which would check the rebuild instead.
+        let logged = OSAllocatedUnfairLock(initialState: [String]())
+        let sink = GitCommandLog.addLineSink { line in logged.withLock { $0.append(line) } }
+        defer { GitCommandLog.removeLineSink(sink) }
         try await client.perform(.applyToIndex(patch: forward, reverse: false), in: repository.root)
 
-        // The shared ring, read for this repository's calls only, and the OSLog line each
-        // of them produced. Reading the line back through `OSLogStore` decoded the whole
-        // process's log and took up to a minute under a parallel run; the line is built
-        // by `logLine` from the same spawned arguments the ring keeps, and `logLine` takes
-        // no output, so these are the lines that reached the unified log.
+        // This repository's calls only: the sink and the ring see every git call in the process.
+        let lines = logged.withLock { $0 }.filter { $0.contains(" cwd=\(repository.root.path) ") }
         let ours = GitCommandLog.entries().filter { $0.directory == repository.root.path }
-        let lines = ours.map { entry in
-            GitCommandLog.logLine(tool: entry.tool, spawned: entry.arguments, directory: repository.root,
-                                  caller: GitCaller(), milliseconds: 0, status: "0")
-        }
         // The command line is the spawned argv: every write runs under `-c core.editor=true`.
         let apply = ours.filter { $0.commandLine.hasPrefix("git -c core.editor=true apply ") }
         #expect(apply.count == 1)
         #expect(apply.first?.commandLine.hasSuffix(" --cached --whitespace=nowarn -") == true)
+        let loggedApply = lines.filter { $0.hasPrefix("git -c core.editor=true apply ") }
+        #expect(loggedApply.count == 1)
+        #expect(loggedApply.first?.contains(" --cached --whitespace=nowarn - cwd=") == true)
         let recorded = lines + ours.compactMap(\.standardError)
         #expect(!recorded.contains { $0.contains("early") || $0.contains("@@") })
     }

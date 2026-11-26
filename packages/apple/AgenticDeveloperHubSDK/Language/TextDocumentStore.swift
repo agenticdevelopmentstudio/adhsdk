@@ -81,6 +81,14 @@ public final class TextDocumentStore {
         documentsByURI[uri]?.document
     }
 
+    /// How many opens are holding `uri` right now — 0 when it is not open.
+    /// What a caller waits on to know a `close` has actually landed: the
+    /// document staying open says nothing on its own while another opener
+    /// still holds it.
+    public func openCount(for uri: DocumentUri) -> Int {
+        documentsByURI[uri]?.openCount ?? 0
+    }
+
     /// Decrements the open count for `uri`; only once it reaches zero is the
     /// document actually removed and `.closed` emitted.
     public func close(uri: DocumentUri) {

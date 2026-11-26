@@ -186,12 +186,33 @@ public enum GitCommandLog {
         let line = logLine(tool: tool, spawned: spawned, directory: directory, caller: caller,
                            milliseconds: milliseconds, status: status)
         logger.info("\(line, privacy: .public)")
+        for sink in lineSinks.withLock({ Array($0.values) }) { sink(line) }
         let failed = exitStatus.map { $0 != 0 } ?? false
         book.append(
             tool: tool, arguments: spawned, directory: directory?.path ?? "",
             caller: "\(caller.file):\(caller.function)",
             duration: .milliseconds(max(milliseconds, 0)), exitStatus: exitStatus,
             standardError: failed ? standardError.map(keptStandardError) : nil)
+    }
+
+    /// Every line handed to the unified log, also handed to each sink here, in
+    /// the same call. What a test reads to check what reached the log, rather
+    /// than decoding the whole process's log through `OSLogStore` — which took
+    /// up to a minute under a parallel run — or rebuilding the line from the
+    /// ring with `logLine`, which checks the rebuild and not the line `record`
+    /// actually logged.
+    private static let lineSinks = OSAllocatedUnfairLock(initialState: [UUID: @Sendable (String) -> Void]())
+
+    /// Adds `sink`, which receives every line logged from now on, from every
+    /// thread that records. Returns the key `removeLineSink(_:)` takes.
+    static func addLineSink(_ sink: @escaping @Sendable (String) -> Void) -> UUID {
+        let key = UUID()
+        lineSinks.withLock { $0[key] = sink }
+        return key
+    }
+
+    static func removeLineSink(_ key: UUID) {
+        lineSinks.withLock { _ = $0.removeValue(forKey: key) }
     }
 
     /// The one OSLog line for a call. It takes no output parameter on purpose:
