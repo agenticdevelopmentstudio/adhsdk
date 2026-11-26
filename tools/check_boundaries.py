@@ -277,7 +277,7 @@ def main(argv: "list[str] | None" = None) -> int:
     ap.add_argument("--root", type=Path, default=DEFAULT_ROOT,
                     help="packages/ directory to scan (default: this toolkit's)")
     ap.add_argument("--include-dist", action="store_true",
-                    help="also scan committed dist/ output (adh CI passes this)")
+                    help="also scan built dist/ output (adh CI passes this)")
     ap.add_argument("--exempt", action="append", default=None,
                     help="repo-relative path exempted from the adh-vocabulary ban "
                          "(may repeat); defaults to boundary_exemptions.EXEMPT_FILES "

@@ -14,10 +14,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from run_local_ci_lib import dist_drift, reached_patterns, steps_to_run  # noqa: E402
+from run_local_ci_lib import steps_to_run  # noqa: E402
 
 PY = "python3"
-ADH_DIST = "packages/web/packages/adh/dist"
 
 
 class StepFailed(Exception):
@@ -34,7 +33,7 @@ def sh(cmd: list[str], cwd: str = ".") -> None:
 
 # Pure-Python, no toolchain: these run before install so a regression fails in
 # seconds rather than after the whole workspace builds. Self-test first, for each
-# guard: a guard whose failing case has rotted passes vacuously. The drift check's
+# guard: a guard whose failing case has rotted passes vacuously. The step list's
 # own test (deployment/run_local_ci_test.py) leads for the same reason.
 # The guards' roots: check_no_retired_names.py and check_doc_links.py both
 # scan the whole repo; check_recipe_scope.py scans recipes and docs; check_site_deps.py
@@ -100,32 +99,6 @@ def build() -> None:
     sh(["pnpm", "build"], "packages/web")
 
 
-# adh is the one package that COMMITS its dist (see packages/adh/.gitignore: it has
-# consumers that check the submodule out and never build). Nothing compared that
-# committed copy with its src, so a src change landed with the old dist and the next
-# person to build anything that links adh found the toolkit dirty, rebuilt it, and
-# committed someone else's change under their own. The build above has just rewritten
-# every tracked dist file from src, so any difference now is a stale commit. The build
-# is deterministic (relative source-map paths, no timestamps), so a clean tree is the
-# pass. NEW dist files count too: the .gitignore ignores dist/, so a new file never
-# shows in `git status`, and dist_drift lists untracked files WITHOUT --exclude-standard.
-# But that .gitignore also leaves ~70 internal .d.ts/.d.ts.map byproducts untracked on
-# purpose, so an ignored file fails only if adh's `exports` map reaches it (the same
-# direction adh-tools' verify_dist_completeness.py checks); a visible untracked file always fails.
-def adh_dist_drift() -> None:
-    reached = reached_patterns(ROOT / "packages/web/packages/adh", ADH_DIST)
-    problems = dist_drift(ROOT, ADH_DIST, reached)
-    if problems:
-        print("\n".join(problems), file=sys.stderr)
-        print(
-            f"FAILED: adh's committed dist does not match its src ({ADH_DIST}).\n"
-            "Rebuild adh and commit what changed. Force-add NEW dist files one by one\n"
-            "(`git add -f <path>`), per packages/web/packages/adh/.gitignore; never `git add -f dist`.",
-            file=sys.stderr,
-        )
-        raise StepFailed
-
-
 # The boundary checks (self-test first) and every package's `tsc`. Per-package tsc
 # resolves sibling DIST types that a fresh checkout has not built; the build step
 # above is what makes it runnable.
@@ -155,7 +128,6 @@ STEPS = [
     ("no-retired-names", no_retired_names),
     ("install", install),
     ("build", build),
-    ("adh-dist-drift", adh_dist_drift),
     ("lint", lint),
     ("test", test),
 ]

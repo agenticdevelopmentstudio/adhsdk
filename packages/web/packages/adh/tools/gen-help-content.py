@@ -30,9 +30,9 @@ purely as the rendering engine: it pipes {key: markdown} in and reads
 Runnable from anywhere (this repo's content dir is resolved relative to this script, not cwd):
   python3 tools/gen-help-content.py            # from packages/web/packages/adh
   python3 packages/web/packages/adh/tools/gen-help-content.py   # from the toolkit root
-  python3 tools/gen-help-content.py --check    # assert the committed module is fresh
+  python3 tools/gen-help-content.py --check    # assert the generated module is fresh
 
-`--check` is what keeps the committed module honest, and it exists because the module went
+`--check` is what keeps the generated module honest, and it exists because the module went
 stale in exactly the way an unguarded derived artifact does: the MCP catalog gained five
 tools (Teams, Persona Knowledge, searchMyData) and the corpus kept advertising 47. The
 backend's side of that chain was already pinned (`test/mcp/catalog-snapshot.test.ts` holds
@@ -44,10 +44,10 @@ REQUIRES THE BACKEND'S CATALOG — the one input in this package that comes from
 repo. The MCP topic (see MCP_COUNT_PLACEHOLDER below) is filled from
 `src/adh/src/mcp/catalog.generated.json` in `agenticdevelopmentstudio/adhbackend`, named to
 this script through `ADH_MCP_CATALOG` rather than derived (see `_mcp_catalog_path()`, which
-records why the old walk-up cannot work any more). Everything this generator PRODUCES is
-committed (`src/help/content.generated.ts`), so a standalone toolkit checkout consumes the
-help corpus perfectly well and simply cannot regenerate it: `_mcp_catalog_path()` exits with
-that message rather than emitting a module with an unresolved `{{MCP_TOOL_COUNT}}` in it.
+records why the old walk-up cannot work any more). What this generator PRODUCES
+(`src/help/content.generated.ts`) is gitignored, so a checkout without that catalog cannot
+build the help corpus: `_mcp_catalog_path()` exits with that message rather than emitting a
+module with an unresolved `{{MCP_TOOL_COUNT}}` in it.
 Recorded here because it is a real, if narrow, dependency of this repo on a repo it does not
 contain — the inverse of the direction the rest of the boundary runs (see
 <adh-tools>/sites/scripts/verify_toolkit_boundary.py, which scans import specifiers in
@@ -258,7 +258,7 @@ def render_module() -> tuple[str, int]:
 
 
 def check(module: str, topics: int) -> int:
-    """Compare the committed module against what this run produces. Returns an exit code.
+    """Compare the module on disk against what this run produces. Returns an exit code.
 
     Byte comparison rather than a numeric spot-check on purpose: this file is derived from
     THREE inputs — this repo's Markdown, adhcontent's, and adh's MCP catalog snapshot — and any can move

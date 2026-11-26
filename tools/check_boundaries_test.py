@@ -170,7 +170,7 @@ with tempfile.TemporaryDirectory() as tmp:
           [("aliased.tsx", "@/components/nav"), ("x.ts", "@/components/nav")])
 
 # (10) dist/ is scanned only when asked. adh's CI passes --include-dist because
-#      the committed dist is what consumers actually resolve.
+#      the built dist is what consumers actually resolve.
 with tempfile.TemporaryDirectory() as tmp:
     root = make_tree(tmp, {
         "mechanism-fixture/dist/x.js": "import { a } from '@adh-sdk/adh'\n",

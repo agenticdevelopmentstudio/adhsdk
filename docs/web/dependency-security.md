@@ -92,7 +92,7 @@ pin. The demo site is still on Next 15, kept at `^15.5.28`.
 To bump the generator, first regenerate from the **same spec as the last run**,
 so the diff contains only the generator's own changes. That spec is the
 `AgenticDeveloperHubClient/openapi.json` that was current when
-`src/apt_terminal/generated/` was last committed. Pulling in a newer spec at
+`src/apt_terminal/generated/` was last generated (it is gitignored). Pulling in a newer spec at
 the same time would mix the two diffs.
 
 Starting with 0.29, generated models use `from __future__ import annotations`,

@@ -95,9 +95,9 @@ instead of the bearer-only `AuthenticationMiddleware`:
 
 ## Regenerating the client
 
-The `/v1` OpenAPI spec snapshot (`openapi.v1.json`) and the generated sources
-(`Sources/Generated/`) are **committed**; regeneration is an explicit, reviewable
-step (not a per-build plugin — build-tool plugins are unreliable inside an
+The `/v1` OpenAPI spec snapshot (`openapi.v1.json`) is committed. The generated
+sources (`Sources/Generated/`, `AuthSources/Generated/`) are **gitignored**, so run
+`generate.py` before building a fresh checkout; generation is an explicit step (not a per-build plugin — build-tool plugins are unreliable inside an
 XcodeGen `.xcodeproj`).
 
 ```bash
@@ -115,7 +115,7 @@ python3 scripts/generate.py --spec /path/to/openapi.v1.json
 and generates both targets from the snapshot as-is (no spec patches):
 `Sources/Generated/{Client,Types}.swift` for the full client and
 `AuthSources/Generated/{HubAuthClient,Types}.swift` for the auth-only one. Commit
-the diff. If the spec is unchanged, re-running produces no diff.
+the spec when it changes; the generated sources stay out of git.
 
 The `/v1` wire is snake_case, with unix-seconds `created`/`updated`, lists in a
 `{object: "list", data, has_more, url}` envelope paged by `limit` and

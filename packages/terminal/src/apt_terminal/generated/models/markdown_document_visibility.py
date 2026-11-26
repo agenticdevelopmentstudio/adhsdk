@@ -1,9 +1,0 @@
-from enum import StrEnum
-
-
-class MarkdownDocumentVisibility(StrEnum):
-    PRIVATE = "private"
-    PUBLIC = "public"
-
-    def __str__(self) -> str:
-        return str(self.value)

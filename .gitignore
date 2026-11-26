@@ -54,3 +54,15 @@ DerivedData/
 *.pyc
 graphify-out/
 .claude/scheduled_tasks.lock
+
+# Generated code is never committed: each file is rebuilt by its generator.
+# Specs and other inputs (openapi*.json, the hand-written routes.generated.ts
+# that merges the per-site shares) stay tracked.
+packages/terminal/src/apt_terminal/generated/
+packages/apple/AgenticDeveloperHubClient/Sources/Generated/
+packages/apple/AgenticDeveloperHubClient/AuthSources/Generated/
+packages/web/packages/adh-api-types/src/schema.ts
+packages/web/packages/crud/src/generated/
+packages/web/packages/api-explorer/src/generated/
+packages/web/packages/adh/src/help/content.generated.ts
+packages/web/packages/adh-registry/src/sites/routes.*.generated.ts
