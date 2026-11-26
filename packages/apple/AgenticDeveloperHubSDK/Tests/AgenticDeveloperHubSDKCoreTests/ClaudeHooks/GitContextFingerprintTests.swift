@@ -279,29 +279,31 @@ final class GitContextFingerprintTests: XCTestCase {
     /// Spawn `git` in the fixture repo under the same conditions
     /// ``ReadOnlyGit/rawGit(_:)`` spawns it: the repaired PATH (so `git`
     /// resolves under Xcode's minimal environment, not just an interactive
-    /// shell's) and a 5-second watchdog (so a fixture command that hangs — an
-    /// unexpected credential or editor prompt on a closed stdin — fails the test
-    /// in five seconds instead of hanging the whole suite until the scheme's
-    /// timeout).
-    private func run(_ args: [String]) -> Int32 {
+    /// shell's), a closed stdin and ``CommandRunner/runToCompletion(_:input:timeout:watchdog:)``
+    /// with a 5-second timeout, so a fixture command that hangs (an unexpected
+    /// credential or editor prompt) fails the test in five seconds instead of
+    /// hanging the suite until the scheme's timeout.
+    ///
+    /// The old fixture's own watchdog terminated the child and returned its
+    /// status, so a hang it caught read as a passing exit code; a timeout here
+    /// is a failure.
+    private func run(_ args: [String], file: StaticString = #filePath, line: UInt = #line) -> Int32 {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
         process.arguments = ["git", "-C", repo.path] + args
         var env = environment
         env["PATH"] = ReadOnlyGit.repairedPath(env["PATH"])
         process.environment = env
-        process.standardOutput = FileHandle.nullDevice
-        process.standardError = FileHandle.nullDevice
-        process.standardInput = FileHandle.nullDevice
         do {
-            try process.run()
+            let outcome = try CommandRunner.runToCompletion(process, input: Data(), timeout: 5)
+            if outcome.timedOut {
+                XCTFail("git \(args.joined(separator: " ")) did not exit within 5 s", file: file, line: line)
+                return -1
+            }
+            return outcome.status
         } catch {
+            XCTFail("git \(args.joined(separator: " ")) did not start: \(error)", file: file, line: line)
             return -1
         }
-        let watchdog = DispatchWorkItem { if process.isRunning { process.terminate() } }
-        DispatchQueue.global().asyncAfter(deadline: .now() + 5, execute: watchdog)
-        process.waitUntilExit()
-        watchdog.cancel()
-        return process.terminationStatus
     }
 }
