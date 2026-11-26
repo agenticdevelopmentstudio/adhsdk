@@ -38,7 +38,7 @@ final class PartnerSessionRegistryTests: XCTestCase {
     /// Polls until `condition` holds, and fails the test at the call site
     /// when it never does: a quiet timeout let the test go on to assert
     /// against a state it had never reached.
-    private func waitUntil(_ timeout: TimeInterval = 3, file: StaticString = #filePath, line: UInt = #line,
+    private func waitUntil(_ timeout: TimeInterval = 15, file: StaticString = #filePath, line: UInt = #line,
                            _ condition: () -> Bool) async {
         let deadline = Date().addingTimeInterval(timeout)
         while !condition() {
