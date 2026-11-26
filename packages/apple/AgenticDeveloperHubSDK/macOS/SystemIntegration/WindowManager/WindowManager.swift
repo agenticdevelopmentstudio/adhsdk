@@ -72,11 +72,20 @@ public final class WindowManager {
 
     private var recentCountCancellable: AnyCancellable?
 
+    /// Where the recent-documents limit is written. AppKit reads it from
+    /// `.standard`, which is the production value; a test passes a suite of its
+    /// own, because `.standard` is one defaults domain for every process of a
+    /// parallel test run, and another worker's manager writing its own count
+    /// there lands between a test's write and its read.
+    private let recentDocumentsDefaults: UserDefaults
+
     public init(
         screenProvider: ScreenProvider = RealScreenProvider(),
         storage: WindowStateStorage = SettingsStoreWindowStateStorage(settings: UserSettings.shared),
-        screenManager: ScreenManager? = nil
+        screenManager: ScreenManager? = nil,
+        recentDocumentsDefaults: UserDefaults = .standard
     ) {
+        self.recentDocumentsDefaults = recentDocumentsDefaults
         // Exactly one ScreenManager owns the persisted screen-set list and the
         // screen-change observer. Production shares `.shared`; tests inject an
         // isolated one. Never let this default to a fresh orphan — a second
@@ -134,7 +143,7 @@ public final class WindowManager {
     /// `noteNewRecentDocumentURL` call.
     public func applyRecentDocumentCountFromSettings() {
         let count = UserSettings.recentWindowsCount.currentValue
-        UserDefaults.standard.set(count, forKey: Self.recentDocumentsLimitKey)
+        recentDocumentsDefaults.set(count, forKey: Self.recentDocumentsLimitKey)
     }
 
     // MARK: - Launch restore
