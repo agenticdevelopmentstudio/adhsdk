@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 2.1.0 | 2026-11-26 | Mike Fullerton | Install removes the legacy shell dispatch.sh once the saved slot runs dispatch.py; the dispatcher command is python3 dispatch.py |
 | 2.0.0 | 2026-11-21 | Mike Fullerton | Specified the router-pointer extension (RouterPointer states, display redaction, set/suspend/resume, uninstall removing the pointer, RouterPointerError), added the stenographer-identifiers dependency, twenty-one router vectors, a routerBaseURL option, three design decisions and an idempotent-operations check, marked unit-test-coverage partial, and dropped the Reference Implementations section. Resolved router-set-marker-failure: an undeletable suspension marker makes setRouterPointer throw with settings.json unchanged, and uninstall logs it and still removes the pointer; added vectors 055 to 058 from RouterPointerMarkerFailureTests. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Added depends-on links and a status-line tag, merged the two rationale requirements into excluded-event-types, marked separation-of-concerns partial and secure-log-output failed, defined the dispatcher command, clarified install-result and disabling errors, split test names into their own vector column, added twelve vectors, dropped the test-fixture decision and gave concrete WinUI 3 paths. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

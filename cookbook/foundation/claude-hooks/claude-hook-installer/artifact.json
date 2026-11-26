@@ -4,11 +4,11 @@
     "id": "fc622208-1504-421f-8892-c5869820550c",
     "title": "Claude Hook Installer",
     "type": "ingredient",
-    "version": "2.0.0",
+    "version": "2.1.0",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
-    "modified": "2026-11-21",
+    "modified": "2026-11-26",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -34,7 +34,7 @@
     "approved-date": ""
   },
   "names_hosts": "The component integrates with Claude Code's hooks and status line; the host's name, events and paths are its subject.",
-  "synced": "0be8e5512288236a",
+  "synced": "95222c98e3e09ca0",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

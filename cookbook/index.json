@@ -7435,9 +7435,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:0728d6f542657584cf232cc360ee7a48b34599a48523b6d1b62fd41e4c9d17c9",
+            "hash": "sha256:fd8051d75f3618d4cd1b102c79691c9f0267a86f9ef929b9578654f8bb87cdbc",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.1.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/ClaudeStatusLine.swift",
           "platform": "apple"
@@ -15076,9 +15076,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:c675066e46345e6cfeda6cb93c699e1df546ba9f04fe48f796d8c4e12be98bdb",
+            "hash": "sha256:65b4eb31a39bc22b38756e777a29311a9a0a4f413177745c08e948efb3d62b3b",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "2.0.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Sessions/ClaudeHookConfiguration.swift",
           "platform": "apple"
@@ -23637,9 +23637,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:36c726a9fa840b862e02f06e3d569066bb47908245521fa5cbcf1871caee2707",
+            "hash": "sha256:563a72cfc5abb94e12dc5d98f84f211b37fa1c925b55b98422e9f5f2e917793c",
             "state": "confirmed",
-            "version": "2.0.0"
+            "version": "2.1.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/ClaudeHookInstaller.swift",
           "platform": "apple"
@@ -23664,9 +23664,9 @@
         },
         {
           "conformance": {
-            "hash": "sha256:f5b8f51e6791c03609246128260a6354aaccb6e4531828e8860ae016d1e76da8",
+            "hash": "sha256:93632c3716a19b77aefba659bab9291c891f668744b21a6e6ab66471580327b8",
             "state": "confirmed",
-            "version": "2.0.0"
+            "version": "2.1.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/ClaudeHookInstaller+RouterPointer.swift",
           "platform": "apple"

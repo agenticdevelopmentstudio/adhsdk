@@ -2,11 +2,11 @@
 id: fc622208-1504-421f-8892-c5869820550c
 title: "Claude Hook Installer"
 type: ingredient
-version: 2.0.0
+version: 2.1.0
 status: review
 language: en
 created: 2026-11-14
-modified: 2026-11-21
+modified: 2026-11-26
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -37,7 +37,7 @@ approved-date: ""
 
 Registrations are identified by the configuration's marker, so several daemons coexist in one file and each installs, updates and removes only its own entries. The installer also registers the daemon with the shared status-line dispatcher (`ClaudeStatusLine`, [adhsdk.ingredient.foundation.claude-hooks.claude-status-line](cookbook:517adfce-44e7-404e-8a7b-b1e304da32e7)), keeps two marker files beside `settings.json` (tracking disabled, status-line display off), replaces every earlier form of its own registrations, and exposes a locked read-modify-write for the daemon's other settings keys.
 
-The dispatcher command is the `statusLine.command` that `ClaudeStatusLine` writes: `sh <quoted dispatch.sh path> # claudehelpers-statusline`, where `dispatch.sh` lives at `~/.claude/claudehelpers/statusline/dispatch.sh`. Shell quoting comes from [adhsdk.ingredient.foundation.process.shell-quoting](cookbook:9c81ac1c-ee1e-45b1-824c-deee1850037c). An older Python dispatcher ran as `python3 -m statusline.dispatcher`; the configuration's legacy forms recognise it so install can replace it.
+The dispatcher command is the `statusLine.command` that `ClaudeStatusLine` writes: `python3 <quoted dispatch.py path> # claudehelpers-statusline`, where `dispatch.py` lives at `~/.claude/claudehelpers/statusline/dispatch.py`; an older install ran `sh <dispatch.sh path>`, which still counts as the dispatcher's. Shell quoting comes from [adhsdk.ingredient.foundation.process.shell-quoting](cookbook:9c81ac1c-ee1e-45b1-824c-deee1850037c). An older Python dispatcher ran as `python3 -m statusline.dispatcher`; the configuration's legacy forms recognise it so install can replace it.
 
 An extension (`ClaudeHookInstaller+RouterPointer.swift`) manages the **router pointer**: `env.ANTHROPIC_BASE_URL` in `settings.json`, which sends Claude Code's API traffic through an account router. The router's base URL is an argument, `routerBaseURL`, defaulting to `StenographerIdentifiers.routerBaseURL` (`http://127.0.0.1:22848`, [adhsdk.ingredient.foundation.stenographer.stenographer-identifiers](cookbook:b6d96b0b-3ca0-48ac-8e94-a25a8ee68e43)), so whichever daemon hosts the router points Claude Code at its own port. The extension reads the pointer, turns it on or off, suspends it while the router's daemon is down and resumes it on the next start, and removes it on a full uninstall. Every write goes through `modifySettings(_:)`, so it shares the settings lock with hook installs and other tools, and a value that is not this router's is never overwritten or removed.
 
@@ -69,6 +69,7 @@ An extension (`ClaudeHookInstaller+RouterPointer.swift`) manages the **router po
 - **install-replaces-legacy**: Install MUST remove each of this owner's hooks that is not the current rendering for its event (an `http` form, an earlier bash form, a retired capture-script form, or a form whose helper path has gone stale after a bundle move) so the additive pass re-registers it in the current form, and MUST keep a foreign hook sharing the matcher group.
 - **install-saved-only-on-change**: Install MUST write `settings.json` only when it changed something, and report `installed` rather than `alreadyInstalled` when the only change was the status line or a scrub.
 - **install-status-line-isolated**: A failure while registering the status line MUST be logged and MUST NOT stop hook registration or fail the install; it costs only the status line.
+- **install-removes-legacy-dispatcher**: After a reconcile, install MUST delete the shell `dispatch.sh` an older install left only when the saved slot equals `dispatcherCommand` (it runs `dispatch.py`), and MUST leave it when the save failed or the slot is not the dispatcher's.
 - **install-removes-capture-script**: After a successful reconcile, install MUST delete the retired capture script when it is this owner's, and MUST NOT delete it when the save failed.
 - **install-keeps-router-pointer**: Install MUST NOT add, change or remove `env.ANTHROPIC_BASE_URL`; only the router-pointer operations touch it.
 
@@ -244,9 +245,9 @@ Not applicable — this is a settings-file installer, not a visual component.
 | claude-hook-installer-056 | router-set-marker-failure | Suspension marker that cannot be deleted, pointer `ours`; `setRouterPointer(false)` | `testDisableThrowsAndKeepsThePointerWhenTheMarkerCannotBeDeleted` | Throws; `env.ANTHROPIC_BASE_URL` is still the router's |
 | claude-hook-installer-057 | router-set-marker-failure | No suspension marker, pointer `absent`; `setRouterPointer(true)` | `testAMissingMarkerIsNotAnError` | Returns `ours` without throwing |
 | claude-hook-installer-058 | router-set-marker-failure, uninstall-removing-router-pointer | Suspension marker that cannot be deleted, pointer `ours`; `uninstallHooks(removingRouterPointer: true)` | `testUninstallStillRemovesThePointerWhenTheMarkerCannotBeDeleted` | Does not throw; logs "Could not forget the router pointer suspension"; `env.ANTHROPIC_BASE_URL` is removed |
+| claude-hook-installer-059 | install-removes-legacy-dispatcher | A legacy `dispatch.sh` and a `sh <legacy> # claudehelpers-statusline` slot | `testInstallRemovesTheShellDispatcherOnceTheSlotRunsThePythonOne`, `testTheShellDispatcherStaysWhileTheSlotIsNotOurs` |
 
 Vectors 034 to 054 are derived from `ClaudeHookInstaller+RouterPointer.swift`; no test in `Tests/AgenticDeveloperHubSDKCoreTests` exercises them, so they name no test. Vectors 055 to 058 are `RouterPointerMarkerFailureTests` (`Tests/AgenticDeveloperHubSDKCoreTests/ClaudeHooks/RouterPointerMarkerFailureTests.swift`), which makes the marker undeletable by giving it a read-only child directory.
-
 ## Edge Cases
 
 - Null and empty input: a missing or empty `settings.json` reads as an empty dictionary (MUST); an empty `statusLine` slot is replaced with no adoption (MUST); an empty `hooks` map after removal is dropped from the file (MUST); an `env` emptied by removing the router pointer is dropped from the file (MUST).
@@ -349,11 +350,11 @@ Error text, paths and commands are logged with public privacy, so a command that
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/ClaudeHookInstaller.swift` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/ClaudeHookInstaller.swift` | confirmed (2.1.0) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/ClaudeHookInstaller+RouterPointer.swift` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/ClaudeHookInstaller+RouterPointer.swift` | confirmed (2.1.0) |
 
 ## Design Decisions
 
@@ -415,6 +416,7 @@ separation-of-concerns is partial: one type also owns hook registration, status-
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 2.1.0 | 2026-11-26 | Mike Fullerton | Install removes the legacy shell dispatch.sh once the saved slot runs dispatch.py; the dispatcher command is python3 dispatch.py |
 | 2.0.0 | 2026-11-21 | Mike Fullerton | Specified the router-pointer extension (RouterPointer states, display redaction, set/suspend/resume, uninstall removing the pointer, RouterPointerError), added the stenographer-identifiers dependency, twenty-one router vectors, a routerBaseURL option, three design decisions and an idempotent-operations check, marked unit-test-coverage partial, and dropped the Reference Implementations section. Resolved router-set-marker-failure: an undeletable suspension marker makes setRouterPointer throw with settings.json unchanged, and uninstall logs it and still removes the pointer; added vectors 055 to 058 from RouterPointerMarkerFailureTests. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Added depends-on links and a status-line tag, merged the two rationale requirements into excluded-event-types, marked separation-of-concerns partial and secure-log-output failed, defined the dispatcher command, clarified install-result and disabling errors, split test names into their own vector column, added twelve vectors, dropped the test-fixture decision and gave concrete WinUI 3 paths. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

@@ -25,6 +25,7 @@
 - **install-replaces-legacy**: Install MUST remove each of this owner's hooks that is not the current rendering for its event (an `http` form, an earlier bash form, a retired capture-script form, or a form whose helper path has gone stale after a bundle move) so the additive pass re-registers it in the current form, and MUST keep a foreign hook sharing the matcher group.
 - **install-saved-only-on-change**: Install MUST write `settings.json` only when it changed something, and report `installed` rather than `alreadyInstalled` when the only change was the status line or a scrub.
 - **install-status-line-isolated**: A failure while registering the status line MUST be logged and MUST NOT stop hook registration or fail the install; it costs only the status line.
+- **install-removes-legacy-dispatcher**: After a reconcile, install MUST delete the shell `dispatch.sh` an older install left only when the saved slot equals `dispatcherCommand` (it runs `dispatch.py`), and MUST leave it when the save failed or the slot is not the dispatcher's.
 - **install-removes-capture-script**: After a successful reconcile, install MUST delete the retired capture script when it is this owner's, and MUST NOT delete it when the save failed.
 - **install-keeps-router-pointer**: Install MUST NOT add, change or remove `env.ANTHROPIC_BASE_URL`; only the router-pointer operations touch it.
 

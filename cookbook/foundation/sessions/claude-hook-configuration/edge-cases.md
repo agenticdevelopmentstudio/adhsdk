@@ -3,7 +3,7 @@
 - **Executable with no parent bundle** (MUST, **bundled-helper-no-parent-bundle**): `bundledHelperPath(named:executable:)` for an executable such as `/usr/local/bin/tool` returns `/usr/local/Helpers/<helperName>`, because it only compares the directory name to `Helpers`; it does not check that the result exists.
 - **Executable that is a missing path**: symlink resolution leaves a path that does not exist unchanged, so the result is computed from the path as written.
 - **No main executable** (MUST, **bundled-helper-default-executable**): the default `executable` argument force-unwraps `Bundle.main.executableURL`; a process without one traps rather than returning an error.
-- **Helper path with fewer than two parent directories** (MUST, **resolved-dispatcher-derived**): `resolvedBundledDispatcher` strips two path components, so `/steno` yields `/Resources/dispatch.sh`; no error is raised.
+- **Helper path with fewer than two parent directories** (MUST, **resolved-dispatcher-derived**): `resolvedBundledDispatcher` strips two path components, so `/steno` yields `/Resources/dispatch.py`; no error is raised.
 - **Changed `name`** (SHOULD, **derived-fields-not-recomputed**): assigning a new `name` leaves `ownLockName` and `statusLineEntryName` at their initial values; a caller that renames SHOULD set them again.
 - **Excluded type in `hookedEvents`** (MUST, **explicit-hooked-events-kept**): kept as given; the installer drops it at registration.
 - **Empty `hookedEvents`**: accepted as given; nothing is registered for passive observation.

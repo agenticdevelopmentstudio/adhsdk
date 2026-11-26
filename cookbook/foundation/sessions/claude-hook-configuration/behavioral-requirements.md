@@ -29,7 +29,7 @@
 - **bundled-helper-no-parent-bundle**: `bundledHelperPath(named:executable:)` MUST NOT check that the executable sits in a bundle: for an executable whose directory is not named `Helpers` it MUST return `<executable directory>/../Helpers/<helperName>` as a path, so `/usr/local/bin/tool` yields `/usr/local/Helpers/<helperName>`, and it MUST NOT check that the result exists.
 - **bundled-helper-absolute-path**: The returned path MUST be absolute (hooks run the helper by this path, so they follow the bundle wherever it lives).
 - **resolved-dispatcher-explicit**: `resolvedBundledDispatcher` MUST return `bundledDispatcher` when it is non-nil.
-- **resolved-dispatcher-derived**: When `bundledDispatcher` is nil, `resolvedBundledDispatcher` MUST return `Resources/dispatch.sh` in the directory two levels above `hookBinaryPath` (beside the helper's `Contents/Helpers`), as a file URL.
+- **resolved-dispatcher-derived**: When `bundledDispatcher` is nil, `resolvedBundledDispatcher` MUST return `Resources/dispatch.py` in the directory two levels above `hookBinaryPath` (beside the helper's `Contents/Helpers`), as a file URL.
 
 ### Legacy forms
 

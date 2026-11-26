@@ -4,11 +4,11 @@
     "id": "517adfce-44e7-404e-8a7b-b1e304da32e7",
     "title": "Claude Status Line",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.1.0",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
-    "modified": "2026-11-14",
+    "modified": "2026-11-26",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -36,7 +36,7 @@
     "approved-date": ""
   },
   "names_hosts": "The component integrates with Claude Code's hooks and status line; the host's name, events and paths are its subject.",
-  "synced": "cb3dcd919e39ac25",
+  "synced": "c4f6f21c1336ec9c",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

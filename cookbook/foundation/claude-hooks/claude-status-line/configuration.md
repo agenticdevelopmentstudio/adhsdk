@@ -1,7 +1,7 @@
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `claudeDirectory` | `URL` | required | The directory holding `settings.json` (`~/.claude`) |
-| `bundledDispatcher` | `URL` | required | The dispatcher this build carries (`Contents/Resources/dispatch.sh`) |
+| `bundledDispatcher` | `URL` | required | The dispatcher this build carries (`Contents/Resources/dispatch.py`) |
 
 Contract constants, fixed byte for byte by **dispatcher-command**, **settings-lock-name** and **owner-only-tree** and not configurable:
 

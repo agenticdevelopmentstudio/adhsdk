@@ -11,7 +11,7 @@
 | `settingsURL` | `URL` | `~/.claude/settings.json` | The settings file to edit |
 | `ownLockName` | `String` (initializer argument `String?`) | `.<name>-hooks.lock` | Lock beside `settings.json`, taken after `.settings.lock` |
 | `statusLineEntryName` | `String` (initializer argument `String?`) | `name` | File name under the dispatcher's `renderers` or `taps` directory |
-| `bundledDispatcher` | `URL?` | nil | Dispatcher a bundle carries; nil derives `Resources/dispatch.sh` from the helper path |
+| `bundledDispatcher` | `URL?` | nil | Dispatcher a bundle carries; nil derives `Resources/dispatch.py` from the helper path |
 | `hookedEvents` | `[HookEventType]` | `defaultHookedEvents` | Event types registered for passive observation |
 | `legacy` | `LegacyHookForms` | `.none` | Earlier forms to recognise and replace |
 | `LegacyHookForms.httpHookURLBase` | `String?` | nil | Base of the retired `http` hook url |

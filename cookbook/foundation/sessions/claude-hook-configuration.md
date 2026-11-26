@@ -2,11 +2,11 @@
 id: 9eb46f78-0ceb-455f-9584-b6b43ddf0871
 title: "Claude Hook Configuration"
 type: ingredient
-version: 1.0.2
+version: 2.0.0
 status: review
 language: en
 created: 2026-11-14
-modified: 2026-11-14
+modified: 2026-11-26
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -70,7 +70,7 @@ Claude Code runs every matching hook entry, so two daemons install their own con
 - **bundled-helper-no-parent-bundle**: `bundledHelperPath(named:executable:)` MUST NOT check that the executable sits in a bundle: for an executable whose directory is not named `Helpers` it MUST return `<executable directory>/../Helpers/<helperName>` as a path, so `/usr/local/bin/tool` yields `/usr/local/Helpers/<helperName>`, and it MUST NOT check that the result exists.
 - **bundled-helper-absolute-path**: The returned path MUST be absolute (hooks run the helper by this path, so they follow the bundle wherever it lives).
 - **resolved-dispatcher-explicit**: `resolvedBundledDispatcher` MUST return `bundledDispatcher` when it is non-nil.
-- **resolved-dispatcher-derived**: When `bundledDispatcher` is nil, `resolvedBundledDispatcher` MUST return `Resources/dispatch.sh` in the directory two levels above `hookBinaryPath` (beside the helper's `Contents/Helpers`), as a file URL.
+- **resolved-dispatcher-derived**: When `bundledDispatcher` is nil, `resolvedBundledDispatcher` MUST return `Resources/dispatch.py` in the directory two levels above `hookBinaryPath` (beside the helper's `Contents/Helpers`), as a file URL.
 
 ### Legacy forms
 
@@ -111,7 +111,7 @@ Not applicable — this is a configuration value type, not a visual component.
 | claude-hook-configuration-004 | bundled-helper-from-macos-directory, bundled-helper-absolute-path | `bundledHelperPath(named: "steno", executable: /Applications/Stenographer.app/Contents/MacOS/stenographerd)` | `/Applications/Stenographer.app/Contents/Helpers/steno` (test `testBundledStenoPathFromDaemonExecutable`) |
 | claude-hook-configuration-005 | bundled-helper-from-helpers-directory | `bundledHelperPath(named: "steno", executable: /Applications/Stenographer.app/Contents/Helpers/steno)` | `/Applications/Stenographer.app/Contents/Helpers/steno` (test `testBundledStenoPathFromTheCLIItself`) |
 | claude-hook-configuration-006 | bundled-helper-resolves-symlinks | a symlink `stenographerd` to `real/Stenographer.app/Contents/MacOS/stenographerd` | the path under the real bundle's `Contents/Helpers/steno` (test `testASymlinkedExecutableResolvesToTheRealBundle`) |
-| claude-hook-configuration-007 | resolved-dispatcher-derived | `hookBinaryPath: "/Applications/Stenographer.app/Contents/Helpers/steno"`, `bundledDispatcher: nil` | `resolvedBundledDispatcher` is the file URL `/Applications/Stenographer.app/Contents/Resources/dispatch.sh` (untested: no test asserts this) |
+| claude-hook-configuration-007 | resolved-dispatcher-derived | `hookBinaryPath: "/Applications/Stenographer.app/Contents/Helpers/steno"`, `bundledDispatcher: nil` | `resolvedBundledDispatcher` is the file URL `/Applications/Stenographer.app/Contents/Resources/dispatch.py` (untested: no test asserts this) |
 | claude-hook-configuration-008 | resolved-dispatcher-explicit | `bundledDispatcher: file:///tmp/d.sh` | `resolvedBundledDispatcher == file:///tmp/d.sh` (untested: no test asserts this) |
 | claude-hook-configuration-009 | default-hooked-events-list | `ClaudeHookConfiguration.defaultHookedEvents` | `HookEventType.allCases` minus every case whose raw value is in `ClaudeHookInstaller.excludedEventTypes`, in `allCases` order (`.preToolUse` is present; `.worktreeCreate`, `.worktreeRemove` and `.statusLine` are absent) (untested: no test asserts this) |
 | claude-hook-configuration-010 | explicit-hooked-events-kept | `hookedEvents: [.stop, .statusLine]` | `hookedEvents == [.stop, .statusLine]`; the excluded type is removed later by the installer, not here (untested: no test asserts this) |
@@ -126,14 +126,14 @@ Not applicable — this is a configuration value type, not a visual component.
 | claude-hook-configuration-019 | mutable-fields, derived-fields-not-recomputed | build with `name: "a"`, then set `name = "b"` | `name == "b"`, `ownLockName == ".a-hooks.lock"`, `statusLineEntryName == "a"` (untested: no test asserts this) |
 | claude-hook-configuration-020 | no-side-effects | construct a configuration and read every derived property | no file is created, no process is run and no notification is posted (untested: no test asserts this) |
 | claude-hook-configuration-021 | bundled-helper-no-parent-bundle | `bundledHelperPath(named: "tool", executable: /usr/local/bin/tool)` | `/usr/local/Helpers/tool` (untested: no test asserts this) |
-| claude-hook-configuration-022 | resolved-dispatcher-derived | `hookBinaryPath: "/steno"`, `bundledDispatcher: nil` | `resolvedBundledDispatcher` is the file URL `/Resources/dispatch.sh` (untested: no test asserts this) |
+| claude-hook-configuration-022 | resolved-dispatcher-derived | `hookBinaryPath: "/steno"`, `bundledDispatcher: nil` | `resolvedBundledDispatcher` is the file URL `/Resources/dispatch.py` (untested: no test asserts this) |
 ## Edge Cases
 
 - **Empty or odd name** (SHOULD): `name` is not validated (**no-input-validation**), so an empty or space-containing `name` yields file and lock names built from it verbatim; callers SHOULD pass a short identifier of letters, digits and hyphens as the shipped owners do.
 - **Executable with no parent bundle** (MUST, **bundled-helper-no-parent-bundle**): `bundledHelperPath(named:executable:)` for an executable such as `/usr/local/bin/tool` returns `/usr/local/Helpers/<helperName>`, because it only compares the directory name to `Helpers`; it does not check that the result exists.
 - **Executable that is a missing path**: symlink resolution leaves a path that does not exist unchanged, so the result is computed from the path as written.
 - **No main executable** (MUST, **bundled-helper-default-executable**): the default `executable` argument force-unwraps `Bundle.main.executableURL`; a process without one traps rather than returning an error.
-- **Helper path with fewer than two parent directories** (MUST, **resolved-dispatcher-derived**): `resolvedBundledDispatcher` strips two path components, so `/steno` yields `/Resources/dispatch.sh`; no error is raised.
+- **Helper path with fewer than two parent directories** (MUST, **resolved-dispatcher-derived**): `resolvedBundledDispatcher` strips two path components, so `/steno` yields `/Resources/dispatch.py`; no error is raised.
 - **Changed `name`** (SHOULD, **derived-fields-not-recomputed**): assigning a new `name` leaves `ownLockName` and `statusLineEntryName` at their initial values; a caller that renames SHOULD set them again.
 - **Excluded type in `hookedEvents`** (MUST, **explicit-hooked-events-kept**): kept as given; the installer drops it at registration.
 - **Empty `hookedEvents`**: accepted as given; nothing is registered for passive observation.
@@ -154,7 +154,7 @@ Not applicable — this is a configuration value type, not a visual component.
 | `settingsURL` | `URL` | `~/.claude/settings.json` | The settings file to edit |
 | `ownLockName` | `String` (initializer argument `String?`) | `.<name>-hooks.lock` | Lock beside `settings.json`, taken after `.settings.lock` |
 | `statusLineEntryName` | `String` (initializer argument `String?`) | `name` | File name under the dispatcher's `renderers` or `taps` directory |
-| `bundledDispatcher` | `URL?` | nil | Dispatcher a bundle carries; nil derives `Resources/dispatch.sh` from the helper path |
+| `bundledDispatcher` | `URL?` | nil | Dispatcher a bundle carries; nil derives `Resources/dispatch.py` from the helper path |
 | `hookedEvents` | `[HookEventType]` | `defaultHookedEvents` | Event types registered for passive observation |
 | `legacy` | `LegacyHookForms` | `.none` | Earlier forms to recognise and replace |
 | `LegacyHookForms.httpHookURLBase` | `String?` | nil | Base of the retired `http` hook url |
@@ -203,7 +203,7 @@ Not applicable: this code makes no log call; the installer that consumes it does
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Sessions/ClaudeHookConfiguration.swift` | confirmed (1.0.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Sessions/ClaudeHookConfiguration.swift` | confirmed (2.0.0) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -247,6 +247,7 @@ separation-of-concerns passes: this type only carries values and derives paths, 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 2.0.0 | 2026-11-26 | Mike Fullerton | The derived bundled dispatcher is Resources/dispatch.py |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (ClaudeHookConfigurationConformanceTests.swift, 20 of 22 vectors); unit-test-coverage now partial (017, 018 skipped). |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Corrected ownLockName and statusLineEntryName to non-optional stored Strings, added requirements for stale derived fields and the no-bundle helper path, tightened RFC wording, linked related specs, and added seven vectors with untested marks. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

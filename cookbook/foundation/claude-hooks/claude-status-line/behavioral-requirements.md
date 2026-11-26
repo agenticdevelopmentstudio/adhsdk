@@ -1,21 +1,23 @@
 
 ### Layout
 
-- **directory-layout**: The dispatcher directory MUST be `claudehelpers/statusline` under the Claude directory, with the dispatcher at `dispatch.sh`, entries under `renderers/` and `taps/`, and failure records under `errors/`.
-- **dispatcher-command**: `dispatcherCommand` MUST be `sh ` plus the dispatcher path (shell-quoted only when needed, matching Python's `shlex.quote`) plus ` # claudehelpers-statusline`, byte for byte the string claudehelpers' Python implementation writes, so the two never fight over the slot. For a dispatcher at `/Users/me/.claude/claudehelpers/statusline/dispatch.sh` the string is `sh /Users/me/.claude/claudehelpers/statusline/dispatch.sh # claudehelpers-statusline`.
+- **directory-layout**: The dispatcher directory MUST be `claudehelpers/statusline` under the Claude directory, with the dispatcher at `dispatch.py` (an older install's shell dispatcher was `dispatch.sh`), entries under `renderers/` and `taps/`, and failure records under `errors/`.
+- **dispatcher-command**: `dispatcherCommand` MUST be `python3 ` plus the dispatcher path (shell-quoted only when needed, matching Python's `shlex.quote`) plus ` # claudehelpers-statusline`, byte for byte the string claudehelpers' Python implementation writes, so the two never fight over the slot. For a dispatcher at `/Users/me/.claude/claudehelpers/statusline/dispatch.py` the string is `python3 /Users/me/.claude/claudehelpers/statusline/dispatch.py # claudehelpers-statusline`.
 - **settings-lock-name**: The shared lock name MUST be `.settings.lock`, the lock every `settings.json` editor that follows the contract holds across its read-modify-write.
 
 ### Recognising commands and names
 
-- **dispatcher-command-shape**: `isDispatcherCommand(_:)` MUST be true for a trimmed command that starts with `sh `, ends with ` # claudehelpers-statusline` and has a non-empty path between, whichever directory it runs from, and false for a command that only mentions the marker elsewhere (such a command is some tool's own).
+- **dispatcher-command-shape**: `isDispatcherCommand(_:)` MUST be true for a trimmed command that starts with `python3 ` or, for an older install's shell dispatcher, `sh `, ends with ` # claudehelpers-statusline` and has a non-empty path between, whichever directory it runs from, and false for a command run by any other runner (`bash …`) or that only mentions the marker elsewhere (such a command is some tool's own).
 - **adopted-name**: `isAdoptedName(_:)` MUST be true for `adopted` and for `adopted-` followed by one or more ASCII digits, and false for any other name, including one that merely starts with the word (`adoptedtheme`) and one with an empty or non-numeric suffix.
 - **valid-name**: `isValidName(_:)` MUST accept only a non-empty name whose first character is an ASCII letter or digit and whose every character is an ASCII letter, digit, `.`, `_` or `-`.
 - **dispatcher-version**: `dispatcherVersion(_:)` MUST return the integer on the first line of the form `# claudehelpers-statusline-dispatch <N>` whose remainder, after trimming spaces, is one or more ASCII digits, MUST skip a line with a non-numeric or empty remainder and keep looking, and MUST return nil when no line qualifies.
 
 ### Installing the dispatcher
 
-- **install-writes-newer**: `installDispatcher()` MUST write the bundled dispatcher to `dispatch.sh` with mode `0755` when none is installed or the installed version is lower than the bundled version, and MUST report the installed and offered versions and that it wrote.
+- **install-writes-newer**: `installDispatcher()` MUST write the bundled dispatcher to `dispatch.py` with mode `0755` when none is installed or the installed version is lower than the bundled version, and MUST report the installed and offered versions and that it wrote.
 - **install-never-downgrades**: `installDispatcher()` MUST NOT write when the installed version is the same or newer, because a newer copy came from a newer tool that relies on it.
+- **install-refuses-shell**: A bundled dispatcher whose version is below 6 (`firstPythonVersion`, the first `dispatch.py`) is a shell script and MUST NOT be written as `dispatch.py`: `installDispatcher()` MUST keep an installed copy and report that it did not write, and MUST throw `dispatcherShell` when none is installed.
+- **remove-legacy-dispatcher**: `removeLegacyDispatcher()` MUST delete `dispatch.sh` beside the dispatcher and report whether there was one, and MUST leave `dispatch.py` alone.
 - **install-replaces-unversioned**: An installed copy with no version line MUST read as no installed version and be replaced.
 - **install-missing-bundle**: When the bundled dispatcher is unreadable, `installDispatcher()` MUST return without writing and with no offered version if a versioned copy is installed, and MUST throw `dispatcherMissing` carrying the bundled path when none is.
 - **install-unversioned-bundle**: When the bundled dispatcher has no version line, `installDispatcher()` MUST return without writing if a versioned copy is installed, and MUST throw `dispatcherUnversioned` carrying the bundled path when none is.

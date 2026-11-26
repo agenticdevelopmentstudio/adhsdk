@@ -4,11 +4,11 @@
     "id": "9eb46f78-0ceb-455f-9584-b6b43ddf0871",
     "title": "Claude Hook Configuration",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "2.0.0",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
-    "modified": "2026-11-14",
+    "modified": "2026-11-26",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -36,7 +36,7 @@
     "approved-date": ""
   },
   "names_hosts": "The component parses Claude Code hook events and settings; the host's name, events and paths are its subject.",
-  "synced": "378a550a621d45ef",
+  "synced": "6808ca11ec272834",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
