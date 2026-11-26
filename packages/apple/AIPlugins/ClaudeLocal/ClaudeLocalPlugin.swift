@@ -42,12 +42,16 @@ public final class ClaudeLocalPlugin: NSObject, AIPlugin, @unchecked Sendable {
     /// no reply at all — even for a one-shot `-p` answer, which surfaces in chat
     /// as a generic failure. Let the CLI use its own turn budget for print mode.
     ///
-    /// `disableBuiltInTools` passes `--tools ""`, so the CLI cannot read files
-    /// or run commands itself when the host is supplying the tools.
+    /// `disableBuiltInTools` passes `--tools ""` and `--strict-mcp-config`, so
+    /// the CLI can neither read files or run commands itself nor reach the MCP
+    /// servers in the user's Claude Code config when the host is supplying the
+    /// tools. Without the second flag the model is offered every MCP tool the
+    /// user has set up (a ticket tracker, say) and calls those natively instead
+    /// of the host's prompted tools.
     static func commandArguments(model: String, systemPrompt: String?,
                                  disableBuiltInTools: Bool = false) -> [String] {
         var arguments = ["-p", "--output-format", "text"]
-        if disableBuiltInTools { arguments += ["--tools", ""] }
+        if disableBuiltInTools { arguments += ["--tools", "", "--strict-mcp-config"] }
         if !model.isEmpty { arguments += ["--model", model] }
         if let systemPrompt, !systemPrompt.isEmpty {
             arguments += ["--system-prompt", systemPrompt]
