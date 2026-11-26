@@ -109,13 +109,32 @@ final class GitProcessBottleneckTests: XCTestCase {
         for case let file as URL in enumerator where file.pathExtension == "swift" {
             let path = file.resolvingSymlinksInPath().path
             let relative = path.hasPrefix(basePath + "/") ? String(path.dropFirst(basePath.count + 1)) : path
-            let source = try String(contentsOf: file, encoding: .utf8)
+            let source = try Data(contentsOf: file)
+            guard String(data: source, encoding: .utf8) != nil else {
+                throw CocoaError(.fileReadInapplicableStringEncoding, userInfo: [NSFilePathErrorKey: path])
+            }
             for spelling in forbiddenSpellings
-            where source.contains(spelling) && !isAllowed(relative, spelling) {
+            where contains(source, spelling) && !isAllowed(relative, spelling) {
                 offenders.append("\(relative) contains \(spelling)")
             }
         }
         return offenders.sorted()
+    }
+
+    /// Whether `source`'s UTF-8 bytes contain `spelling`'s, by `memmem`.
+    ///
+    /// Every spelling is ASCII, so a byte match is the match: a byte search
+    /// finds everything `String.contains` finds, and more where a combining
+    /// mark follows the spelling. It is what keeps the scan of fourteen
+    /// megabytes, ten spellings over each file, from taking seven seconds:
+    /// `String.contains` compares by Unicode canonical equivalence, a
+    /// character at a time.
+    static func contains(_ source: Data, _ spelling: String) -> Bool {
+        let needle = Array(spelling.utf8)
+        return source.withUnsafeBytes { haystack in
+            guard let base = haystack.baseAddress else { return false }
+            return needle.withUnsafeBytes { memmem(base, haystack.count, $0.baseAddress, $0.count) != nil }
+        }
     }
 
     func testEveryTierDirectoryExists() {
