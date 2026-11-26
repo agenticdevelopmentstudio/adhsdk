@@ -67,6 +67,18 @@ describe('detectEnv', () => {
     expect(detectEnv('testing.agenticdeveloperhub.com')).toBe('testing')
     expect(detectEnv('staging.admin.agenticdeveloperhub.com')).toBe('staging')
   })
+  it("classifies a wildcard site's env by the label after the handle", () => {
+    expect(detectEnv('acme.staging.agenticdeveloperhub.com')).toBe('staging')
+    expect(detectEnv('acme.testing.agenticdeveloperhub.com')).toBe('testing')
+    expect(detectEnv('ACME.Staging.agenticdeveloperhub.com:443')).toBe('staging')
+    // A handle named after an env still reads by the label after it.
+    expect(detectEnv('testing.staging.agenticdeveloperhub.com')).toBe('staging')
+    // Hosts that are not a wildcard site's env keep today's answers.
+    expect(detectEnv('acme.agenticdeveloperhub.com')).toBe('production')
+    expect(detectEnv('staging.agenticdeveloperhub.com')).toBe('staging')
+    expect(detectEnv('testing.agenticdeveloperhub.com')).toBe('testing')
+    expect(detectEnv('acme.staging.example.com')).toBe('production')
+  })
   it('classifies local hosts (localhost, 127.*, *.local, *.test, *.localhost, ports)', () => {
     expect(detectEnv('localhost')).toBe('local')
     expect(detectEnv('localhost:3000')).toBe('local')
