@@ -311,7 +311,7 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
         // the controller has settled: every git call it started has exited.
         //
         // Waiting for the call count to go quiet for 300ms was not enough.
-        // A call is counted when its `python3` has started, and on a loaded
+        // A call is counted when its script has started, and on a loaded
         // machine one already spawned can take longer than that to start:
         // the baseline came out one short, and the leftover call was reported
         // as a refresh the stale observer caused. `settled()` waits on the
@@ -474,9 +474,10 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
         manager.closeProject(repoID: repo.id)
         XCTAssertNil(manager.projectController(for: repo.id))
 
-        // The fake git sleeps 0.4s past the marker; wait well past that for
-        // the in-flight open() task to land.
-        try await Task.sleep(for: .milliseconds(900))
+        // Wait for the in-flight open() task to land: `settled()` returns once
+        // the reconcile the fake git is holding has run to its end, which is
+        // the point after which any write it was going to make has been made.
+        await controller.settled()
 
         // The database, which is the claim that matters: a window closed
         // mid-scan must leave the project's rows exactly as it found them.
@@ -559,11 +560,11 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
         // ordering the bug needs.
         try armFocusPersist(on: windowController)
 
-        // Wait for the reconcile's write rather than a fixed 900 ms: the fake
-        // git is a Python script, whose start-up alone outlasts that on a loaded
-        // machine. The debounce was armed above, before the reconcile could
-        // write, so a placeholder write that wins shows up as a poll that never
-        // sees the checkouts, or in the re-read below, well past the debounce.
+        // Wait for the reconcile's write rather than a fixed 900 ms, which a
+        // loaded machine's process start-up alone can outlast. The debounce
+        // was armed above, before the reconcile could write, so a placeholder
+        // write that wins shows up as a poll that never sees the checkouts,
+        // or in the re-read below, well past the debounce.
         let reconciled: Set<String> = ["main", "feature"]
         let deadline = Date().addingTimeInterval(30)
         while Set(controller.workspace.storedTabs()?.tabs.map(\.title) ?? []) != reconciled, Date() < deadline {
@@ -661,7 +662,8 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
         XCTAssertFalse(panesAtOpen.isEmpty, "the stored tab must have been installed by init")
 
         // Past the reconcile, and past the window's own 250 ms debounce.
-        try await Task.sleep(for: .milliseconds(800))
+        try await XCTUnwrap(manager.projectController(for: repo.id)).settled()
+        try await Task.sleep(for: .milliseconds(400))
 
         let panesAfterScan = windowController.allPanes()
         XCTAssertEqual(
@@ -824,37 +826,22 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
     /// count of lines is the count of git calls made.
     private func makeCountingFakeGitExecutable(logDir: URL) throws -> URL {
         let script = """
-        #!/usr/bin/env python3
-        import os
-        import sys
-
-        LOG_DIR = \(pythonLiteral(logDir.path))
-        REPO_ROOT = \(pythonLiteral(repoRoot.path))
-
-
-        def main():
-            fd = os.open(os.path.join(LOG_DIR, "calls.log"), os.O_CREAT | os.O_WRONLY | os.O_APPEND)
-            os.write(fd, b"call\\n")
-            os.close(fd)
-            args = sys.argv[1:]
-            verb = args[0] if args else ""
-            if verb == "worktree":
-                sys.stdout.write(
-                    "worktree " + REPO_ROOT + "\\n"
-                    "HEAD 0000000000000000000000000000000000000001\\n"
-                    "branch refs/heads/main\\n"
-                )
-                sys.exit(0)
-            elif verb == "rev-parse":
-                sys.stdout.write("main\\n")
-                sys.exit(0)
-            else:
-                sys.exit(1)
-
-
-        main()
+        #!/bin/sh
+        echo call >> \(shellLiteral(logDir.appendingPathComponent("calls.log").path))
+        case "$1" in
+        worktree)
+            printf 'worktree %s\\n' \(shellLiteral(repoRoot.path))
+            echo 'HEAD 0000000000000000000000000000000000000001'
+            echo 'branch refs/heads/main'
+            exit 0 ;;
+        rev-parse)
+            echo main
+            exit 0 ;;
+        *)
+            exit 1 ;;
+        esac
         """
-        let scriptURL = logDir.appendingPathComponent("fake-git.py")
+        let scriptURL = logDir.appendingPathComponent("fake-git")
         try script.write(to: scriptURL, atomically: true, encoding: .utf8)
         try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: scriptURL.path)
         return scriptURL
@@ -884,39 +871,26 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
     /// debounce, so the two writers are ordered the way the bug needs them.
     private func makeTwoCheckoutFakeGitExecutable(scriptDir: URL, worktreeRoot: URL) throws -> URL {
         let script = """
-        #!/usr/bin/env python3
-        import sys
-        import time
-
-        REPO_ROOT = \(pythonLiteral(repoRoot.path))
-        WORKTREE_ROOT = \(pythonLiteral(worktreeRoot.path))
-
-
-        def main():
-            args = sys.argv[1:]
-            verb = args[0] if args else ""
-            if verb == "worktree":
-                sys.stdout.write(
-                    "worktree " + REPO_ROOT + "\\n"
-                    "HEAD 0000000000000000000000000000000000000001\\n"
-                    "branch refs/heads/main\\n"
-                    "\\n"
-                    "worktree " + WORKTREE_ROOT + "\\n"
-                    "HEAD 0000000000000000000000000000000000000002\\n"
-                    "branch refs/heads/feature\\n"
-                )
-                sys.exit(0)
-            elif verb == "rev-parse":
-                time.sleep(1.0)
-                sys.stdout.write("main\\n")
-                sys.exit(0)
-            else:
-                sys.exit(1)
-
-
-        main()
+        #!/bin/sh
+        case "$1" in
+        worktree)
+            printf 'worktree %s\\n' \(shellLiteral(repoRoot.path))
+            echo 'HEAD 0000000000000000000000000000000000000001'
+            echo 'branch refs/heads/main'
+            echo
+            printf 'worktree %s\\n' \(shellLiteral(worktreeRoot.path))
+            echo 'HEAD 0000000000000000000000000000000000000002'
+            echo 'branch refs/heads/feature'
+            exit 0 ;;
+        rev-parse)
+            sleep 1
+            echo main
+            exit 0 ;;
+        *)
+            exit 1 ;;
+        esac
         """
-        let scriptURL = scriptDir.appendingPathComponent("fake-git.py")
+        let scriptURL = scriptDir.appendingPathComponent("fake-git")
         try script.write(to: scriptURL, atomically: true, encoding: .utf8)
         try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: scriptURL.path)
         return scriptURL
@@ -934,50 +908,32 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
     /// the window while that call is provably still in flight.
     private func makeSlowFakeGitExecutable(scriptDir: URL) throws -> URL {
         let script = """
-        #!/usr/bin/env python3
-        import os
-        import sys
-        import time
-
-        SCRIPT_DIR = \(pythonLiteral(scriptDir.path))
-        REPO_ROOT = \(pythonLiteral(repoRoot.path))
-
-
-        def main():
-            args = sys.argv[1:]
-            verb = args[0] if args else ""
-            if verb == "worktree":
-                with open(os.path.join(SCRIPT_DIR, "started"), "w") as marker:
-                    marker.write("1")
-                time.sleep(0.4)
-                sys.stdout.write(
-                    "worktree " + REPO_ROOT + "\\n"
-                    "HEAD 0000000000000000000000000000000000000001\\n"
-                    "branch refs/heads/main\\n"
-                )
-                sys.exit(0)
-            elif verb == "rev-parse":
-                sys.stdout.write("main\\n")
-                sys.exit(0)
-            else:
-                sys.exit(1)
-
-
-        main()
+        #!/bin/sh
+        case "$1" in
+        worktree)
+            echo 1 > \(shellLiteral(scriptDir.appendingPathComponent("started").path))
+            sleep 0.4
+            printf 'worktree %s\\n' \(shellLiteral(repoRoot.path))
+            echo 'HEAD 0000000000000000000000000000000000000001'
+            echo 'branch refs/heads/main'
+            exit 0 ;;
+        rev-parse)
+            echo main
+            exit 0 ;;
+        *)
+            exit 1 ;;
+        esac
         """
-        let scriptURL = scriptDir.appendingPathComponent("fake-git.py")
+        let scriptURL = scriptDir.appendingPathComponent("fake-git")
         try script.write(to: scriptURL, atomically: true, encoding: .utf8)
         try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: scriptURL.path)
         return scriptURL
     }
 
-    /// A Python single-quoted string literal for `value`, escaping backslashes
-    /// and single quotes so an absolute path — which on this OS never contains
-    /// a newline — can be spliced straight into the generated script.
-    private func pythonLiteral(_ value: String) -> String {
-        let escaped = value
-            .replacingOccurrences(of: "\\", with: "\\\\")
-            .replacingOccurrences(of: "'", with: "\\'")
-        return "'\(escaped)'"
+    /// A POSIX shell single-quoted word for `value`: each `'` closes the quote,
+    /// adds an escaped quote and reopens it, so any absolute path can be
+    /// spliced straight into the generated script.
+    private func shellLiteral(_ value: String) -> String {
+        "'" + value.replacingOccurrences(of: "'", with: "'\\''") + "'"
     }
 }
