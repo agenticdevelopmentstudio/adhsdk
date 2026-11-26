@@ -11,7 +11,7 @@ export type SiteId =
   | 'bitbag'
   | 'hub'
   | 'admin'
-  | 'product-admin'
+  | 'product-sites'
   | 'cookbook'
   | 'projects'
   | 'personaregistry'
@@ -101,8 +101,17 @@ export interface SiteDef {
   shortLabel?: string
   /** Short tagline shown alongside the label in the switcher. */
   description?: string
-  /** Production host, no protocol. testing/staging prepend `testing.`/`staging.`. */
+  /** Production host, no protocol. testing/staging prepend `testing.`/`staging.`.
+   *  For a {@link wildcardHost} site this is only the folder's name (`dirNameOf`'s join,
+   *  which the shared build closure's `registry_ids.py` also reads), and is never served. */
   prodHost: string
+  /** A site that answers every `<label>.<domain>` (`*.agenticdeveloperhub.com`). Its `prodHost`
+   *  is then only the folder's name, `dirNameOf`'s join, and is never served. A wildcard site
+   *  has no single URL: `siteUrl`, `siteProdUrl` and `buildSiteHref` throw for one,
+   *  `ssoReturnOrigins` leaves it out (its hosts are a product's, not the hub's), and the local
+   *  suite does not serve it (the suite has one host per child, and no wildcard). Its per-env
+   *  host pattern is {@link hostForEnv}'s: the env goes after the `*.`. */
+  readonly wildcardHost?: string
   /** A `staging.<prodHost>` deployment exists. */
   hasStaging: boolean
   /** A `testing.<prodHost>` deployment exists. */
@@ -371,7 +380,12 @@ export const SITES: SiteDef[] = [
   // admin is a wholly-authenticated console — its dashboard root IS its home,
   // so the switcher links it to '/' rather than a separate /home.
   { id: 'admin', label: 'Admin', fullLabel: 'Agentic Developer Admin', description: 'Operations console', prodHost: 'admin.agenticdeveloperhub.com', hasStaging: true, hasTesting: true, hasHome: false, adminOnly: true },
-  { id: 'product-admin', label: 'Product admin', fullLabel: 'Agentic Developer Product Admin', description: 'Your product admin site', prodHost: 'product-admin.agenticdeveloperhub.com', hasStaging: true, hasTesting: true, hasHome: false, adminOnly: true, crawlable: false },
+  // Every product's own site, one Next app chosen by host (`<handle>.agenticdeveloperhub.com`),
+  // with the product's admin console under `/admin`. A wildcard site: `prodHost` is only its
+  // folder's name, and it is neither `adminOnly` (a product's admins are not adh's) nor listed,
+  // so it is in no menu and no footer. Keep the entry on ONE line: the shared build closure's
+  // `registry_ids.py` reads this file a line at a time.
+  { id: 'product-sites', label: 'Product sites', fullLabel: 'Agentic Developer Product Sites', description: "Every product's own site", prodHost: 'product-sites.agenticdeveloperhub.com', wildcardHost: '*.agenticdeveloperhub.com', hasStaging: true, hasTesting: true, hasHome: false, listed: false, crawlable: false },
   { id: 'builds', label: 'Builds', fullLabel: 'Agentic Developer Builds', description: 'Build status', prodHost: 'builder.agenticdeveloperhub.com', hasStaging: false, hasTesting: true, hasHome: false, adminOnly: true },
 ]
 
@@ -469,7 +483,7 @@ export const SITE_BUILD: Partial<Record<SiteId, SiteBuildConfig>> = {
   // (`OVERVIEW_PATH`, `featureIds`) this package cannot import; freezing those values
   // here would re-create the drift their own comments exist to prevent.
   admin: { handRolledConfig: true },
-  'product-admin': { handRolledConfig: true },
+  'product-sites': { handRolledConfig: true },
   'hub-help': { handRolledConfig: true },
   status: { handRolledConfig: true },
   cookbook: { handRolledConfig: true },
@@ -505,6 +519,19 @@ export const ADMIN_SITE_IDS: SiteId[] = SITES.filter((s) => s.adminOnly === true
 
 export function getSite(id: SiteId): SiteDef | undefined {
   return SITES.find((s) => s.id === id)
+}
+
+/** Does `site` answer every `<label>.<domain>` rather than one host? See
+ *  {@link SiteDef.wildcardHost}. */
+export function isWildcardSite(site: SiteDef): boolean {
+  return site.wildcardHost !== undefined
+}
+
+/** The error every single-URL helper throws for a wildcard site. Thrown rather than answered
+ *  with the nominal `prodHost`, because that host is only a folder's name and nothing serves
+ *  it: a link built from it would go nowhere, silently. */
+function wildcardSiteError(site: SiteDef): Error {
+  return new Error(`${site.id} is a wildcard site; it has no single URL`)
 }
 
 /** Runtime guard for a `SiteId` — required wherever a value comes from outside the type
@@ -567,7 +594,7 @@ export function siteIdForDir(name: string): SiteId | undefined {
  *  which is why the route did not have to move when the id changed hands. */
 export const MAIN_SITE_IDS: SiteId[] = [
   'admin', 'bitbag', 'community', 'cookbook', 'devteam', 'help', 'hub', 'hub-help', 'hub-sdk',
-  'myagenticdevteam', 'myagenticteams', 'news', 'personaregistry', 'product-admin', 'shipr',
+  'myagenticdevteam', 'myagenticteams', 'news', 'personaregistry', 'product-sites', 'shipr',
   'status', 'support', 'toolkit',
 ]
 export const MARKETING_SITE_IDS: SiteId[] = [
@@ -751,17 +778,28 @@ export function detectEnv(hostname: string): SiteEnv {
 }
 
 /** Resolve the host for a target site in a given env, falling back
- *  testing → staging → production when the target lacks that env. */
-function hostForEnv(site: SiteDef, env: SiteEnv): string {
+ *  testing → staging → production when the target lacks that env.
+ *
+ *  For a wildcard site the answer is the host PATTERN it serves, with the env after the `*.`:
+ *  `*.testing.agenticdeveloperhub.com`, `*.staging.agenticdeveloperhub.com`,
+ *  `*.agenticdeveloperhub.com` — never `testing.<prodHost>`, which is a folder's name. `local`
+ *  answers the production pattern, as it does for every site (the suite does not serve a
+ *  wildcard site; see `servedLocally`). Exported for that answer: every single-URL helper
+ *  refuses a wildcard site, so this is the one place its hosts can be read. */
+export function hostForEnv(site: SiteDef, env: SiteEnv): string {
+  const wildcardDomain = site.wildcardHost?.replace(/^\*\./, '')
+  const withEnv = (label: 'testing' | 'staging'): string =>
+    wildcardDomain !== undefined ? `*.${label}.${wildcardDomain}` : `${label}.${site.prodHost}`
+  const prod = site.wildcardHost ?? site.prodHost
   if (env === 'testing') {
-    if (site.hasTesting) return `testing.${site.prodHost}`
-    if (site.hasStaging) return `staging.${site.prodHost}`
-    return site.prodHost
+    if (site.hasTesting) return withEnv('testing')
+    if (site.hasStaging) return withEnv('staging')
+    return prod
   }
   if (env === 'staging') {
-    return site.hasStaging ? `staging.${site.prodHost}` : site.prodHost
+    return site.hasStaging ? withEnv('staging') : prod
   }
-  return site.prodHost
+  return prod
 }
 
 /** Domains the `dev.local` tool serves a suite under, current one first.
@@ -800,6 +838,9 @@ const LOCAL_SUITE_DOMAINS = ['sites.localhost', 'dev.test', 'dev.local'] as cons
  *  The suite list is consulted first, which is what keeps the two schemes apart
  *  now that the served domain is itself under `.localhost`. */
 function localOrigin(target: SiteDef, currentHost: string): string {
+  // A wildcard site has no origin in the suite (one host per child, no wildcard host), so
+  // there is nothing to build; its callers refuse it before they get here.
+  if (isWildcardSite(target)) throw wildcardSiteError(target)
   const sub = target.id === 'hub' ? '' : `${target.id}.`
   const host = currentHost.toLowerCase().replace(/:\d+$/, '')
   const domain = LOCAL_SUITE_DOMAINS.find((d) => host.endsWith(`.${d}`))
@@ -830,6 +871,9 @@ function localOrigin(target: SiteDef, currentHost: string): string {
  *  Read on each call, and spelled out in full, because Next inlines a
  *  `process.env.NEXT_PUBLIC_*` reference only where the literal text appears. */
 function servedLocally(target: SiteDef): boolean {
+  // The suite serves one host per child and has no wildcard host, so it never serves a
+  // wildcard site, whatever the list says: that site runs alone, under its own `pnpm dev`.
+  if (isWildcardSite(target)) return false
   const list = process.env.NEXT_PUBLIC_LOCAL_SITES
   if (!list) return true
   return list.split(',').some((id) => id.trim() === target.id)
@@ -853,6 +897,7 @@ function carryPath(target: SiteDef, pathname: string): string {
 /** Build the absolute href to switch to `target` from the current location,
  *  preserving the environment and matching route per the rules above. */
 export function buildSiteHref(target: SiteDef, currentHostname: string, pathname: string): string {
+  if (isWildcardSite(target)) throw wildcardSiteError(target)
   const env = detectEnv(currentHostname)
   if (env === 'local' && servedLocally(target)) {
     return `${localOrigin(target, currentHostname)}${carryPath(target, pathname)}`
@@ -1381,6 +1426,7 @@ export function personaProfileUrl(slug: string): string {
 export function siteUrl(id: SiteId, path: string, currentHostname: string): string {
   const site = getSite(id)
   if (!site) return path
+  if (isWildcardSite(site)) throw wildcardSiteError(site)
   const env = detectEnv(currentHostname)
   if (env === 'local' && servedLocally(site)) return `${localOrigin(site, currentHostname)}${path}`
   return `https://${hostForEnv(site, env)}${path}`
@@ -1391,6 +1437,7 @@ export function siteUrl(id: SiteId, path: string, currentHostname: string): stri
 export function siteProdUrl(id: SiteId, path: string): string {
   const site = getSite(id)
   if (!site) return path
+  if (isWildcardSite(site)) throw wildcardSiteError(site)
   return `https://${site.prodHost}${path}`
 }
 
@@ -1422,7 +1469,9 @@ export function siteHomePath(id: SiteId): string {
  *
  *  `external` sites (FishLamp Design) and `nativeApp` sites (Kitchen,
  *  Stenographer) are excluded from every env: they have no `/auth/callback` and
- *  never begin an ADH login. (`testing/probe-auth-fleet.py` derives its roster
+ *  never begin an ADH login. Wildcard sites (`product-sites`) are excluded too: each of their
+ *  hosts is a product's, signed in through that product's own client, and their nominal
+ *  `prodHost` is a folder's name that nothing serves. (`testing/probe-auth-fleet.py` derives its roster
  *  from the same `hasStaging` / `hasTesting` flags, so a tier claimed and not
  *  deployed shows up there as a failing probe rather than as silence.) */
 export function ssoReturnOrigins(env: 'production' | 'staging' | 'testing'): string[] {
@@ -1431,6 +1480,7 @@ export function ssoReturnOrigins(env: 'production' | 'staging' | 'testing'): str
     (s) =>
       !s.external &&
       !s.nativeApp &&
+      !isWildcardSite(s) &&
       (env === 'production' ? true : env === 'staging' ? s.hasStaging : s.hasTesting),
   ).map((s) => `https://${prefix}${s.prodHost}`)
 }

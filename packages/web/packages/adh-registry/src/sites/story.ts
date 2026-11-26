@@ -157,8 +157,9 @@ export const SITE_STORIES: Record<SiteId, SiteStory> = {
   stenographer: { tier: 'satellite', pillar: 'build', funnelStage: 'build', nextStep: 'hub' },
   // --- operational consoles ---
   admin: { tier: 'chapter', pillar: 'backend', funnelStage: 'ship', nextStep: 'hub' },
-  // A product's own admin site (phase 6): admin-gated and never a landing, like admin above.
-  'product-admin': { tier: 'chapter', pillar: 'backend', funnelStage: 'ship', nextStep: 'hub' },
+  // Every product's own site, its admin console under `/admin` (phase 6, renamed in the
+  // product sites phase 2): never a landing and in no menu, so its story only has to exist.
+  'product-sites': { tier: 'chapter', pillar: 'backend', funnelStage: 'ship', nextStep: 'hub' },
   status: { tier: 'chapter', pillar: 'backend', funnelStage: 'ship', nextStep: 'hub' },
   builds: { tier: 'chapter', pillar: 'backend', funnelStage: 'ship', nextStep: 'status' },
 }

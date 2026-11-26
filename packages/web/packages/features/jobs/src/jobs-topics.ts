@@ -16,9 +16,10 @@ export const jobsTopics: readonly JobsTopic[] = [
   { id: "environments", label: "Environments", href: "jobs/environments" },
 ];
 
-/** The product admin site's Jobs topics. Each `href` is a page route of that site. There is no
- *  Environments page: a product admin owns no machines. */
+/** The product admin console's Jobs topics. Each `href` is a page route of the `product-sites`
+ *  site, where the console lives under `/admin`. There is no Environments page: a product admin
+ *  owns no machines. */
 export const jobsProductAdminTopics: readonly JobsTopic[] = [
-  { id: "status", label: "Status", href: "/jobs" },
-  { id: "templates", label: "Templates", href: "/jobs/templates" },
+  { id: "status", label: "Status", href: "/admin/jobs" },
+  { id: "templates", label: "Templates", href: "/admin/jobs/templates" },
 ];
