@@ -210,8 +210,24 @@ final class UsageSummaryTests: XCTestCase {
     /// Noon UTC on the day `days` before `now`. A late turn's three minutes
     /// then always fall on one day; `now` minus whole days put them across
     /// midnight whenever the suite ran in the ten minutes before 00:00 UTC.
+    ///
+    /// Moved on an hour at a time while a reset instant the fixtures record
+    /// (`weekStart` a whole number of weeks off, or three hours after one)
+    /// falls within its ten minutes: the summary cuts a day's rows at each
+    /// reset, so a run starting just after 03:00 UTC put the noon turns ten
+    /// days back into two segment rows.
     private func noon(daysAgo days: Double) -> Double {
-        ((now.timeIntervalSince1970 / 86400).rounded(.down) - days) * 86400 + 12 * 3600
+        let week = 7.0 * 86400
+        var time = ((now.timeIntervalSince1970 / 86400).rounded(.down) - days) * 86400 + 12 * 3600
+        func crossesAReset(_ start: Double) -> Bool {
+            [weekStart, weekStart + 3 * 3600].contains { reset in
+                let ahead = ((reset - start).truncatingRemainder(dividingBy: week) + week)
+                    .truncatingRemainder(dividingBy: week)
+                return ahead > 0 && ahead <= 10 * 60
+            }
+        }
+        while crossesAReset(time) { time += 3600 }
+        return time
     }
 
     // MARK: - Same rows from the summary as from live turns
