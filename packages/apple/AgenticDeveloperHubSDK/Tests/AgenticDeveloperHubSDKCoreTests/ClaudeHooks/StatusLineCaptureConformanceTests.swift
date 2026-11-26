@@ -47,7 +47,7 @@ final class StatusLineCaptureConformanceTests: XCTestCase {
     ) -> Int32 {
         StatusLineCapture.run(
             captureOnly: captureOnly, payload: payload, environment: environment, configuration: config,
-            post: { _, _ in false }, accountName: { token in seen(token); return "" }, render: render)
+            post: { _, _ in false }, accountName: { token in seen(token); return "" }, lockDirectory: directory, render: render)
     }
 
     // MARK: - Parent pid and injected environment
@@ -195,7 +195,7 @@ final class StatusLineCaptureConformanceTests: XCTestCase {
             captureOnly: false, payload: payload,
             environment: [StatusLineCapture.parentPIDVariable: deadPid], configuration: config,
             post: { _, _ in order.append("post"); return true }, accountName: { _ in "" },
-            render: { data, token in
+            lockDirectory: directory, render: { data, token in
                 order.append("render")
                 renderedPayload = data
                 renderedToken = token
@@ -243,7 +243,7 @@ final class StatusLineCaptureConformanceTests: XCTestCase {
             captureOnly: false, payload: payload,
             environment: ["CLAUDE_CODE_OAUTH_TOKEN": "carried", StatusLineCapture.parentPIDVariable: deadPid],
             configuration: config, post: { _, _ in true }, accountName: { _ in "" },
-            render: { _, token in renderedToken = token; return 0 })
+            lockDirectory: directory, render: { _, token in renderedToken = token; return 0 })
         XCTAssertNil(renderedToken)
     }
 
@@ -258,7 +258,7 @@ final class StatusLineCaptureConformanceTests: XCTestCase {
         let status = StatusLineCapture.run(
             captureOnly: true, payload: payload, environment: ["ADKD_DROP_DIR": dropPath],
             configuration: config, post: { _, _ in posts += 1; return true }, accountName: { _ in "" },
-            render: { _, _ in 5 })
+            lockDirectory: directory, render: { _, _ in 5 })
         fflush(stdout)
         dup2(saved, STDOUT_FILENO)
         close(saved)
@@ -321,7 +321,7 @@ final class StatusLineCaptureConformanceTests: XCTestCase {
         _ = StatusLineCapture.run(
             captureOnly: true, payload: payload, environment: ["ADKD_DROP_DIR": dropPath],
             configuration: config, post: { _, _ in true }, accountName: { _ in "" },
-            render: { _, _ in 0 })
+            lockDirectory: directory, render: { _, _ in 0 })
         let current = signal(SIGPIPE, SIG_IGN)
         XCTAssertEqual(unsafeBitCast(current, to: Int.self), unsafeBitCast(SIG_IGN, to: Int.self))
     }

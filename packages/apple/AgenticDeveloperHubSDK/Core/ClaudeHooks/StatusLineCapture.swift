@@ -48,6 +48,8 @@ public enum StatusLineCapture {
     ///   envelope carries (see `HookCaptureCommand.buildEnvelope`).
     /// - `render`: prints the status line for `(payload, recoveredToken)` and
     ///   returns its exit status. Not called with `captureOnly`.
+    /// - `lockDirectory`: where the per-session feed locks live; the temporary
+    ///   directory unless a test gives one of its own.
     public static func run(
         captureOnly: Bool,
         payload: Data,
@@ -56,6 +58,7 @@ public enum StatusLineCapture {
         post: @escaping @Sendable (_ event: String, _ payload: Data) -> Bool,
         accountName: @escaping @Sendable (String?) -> String,
         oauthEmail: @escaping @Sendable () -> String = { "" },
+        lockDirectory: URL = URL(fileURLWithPath: NSTemporaryDirectory()),
         render: (_ payload: Data, _ token: String?) -> Int32
     ) -> Int32 {
         // A child (external pipeline script) can exit before draining stdin;
@@ -72,7 +75,8 @@ public enum StatusLineCapture {
         if captureOnly {
             feedOnce(payload: payload, token: recoveredToken, environment: environment,
                      configuration: configuration, post: post,
-                     accountName: accountName, oauthEmail: oauthEmail)
+                     accountName: accountName, oauthEmail: oauthEmail,
+                     lockDirectory: lockDirectory)
             return 0
         }
         let status = render(payload, recoveredToken)
@@ -81,7 +85,8 @@ public enum StatusLineCapture {
                        environment: environment, configuration: configuration) {
             feedOnce(payload: payload, token: recoveredToken, environment: environment,
                      configuration: configuration, post: post,
-                     accountName: accountName, oauthEmail: oauthEmail)
+                     accountName: accountName, oauthEmail: oauthEmail,
+                     lockDirectory: lockDirectory)
         }
         return status
     }

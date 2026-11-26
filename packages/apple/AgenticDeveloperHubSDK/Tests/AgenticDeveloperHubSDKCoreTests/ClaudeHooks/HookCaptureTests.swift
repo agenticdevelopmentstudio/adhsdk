@@ -159,7 +159,7 @@ final class HookCaptureTests: XCTestCase {
         let status = StatusLineCapture.run(
             captureOnly: true, payload: payload, environment: ["ADKD_DROP_DIR": directory.path],
             configuration: adkd, post: { _, _ in true }, accountName: { _ in "" },
-            render: { _, _ in rendered = true; return 7 })
+            lockDirectory: directory, render: { _, _ in rendered = true; return 7 })
         XCTAssertEqual(status, 0)
         XCTAssertFalse(rendered)
     }
@@ -169,7 +169,7 @@ final class HookCaptureTests: XCTestCase {
         let status = StatusLineCapture.run(
             captureOnly: false, payload: payload, environment: ["ADKD_DROP_DIR": directory.path],
             configuration: adkd, post: { _, _ in posted = true; return true }, accountName: { _ in "" },
-            render: { _, _ in 3 })
+            lockDirectory: directory, render: { _, _ in 3 })
         XCTAssertEqual(status, 3)
         // This test process is not the helper, so the feed runs in-process.
         XCTAssertTrue(posted)
