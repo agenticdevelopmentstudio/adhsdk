@@ -3,22 +3,23 @@ import AgenticDeveloperHubSDKCore
 @testable import AgenticDeveloperHubSDKMacOS
 
 /// Drives real git in a temp repo and real shells through the session registry.
+///
+/// The classes below share this setup; each is a class of its own so that XCTest can hand them to
+/// separate workers, where one class of 35 ran alone for 100 s at the end of the run.
 @MainActor
-final class ReviewServiceTests: XCTestCase {
-
-    private let fixBranch = "partner/review-fixes"
-
-    private var directory: URL!
-    private var repo: PartnerGitFixture!
-    private var store: PartnerStore!
-    private var registry: PartnerSessionRegistry!
-    private var detector: ManualSessionEventDetector!
-    private var settings: SettingsStore!
-    private var notifier: PartnerNotifier!
-    private var paths: PartnerPaths!
-    private var service: ReviewService!
-    private var posts: [(String, String)] = []
-    private var clock = Date(timeIntervalSince1970: 1_800_000_000)
+class ReviewServiceTestCase: XCTestCase {
+    fileprivate let fixBranch = "partner/review-fixes"
+    fileprivate var directory: URL!
+    fileprivate var repo: PartnerGitFixture!
+    fileprivate var store: PartnerStore!
+    fileprivate var registry: PartnerSessionRegistry!
+    fileprivate var detector: ManualSessionEventDetector!
+    fileprivate var settings: SettingsStore!
+    fileprivate var notifier: PartnerNotifier!
+    fileprivate var paths: PartnerPaths!
+    fileprivate var service: ReviewService!
+    fileprivate var posts: [(String, String)] = []
+    fileprivate var clock = Date(timeIntervalSince1970: 1_800_000_000)
 
     override func setUp() async throws {
         directory = FileManager.default.temporaryDirectory
@@ -45,7 +46,7 @@ final class ReviewServiceTests: XCTestCase {
         try? FileManager.default.removeItem(at: directory)
     }
 
-    private func makeService() -> ReviewService {
+    fileprivate func makeService() -> ReviewService {
         ReviewService(store: store, sessions: registry, notifier: notifier, paths: paths, git: repo.review,
                       worktree: ReviewWorktree(git: repo.review), settings: settings,
                       steps: { PartnerJobDefaults.codeReviews().steps }, now: { [unowned self] in clock })
@@ -53,15 +54,15 @@ final class ReviewServiceTests: XCTestCase {
 
     /// Commits `file` on main and queues a review for that commit.
     @discardableResult
-    private func queue(file: String, day: Int, message: String, branch: String = "main",
-                       repoID: String = "repo", content: String? = nil) throws -> PartnerReview {
+    fileprivate func queue(file: String, day: Int, message: String, branch: String = "main",
+                           repoID: String = "repo", content: String? = nil) throws -> PartnerReview {
         let sha = try repo.commit(file: file, day: day, message: message, content: content)
         return try queueReview(sha: sha, subject: message, branch: branch, repoID: repoID, day: day)
     }
 
     @discardableResult
-    private func queueReview(sha: String, subject: String, branch: String = "main", repoID: String = "repo",
-                             day: Int = 1) throws -> PartnerReview {
+    fileprivate func queueReview(sha: String, subject: String, branch: String = "main", repoID: String = "repo",
+                                 day: Int = 1) throws -> PartnerReview {
         let parent = try repo.review.parentSync(of: sha, in: repo.directory)
         let review = PartnerReview(
             id: "\(repoID):\(sha)", repoID: repoID, repoPath: repo.directory.path, repoName: "demo", sha: sha,
@@ -71,12 +72,43 @@ final class ReviewServiceTests: XCTestCase {
         return review
     }
 
-    private func attentionItems() throws -> [AttentionItem] {
+    fileprivate func attentionItems() throws -> [AttentionItem] {
         try store.attentionItems(includeDoneCompletedAfter: .distantPast)
     }
+    fileprivate static func outcome(_ body: () async throws -> PartnerReviewStart) async -> String {
+        do {
+            _ = try await body()
+            return "started"
+        } catch ReviewError.anotherRunningInRepo {
+            return "another running"
+        } catch {
+            return "\(error)"
+        }
+    }
 
-    // MARK: - start
+    fileprivate func currentBranch(_ worktree: String) throws -> String {
+        try repo.git("-C", worktree, "branch", "--show-current").trimmingCharacters(in: .whitespacesAndNewlines)
+    }
 
+    fileprivate func toolSource() -> PartnerToolSource {
+        PartnerToolSource(callerID: { "c1" }, store: store, sessions: registry, projects: { [] },
+                          notifier: notifier, reviews: service)
+    }
+
+    fileprivate func call(_ source: PartnerToolSource, _ name: String, _ args: [String: Any] = [:]) async throws
+        -> (content: String, isError: Bool) {
+        await source.callTool(name: name, argumentsJSON: try JSONSerialization.data(withJSONObject: args),
+                              caller: "c1")
+    }
+
+    fileprivate func object(_ text: String) throws -> [String: Any] {
+        try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(text.utf8)) as? [String: Any], text)
+    }
+}
+
+/// ReviewService: `start`: worktrees, sessions, steps and fix branches.
+@MainActor
+final class ReviewServiceStartTests: ReviewServiceTestCase {
     func testStartSkipsCommitNoLongerInBranch() async throws {
         try repo.commit(file: "a.txt", day: 1, message: "first")
         let review = try queue(file: "b.txt", day: 2, message: "second")
@@ -124,17 +156,6 @@ final class ReviewServiceTests: XCTestCase {
         XCTAssertEqual(results.filter { $0 == "another running" }.count, 1, "\(results)")
         XCTAssertEqual(try store.reviews(state: .running).count, 1)
         XCTAssertEqual(registry.sessions.count, 1)
-    }
-
-    private static func outcome(_ body: () async throws -> PartnerReviewStart) async -> String {
-        do {
-            _ = try await body()
-            return "started"
-        } catch ReviewError.anotherRunningInRepo {
-            return "another running"
-        } catch {
-            return "\(error)"
-        }
     }
 
     func testConcurrencyLimitHoldsAcrossRepos() async throws {
@@ -301,7 +322,11 @@ final class ReviewServiceTests: XCTestCase {
 
         XCTAssertEqual(started.fixBranch, fixBranch)
     }
+}
 
+/// ReviewService: `start`: what it skips, refuses, blocks or fails.
+@MainActor
+final class ReviewServiceStartRefusalTests: ReviewServiceTestCase {
     func testRefSafeReplacesCharactersGitRefuses() {
         XCTAssertEqual(ReviewService.refSafe("feature/x"), "feature-x")
         XCTAssertEqual(ReviewService.refSafe("a b~c^d:e?f*g[h\\i"), "a-b-c-d-e-f-g-h-i")
@@ -309,10 +334,6 @@ final class ReviewServiceTests: XCTestCase {
         XCTAssertEqual(ReviewService.refSafe("topic.lock"), "topic")
         XCTAssertEqual(ReviewService.refSafe(".hidden."), "hidden")
         XCTAssertEqual(ReviewService.refSafe("release-1.2_rc"), "release-1.2_rc")
-    }
-
-    private func currentBranch(_ worktree: String) throws -> String {
-        try repo.git("-C", worktree, "branch", "--show-current").trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     func testSupersededListAndTipDiffComputedAtStart() async throws {
@@ -511,9 +532,11 @@ final class ReviewServiceTests: XCTestCase {
         XCTAssertEqual(try attentionItems().filter { $0.kind == .blocked }.count, 1)
         XCTAssertEqual(try currentBranch(started.worktreePath), fixBranch, "the rebase was aborted")
     }
+}
 
-    // MARK: - next, finish, requeue
-
+/// ReviewService: `next` and `finish`.
+@MainActor
+final class ReviewServiceFinishTests: ReviewServiceTestCase {
     func testNextListsQueuedWithConcurrencyAndRunning() async throws {
         settings.set(2, for: UserSettings.partnerReviewsConcurrency)
         try repo.commit(file: "a.txt", day: 1, message: "first")
@@ -577,7 +600,11 @@ final class ReviewServiceTests: XCTestCase {
         XCTAssertThrowsError(try service.finish(id: review.id, state: .done, summary: "again"))
         XCTAssertThrowsError(try service.finish(id: "nope", state: .done, summary: ""))
     }
+}
 
+/// ReviewService: Requeueing, and reviews whose session went away.
+@MainActor
+final class ReviewServiceRequeueTests: ReviewServiceTestCase {
     func testRequeueInterrupted() throws {
         let sha = try repo.commit(file: "a.txt", day: 1, message: "first")
         var running = try queueReview(sha: sha, subject: "first")
@@ -644,24 +671,11 @@ final class ReviewServiceTests: XCTestCase {
         XCTAssertEqual(next.running, 0)
         XCTAssertEqual(next.reviews.map(\.id), [review.id])
     }
+}
 
-    // MARK: - Tools
-
-    private func toolSource() -> PartnerToolSource {
-        PartnerToolSource(callerID: { "c1" }, store: store, sessions: registry, projects: { [] },
-                          notifier: notifier, reviews: service)
-    }
-
-    private func call(_ source: PartnerToolSource, _ name: String, _ args: [String: Any] = [:]) async throws
-        -> (content: String, isError: Bool) {
-        await source.callTool(name: name, argumentsJSON: try JSONSerialization.data(withJSONObject: args),
-                              caller: "c1")
-    }
-
-    private func object(_ text: String) throws -> [String: Any] {
-        try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(text.utf8)) as? [String: Any], text)
-    }
-
+/// ReviewService: The review tools.
+@MainActor
+final class ReviewServiceToolTests: ReviewServiceTestCase {
     func testReviewToolsAreListedOnlyWithAService() async {
         let names = await toolSource().toolDefinitions().map(\.name)
         XCTAssertTrue(names.contains("partner_review_next"))
