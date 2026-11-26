@@ -28,8 +28,20 @@ final class PanelListSubtitleTests: XCTestCase {
     }
 
     /// Lets the list's next-turn rebuild run.
+    ///
+    /// The rebuild is a `DispatchQueue.main.async` block, and the main queue
+    /// runs its blocks in order, so a marker enqueued after the change has run
+    /// only once the rebuild has. A fixed 50 ms spin was a guess at the
+    /// machine's load: on a parallel run the block had not run yet, and a
+    /// burst read as no rebuild at all.
     private func drainMainQueue() {
-        RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+        var drained = false
+        DispatchQueue.main.async { drained = true }
+        let deadline = Date().addingTimeInterval(10)
+        while !drained && Date() < deadline {
+            RunLoop.main.run(mode: .default, before: deadline)
+        }
+        XCTAssertTrue(drained, "the main queue never reached the marker")
     }
 
     /// spvc-017
