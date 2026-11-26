@@ -207,6 +207,13 @@ final class UsageSummaryTests: XCTestCase {
         UTCDay.string(from: Date(timeIntervalSince1970: epoch))
     }
 
+    /// Noon UTC on the day `days` before `now`. A late turn's three minutes
+    /// then always fall on one day; `now` minus whole days put them across
+    /// midnight whenever the suite ran in the ten minutes before 00:00 UTC.
+    private func noon(daysAgo days: Double) -> Double {
+        ((now.timeIntervalSince1970 / 86400).rounded(.down) - days) * 86400 + 12 * 3600
+    }
+
     // MARK: - Same rows from the summary as from live turns
 
     /// A new reset phase is saved in the same commit as the backfill restart,
@@ -426,7 +433,7 @@ final class UsageSummaryTests: XCTestCase {
     func testTurnsArrivingAfterADayIsFinalizedAreCounted() async throws {
         try seedHistory()
         try await runRollupUntilSettled()
-        let lateTime = now.timeIntervalSince1970 - 4 * 86400
+        let lateTime = noon(daysAgo: 4)
         let lateDay = utcDay(lateTime)
         XCTAssertLessThanOrEqual(lateDay, try XCTUnwrap(try database.usageSummaryFinalizedThrough()))
 
@@ -454,7 +461,7 @@ final class UsageSummaryTests: XCTestCase {
     func testALateTurnOnADayKeptAsStoredIsAdded() async throws {
         try seedHistory()
         try await runRollupUntilSettled()
-        let lateTime = now.timeIntervalSince1970 - 4 * 86400
+        let lateTime = noon(daysAgo: 4)
         let lateDay = utcDay(lateTime)
         try database.execute(
             "UPDATE session_summary SET turn_count = turn_count + 100 WHERE day = ?", params: [lateDay])
@@ -482,7 +489,7 @@ final class UsageSummaryTests: XCTestCase {
     func testARetriedRecountNeverAddsTurnsADayWasRebuiltWith() async throws {
         try seedHistory()
         try await runRollupUntilSettled()
-        let lateTime = now.timeIntervalSince1970 - 4 * 86400
+        let lateTime = noon(daysAgo: 4)
         let lateDay = utcDay(lateTime)
         for minute in [0.0, 5, 10] {
             try harness.seedTurn(
@@ -528,7 +535,7 @@ final class UsageSummaryTests: XCTestCase {
 
     /// Three late turns ten days back, on a day the trim has reached.
     private func seedLateTurnsOnATrimmedDay(sessionId: String) throws -> String {
-        let lateTime = now.timeIntervalSince1970 - 10 * 86400
+        let lateTime = noon(daysAgo: 10)
         XCTAssertLessThan(lateTime, try XCTUnwrap(try database.usageSummaryTrimmedBefore()))
         for minute in [0.0, 5, 10] {
             try harness.seedTurn(
@@ -614,7 +621,7 @@ final class UsageSummaryTests: XCTestCase {
         try seedHistory()
         try await runRollupUntilSettled()
         let before = try dump("session_summary")
-        let lateTime = now.timeIntervalSince1970 - 4 * 86400
+        let lateTime = noon(daysAgo: 4)
         XCTAssertLessThanOrEqual(utcDay(lateTime), try XCTUnwrap(try database.usageSummaryFinalizedThrough()))
         XCTAssertNil(try database.usageSummaryTrimmedBefore())
         for minute in [0.0, 5, 10] {
