@@ -74,6 +74,14 @@ def chat_contract() -> None:
     sh([PY, "tools/verify_chat_types_copy.py"], "packages/web")
 
 
+# adh's PRODUCT_SITE_HANDLE_WORDS is a copy of the backend's list in rdid.ts, which is another
+# repo. The guard compares the two when it can find the backend (this repo embedded in it, or
+# ADH_BACKEND_RDID) and prints a skip when it cannot; its self-test runs either way.
+def product_site_handles() -> None:
+    sh([PY, "tools/verify_product_site_handles_copy_test.py"], "packages/web")
+    sh([PY, "tools/verify_product_site_handles_copy.py", "--if-backend"], "packages/web")
+
+
 # Eight packages arrived here from a PRIVATE repo, each carrying the prose its old home
 # wrote about it. The per-package arrival checks scan src/, which is where the imports
 # are, and imports are not where this leaks. It leaks in a README, a CHANGELOG, a
@@ -125,6 +133,7 @@ STEPS = [
     ("repo-guards", repo_guards),
     ("license-fields", license_fields),
     ("chat-contract", chat_contract),
+    ("product-site-handles", product_site_handles),
     ("no-retired-names", no_retired_names),
     ("install", install),
     ("build", build),

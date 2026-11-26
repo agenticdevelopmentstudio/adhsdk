@@ -351,6 +351,7 @@ export function reservedWorkspaceSlugs(): ReadonlySet<string> {
  * The backend's `RESERVED_PRODUCT_SITE_HANDLES` (`backend/src/adh/src/lib/rdid.ts`) is the
  * authority the API enforces. This copy exists so the hub pane can refuse a reserved handle
  * before it is sent; a word missing here is still refused on submit.
+ * `packages/web/tools/verify_product_site_handles_copy.py` fails when the two lists drift.
  */
 export const PRODUCT_SITE_HANDLE_WORDS: readonly string[] = [
   'admin',
