@@ -20,21 +20,31 @@ enum StatusLineTestSupport {
     /// The adtoolkit checkout, which owns claudehelpers' status-line
     /// dispatcher and its contract. `ADTOOLKIT_CHECKOUT` names one; otherwise
     /// it is the checkout adtoolkit's `./install` recorded in `~/.adtoolkitrc`
-    /// (`# Checkout: <path>`). Nil when neither says, and `requireAdtoolkit`
-    /// then fails naming the fix.
+    /// (`# Checkout: <path>`), read as `./install`'s `adtoolkit_checkout`
+    /// reads it: the first ten lines, blank ones counted, a leading `~` the
+    /// home directory, a relative path naming none. Nil when neither says,
+    /// and `requireAdtoolkit` then fails naming the fix.
     static var adtoolkitRoot: URL? {
         if let named = ProcessInfo.processInfo.environment["ADTOOLKIT_CHECKOUT"], !named.isEmpty {
             return URL(fileURLWithPath: named, isDirectory: true)
         }
-        let rcFile = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".adtoolkitrc")
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        let rcFile = home.appendingPathComponent(".adtoolkitrc")
         guard let text = try? String(contentsOf: rcFile, encoding: .utf8) else { return nil }
         let prefix = "# Checkout: "
-        for line in text.split(separator: "\n").prefix(10) where line.hasPrefix(prefix) {
-            let path = line.dropFirst(prefix.count).trimmingCharacters(in: .whitespaces)
-            if !path.isEmpty { return URL(fileURLWithPath: path, isDirectory: true) }
+        for line in text.components(separatedBy: "\n").prefix(10) where line.hasPrefix(prefix) {
+            var path = line.dropFirst(prefix.count).trimmingCharacters(in: .whitespaces)
+            if path == "~" || path.hasPrefix("~/") { path = home.path + path.dropFirst() }
+            return path.hasPrefix("/") ? URL(fileURLWithPath: path, isDirectory: true) : nil
         }
         return nil
     }
+
+    /// The dispatcher version whose contract these tests were written
+    /// against. The tests read adtoolkit's checkout as it is on disk, so a
+    /// newer contract there fails them as a version mismatch, naming both,
+    /// rather than as whichever case happened to change.
+    static let adtoolkitContractVersion = 7
 
     /// adtoolkit's path to claudehelpers, under its checkout.
     private static func inAdtoolkit(_ relative: String) -> URL {
@@ -54,12 +64,32 @@ enum StatusLineTestSupport {
     static var conformanceFixtures: URL { inAdtoolkit("tests/fixtures/statusline_conformance.json") }
 
     /// Fails with a message that names the fix when adtoolkit is not
-    /// installed, instead of a bare missing-file error.
+    /// installed, instead of a bare missing-file error, and when its
+    /// dispatcher carries a contract other than `adtoolkitContractVersion`.
     static func requireAdtoolkit(_ url: URL) throws -> URL {
         guard FileManager.default.fileExists(atPath: url.path) else {
             throw AdtoolkitMissing(path: url.path)
         }
+        let dispatcher = realDispatcher
+        guard let text = try? String(contentsOf: dispatcher, encoding: .utf8) else {
+            throw AdtoolkitMissing(path: dispatcher.path)
+        }
+        let version = ClaudeStatusLine.dispatcherVersion(text)
+        guard version == adtoolkitContractVersion else {
+            throw AdtoolkitContractChanged(path: dispatcher.path, found: version)
+        }
         return url
+    }
+
+    struct AdtoolkitContractChanged: Error, CustomStringConvertible {
+        let path: String
+        let found: Int?
+        var description: String {
+            let found = self.found.map(String.init) ?? "no version line"
+            return "\(path) carries status-line contract \(found), but these tests follow "
+                + "\(StatusLineTestSupport.adtoolkitContractVersion): bring ClaudeStatusLine and its "
+                + "tests to the new contract, or use the adtoolkit that matches"
+        }
     }
 
     struct AdtoolkitMissing: Error, CustomStringConvertible {
