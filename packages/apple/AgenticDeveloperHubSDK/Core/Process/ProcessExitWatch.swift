@@ -32,12 +32,18 @@ public final class ProcessExitWatch: @unchecked Sendable {
     /// an honest cleanup handler and short enough that nobody notices.
     public static let terminationGrace: TimeInterval = 2
 
+    /// The grace `stop` gives each of its two steps: `terminationGrace`
+    /// unless the creator chose another. Only a test of the escalation itself
+    /// has a reason to: the step is what it checks, not the two seconds.
+    public let grace: TimeInterval
+
     private let exited = DispatchSemaphore(value: 0)
     private let lock = NSLock()
     private var seenExit = false
 
     /// Installs the handler on `process`, which must not have been launched.
-    public init(_ process: Process) {
+    public init(_ process: Process, grace: TimeInterval = ProcessExitWatch.terminationGrace) {
+        self.grace = grace
         precondition(!process.isRunning, "ProcessExitWatch must be installed before run()")
         process.terminationHandler = { [exited] _ in exited.signal() }
     }
@@ -61,9 +67,9 @@ public final class ProcessExitWatch: @unchecked Sendable {
     public func stop(_ process: Process) -> Bool {
         if hasExited { return true }
         process.terminate()
-        if waitForExit(timeout: Self.terminationGrace) { return true }
+        if waitForExit(timeout: grace) { return true }
         kill(process.processIdentifier, SIGKILL)
-        return waitForExit(timeout: Self.terminationGrace)
+        return waitForExit(timeout: grace)
     }
 
     private var hasExited: Bool { lock.withLock { seenExit } }

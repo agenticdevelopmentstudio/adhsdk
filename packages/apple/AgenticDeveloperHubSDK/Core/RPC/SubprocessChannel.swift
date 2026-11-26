@@ -18,6 +18,10 @@ public actor SubprocessChannel {
         public var framing: MessageFraming
         /// Working directory for the child, or `nil` to inherit the parent's.
         public var currentDirectoryURL: URL?
+        /// The SIGTERM grace before `terminate()` escalates to SIGKILL:
+        /// `SubprocessChannel.terminationGraceSeconds` unless a test of the
+        /// escalation itself shortens it.
+        public var terminationGrace: TimeInterval
 
         public init(
             executableURL: URL,
@@ -25,8 +29,10 @@ public actor SubprocessChannel {
             environment: [String: String] = [:],
             environmentPolicy: EnvironmentPolicy = .replace,
             framing: MessageFraming = .newlineDelimited,
-            currentDirectoryURL: URL? = nil
+            currentDirectoryURL: URL? = nil,
+            terminationGrace: TimeInterval = SubprocessChannel.terminationGraceSeconds
         ) {
+            self.terminationGrace = terminationGrace
             self.executableURL = executableURL
             self.arguments = arguments
             self.environment = environment
@@ -104,7 +110,7 @@ public actor SubprocessChannel {
     /// SIGTERM grace period before `terminate()` escalates to SIGKILL. A
     /// child that traps or ignores SIGTERM must not be able to hang
     /// `terminate()`, or leak the process and its descriptors, forever.
-    private static let terminationGraceSeconds: TimeInterval = 2.0
+    public static let terminationGraceSeconds: TimeInterval = 2.0
 
     /// How long `standardErrorText()` will wait for the stderr drain to reach
     /// EOF before answering with whatever it has buffered so far. EOF on
@@ -597,7 +603,7 @@ public actor SubprocessChannel {
             process.terminate() // SIGTERM
 
             let exitWaiterBox = exitWaiterBox
-            _ = try? await withWallClockBudget(Self.terminationGraceSeconds) {
+            _ = try? await withWallClockBudget(configuration.terminationGrace) {
                 await exitWaiterBox.get()?.wait()
             }
 

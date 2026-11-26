@@ -8,11 +8,12 @@ import Testing
 @Suite(.serialized)
 struct ProcessExitWatchConformanceTests {
 
-    private func launch(_ path: String, _ arguments: [String]) throws -> (Process, ProcessExitWatch) {
+    private func launch(_ path: String, _ arguments: [String],
+                        grace: TimeInterval = ProcessExitWatch.terminationGrace) throws -> (Process, ProcessExitWatch) {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: path)
         process.arguments = arguments
-        let watch = ProcessExitWatch(process)
+        let watch = ProcessExitWatch(process, grace: grace)
         try process.run()
         return (process, watch)
     }
@@ -85,14 +86,16 @@ struct ProcessExitWatchConformanceTests {
     @Test("V7: stop kills a child that ignores SIGTERM after the first grace")
     func v007StopKillsSecond() throws {
         // `exec` keeps the ignored-SIGTERM disposition in the sleeping image.
-        let (process, watch) = try launch("/bin/sh", ["-c", "trap '' TERM; exec sleep 30"])
+        // A half-second grace: the first step's wait is what this checks, and
+        // it is the same code whatever the length.
+        let (process, watch) = try launch("/bin/sh", ["-c", "trap '' TERM; exec sleep 30"], grace: 0.5)
         // Let the shell install the trap before the first signal lands.
         Thread.sleep(forTimeInterval: 0.5)
         var stopped = false
         let took = elapsed { stopped = watch.stop(process) }
         #expect(stopped)
-        #expect(took >= ProcessExitWatch.terminationGrace - 0.2)
-        #expect(took < 2 * ProcessExitWatch.terminationGrace)
+        #expect(took >= watch.grace - 0.2)
+        #expect(took < 2 * watch.grace)
         #expect(!process.isRunning)
     }
 

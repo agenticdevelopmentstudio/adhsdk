@@ -733,7 +733,9 @@ struct SubprocessChannelTests {
         // make SIGKILL unreachable.
         try await withLaunchedChannel(.init(
             executableURL: URL(fileURLWithPath: "/bin/sh"),
-            arguments: ["-c", "trap '' TERM; echo READY; while :; do sleep 0.05; done"]
+            arguments: ["-c", "trap '' TERM; echo READY; while :; do sleep 0.05; done"],
+            // Short: the escalation is what this checks, not the grace's length.
+            terminationGrace: 0.3
         )) { channel in
             // `READY` comes after the trap; a signal sent before it would kill
             // the child with SIGTERM (15) and say nothing about the escalation.

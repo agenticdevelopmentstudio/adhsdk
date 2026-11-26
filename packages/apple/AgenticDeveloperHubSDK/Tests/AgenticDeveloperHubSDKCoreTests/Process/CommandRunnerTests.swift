@@ -126,13 +126,15 @@ struct CommandRunnerTests {
         ]
 
         let started = Date()
-        let outcome = try CommandRunner.runToCompletion(process, timeout: 1)
+        // A short grace: the escalation is what this checks, not the two
+        // seconds production gives an honest cleanup handler.
+        let outcome = try CommandRunner.runToCompletion(process, timeout: 1, terminationGrace: 0.3)
         let elapsed = Date().timeIntervalSince(started)
 
         #expect(outcome.timedOut)
-        // 1s timeout, then SIGTERM is ignored through a 2s grace, then SIGKILL.
-        // Comfortably inside the 1 + 2 + 2 budget, and well past it would mean
-        // the escalation never happened.
+        // 1s timeout, then SIGTERM is ignored through a 0.3s grace, then
+        // SIGKILL. Comfortably inside the 1 + 0.3 + 0.3 budget, and well past
+        // it would mean the escalation never happened.
         #expect(elapsed < 8)
         // What it managed to write before being killed is still collected —
         // the drain does not depend on a clean exit.

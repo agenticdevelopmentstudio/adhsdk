@@ -31,10 +31,14 @@ public actor SerialAsyncGate {
     public static let grace: TimeInterval = 2
 
     private let timeout: TimeInterval
+    private let cancelledJobGrace: TimeInterval
     private var tail: Task<Void, Never>?
 
-    public init(timeout: TimeInterval = SerialAsyncGate.defaultTimeout) {
+    /// `grace` is `SerialAsyncGate.grace` unless a test of the give-up itself
+    /// shortens it.
+    public init(timeout: TimeInterval = SerialAsyncGate.defaultTimeout, grace: TimeInterval = SerialAsyncGate.grace) {
         self.timeout = timeout
+        self.cancelledJobGrace = grace
     }
 
     /// Runs `body` after every job handed to this gate before it, and answers
@@ -49,11 +53,12 @@ public actor SerialAsyncGate {
         // this one waits chains onto `job` rather than onto `previous`. The
         // tail waits for the job only as long as the timeout allows.
         let timeout = timeout
+        let grace = cancelledJobGrace
         tail = Task {
             if await job.finished(within: .seconds(timeout)) { return }
             Self.logger.error(
                 "a job ran past \(Int(timeout))s and was cancelled; the next job no longer waits for it")
-            _ = await job.finished(within: .seconds(Self.grace))
+            _ = await job.finished(within: .seconds(grace))
         }
         return await job.value
     }

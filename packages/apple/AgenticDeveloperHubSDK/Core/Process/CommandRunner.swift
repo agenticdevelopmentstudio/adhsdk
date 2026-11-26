@@ -151,7 +151,8 @@ public enum CommandRunner {
         _ process: Process,
         input: Data? = nil,
         timeout: TimeInterval,
-        watchdog: Watchdog? = nil
+        watchdog: Watchdog? = nil,
+        terminationGrace: TimeInterval = ProcessExitWatch.terminationGrace
     ) throws -> Outcome {
         let output = Pipe()
         let errors = Pipe()
@@ -165,7 +166,7 @@ public enum CommandRunner {
         let outputDrained = drain(output, into: collected, as: .standardOutput, on: readers)
         let errorsDrained = drain(errors, into: collected, as: .standardError, on: readers)
 
-        let watch = ProcessExitWatch(process)
+        let watch = ProcessExitWatch(process, grace: terminationGrace)
         do {
             try process.run()
         } catch {
