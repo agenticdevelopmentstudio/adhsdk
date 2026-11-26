@@ -64,6 +64,83 @@ final class ComposableTabsClosePersistTests: XCTestCase {
                        "closing the window dropped the divider the user had just placed")
     }
 
+    /// Until a project's first reconcile has settled, the window's live tab
+    /// set is the placeholder it was built with, and the divider write the
+    /// first layout pass arms reaches `persistAllTabs()` like any other. A
+    /// scan slower than the 300 ms debounce let it store the placeholder,
+    /// which the reconcile then kept as the main checkout's tab. Held while
+    /// the reconcile is pending, and dropped when the reconcile writes.
+    func testADividerWriteBeforeTheFirstReconcileDoesNotLand() async throws {
+        let project = try makeProject()
+        XCTAssertNil(project.storedTabs(), "a first open has nothing stored")
+
+        let window = ComposableTabsWindowController(project: project, awaitsFirstReconcile: true)
+        defer { window.close() }
+        window.showWindow(nil)
+        window.window?.setContentSize(NSSize(width: 900, height: 600))
+        let split = try XCTUnwrap(
+            Self.firstSplitTree(under: try XCTUnwrap(window.window?.contentViewController)),
+            "expected the placeholder tab's split tree to be installed"
+        )
+        split.view.layoutSubtreeIfNeeded()
+        let total = split.splitView.bounds.width
+        split.splitView.setPosition(total * 0.25, ofDividerAt: 0)
+        split.view.layoutSubtreeIfNeeded()
+
+        // Well past the debounce: the write has come due and been held.
+        try await Task.sleep(for: .milliseconds(800))
+        XCTAssertNil(project.storedTabs(), "a divider write before the first reconcile stored the placeholder")
+
+        // The reconcile writes, as `ProjectController` does: cancel, persist,
+        // reload, settle.
+        let reconciled = TabRecord(title: "main", root: project.layout.blueprint())
+        window.cancelPendingTabPersist()
+        project.persistTabs([reconciled], activeTabID: reconciled.id, enabledEdges: [.top])
+        window.reloadTabs()
+        window.reconcileDidSettle()
+
+        try await Task.sleep(for: .milliseconds(800))
+        XCTAssertEqual(
+            project.storedTabs()?.tabs.map(\.title), ["main"],
+            "the held divider write must not land over the reconciled tabs"
+        )
+    }
+
+    /// The other outcome of the first reconcile: it found the stored tabs
+    /// already right and wrote nothing. The window is then showing a saved
+    /// arrangement, and a divider the user moved while the scan ran is theirs
+    /// — held, not dropped, and written the moment the reconcile settles.
+    func testADividerHeldForTheFirstReconcileIsWrittenWhenItSettlesUnchanged() async throws {
+        let project = try makeProject()
+        let stored = TabRecord(title: "main", root: project.layout.blueprint())
+        project.persistTabs([stored], activeTabID: stored.id, enabledEdges: [.top])
+
+        let window = ComposableTabsWindowController(project: project, awaitsFirstReconcile: true)
+        defer { window.close() }
+        window.showWindow(nil)
+        window.window?.setContentSize(NSSize(width: 900, height: 600))
+        let split = try XCTUnwrap(
+            Self.firstSplitTree(under: try XCTUnwrap(window.window?.contentViewController)),
+            "expected the stored tab's split tree to be installed"
+        )
+        split.view.layoutSubtreeIfNeeded()
+        let total = split.splitView.bounds.width
+        split.splitView.setPosition(total * 0.25, ofDividerAt: 0)
+        split.view.layoutSubtreeIfNeeded()
+
+        try await Task.sleep(for: .milliseconds(800))
+        XCTAssertNotEqual(
+            storedFractions(over: project).first.map { ($0 * 100).rounded() }, 25,
+            "the divider write must be held while the first reconcile is pending"
+        )
+
+        window.reconcileDidSettle()
+
+        let saved = try XCTUnwrap(storedFractions(over: project).first)
+        XCTAssertEqual(saved, 0.25, accuracy: 0.03,
+                       "the divider held for the first reconcile was never written")
+    }
+
     // MARK: - Helpers
 
     private func makeProject() throws -> ProjectWorkspace {

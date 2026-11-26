@@ -975,10 +975,15 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         // the window installs its stored tabs while initializing, and a tab
         // whose item is built before the data source arrives falls back to a
         // plain title, leaving a pane-less tab until something else reloads.
+        // The window holds its debounced writes until the first reconcile
+        // settles (`onDidReconcile` below): until then its live tab set is the
+        // placeholder it was built with, and a write of it that beat a slow
+        // scan was kept by the reconcile as the main checkout's tab.
         let controller = ComposableTabsWindowController(
             project: workspace,
             tabItemDataSource: projectController,
-            shelf: makeShelf(for: group)
+            shelf: makeShelf(for: group),
+            awaitsFirstReconcile: true
         )
         // Ruling Q: `projectController` is captured weakly here and the window
         // reloads only while this controller is still the one registered for
@@ -996,6 +1001,12 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         // the reconcile just replaced.
         projectController.onWillChangeTabs = { [weak controller] in
             controller?.cancelPendingTabPersist()
+        }
+        // Lifts the hold `awaitsFirstReconcile` put on the window's debounced
+        // writes. Not guarded like the two reloads: it only ever lowers a flag
+        // the window raised for this very reconcile, and is a no-op after.
+        projectController.onDidReconcile = { [weak controller] in
+            controller?.reconcileDidSettle()
         }
         // The other half of the reconcile's two outcomes. Nothing was written,
         // so the panes stand; but the window built its tab buttons before this

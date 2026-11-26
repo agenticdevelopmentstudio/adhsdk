@@ -31,6 +31,14 @@ public final class ProjectController: ComposableTabsTabItemDataSource {
     /// the path that writes, the other on the path that does not.
     public var onTabItemsNeedRefresh: (() -> Void)?
 
+    /// Fired at the end of every reconcile that ran to completion, on both
+    /// paths — after `onTabsDidChange` on the one that writes, after
+    /// `onTabItemsNeedRefresh` (or nothing) on the one that does not. Never
+    /// for a reconcile a close cut short. The window holds its debounced
+    /// writes until the first of these, because before it the window's live
+    /// tab set is a placeholder (`ComposableTabsWindowController.reconcileDidSettle()`).
+    public var onDidReconcile: (() -> Void)?
+
     /// The project's client, not a second one of this controller's own: the
     /// workspace mints the per-directory objects (status providers) that these
     /// checkouts are read into, and two injected clients for one project is one
@@ -219,6 +227,7 @@ public final class ProjectController: ComposableTabsTabItemDataSource {
             // and could only answer `.title`. Now that it can answer properly,
             // the buttons — and only the buttons — are rebuilt.
             if previousCheckouts != checkouts { onTabItemsNeedRefresh?() }
+            onDidReconcile?()
             return
         }
 
@@ -245,6 +254,7 @@ public final class ProjectController: ComposableTabsTabItemDataSource {
         onWillChangeTabs?()
         workspace.persistTabs(tabs, activeTabID: activeTabID, enabledEdges: storedEdges)
         onTabsDidChange?()
+        onDidReconcile?()
     }
 
     /// The repository's own checkout first. When git answers with no

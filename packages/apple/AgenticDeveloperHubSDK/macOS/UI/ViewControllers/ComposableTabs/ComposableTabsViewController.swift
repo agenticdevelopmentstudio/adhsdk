@@ -162,6 +162,14 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
         DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
     }
 
+    /// Root only: asked when the debounced write comes due. While it answers
+    /// true the write is not made and stays pending, for the host to flush
+    /// (`flushPendingThicknessPersist()`) or drop
+    /// (`cancelPendingThicknessPersist()`). The window holds it until its
+    /// project's first reconcile has settled — see
+    /// `ComposableTabsWindowController.awaitsFirstReconcile`.
+    var isThicknessPersistHeld: () -> Bool = { false }
+
     /// Keeps the gutters live: `dividerThickness` is computed from the setting,
     /// so something has to tell AppKit the answer moved.
     private var spacingObservers: [UserSettingObserver<Int>] = []
@@ -877,7 +885,11 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
         guard isRoot else { return }
         pendingThicknessPersist?.cancel()
         let work = DispatchWorkItem { [weak self] in
-            self?.persistThicknessesIfChanged()
+            guard let self else { return }
+            // Held: the item stays pending, so the host's flush writes it once
+            // the hold is lifted.
+            guard !self.isThicknessPersistHeld() else { return }
+            self.persistThicknessesIfChanged()
         }
         pendingThicknessPersist = work
         thicknessPersistScheduler(Self.thicknessPersistDelay, work)
@@ -904,6 +916,14 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
         pending.cancel()
         pendingThicknessPersist = nil
         persistThicknessesIfChanged()
+    }
+
+    /// Drops a pending divider write without making it — for a host about to
+    /// replace the tab rows it would write (a reconcile), where the write
+    /// would land afterwards with the tab set the reconcile just replaced.
+    public func cancelPendingThicknessPersist() {
+        pendingThicknessPersist?.cancel()
+        pendingThicknessPersist = nil
     }
 
     private func persistThicknessesIfChanged() {

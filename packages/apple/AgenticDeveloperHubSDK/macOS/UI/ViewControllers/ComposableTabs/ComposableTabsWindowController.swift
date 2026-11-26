@@ -250,6 +250,24 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
 
     private var firstResponderObserver: NSObjectProtocol?
     private var pendingFocusPersist: DispatchWorkItem?
+
+    /// Up from the initializer until the project controller's first reconcile
+    /// has settled (`reconcileDidSettle()`), for a window that has one; never
+    /// up for a window with no reconcile behind it (a File Browser, Document
+    /// or Git window, every layout test), where this window is the only writer
+    /// of its rows and its first debounced write is the one that stores them.
+    ///
+    /// While it is up the two debounced writers — the focused leaf and the
+    /// divider thicknesses — are held rather than run: the live tab set is
+    /// the placeholder the window was built with, and a write of it that lands
+    /// before the reconcile's (a scan that outlasts the debounce) is kept by
+    /// the reconcile as the main checkout's tab for good. What was held is
+    /// written when the reconcile settles without writing, and dropped when it
+    /// writes (`cancelPendingTabPersist()`), since the window then rebuilds.
+    private var awaitsFirstReconcile: Bool
+
+    /// A focus persist that fired while `awaitsFirstReconcile` was up.
+    private var hasHeldFocusPersist = false
     private static let focusPersistDelay: DispatchTimeInterval = .milliseconds(250)
 
     /// Latched by `windowWillClose(_:)`. A window on its way out still lays
@@ -345,6 +363,9 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     ///   Document window, for now).
     /// - Parameter extraToolbarItems: the window's own items, placed after the
     ///   shelf's and before the flexible space (the Git window's verbs).
+    /// - Parameter awaitsFirstReconcile: true for a project window whose
+    ///   project controller has yet to run its first reconcile; the caller
+    ///   then owes `reconcileDidSettle()`. See `awaitsFirstReconcile`.
     public init(
         project: ProjectWorkspace,
         tabItemDataSource: ComposableTabsTabItemDataSource? = nil,
@@ -352,9 +373,11 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
         showsTabBars: Bool = true,
         showsPaneChrome: Bool = true,
         showsFooter: Bool = true,
-        extraToolbarItems: [WindowToolbarItem] = []
+        extraToolbarItems: [WindowToolbarItem] = [],
+        awaitsFirstReconcile: Bool = false
     ) {
         self.project = project
+        self.awaitsFirstReconcile = awaitsFirstReconcile
         self.shelf = shelf
         self.showsPaneChrome = showsPaneChrome
         self.extraToolbarItems = extraToolbarItems
@@ -1306,15 +1329,21 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
 
     private func scheduleFocusPersist() {
         pendingFocusPersist?.cancel()
-        // A focus record refines a saved layout; it is never the first write
-        // of one. On a first open nothing is stored yet and the live tab set is
-        // the placeholder, and when the project's `git worktree list` outlasts
-        // this debounce (a loaded machine, a large repository) the write
-        // landed *before* the reconcile, which then kept the placeholder as
-        // the main checkout's tab for good. Checked when the item fires, not
-        // when it is armed, because the reconcile may have written meanwhile.
+        // Held, not run, while a reconcile is still to come: on a project's
+        // first open the live tab set is the placeholder, and when its `git
+        // worktree list` outlasts this debounce (a loaded machine, a large
+        // repository) the write landed *before* the reconcile, which then kept
+        // the placeholder as the main checkout's tab for good. Gated on the
+        // pending reconcile rather than on whether tabs are stored, because a
+        // standalone window has no reconcile and this is its first write.
+        // Checked when the item fires, not when it is armed, because the
+        // reconcile may have settled meanwhile.
         let work = DispatchWorkItem { [weak self] in
-            guard let self, self.project.storedTabs() != nil else { return }
+            guard let self else { return }
+            guard !self.awaitsFirstReconcile else {
+                self.hasHeldFocusPersist = true
+                return
+            }
             self.persistAllTabs()
         }
         pendingFocusPersist = work
@@ -1337,9 +1366,39 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     /// turn as it, leaving no window for a new one to be armed in. The focus
     /// record the cancelled item was carrying is re-derived from the rebuilt
     /// tabs; it is a first-responder position, not user data.
+    ///
+    /// The splits' debounced thickness write is the other one, and it is
+    /// dropped too: it reaches `persistAllTabs()` through `onLayoutDidChange`
+    /// with the same live tab set, so a divider write armed by the first
+    /// layout pass, landing after the reconcile, wrote the placeholder just as
+    /// the focus write did. Anything held for `awaitsFirstReconcile` goes with
+    /// them: the reconcile's write and the rebuild that follows supersede it.
     public func cancelPendingTabPersist() {
         pendingFocusPersist?.cancel()
         pendingFocusPersist = nil
+        hasHeldFocusPersist = false
+        for split in splitControllersByTabID.values {
+            split.cancelPendingThicknessPersist()
+        }
+    }
+
+    /// The project controller's reconcile has finished, whether or not it
+    /// wrote. Lowers `awaitsFirstReconcile` and writes whatever the two
+    /// debounced writers held meanwhile: the stored tabs now say what the
+    /// reconcile settled on, so the live tab set is no longer a placeholder.
+    /// After a reconcile that wrote, `cancelPendingTabPersist()` has already
+    /// dropped all of it and this only lowers the flag. A no-op once lowered,
+    /// so the caller may call it after every reconcile (`idempotency`).
+    public func reconcileDidSettle() {
+        guard awaitsFirstReconcile else { return }
+        awaitsFirstReconcile = false
+        for split in splitControllersByTabID.values {
+            split.flushPendingThicknessPersist()
+        }
+        if hasHeldFocusPersist {
+            hasHeldFocusPersist = false
+            persistAllTabs()
+        }
     }
 
     /// A closing window stops writing the project's tab rows.
@@ -1381,15 +1440,14 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
         // still the one the user was looking at, so a divider they let go of a
         // moment ago writes what they left on screen.
         //
-        // Only where there is an arrangement to refine, though. A pending
+        // Only where the live tab set is not a placeholder, though. A pending
         // thickness write is armed by *any* resize — the window's first layout
-        // pass included — so a window closed before its project finished
-        // opening has one pending over a placeholder tab set that was never
-        // saved. Flushing there would write the placeholder as if it were the
-        // user's arrangement; `storedTabs()` is what tells the two apart, and
-        // a debounced divider is an update to a saved layout by definition,
-        // never the first write of one.
-        if project.storedTabs() != nil {
+        // pass included — so a project window closed before its first
+        // reconcile settled has one pending over a placeholder tab set that
+        // was never saved. Flushing there would write the placeholder as if it
+        // were the user's arrangement. A standalone window has no reconcile,
+        // so its flush is always its own arrangement, saved or not.
+        if !awaitsFirstReconcile {
             for split in splitControllersByTabID.values {
                 split.flushPendingThicknessPersist()
             }
@@ -1800,6 +1858,9 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     }
 
     private func wireLayoutCallback(on split: ComposableTabsViewController, tabID: UUID) {
+        // The divider half of `awaitsFirstReconcile`: the split keeps its
+        // pending write while this is up, for `reconcileDidSettle()` to flush.
+        split.isThicknessPersistHeld = { [weak self] in self?.awaitsFirstReconcile ?? false }
         split.onLayoutDidChange = { [weak self, weak split] node in
             guard let self else { return }
             // A split or a close makes leaves this window has never seen.

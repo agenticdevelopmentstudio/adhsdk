@@ -583,6 +583,41 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
         manager.closeProject(repoID: repo.id)
     }
 
+    /// A standalone window — File Browser, Document, Git — has no project
+    /// controller and so no reconcile: it is the only writer of its rows, and
+    /// its first debounced focus write is what stores its layout at all. A
+    /// gate on "tabs are already stored" (rather than on "a reconcile is still
+    /// pending") switched that write off for good, so a one-pane Document
+    /// window reopened on a freshly minted leaf and orphaned its pane state.
+    func testAStandaloneWindowStoresItsFocusedLeafWithNoReconcileBehindIt() async throws {
+        let database = try ProjectDatabase(path: repoRoot.appendingPathComponent(".test-project.db").path)
+        let repo = GitRepo(path: repoRoot.path, name: "fixture", kind: .fileBrowser)
+        try database.insert(repo)
+        let coordinator = try ProjectsCoordinator(database: database, scanner: nil, commandRegistry: CommandRegistry())
+        let manager = ProjectWindowManager()
+        manager.attach(to: coordinator)
+        manager.gitClient = GitClient(configuration: .tests)
+
+        let layout = try XCTUnwrap(ComposableTabsLayout.current, "setUp installs the test layout")
+        let windowController = try XCTUnwrap(
+            manager.openFileBrowserWindow(repo, layout: layout, activates: false) { _ in }
+        )
+        defer { windowController.close() }
+        XCTAssertNil(manager.projectController(for: repo.id), "a standalone window has no project controller")
+        let focused = try XCTUnwrap(windowController.allPanes().first?.nodeID)
+
+        try armFocusPersist(on: windowController)
+
+        let deadline = Date().addingTimeInterval(5)
+        while windowController.project.storedTabs()?.tabs.first?.focusedNodeID != focused, Date() < deadline {
+            try await Task.sleep(for: .milliseconds(20))
+        }
+        XCTAssertEqual(
+            windowController.project.storedTabs()?.tabs.first?.focusedNodeID, focused,
+            "a standalone window's focus change must store its layout, focused leaf included"
+        )
+    }
+
     /// MAJOR 6 (final review B): opening a project built its whole pane tree
     /// twice — once inside `init`, before the data source was assigned, so
     /// every tab fell back to a plain title, and again from a `reloadTabs()`
