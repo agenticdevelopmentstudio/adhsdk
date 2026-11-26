@@ -5,7 +5,7 @@ client's `jobs/__tests__/` MUST carry. The data client, the package and their te
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
 | jobs-001 | jobs-topics, topic-ids-unique | `jobsTopics` | Three entries in order: Jobs `jobs`, Templates `jobs/templates`, Environments `jobs/environments`; the ids are unique. |
-| jobs-002 | jobs-product-admin-topics, topic-ids-unique | `jobsProductAdminTopics` | Two entries in order: Status `/jobs`, Templates `/jobs/templates`; the ids are unique. |
+| jobs-002 | jobs-product-admin-topics, topic-ids-unique | `jobsProductAdminTopics` (test: "is Status and Templates in order, under the console's /admin") | Two entries in order: Status `/admin/jobs`, Templates `/admin/jobs/templates`; the ids are unique. |
 | jobs-003 | topics-subpath-plain-data | Import `@adh-sdk/jobs/topics` in a module with no React | Both topic sets load; the module imports nothing from React. |
 | jobs-004 | jobs-customer-catalog-only | Render `JobsPane side="customer"` with a catalog of one template | Creation is offered from the catalog entry only; no inline-steps or template authoring action is shown. |
 | jobs-005 | jobs-side-prop, jobs-catalog | Render `JobsPane side="account"` with a catalog of one template; create a job from it | The create call names that template's latest version. |

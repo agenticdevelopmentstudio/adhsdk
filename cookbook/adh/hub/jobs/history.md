@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.4.2 | 2026-11-26 | Mike Fullerton | jobsProductAdminTopics hrefs under the console's /admin: /admin/jobs, /admin/jobs/templates |
 | 1.4.1 | 2026-11-23 | Mike Fullerton | Accessibility: the notify boxes, the Offered-by boxes and the once-shown secret's confirm carry names that say what they do. |
 | 1.4.0 | 2026-11-23 | Mike Fullerton | A template job's inputs and defaults come from its pinned-version read and are editable against that version; a step run shows the name its run froze, else Step N. |
 | 1.3.0 | 2026-11-23 | Mike Fullerton | Review fixes: a template job's inputs and defaults come from the catalog only at its pinned version (job-inputs-pinned-version); notify shows the resolved value and saves only when changed; the job's runs and the status table hold every page in one query, and a failed Load more keeps the rows; a step run with no known name reads Step N with its id; defaults problems on publish are listed (vectors jobs-014 to jobs-018) |

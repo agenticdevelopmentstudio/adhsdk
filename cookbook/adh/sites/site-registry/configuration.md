@@ -9,3 +9,4 @@
 | The environment (the OAuth return-origin allowlist) | one of `'production'`, `'staging'`, `'testing'` | caller-supplied; required | Which deploy environment's OAuth-return-origin allowlist to compute. |
 | The build configuration table | optional build configuration entry per site identifier | fixed at build time | Per-site build behavior flags read by the shared build-configuration package; not caller-configurable at runtime. |
 
+| A site's `wildcardHost` (site definition field) | host pattern string, `*.<domain>` | absent, meaning a single-host site | Marks a wildcard site, one app serving every `<handle>.<domain>` host (today only `product-sites`, `*.agenticdeveloperhub.com`). Its env hosts put the env after the `*.`, its `prodHost` becomes only its folder's name, and every single-URL helper refuses it. |

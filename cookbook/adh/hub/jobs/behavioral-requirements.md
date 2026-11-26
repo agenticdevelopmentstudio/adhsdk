@@ -59,9 +59,10 @@
   (segment `jobs`), Templates (segment `jobs/templates`) and Environments (segment `jobs/environments`).
   Each entry is `{ id, label, href }`, and its `href` is the segment the host prefixes with the
   workspace.
-- **jobs-product-admin-topics**: `jobsProductAdminTopics` MUST list the product admin site's two Jobs
-  topics in this order: Status (`/jobs`) and Templates (`/jobs/templates`). Each entry is
-  `{ id, label, href }`, and its `href` is a page route of the product admin site.
+- **jobs-product-admin-topics**: `jobsProductAdminTopics` MUST list the product admin console's two Jobs
+  topics in this order: Status (`/admin/jobs`) and Templates (`/admin/jobs/templates`). Each
+  entry is `{ id, label, href }`, and its `href` is a page route of the `product-sites` site,
+  where the console lives under `/admin`.
 - **topic-ids-unique**: The ids within each topic set MUST be unique.
 
 ### JobsPane

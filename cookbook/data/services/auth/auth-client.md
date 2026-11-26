@@ -2,11 +2,11 @@
 id: 3ea9329e-5acc-4c43-b5ce-bb8c50570104
 title: "Authentication Client"
 type: ingredient
-version: 2.1.1
+version: 2.2.0
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-11-23
+modified: 2026-11-26
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -62,7 +62,7 @@ its own — every UI component in the auth family (login forms, callback pages,
 account-security screens) is a consumer of this contract, not part of it.
 
 
-A twelfth, React-based module covers a second kind of session. The product admin site (phase 6), where a product's own admins manage that product at its own host, keeps its access token in memory only, with its refresh token as an HttpOnly cookie on the site's origin. Its provider installs an access-token source that the request wrapper and the refresh operation ask before storage, so every data client sends the site's bearer unchanged; with no source installed, nothing differs.
+A twelfth, React-based module covers a second kind of session. The product admin console (phase 6, now under `/admin` on each product's own site), where a product's own admins manage that product at its own host, keeps its access token in memory only, with its refresh token as an HttpOnly cookie on the site's origin. Its provider takes the path of the site's auth route handlers as a required `authBase` prop, installs an access-token source that the request wrapper and the refresh operation ask before storage, so every data client sends the site's bearer unchanged; with no source installed, nothing differs.
 
 The client entry point (`client.ts`, published as `@adh-sdk/auth/client`) also re-exports the /v1 wire helpers, among them the token-free `publicJson` and `listAllPublicV1`, which are specified in the Auth v1 Wire Conventions ([adhsdk.ingredient.data.services.auth.v1](cookbook:870c182f-1a80-4254-8fec-3eb35c8f13f7)) recipe, not here.
 ## Behavioral Requirements
@@ -505,12 +505,20 @@ in with the product's customer login, managing that product at its own host. It
 is a sibling of the hub's session provider, not a mode of it: a page under one
 MUST NOT mount the other.
 
+- **product-admin-session-auth-base**: the provider MUST take a required `authBase`
+  prop, the path where the site's auth route handlers are mounted, with no trailing slash
+  (the product site passes `/admin/auth`). Every auth URL it requests or navigates to MUST be
+  built from it: `<authBase>/session`, `<authBase>/signout`, `<authBase>/signin` and
+  `<authBase>/signin?return=...`, with no request to any other auth path. It is required,
+  not defaulted, so a host that forgets it fails to compile rather than calling the wrong
+  path. The one in-flight session request at module scope is shared by every mount, since
+  one site has one auth base.
 - **product-admin-session-start**: on mount the provider MUST install a token
   source (a ref-held in-memory token, never storage or a URL) before any child's
   first effect runs, so a child's first request never reads a stored hub token,
-  and `POST` `/auth/session` with credentials included, the site's own route
+  and `POST` `<authBase>/session` with credentials included, the site's own route
   handler, whose refresh token is an HttpOnly cookie on the site's origin. A `401` MUST clear the
-  token and navigate to `/auth/signin?return=<current path and query,
+  token and navigate to `<authBase>/signin?return=<current path and query,
   URL-encoded>`. Any other non-OK status, or an answer with no `accessToken`
   string, is a failure, handled as in **product-admin-session-account**.
 - **product-admin-session-account**: once a token is held, the provider MUST read
@@ -527,10 +535,10 @@ MUST NOT mount the other.
   else the token's own `exp` claim; with neither, nothing is scheduled and a `401`
   still refreshes on demand through the token source. Concurrent refreshes MUST
   share one in-flight promise, and so MUST a remount's (React StrictMode's mount,
-  unmount and mount): `POST /auth/session` spends the rotating refresh cookie, so
+  unmount and mount): `POST <authBase>/session` spends the rotating refresh cookie, so
   two requests with one cookie end the session.
 - **product-admin-session-cross-tab**: every request that spends the refresh
-  cookie (`POST /auth/session` and `POST /auth/signout`) MUST run under one Web
+  cookie (`POST <authBase>/session` and `POST <authBase>/signout`) MUST run under one Web
   Lock (`navigator.locks`, name `adh-product-admin-session`) shared by every tab of
   the site, so two tabs never present the same cookie at once. Where Web Locks are
   unavailable the request runs without it.
@@ -540,16 +548,16 @@ MUST NOT mount the other.
   source only if it is still the installed one.
 - **product-admin-session-signout**: sign-out MUST cancel the timer and drop any
   refresh in flight (see **product-admin-session-stale-answers**), wait for a
-  `POST /auth/session` already sent to settle, `POST` `/auth/signout` with
+  `POST <authBase>/session` already sent to settle, `POST` `<authBase>/signout` with
   credentials included, and then, whether or not that request failed, clear the
-  token and account and navigate to `/auth/signin`.
+  token and account and navigate to `<authBase>/signin`.
 - **product-admin-session-hook**: the session hook MUST return the status, the
   account, the access token and sign-out, and MUST throw outside the provider.
   Navigation MUST go through the provider's `navigate` prop when given, else
   `window.location.assign`; a new `navigate` on each render MUST NOT restart the
   session.
 
-- **product-admin-session-step-up**: the product admin session hook MUST also return `stepUp(returnPath?)`, which MUST navigate (through the provider's `navigate`, else `window.location.assign`) to `/auth/signin?return=<returnPath, or the current path and query, URL-encoded>&prompt=login&max_age=600`, the URL the package also exports as `stepUpSigninUrl(returnPath)` so a page outside the provider can build the same link. It MUST NOT clear the token or the account, since the person is still signed in when it is called, and MUST NOT call `/auth/signout`. The site's own sign-in route turns `prompt` and `max_age` into the authorize request, so the second factor runs again.
+- **product-admin-session-step-up**: the product admin session hook MUST also return `stepUp(returnPath?)`, which MUST navigate (through the provider's `navigate`, else `window.location.assign`) to `<authBase>/signin?return=<returnPath, or the current path and query, URL-encoded>&prompt=login&max_age=600`, the URL the package also exports as `stepUpSigninUrl(authBase, returnPath)` so a page outside the provider can build the same link. It MUST NOT clear the token or the account, since the person is still signed in when it is called, and MUST NOT call `<authBase>/signout`. The site's own sign-in route turns `prompt` and `max_age` into the authorize request, so the second factor runs again.
 
 ### Security
 
@@ -733,16 +741,18 @@ component.
 | auth-client-119 | refresh-token-never-persisted | Token extraction from a body carrying `{ token: 'T', refreshToken: 'server-side-rt' }`, then writing the resulting bundle; inspecting the persistent store | The stored JSON's `refreshToken` field is `''`, never `'server-side-rt'` |
 | auth-client-120 | token-subject-not-an-authorization-decision | An access token with an unsigned/forged `sub` claim | Reading the token's subject claim returns that claim's value unverified — documents that callers MUST NOT treat it as an authorization fact |
 | auth-client-121 | access-token-source-seam, read-access-token-derivation, refresh-delegates-to-token-source | A token source whose `read` answers `'M'` installed while a stored bundle holds `'S'`; then reading the access token, refreshing, and removing the source | The read is `'M'` and the refresh is the source's own, with no refresh request sent; every install and removal invokes the session-change subscribers; after removal the read is `'S'` |
-| auth-client-122 | product-admin-session-start, product-admin-session-account | The provider mounted where `POST /auth/session` answers `{ accessToken: 'T', expiresAt }` and `GET /api/v1/account` answers roles `['admin']`; then an account whose roles lack `admin` | The first reads `ready` with the token held in memory and the mapped account; the second reads `no-access` |
-| auth-client-123 | product-admin-session-start | `POST /auth/session` answering `401` on the page `/users?q=a` | The browser is sent to `/auth/signin?return=%2Fusers%3Fq%3Da` |
-| auth-client-124 | product-admin-session-refresh | A token whose `expiresAt` is 10 minutes ahead | The next `POST /auth/session` fires at nine minutes |
-| auth-client-125 | product-admin-session-signout, product-admin-session-stale-answers | Sign-out; then the provider unmounted | Sign-out posts `/auth/signout`, drops the token and navigates to `/auth/signin`; unmount removes the token source |
+| auth-client-122 | product-admin-session-start, product-admin-session-account | The provider mounted where `POST /admin/auth/session` answers `{ accessToken: 'T', expiresAt }` and `GET /api/v1/account` answers roles `['admin']`; then an account whose roles lack `admin` | The first reads `ready` with the token held in memory and the mapped account; the second reads `no-access` |
+| auth-client-123 | product-admin-session-start | `POST /admin/auth/session` answering `401` on the page `/users?q=a`, mounted with `authBase` `/admin/auth` | The browser is sent to `/admin/auth/signin?return=%2Fusers%3Fq%3Da` |
+| auth-client-124 | product-admin-session-refresh | A token whose `expiresAt` is 10 minutes ahead | The next `POST /admin/auth/session` fires at nine minutes |
+| auth-client-125 | product-admin-session-signout, product-admin-session-stale-answers | Sign-out; then the provider unmounted | Sign-out posts `/admin/auth/signout`, drops the token and navigates to `/admin/auth/signin`; unmount removes the token source |
 | auth-client-126 | product-admin-session-stale-answers | A refresh pending when sign-out is clicked, then answering a token | The token is not adopted and no refresh is scheduled |
-| auth-client-127 | product-admin-session-refresh | The provider mounted under React StrictMode | One `POST /auth/session` is sent |
-| auth-client-128 | product-admin-session-cross-tab | Another tab holds the `adh-product-admin-session` lock | The provider's `POST /auth/session` waits for it; sign-out's `POST /auth/signout` takes the same lock |
+| auth-client-127 | product-admin-session-refresh | The provider mounted under React StrictMode | One `POST /admin/auth/session` is sent |
+| auth-client-128 | product-admin-session-cross-tab | Another tab holds the `adh-product-admin-session` lock | The provider's `POST /admin/auth/session` waits for it; sign-out's `POST /admin/auth/signout` takes the same lock |
 | auth-client-129 | product-admin-session-start | A stored hub token present, and a child that reads the access token in its first effect | The child reads the provider's token, never the stored one |
-| auth-client-130 | product-admin-session-hook | The provider given a new inline `navigate` on each render | One `POST /auth/session` is sent |
-| auth-client-131 | product-admin-session-step-up | `stepUp('/support')` called from a signed-in product admin | One navigation to `/auth/signin?return=%2Fsupport&prompt=login&max_age=600`; the token and account are kept and nothing is posted |
+| auth-client-130 | product-admin-session-hook | The provider given a new inline `navigate` on each render | One `POST /admin/auth/session` is sent |
+| auth-client-131 | product-admin-session-step-up | `stepUp('/support')` called from a signed-in product admin, the provider mounted with `authBase` `/admin/auth` | One navigation to `/admin/auth/signin?return=%2Fsupport&prompt=login&max_age=600`; the token and account are kept and nothing is posted |
+| auth-client-132 | product-admin-session-step-up, product-admin-session-auth-base | `stepUpSigninUrl('/admin/auth', '/admin/support?x=1')`, then `stepUpSigninUrl('/auth', '/support')` (traced to "builds the step-up URL on its own, from the auth base it is given") | `'/admin/auth/signin?return=%2Fadmin%2Fsupport%3Fx%3D1&prompt=login&max_age=600'`, then `'/auth/signin?return=%2Fsupport&prompt=login&max_age=600'` |
+| auth-client-133 | product-admin-session-auth-base | The provider mounted with `authBase` `/elsewhere/auth` for an admin; then `stepUp('/admin/support')`; then sign-out (traced to "takes every URL from authBase, with no request to any other auth path") | Step-up navigates to `/elsewhere/auth/signin?return=%2Fadmin%2Fsupport&prompt=login&max_age=600`; sign-out navigates to `/elsewhere/auth/signin`; the only requests are `/elsewhere/auth/session`, `/api/v1/account` and `/elsewhere/auth/signout`, in that order |
 ## Edge Cases
 
 - **Null/empty input**: token extraction from `{}` (neither field present) —
@@ -813,7 +823,7 @@ component.
 | The error-reporter hook | injected hook | none | Host-supplied sink for error reporting; none means console-only |
 | The retry-marker hook | injected hook | none | Host-supplied callback tagging the exact request options of a retried request |
 | Session-change subscription | injected subscription | n/a | Caller-registered callback invoked on every token write/clear |
-
+| `authBase` (`ProductAdminAuthProvider` prop) | string, no trailing slash | required, no default | Where the site's auth route handlers are mounted (the product site passes `/admin/auth`); every session, sign-in, sign-out and step-up URL the provider uses is built from it |
 ## Deep Linking
 
 Not applicable in the sense of a registered URL scheme or platform deep-link
@@ -939,7 +949,9 @@ keeps an expected 4xx (wrong password, stale code) off this log.
   "no interactive host environment" guards resolve to in source — they gate
   every operation that would otherwise run during server-side rendering.
   `ProductAdminAuthProvider.tsx` (React context, the one file in this ingredient
-  that is not framework-free) is the product admin site's session: it sets itself
+  that is not framework-free) is the product site's admin-console session, its auth URLs built from the required
+  `authBase` prop (`/admin/auth` on the product site, and `stepUpSigninUrl(authBase, returnPath)`
+  for a link built outside it): it sets itself
   as the token source (`AccessTokenSource`, `setAccessTokenSource` and
   `accessTokenSource` in `tokens.ts`) so every `@adh-sdk/data` client sends its
   in-memory bearer through `authedJson`, and `refreshAccessToken` in `refresh.ts`
@@ -1165,6 +1177,7 @@ honestly-reported gap in the source, not a hidden one.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 2.2.0 | 2026-11-26 | Mike Fullerton | ProductAdminAuthProvider: the required authBase prop builds every auth URL (<authBase>/session, /signin, /signout); stepUpSigninUrl(authBase, returnPath) |
 | 2.1.1 | 2026-11-23 | Mike Fullerton | The public reads use the shared token-free publicJson from the Auth v1 Wire Conventions; behaviour unchanged. |
 | 2.1.0 | 2026-11-23 | Mike Fullerton | Phase 7: consented support access |
 | 2.0.0 | 2026-11-23 | Mike Fullerton | Phase 6: the access-token source seam and ProductAdminAuthProvider, the product admin site's in-memory session |
