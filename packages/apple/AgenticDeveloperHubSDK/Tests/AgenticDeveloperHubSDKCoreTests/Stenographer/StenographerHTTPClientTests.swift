@@ -35,17 +35,19 @@ final class StenographerHTTPClientTests: XCTestCase {
     override func tearDown() { StubDaemonProtocol.handler = nil }
 
     /// The deprecated no-argument client still builds and still honours
-    /// `STENOGRAPHER_URL`, so a consumer that named it keeps compiling.
+    /// `STENOGRAPHER_URL`, so a consumer that named it keeps compiling. The
+    /// environment is handed in rather than `setenv`'d: the process
+    /// environment is shared with every test running beside this one.
     @available(*, deprecated)
     func testTheDeprecatedDefaultBaseURLHonoursTheEnvironment() {
-        let previous = ProcessInfo.processInfo.environment["STENOGRAPHER_URL"]
-        defer {
-            if let previous { setenv("STENOGRAPHER_URL", previous, 1) } else { unsetenv("STENOGRAPHER_URL") }
-        }
-        setenv("STENOGRAPHER_URL", "http://127.0.0.1:22951", 1)
-        XCTAssertEqual(StenographerHTTPClient.defaultBaseURL.absoluteString, "http://127.0.0.1:22951")
-        unsetenv("STENOGRAPHER_URL")
-        XCTAssertEqual(StenographerHTTPClient.defaultBaseURL.absoluteString, "http://127.0.0.1:22847")
+        XCTAssertEqual(
+            StenographerHTTPClient.defaultBaseURL(environment: ["STENOGRAPHER_URL": "http://127.0.0.1:22951"])
+                .absoluteString,
+            "http://127.0.0.1:22951")
+        XCTAssertEqual(StenographerHTTPClient.defaultBaseURL(environment: [:]).absoluteString,
+                       "http://127.0.0.1:22847")
+        XCTAssertEqual(StenographerHTTPClient.defaultBaseURL,
+                       StenographerHTTPClient.defaultBaseURL(environment: ProcessInfo.processInfo.environment))
         _ = StenographerHTTPClient()
     }
 

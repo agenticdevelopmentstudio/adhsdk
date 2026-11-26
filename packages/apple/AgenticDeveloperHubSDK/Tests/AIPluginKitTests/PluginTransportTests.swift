@@ -222,15 +222,18 @@ struct PluginTransportTests {
     /// purpose; quietly merging the host's back in would hand a plugin
     /// subprocess every secret in this process's environment.
     ///
-    /// The probe variable is planted in *this* process rather than assumed:
-    /// asserting on a real variable like `PATH` would be unsound, because a
-    /// shell invents one for itself when it is missing.
+    /// The probe is a variable this process already has, read rather than
+    /// planted with `setenv`: the process environment is one table shared with
+    /// every test running beside this one, and a `setenv` reallocates it under
+    /// any thread copying it to spawn a child. The child is `/usr/bin/env`
+    /// itself, with no shell to invent a variable of its own, so any parent
+    /// variable it prints was inherited.
     @Test("a non-empty environment replaces the parent's rather than merging over it")
     func environmentReplacesRatherThanMergesOverTheParent() async throws {
-        let parentOnly = "WHIPPET_PARENT_ONLY_"
-            + UUID().uuidString.replacingOccurrences(of: "-", with: "")
-        setenv(parentOnly, "1", 1)
-        defer { unsetenv(parentOnly) }
+        let parentOnly = try #require(
+            ProcessInfo.processInfo.environment.keys.filter { $0 != "WHIPPET_PLUGIN_PROBE" }.sorted().first,
+            "the test process has no environment variable to withhold"
+        )
 
         // `/usr/bin/env` directly, not through a shell: a shell would add
         // variables of its own and blur what the child actually inherited.
@@ -246,7 +249,7 @@ struct PluginTransportTests {
             "the plugin's own variable must reach the child"
         )
         #expect(
-            !childEnvironment.contains(parentOnly),
+            !childEnvironment.split(separator: "\n").contains { $0.hasPrefix("\(parentOnly)=") },
             "a parent variable the plugin never asked for reached the child: \(childEnvironment)"
         )
     }

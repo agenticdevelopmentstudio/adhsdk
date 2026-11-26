@@ -171,7 +171,8 @@ final class PartnerControllerTests: XCTestCase {
         endpoint: PartnerController.Endpoint? = .init(port: 1, token: "t"),
         turnTimeout: (() -> Duration)? = nil,
         isPIDAlive: @escaping (Int32) -> Bool = { _ in false },
-        purgeInterval: TimeInterval = 86_400
+        purgeInterval: TimeInterval = 86_400,
+        parentEnvironment: @escaping () -> [String: String] = { ProcessInfo.processInfo.environment }
     ) -> PartnerController {
         let log = log!
         let made = PartnerController(
@@ -185,7 +186,7 @@ final class PartnerControllerTests: XCTestCase {
                 return process
             },
             settings: settings, turnTimeout: turnTimeout, pid: 4242, isPIDAlive: isPIDAlive,
-            purgeInterval: purgeInterval)
+            purgeInterval: purgeInterval, parentEnvironment: parentEnvironment)
         controller = made
         return made
     }
@@ -249,9 +250,11 @@ final class PartnerControllerTests: XCTestCase {
     }
 
     func testThePartnerRunsHeadlessWithoutAnInheritedCredential() async {
-        setenv("ANTHROPIC_API_KEY", "inherited", 1)
-        defer { unsetenv("ANTHROPIC_API_KEY") }
-        let controller = makeController()
+        // The inherited credential is handed in, never `setenv`'d: the process
+        // environment is shared with every test running beside this one, and
+        // its children would briefly inherit the key.
+        let parent = ProcessInfo.processInfo.environment.merging(["ANTHROPIC_API_KEY": "inherited"]) { _, new in new }
+        let controller = makeController(parentEnvironment: { parent })
         await startIdle(controller)
         XCTAssertEqual(controller.environment["ADH_SDK_HEADLESS"], "1")
         XCTAssertNil(controller.environment["ANTHROPIC_API_KEY"])

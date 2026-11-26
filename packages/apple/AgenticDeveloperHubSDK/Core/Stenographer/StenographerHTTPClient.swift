@@ -57,7 +57,14 @@ public final class StenographerHTTPClient: StenographerDaemonService, @unchecked
     @available(*, deprecated,
                message: "stenographerd is retired; pass init(baseURL:) the URL of the daemon that serves Stenographer")
     public static var defaultBaseURL: URL {
-        if let raw = ProcessInfo.processInfo.environment["STENOGRAPHER_URL"], let url = URL(string: raw) {
+        defaultBaseURL(environment: ProcessInfo.processInfo.environment)
+    }
+
+    /// ``defaultBaseURL`` read from `environment` rather than this process's
+    /// own, so a test can name `STENOGRAPHER_URL` without a `setenv`, which
+    /// races every other thread spawning a child at the same moment.
+    static func defaultBaseURL(environment: [String: String]) -> URL {
+        if let raw = environment["STENOGRAPHER_URL"], let url = URL(string: raw) {
             return url
         }
         return URL(string: "http://127.0.0.1:22847")!

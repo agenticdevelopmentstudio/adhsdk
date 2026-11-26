@@ -62,6 +62,8 @@ public final class PartnerController: ObservableObject {
     let pid: Int32
     let isPIDAlive: (Int32) -> Bool
     let now: () -> Date
+    /// The environment the partner's own is made from, read at each start: this process's by default.
+    let parentEnvironment: () -> [String: String]
     /// How often a running partner drops done attention items, closed sessions and old tool calls.
     let purgeInterval: TimeInterval
 
@@ -115,8 +117,10 @@ public final class PartnerController: ObservableObject {
                 pid: Int32 = ProcessInfo.processInfo.processIdentifier,
                 isPIDAlive: @escaping (Int32) -> Bool = { kill($0, 0) == 0 },
                 now: @escaping () -> Date = Date.init,
-                purgeInterval: TimeInterval = 86_400) {
+                purgeInterval: TimeInterval = 86_400,
+                parentEnvironment: @escaping () -> [String: String] = { ProcessInfo.processInfo.environment }) {
         self.store = store
+        self.parentEnvironment = parentEnvironment
         self.purgeInterval = purgeInterval
         self.sessions = sessions
         self.notifier = notifier
@@ -214,7 +218,7 @@ public final class PartnerController: ObservableObject {
         self.callerID = callerID
         // The whole environment, not overrides: marked headless so session trackers do not record the partner
         // as a session, and without any credential the app inherited from the terminal that launched it.
-        environment = ClaudeAuthCLI.childEnvironment(executable: claude)
+        environment = ClaudeAuthCLI.childEnvironment(executable: claude, parent: parentEnvironment())
         do {
             try await launch(configuration)
         } catch is CancellationError {

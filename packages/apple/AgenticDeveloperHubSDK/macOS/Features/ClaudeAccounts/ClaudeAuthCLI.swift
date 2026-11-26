@@ -141,8 +141,14 @@ public enum ClaudeAuthCLI {
     ///
     /// `PATH` leads with `executable`'s own directory, so a script-installed
     /// `claude` finds the `node` beside it.
-    static func childEnvironment(executable: String) -> [String: String] {
-        var env = ProcessInfo.processInfo.environment
+    ///
+    /// `parent` is the environment edited, this process's own by default; a
+    /// test passes one rather than calling `setenv`, which races every other
+    /// thread spawning a child at the same moment.
+    static func childEnvironment(
+        executable: String, parent: [String: String] = ProcessInfo.processInfo.environment
+    ) -> [String: String] {
+        var env = parent
         env["PATH"] = ClaudeCLI.searchPath(
             claudeDirectory: ClaudeCLI.directory(ofBinary: executable), inheritedPath: env["PATH"])
         env["ADH_SDK_HEADLESS"] = "1"

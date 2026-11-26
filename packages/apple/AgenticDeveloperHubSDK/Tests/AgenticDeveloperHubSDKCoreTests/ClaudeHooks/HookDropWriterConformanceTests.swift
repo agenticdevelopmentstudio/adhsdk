@@ -62,13 +62,30 @@ final class HookDropWriterConformanceTests: XCTestCase {
                        "~/.claude/adkd-events")
     }
 
+    /// The default is this process's environment. Checked against what the
+    /// process already has rather than a variable planted with `setenv`: the
+    /// process environment is one table shared with every test running beside
+    /// this one, and a `setenv` reallocates it under any thread copying it to
+    /// spawn a child. Every `*_DROP_DIR` variable the process carries is
+    /// checked by name; the fresh name below is one it cannot carry, so its
+    /// default must fall back to the configured directory.
     func testDrop017_theEnvironmentDefaultsToTheProcessEnvironment() {
+        let process = ProcessInfo.processInfo.environment
         let key = "HOOKDROPCONFORMANCE\(UUID().uuidString.prefix(8).uppercased())_DROP_DIR"
-        let config = configuration(name: String(key.dropLast("_DROP_DIR".count)))
-        setenv(key, "/tmp/from-process-env", 1)
-        defer { unsetenv(key) }
-        XCTAssertEqual(HookDropWriter.dropDirectoryVariable(configuration: config), key)
-        XCTAssertEqual(HookDropWriter.dropDirectory(configuration: config), "/tmp/from-process-env")
+        let fresh = configuration(name: String(key.dropLast("_DROP_DIR".count)))
+        XCTAssertEqual(HookDropWriter.dropDirectoryVariable(configuration: fresh), key)
+        XCTAssertEqual(HookDropWriter.dropDirectory(configuration: fresh), fresh.dropDirectory)
+        XCTAssertEqual(HookDropWriter.dropDirectory(configuration: fresh, environment: [key: "/tmp/given"]),
+                       "/tmp/given")
+
+        let carried = process.keys.filter {
+            $0.hasSuffix("_DROP_DIR") && $0.count > "_DROP_DIR".count && !(process[$0] ?? "").isEmpty
+        }
+        for variable in carried {
+            let config = configuration(name: String(variable.dropLast("_DROP_DIR".count)))
+            guard HookDropWriter.dropDirectoryVariable(configuration: config) == variable else { continue }
+            XCTAssertEqual(HookDropWriter.dropDirectory(configuration: config), process[variable])
+        }
     }
 
     // MARK: - Writing
