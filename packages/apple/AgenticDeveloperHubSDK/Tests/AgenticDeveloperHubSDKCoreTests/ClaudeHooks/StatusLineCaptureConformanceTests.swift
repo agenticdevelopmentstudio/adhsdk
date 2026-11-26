@@ -47,7 +47,8 @@ final class StatusLineCaptureConformanceTests: XCTestCase {
     ) -> Int32 {
         StatusLineCapture.run(
             captureOnly: captureOnly, payload: payload, environment: environment, configuration: config,
-            post: { _, _ in false }, accountName: { token in seen(token); return "" }, lockDirectory: directory, render: render)
+            post: { _, _ in false }, accountName: { token in seen(token); return "" },
+            lockDirectory: directory, render: render)
     }
 
     // MARK: - Parent pid and injected environment
