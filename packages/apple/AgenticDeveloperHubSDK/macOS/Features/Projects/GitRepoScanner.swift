@@ -41,7 +41,14 @@ public struct GitRepoScanner: Sendable {
         "Pods", "Carthage"
     ]
 
+    /// The roots as the caller spelled them, which is how the walk spells
+    /// every project under them. Never standardized: `standardizedFileURL`
+    /// turns `/private/var/...` into `/var/...`, so a root given by its real
+    /// path would report its projects under another spelling.
     public let roots: [URL]
+    /// The same roots standardized, for `skips(path:)`, which standardizes
+    /// the path it is asked about and must compare like with like.
+    private let standardizedRoots: [URL]
     public let skippedDirectories: [URL]
     public let skipsHiddenDirectories: Bool
     public let skipsSubmodules: Bool
@@ -52,7 +59,8 @@ public struct GitRepoScanner: Sendable {
         skipsHiddenDirectories: Bool = true,
         skipsSubmodules: Bool = true
     ) {
-        self.roots = roots.map(\.standardizedFileURL)
+        self.roots = roots
+        self.standardizedRoots = roots.map(\.standardizedFileURL)
         self.skippedDirectories = skippedDirectories.map(\.standardizedFileURL)
         self.skipsHiddenDirectories = skipsHiddenDirectories
         self.skipsSubmodules = skipsSubmodules
@@ -70,7 +78,7 @@ public struct GitRepoScanner: Sendable {
     public func skips(path: String) -> Bool {
         let url = URL(fileURLWithPath: path).standardizedFileURL
         let components = url.pathComponents
-        guard let root = roots.first(where: { Self.components(components, areWithin: $0) }) else {
+        guard let root = standardizedRoots.first(where: { Self.components(components, areWithin: $0) }) else {
             return true
         }
         if skippedDirectories.contains(where: { Self.components(components, areWithin: $0) }) {
