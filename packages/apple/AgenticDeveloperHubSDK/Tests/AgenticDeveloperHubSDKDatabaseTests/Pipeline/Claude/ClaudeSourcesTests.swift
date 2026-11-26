@@ -35,11 +35,16 @@ final class ClaudeSourcesTests: XCTestCase {
 
     override func tearDownWithError() throws {
         spool = nil
-        // Restore permissions so a chmod-000 fixture can be removed.
+        // Restore permissions so a chmod-000 fixture can be removed. A
+        // directory needs its search bit back too: 0o644 on one left it
+        // untraversable, so the removal below failed and every run leaked it.
         if let items = FileManager.default.enumerator(atPath: tmpDir.path) {
             for case let item as String in items {
+                let path = tmpDir.appendingPathComponent(item).path
+                var isDirectory: ObjCBool = false
+                _ = FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory)
                 try? FileManager.default.setAttributes(
-                    [.posixPermissions: 0o644], ofItemAtPath: tmpDir.appendingPathComponent(item).path)
+                    [.posixPermissions: isDirectory.boolValue ? 0o755 : 0o644], ofItemAtPath: path)
             }
         }
         try? FileManager.default.removeItem(at: tmpDir)

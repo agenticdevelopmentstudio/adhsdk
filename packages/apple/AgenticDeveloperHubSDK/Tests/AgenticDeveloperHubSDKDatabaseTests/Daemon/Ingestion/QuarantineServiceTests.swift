@@ -112,7 +112,10 @@ final class QuarantineServiceTests: XCTestCase {
     /// active, so the badge still counts it and a later retry can resolve it.
     func testClearLeavesTheLogRowOfAKeptFileActive() throws {
         let (database, path) = try TestDaemonDatabase.makeSessionDatabase()
-        defer { try? FileManager.default.removeItem(atPath: path) }
+        // After the test returns and releases the database, so the close is
+        // done before its -wal, -shm and directory go too; a defer here ran
+        // with the database still open and left all three behind.
+        addTeardownBlock { TestDaemonDatabase.remove(path: path) }
         let service = QuarantineService(errorsDirectory: errorsDir, database: database, preserveRaw: { url in
             if url.lastPathComponent == "error-kept.json" { throw Refused() }
         })

@@ -13,6 +13,10 @@ import AgenticDeveloperHubSDKDatabase
 final class SafariExtensionsTopicTests: XCTestCase {
 
     private var root: URL!
+    /// Every host a test made, so tearDown can wait for their saves: a
+    /// host saves the catalog on a task of its own, and one still running
+    /// when the root was removed wrote `Library/global` back, leaking it.
+    private var hosts: [SafariExtensionHost] = []
 
     override func setUp() {
         super.setUp()
@@ -21,15 +25,19 @@ final class SafariExtensionsTopicTests: XCTestCase {
         try? FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
+        for host in hosts { await host.savesFinished() }
+        hosts = []
         try? FileManager.default.removeItem(at: root)
-        super.tearDown()
+        try await super.tearDown()
     }
 
     // MARK: - Fixtures
 
     private func makeHost() -> SafariExtensionHost {
-        SafariExtensionHost(profile: .global, library: library)
+        let host = SafariExtensionHost(profile: .global, library: library)
+        hosts.append(host)
+        return host
     }
 
     /// A library over a scratch catalog, never the person's.
