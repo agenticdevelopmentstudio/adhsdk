@@ -251,4 +251,46 @@ struct GitLFSFixtureTests {
         #expect(state.files == ["blob.bin": true])
         #expect(state.isInUse)
     }
+
+    @Test("a repository no attribute marks for LFS is reported empty without running git-lfs")
+    func noLFSAttributeRunsNoGitLFS() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-lfs-none")
+        defer { repository.tearDown() }
+        try repository.write("*.txt text\n", to: ".gitattributes")
+        try repository.write("a", to: "a.txt")
+        try await repository.run(["add", "--", ".gitattributes", "a.txt"])
+        try await repository.commit("plain", at: 1_767_268_800)
+
+        let client = GitClient(configuration: .tests)
+        let state = try await client.lfsState(in: repository.root)
+        #expect(state.isInstalled)
+        #expect(state.trackedPatterns.isEmpty)
+        #expect(state.files.isEmpty)
+        let lfsCalls = GitCommandLog.entries().filter { entry in
+            entry.directory.hasPrefix(repository.root.path) && entry.arguments.contains("lfs")
+                && !entry.arguments.contains("version")
+        }
+        #expect(lfsCalls.isEmpty, "ran \(lfsCalls.map(\.commandLine))")
+    }
+
+    @Test("an uncommitted .gitattributes in a subdirectory still reports its pattern, asked from another one")
+    func nestedUncommittedAttributesAreRead() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-lfs-nested")
+        defer { repository.tearDown() }
+        try repository.write("*.img filter=lfs diff=lfs merge=lfs -text\n", to: "assets/.gitattributes")
+        try repository.write("x", to: "docs/readme.txt")
+
+        let state = try await GitClient(configuration: .tests).lfsState(in: repository.url("docs"))
+        #expect(state.trackedPatterns == ["assets/*.img"])
+    }
+
+    @Test("a pattern in the repository's info/attributes is reported")
+    func infoAttributesAreRead() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-lfs-info")
+        defer { repository.tearDown() }
+        try repository.write("*.dat filter=lfs diff=lfs merge=lfs -text\n", to: ".git/info/attributes")
+
+        let state = try await GitClient(configuration: .tests).lfsState(in: repository.root)
+        #expect(state.trackedPatterns == [".git/info/*.dat"])
+    }
 }
