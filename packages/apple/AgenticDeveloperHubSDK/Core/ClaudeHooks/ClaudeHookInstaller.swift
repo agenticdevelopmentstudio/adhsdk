@@ -527,6 +527,10 @@ public final class ClaudeHookInstaller: Sendable {
             try statusLine.unregister(name)
             logger.info("Removed our own earlier statusLine command, adopted as \(name, privacy: .public)")
         }
+        for name in dispatcherAdoptedEntryNames() {
+            try statusLine.unregister(name)
+            logger.info("Removed the dispatcher's own command, adopted as \(name, privacy: .public)")
+        }
         logDispatcherInstall(try statusLine.installDispatcher())
         let current = Self.statusLineSlotCommand(settings)
         guard current != statusLine.dispatcherCommand else { return nil }
@@ -572,6 +576,17 @@ public final class ClaudeHookInstaller: Sendable {
         (entries ?? statusLine.entries())
             .filter { $0.kind == .renderers && ClaudeStatusLine.isAdoptedName($0.name)
                 && isOwnStatusLineCommand($0.command) }
+            .map(\.name)
+    }
+
+    /// `adopted*` renderers that run the dispatcher itself: left by an
+    /// installer that knew only the shell shape and adopted the `python3`
+    /// slot as another tool's command. The dispatcher prints nothing as its
+    /// own entry, so such an entry is dead weight, and it is removed.
+    private func dispatcherAdoptedEntryNames() -> [String] {
+        statusLine.entries()
+            .filter { $0.kind == .renderers && ClaudeStatusLine.isAdoptedName($0.name)
+                && ClaudeStatusLine.isDispatcherCommand($0.command.trimmingCharacters(in: .whitespacesAndNewlines)) }
             .map(\.name)
     }
 

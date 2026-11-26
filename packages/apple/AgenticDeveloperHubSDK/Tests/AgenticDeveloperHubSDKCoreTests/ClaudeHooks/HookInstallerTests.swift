@@ -422,6 +422,19 @@ final class HookInstallerTests: XCTestCase {
         XCTAssertTrue(adopted.isEmpty, "\(adopted)")
     }
 
+    func testTheDispatcherAdoptedByAShellOnlyInstallerIsRemoved() throws {
+        // An installer that knew only `sh …dispatch.sh` took the python3 slot
+        // for another tool's command and kept it as `adopted`: the dispatcher
+        // running as its own entry prints nothing, so the entry is dead weight.
+        _ = try installer.statusLine.register(.renderers, name: "adopted",
+                                              command: installer.statusLine.dispatcherCommand)
+        let shellSlot = "sh /x/dispatch.sh # claudehelpers-statusline"
+        try writeSettings(["statusLine": ["type": "command", "command": shellSlot]])
+        XCTAssertEqual(installer.installHooks(), .installed)
+        assertDispatching()
+        XCTAssertTrue(adopted.isEmpty, "\(adopted)")
+    }
+
     func testUninstallRemovesOurOwnAdoptedCommandToo() throws {
         installer.installHooks()
         _ = try installer.statusLine.adopt("'/Users/x/Old Apps/Stenographer.app/Contents/Helpers/steno' statusline")

@@ -34,7 +34,7 @@
     "approved-date": ""
   },
   "names_hosts": "The component integrates with Claude Code's hooks and status line; the host's name, events and paths are its subject.",
-  "synced": "95222c98e3e09ca0",
+  "synced": "a768f3c5ec968ebb",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
