@@ -79,7 +79,8 @@ struct GitClientTests {
         /// `GIT_CONFIG_GLOBAL`, via `extraEnvironment` rather than a process-wide `setenv`.
         var configuration: GitClientConfiguration {
             GitClientConfiguration(
-                executableURL: GitTestRepository.gitURL, timeout: 60, extraEnvironment: ["GIT_CONFIG_GLOBAL": file.path])
+                executableURL: GitTestRepository.gitURL, timeout: 60,
+                extraEnvironment: ["GIT_CONFIG_GLOBAL": file.path])
         }
 
         /// The developer's real global config, read only so a test can assert it was
