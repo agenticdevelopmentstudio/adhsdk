@@ -190,6 +190,46 @@ struct GitLFSTests {
         #expect(!state.isInUse)
     }
 
+    @Test("git-lfs uninstalled after a yes was remembered is notInstalled on the next look, not a throw")
+    func uninstalledAfterCachedYes() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-lfs-uninstalled")
+        defer { repository.tearDown() }
+        try repository.write("*.bin filter=lfs diff=lfs merge=lfs -text\n", to: ".gitattributes")
+        let tools = FileManager.default.temporaryDirectory
+            .appendingPathComponent("git-lfs-uninstalled-tools-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: tools, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tools) }
+        // `lfs` answers as git-lfs would until the marker exists, then as git does without
+        // it; every other verb is the real git.
+        let marker = tools.appendingPathComponent("uninstalled")
+        let script = tools.appendingPathComponent("git")
+        try """
+            #!/bin/sh
+            if [ "$1" = "lfs" ]; then
+              if [ -e '\(marker.path)' ]; then
+                echo "git: 'lfs' is not a git command. See 'git --help'." >&2
+                exit 1
+              fi
+              if [ "$2" = "version" ]; then echo "git-lfs/3.6.0"; fi
+              exit 0
+            fi
+            exec '\(GitTestRepository.gitURL.path)' "$@"
+
+            """.write(to: script, atomically: true, encoding: .utf8)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: script.path)
+        let client = GitClient(configuration: GitClientConfiguration(
+            executableURL: script, timeout: 60, extraEnvironment: GitClientConfiguration.isolatedEnvironment))
+
+        let before = try await client.lfsState(in: repository.root)
+        #expect(before.isInstalled)
+        try Data().write(to: marker)
+
+        let after = try await client.lfsState(in: repository.root)
+        #expect(after == .notInstalled)
+        let remembered = await client.lfsInstalledFor
+        #expect(!remembered.contains(script.path))
+    }
+
     @Test("a git child's PATH adds Homebrew's bin to a Finder-launched app's system PATH")
     func childPathIsRepaired() {
         let environment = GitClient.childEnvironment(

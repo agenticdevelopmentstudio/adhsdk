@@ -9,8 +9,9 @@ import Foundation
 /// git usage — by the app and by agents driving it — countable, attributable
 /// and bounded by a single timeout.
 ///
-/// **"Bottleneck" is about accounting, not about serialization.** This actor
-/// holds no isolated mutable state, and every verb suspends at
+/// **"Bottleneck" is about accounting, not about serialization.** This actor's
+/// only isolated mutable state is `lfsInstalledFor`, a small cache no verb
+/// waits on, and every verb suspends at
 /// `await SubprocessChannel.run`, which releases the actor for the whole
 /// lifetime of the child. Ten concurrent callers therefore run ten concurrent
 /// git processes, not one at a time — intentionally, since a `status` on one
@@ -42,7 +43,9 @@ public actor GitClient {
     /// The git executables `git lfs version` has already answered for. Whether
     /// git-lfs is installed is the machine's, not the repository's, so it is
     /// asked once per executable rather than on every refresh. Only a yes is
-    /// kept: git-lfs installed while the app runs is seen on the next look.
+    /// kept: git-lfs installed while the app runs is seen on the next look, and
+    /// a `git lfs track` that fails drops the yes and asks again, so git-lfs
+    /// uninstalled while the app runs is seen too.
     var lfsInstalledFor: Set<String> = []
 
     public init(configuration provider: @escaping @Sendable () async -> GitClientConfiguration) {

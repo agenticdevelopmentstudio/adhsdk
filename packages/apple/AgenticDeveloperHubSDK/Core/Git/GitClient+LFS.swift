@@ -13,16 +13,14 @@ extension GitClient {
     ///
     /// `lfs version` is asked once per git executable (see `lfsInstalledFor`), and `track`
     /// and `ls-files` run side by side: each is a few hundred milliseconds, and the model
-    /// asks on every refresh. Neither runs when no attribute source names `filter=lfs`
+    /// asks on every refresh. A `track` that fails drops the remembered yes and asks
+    /// `lfs version` again, so git-lfs uninstalled while the app runs is `.notInstalled`
+    /// on the next look rather than a thrown `track` failure. Neither runs when no attribute source names `filter=lfs`
     /// (see `namesLFSFilter`): then LFS manages nothing here, and the state is empty.
     public func lfsState(in directory: URL, caller: GitCaller = GitCaller()) async throws -> GitLFSState {
         let executable = await configurationProvider().executableURL.path
         if !lfsInstalledFor.contains(executable) {
-            do {
-                _ = try await run("lfs", ["version"], in: directory, caller: caller)
-            } catch GitClientError.commandFailed {
-                return .notInstalled
-            }
+            guard try await lfsAnswersVersion(in: directory, caller: caller) else { return .notInstalled }
             lfsInstalledFor.insert(executable)
         }
         guard try await namesLFSFilter(in: directory, caller: caller) else {
@@ -31,11 +29,32 @@ extension GitClient {
         async let trackOutput = run("lfs", ["track"], in: directory, caller: caller)
         async let filesOutput = run("lfs", ["ls-files"], in: directory, caller: caller)
         let files = (try? await filesOutput) ?? ""
-        let track = try await trackOutput
+        let track: String
+        do {
+            track = try await trackOutput
+        } catch let error as GitClientError {
+            guard case .commandFailed = error else { throw error }
+            // The remembered yes may be stale: git-lfs uninstalled since it was asked.
+            lfsInstalledFor.remove(executable)
+            guard try await lfsAnswersVersion(in: directory, caller: caller) else { return .notInstalled }
+            lfsInstalledFor.insert(executable)
+            throw error
+        }
         return GitLFSState(
             isInstalled: true,
             trackedPatterns: GitLFSState.parseTrackedPatterns(track),
             files: GitLFSState.parseFiles(files))
+    }
+
+    /// Whether `git lfs version` exits 0; false for the failure git gives when git-lfs is
+    /// not installed. Git itself missing, or a timeout, still throws.
+    private func lfsAnswersVersion(in directory: URL, caller: GitCaller) async throws -> Bool {
+        do {
+            _ = try await run("lfs", ["version"], in: directory, caller: caller)
+            return true
+        } catch GitClientError.commandFailed {
+            return false
+        }
     }
 
     /// Whether any attribute source `git lfs track` reads mentions `filter=lfs`: every
