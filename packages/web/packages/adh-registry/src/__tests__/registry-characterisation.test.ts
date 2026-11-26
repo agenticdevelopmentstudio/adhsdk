@@ -23,6 +23,11 @@ describe('registry URL helpers (pins behaviour across the @adh-sdk/adh-registry 
       'https://testing.agenticdeveloperhub.com/',
     )
     expect(siteUrl('hub', '/', 'agenticdeveloperhub.com')).toBe('https://agenticdeveloperhub.com/')
+    // From a product site's env host, a link to another site stays in that env.
+    expect(siteUrl('hub', '/', 'acme.staging.agenticdeveloperhub.com')).toBe(
+      'https://staging.agenticdeveloperhub.com/',
+    )
+    expect(siteUrl('hub', '/', 'acme.agenticdeveloperhub.com')).toBe('https://agenticdeveloperhub.com/')
   })
 
   it('siteUrl falls through to the raw path for an unknown id', () => {

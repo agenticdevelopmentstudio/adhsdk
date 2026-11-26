@@ -759,7 +759,13 @@ export const SITE_SWITCH_HASH = '#site-switch'
  *  suite serves `sites.localhost` today, `dev.test` before that and `dev.local`
  *  before that — matching the whole suffix rather than any one suite domain
  *  keeps this classifier out of the business of knowing which is current, which
- *  is `localOrigin`'s job and nothing else's. */
+ *  is `localOrigin`'s job and nothing else's.
+ *
+ *  A wildcard site puts the env in the label AFTER the handle, not before it
+ *  (`acme.staging.agenticdeveloperhub.com`; see `hostForEnv`), so for each one a host ending in
+ *  `.testing.<domain>` is `testing` and one ending in `.staging.<domain>` is `staging`, `<domain>`
+ *  being its `wildcardHost` minus the `*.`. That check runs before the leading-label one, so a
+ *  handle that happens to be `testing` on staging still reads as staging. */
 export function detectEnv(hostname: string): SiteEnv {
   const host = hostname.toLowerCase().replace(/:\d+$/, '')
   if (
@@ -771,6 +777,12 @@ export function detectEnv(hostname: string): SiteEnv {
     host.endsWith('.localhost')
   ) {
     return 'local'
+  }
+  for (const site of SITES) {
+    const domain = site.wildcardHost?.replace(/^\*\./, '')
+    if (domain === undefined) continue
+    if (host.endsWith(`.testing.${domain}`)) return 'testing'
+    if (host.endsWith(`.staging.${domain}`)) return 'staging'
   }
   if (host.startsWith('testing.')) return 'testing'
   if (host.startsWith('staging.')) return 'staging'
