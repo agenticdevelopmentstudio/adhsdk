@@ -88,6 +88,19 @@ public struct HandlerError: Codable, Sendable, Equatable {
         .error(500, internalCode, error.localizedDescription)
     }
     static let noRoute = notFound("No such route")
+
+    /// How every handler set words a malformed body: the missing key, or the
+    /// coding path and what was wrong there. Shared here so no handler set
+    /// depends on another for it.
+    static func describe(_ error: DecodingError) -> String {
+        switch error {
+        case .keyNotFound(let key, _): return "missing `\(key.stringValue)`"
+        case .typeMismatch(_, let context), .valueNotFound(_, let context), .dataCorrupted(let context):
+            let path = context.codingPath.map(\.stringValue).joined(separator: ".")
+            return path.isEmpty ? context.debugDescription : "`\(path)`: \(context.debugDescription)"
+        @unknown default: return error.localizedDescription
+        }
+    }
 }
 
 extension HandlerRequest {

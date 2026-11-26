@@ -50,12 +50,25 @@ public struct PluginSummary: Codable, Sendable, Equatable {
     public var displayName: String
     public var version: String
     public var templates: [Template]
+    /// Why the host refused to load the plugin (an AIPluginKit ABI mismatch);
+    /// nil for a plugin it accepted. A refused plugin has no templates.
+    public var loadError: String?
 
-    public init(identifier: String, displayName: String, version: String, templates: [Template]) {
+    public init(
+        identifier: String, displayName: String, version: String, templates: [Template], loadError: String? = nil
+    ) {
         self.identifier = identifier
         self.displayName = displayName
         self.version = version
         self.templates = templates
+        self.loadError = loadError
+    }
+
+    /// A plugin discovery refused, listed so a client can say why it is unusable.
+    public init(refused failure: PluginLoadFailure) {
+        self.init(
+            identifier: failure.identifier, displayName: failure.displayName, version: "",
+            templates: [], loadError: failure.message)
     }
 
     public init(_ descriptor: AIPluginDescriptor) {
@@ -101,6 +114,11 @@ public enum ModelRegistryError: Error, LocalizedError, Equatable {
     case invalidEntry(String)
     case pluginNotInstalled(String)
     case unknownTemplate(plugin: String, template: String)
+    /// `create` of an id that is already stored.
+    case duplicate(UUID)
+    /// The entry's plugin is installed but was refused (an AIPluginKit ABI
+    /// mismatch); the message says why.
+    case pluginIncompatible(plugin: String, message: String)
 
     public var errorDescription: String? {
         switch self {
@@ -109,6 +127,8 @@ public enum ModelRegistryError: Error, LocalizedError, Equatable {
         case .pluginNotInstalled(let plugin): return "AI plugin not installed: \(plugin)"
         case let .unknownTemplate(plugin, template):
             return "AI plugin \(plugin) has no template '\(template)'"
+        case .duplicate(let id): return "A model entry with id \(id.uuidString) exists"
+        case .pluginIncompatible(_, let message): return message
         }
     }
 }

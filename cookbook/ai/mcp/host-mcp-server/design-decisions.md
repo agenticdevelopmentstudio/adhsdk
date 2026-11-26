@@ -51,6 +51,6 @@
 **Rationale**: The source constructs its own OSLog `Logger`. Injecting a logger or log sink through the initializer would make vector 022 assertable and is the intended direction; until then the lines are specified here and verified by reading the source.
 **Approved**: pending
 
-**Decision**: Overlapping `serve(over:)` and `stop()` calls have no specified ordering.
-**Rationale**: The source gives no rule and no test settles one. The candidate rule is that the calls serialise and the last call wins; a test issuing two `serve(over:)` calls without awaiting the first would confirm what the actor does today before that rule becomes a requirement.
+**Decision**: `serve(over:)` and `stop()` are serialised through one queue, in call order, and the last call wins.
+**Rationale**: Actor isolation alone does not order them: each suspends after reading the current server, so a second call could start a server the first then overwrote without stopping, leaking a connection and its receive task. Refusing a second `serve` would break the existing `serve-stops-previous` contract, where a host re-serves over a new transport on reconnect; queueing keeps that contract and makes it hold under overlap. Each call is a task that awaits the one before it, so a thrown `serve` releases the queue (`serve-serialized`).
 **Approved**: pending

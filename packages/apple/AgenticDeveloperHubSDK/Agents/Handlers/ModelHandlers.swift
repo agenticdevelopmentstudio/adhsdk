@@ -32,7 +32,7 @@ public struct ModelHandlers: Sendable {
         } catch let error as ModelRegistryError {
             return Self.response(for: error)
         } catch let error as DecodingError {
-            return HandlerError.badRequest("Malformed body: \(AgentHandlers.describe(error))")
+            return HandlerError.badRequest("Malformed body: \(HandlerError.describe(error))")
         } catch {
             return HandlerError.failure(error)
         }
@@ -44,12 +44,10 @@ public struct ModelHandlers: Sendable {
         case ("GET", nil, 0):
             return .encoded(try registry.list())
         case ("POST", nil, 0):
+            // The registry's create checks for the id and inserts in one
+            // transaction, so concurrent creates answer one 201 and 409s.
             let body = try AgentsJSON.decode(EntryBody.self, from: request.body)
-            if try registry.get(body.entry.id) != nil {
-                return HandlerError.conflict("A model entry with id \(body.entry.id.uuidString) exists")
-            }
-            try registry.upsert(body.entry, secrets: body.secrets)
-            return .encoded(try registry.get(body.entry.id), status: 201)
+            return .encoded(try registry.create(body.entry, secrets: body.secrets), status: 201)
         case ("GET", "plugins", 1):
             return .encoded(await registry.plugins())
         case ("GET", "resolve", 1):
@@ -100,8 +98,10 @@ public struct ModelHandlers: Sendable {
             return HandlerError.notFound(error.localizedDescription)
         case .invalidEntry:
             return HandlerError.badRequest(error.localizedDescription)
-        case .pluginNotInstalled, .unknownTemplate:
+        case .pluginNotInstalled, .unknownTemplate, .pluginIncompatible:
             return HandlerError.unprocessable(error.localizedDescription)
+        case .duplicate:
+            return HandlerError.conflict(error.localizedDescription)
         }
     }
 }

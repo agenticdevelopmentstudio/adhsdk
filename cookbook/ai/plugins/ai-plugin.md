@@ -2,11 +2,11 @@
 id: 47eb19ef-2c42-4a52-a60b-54b6f01c8791
 title: "AI Plugin"
 type: ingredient
-version: 1.1.0
+version: 1.2.0
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-09-27
+modified: 2026-11-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -114,6 +114,8 @@ settings UI from the bundle's descriptor schema, and owns secret storage.
   declaring this contract without embedding a separate copy of it, so a
   freshly loaded plugin type resolves against the host's single loaded
   copy of that module and can be recognized as conforming to the contract.
+- **abi-stamp**: A plugin bundle MUST carry the plugin kit's ABI version it was built against as an integer under the information key `AIPluginKitABIVersion`, written by its build from the contract module's `AIPluginABI.version`, never typed by hand. A host refuses a bundle whose stamp is missing or differs from its own (the plugin manager's `abi-stamp-check`).
+- **abi-version-bump**: The contract module's `AIPluginABI.version` MUST be incremented whenever a type a plugin shares with the host changes shape (this contract, its request spec, stream events, descriptor or configuration types), so every plugin built before the change is refused rather than loaded.
 
 ## Appearance
 
@@ -213,6 +215,7 @@ Not applicable: this contract contains no logging call; it is a pure contract de
 | Platform | Location | Conformance |
 |----------|----------|-------------|
 | apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIPlugin.swift` | confirmed (1.1.0) |
+| apple | `packages/apple/AIPlugins/tools/stamp_plugin_abi.py` | unverified |
 
 ## Design Decisions
 
@@ -251,3 +254,4 @@ Notes: separation-of-concerns passes because the protocol's own requirements for
 | 1.0.2 | 2026-09-24 | Mike Fullerton | Phase 6 lint: removed source line-number citations; recipes cite files and symbols, not lines. |
 | 1.0.3 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ai/plugins/. |
+| 1.2.0 | 2026-11-25 | Mike Fullerton | A plugin bundle carries the AIPluginKitABIVersion stamp its build writes from AIPluginABI.version; the version is bumped on any shared-type change. |

@@ -4,7 +4,7 @@
     "id": "dac3e46e-2eeb-4ebd-b88d-4e4999870db7",
     "title": "HostMCPServer",
     "type": "ingredient",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -33,7 +33,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "4308a447b4d50940",
+  "synced": "ae631e892b939a78",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -1,5 +1,6 @@
 // Tests/AgenticDeveloperHubSDKCoreTests/MCP/HostMCPServerTests.swift
 import XCTest
+import Logging
 import MCP
 @testable import AgenticDeveloperHubSDKCore
 
@@ -150,4 +151,116 @@ final class HostMCPServerTests: XCTestCase {
         _ = await server.call(name: "a", arguments: [:], caller: caller)
         XCTAssertEqual(source.calls.first?.caller, "pane-7")
     }
+
+    // MARK: - Serialized serve / stop
+
+    func testOverlappingServesRunInCallOrder() async throws {
+        let server = HostMCPServer(appName: "Test", appVersion: "1")
+        let events = TransportEventLog()
+        let first = GatedTransport(name: "A", gated: true, events: events)
+        let second = GatedTransport(name: "B", gated: false, events: events)
+
+        let serveFirst = Task { try await server.serve(over: first) }
+        try await events.wait(for: "connect A")
+        let serveSecond = Task { try await server.serve(over: second) }
+        try await Task.sleep(for: .milliseconds(200))
+        let beforeRelease = await events.all
+        XCTAssertFalse(beforeRelease.contains("connect B"), "B started before A's serve returned: \(beforeRelease)")
+
+        await first.release()
+        try await serveFirst.value
+        try await serveSecond.value
+        await server.stop()
+
+        let log = await events.all
+        let order = ["connected A", "disconnect A", "connect B", "connected B", "disconnect B"]
+        let indices = order.map { log.firstIndex(of: $0) }
+        XCTAssertFalse(indices.contains(nil), "missing events in \(log)")
+        XCTAssertEqual(indices.compactMap { $0 }, indices.compactMap { $0 }.sorted(), "out of order: \(log)")
+    }
+
+    func testFailedServeDoesNotBlockTheQueue() async throws {
+        let server = HostMCPServer(appName: "Test", appVersion: "1")
+        await server.register(EchoSource(names: ["a"]))
+        do {
+            try await server.serve(over: ConnectFailingTransport())
+            XCTFail("should throw")
+        } catch {
+            XCTAssertTrue(error is ConnectFailed, "got \(error)")
+        }
+
+        let (clientTransport, serverTransport) = await InMemoryTransport.createConnectedPair()
+        try await server.serve(over: serverTransport)
+        let client = Client(name: "test-client", version: "1")
+        _ = try await client.connect(transport: clientTransport)
+        let tools = try await client.listTools().tools
+        XCTAssertEqual(tools.map(\.name), ["a"])
+        await client.disconnect()
+        await server.stop()
+    }
+}
+
+/// Records transport calls, in order, across the transports of one test.
+private actor TransportEventLog {
+    private(set) var all: [String] = []
+
+    func add(_ event: String) { all.append(event) }
+
+    /// Waits up to two seconds for `event` to be recorded.
+    func wait(for event: String) async throws {
+        for _ in 0..<200 where !all.contains(event) {
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        if !all.contains(event) { XCTFail("timed out waiting for \(event): \(all)") }
+    }
+}
+
+/// A transport whose `connect()` can be held until `release()`, and that
+/// records each connect and disconnect. It never delivers a message.
+private actor GatedTransport: Transport {
+    nonisolated let logger = Logger(label: "test.gated", factory: { _ in SwiftLogNoOpLogHandler() })
+    private let name: String
+    private let events: TransportEventLog
+    private var gated: Bool
+    private var waiter: CheckedContinuation<Void, Never>?
+    private let stream: AsyncThrowingStream<Data, Swift.Error>
+    private let continuation: AsyncThrowingStream<Data, Swift.Error>.Continuation
+
+    init(name: String, gated: Bool, events: TransportEventLog) {
+        self.name = name
+        self.gated = gated
+        self.events = events
+        (stream, continuation) = AsyncThrowingStream<Data, Swift.Error>.makeStream()
+    }
+
+    func connect() async throws {
+        await events.add("connect \(name)")
+        if gated { await withCheckedContinuation { waiter = $0 } }
+        await events.add("connected \(name)")
+    }
+
+    func release() {
+        gated = false
+        waiter?.resume()
+        waiter = nil
+    }
+
+    func disconnect() async {
+        await events.add("disconnect \(name)")
+        continuation.finish()
+    }
+
+    func send(_ data: Data) async throws {}
+
+    func receive() -> AsyncThrowingStream<Data, Swift.Error> { stream }
+}
+
+private struct ConnectFailed: Error {}
+
+private actor ConnectFailingTransport: Transport {
+    nonisolated let logger = Logger(label: "test.connect-failing", factory: { _ in SwiftLogNoOpLogHandler() })
+    func connect() async throws { throw ConnectFailed() }
+    func disconnect() async {}
+    func send(_ data: Data) async throws {}
+    func receive() -> AsyncThrowingStream<Data, Swift.Error> { AsyncThrowingStream { $0.finish() } }
 }

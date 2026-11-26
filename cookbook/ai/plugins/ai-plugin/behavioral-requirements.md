@@ -68,4 +68,6 @@
   declaring this contract without embedding a separate copy of it, so a
   freshly loaded plugin type resolves against the host's single loaded
   copy of that module and can be recognized as conforming to the contract.
+- **abi-stamp**: A plugin bundle MUST carry the plugin kit's ABI version it was built against as an integer under the information key `AIPluginKitABIVersion`, written by its build from the contract module's `AIPluginABI.version`, never typed by hand. A host refuses a bundle whose stamp is missing or differs from its own (the plugin manager's `abi-stamp-check`).
+- **abi-version-bump**: The contract module's `AIPluginABI.version` MUST be incremented whenever a type a plugin shares with the host changes shape (this contract, its request spec, stream events, descriptor or configuration types), so every plugin built before the change is refused rather than loaded.
 

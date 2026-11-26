@@ -20,8 +20,18 @@ final class FakeModelSecrets: ModelSecretStore, @unchecked Sendable {
     }
 
     func set(_ value: String, for entry: UUID, field: String) throws {
-        lock.withLock { values["\(entry.uuidString)/\(field)"] = value }
+        try lock.withLock {
+            if failingSet.contains(field) { throw ModelSecretStoreError.writeFailed(field: field) }
+            values["\(entry.uuidString)/\(field)"] = value
+        }
     }
+
+    /// Fields whose write fails, to exercise the rollback of a partial write.
+    var failingSets: Set<String> {
+        get { lock.withLock { failingSet } }
+        set { lock.withLock { failingSet = newValue } }
+    }
+    private var failingSet: Set<String> = []
 
     /// Fields whose removal fails, to exercise `removeFailed`.
     var failingRemovals: Set<String> {
@@ -167,7 +177,8 @@ final class ScriptedRuntime: @unchecked Sendable {
                     continuation.finish()
                 }
             },
-            discover: { _ in [fakeDescriptor()] })
+            discover: { _ in [fakeDescriptor()] },
+            refused: { _ in [] })
     }
 }
 
@@ -188,10 +199,11 @@ func makeEntry(
 func makeRegistry(
     runtime: DaemonAIChat.PluginRuntime = ScriptedRuntime().runtime,
     secrets: any ModelSecretStore = FakeModelSecrets(),
-    signal: FakeSignal = FakeSignal()
+    signal: FakeSignal = FakeSignal(),
+    database: BoundedDatabase? = nil
 ) throws -> ModelRegistry {
     try ModelRegistry(
-        database: try BoundedDatabase(path: ":memory:"),
+        database: try database ?? BoundedDatabase(path: ":memory:"),
         secrets: secrets,
         runtime: runtime,
         searchPaths: [],

@@ -8,3 +8,4 @@
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolved two NEEDS REVIEW markers as current behavior plus pending Design Decisions; added separation-of-concerns and unit-test-coverage compliance. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
 | 1.2.2 | 2026-10-04 | Mike Fullerton | Inverted prohibitions (none/neither/no X MUST) restated as MUST NOT. |
+| 1.3.0 | 2026-11-25 | Mike Fullerton | AIPluginKit ABI stamp: discovery refuses a bundle whose AIPluginKitABIVersion is missing or differs, reports the refusal as a load failure, and loading re-checks it. |

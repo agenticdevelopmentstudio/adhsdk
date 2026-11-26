@@ -35,10 +35,10 @@
 **Rationale**: Stored rows, HTTP bodies and test fixtures read the same and a CLI client decodes identically; `JSONEncoder` and `JSONDecoder` are not `Sendable`, so sharing one instance across tasks would not compile under strict concurrency.
 **Approved**: pending
 
-**Decision**: `ModelHandlers` reuses `AgentHandlers.describe` for decoding errors, and this is recorded as technical debt.
-**Rationale**: Both sets must word a malformed body the same way, so there is one description function. Today `ModelHandlers` depends on `AgentHandlers` for it, so the two handler sets are coupled. Fix path: move the description helper beside `HandlerError` (the shared tier both sets already use), keeping the `decoding-error-description` wording unchanged, so neither set depends on the other.
+**Decision**: The decoding-error description is `HandlerError.describe(_:)`, beside `HandlerError` in `HandlerRequest.swift`.
+**Rationale**: Both sets must word a malformed body the same way, so there is one description function. Putting it with the request and error types both sets already use keeps `ModelHandlers` and `AgentHandlers` independent of each other, with the `decoding-error-description` wording unchanged.
 **Approved**: pending
 
-**Decision**: The check-then-act race on `POST` to the model routes is accepted as known debt.
-**Rationale**: The handler reads the registry for an existing id and then calls `upsert`, which is an insert-or-update; two concurrent creates of the same new id both pass the check, both answer 201, and the later write wins silently. The window is small on a loopback, single-user surface and a fix needs a registry change. Fix path: an atomic insert-if-absent in the registry that the handler maps to 409, which removes the separate read. Until then `models-create-check-order` only fixes the order of the two calls.
+**Decision**: `POST` to the model routes calls the registry's atomic `create` and maps its `duplicate` error to 409.
+**Rationale**: A separate read for an existing id followed by `upsert` (an insert-or-update) let two concurrent creates of one new id both answer 201, the later write winning silently. The registry's `create` checks and inserts in one transaction, so the handler does no read of its own and the conflict answer cannot race (`models-create-atomic`).
 **Approved**: pending

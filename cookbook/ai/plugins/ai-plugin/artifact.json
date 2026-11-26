@@ -4,11 +4,11 @@
     "id": "47eb19ef-2c42-4a52-a60b-54b6f01c8791",
     "title": "AI Plugin",
     "type": "ingredient",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-23",
-    "modified": "2026-09-27",
+    "modified": "2026-11-25",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -35,7 +35,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "220a73897f06aeaf",
+  "synced": "9029630b4b843bd7",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -53,8 +53,10 @@
 - **list-order**: `list()` MUST return every stored entry ordered by
   configuration name using a case-insensitive, locale-aware comparison, and MUST
   break ties between equal names by ascending id string.
-- **list-decode-failure**: `list()` MUST throw when any stored row fails to
-  decode; it MUST NOT skip the row.
+- **list-decode-failure**: `list()` MUST skip a stored row that fails to
+  decode and return every other entry. It MUST log the skipped row at error
+  level with the row's id and the decoding error's description; rows hold no
+  secret values, and the log MUST NOT carry the row's JSON.
 - **get-by-id**: `get(_:)` MUST return the entry stored under the id, and MUST
   return no entry (not an error) when no row has that id.
 
@@ -65,7 +67,19 @@
   empty after trimming spaces and tabs, `A model entry needs a plugin identifier`
   when `pluginIdentifier` is empty, and `A model entry needs a template id` when
   `templateId` is empty, and MUST write nothing (no row, no secret, no signal) in
-  that case.
+  that case. `create` MUST apply the same validation.
+- **create-atomic**: `create(_:secrets:)` MUST insert the entry only when no row
+  has its id, and MUST decide that and insert the row in one `IMMEDIATE` write
+  transaction, so two concurrent creates of one id, from one process or several,
+  store one row and the other call throws `ModelRegistryError.duplicate(id)`,
+  described as `A model entry with id <id> exists`.
+- **create-duplicate-first**: `create` MUST detect a duplicate before it writes
+  any secret, so a refused create leaves the existing entry's secrets untouched.
+- **create-secrets**: `create` MUST write the non-empty values of `secrets`
+  inside its transaction, after the duplicate check, and set `secretFields` to
+  their sorted names; with `secrets` absent it MUST keep the entry's own
+  `secretFields`. It MUST set `updatedAt` to now, keep the entry's `createdAt`,
+  post the change signal once after the commit, and return the stored entry.
 - **upsert-replaces-row**: `upsert` MUST insert the entry when no row has its id
   and MUST replace the stored JSON and `updated_at` of the row when one does.
 - **upsert-timestamps**: `upsert` MUST keep `createdAt` from the stored entry
@@ -100,14 +114,18 @@
   plus any stale field whose removal failed (`secret-removal-failure`).
 - **upsert-secret-write-failure**: `upsert` MUST propagate the secret store's
   error when a secret write fails, and MUST NOT write the entry row or post the
-  signal in that case. Secrets of the same call written before the failure MUST
-  NOT be rolled back, so for an entry with no stored row they remain in the
-  Keychain with no row naming them (`secret-write-orphan`).
-- **secret-write-orphan**: A failed `set` after earlier `set`s of the same
-  `upsert` call MUST leave those earlier values stored. For a new entry no row
-  names them, and for an existing entry a field it did not already name is
-  likewise untracked; a later successful `upsert` of the same id with the same
-  field names overwrites them.
+  signal in that case. The secrets the call already wrote or removed MUST be
+  rolled back (`secret-write-rollback`).
+- **secret-write-rollback**: When `upsert` or `create` fails after it has
+  written or removed secrets (a failed `set`, a failed row write or commit), it
+  MUST put each field it touched back as it was before the call: set the
+  previous value again, or remove the field when it had none. The previous
+  value MUST be read before the field is first touched. The rollback is best
+  effort: a restore that itself fails MUST be logged at error level with the
+  entry id and the field name and no value, MUST NOT stop the other restores,
+  and MUST NOT replace the original error, which the call throws. A stale
+  removal that fails does not fail the call (`secret-removal-failure`), so it
+  starts no rollback.
 - **upsert-signals**: `upsert` MUST post the change signal once, after the row
   is written.
 - **remove-deletes**: `remove(_:)` MUST remove from the secret store each field
@@ -121,9 +139,9 @@
 
 - **resolve-role**: `resolve(role:)` MUST return the first entry in `list()`
   order that is enabled and whose `roles` contains the role by exact string
-  equality, and MUST return no entry when none matches. Because it reads `list()`, it MUST
-  throw when any stored row fails to decode (`list-decode-failure`), even when
-  the corrupt row is not the one that would match.
+  equality, and MUST return no entry when none matches. Because it reads `list()`, a
+  row that fails to decode is skipped (`list-decode-failure`) and the role
+  resolves from the remaining entries.
 - **resolve-selector-role**: `resolve(_:)` on `.role(role)` MUST return the entry
   of `resolve(role:)`, with the model set to that entry's `effectiveModel`, and
   MUST return no result when no entry matches.
@@ -187,6 +205,8 @@
 - **test-ignores-other-events**: `test(_:)` MUST ignore thinking deltas, tool
   uses and usage events, and MUST stop reading the stream at its end event.
 
+- **plugins-refused**: `plugins()` MUST also list each plugin the runtime's `refused` reports, as a summary with its identifier and name, an empty version and no templates, and `loadError` set to the refusal message; an installed, accepted plugin's `loadError` MUST be absent. `listModels` and `test` of an entry whose plugin was refused MUST fail with `pluginIncompatible`, described as the refusal message, rather than `pluginNotInstalled`.
+
 ### Change notification
 
 - **change-signal-name**: The registry's default change signal MUST be the Darwin
@@ -230,7 +250,7 @@
 - **database-serialization**: Reads and writes MUST go through `BoundedDatabase`,
   which serialises writes and reads from a pool in WAL mode; the registry adds no
   lock of its own.
-- **concurrent-upsert**: Two `upsert` calls of one id, from one process or several, MUST be last-writer-wins for the row: each reads the stored row and writes its own in one database write transaction, so neither loses the stored `createdAt`. Secret values are written field by field before that transaction and are not part of it, so concurrent calls MAY interleave: the secret store MAY hold a mix of both calls' values, and the surviving row's `secretFields` MAY come from the other writer than some of the Keychain values (`upsert-stale-read`). The registry guarantees nothing about secrets beyond each field holding some call's value.
+- **concurrent-upsert**: Two `upsert` calls of one id, from one process or several, MUST be last-writer-wins for the row: each reads the stored row and writes its own in one database write transaction, so neither loses the stored `createdAt`. Secret values are written field by field before that transaction and are not part of it, so concurrent calls MAY interleave: the secret store MAY hold a mix of both calls' values, and the surviving row's `secretFields` MAY come from the other writer than some of the Keychain values (`upsert-stale-read`). The registry guarantees nothing about secrets beyond each field holding some call's value. A rollback (`secret-write-rollback`) restores the value the failing call read before it touched a field, so it MAY overwrite a value a concurrent call wrote in between.
 - **list-models-main-actor**: `listModels(_:)` MUST resolve the provider's model
   source on the main actor and MUST load it off the main actor.
 - **app-import**: `ModelRegistryImport.run(_:into:origin:)` MUST upsert each source as an entry with the source configuration's id, its non-secret fields, its model and the given `origin`, passing its secrets to `upsert(_:secrets:)`. It MUST skip a source when the registry already holds an entry with its id, or an entry of the same plugin identifier with equal non-secret fields, and MUST report each source as imported, skipped or failed by id without any secret value. A failed upsert MUST NOT stop the remaining sources.

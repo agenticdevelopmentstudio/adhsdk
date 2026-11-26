@@ -4,7 +4,7 @@
     "id": "f9f7ae23-0da9-41fb-a065-968a028d059e",
     "title": "Agent Handlers",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "status": "review",
     "language": "en",
     "created": "2026-11-25",
@@ -33,7 +33,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "2051c67bb9e32f09",
+  "synced": "1cdd2facf2cbc94f",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

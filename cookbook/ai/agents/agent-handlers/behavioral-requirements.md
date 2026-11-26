@@ -27,7 +27,7 @@
 - **handle-never-throws**: `handle` on `AgentHandlers` and on `ModelHandlers` MUST NOT throw; every failure MUST be returned as a JSON error reply.
 - **handle-async**: `handle` MUST be asynchronous and the handler structs MUST be `Sendable` values holding only their host or registry.
 - **decoding-error-400**: A `DecodingError` raised while routing MUST answer 400 `bad_request` with the message `Malformed body: ` followed by a description.
-- **decoding-error-description**: The description of a `DecodingError` MUST be ``missing `<key>` `` for a missing key, and otherwise the dotted coding path in backticks, a colon and the decoder's debug description (or the debug description alone when the path is empty).
+- **decoding-error-description**: Both handler sets MUST describe a `DecodingError` with the one shared `HandlerError.describe(_:)`, which lives beside `HandlerError` so neither set depends on the other. The description MUST be ``missing `<key>` `` for a missing key, and otherwise the dotted coding path in backticks, a colon and the decoder's debug description (or the debug description alone when the path is empty).
 - **unexpected-error-500**: Any error that is neither the owning component's error type nor a `DecodingError` MUST answer 500 `internal` with the error's localized description.
 - **uuid-case-insensitive**: A path id that is a UUID string MUST be parsed whatever its letter case, on both the session routes and the model entry routes.
 - **segment-before-decode**: The `HandlerRequest` string initializer MUST split the path on `/` before percent-decoding, so an encoded slash (`%2F`) stays inside its segment and an encoded space is part of one segment.
@@ -97,8 +97,8 @@
 
 - **models-dispatch**: `ModelHandlers` MUST match on method, first segment and segment count: an empty path (`GET`, `POST`), `plugins` and `resolve` (one segment, `GET`), otherwise the entry routes keyed by a UUID first segment.
 - **models-list**: `GET` on an empty path MUST answer 200 with the registry's `ModelEntry` list.
-- **models-create-conflict**: `POST` on an empty path with body `{entry, secrets?}` MUST answer 409 `conflict` with a message naming the id when an entry with that id exists.
-- **models-create**: `POST` on an empty path for a new id MUST call the registry's `upsert` with the entry and the optional secrets and answer 201 with the stored entry.
+- **models-create-conflict**: `POST` on an empty path with body `{entry, secrets?}` MUST answer 409 `conflict` with the message `A model entry with id <id> exists` when an entry with that id exists, which the registry reports as `duplicate`.
+- **models-create**: `POST` on an empty path for a new id MUST call the registry's `create` with the entry and the optional secrets and answer 201 with the entry `create` returns.
 - **models-create-decode**: `POST` on an empty path with a body that does not decode as `{entry, secrets?}` (for example `{}`) MUST answer 400.
 - **models-create-invalid**: `POST` on an empty path MUST map registry errors through the shared map (see #requirements/models-error-map); an empty name, for example, is refused with `invalidEntry`.
 - **models-secrets-never-returned**: No reply MUST carry a secret value; the reply entry names its secret fields only.
@@ -113,8 +113,8 @@
 - **models-resolve-role**: `GET resolve` MUST answer 400 `` `role` is required `` when the `role` query value is absent or empty.
 - **models-resolve**: `GET resolve?role=<r>` MUST answer 200 with the enabled entry holding the role, or 404 with `No enabled model entry has the role '<r>'`.
 - **models-non-uuid**: A first segment other than the named ones that is not a UUID string MUST answer the no-route reply, and an unmatched method or sub-path on a UUID MUST answer the no-route reply.
-- **models-error-map**: Registry errors MUST map as: `notFound` to 404 `not_found`; `invalidEntry` to 400 `bad_request`; `pluginNotInstalled` and `unknownTemplate` to 422 `unprocessable`. The message MUST be the error's localized description.
-- **models-create-check-order**: The conflict check on `POST` MUST read the registry first and call `upsert` afterwards; see the Design Decision on the create race.
+- **models-error-map**: Registry errors MUST map as: `notFound` to 404 `not_found`; `invalidEntry` to 400 `bad_request`; `pluginNotInstalled`, `unknownTemplate` and `pluginIncompatible` (a plugin the host refused for an AIPluginKit ABI mismatch) to 422 `unprocessable`; `duplicate` to 409 `conflict`. The message MUST be the error's localized description.
+- **models-create-atomic**: `POST` on an empty path MUST NOT check for an existing id itself; the registry's atomic `create` decides, so two concurrent creates of one new id answer one 201 and one 409.
 
 ### Concurrency and side effects
 

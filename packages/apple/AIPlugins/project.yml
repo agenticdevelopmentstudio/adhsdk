@@ -75,6 +75,10 @@ targets:
       - target: AgenticDeveloperHubSDK/AIPluginKit
         embed: false
     postBuildScripts:
+      - name: Stamp AIPluginKit ABI
+        basedOnDependencyAnalysis: false
+        script: |
+          /usr/bin/python3 "$PROJECT_DIR/tools/stamp_plugin_abi.py"
       - name: Install to ~/.agenticplugins
         basedOnDependencyAnalysis: false
         script: |
@@ -102,6 +106,10 @@ targets:
       - target: AgenticDeveloperHubSDK/AIPluginKit
         embed: false
     postBuildScripts:
+      - name: Stamp AIPluginKit ABI
+        basedOnDependencyAnalysis: false
+        script: |
+          /usr/bin/python3 "$PROJECT_DIR/tools/stamp_plugin_abi.py"
       - name: Install to ~/.agenticplugins
         basedOnDependencyAnalysis: false
         script: |
@@ -129,6 +137,10 @@ targets:
       - target: AgenticDeveloperHubSDK/AIPluginKit
         embed: false
     postBuildScripts:
+      - name: Stamp AIPluginKit ABI
+        basedOnDependencyAnalysis: false
+        script: |
+          /usr/bin/python3 "$PROJECT_DIR/tools/stamp_plugin_abi.py"
       - name: Install to ~/.agenticplugins
         basedOnDependencyAnalysis: false
         script: |
@@ -156,6 +168,10 @@ targets:
       - target: AgenticDeveloperHubSDK/AIPluginKit
         embed: false
     postBuildScripts:
+      - name: Stamp AIPluginKit ABI
+        basedOnDependencyAnalysis: false
+        script: |
+          /usr/bin/python3 "$PROJECT_DIR/tools/stamp_plugin_abi.py"
       - name: Install to ~/.agenticplugins
         basedOnDependencyAnalysis: false
         script: |
@@ -183,6 +199,10 @@ targets:
       - target: AgenticDeveloperHubSDK/AIPluginKit
         embed: false
     postBuildScripts:
+      - name: Stamp AIPluginKit ABI
+        basedOnDependencyAnalysis: false
+        script: |
+          /usr/bin/python3 "$PROJECT_DIR/tools/stamp_plugin_abi.py"
       - name: Install to ~/.agenticplugins
         basedOnDependencyAnalysis: false
         script: |

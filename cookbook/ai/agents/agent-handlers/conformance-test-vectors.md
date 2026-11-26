@@ -23,7 +23,7 @@ Vectors are derived from `AgentHandlersTests.swift` (suites `HandlerRequest`, `A
 | agent-handlers-018 | tools-call-unknown | `POST tools/nope` (test: toolErrors) | 404, code `not_found`, message `Unknown tool 'nope'` |
 | agent-handlers-019 | tools-call-tool-error | `POST tools/broken` (test: toolErrors) | 422, error code `unprocessable`, message `The tool broke` |
 | agent-handlers-020 | route-top-level, route-method-fallthrough | `GET nowhere`; `PATCH agents` (test: noRoute) | 404 `not_found` `No such route`; 404 `not_found` `No such route` |
-| agent-handlers-021 | models-create, models-secrets-never-returned, models-create-conflict, models-list | `POST` empty path with entry (roles fast) and secrets apiKey `sk-secret`; same again; `GET` empty path (test: create) | 201, body lacks `sk-secret` and names `apiKey`, secret store holds it; 409; list holds the entry id |
+| agent-handlers-021 | models-create, models-secrets-never-returned, models-create-conflict, models-create-atomic, models-list | `POST` empty path with entry (roles fast) and secrets apiKey `sk-secret`; same again; `GET` empty path (test: create) | 201, body lacks `sk-secret` and names `apiKey`, secret store holds it; 409; list holds the entry id |
 | agent-handlers-022 | models-create-invalid, models-create-decode | `POST` entry with empty name; `POST` body `{}` (test: invalid) | 400 `bad_request` with the registry's reason; 400 `bad_request` starting `Malformed body: missing` |
 | agent-handlers-023 | models-get, models-put, models-put-check-order, models-delete | get, put renamed entry, put to a random path id, put an absent entry, delete, get, delete (test: entryRoutes) | 200; 200 and registry shows `Renamed`; 400 `bad_request`; 404 `not_found`; 204 empty; 404 `not_found`; 404 `not_found` |
 | agent-handlers-024 | models-resolve-role, models-resolve | `GET resolve` no query; role `fast`; role `smart` (test: resolve) | 400 `bad_request` `` `role` is required ``; 404 `not_found` `No enabled model entry has the role 'fast'`; 200 with the entry id |
@@ -46,6 +46,7 @@ Vectors are derived from `AgentHandlersTests.swift` (suites `HandlerRequest`, `A
 | agent-handlers-041 | models-secrets-absent, models-put | `PUT <id>` with an entry and no `secrets` after a create that stored `apiKey` (from source; no test) | 200; the secret store still holds the earlier `apiKey` value |
 | agent-handlers-042 | models-error-map | the registry throws `pluginNotInstalled`; `unknownTemplate` (from source; no test) | 422 `unprocessable` with the error's localized description, for each |
 | agent-handlers-043 | tools-call-caller-fallback, tools-list-invalid-schema | `POST tools/echo` with `caller` null, `""` and `5`; `GET tools` with a tool whose schema text is `not json` (from source; no test) | each call's result carries `"caller":"external"`; the tool is listed with `input_schema` `{}` |
+| agent-handlers-044 | models-create-atomic, models-create-conflict (test: concurrentModelCreates) | eight concurrent `POST` empty path with the same new entry id | exactly one answers 201; the others answer 409 `conflict` naming the id; the registry lists one entry |
 
 SHOULD requirements: the component states none, so no SHOULD vectors are owed.
 

@@ -20,14 +20,18 @@
 **Approved**: pending
 
 **Decision**: Secret work goes before the row change, and the row's read and write share one transaction: `upsert` writes secrets first, `remove` deletes secrets first. `remove` throws before deleting the row and posts no signal when a secret removal fails; `upsert` with a failed stale removal still writes and signals, then throws.
-**Rationale**: The Keychain cannot join a SQLite transaction, so the order decides what a failure leaves behind. Secrets first means a failed write leaves no row change and a failed delete leaves the entry naming the secret, so a failed removal never orphans a Keychain item. It does not cover a failed write partway through a multi-secret `upsert`: values already written stay, and for a new entry no row names them (`secret-write-orphan`); the order narrows the orphan window, it does not close it. Reading the stored row inside the write transaction makes concurrent upserts last-writer-wins without losing `createdAt` (`concurrent-upsert`, `secret-removal-failure`). The stale-field set is read earlier, outside the transaction, because the removals must run before it opens (`upsert-stale-read`).
+**Rationale**: The Keychain cannot join a SQLite transaction, so the order decides what a failure leaves behind. Secrets first means a failed write leaves no row change and a failed delete leaves the entry naming the secret, so a failed removal never orphans a Keychain item. A failure partway through is undone by a rollback that reads each field's previous value before touching it and puts it back afterwards (`secret-write-rollback`), so a failed multi-secret `upsert` leaves no orphaned or half-replaced secrets. The rollback is best effort, because the Keychain can refuse it too; a refused restore is logged rather than thrown, so the caller sees the error that caused the failure. Reading the stored row inside the write transaction makes concurrent upserts last-writer-wins without losing `createdAt` (`concurrent-upsert`, `secret-removal-failure`). The stale-field set is read earlier, outside the transaction, because the removals must run before it opens (`upsert-stale-read`).
 **Approved**: pending
 
 **Decision**: The request value bag lists declared secrets even when blank, and scopes them to the named template.
 **Rationale**: A blank-but-present key lets `buildRequest` tell "needs a key and it is blank" from "keyless", so it can report the missing key; scoping to the named template avoids a keyless template (Ollama) being rejected for a blank key it never needed.
 **Approved**: pending
 
-**Decision**: `list-decode-failure` lets one corrupt row fail the whole listing.
-**Rationale**: Fail fast over silent data loss: skipping a corrupt row would make a configured model vanish from every picker and role resolution with no signal. Throwing surfaces the corruption to the caller. The cost is that one bad row also breaks `resolve(role:)` for every role (`resolve-role`), and the registry offers no repair path; a recovery plan (a repair or quarantine call that names the failing row id) is pending.
+**Decision**: `list()` skips a row that fails to decode and logs it (`list-decode-failure`).
+**Rationale**: One corrupt row must not take every picker and every role resolution down with it. The skipped row is logged at error level with its id, so the corruption is visible in the log and the id names the row to repair or remove; rows hold only secret names, and the log omits the JSON anyway. `get` of that id still throws, so a caller asking for that entry by id learns it is unreadable.
+**Approved**: pending
+
+**Decision**: `create` is a separate, atomic insert-if-absent, and a duplicate id throws `duplicate`.
+**Rationale**: A check with `get` followed by `upsert` lets two concurrent creates of one id both succeed, the later silently replacing the earlier. `create` checks and inserts in one `IMMEDIATE` transaction, which takes SQLite's write lock before the check, so the check holds across processes as well as threads. The duplicate check runs before any secret is written, so a refused create cannot overwrite the existing entry's secrets; the secrets are written inside the transaction and rolled back if the insert or commit fails (`create-atomic`, `secret-write-rollback`).
 **Approved**: pending
 

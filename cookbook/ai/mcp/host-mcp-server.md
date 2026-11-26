@@ -2,7 +2,7 @@
 id: dac3e46e-2eeb-4ebd-b88d-4e4999870db7
 title: "HostMCPServer"
 type: ingredient
-version: 1.2.0
+version: 1.3.0
 status: review
 language: en
 created: 2026-11-14
@@ -54,6 +54,7 @@ Serving
 
 - **fresh-server-per-serve**: Each `serve(over:)` MUST create a new SDK `Server`, because the SDK marks a server initialized on its first `initialize` and never clears that, so a reused server would answer the next client's `initialize` with "Server is already initialized".
 - **serve-stops-previous**: If a server is already serving, `serve(over:)` MUST stop it before starting the new one, so the old connection and receive task are cancelled.
+- **serve-serialized**: `serve(over:)` and `stop()` MUST run one at a time, in the order they were called: a call MUST NOT begin until every earlier `serve(over:)` or `stop()` has finished, including across the suspension points inside each call. So of two overlapping `serve(over:)` calls the later one stops the earlier one's server and its own server is the one left serving (last call wins), and a `stop()` called while a `serve(over:)` is starting stops the server that call starts. A `serve(over:)` that throws does not block the calls queued after it.
 - **tools-capability**: The server MUST declare the tools capability with `listChanged` false.
 - **not-strict**: The server MUST be created with the SDK's default configuration, not strict mode, so a stateless HTTP caller can send `tools/call` without a prior `initialize`.
 - **serve-throws-start-failure**: `serve(over:)` MUST throw when starting the SDK server on the transport throws, and in that case MUST NOT record the new server as current.
@@ -158,6 +159,8 @@ Derived from `HostMCPServerTests` where named; the rest are traced to the source
 | host-mcp-server-033 | bridge-name-first-match (`AgentToolSourceTests.firstNameMatch`) | Two tools named `echo` in one source; call `echo` | The first tool runs |
 | host-mcp-server-034 | bridge-result, bridge-ignores-policy (`AgentToolSourceTests.mutatingToolRuns`) | Call a mutating `ask` tool through an `AgentToolSource`, as `HostMCPServer` does for `tools/call` | The tool runs and its `resultJSON` is the content; no activity entry is written by the bridge |
 | host-mcp-server-035 | call-first-match-only | Two sources both advertising `b`; the first returns an error (`it failed`, error true), the second would return `echo:b`; call `b` | `isError` true, text `it failed`; the second source received no call |
+| host-mcp-server-036 | serve-serialized, serve-stops-previous (`HostMCPServerTests.testOverlappingServesRunInCallOrder`) | Start `serve(over: A)` on a transport whose `connect()` waits for a release; while it waits, start `serve(over: B)`; then release A | B's `connect()` is not called until A's `serve` returns; then A is disconnected and B connected, and B's server is the one serving |
+| host-mcp-server-037 | serve-serialized, serve-throws-start-failure (`HostMCPServerTests.testFailedServeDoesNotBlockTheQueue`) | `serve(over:)` a transport whose `connect()` throws, then `serve(over:)` an in-memory pair | The first throws; the second serves and a client lists the tools |
 ## Edge Cases
 
 - **No registrations**: `tools/list` MUST return an empty list, and any `tools/call` MUST return `unknown tool <name>`.
@@ -169,7 +172,7 @@ Derived from `HostMCPServerTests` where named; the rest are traced to the source
 - **Source throws or returns an error**: sources return a content string and an error flag and cannot throw through the contract; an error flag becomes an MCP error result, and no later registration is tried.
 - **Schema bytes that do not decode**: MUST fall back to an empty object schema; the failure is not logged.
 - **Concurrent calls**: the actor serialises its own state, but `tools/call` handlers run in separate tasks in the SDK and each awaits the source, so two calls to a slow source can overlap; the server adds no lock around source calls.
-- **Overlapping `serve` or `stop`**: `serve(over:)` and `stop()` are actor methods that suspend (on `stop()`, `installHandlers`, `start`) after reading the current server, and the source gives no ordering rule for two overlapping calls, so one call can replace or clear the connection another has just recorded. The behaviour is unspecified and untested; see the pending Design Decision on overlapping serve calls.
+- **Overlapping `serve` or `stop`**: `serve(over:)` and `stop()` suspend (on `stop()`, `installHandlers`, `start`), and an actor lets another call in at each suspension. They are therefore queued: each waits for every earlier call to finish before it reads the current server, so overlapping calls take effect in call order and the last one wins (`serve-serialized`).
 - **Transport closes**: the message loop ends and `waitUntilServerCompleted()` returns; the server stays recorded as current until `stop()` is called.
 - **Stateless HTTP caller**: a `tools/call` with no `initialize` MUST be answered.
 - **Unreachable client or network loss mid-call**: the source call continues to completion and the reply is written to the transport; the server has no retry, timeout or cancellation of its own.
@@ -309,8 +312,8 @@ The tool name and outcome are logged with public privacy. The stdio drain adds a
 **Rationale**: The source constructs its own OSLog `Logger`. Injecting a logger or log sink through the initializer would make vector 022 assertable and is the intended direction; until then the lines are specified here and verified by reading the source.
 **Approved**: pending
 
-**Decision**: Overlapping `serve(over:)` and `stop()` calls have no specified ordering.
-**Rationale**: The source gives no rule and no test settles one. The candidate rule is that the calls serialise and the last call wins; a test issuing two `serve(over:)` calls without awaiting the first would confirm what the actor does today before that rule becomes a requirement.
+**Decision**: `serve(over:)` and `stop()` are serialised through one queue, in call order, and the last call wins.
+**Rationale**: Actor isolation alone does not order them: each suspends after reading the current server, so a second call could start a server the first then overwrote without stopping, leaking a connection and its receive task. Refusing a second `serve` would break the existing `serve-stops-previous` contract, where a host re-serves over a new transport on reconnect; queueing keeps that contract and makes it hold under overlap. Each call is a task that awaits the one before it, so a thrown `serve` releases the queue (`serve-serialized`).
 **Approved**: pending
 ## Compliance
 
@@ -328,6 +331,7 @@ Separation of concerns is partial because `AgentToolSource` shares this ingredie
 ## Change History
 
 | Version | Date | Author | Summary |
+| 1.3.0 | 2026-11-25 | Mike Fullerton | serve(over:) and stop() are queued in call order (serve-serialized); the last call wins and a thrown serve does not block the queue. |
 |---------|------|--------|---------|
 | 1.2.0 | 2026-11-25 | Mike Fullerton | Added the AgentToolSource bridge: exposes AgentTools to the host MCP server with a fixed caller; header text corrected to X-ADHD-Pane. |
 | 1.1.0 | 2026-11-23 | Mike Fullerton | Apps suite Phase 4: callerHeader is X-ADHD-Pane; legacyCallerHeader and callerHeaders added. |

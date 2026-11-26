@@ -360,6 +360,7 @@
 				500D95DB61344EC1088DBD06 /* Sources */,
 				58353875AEBF0A9F8229CBFC /* Resources */,
 				EFB4957DD3809E5D70D985DA /* Frameworks */,
+				4DC3564AC67B322CD286520A /* Stamp AIPluginKit ABI */,
 				CB41CFE654A0F740A09F9DEA /* Install to ~/.agenticplugins */,
 			);
 			buildRules = (
@@ -382,6 +383,7 @@
 				B8852837DB3305F1754F92ED /* Sources */,
 				B6D6B0882D07E2FE002BBD85 /* Resources */,
 				BB1BC382756F5F5B05AAC170 /* Frameworks */,
+				A2CA01509B6E7FAC96865990 /* Stamp AIPluginKit ABI */,
 				399DC83516F4F8D72F9E644F /* Install to ~/.agenticplugins */,
 			);
 			buildRules = (
@@ -404,6 +406,7 @@
 				1AE37AA861A82C4B4F805E95 /* Sources */,
 				6C8082CE9E4C07E3340B4871 /* Resources */,
 				B8363725CBB07A8D107F344F /* Frameworks */,
+				7998D5E556E6D0056ECF8D3F /* Stamp AIPluginKit ABI */,
 				C3CD6AB1A4A00D10F140CCA6 /* Install to ~/.agenticplugins */,
 			);
 			buildRules = (
@@ -426,6 +429,7 @@
 				BC45C9DB23EC021B6D5F64C3 /* Sources */,
 				77F1B7F5D082E96C8926DE1B /* Resources */,
 				EF5DE97AD8241ECE6A431536 /* Frameworks */,
+				671E02814139FFF1C7D12AC3 /* Stamp AIPluginKit ABI */,
 				B7811E083E81C37EE2134CFF /* Install to ~/.agenticplugins */,
 			);
 			buildRules = (
@@ -448,6 +452,7 @@
 				B4DD2844608E52AC614BD97A /* Sources */,
 				8CEBEA58BBDDC3525D56E31D /* Resources */,
 				A485582FFBCEF05D094E364A /* Frameworks */,
+				F0FA3F3BFEF6DB8B856526B8 /* Stamp AIPluginKit ABI */,
 				C037A96FAA23E3B79C98945C /* Install to ~/.agenticplugins */,
 			);
 			buildRules = (
@@ -577,6 +582,25 @@
 			shellPath = /bin/sh;
 			shellScript = "/usr/bin/python3 \"$PROJECT_DIR/tools/self_install_plugin.py\"\n";
 		};
+		4DC3564AC67B322CD286520A /* Stamp AIPluginKit ABI */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Stamp AIPluginKit ABI";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/usr/bin/python3 \"$PROJECT_DIR/tools/stamp_plugin_abi.py\"\n";
+		};
 		572192510E5E1A967BEACACE /* SwiftLint */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
@@ -615,6 +639,25 @@
 			shellPath = /bin/sh;
 			shellScript = "if [[ \"$(uname -m)\" == \"arm64\" ]]; then\n  export PATH=\"/opt/homebrew/bin:$PATH\"\nfi\nif which swiftlint >/dev/null; then\n  swiftlint lint --quiet --strict\nelse\n  echo \"warning: SwiftLint not installed; brew install swiftlint to enable\"\nfi\n";
 		};
+		671E02814139FFF1C7D12AC3 /* Stamp AIPluginKit ABI */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Stamp AIPluginKit ABI";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/usr/bin/python3 \"$PROJECT_DIR/tools/stamp_plugin_abi.py\"\n";
+		};
 		75DB6E38AB4962031F040020 /* SwiftLint */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
@@ -633,6 +676,25 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "if [[ \"$(uname -m)\" == \"arm64\" ]]; then\n  export PATH=\"/opt/homebrew/bin:$PATH\"\nfi\nif which swiftlint >/dev/null; then\n  swiftlint lint --quiet --strict\nelse\n  echo \"warning: SwiftLint not installed; brew install swiftlint to enable\"\nfi\n";
+		};
+		7998D5E556E6D0056ECF8D3F /* Stamp AIPluginKit ABI */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Stamp AIPluginKit ABI";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/usr/bin/python3 \"$PROJECT_DIR/tools/stamp_plugin_abi.py\"\n";
 		};
 		7D320D4AF7DE8B7386AD85E5 /* SwiftLint */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -671,6 +733,25 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "if [[ \"$(uname -m)\" == \"arm64\" ]]; then\n  export PATH=\"/opt/homebrew/bin:$PATH\"\nfi\nif which swiftlint >/dev/null; then\n  swiftlint lint --quiet --strict\nelse\n  echo \"warning: SwiftLint not installed; brew install swiftlint to enable\"\nfi\n";
+		};
+		A2CA01509B6E7FAC96865990 /* Stamp AIPluginKit ABI */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Stamp AIPluginKit ABI";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/usr/bin/python3 \"$PROJECT_DIR/tools/stamp_plugin_abi.py\"\n";
 		};
 		B7811E083E81C37EE2134CFF /* Install to ~/.agenticplugins */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -766,6 +847,25 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "/usr/bin/python3 \"$PROJECT_DIR/tools/self_install_plugin.py\"\n";
+		};
+		F0FA3F3BFEF6DB8B856526B8 /* Stamp AIPluginKit ABI */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Stamp AIPluginKit ABI";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/usr/bin/python3 \"$PROJECT_DIR/tools/stamp_plugin_abi.py\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

@@ -1,5 +1,6 @@
 
 | Version | Date | Author | Summary |
+| 1.3.0 | 2026-11-25 | Mike Fullerton | The plugin runtime gains a refused seam listing plugins discovery refused for an AIPluginKit ABI mismatch; the live cache's load fails with the refusal message. |
 |---------|------|--------|---------|
 | 1.2.0 | 2026-11-25 | Mike Fullerton | A one-shot reply ignores thinkingDelta and usage events (stream-thinking-usage-ignored). |
 | 1.1.2 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |

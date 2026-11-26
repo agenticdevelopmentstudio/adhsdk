@@ -2,7 +2,7 @@
 id: f9f7ae23-0da9-41fb-a065-968a028d059e
 title: "Agent Handlers"
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: 2026-11-25
@@ -78,7 +78,7 @@ Boundary: the handlers only route, map and serialise. They do not authenticate, 
 - **handle-never-throws**: `handle` on `AgentHandlers` and on `ModelHandlers` MUST NOT throw; every failure MUST be returned as a JSON error reply.
 - **handle-async**: `handle` MUST be asynchronous and the handler structs MUST be `Sendable` values holding only their host or registry.
 - **decoding-error-400**: A `DecodingError` raised while routing MUST answer 400 `bad_request` with the message `Malformed body: ` followed by a description.
-- **decoding-error-description**: The description of a `DecodingError` MUST be ``missing `<key>` `` for a missing key, and otherwise the dotted coding path in backticks, a colon and the decoder's debug description (or the debug description alone when the path is empty).
+- **decoding-error-description**: Both handler sets MUST describe a `DecodingError` with the one shared `HandlerError.describe(_:)`, which lives beside `HandlerError` so neither set depends on the other. The description MUST be ``missing `<key>` `` for a missing key, and otherwise the dotted coding path in backticks, a colon and the decoder's debug description (or the debug description alone when the path is empty).
 - **unexpected-error-500**: Any error that is neither the owning component's error type nor a `DecodingError` MUST answer 500 `internal` with the error's localized description.
 - **uuid-case-insensitive**: A path id that is a UUID string MUST be parsed whatever its letter case, on both the session routes and the model entry routes.
 - **segment-before-decode**: The `HandlerRequest` string initializer MUST split the path on `/` before percent-decoding, so an encoded slash (`%2F`) stays inside its segment and an encoded space is part of one segment.
@@ -148,8 +148,8 @@ Boundary: the handlers only route, map and serialise. They do not authenticate, 
 
 - **models-dispatch**: `ModelHandlers` MUST match on method, first segment and segment count: an empty path (`GET`, `POST`), `plugins` and `resolve` (one segment, `GET`), otherwise the entry routes keyed by a UUID first segment.
 - **models-list**: `GET` on an empty path MUST answer 200 with the registry's `ModelEntry` list.
-- **models-create-conflict**: `POST` on an empty path with body `{entry, secrets?}` MUST answer 409 `conflict` with a message naming the id when an entry with that id exists.
-- **models-create**: `POST` on an empty path for a new id MUST call the registry's `upsert` with the entry and the optional secrets and answer 201 with the stored entry.
+- **models-create-conflict**: `POST` on an empty path with body `{entry, secrets?}` MUST answer 409 `conflict` with the message `A model entry with id <id> exists` when an entry with that id exists, which the registry reports as `duplicate`.
+- **models-create**: `POST` on an empty path for a new id MUST call the registry's `create` with the entry and the optional secrets and answer 201 with the entry `create` returns.
 - **models-create-decode**: `POST` on an empty path with a body that does not decode as `{entry, secrets?}` (for example `{}`) MUST answer 400.
 - **models-create-invalid**: `POST` on an empty path MUST map registry errors through the shared map (see #requirements/models-error-map); an empty name, for example, is refused with `invalidEntry`.
 - **models-secrets-never-returned**: No reply MUST carry a secret value; the reply entry names its secret fields only.
@@ -164,8 +164,8 @@ Boundary: the handlers only route, map and serialise. They do not authenticate, 
 - **models-resolve-role**: `GET resolve` MUST answer 400 `` `role` is required `` when the `role` query value is absent or empty.
 - **models-resolve**: `GET resolve?role=<r>` MUST answer 200 with the enabled entry holding the role, or 404 with `No enabled model entry has the role '<r>'`.
 - **models-non-uuid**: A first segment other than the named ones that is not a UUID string MUST answer the no-route reply, and an unmatched method or sub-path on a UUID MUST answer the no-route reply.
-- **models-error-map**: Registry errors MUST map as: `notFound` to 404 `not_found`; `invalidEntry` to 400 `bad_request`; `pluginNotInstalled` and `unknownTemplate` to 422 `unprocessable`. The message MUST be the error's localized description.
-- **models-create-check-order**: The conflict check on `POST` MUST read the registry first and call `upsert` afterwards; see the Design Decision on the create race.
+- **models-error-map**: Registry errors MUST map as: `notFound` to 404 `not_found`; `invalidEntry` to 400 `bad_request`; `pluginNotInstalled`, `unknownTemplate` and `pluginIncompatible` (a plugin the host refused for an AIPluginKit ABI mismatch) to 422 `unprocessable`; `duplicate` to 409 `conflict`. The message MUST be the error's localized description.
+- **models-create-atomic**: `POST` on an empty path MUST NOT check for an existing id itself; the registry's atomic `create` decides, so two concurrent creates of one new id answer one 201 and one 409.
 
 ### Concurrency and side effects
 
@@ -214,7 +214,7 @@ Vectors are derived from `AgentHandlersTests.swift` (suites `HandlerRequest`, `A
 | agent-handlers-018 | tools-call-unknown | `POST tools/nope` (test: toolErrors) | 404, code `not_found`, message `Unknown tool 'nope'` |
 | agent-handlers-019 | tools-call-tool-error | `POST tools/broken` (test: toolErrors) | 422, error code `unprocessable`, message `The tool broke` |
 | agent-handlers-020 | route-top-level, route-method-fallthrough | `GET nowhere`; `PATCH agents` (test: noRoute) | 404 `not_found` `No such route`; 404 `not_found` `No such route` |
-| agent-handlers-021 | models-create, models-secrets-never-returned, models-create-conflict, models-list | `POST` empty path with entry (roles fast) and secrets apiKey `sk-secret`; same again; `GET` empty path (test: create) | 201, body lacks `sk-secret` and names `apiKey`, secret store holds it; 409; list holds the entry id |
+| agent-handlers-021 | models-create, models-secrets-never-returned, models-create-conflict, models-create-atomic, models-list | `POST` empty path with entry (roles fast) and secrets apiKey `sk-secret`; same again; `GET` empty path (test: create) | 201, body lacks `sk-secret` and names `apiKey`, secret store holds it; 409; list holds the entry id |
 | agent-handlers-022 | models-create-invalid, models-create-decode | `POST` entry with empty name; `POST` body `{}` (test: invalid) | 400 `bad_request` with the registry's reason; 400 `bad_request` starting `Malformed body: missing` |
 | agent-handlers-023 | models-get, models-put, models-put-check-order, models-delete | get, put renamed entry, put to a random path id, put an absent entry, delete, get, delete (test: entryRoutes) | 200; 200 and registry shows `Renamed`; 400 `bad_request`; 404 `not_found`; 204 empty; 404 `not_found`; 404 `not_found` |
 | agent-handlers-024 | models-resolve-role, models-resolve | `GET resolve` no query; role `fast`; role `smart` (test: resolve) | 400 `bad_request` `` `role` is required ``; 404 `not_found` `No enabled model entry has the role 'fast'`; 200 with the entry id |
@@ -237,6 +237,7 @@ Vectors are derived from `AgentHandlersTests.swift` (suites `HandlerRequest`, `A
 | agent-handlers-041 | models-secrets-absent, models-put | `PUT <id>` with an entry and no `secrets` after a create that stored `apiKey` (from source; no test) | 200; the secret store still holds the earlier `apiKey` value |
 | agent-handlers-042 | models-error-map | the registry throws `pluginNotInstalled`; `unknownTemplate` (from source; no test) | 422 `unprocessable` with the error's localized description, for each |
 | agent-handlers-043 | tools-call-caller-fallback, tools-list-invalid-schema | `POST tools/echo` with `caller` null, `""` and `5`; `GET tools` with a tool whose schema text is `not json` (from source; no test) | each call's result carries `"caller":"external"`; the tool is listed with `input_schema` `{}` |
+| agent-handlers-044 | models-create-atomic, models-create-conflict (test: concurrentModelCreates) | eight concurrent `POST` empty path with the same new entry id | exactly one answers 201; the others answer 409 `conflict` naming the id; the registry lists one entry |
 
 SHOULD requirements: the component states none, so no SHOULD vectors are owed.
 
@@ -250,7 +251,7 @@ SHOULD requirements: the component states none, so no SHOULD vectors are owed.
 - **Path longer than the route**: extra segments after a recognised session sub-route are ignored (`sessions-extra-segments`); extra segments on `agents` and `tools` answer no-route.
 - **Missing caller**: see `tools-call-caller-fallback`.
 - **Invalid tool schema**: see `tools-list-invalid-schema`.
-- **Concurrent calls**: the handler sets hold no mutable state, so concurrent `handle` calls are safe at this layer. A second message to a session with a turn running answers 409. Concurrent creates of the same new model id can both pass the conflict check and both answer 201, the later write replacing the earlier; this is recorded as debt in the Design Decisions.
+- **Concurrent calls**: the handler sets hold no mutable state, so concurrent `handle` calls are safe at this layer. A second message to a session with a turn running answers 409. Concurrent creates of the same new model id answer one 201 and one 409, because the registry's `create` checks and inserts in one transaction (`models-create-atomic`).
 - **Check-then-act on delete**: `DELETE sessions/<id>` and `DELETE <id>` check existence and then delete as two calls; a concurrent delete can make the second call surface the host or registry error, which `unmapped-error-500` and the error maps turn into a JSON error.
 - **Stream cancellation**: the `events` reply is a plain `AsyncStream`; the handler adds no cancellation, timeout or keep-alive, and the mounting server owns client disconnects (a fact: no such code exists here).
 - **Unreachable dependency**: the host and registry are in-process; a database or plugin failure inside them surfaces as an unmapped error and answers 500 `internal` (`unexpected-error-500`). A plugin that is not installed answers 422 on the model routes (`models-error-map`).
@@ -354,12 +355,12 @@ Not applicable: the source contains no log call. Errors are returned in the repl
 **Rationale**: Stored rows, HTTP bodies and test fixtures read the same and a CLI client decodes identically; `JSONEncoder` and `JSONDecoder` are not `Sendable`, so sharing one instance across tasks would not compile under strict concurrency.
 **Approved**: pending
 
-**Decision**: `ModelHandlers` reuses `AgentHandlers.describe` for decoding errors, and this is recorded as technical debt.
-**Rationale**: Both sets must word a malformed body the same way, so there is one description function. Today `ModelHandlers` depends on `AgentHandlers` for it, so the two handler sets are coupled. Fix path: move the description helper beside `HandlerError` (the shared tier both sets already use), keeping the `decoding-error-description` wording unchanged, so neither set depends on the other.
+**Decision**: The decoding-error description is `HandlerError.describe(_:)`, beside `HandlerError` in `HandlerRequest.swift`.
+**Rationale**: Both sets must word a malformed body the same way, so there is one description function. Putting it with the request and error types both sets already use keeps `ModelHandlers` and `AgentHandlers` independent of each other, with the `decoding-error-description` wording unchanged.
 **Approved**: pending
 
-**Decision**: The check-then-act race on `POST` to the model routes is accepted as known debt.
-**Rationale**: The handler reads the registry for an existing id and then calls `upsert`, which is an insert-or-update; two concurrent creates of the same new id both pass the check, both answer 201, and the later write wins silently. The window is small on a loopback, single-user surface and a fix needs a registry change. Fix path: an atomic insert-if-absent in the registry that the handler maps to 409, which removes the separate read. Until then `models-create-check-order` only fixes the order of the two calls.
+**Decision**: `POST` to the model routes calls the registry's atomic `create` and maps its `duplicate` error to 409.
+**Rationale**: A separate read for an existing id followed by `upsert` (an insert-or-update) let two concurrent creates of one new id both answer 201, the later write winning silently. The registry's `create` checks and inserts in one transaction, so the handler does no read of its own and the conflict answer cannot race (`models-create-atomic`).
 **Approved**: pending
 ## Compliance
 
@@ -378,4 +379,5 @@ The handlers keep routing, status mapping and serialisation apart from the host,
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-11-25 | Mike Fullerton | POST models calls the registry's atomic create (duplicate maps to 409); the decoding-error description is the shared HandlerError.describe. |
 | 1.0.0 | 2026-11-25 | Mike Fullerton | Initial creation |

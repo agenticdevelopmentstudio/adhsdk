@@ -29,7 +29,7 @@ public struct AgentHandlers: Sendable {
         } catch let error as AgentHostError {
             return Self.response(for: error)
         } catch let error as DecodingError {
-            return HandlerError.badRequest("Malformed body: \(Self.describe(error))")
+            return HandlerError.badRequest("Malformed body: \(HandlerError.describe(error))")
         } catch {
             return HandlerError.failure(error)
         }
@@ -201,16 +201,6 @@ public struct AgentHandlers: Sendable {
             return HandlerError.conflict(error.localizedDescription)
         case .invalidAgent:
             return HandlerError.badRequest(error.localizedDescription)
-        }
-    }
-
-    static func describe(_ error: DecodingError) -> String {
-        switch error {
-        case .keyNotFound(let key, _): return "missing `\(key.stringValue)`"
-        case .typeMismatch(_, let context), .valueNotFound(_, let context), .dataCorrupted(let context):
-            let path = context.codingPath.map(\.stringValue).joined(separator: ".")
-            return path.isEmpty ? context.debugDescription : "`\(path)`: \(context.debugDescription)"
-        @unknown default: return error.localizedDescription
         }
     }
 }

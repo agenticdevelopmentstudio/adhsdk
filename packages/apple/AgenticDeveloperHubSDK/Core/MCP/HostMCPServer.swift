@@ -32,6 +32,9 @@ public actor HostMCPServer {
     /// next client's `initialize` with "Server is already initialized".
     private var server: Server?
     private var registrations: [Registration] = []
+    /// The newest queued `serve(over:)` or `stop()`. Each call waits for the
+    /// one before it, so overlapping calls run whole, in call order.
+    private var lastOperation: Task<Void, Error>?
     let log = Logger(subsystem: "AgenticDeveloperHubSDK", category: "automation")
 
     public init(appName: String, appVersion: String) {
@@ -48,9 +51,15 @@ public actor HostMCPServer {
     /// Starts serving over `transport` on a fresh SDK server. If one is
     /// already serving, it is stopped first: the SDK's `Server.start` would
     /// otherwise overwrite its connection and receive task without
-    /// cancelling the old ones.
+    /// cancelling the old ones. Calls to `serve(over:)` and `stop()` run one
+    /// at a time in call order, so of two overlapping serves the later one is
+    /// left serving; a serve that throws does not hold up the next call.
     public func serve(over transport: any Transport) async throws {
-        if server != nil { await stop() }
+        try await enqueue { server in try await server.serveNow(over: transport) }
+    }
+
+    private func serveNow(over transport: any Transport) async throws {
+        if server != nil { await stopNow() }
         // Not `.strict`: a stateless HTTP caller sends `tools/call` with no
         // `initialize` first, and strict mode would refuse it.
         let fresh = Server(name: appName, version: appVersion,
@@ -67,8 +76,25 @@ public actor HostMCPServer {
     }
 
     /// Stops serving. Registrations survive a stop, so a later `serve(over:)`
-    /// serves the same tools; callers must not re-register.
+    /// serves the same tools; callers must not re-register. Queued behind any
+    /// `serve(over:)` or `stop()` called before it.
     public func stop() async {
+        try? await enqueue { server in await server.stopNow() }
+    }
+
+    /// Runs `operation` after every earlier queued call has finished, and
+    /// makes it the call the next one waits for.
+    private func enqueue(_ operation: @escaping @Sendable (isolated HostMCPServer) async throws -> Void) async throws {
+        let previous = lastOperation
+        let task = Task {
+            _ = try? await previous?.value
+            try await operation(self)
+        }
+        lastOperation = task
+        try await task.value
+    }
+
+    private func stopNow() async {
         await server?.stop()
         server = nil
     }

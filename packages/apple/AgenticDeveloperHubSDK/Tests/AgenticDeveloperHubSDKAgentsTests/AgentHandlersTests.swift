@@ -228,6 +228,42 @@ struct ModelHandlersTests {
         #expect(try AgentsJSON.decode([ModelEntry].self, from: body(list)).map(\.id) == [entry.id])
     }
 
+    @Test("concurrent POSTs of one id answer one 201 and the rest 409")
+    func concurrentModelCreates() async throws {
+        let handlers = ModelHandlers(registry: try makeRegistry())
+        let payload = try entryBody(makeEntry())
+
+        let statuses = await withTaskGroup(of: Int.self) { group in
+            for _ in 0..<8 {
+                group.addTask {
+                    await handlers.handle(HandlerRequest(method: "POST", path: "", body: payload)).status
+                }
+            }
+            return await group.reduce(into: [Int]()) { $0.append($1) }
+        }
+
+        #expect(statuses.sorted() == [201] + Array(repeating: 409, count: 7))
+    }
+
+    @Test("a refused plugin is 422 with its load error")
+    func refusedPluginIsUnprocessable() async throws {
+        var runtime = ScriptedRuntime().runtime
+        runtime.discover = { _ in [] }
+        runtime.refused = { _ in
+            [PluginLoadFailure(identifier: FakePluginConstants.identifier, displayName: "Fake", message: "rebuild it")]
+        }
+        let registry = try makeRegistry(runtime: runtime)
+        let entry = makeEntry()
+        try registry.upsert(entry, secrets: nil)
+        let handlers = ModelHandlers(registry: registry)
+
+        let response = await handlers.handle(HandlerRequest(method: "GET", path: "\(entry.id.uuidString)/models"))
+
+        #expect(response.status == 422)
+        let decoded = try AgentsJSON.decode(HandlerError.self, from: body(response))
+        #expect(decoded.message == "rebuild it")
+    }
+
     @Test("an invalid entry is 400")
     func invalid() async throws {
         let handlers = ModelHandlers(registry: try makeRegistry())

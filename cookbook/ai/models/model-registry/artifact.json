@@ -4,7 +4,7 @@
     "id": "12d36a57-8d7d-454e-a2ee-44effbd9e93b",
     "title": "Model Registry",
     "type": "ingredient",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "status": "review",
     "language": "en",
     "created": "2026-11-25",
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "5f9da84f5dff83f5",
+  "synced": "2762f0e0bef3a519",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

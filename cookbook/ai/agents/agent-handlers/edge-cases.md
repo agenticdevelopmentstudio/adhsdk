@@ -7,7 +7,7 @@
 - **Path longer than the route**: extra segments after a recognised session sub-route are ignored (`sessions-extra-segments`); extra segments on `agents` and `tools` answer no-route.
 - **Missing caller**: see `tools-call-caller-fallback`.
 - **Invalid tool schema**: see `tools-list-invalid-schema`.
-- **Concurrent calls**: the handler sets hold no mutable state, so concurrent `handle` calls are safe at this layer. A second message to a session with a turn running answers 409. Concurrent creates of the same new model id can both pass the conflict check and both answer 201, the later write replacing the earlier; this is recorded as debt in the Design Decisions.
+- **Concurrent calls**: the handler sets hold no mutable state, so concurrent `handle` calls are safe at this layer. A second message to a session with a turn running answers 409. Concurrent creates of the same new model id answer one 201 and one 409, because the registry's `create` checks and inserts in one transaction (`models-create-atomic`).
 - **Check-then-act on delete**: `DELETE sessions/<id>` and `DELETE <id>` check existence and then delete as two calls; a concurrent delete can make the second call surface the host or registry error, which `unmapped-error-500` and the error maps turn into a JSON error.
 - **Stream cancellation**: the `events` reply is a plain `AsyncStream`; the handler adds no cancellation, timeout or keep-alive, and the mounting server owns client disconnects (a fact: no such code exists here).
 - **Unreachable dependency**: the host and registry are in-process; a database or plugin failure inside them surfaces as an unmapped error and answers 500 `internal` (`unexpected-error-500`). A plugin that is not installed answers 422 on the model routes (`models-error-map`).

@@ -15,15 +15,16 @@ the mapping from a stored configuration to a request bag in
 `AIPluginDescriptor+Request.swift`. `unit-test-coverage` is partial:
 `ModelRegistryTests.swift` covers ordering, secret handling, timestamps, removal,
 validation, role and selector resolution, request values, plugin listing, `test`,
-the change signal and the wire forms, but no test covers `listModels`, a failing
-secret write, a corrupt row, the change coalescing, the keychain choice, or a
-selector with an unknown type. `secure-storage` passes because secret values go
+the change signal and the wire forms, a failing secret write and its rollback, a corrupt row,
+and `create` (including concurrent creates), but no test covers `listModels`,
+the change coalescing, the keychain choice, or a selector with an unknown type. `secure-storage` passes because secret values go
 only to the Keychain and never into the SQLite file or the entry JSON.
 `explicit-error-handling` is partial: a failed secret delete throws
 `removeFailed` (`secret-removal-failure`), but a failed live model list
 silently falls back to the static list. `data-integrity` is partial because
-the row's read-modify-write is one transaction (`concurrent-upsert`) but the
-Keychain writes are not part of it. `no-hardcoded-strings` fails because every error
+the row's read-modify-write is one transaction (`concurrent-upsert`) and a
+failed call rolls its Keychain writes back (`secret-write-rollback`), but that
+rollback is best effort, not part of the transaction. `no-hardcoded-strings` fails because every error
 description and the empty-reply message are English literals with no
 localization mechanism.
 

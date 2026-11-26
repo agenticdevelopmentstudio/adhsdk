@@ -4,6 +4,7 @@
 - A search-path entry that exists but cannot be enumerated (permissions failure, or a non-directory file at that path): silently skipped with no log — see `search-path-enumeration-failure` and its Design Decision.
 - A directory entry with the plugin extension that is not a valid bundle: caught by `unreadable-candidate-skip` (the bundle cannot be opened), logged and skipped, MUST NOT throw.
 - The descriptor file absent, unreadable, or not valid JSON for the declared descriptor shape: caught by `unreadable-candidate-skip`, logged and skipped, MUST NOT throw. This is also how a pre-descriptor plugin (no descriptor file at all) is ignored, per the source's own documentation.
+- A plugin built against a different plugin kit: refused at discovery by `abi-stamp-check` and never loaded, because loading a binary built against other type layouts can crash the host at the first call; a plugin with no stamp at all (built before the stamp existed) is refused the same way. Re-checked before loading (`abi-check-before-load`).
 - The schema version below the minimum or above the current maximum: caught by `schema-version-filter`, logged and skipped, MUST NOT throw.
 - The same identifier discovered from two or more search paths (including the same identifier appearing twice in one directory listing, which cannot occur since file names are unique): only the first-recorded one is kept, per `duplicate-identifier-first-wins`.
 - Loading a plugin for an identifier never discovered: MUST fail with a not-found error, per `load-unknown-identifier`.

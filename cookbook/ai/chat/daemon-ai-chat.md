@@ -2,7 +2,7 @@
 id: 4d7ed9a3-c6d8-491b-911a-cf257fde1c38
 title: "Daemon AI Chat"
 type: ingredient
-version: 1.2.0
+version: 1.3.0
 status: review
 language: en
 created: 2026-09-23
@@ -95,6 +95,8 @@ Every collaborator the entry point touches — the settings reader (the provider
 - **timeout-cli-path-only**: the entry point's `timeout` parameter MUST govern only the CLI path's subprocess wait (forwarded verbatim); it MUST NOT be forwarded into the plugin path, whose own per-request budget is the plugin-supplied request spec's timeout and whose lock-hold budget is the guard's own exclusive-section deadline.
 - **cache-reuse-by-search-paths**: the live plugin cache's `load` MUST reuse the cached plugin manager when the given search paths equal the previously cached ones; otherwise it MUST construct a new plugin manager, discover its plugins, replace the cached manager and paths, and clear every previously loaded plugin instance.
 - **runtime-discover-seam**: the plugin runtime seam MUST carry a third member, `discover`, that lists the installed plugins' descriptors for the given search paths without loading any plugin code; when an initializer caller does not supply one, it MUST default to scanning those search paths for descriptors. The live runtime's `discover` MUST scan the given search paths followed by each additional search path it was built with that the given list does not already hold.
+- **runtime-refused-seam**: the plugin runtime seam MUST carry a fourth member, `refused`, that lists the plugins under the given search paths that discovery refused (for an ABI mismatch, see the plugin manager's `abi-stamp-check`) as load failures, without loading any plugin code; its default MUST scan the given search paths, and the live runtime's MUST scan the same paths as its `discover`.
+- **cache-refused-error**: the live plugin cache's `load` MUST fail with the refusal's message, not the not-installed message, when the identifier names a plugin its manager's discovery refused.
 - **shared-request-values**: the plugin path MUST assemble the forwarded values through the plugin descriptor's shared request-values and template-scoped secret-field helpers, the same two helpers the model registry resolves an entry through, so both paths build identical value bags for identical stored configurations (the ordering and scoping are fixed by `ledger-driven-values`, `secret-scope-by-template` and `model-key-injected-last`).
 - **cache-unknown-identifier**: the live plugin cache's `load` MUST throw the completion error type's provider-error case with the message `"AI plugin not installed: <identifier>"` when the manager has no descriptor for that identifier.
 - **cache-instance-reuse**: the live plugin cache's `load` MUST return an already-cached plugin instance for the identifier without loading it again; otherwise it MUST load it, cache the result, and return it.
@@ -156,6 +158,7 @@ Not applicable — this is a headless one-shot AI-completion orchestrator, not a
 | daemon-ai-chat-037 | cache-unknown-identifier | The live plugin cache's `load` for an identifier the plugin manager has no descriptor for | Throws `ChatError.providerError("AI plugin not installed: <identifier>")` |
 | daemon-ai-chat-038 | cache-reuse-by-search-paths | Call the live plugin cache's `load` twice with equal search paths, then once with different search paths | The plugin manager is reused for equal paths; for different paths a new manager is built, discovery reruns, and every previously loaded plugin instance is cleared |
 | daemon-ai-chat-039 | cache-instance-reuse | Call the live plugin cache's `load` twice for the same installed identifier with unchanged search paths | The second call returns the cached instance without loading the plugin again |
+| daemon-ai-chat-040 | runtime-refused-seam (test: `AIPluginABITests.runtimeReportsRefusals`) | A runtime built with the default `refused` over a search path holding one refused bundle | `refused` returns that one failure; `discover` returns nothing |
 ## Edge Cases
 
 - **Empty/blank prompts**: an empty user prompt or system prompt MUST be passed through unvalidated to the plugin's request-building step (or, on the CLI path, to the CLI runner/`claude -p` itself); this component performs no non-emptiness check of its own (see `single-user-message`).
@@ -297,6 +300,7 @@ Secure-storage passes because `DaemonAIChat.swift` never persists a credential i
 ## Change History
 
 | Version | Date | Author | Summary |
+| 1.3.0 | 2026-11-25 | Mike Fullerton | The plugin runtime gains a refused seam listing plugins discovery refused for an AIPluginKit ABI mismatch; the live cache's load fails with the refusal message. |
 |---------|------|--------|---------|
 | 1.2.0 | 2026-11-25 | Mike Fullerton | A one-shot reply ignores thinkingDelta and usage events (stream-thinking-usage-ignored). |
 | 1.1.2 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |

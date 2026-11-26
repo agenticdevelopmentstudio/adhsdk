@@ -8,7 +8,7 @@
 - **Source throws or returns an error**: sources return a content string and an error flag and cannot throw through the contract; an error flag becomes an MCP error result, and no later registration is tried.
 - **Schema bytes that do not decode**: MUST fall back to an empty object schema; the failure is not logged.
 - **Concurrent calls**: the actor serialises its own state, but `tools/call` handlers run in separate tasks in the SDK and each awaits the source, so two calls to a slow source can overlap; the server adds no lock around source calls.
-- **Overlapping `serve` or `stop`**: `serve(over:)` and `stop()` are actor methods that suspend (on `stop()`, `installHandlers`, `start`) after reading the current server, and the source gives no ordering rule for two overlapping calls, so one call can replace or clear the connection another has just recorded. The behaviour is unspecified and untested; see the pending Design Decision on overlapping serve calls.
+- **Overlapping `serve` or `stop`**: `serve(over:)` and `stop()` suspend (on `stop()`, `installHandlers`, `start`), and an actor lets another call in at each suspension. They are therefore queued: each waits for every earlier call to finish before it reads the current server, so overlapping calls take effect in call order and the last one wins (`serve-serialized`).
 - **Transport closes**: the message loop ends and `waitUntilServerCompleted()` returns; the server stays recorded as current until `stop()` is called.
 - **Stateless HTTP caller**: a `tools/call` with no `initialize` MUST be answered.
 - **Unreachable client or network loss mid-call**: the source call continues to completion and the reply is written to the transport; the server has no retry, timeout or cancellation of its own.

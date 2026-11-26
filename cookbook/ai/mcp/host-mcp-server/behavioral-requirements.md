@@ -11,6 +11,7 @@ Serving
 
 - **fresh-server-per-serve**: Each `serve(over:)` MUST create a new SDK `Server`, because the SDK marks a server initialized on its first `initialize` and never clears that, so a reused server would answer the next client's `initialize` with "Server is already initialized".
 - **serve-stops-previous**: If a server is already serving, `serve(over:)` MUST stop it before starting the new one, so the old connection and receive task are cancelled.
+- **serve-serialized**: `serve(over:)` and `stop()` MUST run one at a time, in the order they were called: a call MUST NOT begin until every earlier `serve(over:)` or `stop()` has finished, including across the suspension points inside each call. So of two overlapping `serve(over:)` calls the later one stops the earlier one's server and its own server is the one left serving (last call wins), and a `stop()` called while a `serve(over:)` is starting stops the server that call starts. A `serve(over:)` that throws does not block the calls queued after it.
 - **tools-capability**: The server MUST declare the tools capability with `listChanged` false.
 - **not-strict**: The server MUST be created with the SDK's default configuration, not strict mode, so a stateless HTTP caller can send `tools/call` without a prior `initialize`.
 - **serve-throws-start-failure**: `serve(over:)` MUST throw when starting the SDK server on the transport throws, and in that case MUST NOT record the new server as current.

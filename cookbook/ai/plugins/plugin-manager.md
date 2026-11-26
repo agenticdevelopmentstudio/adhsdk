@@ -2,11 +2,11 @@
 id: 0a729d47-fc2d-427c-b474-26072dc8b336
 title: "Plugin Manager"
 type: ingredient
-version: 1.2.2
+version: 1.3.0
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-25
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -51,6 +51,10 @@ secret-storage component respectively.
 - **aiplugin-extension-filter**: Discovery MUST only consider a directory entry whose file extension is exactly `aiplugin`.
 - **no-binary-load-at-discovery**: Discovery MUST NOT load or otherwise map a candidate's executable code into memory; it MUST only open the candidate as a bundle and read its descriptor file from it.
 - **unreadable-candidate-skip**: Discovery MUST skip a candidate — not add it to the manager's records — and log a warning naming the candidate's last path component when the candidate cannot be opened as a bundle, or when its descriptor file is missing, unreadable, or fails to decode as a descriptor.
+- **abi-stamp-check**: Discovery MUST read each candidate's plugin-kit ABI stamp, the integer under the bundle information key `AIPluginKitABIVersion`, from the bundle's information file alone, before it reads the descriptor and without loading code. A candidate whose stamp is missing, is not an integer, or differs from the host's `AIPluginABI.version` MUST be refused: not added to records, logged at error level with the candidate's name and both versions, and recorded as a refused plugin (`abi-refusal-reported`). Equality is required, not a range, because the plugin kit is not built for binary compatibility across versions.
+- **abi-refusal-message**: A refusal's message MUST be `Plugin '<name>' was built against AIPluginKit ABI <stamp>, but this host has ABI <host>; rebuild the plugin` for a different stamp, and `Plugin '<name>' has no AIPluginKit ABI stamp (AIPluginKitABIVersion); rebuild it against this AIPluginKit` for a missing or malformed one. `<name>` is the descriptor's display name when the descriptor reads, else the bundle's last path component.
+- **abi-refusal-reported**: The scan MUST return the refused plugins beside the discovered ones, each a load failure carrying the descriptor's identifier (else the bundle identifier, else the bundle's last path component), the name and the message. The manager MUST keep the refusals of its discovery runs, one per identifier, and loading all plugins MUST report them among its failures, so the host's existing load-failure surfaces show them.
+- **abi-check-before-load**: Loading a plugin MUST check the bundle's ABI stamp again before loading its code, and MUST fail with an incompatible-ABI error carrying the refusal message when it does not match, so a bundle replaced on disk after discovery is still never loaded.
 - **schema-version-filter**: Discovery MUST skip a candidate — not add it to records — and log a warning naming the descriptor's display name and schema version when the descriptor's schema version falls outside the currently supported range (currently 2 through 3).
 - **duplicate-identifier-first-wins**: Discovery MUST silently ignore (no log, not added to records) a candidate whose descriptor identifier already matches a previously recorded descriptor, so the search path that appears first in search-path order wins for a given identifier.
 - **discovery-idempotent**: Running discovery more than once MUST leave the discovered descriptors unchanged for every identifier a previous run already discovered.
@@ -128,6 +132,10 @@ Not applicable — this is a plugin discovery and loading manager, not a visual 
 | ai-plugin-manager-023 | single-context-confinement | Attempting to access the manager's state from outside its designated execution context, with no explicit hand-off | Rejected by the platform's concurrency enforcement (e.g. a compile-time diagnostic) rather than allowed to run concurrently |
 | ai-plugin-manager-024 | load-result-context-confined | A load result value passed to or read from a separate concurrent execution context | Rejected by the platform's concurrency enforcement (e.g. a compile-time diagnostic), since a load result carries no cross-context sharing guarantee |
 | ai-plugin-manager-025 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
+| ai-plugin-manager-026 | abi-stamp-check, abi-refusal-message, abi-refusal-reported (test: `AIPluginABITests.refusesAMismatchedStamp`) | A `.aiplugin` bundle whose information file has `AIPluginKitABIVersion` one above the host's, and a valid descriptor | Scanning returns no discovered plugin and one refusal naming the descriptor's identifier with the different-stamp message; no code is loaded |
+| ai-plugin-manager-027 | abi-stamp-check, abi-refusal-message (test: `AIPluginABITests.refusesAMissingStamp`) | A `.aiplugin` bundle with no `AIPluginKitABIVersion` key | Refused with the missing-stamp message |
+| ai-plugin-manager-028 | abi-stamp-check (test: `AIPluginABITests.acceptsAMatchingStamp`) | A `.aiplugin` bundle stamped with the host's version and a valid descriptor | Discovered; no refusal |
+| ai-plugin-manager-029 | abi-refusal-reported, load-all-resilient (test: `AIPluginABITests.loadAllReportsRefusals`) | A manager whose search path holds one refused bundle; discover, then load all | The load result's failures hold the refusal; nothing is loaded |
 
 ## Edge Cases
 
@@ -136,6 +144,7 @@ Not applicable — this is a plugin discovery and loading manager, not a visual 
 - A search-path entry that exists but cannot be enumerated (permissions failure, or a non-directory file at that path): silently skipped with no log — see `search-path-enumeration-failure` and its Design Decision.
 - A directory entry with the plugin extension that is not a valid bundle: caught by `unreadable-candidate-skip` (the bundle cannot be opened), logged and skipped, MUST NOT throw.
 - The descriptor file absent, unreadable, or not valid JSON for the declared descriptor shape: caught by `unreadable-candidate-skip`, logged and skipped, MUST NOT throw. This is also how a pre-descriptor plugin (no descriptor file at all) is ignored, per the source's own documentation.
+- A plugin built against a different plugin kit: refused at discovery by `abi-stamp-check` and never loaded, because loading a binary built against other type layouts can crash the host at the first call; a plugin with no stamp at all (built before the stamp existed) is refused the same way. Re-checked before loading (`abi-check-before-load`).
 - The schema version below the minimum or above the current maximum: caught by `schema-version-filter`, logged and skipped, MUST NOT throw.
 - The same identifier discovered from two or more search paths (including the same identifier appearing twice in one directory listing, which cannot occur since file names are unique): only the first-recorded one is kept, per `duplicate-identifier-first-wins`.
 - Loading a plugin for an identifier never discovered: MUST fail with a not-found error, per `load-unknown-identifier`.
@@ -218,8 +227,13 @@ Subsystem: the app's bundle identifier (falls back to a fixed placeholder if uns
 | Platform | Location | Conformance |
 |----------|----------|-------------|
 | apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIPluginManager.swift` | confirmed (1.2.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIPluginABI.swift` | unverified |
 
 ## Design Decisions
+
+**Decision**: Plugin compatibility is an integer ABI stamp, `AIPluginKitABIVersion`, written into each plugin's built Info.plist at build time from the `AIPluginABI.version` constant in the plugin kit's source, and compared for equality at discovery and again before loading.
+**Rationale**: A plugin links the host's single copy of the plugin kit (`shared-framework-image`), and that framework is not built for library evolution, so a plugin built against other type layouts can crash the host as soon as a type crosses the boundary; the check has to happen before any plugin code is mapped. The Info.plist is readable without loading code, unlike the binary, and is separate from the descriptor, whose schema version covers the descriptor's shape rather than the code's. One constant in the kit's source is the single source of truth: the build's stamp script reads it, so no build setting has to be kept in step across projects. The constant is bumped by hand on any change to a type a plugin shares with the host.
+**Approved**: pending
 
 **Decision**: Loading a plugin caches one instance per identifier for the manager's lifetime instead of creating a fresh instance per call, even though the plugin protocol's own doc comment says "Instances are cheap and may be created per request."
 **Rationale**: Caching avoids repeating the bundle-load/principal-class resolution on every request and keeps the loaded-bundles bookkeeping simple (one bundle reference per identifier); since macOS never truly unloads a loaded bundle's binary anyway (per `unload-retains-bundle`), there is no memory cost to keeping one instance alive alongside it. (Apple platform implementation.)
@@ -267,3 +281,4 @@ Explicit-error-handling is `partial`: loading a plugin (individually or via "loa
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolved two NEEDS REVIEW markers as current behavior plus pending Design Decisions; added separation-of-concerns and unit-test-coverage compliance. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
 | 1.2.2 | 2026-10-04 | Mike Fullerton | Inverted prohibitions (none/neither/no X MUST) restated as MUST NOT. |
+| 1.3.0 | 2026-11-25 | Mike Fullerton | AIPluginKit ABI stamp: discovery refuses a bundle whose AIPluginKitABIVersion is missing or differs, reports the refusal as a load failure, and loading re-checks it. |

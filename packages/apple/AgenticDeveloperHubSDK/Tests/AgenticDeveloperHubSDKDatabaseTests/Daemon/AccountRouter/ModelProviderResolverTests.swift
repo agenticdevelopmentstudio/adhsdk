@@ -174,7 +174,10 @@ final class ModelProviderResolverTests: XCTestCase {
         let contents = root.appendingPathComponent("Compat.aiplugin/Contents")
         let resources = contents.appendingPathComponent("Resources")
         try FileManager.default.createDirectory(at: resources, withIntermediateDirectories: true)
-        let plist: [String: Any] = ["CFBundleIdentifier": "test.compat", "CFBundlePackageType": "BNDL"]
+        let plist: [String: Any] = [
+            "CFBundleIdentifier": "test.compat", "CFBundlePackageType": "BNDL",
+            AIPluginABI.infoPlistKey: AIPluginABI.version
+        ]
         try PropertyListSerialization.data(fromPropertyList: plist, format: .xml, options: 0)
             .write(to: contents.appendingPathComponent("Info.plist"))
         let descriptor = #"""

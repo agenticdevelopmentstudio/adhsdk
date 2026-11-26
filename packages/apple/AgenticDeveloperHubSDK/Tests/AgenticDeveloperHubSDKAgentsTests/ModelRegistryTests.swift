@@ -2,6 +2,7 @@
 import Testing
 import Foundation
 import AIPluginKit
+import AgenticDeveloperHubSDKDatabase
 @testable import AgenticDeveloperHubSDKAgents
 
 @Suite("ModelRegistry")
@@ -97,6 +98,96 @@ struct ModelRegistryTests {
         #expect(try registry.get(entry.id) == nil)
     }
 
+    @Test("list skips a row that does not decode and returns the rest")
+    func skipsCorruptRow() throws {
+        let database = try BoundedDatabase(path: ":memory:")
+        let registry = try makeRegistry(database: database)
+        try registry.upsert(makeEntry(name: "good"), secrets: nil)
+        try database.write { conn in
+            try conn.execute(
+                sql: "INSERT INTO model_entries (id, json, updated_at) VALUES (?, ?, ?)",
+                arguments: [UUID().uuidString, "{not json", 0])
+        }
+
+        #expect(try registry.list().map(\.configuration.name) == ["good"])
+    }
+
+    @Test("an upsert whose secret write fails removes the secrets it added")
+    func rollsBackNewSecrets() throws {
+        let secrets = FakeModelSecrets()
+        let registry = try makeRegistry(secrets: secrets)
+        let entry = makeEntry()
+        secrets.failingSets = ["orgId"]
+
+        #expect(throws: ModelSecretStoreError.writeFailed(field: "orgId")) {
+            try registry.upsert(entry, secrets: ["apiKey": "sk", "orgId": "org"])
+        }
+        #expect(secrets.count == 0)
+        #expect(try registry.get(entry.id) == nil)
+    }
+
+    @Test("an upsert whose secret write fails restores the values it replaced")
+    func rollsBackReplacedSecrets() throws {
+        let secrets = FakeModelSecrets()
+        let registry = try makeRegistry(secrets: secrets)
+        let entry = makeEntry()
+        try registry.upsert(entry, secrets: ["apiKey": "one"])
+        secrets.failingSets = ["orgId"]
+
+        #expect(throws: ModelSecretStoreError.writeFailed(field: "orgId")) {
+            try registry.upsert(entry, secrets: ["apiKey": "two", "orgId": "org"])
+        }
+        #expect(secrets.value(for: entry.id, field: "apiKey") == "one")
+        #expect(secrets.value(for: entry.id, field: "orgId") == nil)
+        #expect(try registry.get(entry.id)?.secretFields == ["apiKey"])
+    }
+
+    @Test("create stores a new entry once; a second create of its id is a duplicate")
+    func createsOnce() throws {
+        let secrets = FakeModelSecrets()
+        let registry = try makeRegistry(secrets: secrets)
+        let entry = makeEntry()
+
+        let stored = try registry.create(entry, secrets: ["apiKey": "one"])
+        #expect(stored.secretFields == ["apiKey"])
+        #expect(throws: ModelRegistryError.duplicate(entry.id)) {
+            try registry.create(entry, secrets: ["apiKey": "two"])
+        }
+        #expect(secrets.value(for: entry.id, field: "apiKey") == "one")
+        #expect(try registry.list().count == 1)
+    }
+
+    @Test("concurrent creates of one id store one entry")
+    func concurrentCreates() async throws {
+        let registry = try makeRegistry()
+        let entry = makeEntry()
+
+        let outcomes = await withTaskGroup(of: Bool.self) { group in
+            for _ in 0..<8 {
+                group.addTask { (try? registry.create(entry)) != nil }
+            }
+            return await group.reduce(into: [Bool]()) { $0.append($1) }
+        }
+
+        #expect(outcomes.filter { $0 }.count == 1)
+        #expect(try registry.list().count == 1)
+    }
+
+    @Test("create validates like upsert and rolls back a failed secret write")
+    func createValidates() throws {
+        let secrets = FakeModelSecrets()
+        let registry = try makeRegistry(secrets: secrets)
+        #expect(throws: ModelRegistryError.self) { try registry.create(makeEntry(name: " ")) }
+
+        let entry = makeEntry()
+        secrets.failingSets = ["orgId"]
+        #expect(throws: ModelSecretStoreError.writeFailed(field: "orgId")) {
+            try registry.create(entry, secrets: ["apiKey": "sk", "orgId": "org"])
+        }
+        #expect(secrets.count == 0)
+        #expect(try registry.get(entry.id) == nil)
+    }
+
     @Test("rejects an entry without a name, plugin or template")
     func validates() throws {
         let registry = try makeRegistry()
@@ -162,6 +253,30 @@ struct ModelRegistryTests {
         let plugins = await registry.plugins()
         #expect(plugins.map(\.identifier) == [FakePluginConstants.identifier])
         #expect(plugins.first?.templates.first?.models.count == 2)
+    }
+
+    @Test("plugins lists refused plugins with their load error, and using one is incompatible")
+    func listsRefusedPlugins() async throws {
+        var runtime = ScriptedRuntime().runtime
+        let refusal = PluginLoadFailure(
+            identifier: "com.test.stale", displayName: "Stale",
+            message: "Plugin 'Stale' was built against AIPluginKit ABI 0, but this host has ABI 1; rebuild the plugin")
+        runtime.refused = { _ in [refusal] }
+        runtime.discover = { _ in [] }
+        let registry = try makeRegistry(runtime: runtime)
+
+        let plugins = await registry.plugins()
+        #expect(plugins.map(\.identifier) == ["com.test.stale"])
+        #expect(plugins.first?.loadError == refusal.message)
+        #expect(plugins.first?.templates.isEmpty == true)
+
+        let entry = ModelEntry(configuration: AIProviderConfiguration(
+            name: "stale", pluginIdentifier: "com.test.stale", templateId: "t"))
+        try registry.upsert(entry, secrets: nil)
+        let incompatible = ModelRegistryError.pluginIncompatible(plugin: "com.test.stale", message: refusal.message)
+        await #expect(throws: incompatible) {
+            _ = try await registry.listModels(entry.id)
+        }
     }
 
     @Test("test reports the model's reply")

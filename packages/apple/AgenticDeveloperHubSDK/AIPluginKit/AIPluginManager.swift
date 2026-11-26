@@ -52,6 +52,11 @@ public final class AIPluginManager {
     /// Internal storage pairing each descriptor with the bundle it came from.
     private var records: [Record] = []
 
+    /// The plugins discovery refused because their AIPluginKit ABI stamp is
+    /// missing or differs from `AIPluginABI.version`, one per identifier, in
+    /// the order first refused. `loadAllPlugins()` reports them as failures.
+    public private(set) var discoveryFailures: [PluginLoadFailure] = []
+
     /// Loaded plugin instances, keyed by identifier.
     private var loadedPlugins: [String: any AIPlugin] = [:]
 
@@ -71,6 +76,9 @@ public final class AIPluginManager {
         case loadFailed(String)
         case noPrincipalClass(String)
         case principalClassNotPlugin(String)
+        /// The bundle's AIPluginKit ABI stamp does not match this host's; the
+        /// message says which it has and what to do.
+        case incompatibleABI(String, message: String)
 
         public var errorDescription: String? {
             switch self {
@@ -82,6 +90,8 @@ public final class AIPluginManager {
                 return "Plugin '\(id)' has no NSPrincipalClass"
             case .principalClassNotPlugin(let id):
                 return "Plugin '\(id)' principal class does not conform to AIPlugin"
+            case .incompatibleABI(_, let message):
+                return message
             }
         }
     }
@@ -130,9 +140,15 @@ public final class AIPluginManager {
     /// Scans all search paths for `.aiplugin` bundles and reads their
     /// `descriptor.json`. Does not load any plugin binaries. Bundles without a
     /// descriptor, or whose `schemaVersion` the host does not understand, are
-    /// skipped (this is how old v1 plugins are ignored).
+    /// skipped (this is how old v1 plugins are ignored). A bundle built against
+    /// a different AIPluginKit is refused and kept in `discoveryFailures`.
     public func discoverPlugins() {
-        for found in Self.scanDescriptors(in: searchPaths)
+        let scan = Self.scanPlugins(in: searchPaths)
+        for refusal in scan.refused
+        where !discoveryFailures.contains(where: { $0.identifier == refusal.identifier }) {
+            discoveryFailures.append(refusal)
+        }
+        for found in scan.plugins
         where !records.contains(where: { $0.descriptor.identifier == found.descriptor.identifier }) {
             records.append(Record(descriptor: found.descriptor, bundleURL: found.bundleURL))
             let descriptor = found.descriptor
@@ -153,8 +169,20 @@ public final class AIPluginManager {
     /// only, never loads a binary, and touches no manager state, so a daemon or
     /// any other non-main-actor caller can use it.
     public nonisolated static func scanDescriptors(in searchPaths: [URL]) -> [DiscoveredPlugin] {
+        scanPlugins(in: searchPaths).plugins
+    }
+
+    /// What a scan of `searchPaths` found: the plugins the host can load (as
+    /// `scanDescriptors` returns them) and the bundles it refused because
+    /// their AIPluginKit ABI stamp is missing or differs (see `AIPluginABI`),
+    /// each logged at error level. Reads Info.plist and `descriptor.json`
+    /// only, never loads a binary, and touches no manager state.
+    public nonisolated static func scanPlugins(
+        in searchPaths: [URL]
+    ) -> (plugins: [DiscoveredPlugin], refused: [PluginLoadFailure]) {
         let fileManager = FileManager.default
         var found: [DiscoveredPlugin] = []
+        var refused: [PluginLoadFailure] = []
         for searchPath in searchPaths {
             guard fileManager.fileExists(atPath: searchPath.path) else { continue }
 
@@ -165,6 +193,14 @@ public final class AIPluginManager {
             ) else { continue }
 
             for url in contents where url.pathExtension == "aiplugin" {
+                if let bundle = Bundle(url: url), let refusal = abiRefusal(of: bundle, at: url) {
+                    // swiftlint:disable:next line_length
+                    logger.error("Refusing plugin \(url.lastPathComponent, privacy: .public): \(refusal.message, privacy: .public)")
+                    if !refused.contains(where: { $0.identifier == refusal.identifier }) {
+                        refused.append(refusal)
+                    }
+                    continue
+                }
                 guard let bundle = Bundle(url: url),
                       let descriptor = readDescriptor(from: bundle) else {
                     // swiftlint:disable:next line_length
@@ -182,7 +218,17 @@ public final class AIPluginManager {
                 found.append(DiscoveredPlugin(descriptor: descriptor, bundleURL: url))
             }
         }
-        return found
+        return (found, refused)
+    }
+
+    /// The failure that refuses `bundle` for its ABI stamp, or nil when the
+    /// stamp matches. Named from the descriptor when it reads, else the file.
+    private nonisolated static func abiRefusal(of bundle: Bundle, at url: URL) -> PluginLoadFailure? {
+        let descriptor = readDescriptor(from: bundle)
+        let name = descriptor?.displayName ?? url.lastPathComponent
+        guard let message = AIPluginABI.incompatibility(of: bundle, name: name) else { return nil }
+        let identifier = descriptor?.identifier ?? bundle.bundleIdentifier ?? url.lastPathComponent
+        return PluginLoadFailure(identifier: identifier, displayName: name, message: message)
     }
 
     /// Reads and decodes `descriptor.json` from a bundle's resources.
@@ -197,10 +243,11 @@ public final class AIPluginManager {
     // MARK: - Loading
 
     /// Loads every discovered plugin. Resilient: a failure loading one plugin is
-    /// logged and recorded in `failures` without aborting the others.
+    /// logged and recorded in `failures` without aborting the others. The
+    /// plugins discovery refused (`discoveryFailures`) are reported there too.
     public func loadAllPlugins() -> PluginLoadResult {
         var loaded: [any AIPlugin] = []
-        var failures: [PluginLoadFailure] = []
+        var failures: [PluginLoadFailure] = discoveryFailures
         for descriptor in descriptors {
             do {
                 loaded.append(try loadPlugin(identifier: descriptor.identifier))
@@ -233,6 +280,13 @@ public final class AIPluginManager {
 
         guard let bundle = Bundle(url: record.bundleURL) else {
             throw AIPluginError.loadFailed(identifier)
+        }
+
+        // Checked again here, before any code is mapped: the bundle on disk
+        // may have been replaced since discovery.
+        if !bundle.isLoaded,
+           let message = AIPluginABI.incompatibility(of: bundle, name: record.descriptor.displayName) {
+            throw AIPluginError.incompatibleABI(identifier, message: message)
         }
 
         if !bundle.isLoaded {
@@ -299,10 +353,16 @@ public final class AIPluginManager {
 // MARK: - Load result
 
 /// One plugin's load failure: identity + a human-readable reason.
-public struct PluginLoadFailure: Sendable {
+public struct PluginLoadFailure: Sendable, Equatable {
     public let identifier: String
     public let displayName: String
     public let message: String
+
+    public init(identifier: String, displayName: String, message: String) {
+        self.identifier = identifier
+        self.displayName = displayName
+        self.message = message
+    }
 }
 
 /// Outcome of loading every discovered plugin: what loaded, and what didn't.

@@ -103,9 +103,8 @@ final class DaemonLivePluginRuntimeTests {
     private func writeDescriptorBundle(
         id: String, name: String, schemaVersion: Int = AIPluginDescriptor.currentSchemaVersion
     ) {
-        let resources = tempDir
-            .appendingPathComponent("\(name).aiplugin")
-            .appendingPathComponent("Contents/Resources")
+        let bundle = tempDir.appendingPathComponent("\(name).aiplugin")
+        let resources = bundle.appendingPathComponent("Contents/Resources")
         try? FileManager.default.createDirectory(at: resources, withIntermediateDirectories: true)
         let descriptor: [String: Any] = [
             "schemaVersion": schemaVersion,
@@ -117,5 +116,7 @@ final class DaemonLivePluginRuntimeTests {
         ]
         let data = (try? JSONSerialization.data(withJSONObject: descriptor)) ?? Data()
         try? data.write(to: resources.appendingPathComponent("descriptor.json"))
+        // A built plugin carries the host's ABI stamp; without it discovery refuses it.
+        try? AIPluginABI.stampForTesting(bundleAt: bundle)
     }
 }

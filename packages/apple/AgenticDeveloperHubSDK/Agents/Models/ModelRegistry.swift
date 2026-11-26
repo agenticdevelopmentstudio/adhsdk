@@ -3,6 +3,7 @@ import AgenticDeveloperHubSDKCore
 import AgenticDeveloperHubSDKDatabase
 import AIPluginKit
 import GRDB
+import os
 
 /// The suite's shared list of model configurations: one SQLite file every app
 /// and daemon on the Mac opens, secrets in the shared Keychain group, and a
@@ -65,12 +66,25 @@ public final class ModelRegistry: Sendable {
 
     // MARK: - Entries
 
-    /// Every entry, by name (case-insensitive), then id.
+    /// Every entry, by name (case-insensitive), then id. A row that fails to
+    /// decode is skipped and logged with its id, so one corrupt row never hides
+    /// the others.
     public func list() throws -> [ModelEntry] {
         let rows = try database.read { conn in
-            try String.fetchAll(conn, sql: "SELECT json FROM model_entries")
+            try Row.fetchAll(conn, sql: "SELECT id, json FROM model_entries")
         }
-        return try rows.map { try AgentsJSON.decode(ModelEntry.self, from: $0) }.sorted(by: Self.byName)
+        return rows.compactMap { row -> ModelEntry? in
+            let id: String = row["id"]
+            let json: String = row["json"]
+            do {
+                return try AgentsJSON.decode(ModelEntry.self, from: json)
+            } catch {
+                logger.error("""
+                    Skipping model entry \(id, privacy: .public): \(error.localizedDescription, privacy: .public)
+                    """)
+                return nil
+            }
+        }.sorted(by: Self.byName)
     }
 
     public func get(_ id: UUID) throws -> ModelEntry? {
@@ -87,46 +101,95 @@ public final class ModelRegistry: Sendable {
     /// written in one transaction, so concurrent upserts of one id are
     /// last-writer-wins and never lose `createdAt`. A secret that cannot be
     /// removed stays listed in `secretFields`, and the call throws after the
-    /// row is written.
+    /// row is written. A failed secret write or row write puts every secret
+    /// the call touched back as it was, then throws.
     public func upsert(_ entry: ModelEntry, secrets newSecrets: [String: String]?) throws {
         try Self.validate(entry)
         var entry = entry
         entry.updatedAt = Date()
         var failedRemoval: Error?
         var newFields: [String]?
-        if let newSecrets {
-            let kept = newSecrets.filter { !$0.value.isEmpty }
-            for (field, value) in kept {
-                try secrets.set(value, for: entry.id, field: field)
-            }
-            var fields = Set(kept.keys)
-            let stale = Set(try get(entry.id)?.secretFields ?? []).subtracting(kept.keys)
-            for field in stale.sorted() {
-                do {
-                    try secrets.remove(for: entry.id, field: field)
-                } catch {
-                    fields.insert(field)
-                    failedRemoval = failedRemoval ?? error
+        var journal = ModelSecretJournal(store: secrets, entry: entry.id, logger: logger)
+        do {
+            if let newSecrets {
+                let kept = newSecrets.filter { !$0.value.isEmpty }
+                for field in kept.keys.sorted() {
+                    try journal.set(kept[field] ?? "", field: field)
                 }
+                var fields = Set(kept.keys)
+                let stale = Set(try get(entry.id)?.secretFields ?? []).subtracting(kept.keys)
+                for field in stale.sorted() {
+                    do {
+                        try journal.remove(field: field)
+                    } catch {
+                        fields.insert(field)
+                        failedRemoval = failedRemoval ?? error
+                    }
+                }
+                newFields = fields.sorted()
             }
-            newFields = fields.sorted()
-        }
-        try database.write { conn in
-            let row = try String.fetchOne(
-                conn, sql: "SELECT json FROM model_entries WHERE id = ?", arguments: [entry.id.uuidString])
-            let existing = try row.map { try AgentsJSON.decode(ModelEntry.self, from: $0) }
-            entry.createdAt = existing?.createdAt ?? entry.createdAt
-            entry.secretFields = newFields ?? existing?.secretFields ?? entry.secretFields
-            try conn.execute(
-                sql: """
-                    INSERT INTO model_entries (id, json, updated_at) VALUES (?, ?, ?)
-                    ON CONFLICT(id) DO UPDATE SET json = excluded.json, updated_at = excluded.updated_at
-                    """,
-                arguments: [entry.id.uuidString, try AgentsJSON.encodeString(entry),
-                            entry.updatedAt.timeIntervalSince1970])
+            try database.write { conn in
+                let row = try String.fetchOne(
+                    conn, sql: "SELECT json FROM model_entries WHERE id = ?", arguments: [entry.id.uuidString])
+                let existing = try row.map { try AgentsJSON.decode(ModelEntry.self, from: $0) }
+                entry.createdAt = existing?.createdAt ?? entry.createdAt
+                entry.secretFields = newFields ?? existing?.secretFields ?? entry.secretFields
+                try conn.execute(
+                    sql: """
+                        INSERT INTO model_entries (id, json, updated_at) VALUES (?, ?, ?)
+                        ON CONFLICT(id) DO UPDATE SET json = excluded.json, updated_at = excluded.updated_at
+                        """,
+                    arguments: [entry.id.uuidString, try AgentsJSON.encodeString(entry),
+                                entry.updatedAt.timeIntervalSince1970])
+            }
+        } catch {
+            journal.rollback()
+            throw error
         }
         signal.post()
         if let failedRemoval { throw failedRemoval }
+    }
+
+    /// Inserts `entry` only when no entry has its id, else throws
+    /// `ModelRegistryError.duplicate`. The check and the insert are one
+    /// `IMMEDIATE` transaction, so concurrent creates of one id, in this
+    /// process or another, store one row. A duplicate is found before any
+    /// secret is written; `secrets` nil keeps the entry's own `secretFields`,
+    /// a dictionary's non-empty values are stored and named. A failed secret
+    /// write, insert or commit puts the touched secrets back and throws.
+    @discardableResult
+    public func create(_ entry: ModelEntry, secrets newSecrets: [String: String]? = nil) throws -> ModelEntry {
+        try Self.validate(entry)
+        var entry = entry
+        entry.updatedAt = Date()
+        var journal = ModelSecretJournal(store: secrets, entry: entry.id, logger: logger)
+        do {
+            try database.writeWithoutTransaction { conn in
+                try conn.inTransaction(.immediate) {
+                    let exists = try Bool.fetchOne(
+                        conn, sql: "SELECT EXISTS(SELECT 1 FROM model_entries WHERE id = ?)",
+                        arguments: [entry.id.uuidString]) ?? false
+                    if exists { throw ModelRegistryError.duplicate(entry.id) }
+                    if let newSecrets {
+                        let kept = newSecrets.filter { !$0.value.isEmpty }
+                        for field in kept.keys.sorted() {
+                            try journal.set(kept[field] ?? "", field: field)
+                        }
+                        entry.secretFields = kept.keys.sorted()
+                    }
+                    try conn.execute(
+                        sql: "INSERT INTO model_entries (id, json, updated_at) VALUES (?, ?, ?)",
+                        arguments: [entry.id.uuidString, try AgentsJSON.encodeString(entry),
+                                    entry.updatedAt.timeIntervalSince1970])
+                    return .commit
+                }
+            }
+        } catch {
+            journal.rollback()
+            throw error
+        }
+        signal.post()
+        return entry
     }
 
     /// Removes the entry and its secrets. Removing an absent id is not an
@@ -170,10 +233,13 @@ public final class ModelRegistry: Sendable {
 
     // MARK: - Plugins
 
-    /// The installed plugins, read from their descriptors (no code is loaded).
+    /// The installed plugins, read from their descriptors (no code is loaded),
+    /// with each plugin the host refused (an AIPluginKit ABI mismatch) listed
+    /// with its `loadError` and no templates.
     public func plugins() async -> [PluginSummary] {
-        await runtime.discover(searchPaths)
-            .map(PluginSummary.init)
+        let accepted = await runtime.discover(searchPaths).map(PluginSummary.init)
+        let refused = await runtime.refused(searchPaths).map(PluginSummary.init(refused:))
+        return (accepted + refused)
             .sorted { $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending }
     }
 
@@ -212,6 +278,7 @@ public final class ModelRegistry: Sendable {
         do {
             guard let entry = try get(id) else { throw ModelRegistryError.notFound(id) }
             let resolved = ResolvedModel(entry: entry, model: entry.effectiveModel, secrets: secretValues(of: entry))
+            try await throwIfRefused(entry.configuration.pluginIdentifier)
             let (plugin, descriptor) = try await runtime.load(entry.configuration.pluginIdentifier, searchPaths)
             let request = resolved.request(descriptor: descriptor)
             let context = AIChatContext(
@@ -259,9 +326,17 @@ public final class ModelRegistry: Sendable {
     func descriptor(for entry: ModelEntry) async throws -> AIPluginDescriptor {
         let pluginId = entry.configuration.pluginIdentifier
         guard let descriptor = await runtime.discover(searchPaths).first(where: { $0.identifier == pluginId }) else {
+            try await throwIfRefused(pluginId)
             throw ModelRegistryError.pluginNotInstalled(pluginId)
         }
         return descriptor
+    }
+
+    /// Throws `pluginIncompatible` when discovery refused the plugin.
+    func throwIfRefused(_ pluginId: String) async throws {
+        if let failure = await runtime.refused(searchPaths).first(where: { $0.identifier == pluginId }) {
+            throw ModelRegistryError.pluginIncompatible(plugin: pluginId, message: failure.message)
+        }
     }
 
     // MARK: - Helpers
@@ -308,6 +383,10 @@ public final class ModelRegistry: Sendable {
         }
         return migrator
     }
+}
+
+extension ModelRegistry: Loggable {
+    public static nonisolated let logger = makeLogger()
 }
 
 extension ResolvedModel {

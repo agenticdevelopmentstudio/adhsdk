@@ -33,6 +33,9 @@ public enum DaemonAIChat {
         /// Lists the installed plugins' descriptors without loading any code, for a
         /// host that shows what can be configured (the model registry's `plugins()`).
         public var discover: @Sendable (_ searchPaths: [URL]) async -> [AIPluginDescriptor]
+        /// Lists the installed plugins discovery refused (an AIPluginKit ABI
+        /// mismatch, see `AIPluginABI`) as load failures, without loading any code.
+        public var refused: @Sendable (_ searchPaths: [URL]) async -> [PluginLoadFailure]
 
         public init(
             load: @escaping @Sendable (_ identifier: String, _ searchPaths: [URL]) async throws
@@ -40,11 +43,15 @@ public enum DaemonAIChat {
             run: @escaping @Sendable (AIRequestSpec, any AIPlugin) -> AsyncThrowingStream<AIStreamEvent, Error>,
             discover: @escaping @Sendable (_ searchPaths: [URL]) async -> [AIPluginDescriptor] = { paths in
                 AIPluginManager.scanDescriptors(in: paths).map(\.descriptor)
+            },
+            refused: @escaping @Sendable (_ searchPaths: [URL]) async -> [PluginLoadFailure] = { paths in
+                AIPluginManager.scanPlugins(in: paths).refused
             }
         ) {
             self.load = load
             self.run = run
             self.discover = discover
+            self.refused = refused
         }
 
         public static let live = PluginRuntime.live(additionalSearchPaths: [])
@@ -65,6 +72,10 @@ public enum DaemonAIChat {
                 discover: { searchPaths in
                     let paths = searchPaths + additionalSearchPaths.filter { !searchPaths.contains($0) }
                     return AIPluginManager.scanDescriptors(in: paths).map(\.descriptor)
+                },
+                refused: { searchPaths in
+                    let paths = searchPaths + additionalSearchPaths.filter { !searchPaths.contains($0) }
+                    return AIPluginManager.scanPlugins(in: paths).refused
                 }
             )
         }
@@ -366,6 +377,9 @@ public enum DaemonAIChat {
                 loaded.removeAll()  // search paths changed → prior plugins may be stale
             }
             guard let descriptor = mgr.descriptor(for: identifier) else {
+                if let refusal = mgr.discoveryFailures.first(where: { $0.identifier == identifier }) {
+                    throw ChatError.providerError(refusal.message)
+                }
                 throw ChatError.providerError("AI plugin not installed: \(identifier)")
             }
             if let plugin = loaded[identifier] {

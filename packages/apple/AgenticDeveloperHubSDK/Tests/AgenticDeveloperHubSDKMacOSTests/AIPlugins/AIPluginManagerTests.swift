@@ -34,6 +34,8 @@ struct AIPluginManagerTests {
         ]
         let data = try JSONSerialization.data(withJSONObject: descriptor)
         try data.write(to: resourcesDir.appendingPathComponent("descriptor.json"))
+        // A built plugin carries the host's ABI stamp; without it discovery refuses it.
+        try AIPluginABI.stampForTesting(bundleAt: bundleDir)
         return bundleDir
     }
 

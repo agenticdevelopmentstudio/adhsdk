@@ -13,6 +13,15 @@ public enum AIProviderResolver {
         public let model: String
         public let values: [String: String]
         public let fields: [AIPluginDescriptor.Field]
+
+        public init(
+            pluginIdentifier: String, model: String, values: [String: String], fields: [AIPluginDescriptor.Field]
+        ) {
+            self.pluginIdentifier = pluginIdentifier
+            self.model = model
+            self.values = values
+            self.fields = fields
+        }
     }
 
     public static func resolve(_ config: AIProviderConfiguration, manager: AIPluginManager) -> Resolved? {
