@@ -219,7 +219,6 @@ const ICONS: Record<string, LucideIcon> = {
   admin: ShieldCheck, // operations console
   api: Code,
   builds: HardHat, // the build console
-  'product-admin': UserCog, // a product's own admin site; the hub's Admin site row wears it too
   shipr: Rocket, // walks a commit from main to production
 
   // --- the macOS native tools' sites (registry `nativeApp`), for their Build rows. ---

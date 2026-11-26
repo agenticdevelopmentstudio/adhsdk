@@ -1,7 +1,9 @@
-// The product admin site's rail (phase 6): one entry per page, in rail order. Each `href` is a
-// page route of the `product-admin` site (adh-registry's `SITE_ROUTES['product-admin']`, Task 10's
-// share); the topics test holds the two equal. Plain data, no React, so the site's console layout
-// can import it from a server component (`@adh-sdk/product-admin/topics`).
+// The product admin console's rail (phase 6): one entry per page, in rail order. Each `href` is a
+// page route of the `product-sites` site (adh-registry's `SITE_ROUTES['product-sites']`), where
+// the console lives under `/admin`; the topics test holds the two equal. That site is the only
+// reader, which is why the prefix is spelled here rather than added by the host. Plain data, no
+// React, so the site's console layout can import it from a server component
+// (`@adh-sdk/product-admin/topics`).
 
 export interface ProductAdminTopic {
   id: string;
@@ -10,14 +12,14 @@ export interface ProductAdminTopic {
 }
 
 export const PRODUCT_ADMIN_TOPICS: readonly ProductAdminTopic[] = [
-  { id: "users", label: "Users", href: "/users" },
-  { id: "requests", label: "Requests", href: "/requests" },
-  { id: "pending", label: "Pending users", href: "/pending" },
-  { id: "invites", label: "Invites", href: "/invites" },
-  { id: "roles", label: "Roles", href: "/roles" },
-  { id: "signup-list", label: "Sign-up list", href: "/signup-list" },
-  { id: "sets", label: "Sets", href: "/sets" },
-  { id: "jobs", label: "Jobs", href: "/jobs" },
-  { id: "totals", label: "Totals", href: "/totals" },
-  { id: "support", label: "Support", href: "/support" },
+  { id: "users", label: "Users", href: "/admin/users" },
+  { id: "requests", label: "Requests", href: "/admin/requests" },
+  { id: "pending", label: "Pending users", href: "/admin/pending" },
+  { id: "invites", label: "Invites", href: "/admin/invites" },
+  { id: "roles", label: "Roles", href: "/admin/roles" },
+  { id: "signup-list", label: "Sign-up list", href: "/admin/signup-list" },
+  { id: "sets", label: "Sets", href: "/admin/sets" },
+  { id: "jobs", label: "Jobs", href: "/admin/jobs" },
+  { id: "totals", label: "Totals", href: "/admin/totals" },
+  { id: "support", label: "Support", href: "/admin/support" },
 ];

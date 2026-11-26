@@ -111,14 +111,14 @@ describe("site build fields", () => {
   // `learntruefacts` was a seventh until it left the fleet on 2026-08-14; `bitbag` stays
   // on the list even though its source moved to its own repo on 2026-08-15, because the
   // flag describes the config that site's build uses, not which checkout holds it.
-  // `product-admin` (phase 6) joined them: its root `app/` holds the site's `/auth/*` route
-  // handlers, so its config is hand-written like the operator admin site's.
+  // `product-sites` (phase 6, as `product-admin`) joined them: its `app/admin/auth/` holds the
+  // console's auth route handlers, so its config is hand-written like the operator admin site's.
   it("marks exactly the seven hand-rolled sites", () => {
     const flagged = Object.entries(SITE_BUILD)
       .filter(([, cfg]) => cfg?.handRolledConfig)
       .map(([id]) => id)
       .sort();
-    expect(flagged).toEqual(["admin", "bitbag", "cookbook", "hub", "hub-help", "product-admin", "status"].sort());
+    expect(flagged).toEqual(["admin", "bitbag", "cookbook", "hub", "hub-help", "product-sites", "status"].sort());
   });
 
   it("isSiteId accepts a real id and rejects a directory that is not a site", () => {

@@ -10,7 +10,7 @@ import { dirname, resolve } from 'node:path'
 // (TS7053) even though "does the hub route this site?" is exactly what these cases ask. The
 // accessor is where that widening is supposed to live — see its doc comment in registry.ts.
 import type { SiteId } from '../sites/registry'
-import { SITES, LISTED_SITES, FOOTER_SITES, MAIN_SITE_IDS, MARKETING_SITE_IDS, SITE_CATEGORIES, groupSitesByCategory, getSite, detectEnv, buildSiteHref, siteUrl, ssoReturnOrigins, HUB_FEATURE_SEGMENT, hubFeatureSegment, SITE_FOR_HUB_SEGMENT, HUB_WORKSPACE_SEGMENTS, siteWorkspaceHref, siteWorkspaceSlug, SITE_LANDING_SEGMENTS, HUB_ROUTE_SEGMENTS, siteIdForDir, ADMIN_SITE_IDS, HUB_EXTRA_FEATURE_SEGMENTS } from '../sites/registry'
+import { SITES, LISTED_SITES, FOOTER_SITES, MAIN_SITE_IDS, MARKETING_SITE_IDS, SITE_CATEGORIES, groupSitesByCategory, getSite, detectEnv, buildSiteHref, siteUrl, ssoReturnOrigins, HUB_FEATURE_SEGMENT, hubFeatureSegment, SITE_FOR_HUB_SEGMENT, HUB_WORKSPACE_SEGMENTS, siteWorkspaceHref, siteWorkspaceSlug, SITE_LANDING_SEGMENTS, HUB_ROUTE_SEGMENTS, siteIdForDir, ADMIN_SITE_IDS, HUB_EXTRA_FEATURE_SEGMENTS, isWildcardSite, hostForEnv, siteProdUrl } from '../sites/registry'
 // The generated route map — imported ONLY here. `registry.ts` keeps its landing-segment
 // set as a hand-written literal so the always-loaded header never pulls the family's
 // whole route inventory into its bundle; this is the oracle that keeps the two equal.
@@ -248,7 +248,7 @@ describe('local hops to a site the local server does not run', () => {
 describe('ssoReturnOrigins (central adh SSO client allowlist, per env)', () => {
   it('production = every ADH app site as a bare-host origin (no env prefix)', () => {
     const origins = ssoReturnOrigins('production')
-    expect(origins.length).toBe(SITES.filter((s) => !s.external && !s.nativeApp).length)
+    expect(origins.length).toBe(SITES.filter((s) => !s.external && !s.nativeApp && !isWildcardSite(s)).length)
     // one origin per site, scheme + bare prod host, no path
     expect(origins).toContain('https://agenticdeveloperhub.com')
     expect(origins).toContain('https://agenticdevelopercookbook.com')
@@ -291,6 +291,21 @@ describe('ssoReturnOrigins (central adh SSO client allowlist, per env)', () => {
     }
   })
 
+  it('never allows a wildcard site origin, nor any `*`, in any env', () => {
+    // product-sites answers every `<handle>.agenticdeveloperhub.com`: each of those hosts is a
+    // product's, signed in through that product's own client, and its nominal prodHost is a
+    // folder's name nothing serves. Neither belongs on the hub client's return list.
+    const wildcards = SITES.filter((s) => isWildcardSite(s))
+    expect(wildcards.map((s) => s.id)).toEqual(['product-sites'])
+    for (const env of ['production', 'staging', 'testing'] as const) {
+      const origins = ssoReturnOrigins(env)
+      expect(origins.some((o) => o.includes('*')), env).toBe(false)
+      for (const s of wildcards) {
+        expect(origins.some((o) => o.includes(s.prodHost)), `${s.id} in ${env}`).toBe(false)
+      }
+    }
+  })
+
   it('keeps native-app sites out of the ADH app rosters', () => {
     for (const s of SITES.filter((s) => s.nativeApp)) {
       expect(MAIN_SITE_IDS, s.id).not.toContain(s.id)
@@ -301,7 +316,7 @@ describe('ssoReturnOrigins (central adh SSO client allowlist, per env)', () => {
 
   it('testing = only sites with a testing deploy, prefixed testing.', () => {
     const origins = ssoReturnOrigins('testing')
-    const testingSites = SITES.filter((s) => s.hasTesting && !s.external && !s.nativeApp)
+    const testingSites = SITES.filter((s) => s.hasTesting && !s.external && !s.nativeApp && !isWildcardSite(s))
     expect(origins.length).toBe(testingSites.length)
     expect(new Set(origins)).toEqual(
       new Set(testingSites.map((s) => `https://testing.${s.prodHost}`)),
@@ -313,7 +328,7 @@ describe('ssoReturnOrigins (central adh SSO client allowlist, per env)', () => {
 
   it('staging = every staging-deploy site, prefixed staging.', () => {
     const origins = ssoReturnOrigins('staging')
-    const stagingSites = SITES.filter((s) => s.hasStaging && !s.external && !s.nativeApp)
+    const stagingSites = SITES.filter((s) => s.hasStaging && !s.external && !s.nativeApp && !isWildcardSite(s))
     expect(origins.length).toBe(stagingSites.length)
     expect(origins).toContain('https://staging.agenticdevelopercookbook.com')
     expect(origins).toContain('https://staging.agenticdeveloperhub.com')
@@ -333,17 +348,70 @@ describe('SITES registry', () => {
       expect(s.prodHost).toMatch(/\./)
     }
   })
-  // Phase 6: the product admin site. One Next app serves every product's admin site, chosen by
-  // host, so the registry's host is only its default; it is admin-gated, never indexed, and a
-  // main-family app built in `product-admin.agenticdeveloperhub/`.
-  it('registers the product admin site: its folder, not crawlable, admin-gated, a main app', () => {
-    const site = getSite('product-admin')!
-    expect(site.prodHost).toBe('product-admin.agenticdeveloperhub.com')
-    expect(siteIdForDir('product-admin.agenticdeveloperhub')).toBe('product-admin')
+  // Product sites phase 2: every product's own site, one Next app chosen by host. It answers
+  // `*.agenticdeveloperhub.com`, so its prodHost is only its folder's name; it is never indexed,
+  // not admin-gated (a product's admins are not adh's), unlisted, and a main-family app built in
+  // `product-sites.agenticdeveloperhub/`.
+  it('registers product-sites: a wildcard site, its folder, not crawlable, not admin-gated, a main app', () => {
+    const site = getSite('product-sites')!
+    expect(isWildcardSite(site)).toBe(true)
+    expect(site.wildcardHost).toBe('*.agenticdeveloperhub.com')
+    expect(site.prodHost).toBe('product-sites.agenticdeveloperhub.com')
+    expect(siteIdForDir('product-sites.agenticdeveloperhub')).toBe('product-sites')
     expect(site.crawlable).toBe(false)
-    expect(ADMIN_SITE_IDS).toContain('product-admin')
-    expect(MAIN_SITE_IDS).toContain('product-admin')
-    expect(FOOTER_SITES.map((s) => s.id)).not.toContain('product-admin')
+    expect(site.listed).toBe(false)
+    expect(ADMIN_SITE_IDS).not.toContain('product-sites')
+    expect(MAIN_SITE_IDS).toContain('product-sites')
+    expect(LISTED_SITES.map((s) => s.id)).not.toContain('product-sites')
+    expect(FOOTER_SITES.map((s) => s.id)).not.toContain('product-sites')
+  })
+
+  it('is the only wildcard site, and no single-host site is one', () => {
+    expect(SITES.filter((s) => isWildcardSite(s)).map((s) => s.id)).toEqual(['product-sites'])
+    expect(isWildcardSite(hub)).toBe(false)
+  })
+
+  it('gives a wildcard site its host pattern per env, the env after the `*.`', () => {
+    const site = getSite('product-sites')!
+    expect(hostForEnv(site, 'production')).toBe('*.agenticdeveloperhub.com')
+    expect(hostForEnv(site, 'staging')).toBe('*.staging.agenticdeveloperhub.com')
+    expect(hostForEnv(site, 'testing')).toBe('*.testing.agenticdeveloperhub.com')
+    expect(hostForEnv(site, 'local')).toBe('*.agenticdeveloperhub.com')
+    for (const env of ['production', 'staging', 'testing', 'local'] as const) {
+      expect(hostForEnv(site, env), env).not.toContain(site.prodHost)
+    }
+  })
+
+  it('leaves a single-host site on `<env>.<prodHost>`', () => {
+    expect(hostForEnv(hub, 'production')).toBe('agenticdeveloperhub.com')
+    expect(hostForEnv(hub, 'staging')).toBe('staging.agenticdeveloperhub.com')
+    expect(hostForEnv(hub, 'testing')).toBe('testing.agenticdeveloperhub.com')
+    expect(hostForEnv(mcp, 'testing')).toBe('staging.mcp.agenticdeveloperhub.com')
+  })
+
+  it('refuses a single URL for a wildcard site, in every env', () => {
+    const site = getSite('product-sites')!
+    const refusal = 'product-sites is a wildcard site; it has no single URL'
+    for (const host of [
+      'agenticdeveloperhub.com',
+      'staging.agenticdeveloperhub.com',
+      'testing.agenticdeveloperhub.com',
+      'hub.sites.localhost',
+      'localhost:5229',
+    ]) {
+      expect(() => siteUrl('product-sites', '/', host), host).toThrow(refusal)
+      expect(() => buildSiteHref(site, host, '/'), host).toThrow(refusal)
+    }
+    expect(() => siteProdUrl('product-sites', '/')).toThrow(refusal)
+  })
+
+  it('still refuses a wildcard site when the local list names it', () => {
+    vi.stubEnv('NEXT_PUBLIC_LOCAL_SITES', 'hub,product-sites')
+    try {
+      expect(() => siteUrl('product-sites', '/', 'hub.sites.localhost')).toThrow(/wildcard site/)
+    } finally {
+      vi.unstubAllEnvs()
+    }
   })
 })
 
@@ -410,7 +478,6 @@ describe('LISTED_SITES (the family roster)', () => {
       'fishlampdesign',
       'status',
       'admin',
-      'product-admin',
       'builds',
     ])
   })
@@ -514,16 +581,16 @@ describe('LISTED_SITES (the family roster)', () => {
       }
     }
   })
-  it('ends with the status + admin + product-admin + builds console section', () => {
+  it('ends with the status + admin + builds console section', () => {
     const ids = LISTED_SITES.map((s) => s.id)
     // status heads the block, not admin: it is the one console anyone may read, and
-    // it carries the section's `dividerBefore`/`sectionLabel`. The three below it are
+    // it carries the section's `dividerBefore`/`sectionLabel`. The two below it are
     // `adminOnly`, so they are absent from FOOTER_SITES entirely — a section head
     // that disappears from the overview would leave the rest of the block unlabelled.
+    // (product-sites sits between admin and builds in SITES, but is unlisted.)
     expect(ids[ids.length - 1]).toBe('builds')
-    expect(ids[ids.length - 2]).toBe('product-admin')
-    expect(ids[ids.length - 3]).toBe('admin')
-    expect(ids[ids.length - 4]).toBe('status')
+    expect(ids[ids.length - 2]).toBe('admin')
+    expect(ids[ids.length - 3]).toBe('status')
   })
 })
 

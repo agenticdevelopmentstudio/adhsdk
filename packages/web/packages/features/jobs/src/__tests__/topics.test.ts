@@ -22,10 +22,10 @@ describe("jobsTopics (vector jobs-001)", () => {
 });
 
 describe("jobsProductAdminTopics (vector jobs-002)", () => {
-  it("is Status and Templates in order", () => {
+  it("is Status and Templates in order, under the console's /admin", () => {
     expect(jobsProductAdminTopics.map((t) => [t.label, t.href])).toEqual([
-      ["Status", "/jobs"],
-      ["Templates", "/jobs/templates"],
+      ["Status", "/admin/jobs"],
+      ["Templates", "/admin/jobs/templates"],
     ]);
   });
 
