@@ -15,23 +15,12 @@ import XCTest
 @MainActor
 final class ConversationsShelfTests: XCTestCase {
 
-    /// Where `NSSplitView` keeps the split's frames — collapsed state included
-    /// — under its `autosaveName`, in the test process's own defaults domain.
-    /// Setting the name restores them, over the collapsed start `viewDidLoad`
-    /// gives the shelf, so a split one test disclosed came back disclosed in
-    /// every later test and every later run, and the shelf "started away" only
-    /// on a machine that had never run this suite.
-    private static let splitAutosaveKey = "NSSplitView Subview Frames conversations-split"
-
-    override func setUp() async throws {
-        try await super.setUp()
-        UserDefaults.standard.removeObject(forKey: Self.splitAutosaveKey)
-    }
-
-    override func tearDown() async throws {
-        UserDefaults.standard.removeObject(forKey: Self.splitAutosaveKey)
-        try await super.tearDown()
-    }
+    // Every split here is built with `autosaveName: nil`. `NSSplitView`
+    // restores its frames — collapsed state included — from the defaults
+    // domain under that name, over the collapsed start `viewDidLoad` gives the
+    // shelf, and that domain is shared by every parallel test clone through
+    // cfprefsd: removing the key in setUp could not stop another clone saving a
+    // disclosed shelf under it before this test's split loaded.
 
     /// A call counter a `@Sendable` closure may reach.
     private final class Counter: @unchecked Sendable {
@@ -505,7 +494,7 @@ final class ConversationsShelfTests: XCTestCase {
         XCTAssertEqual(source.stops.value, 1, "a closed window kept polling")
 
         let feed = ConversationsViewController { _, _, _ in [] }
-        let split = ConversationsSplitViewController(feed: feed)
+        let split = ConversationsSplitViewController(feed: feed, autosaveName: nil)
         _ = split.view
         split.viewDidAppear()
         XCTAssertTrue(split.shelf.watchesActivity, "the window on screen does not watch")
@@ -728,7 +717,7 @@ final class ConversationsShelfTests: XCTestCase {
 
     func testTheShelfStartsAway() {
         let split = ConversationsSplitViewController(
-            feed: ConversationsViewController { _, _, _ in [] })
+            feed: ConversationsViewController { _, _, _ in [] }, autosaveName: nil)
         _ = split.view
         XCTAssertFalse(split.isShelfVisible)
     }
@@ -740,7 +729,7 @@ final class ConversationsShelfTests: XCTestCase {
         // spells "no maximum" as `unspecifiedDimension`, not as zero — zero is
         // a real ceiling, and asserting on it passes only by accident.
         let split = ConversationsSplitViewController(
-            feed: ConversationsViewController { _, _, _ in [] })
+            feed: ConversationsViewController { _, _, _ in [] }, autosaveName: nil)
         _ = split.view
         guard let shelfItem = split.splitViewItems.first else { return XCTFail("no shelf item") }
         XCTAssertEqual(
@@ -754,7 +743,7 @@ final class ConversationsShelfTests: XCTestCase {
         // conversation, ⌘↑/⌘↓ walk it — so a mode switch that leaves the shelf
         // away strands the reader on whichever session was showing.
         let split = ConversationsSplitViewController(
-            feed: ConversationsViewController { _, _, _ in [] })
+            feed: ConversationsViewController { _, _, _ in [] }, autosaveName: nil)
         _ = split.view
         XCTAssertFalse(split.isShelfVisible)
 
@@ -772,7 +761,7 @@ final class ConversationsShelfTests: XCTestCase {
         // siblings fixed — and the split view here *is* the window's content,
         // so the window jumped 260 points wider every time the shelf came out.
         let split = ConversationsSplitViewController(
-            feed: ConversationsViewController { _, _, _ in [] })
+            feed: ConversationsViewController { _, _, _ in [] }, autosaveName: nil)
         _ = split.view
 
         guard let shelfItem = split.splitViewItems.first else { return XCTFail("no shelf item") }
@@ -787,7 +776,7 @@ final class ConversationsShelfTests: XCTestCase {
 
     func testTickingASessionOffReachesTheFeed() {
         let feed = ConversationsViewController { _, _, _ in [] }
-        let split = ConversationsSplitViewController(feed: feed)
+        let split = ConversationsSplitViewController(feed: feed, autosaveName: nil)
         _ = split.view
         split.shelf.sessions = [
             ConversationsSessionFilter.Session(id: "a", name: "Alpha", context: [])
@@ -803,7 +792,7 @@ final class ConversationsShelfTests: XCTestCase {
     func testAFeedThatAlreadyHidesASessionStartsWithItsShelfRowUnticked() {
         let feed = ConversationsViewController { _, _, _ in [] }
         feed.hiddenSessions = ["a"]
-        let split = ConversationsSplitViewController(feed: feed)
+        let split = ConversationsSplitViewController(feed: feed, autosaveName: nil)
         _ = split.view
         XCTAssertEqual(split.shelf.hidden, ["a"],
                        "the shelf ticked a session the feed was already hiding")
@@ -813,7 +802,7 @@ final class ConversationsShelfTests: XCTestCase {
     /// host remembers.
     func testThePickReachesTheFeedAndTheHost() {
         let feed = ConversationsViewController { _, _, _ in [] }
-        let split = ConversationsSplitViewController(feed: feed)
+        let split = ConversationsSplitViewController(feed: feed, autosaveName: nil)
         _ = split.view
         var heard: [String?] = []
         split.onSoloSessionChanged = { heard.append($0) }
@@ -831,7 +820,7 @@ final class ConversationsShelfTests: XCTestCase {
     /// A restored pick reaches both halves without being reported back.
     func testARestoredPickReachesBothHalvesQuietly() {
         let feed = ConversationsViewController { _, _, _ in [] }
-        let split = ConversationsSplitViewController(feed: feed)
+        let split = ConversationsSplitViewController(feed: feed, autosaveName: nil)
         var heard: [String?] = []
         split.onSoloSessionChanged = { heard.append($0) }
         split.soloSessionID = "b"

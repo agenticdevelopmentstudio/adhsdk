@@ -34,7 +34,7 @@ final class ConversationsKeyCommandsConformanceTests: XCTestCase {
 
     private func controller() -> ConversationsSplitViewController {
         let split = ConversationsSplitViewController(
-            feed: ConversationsViewController { _, _, _ in [] })
+            feed: ConversationsViewController { _, _, _ in [] }, autosaveName: nil)
         _ = split.view
         return split
     }

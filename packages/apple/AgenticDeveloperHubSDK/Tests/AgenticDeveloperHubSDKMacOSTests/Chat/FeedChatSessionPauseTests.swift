@@ -84,7 +84,7 @@ final class FeedChatSessionPauseTests: XCTestCase {
     func testTheWindowReadsTheFeedOnlyWhileItIsOnScreen() {
         let feed = ConversationsViewController(watchesFeed: false) { _, _, _ in [] }
         XCTAssertFalse(feed.watchesFeed)
-        let split = ConversationsSplitViewController(feed: feed)
+        let split = ConversationsSplitViewController(feed: feed, autosaveName: nil)
         _ = split.view
         split.viewDidAppear()
         XCTAssertTrue(feed.watchesFeed, "the window on screen does not read its feed")

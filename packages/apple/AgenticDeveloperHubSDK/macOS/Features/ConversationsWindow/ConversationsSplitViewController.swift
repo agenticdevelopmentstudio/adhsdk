@@ -118,8 +118,18 @@ public final class ConversationsSplitViewController: NSSplitViewController {
     /// or the shelf is collapsed.
     private var keyViewLoop: KeyViewLoop?
 
-    public init(feed: ConversationsViewController) {
+    /// The name `NSSplitView` keeps the split's frames under, collapsed state
+    /// included, in the process's defaults domain; nil keeps nothing.
+    private let splitAutosaveName: String?
+
+    /// - Parameter autosaveName: `"conversations-split"` in the app. A test
+    ///   passes nil: the defaults domain is shared by every parallel test
+    ///   clone through cfprefsd, so a split one clone disclosed and saved was
+    ///   restored disclosed in another clone's split, whatever that test's own
+    ///   setUp had removed.
+    public init(feed: ConversationsViewController, autosaveName: String? = "conversations-split") {
         self.feed = feed
+        self.splitAutosaveName = autosaveName
         self.shelf = ConversationsShelfViewController()
         super.init(nibName: nil, bundle: nil)
 
@@ -215,7 +225,7 @@ public final class ConversationsSplitViewController: NSSplitViewController {
         // NSRangeException that trapped the app on launch, three times, before
         // the subclass came back out. The shelf's panel is inset from its
         // trailing edge anyway, so there is no divider to hide.
-        splitView.autosaveName = NSSplitView.AutosaveName("conversations-split")
+        splitView.autosaveName = splitAutosaveName.map { NSSplitView.AutosaveName($0) }
 
         // Both panes have loaded their views by now — `addSplitViewItem` does
         // it — so the two fields exist to be threaded together.
