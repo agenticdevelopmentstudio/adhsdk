@@ -220,6 +220,29 @@ struct GitClientHistoryTests {
         #expect(submodules == [GitSubmodule(path: "vendored lib", id: try await other.sha("HEAD"), state: .current)])
     }
 
+    @Test("submodules are still listed when .gitmodules is gone from disk, then from the index too")
+    func submodulesWithoutGitmodulesOnDisk() async throws {
+        let history = try await History.make()
+        defer { history.tearDown() }
+        let other = try await GitTestRepository.make(prefix: "git-client-submodule-sparse")
+        defer { other.tearDown() }
+        try other.write("inner\n", to: "inner.txt")
+        try await other.run(["add", "inner.txt"])
+        try await other.run(["commit", "-m", "inner"])
+        try await history.repository.run(["-c", "protocol.file.allow=always", "submodule", "add", "--quiet",
+                                          other.root.path, "lib"])
+        try await history.repository.run(["commit", "-m", "submodule"])
+        let expected = [GitSubmodule(path: "lib", id: try await other.sha("HEAD"), state: .current)]
+
+        // As a non-cone sparse checkout or an unstaged delete leaves it: in the index only.
+        try FileManager.default.removeItem(at: history.repository.url(".gitmodules"))
+        #expect(try await client.submodules(in: history.root) == expected)
+
+        // A staged delete: only HEAD still has it, and git reads it from there.
+        try await history.repository.run(["rm", "--quiet", "--cached", ".gitmodules"])
+        #expect(try await client.submodules(in: history.root) == expected)
+    }
+
     @Test("topLevel answers the working tree root from a subdirectory")
     func topLevelFromSubdirectory() async throws {
         let repository = try await GitTestRepository.make()

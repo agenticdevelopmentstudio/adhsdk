@@ -426,14 +426,20 @@ public actor GitClient {
         return GitStash.parse(list: output)
     }
 
-    /// The submodules `git submodule status` reports; none without `.gitmodules`.
+    /// The submodules `git submodule status` reports; none when git has no `.gitmodules`
+    /// to read.
     ///
     /// `git submodule status` is a shell script that costs hundreds of
-    /// milliseconds, and the model asks on every refresh, so a working tree
-    /// with no `.gitmodules` at its top level is answered without it: git
-    /// would report nothing there, or refuse an orphan gitlink, which the
-    /// model shows as no submodules either way. Looking costs a stat, or a
-    /// `rev-parse` when `directory` is not the top level.
+    /// milliseconds, and the model asks on every refresh, so a repository with
+    /// no `.gitmodules` anywhere git looks is answered without it: git would
+    /// report nothing there, or refuse an orphan gitlink, which the model shows
+    /// as no submodules either way. git (2.21+) reads `.gitmodules` from the
+    /// working tree, else the index, else HEAD, so all three are looked in: one
+    /// `ls-files` of the top-level path (on disk, tracked or not, or in the
+    /// index, which a non-cone sparse checkout or an unstaged delete leaves it
+    /// in), then a `rev-parse` of `HEAD:.gitmodules` (a staged delete) only when
+    /// that finds nothing. A few milliseconds each, and both are git's, under its
+    /// timeout: nothing here touches the file system on this actor.
     public func submodules(in directory: URL, caller: GitCaller = GitCaller()) async throws -> [GitSubmodule] {
         guard try await hasGitmodules(directory, caller: caller) else { return [] }
         let output = try await execute(
@@ -447,16 +453,20 @@ public actor GitClient {
         return GitSubmodule.parse(status: output)
     }
 
-    /// Whether the working tree holding `directory` has a `.gitmodules` at its top level.
+    /// Whether git has a top-level `.gitmodules` to read for the repository holding
+    /// `directory`: in the working tree, the index, or HEAD.
     private func hasGitmodules(_ directory: URL, caller: GitCaller) async throws -> Bool {
-        let fileManager = FileManager.default
-        if fileManager.fileExists(atPath: directory.appendingPathComponent(".gitmodules").path) { return true }
-        let topLevel = try await run("rev-parse", ["--show-toplevel"], in: directory, caller: caller)
-            .trimmingCharacters(in: .newlines)
-        guard !topLevel.isEmpty,
-              URL(fileURLWithPath: topLevel).standardizedFileURL != directory.standardizedFileURL
-        else { return false }
-        return fileManager.fileExists(atPath: URL(fileURLWithPath: topLevel).appendingPathComponent(".gitmodules").path)
+        // No `--exclude-standard`: git reads an ignored `.gitmodules` too.
+        let listed = try await run("ls-files", ["-z", "--cached", "--others", "--", ":(top,literal).gitmodules"],
+                                   in: directory, caller: caller)
+        if !listed.isEmpty { return true }
+        do {
+            _ = try await run("rev-parse", ["--verify", "--quiet", "HEAD:.gitmodules"], in: directory, caller: caller)
+            return true
+        } catch GitClientError.commandFailed {
+            // Exit 1: HEAD has none, or HEAD is unborn.
+            return false
+        }
     }
 
     /// The patch `target` describes, parsed.
