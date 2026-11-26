@@ -1830,6 +1830,7 @@
 		5AD5C76C803F069B1873DE64 /* HubLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173A3E6234F44151299BD6E0 /* HubLinks.swift */; };
 		5AD5D63BB16085E00F579278 /* SchemaMigratorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B2E2CEA6283EEB0F5931089 /* SchemaMigratorTests.swift */; };
 		5AE1F5BEC129638AEFB312ED /* ComposableTabsPaneHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63000E81E8F6443F15B5346D /* ComposableTabsPaneHost.swift */; };
+		5AE7B63DBAFA73E4C07B239C /* MultiTabbedCompactCardTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8FF71DCCDD2E0A4F23A26D5 /* MultiTabbedCompactCardTests.swift */; };
 		5AEE8A614A409D8D6D2D529E /* ConversationsSessionFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD88503BC88624C668D5542 /* ConversationsSessionFilter.swift */; };
 		5AF381C113C99DE9DDE1A8DA /* PeriodicRefresher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CACABE5E8C8DF3E76333DF8 /* PeriodicRefresher.swift */; };
 		5B1DF3A40161C02F4E2C83A9 /* AgenticDeveloperHubSDK-macOS.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 74A8C8CA2D090E5DA642E5A4 /* AgenticDeveloperHubSDK-macOS.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -11197,6 +11198,7 @@
 		E8DB03C241AECFD5B23C1606 /* HookCaptureCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HookCaptureCommand.swift; sourceTree = "<group>"; };
 		E8E4B999DC2BCCBF6F84504E /* MarkdownPaneViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownPaneViewController.swift; sourceTree = "<group>"; };
 		E8ECE8662EA237236EE39911 /* InputActivityTrigger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputActivityTrigger.swift; sourceTree = "<group>"; };
+		E8FF71DCCDD2E0A4F23A26D5 /* MultiTabbedCompactCardTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiTabbedCompactCardTests.swift; sourceTree = "<group>"; };
 		E904291106FB8BE145111B77 /* ThemeScope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeScope.swift; sourceTree = "<group>"; };
 		E933B9E52301E7DB8DB3E7D5 /* ChromiumLauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChromiumLauncher.swift; sourceTree = "<group>"; };
 		E95DD68D513022F44BC48CEE /* PartnerGitFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartnerGitFixture.swift; sourceTree = "<group>"; };
@@ -19696,6 +19698,7 @@
 			children = (
 				D0E5C456D12FD6B7CAE7689F /* MultiTabbedAccessoryBelowBarTests.swift */,
 				116AABFCDDC1C3DD100AD1F8 /* MultiTabbedActiveTabTests.swift */,
+				E8FF71DCCDD2E0A4F23A26D5 /* MultiTabbedCompactCardTests.swift */,
 				69CFFFD470E5ACEFE143A5ED /* MultiTabbedHostedItemTests.swift */,
 				3D61443646C402A542837EB2 /* TabBarAccessibilityTests.swift */,
 				5B275F618B8CE2CEE79CE7CC /* TabBarStartInsetTests.swift */,
@@ -24170,6 +24173,7 @@
 				2FF1A6A271BDE88B068D9367 /* MultiChoiceFilterButtonConformanceTests.swift in Sources */,
 				91B91667D544AD4996DC2E96 /* MultiTabbedAccessoryBelowBarTests.swift in Sources */,
 				AAC0082CBC519E237592F943 /* MultiTabbedActiveTabTests.swift in Sources */,
+				5AE7B63DBAFA73E4C07B239C /* MultiTabbedCompactCardTests.swift in Sources */,
 				85DA762EE9C4A17B1EAC305D /* MultiTabbedHostedItemTests.swift in Sources */,
 				76E046C9EB1C1C83173B34BC /* NewItemRegistryTests.swift in Sources */,
 				E7748E7FB5ECF5CFCBCE37E9 /* NotImplementedLedgerTests.swift in Sources */,

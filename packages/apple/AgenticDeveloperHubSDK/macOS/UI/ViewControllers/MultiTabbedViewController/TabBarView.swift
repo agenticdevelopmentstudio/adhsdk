@@ -311,6 +311,14 @@ final class TabBarView: NSView {
             }
             hostedControllers[id] = nil
         }
+        // The bar takes its new thickness before any item is pinned across
+        // it. In a window each constraint is solved as it is activated, so a
+        // pin made while the bar still had its old (or default) thickness was
+        // unsatisfiable against a taller card, and AppKit broke one of the
+        // card's own constraints (its status icon's height) to recover, which
+        // stayed broken after the bar grew.
+        hostedControllers.merge(currentControllers) { _, new in new }
+        updateThickness()
 
         for item in items {
             let view: NSView
