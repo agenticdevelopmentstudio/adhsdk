@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { RESERVED_SLUGS } from '@adh-sdk/adh-registry'
 import {
   isReservedProductSiteHandle,
   PRODUCT_SITE_HANDLE_WORDS,
@@ -57,12 +58,19 @@ describe('reserved product site handles', () => {
     }
   })
 
-  it('reserves every word a workspace slug may not take', () => {
+  it('reserves every word any site reserves, as the server does', () => {
     expect(isReservedProductSiteHandle('privacy')).toBe(true)
     const handles = reservedProductSiteHandles()
-    for (const slug of reservedWorkspaceSlugs()) {
+    for (const slug of Object.values(RESERVED_SLUGS).flat()) {
       expect(handles.has(slug)).toBe(true)
     }
+  })
+
+  it('leaves a word only a workspace path segment collides with claimable', () => {
+    // A route word, reserved for `/<workspace>` but not in any site's RESERVED_SLUGS: the
+    // server accepts it as a handle, so the form must too.
+    expect(reservedWorkspaceSlugs().has('research')).toBe(true)
+    expect(isReservedProductSiteHandle('research')).toBe(false)
   })
 
   it('leaves an ordinary word claimable', () => {

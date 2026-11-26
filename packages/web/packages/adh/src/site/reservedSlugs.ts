@@ -26,6 +26,8 @@
  * stored, on either side — both are mint-time refusals.
  */
 
+import { RESERVED_SLUGS } from '@adh-sdk/adh-registry'
+
 /**
  * Top-level route segments the site template itself owns.
  *
@@ -367,12 +369,21 @@ export const PRODUCT_SITE_HANDLE_WORDS: readonly string[] = [
 ]
 
 /**
- * Every name a product site handle may not take: the decision-5 words plus every word a workspace
- * slug may not take, lowercased for the same reason `reservedWorkspaceSlugs` lowercases.
+ * Every name a product site handle may not take: the decision-5 words plus every word any site
+ * reserves in `@adh-sdk/adh-registry`'s `RESERVED_SLUGS` (all sites, flattened).
+ *
+ * That is the server's set exactly, built the same way from the same source: the backend vendors
+ * the registry's `reserved-slugs.ts` and folds it into `RESERVED_PRODUCT_SITE_HANDLES` beside the
+ * same thirteen words. It is deliberately NOT `reservedWorkspaceSlugs()`, which is wider on
+ * purpose — it holds the route and grammar words a `/<workspace>` path segment would collide
+ * with (`research`, `docs`, `pricing`, ...), and a handle is a DNS label, not a path segment, so
+ * the form refusing those would turn away handles the API accepts.
+ *
+ * Lowercased for the same reason `reservedWorkspaceSlugs` lowercases.
  */
 export function reservedProductSiteHandles(): ReadonlySet<string> {
-  const all = [...PRODUCT_SITE_HANDLE_WORDS.map((s) => s.toLowerCase()), ...reservedWorkspaceSlugs()]
-  return new Set(all)
+  const all = [...PRODUCT_SITE_HANDLE_WORDS, ...Object.values(RESERVED_SLUGS).flat()]
+  return new Set(all.map((s) => s.toLowerCase()))
 }
 
 /** Whether `handle`, trimmed and lowercased, is a reserved product site handle. */
