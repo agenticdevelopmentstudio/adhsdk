@@ -303,18 +303,15 @@ struct MCPClientRaceTests {
     /// never completes at any budget — this is a wait-for-completion assertion,
     /// not a timing one.
     ///
-    /// `burn` is the symptom, and its ceiling is safe for three structural
-    /// reasons rather than a tuned number: `RUSAGE_SELF` measures CPU this
-    /// process has *consumed*, not elapsed time, so a loaded machine can only
-    /// push the reading down, never invent a false failure; `xcodebuild` runs
-    /// each test bundle in its own `xctest` process, so `RUSAGE_SELF` here never
-    /// covers any other bundle's tests; and this suite is already `.serialized`,
-    /// so its five siblings cannot overlap the measurement window. Measured
-    /// worst passing value across 14 runs (race suite alone, inside the full
-    /// parallel suite, and under `2 × ncpu` external load): 0.00155, against a
-    /// ceiling of 0.25 — 161× of headroom — and 2.08 with step 6 deleted, ~8×
-    /// over the ceiling. If this ever flakes, raise the ceiling; the headroom is
-    /// there to be spent.
+    /// `burn` is the symptom: the most CPU any one thread of this process spent
+    /// in a 1.0 s window. A spinning loop keeps a thread busy for the whole
+    /// window. Whole-process CPU (`RUSAGE_SELF`) cannot tell that apart from
+    /// ordinary work, because `.serialized` orders this suite's own tests only:
+    /// every other suite in the bundle shares this `xctest` process and runs
+    /// alongside it, and inside the full parallel suite their CPU read 0.28
+    /// against a 0.25 ceiling with the fix in place. One thread's share is
+    /// what a spin changes and concurrent tests do not: they spread across
+    /// the pool and finish in milliseconds.
     @Test("an abandoned connect is freed rather than left spinning a core")
     func teardownFreesTheAbandonedConnectRatherThanSpinning() async throws {
         let marker = "MCPClientAbandonedConnectProbe-\(UUID().uuidString)"
@@ -338,9 +335,9 @@ struct MCPClientRaceTests {
         let returned = await Self.completes(disconnecting, within: 8)
 
         // Whatever step 6 was supposed to stop is running right now.
-        let before = Self.processCPUSeconds()
+        let before = Self.threadCPUSeconds()
         try await Task.sleep(for: .seconds(1))
-        let burn = Self.processCPUSeconds() - before
+        let burn = Self.busiestThreadCPUSeconds(since: before)
 
         let freed = await Self.completes(connecting, within: 5)
 
@@ -355,30 +352,64 @@ struct MCPClientRaceTests {
             burn < Self.abandonedConnectCPUCeiling,
             """
             an abandoned connect is still burning CPU after disconnect() returned \
-            (\(burn) CPU-seconds per 1.0 s of wall clock; ceiling \(Self.abandonedConnectCPUCeiling))
+            (one thread spent \(burn) CPU-seconds of a 1.0 s window; ceiling \(Self.abandonedConnectCPUCeiling))
             """
         )
     }
 
-    /// The whole-process CPU ceiling the test above allows over its 1.0 s window.
-    /// A pinned loop reads 2.08; the shipped code reads 0.0009-0.0016 across 14
-    /// runs, including five under `2 × ncpu` of deliberate external load and
-    /// eight inside the full parallel suite. This sits 161× above the worst
-    /// observed pass and 8× below the observed failure, so it is a threshold with
-    /// no tuning in it: anything from 0.01 to 1.0 behaves identically.
-    private static let abandonedConnectCPUCeiling = 0.25
+    /// The most CPU one thread may spend in the test's 1.0 s window. A spin
+    /// pins a thread at close to 1.0; with the fix, no thread comes near half.
+    private static let abandonedConnectCPUCeiling = 0.5
 
-    /// User+system CPU consumed by *this process* so far. `RUSAGE_SELF` is
-    /// consumption, not elapsed time, so a loaded machine deschedules a spinning
-    /// loop and makes this read *lower* — external load can only make the
-    /// assertion above miss a regression, never invent one. Each test bundle gets
-    /// its own `xctest` process, so Swift Testing's parallelism contributes only
-    /// this bundle's concurrent tests, measured at ~0.001 CPU-seconds.
-    private static func processCPUSeconds() -> Double {
-        var usage = rusage()
-        getrusage(RUSAGE_SELF, &usage)
-        let user = Double(usage.ru_utime.tv_sec) + Double(usage.ru_utime.tv_usec) / 1_000_000
-        let system = Double(usage.ru_stime.tv_sec) + Double(usage.ru_stime.tv_usec) / 1_000_000
+    /// User+system CPU each live thread of this process has consumed, keyed by
+    /// its system-wide thread id, so a pool thread is matched across the two
+    /// readings and one that started between them counts from zero.
+    private static func threadCPUSeconds() -> [UInt64: Double] {
+        var threads: thread_act_array_t?
+        var count: mach_msg_type_number_t = 0
+        guard task_threads(mach_task_self_, &threads, &count) == KERN_SUCCESS, let threads else { return [:] }
+        defer {
+            for index in 0..<Int(count) { mach_port_deallocate(mach_task_self_, threads[index]) }
+            let size = vm_size_t(Int(count) * MemoryLayout<thread_act_t>.stride)
+            vm_deallocate(mach_task_self_, vm_address_t(UInt(bitPattern: threads)), size)
+        }
+        var readings: [UInt64: Double] = [:]
+        for index in 0..<Int(count) {
+            guard let identifier = threadIdentifier(threads[index]),
+                  let seconds = threadSeconds(threads[index]) else { continue }
+            readings[identifier] = seconds
+        }
+        return readings
+    }
+
+    /// The largest CPU any one thread spent since `before`.
+    private static func busiestThreadCPUSeconds(since before: [UInt64: Double]) -> Double {
+        threadCPUSeconds().map { identifier, seconds in seconds - (before[identifier] ?? 0) }.max() ?? 0
+    }
+
+    private static func threadIdentifier(_ thread: thread_act_t) -> UInt64? {
+        var info = thread_identifier_info_data_t()
+        var size = mach_msg_type_number_t(
+            MemoryLayout<thread_identifier_info_data_t>.size / MemoryLayout<natural_t>.size)
+        let status = withUnsafeMutablePointer(to: &info) { pointer in
+            pointer.withMemoryRebound(to: integer_t.self, capacity: Int(size)) {
+                thread_info(thread, thread_flavor_t(THREAD_IDENTIFIER_INFO), $0, &size)
+            }
+        }
+        return status == KERN_SUCCESS ? info.thread_id : nil
+    }
+
+    private static func threadSeconds(_ thread: thread_act_t) -> Double? {
+        var info = thread_basic_info_data_t()
+        var size = mach_msg_type_number_t(MemoryLayout<thread_basic_info_data_t>.size / MemoryLayout<natural_t>.size)
+        let status = withUnsafeMutablePointer(to: &info) { pointer in
+            pointer.withMemoryRebound(to: integer_t.self, capacity: Int(size)) {
+                thread_info(thread, thread_flavor_t(THREAD_BASIC_INFO), $0, &size)
+            }
+        }
+        guard status == KERN_SUCCESS else { return nil }
+        let user = Double(info.user_time.seconds) + Double(info.user_time.microseconds) / 1_000_000
+        let system = Double(info.system_time.seconds) + Double(info.system_time.microseconds) / 1_000_000
         return user + system
     }
 
