@@ -569,10 +569,9 @@ final class NotesSplitViewControllerTests: XCTestCase {
     /// created, so a bug that removed it would delete asynchronously, inside
     /// `performDelete(_:)`'s own `Task`. An assertion taken immediately after
     /// the call cannot tell "the guard held" apart from "the delete just
-    /// hasn't finished yet" — so this waits out the same budget `pollUntil`
-    /// gives a real async settle elsewhere in this file, and asserts the
-    /// delete never happens in that window, rather than asserting it hasn't
-    /// happened yet.
+    /// hasn't finished yet" — so this waits one hop of the main queue, which
+    /// runs after any task the call enqueued and so after the point where
+    /// such a delete would drop the note, and asserts the note is still there.
     func testDeleteSelectedNoteWithNoWindowDoesNothing() async throws {
         let store = try store()
         _ = try store.createDocument(content: "hello", markers: [.note])

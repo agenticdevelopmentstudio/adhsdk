@@ -207,9 +207,21 @@ public enum CommandRunner {
         // Both write ends are closed once the process is gone, so these are
         // waits on an EOF that has already been posted; the writer, likewise,
         // has either finished or been handed EPIPE by the dead read end.
-        _ = outputDrained.finished.wait(timeout: .now() + settleGrace)
-        _ = errorsDrained.finished.wait(timeout: .now() + settleGrace)
+        let outputDone = outputDrained.finished.wait(timeout: .now() + settleGrace) == .success
+        let errorsDone = errorsDrained.finished.wait(timeout: .now() + settleGrace) == .success
         _ = inputWritten?.wait(timeout: .now() + settleGrace)
+        // A drain the grace ran out on — starved at a low class, or behind a
+        // grandchild that still holds the pipe — may leave output sitting in
+        // the pipe's buffer, and cancelling would drop it while the run
+        // reports success. One last non-blocking read takes what is there.
+        // On the readers' own queue, so it runs after any read already queued
+        // and the bytes stay in order.
+        if !outputDone || !errorsDone {
+            readers.sync {
+                if !outputDone { outputDrained.readRemaining(into: collected) }
+                if !errorsDone { errorsDrained.readRemaining(into: collected) }
+            }
+        }
         outputDrained.source.cancel()
         errorsDrained.source.cancel()
 
@@ -292,6 +304,27 @@ public enum CommandRunner {
     private struct Drain {
         let finished: DispatchSemaphore
         let source: DispatchSourceRead
+        let descriptor: Int32
+        let stream: Stream
+
+        /// Reads whatever the pipe holds right now, without waiting for more.
+        /// Called on the drain's queue, before the source is cancelled.
+        func readRemaining(into collected: Collector) {
+            guard !source.isCancelled else { return }
+            let flags = fcntl(descriptor, F_GETFL)
+            guard flags != -1, fcntl(descriptor, F_SETFL, flags | O_NONBLOCK) != -1 else { return }
+            var buffer = [UInt8](repeating: 0, count: 64 * 1024)
+            while true {
+                let count = read(descriptor, &buffer, buffer.count)
+                if count > 0 {
+                    collected.append(Data(buffer[0..<count]), to: stream)
+                } else if count < 0 && errno == EINTR {
+                    continue
+                } else {
+                    return
+                }
+            }
+        }
     }
 
     /// Reads `pipe` on `queue` until EOF, appending into `collected`, and
@@ -330,7 +363,7 @@ public enum CommandRunner {
             finished.signal()
         }
         source.resume()
-        return Drain(finished: finished, source: source)
+        return Drain(finished: finished, source: source, descriptor: descriptor, stream: stream)
     }
 
     /// The two buffers, behind one lock.

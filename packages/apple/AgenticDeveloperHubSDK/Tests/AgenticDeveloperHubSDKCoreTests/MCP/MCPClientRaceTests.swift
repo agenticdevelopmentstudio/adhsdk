@@ -292,8 +292,8 @@ struct MCPClientRaceTests {
     /// budget. Without step 6 the abandoned `MCP.Client` keeps a message-handling
     /// loop whose stream step 5 has already finished, so every iteration of it
     /// returns at once and the `repeat … while true` spins for the life of the
-    /// process. Measured with step 6 deleted: 2.08 CPU-seconds per 1.0 s of wall
-    /// clock, against 0.0009-0.0016 with it — about 1300×.
+    /// process. Measured with step 6 deleted, the busiest thread spent 1.02
+    /// CPU-seconds of a 1.0 s window: one core, pinned.
     ///
     /// Two assertions, because one is the mechanism and one is the symptom.
     /// `freed` is deterministic and carries the weight: step 6 drains

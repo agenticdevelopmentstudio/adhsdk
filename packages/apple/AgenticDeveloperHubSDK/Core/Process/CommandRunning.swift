@@ -53,8 +53,10 @@ public struct ProcessCommandRunner: CommandRunning {
         self.backstop = backstop
     }
 
-    // Default QoS, enforced: the drain threads run at default, and waiting on
-    // them from the caller's (often main-thread) class is a priority inversion.
+    // Default QoS, enforced: the helper runs at default whatever the caller's
+    // (often main-thread) class is. `CommandRunner` drains at the class of the
+    // thread that waits, so pinning this block pins the waiter and its drains
+    // together, and a main-thread caller never runs a helper user-interactive.
     public func run(_ argv: [String]) async -> (status: Int32, output: String) {
         let backstop = backstop
         return await BlockingWork.run(qos: .default, enforcedQoS: .default) {

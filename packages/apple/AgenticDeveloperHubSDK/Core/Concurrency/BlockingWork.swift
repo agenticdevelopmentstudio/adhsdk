@@ -46,9 +46,10 @@ public enum BlockingWork {
     ///
     /// `enforcedQoS` pins the block itself to a class, whatever the caller's
     /// is. Without it a block submitted from the main thread inherits
-    /// user-interactive QoS, and work that then waits on threads of a lower
-    /// class — `CommandRunner`'s drain threads run at default — is a priority
-    /// inversion the system reports as a hang risk.
+    /// user-interactive QoS, and any work it waits on that runs at a fixed
+    /// lower class is a priority inversion the system reports as a hang risk.
+    /// (`CommandRunner` drains at the waiting thread's own class, so its waits
+    /// are not one of those; pinning still decides what class the work runs at.)
     public static func run<T: Sendable>(
         qos: DispatchQoS.QoSClass = .userInitiated,
         enforcedQoS: DispatchQoS? = nil,
