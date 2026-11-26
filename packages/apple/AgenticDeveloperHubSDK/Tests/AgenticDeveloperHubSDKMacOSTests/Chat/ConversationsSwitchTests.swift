@@ -18,18 +18,22 @@ final class ConversationsSwitchTests: XCTestCase {
     }
 
     func testASwitchToAnUnreadConversationClearsTheScreenAtOnce() async throws {
-        let controller = try await singleFeed(showing: "s1")
+        // s3's read is held until the test releases it, so the screen is
+        // looked at while that read is certainly still out: however long
+        // `layout()`'s turns stretch on a loaded machine, s3's row cannot have
+        // arrived, and the only right answer is an empty screen.
+        let gate = ReadGate(holding: "s3")
+        let controller = try await singleFeed(showing: "s1", gate: gate)
         XCTAssertTrue(texts(of: controller).allSatisfy { $0.hasPrefix("s1") })
 
         controller.soloSessionID = "s3"
         await layout()
 
-        // Empty, or s3's own row when its read has already landed: the read
-        // is scheduled, not awaited, and `layout()`'s turns stretch long
-        // enough on a loaded machine for it to arrive. Either way nothing of
-        // s1 may be left.
-        XCTAssertTrue(Set(texts(of: controller)).isSubset(of: ["s3 one"]),
-                      "s1's rows stayed on screen under the s3 pick: \(texts(of: controller))")
+        XCTAssertEqual(texts(of: controller), [],
+                       "s1's rows stayed on screen under the s3 pick")
+
+        await gate.release()
+        try await waitUntil("s3 was read") { self.texts(of: controller) == ["s3 one"] }
     }
 
     func testASwitchToAConversationReadBeforeDrawsItAtOnce() async throws {
@@ -62,6 +66,27 @@ final class ConversationsSwitchTests: XCTestCase {
 
     // MARK: - Fixtures
 
+    /// Holds every read of one session until `release()`; reads of the
+    /// others pass straight through.
+    private actor ReadGate {
+        private let held: String
+        private var isReleased = false
+        private var waiting: [CheckedContinuation<Void, Never>] = []
+
+        init(holding id: String) { held = id }
+
+        func pass(_ id: String) async {
+            guard id == held, !isReleased else { return }
+            await withCheckedContinuation { waiting.append($0) }
+        }
+
+        func release() {
+            isReleased = true
+            waiting.forEach { $0.resume() }
+            waiting.removeAll()
+        }
+    }
+
     private nonisolated static let rows: [String: [String]] = [
         "s1": ["s1 one", "s1 two"],
         "s2": ["s2 one"],
@@ -80,8 +105,10 @@ final class ConversationsSwitchTests: XCTestCase {
 
     /// A three-session feed in single mode, showing `id`. A read for one
     /// session returns only its rows; the merged read returns all of them.
-    private func singleFeed(showing id: String) async throws -> ConversationsViewController {
+    private func singleFeed(showing id: String, gate: ReadGate? = nil) async throws
+        -> ConversationsViewController {
         let controller = ConversationsViewController(refreshInterval: .seconds(3600)) { _, source, _ in
+            if let gate, let source { await gate.pass(source) }
             let ids = source.map { [$0] } ?? Self.rows.keys.sorted()
             return ids.flatMap { id in (Self.rows[id] ?? []).map { Self.message($0, in: id) } }
         }
