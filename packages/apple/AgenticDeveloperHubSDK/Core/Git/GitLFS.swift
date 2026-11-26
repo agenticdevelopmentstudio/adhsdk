@@ -133,7 +133,9 @@ public struct GitLFSState: Sendable, Hashable {
     /// The patterns `git lfs track` lists, in its order; `[]` when none.
     public let trackedPatterns: [String]
     /// Each path `git lfs ls-files` lists, and whether its object is downloaded (`*`)
-    /// rather than only its pointer (`-`).
+    /// rather than only its pointer (`-`). `[:]` when no attribute source names
+    /// `filter=lfs`, even where `ls-files` would list a pointer committed under a rule
+    /// since removed: `ls-files` is not asked then (see `GitClient.lfsState`).
     public let files: [String: Bool]
 
     public init(isInstalled: Bool, trackedPatterns: [String], files: [String: Bool]) {

@@ -214,7 +214,8 @@ extension GitClientConfiguration {
     /// `color.ui=always`), and `XDG_CONFIG_HOME` at an empty directory drops
     /// `~/.config/git/attributes` and `ignore`, which `GIT_CONFIG_GLOBAL` leaves
     /// in force: a global `*.psd filter=lfs` there would otherwise reach every
-    /// LFS test's repository.
+    /// LFS test's repository. `GIT_ATTR_NOSYSTEM` drops the system attributes
+    /// file, which `GIT_CONFIG_NOSYSTEM` does not, for the same reason.
     static let tests = GitClientConfiguration(
         executableURL: GitTestRepository.gitURL, timeout: 60,
         extraEnvironment: isolatedEnvironment
@@ -225,6 +226,7 @@ extension GitClientConfiguration {
     static let isolatedEnvironment: [String: String] = [
         "GIT_CONFIG_GLOBAL": "/dev/null",
         "GIT_CONFIG_NOSYSTEM": "1",
+        "GIT_ATTR_NOSYSTEM": "1",
         "XDG_CONFIG_HOME": emptyConfigHome.path
     ]
 

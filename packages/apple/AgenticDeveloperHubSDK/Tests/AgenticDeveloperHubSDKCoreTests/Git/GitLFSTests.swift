@@ -324,6 +324,23 @@ struct GitLFSFixtureTests {
         #expect(state.trackedPatterns == ["assets/*.img"])
     }
 
+    @Test("a committed .gitattributes missing from the working tree is read from the index")
+    func indexedAttributesMissingFromDiskAreRead() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-lfs-index-only")
+        defer { repository.tearDown() }
+        try await repository.run(["lfs", "install", "--local"])
+        try await repository.run(["lfs", "track", "*.bin"])
+        try repository.write(Data([0, 1, 2, 3, 4, 5, 6, 7]), to: "blob.bin")
+        try await repository.run(["add", "--", ".gitattributes", "blob.bin"])
+        try await repository.commit("lfs", at: 1_767_268_800)
+        // As a non-cone sparse checkout leaves it: in the index, not on disk.
+        try FileManager.default.removeItem(at: repository.url(".gitattributes"))
+
+        let state = try await GitClient(configuration: .tests).lfsState(in: repository.root)
+        #expect(state.files.keys.contains("blob.bin"))
+        #expect(state.isInUse)
+    }
+
     @Test("a pattern in the repository's info/attributes is reported")
     func infoAttributesAreRead() async throws {
         let repository = try await GitTestRepository.make(prefix: "git-lfs-info")
