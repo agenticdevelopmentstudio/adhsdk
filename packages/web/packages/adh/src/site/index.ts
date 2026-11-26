@@ -19,6 +19,9 @@ export {
   SITE_ROUTE_SEGMENTS,
   GRAMMAR_SEGMENTS,
   RESERVED_HANDLE_WORDS,
+  PRODUCT_SITE_HANDLE_WORDS,
+  reservedProductSiteHandles,
+  isReservedProductSiteHandle,
 } from './reservedSlugs'
 // Which hub URLs are the signed-in workspace. Here, beside the list it reads, rather than in
 // `@adh-sdk/adh-registry` where it used to live: since the hub's root became

@@ -337,3 +337,45 @@ export function reservedWorkspaceSlugs(): ReadonlySet<string> {
   ]
   return new Set(all.map((s) => s.toLowerCase()))
 }
+
+/**
+ * Words a PRODUCT SITE handle may not take, beyond the ones a workspace slug may not.
+ *
+ * Decision 5 of the product-sites checklist. A product site handle is not a URL segment but a
+ * DNS label — `<handle>.<base domain>` — so it sits beside the family's real host names, and a
+ * product handled `api` or `help` would collide with a record that already answers there. That is
+ * why the list is wider than any route list: it names hosts, not paths.
+ *
+ * The backend's `RESERVED_PRODUCT_SITE_HANDLES` (`adhbackend src/adh/src/lib/rdid.ts`) is the
+ * authority the API enforces. This copy exists so the hub pane can refuse a reserved handle
+ * before it is sent; a word missing here is still refused on submit.
+ */
+export const PRODUCT_SITE_HANDLE_WORDS: readonly string[] = [
+  'admin',
+  'api',
+  'app',
+  'auth',
+  'help',
+  'mail',
+  'product-admin',
+  'sdk',
+  'staging',
+  'status',
+  'support',
+  'testing',
+  'www',
+]
+
+/**
+ * Every name a product site handle may not take: the decision-5 words plus every word a workspace
+ * slug may not take, lowercased for the same reason `reservedWorkspaceSlugs` lowercases.
+ */
+export function reservedProductSiteHandles(): ReadonlySet<string> {
+  const all = [...PRODUCT_SITE_HANDLE_WORDS.map((s) => s.toLowerCase()), ...reservedWorkspaceSlugs()]
+  return new Set(all)
+}
+
+/** Whether `handle`, trimmed and lowercased, is a reserved product site handle. */
+export function isReservedProductSiteHandle(handle: string): boolean {
+  return reservedProductSiteHandles().has(handle.trim().toLowerCase())
+}
