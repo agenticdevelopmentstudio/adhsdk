@@ -592,7 +592,7 @@ final class ProjectWindowManagerControllerTests: XCTestCase {
     func testAStandaloneWindowStoresItsFocusedLeafWithNoReconcileBehindIt() async throws {
         let database = try ProjectDatabase(path: repoRoot.appendingPathComponent(".test-project.db").path)
         let repo = GitRepo(path: repoRoot.path, name: "fixture", kind: .fileBrowser)
-        try database.insert(repo)
+        try database.insertRow(repo)
         let coordinator = try ProjectsCoordinator(database: database, scanner: nil, commandRegistry: CommandRegistry())
         let manager = ProjectWindowManager()
         manager.attach(to: coordinator)
