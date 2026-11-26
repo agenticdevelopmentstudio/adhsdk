@@ -1,3 +1,4 @@
+import AgenticDeveloperHubSDKCore
 import Foundation
 
 /// The bundle's `NSPrincipalClass`: XCTest makes one before it runs a test.
@@ -14,6 +15,16 @@ import Foundation
 ///
 /// The argument domain is the highest-priority one and is never written to
 /// disk, so this changes nothing outside the process.
+///
+/// It also gives `UserSettings.shared` an in-memory store of this process's
+/// own. The default store writes `UserDefaults.standard`, which in a test run
+/// is the xctest tool's domain, and every parallel worker process shares it
+/// through cfprefsd: one worker's key-command binding or "active pane follows
+/// mouse" write landed in another worker's test part way through it
+/// (`KeyCommandMenuBridgeTests`, `ComposableTabsActivePaneConformanceTests`
+/// CTA15 and CTA16). `ExclusiveAccess` orders the tests inside one process; it
+/// cannot see another. In memory, nothing is left on disk either (a defaults
+/// suite leaves an empty plist behind after its domain is removed).
 @objc(AgenticDeveloperHubSDKMacOSTestBundleSetup)
 final class TestBundleSetup: NSObject {
     override init() {
@@ -21,5 +32,11 @@ final class TestBundleSetup: NSObject {
         arguments["NSAutomaticWindowAnimationsEnabled"] = false
         UserDefaults.standard.setVolatileDomain(arguments, forName: UserDefaults.argumentDomain)
         super.init()
+        MainActor.assumeIsolated { Self.isolateUserSettings() }
+    }
+
+    @MainActor
+    private static func isolateUserSettings() {
+        UserSettings.shared = UserSettings(with: InMemorySettingsStorageProvider())
     }
 }
