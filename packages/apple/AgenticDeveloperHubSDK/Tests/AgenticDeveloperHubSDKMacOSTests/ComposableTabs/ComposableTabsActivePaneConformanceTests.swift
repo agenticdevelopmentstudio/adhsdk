@@ -243,7 +243,7 @@ final class ComposableTabsActivePaneConformanceTests: XCTestCase {
     func testCTA02_unclaimedPaneCountsAsActive() {
         let rig = makeRig()
         rig.window.close()
-        drain()
+        drain(until: { tracker.activeNodeID(in: rig.window) == nil })
         XCTAssertNil(tracker.activeNodeID(in: rig.window))
         XCTAssertTrue(tracker.isInActivePane(rig.focus[0]))
         XCTAssertTrue(tracker.isInActivePane(rig.focus[1]))
@@ -310,7 +310,7 @@ final class ComposableTabsActivePaneConformanceTests: XCTestCase {
         let rig = makeRig()
         let log = observeChanges()
         rig.window.close()
-        drain()
+        drain(until: { tracker.activeNodeID(in: rig.window) == nil })
         XCTAssertNil(tracker.activeNodeID(in: rig.window))
         XCTAssertEqual(log.count(for: rig.window), 0)
     }
@@ -703,7 +703,7 @@ final class ComposableTabsActivePaneConformanceTests: XCTestCase {
     func testCTA52_anUnclaimedWindowDrawsNoAccentEvenThoughMembershipReportsTrue() throws {
         let rig = makeRig()
         rig.window.close()
-        drain()
+        drain(until: { tracker.activeNodeID(in: rig.window) == nil })
         XCTAssertNil(tracker.activeNodeID(in: rig.window))
         for (index, pane) in rig.panes.enumerated() {
             let paneColors = palette(of: pane)
