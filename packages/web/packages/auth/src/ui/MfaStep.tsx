@@ -3,6 +3,7 @@
 import { useState, type FormEvent, type ReactElement } from 'react'
 import { useOptionalAuth } from '../context'
 import type { MfaChallenge, MfaCodeMethod, MfaMethod } from '../mfa'
+import { isCodeMethod, MFA_METHOD_LABELS as LABELS } from '../mfa-labels'
 
 /**
  * The three wire calls a second-factor step makes. Injected, because a login has two
@@ -31,19 +32,8 @@ export interface MfaStepProps {
   onCancel: () => void
 }
 
-const LABELS: Record<MfaMethod, string> = {
-  totp: 'Authenticator app',
-  sms: 'Text message',
-  webauthn: 'Passkey or security key',
-  recovery: 'Recovery code',
-}
-
 // The order we prefer to present factors in (recovery is always the last resort).
 const ORDER: MfaMethod[] = ['totp', 'webauthn', 'sms', 'recovery']
-
-function isCodeMethod(m: MfaMethod): m is MfaCodeMethod {
-  return m === 'sms' || m === 'totp' || m === 'recovery'
-}
 
 /** The default operations come from the AuthProvider; a step rendered without one
  *  and without injected operations has nothing to complete against, and says so at

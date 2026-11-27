@@ -7,6 +7,9 @@ export default defineConfig({
     client: 'src/client.ts',
     'ui/index': 'src/ui/index.ts',
     'server/index': 'src/server/index.ts',
+    // Directive-free, so a server component (the hosted login page) can import the MFA
+    // labels without pulling in a 'use client' chunk.
+    'mfa-labels': 'src/mfa-labels.ts',
   },
   outDir: 'dist',
   format: ['esm'],

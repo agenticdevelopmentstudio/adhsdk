@@ -34,6 +34,11 @@
       "development": "./src/server/index.ts",
       "import": "./dist/server/index.js"
     },
+    "./mfa-labels": {
+      "types": "./dist/mfa-labels.d.ts",
+      "development": "./src/mfa-labels.ts",
+      "import": "./dist/mfa-labels.js"
+    },
     "./styles.css": "./dist/styles/auth.css"
   },
   "scripts": {

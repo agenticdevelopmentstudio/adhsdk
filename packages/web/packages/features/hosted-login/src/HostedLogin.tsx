@@ -1,4 +1,5 @@
 import type { ReactElement } from "react";
+import { isCodeMethod, MFA_METHOD_LABELS, type MfaCodeMethod } from "@adh-sdk/auth/mfa-labels";
 import {
   fetchHostedLoginContext,
   trimTrailingSlashes,
@@ -59,25 +60,19 @@ function verifySubhead(codeSent: string | undefined, error: string | undefined):
   return "Enter the code we sent to the address you signed up with.";
 }
 
-// The factors completable by typing a code in this server-rendered flow (a passkey
-// needs a browser ceremony, so it isn't offered here — passkey users sign in at `passkeyLoginUrl`).
-const CODE_METHOD_LABELS: Record<string, string> = {
-  totp: "Authenticator app",
-  sms: "Text message",
-  recovery: "Recovery code",
-};
-
-function codeMethods(mfa: string | undefined): string[] {
+// Only the factors completable by typing a code are offered in this server-rendered flow (a
+// passkey needs a browser ceremony, so it isn't offered here — passkey users sign in at
+// `passkeyLoginUrl`). The guard and the labels are auth's own, shared with its client MFA step.
+function codeMethods(mfa: string | undefined): MfaCodeMethod[] {
   // A Set keeps the first-seen order and drops repeats: `mfa=totp,totp` is one radio, not two
-  // sharing a React key.
+  // sharing a React key. isCodeMethod compares against the three names exactly, so nothing
+  // from Object.prototype (`__proto__`, `constructor`) a crafted `?mfa=` names gets through.
   return [
     ...new Set(
       (mfa ?? "")
         .split(",")
         .map((m) => m.trim())
-        // Own keys only: `in` would also pass `__proto__`, `constructor` and the rest of
-        // Object.prototype, which a crafted `?mfa=` could name.
-        .filter((m) => Object.hasOwn(CODE_METHOD_LABELS, m)),
+        .filter(isCodeMethod),
     ),
   ];
 }
@@ -224,7 +219,7 @@ export async function HostedLogin({
                 {methods.map((m, i) => (
                   <label key={m} className="auth-card__mfa-radio">
                     <input type="radio" name="method" value={m} defaultChecked={i === 0} />
-                    {CODE_METHOD_LABELS[m]}
+                    {MFA_METHOD_LABELS[m]}
                   </label>
                 ))}
               </fieldset>
