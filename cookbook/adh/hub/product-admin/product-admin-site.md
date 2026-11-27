@@ -78,7 +78,7 @@ The pieces:
 ### Which pages move
 
 - **product-site-topic**: the product topic list MUST carry a `product-site` row labeled "Product site", placed after Sets, that names no catalog feature, so the feature manager always draws it (every product is given an address when it is made), and that renders `ProductSitePane` with the product's name and the help key `ecosystems/product-site`. The old topic id `admin-site` MUST still reach it, through `PRODUCT_TOPIC_ALIASES`.
-- **visible-topics**: `visibleProductTopics(topics, site)` MUST keep every row while the site is not known (`site` undefined: the read is in flight, or failed with no answer) and while the console is not live (`consoleLive` false: off, or on and not answering yet). When the console is live it MUST remove roles, signup-list and sets and narrow the Users row (`invitations`) to its Email Signup and Authentication members (`CONSOLE_KEPT_USERS_MEMBERS`, through the row's `members`), which the console has no page for. The Product site row is never removed.
+- **visible-topics**: `visibleProductTopics(topics, site)` MUST keep every row while the site is not known (`site` undefined: the read is in flight, or failed with no answer) and while the console is not live (`consoleLive` false: off, or on and not answering yet). When the console is live it MUST remove roles, signup-list and sets and narrow the Users row (`invitations`) to its Email Signup and Authentication members (`CONSOLE_KEPT_USERS_MEMBERS`, through the row's `members`), which the console has no page for. The Product site row is never removed, and it is drawn only for an ecosystem of type `product` (the row names `types: ["product"]`), because only a product has a product site and the backend answers 404 for any other type.
 - **run-at-product-site**: `runAtProductSite(topicId, site)` MUST answer true exactly when the site is known, its console is live and the topic is one of `CONSOLE_MOVED_TOPIC_IDS` (invitations, roles, signup-list, sets): the question a host that answers one topic at a time (the hub's `/<slug>/<topic>` routes, where `invitations` is the roster alone) asks.
 - **hide-admin-records**: the requests, pending and invites panes MUST take `hideAdminRecords`, which hides the developer's admin records: the panes MUST get neither notes slot and show no notes, no entity history and no "Admin notes" action. Without it the panes mount the notes editor and offer Admin notes.
 
@@ -167,7 +167,7 @@ Not applicable beyond the shared UI kit's behavior.
 
 ## Feature Flags
 
-- **`product_admin_site`**: the backend switch, folded by the backend into the site's `consoleLive` (the switch is on and the product's console is on with a login registration). The pane and the rail never read the switch itself: `consoleLive` false keeps every hub page, and true hides the moved pages. The Product site row is drawn either way.
+- **`product_admin_site`**: the backend switch, folded by the backend into the site's `consoleLive` (the switch is on and the product's console is on with a login registration). The pane and the rail never read the switch itself: `consoleLive` false keeps every hub page, and true hides the moved pages. The Product site row is drawn either way, but only for an ecosystem of type `product` (the `types` gate).
 
 The Support page depends on the backend's `consented_access` switch, which the page reads only as a 404 on the grants read (see **support-switch-off**); it never reads the switch itself.
 ## Analytics
