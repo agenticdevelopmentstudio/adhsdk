@@ -60,7 +60,7 @@ function verifySubhead(codeSent: string | undefined, error: string | undefined):
 }
 
 // The factors completable by typing a code in this server-rendered flow (a passkey
-// needs a browser ceremony, so it isn't offered here — passkey users sign in at the hub).
+// needs a browser ceremony, so it isn't offered here — passkey users sign in at `passkeyLoginUrl`).
 const CODE_METHOD_LABELS: Record<string, string> = {
   totp: "Authenticator app",
   sms: "Text message",
@@ -80,6 +80,19 @@ function codeMethods(mfa: string | undefined): string[] {
         .filter((m) => Object.hasOwn(CODE_METHOD_LABELS, m)),
     ),
   ];
+}
+
+/** The passkey hint's default target: the production hub, which runs the passkey ceremony. */
+const DEFAULT_PASSKEY_LOGIN_URL = "https://agenticdeveloperhub.com/login";
+
+/** A link's visible text: the URL's host (`agenticdeveloperhub.com`), or the URL as given when
+ *  it doesn't parse. */
+function linkText(url: string): string {
+  try {
+    return new URL(url).host || url;
+  } catch {
+    return url;
+  }
 }
 
 /** The card for a sign-in link that reached the page without a `login_challenge`. */
@@ -131,12 +144,20 @@ export async function HostedLogin({
   backendUrl,
   params,
   context,
+  passkeyLoginUrl = DEFAULT_PASSKEY_LOGIN_URL,
 }: {
   /** The backend the forms post to and the context is read from. Trailing slashes are dropped. */
   backendUrl: string;
   params: HostedLoginParams;
   /** Omitted: the component fetches it itself, after the MFA and code steps, as today. */
   context?: HostedLoginContext | null;
+  /**
+   * Where a passkey-only account is sent to sign in, since this server-rendered page can't run
+   * the passkey ceremony. The link reads as the URL's host. Omitted: the production hub's
+   * `https://agenticdeveloperhub.com/login`; a product site, staging or a local stack passes its
+   * own.
+   */
+  passkeyLoginUrl?: string;
 }): Promise<ReactElement> {
   // The backend names it `mfa_token` (loginPage.ts `loginUiUrl`), the same as the form field;
   // likewise `verify_token`.
@@ -185,7 +206,7 @@ export async function HostedLogin({
         {methods.length === 0 ? (
           <p className="auth-card__mfa-hint">
             Your account uses a passkey. Sign in at{" "}
-            <a href="https://agenticdeveloperhub.com/login">agenticdeveloperhub.com</a> to
+            <a href={passkeyLoginUrl}>{linkText(passkeyLoginUrl)}</a> to
             continue.
           </p>
         ) : (

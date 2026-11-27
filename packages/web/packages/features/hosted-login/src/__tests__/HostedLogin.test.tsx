@@ -207,4 +207,26 @@ describe("HostedLogin", () => {
     expect(html).toContain(`action="${BACKEND}/auth/oidc/login"`);
     expect(html).not.toContain("limited to administrators");
   });
+
+  it("sends a passkey-only account to the production hub by default", async () => {
+    const html = await render({
+      backendUrl: BACKEND,
+      params: { login_challenge: "chal-1", mfa_token: "mfa-tok", mfa: "webauthn" },
+    });
+
+    expect(html).toContain(
+      '<a href="https://agenticdeveloperhub.com/login">agenticdeveloperhub.com</a>',
+    );
+  });
+
+  it("sends a passkey-only account to the passkeyLoginUrl it is given", async () => {
+    const html = await render({
+      backendUrl: BACKEND,
+      params: { login_challenge: "chal-1", mfa_token: "mfa-tok", mfa: "webauthn" },
+      passkeyLoginUrl: "http://localhost:3000/login",
+    });
+
+    expect(html).toContain('<a href="http://localhost:3000/login">localhost:3000</a>');
+    expect(html).not.toContain("agenticdeveloperhub.com");
+  });
 });
