@@ -216,9 +216,17 @@ export function productDomainsAvailable(err: unknown): boolean {
 export const PRODUCT_DOMAINS_KEY = (ecosystemId: string) => ["product-domains", ecosystemId] as const;
 
 /**
+ * How often the domain list is read again while a domain is `pending` or `removing`: the backend's
+ * sweep verifies a pending domain and finishes a removal on its own, and the list shows it.
+ */
+export const PRODUCT_DOMAINS_POLL_MS = 60_000;
+
+/**
  * The product's custom domains. Disabled until there is an id to ask about. A 404 is not retried:
- * the switch being off answers it every time. The error is a ProductDomainError for an HTTP
- * refusal, or a plain Error when the request never got an answer (the network).
+ * the switch being off answers it every time. While any domain is `pending` or `removing` the list
+ * is read again every `PRODUCT_DOMAINS_POLL_MS`, and not at all otherwise; the site query is not
+ * polled. The error is a ProductDomainError for an HTTP refusal, or a plain Error when the request
+ * never got an answer (the network).
  */
 export function useProductDomains(
   ecosystemId: string | null | undefined,
@@ -228,6 +236,10 @@ export function useProductDomains(
     queryFn: () => productDomainsApi.list(ecosystemId as string),
     enabled: Boolean(ecosystemId),
     retry: (count, err) => !isNotFound(err) && count < 1,
+    refetchInterval: (query) =>
+      query.state.data?.some((d) => d.status === "pending" || d.status === "removing")
+        ? PRODUCT_DOMAINS_POLL_MS
+        : false,
   });
 }
 

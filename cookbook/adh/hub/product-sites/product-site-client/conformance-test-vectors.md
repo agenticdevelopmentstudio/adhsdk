@@ -22,6 +22,7 @@
 | product-site-client-019 | domains-primary-cache | `setPrimary` answered with a list whose second row is primary | The cache holds that list and the product site's query is invalidated |
 | product-site-client-020 | domains-remove-cache | A remove answered 204; then one answered 502 | The row leaves the cache and the site's query is invalidated; then the domain list and the site's query are both invalidated |
 | product-site-client-021 | domains-available | A 404 with code `not_found`; a 404 with no code; a 404 with `product_domain_not_found`; a 500 | false; false; true; true |
+| product-site-client-022 | domains-poll | `useProductDomains("eco-1")` over a list holding a `pending` domain, then over one whose domains are `verified` and `failed`, each with a minute or more passing (tests: "reads the list again every minute while a domain is pending", "does not poll when every domain is verified or failed") | A second request after one minute; then no request after the first, even after three minutes |
 
 Vectors 001 to 009 are asserted in `packages/web/packages/data/src/product-sites/__tests__/product-site-hook.test.tsx`, which stubs the transport, by the tests named. Vectors 010 to 021 are written from the phase 8 design and asserted in the same folder's `product-site-hook.test.tsx` (010) and `product-domains-hook.test.tsx` (011 to 021).
 

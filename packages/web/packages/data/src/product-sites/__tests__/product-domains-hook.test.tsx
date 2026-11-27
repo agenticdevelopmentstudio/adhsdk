@@ -18,6 +18,7 @@ import { responseError } from "@adh-sdk/auth/client";
 import {
   PRODUCT_DOMAINS_KEY,
   PRODUCT_DOMAINS_PATH,
+  PRODUCT_DOMAINS_POLL_MS,
   PRODUCT_SITE_KEY,
   ProductDomainError,
   productDomainsApi,
@@ -243,6 +244,32 @@ describe("useProductDomains", () => {
     const { wrapper } = setup();
     renderHook(() => useProductDomains(null), { wrapper });
     expect(mockedJson).not.toHaveBeenCalled();
+  });
+  describe("polling", () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("reads the list again every minute while a domain is pending", async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      mockedJson.mockResolvedValue({ domains: [verified, wireDomain] });
+      const { wrapper } = setup();
+      const { result } = renderHook(() => useProductDomains(ECO), { wrapper });
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      expect(mockedJson).toHaveBeenCalledTimes(1);
+      await act(() => vi.advanceTimersByTimeAsync(PRODUCT_DOMAINS_POLL_MS));
+      expect(mockedJson).toHaveBeenCalledTimes(2);
+    });
+
+    it("does not poll when every domain is verified or failed", async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      mockedJson.mockResolvedValue({ domains: [verified, { ...wireDomain, status: "failed" }] });
+      const { wrapper } = setup();
+      const { result } = renderHook(() => useProductDomains(ECO), { wrapper });
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await act(() => vi.advanceTimersByTimeAsync(PRODUCT_DOMAINS_POLL_MS * 3));
+      expect(mockedJson).toHaveBeenCalledTimes(1);
+    });
   });
 });
 

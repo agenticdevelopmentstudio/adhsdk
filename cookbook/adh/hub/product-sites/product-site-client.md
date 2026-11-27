@@ -85,6 +85,7 @@ The row type `ProductDomain` carries `id`, `host`, `status` (`pending`, `verifie
 - **domains-remove**: `productDomainsApi.remove(id, domainId)` MUST `DELETE` `<path>/<domainId>` and resolve to nothing on the 204.
 - **domains-error**: a domain call's failure that has an HTTP status MUST be rethrown, by `asProductDomainError`, as a `ProductDomainError(status, message, code?)` exactly as [site-error-carries-sentence](#requirements/site-error-carries-sentence) says for the site; a failure with no status MUST be rethrown unchanged.
 - **domains-hook-key**: `useProductDomains(id)` MUST read under `["product-domains", <id>]` (`PRODUCT_DOMAINS_KEY`), MUST be disabled without an ecosystem id, and MUST NOT retry a 404 (`retry: (n, err) => !isNotFound(err) && n < 1`); any other failure is retried once.
+- **domains-poll**: `useProductDomains(id)` MUST read the list again every `PRODUCT_DOMAINS_POLL_MS` (60 seconds) while any cached domain is `pending` or `removing`, and MUST NOT poll otherwise: its `refetchInterval` is a function of the query's data, `false` when there is none. The backend's sweep verifies a pending domain and finishes a removal on its own, so the list follows without a reload. The site's query is not polled.
 - **domains-add-cache**: `useAddProductDomain` MUST, on success, append the new domain to the product's domain list in the cache.
 - **domains-check-cache**: `useCheckProductDomain` MUST, on success, replace that domain's row in the cache with the answer.
 - **domains-primary-cache**: `useSetPrimaryProductDomain` MUST, on success, set the product's domain list in the cache to the answer and then invalidate `PRODUCT_SITE_KEY` for the product, so the site's `primaryOrigin` follows.
@@ -128,6 +129,7 @@ Not applicable: this is a data client with no user interface; the panes that con
 | product-site-client-019 | domains-primary-cache | `setPrimary` answered with a list whose second row is primary | The cache holds that list and the product site's query is invalidated |
 | product-site-client-020 | domains-remove-cache | A remove answered 204; then one answered 502 | The row leaves the cache and the site's query is invalidated; then the domain list and the site's query are both invalidated |
 | product-site-client-021 | domains-available | A 404 with code `not_found`; a 404 with no code; a 404 with `product_domain_not_found`; a 500 | false; false; true; true |
+| product-site-client-022 | domains-poll | `useProductDomains("eco-1")` over a list holding a `pending` domain, then over one whose domains are `verified` and `failed`, each with a minute or more passing (tests: "reads the list again every minute while a domain is pending", "does not poll when every domain is verified or failed") | A second request after one minute; then no request after the first, even after three minutes |
 
 Vectors 001 to 009 are asserted in `packages/web/packages/data/src/product-sites/__tests__/product-site-hook.test.tsx`, which stubs the transport, by the tests named. Vectors 010 to 021 are written from the phase 8 design and asserted in the same folder's `product-site-hook.test.tsx` (010) and `product-domains-hook.test.tsx` (011 to 021).
 
@@ -139,6 +141,7 @@ Vectors 001 to 009 are asserted in `packages/web/packages/data/src/product-sites
 - **Custom domains switched off (MUST)**: every domain route answers 404 `not_found`; `useProductDomains` asks once and `productDomainsAvailable` answers false, so the caller shows nothing.
 - **A remove the domain service did not finish (MUST)**: a 502 leaves the row `removing` on the backend; the hook reads the list again rather than dropping the row, so the caller can offer Remove again.
 - **A removed or changed primary (MUST)**: the product's address moves, so the site's query is read again and `primaryOrigin` follows.
+- **A domain the sweep settles (MUST)**: the backend verifies a pending domain, or finishes a removal, on its own; while any row is `pending` or `removing` the list is read again every minute, so the change shows without a reload.
 - **An older backend (MUST)**: a site body with no `subdomainOrigin` reads it as its `primaryOrigin` (or `null` when that is null too), so the handle's suffix and the rename warning's addresses still show; an explicit `null` stays `null`.
 
 ## Configuration
@@ -149,6 +152,7 @@ Vectors 001 to 009 are asserted in `packages/web/packages/data/src/product-sites
 | `PRODUCT_SITE_KEY(ecosystemId)` | function | `["product-sites", ecosystemId]` | The query key of one product's site. |
 | `PRODUCT_DOMAINS_PATH` | string constant | `/api/ecosystem/product-domains` | The custom domains route. |
 | `PRODUCT_DOMAINS_KEY(ecosystemId)` | function | `["product-domains", ecosystemId]` | The query key of one product's custom domains. |
+| `PRODUCT_DOMAINS_POLL_MS` | number constant | `60000` | How often the domain list is read again while a domain is `pending` or `removing`. |
 
 ## Deep Linking
 
