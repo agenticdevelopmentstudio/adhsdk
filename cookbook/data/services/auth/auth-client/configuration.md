@@ -15,4 +15,4 @@
 | The error-reporter hook | injected hook | none | Host-supplied sink for error reporting; none means console-only |
 | The retry-marker hook | injected hook | none | Host-supplied callback tagging the exact request options of a retried request |
 | Session-change subscription | injected subscription | n/a | Caller-registered callback invoked on every token write/clear |
-| `authBase` (`ProductAdminAuthProvider` prop) | string, no trailing slash | required, no default | Where the site's auth route handlers are mounted (the product site passes `/admin/auth`); every session, sign-in, sign-out and step-up URL the provider uses is built from it |
+| `authBase` (`ProductAdminAuthProvider` prop) | string; trailing slashes are dropped | required, no default | Where the site's auth route handlers are mounted (the product site passes `/admin/auth`); every session, sign-in, sign-out and step-up URL the provider uses is built from it |

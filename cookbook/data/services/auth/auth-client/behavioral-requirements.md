@@ -438,9 +438,10 @@ is a sibling of the hub's session provider, not a mode of it: a page under one
 MUST NOT mount the other.
 
 - **product-admin-session-auth-base**: the provider MUST take a required `authBase`
-  prop, the path where the site's auth route handlers are mounted, with no trailing slash
-  (the product site passes `/admin/auth`). Every auth URL it requests or navigates to MUST be
-  built from it: `<authBase>/session`, `<authBase>/signout`, `<authBase>/signin` and
+  prop, the path where the site's auth route handlers are mounted (the product site passes
+  `/admin/auth`). Trailing slashes on it MUST be dropped once, before any URL is built, so
+  `/admin/auth/` means the same as `/admin/auth`; `stepUpSigninUrl` drops them too. Every auth
+  URL it requests or navigates to MUST be built from it: `<authBase>/session`, `<authBase>/signout`, `<authBase>/signin` and
   `<authBase>/signin?return=...`, with no request to any other auth path. It is required,
   not defaulted, so a host that forgets it fails to compile rather than calling the wrong
   path. The one in-flight session request at module scope is shared by every mount, since
