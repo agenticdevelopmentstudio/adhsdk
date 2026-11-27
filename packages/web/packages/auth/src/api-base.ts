@@ -1,21 +1,40 @@
 /**
- * Where the browser sends the toolkit's backend API calls: the one place that answer lives.
+ * Where the browser sends the toolkit's DATA calls: the one place that answer lives.
  *
  * Every data client in the toolkit names its route as a same-origin `/api/...` path
  * (`/api/v1/workspaces`, `/api/jobs/...`), the shape a site's `/api/:path*` rewrite forwards to
  * the backend. That stays the default, so the hub and every site with the rewrite behave exactly
  * as before. A host whose browser calls the backend directly instead (the product site, which has
  * no rewrite: Vercel only hosts it) configures the backend's public origin once at bootstrap, and
- * every `/api/...` path is then sent to `<base>/...`, the same destination the rewrite would have
- * chosen. A path that does not start with `/api/` (an absolute URL, a signed upload URL, a site's
- * own `/admin/auth/...` route) is never touched.
+ * the data calls' `/api/...` paths are then sent to `<base>/...`, the same destination the
+ * rewrite would have chosen.
  *
- * Not the authorization server's base (`asBase.ts`, `NEXT_PUBLIC_AUTH_API_URL`): that one names
- * where sign-in happens, this one where the data calls go.
+ * What follows the base (resolved where the request is made, never at the call sites):
+ * - every Bearer call through `authedFetch` / `authedJson` / `authedRequest` (`rawFetch`), so
+ *   every `@adh-sdk/data` client and every pane built on them;
+ * - every `publicJson` read;
+ * - the SSE transport (`connectSse`);
+ * - the raw data fetches that name an `/api/...` path themselves: the invitation preview and
+ *   verify, and `@adh-sdk/adh`'s profile lookup and people search.
  *
- * Resolved where the requests are made (`rawFetch` and `publicJson`, the SSE transport, the few
- * raw fetches), never at the call sites, so no client carries the base itself. Deliberately
- * import-free, like `asBase.ts`, so every module that makes a request can read it without a cycle.
+ * What never follows it, by design:
+ * - the hub's cookie session routes: AuthProvider's login, register (and `registerWithInvite`),
+ *   revoke, the MFA and passkey steps in `mfa.ts`, the SSO code exchange
+ *   (`DEFAULT_EXCHANGE_PATH`) and the refresh (`refreshPath`). The refresh token is an HttpOnly
+ *   cookie on the site's own origin, so these only work same-origin. A host with a base and no
+ *   rewrite signs in some other way: the product site's admin console uses
+ *   ProductAdminAuthProvider, whose routes are its own `/admin/auth/*`;
+ * - authorization-server calls (`asEndpoint` in `asBase.ts`, `NEXT_PUBLIC_AUTH_API_URL`, and so
+ *   `linkProvider`), whose same-origin fallback is the AS proxy, not the data API;
+ * - `@adh-sdk/markdown`'s default fetcher, which sits below this tier; a host with no rewrite
+ *   injects its own `fetcher`;
+ * - clients that take their own base (`@adh-sdk/adh`'s visitor chat, `apiBase` option), and the
+ *   debug environment panel, a same-origin developer tool;
+ * - any path that does not start with `/api/` (an absolute URL, a signed upload URL, a site's
+ *   own `/admin/auth/...` route).
+ *
+ * Deliberately import-free, like `asBase.ts`, so every module that makes a request can read it
+ * without a cycle.
  */
 
 /** The same-origin prefix a site's rewrite forwards, and the default base. */
@@ -24,7 +43,7 @@ const SAME_ORIGIN_PREFIX = '/api'
 let base = SAME_ORIGIN_PREFIX
 
 /**
- * Point every toolkit `/api/...` request at `apiBase`: an origin such as
+ * Point the data calls' `/api/...` paths (see above) at `apiBase`: an origin such as
  * `https://api.example.com` (trailing slashes dropped), or `/api` to restore the default.
  * Call it once at bootstrap, before the first request; calling it again with the same value is a
  * no-op, so a component may call it on every render. An empty value restores the default.

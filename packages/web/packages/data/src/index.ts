@@ -26,7 +26,8 @@ export {
 // Where the browser sends the data calls. Every client names a same-origin `/api/...` path;
 // by default that is what is sent (a site's `/api` rewrite forwards it), and a host with no
 // rewrite (the product site) calls `configureApiBase(<backend origin>)` once at bootstrap to
-// send them to the backend directly. One setting, read where requests are made.
+// send them to the backend directly. One setting, read where requests are made; the cookie
+// session's sign-in routes stay same-origin (the full contract is in @adh-sdk/auth's api-base.ts).
 export { apiBase, apiUrl, configureApiBase } from "./http";
 
 // Request/response shaping shared by the CRUD clients.
