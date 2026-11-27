@@ -252,6 +252,36 @@ describe('ProductAdminAuthProvider', () => {
     expect(navigate).not.toHaveBeenCalled()
   })
 
+  it('never joins an in-flight request for another auth base; it sends its own after that one answers', async () => {
+    let releaseA: (r: Response) => void = () => undefined
+    fetchMock.mockImplementation(async (url: string) => {
+      if (url === '/a/auth/session') return new Promise<Response>((r) => (releaseA = r))
+      if (url === '/b/auth/session') return json(200, { accessToken: 'tok-b', expiresAt: Math.floor(Date.now() / 1000) + 3600 })
+      if (url === '/api/v1/account') return json(200, account(['admin']))
+      throw new Error(`unexpected fetch ${url}`)
+    })
+    const first = render(
+      <ProductAdminAuthProvider authBase="/a/auth" navigate={navigate}>
+        <Probe />
+      </ProductAdminAuthProvider>,
+    )
+    expect(callsTo('/a/auth/session')).toHaveLength(1)
+    first.unmount()
+    render(
+      <ProductAdminAuthProvider authBase="/b/auth" navigate={navigate}>
+        <Probe />
+      </ProductAdminAuthProvider>,
+    )
+    // Serialised behind /a/auth's request, not joined to it.
+    expect(callsTo('/b/auth/session')).toHaveLength(0)
+    await act(async () => {
+      releaseA(json(200, { accessToken: 'tok-a', expiresAt: Math.floor(Date.now() / 1000) + 3600 }))
+    })
+    await waitFor(() => expect(seen?.status).toBe('ready'))
+    expect(callsTo('/b/auth/session')).toHaveLength(1)
+    expect(readAccessToken()).toBe('tok-b')
+  })
+
   it("installs its token source before a child's first effect, so no stored token leaks out", async () => {
     // Another session's token in the shared storage key: before the fix a child's mount query
     // sent it, since the source was not yet installed.

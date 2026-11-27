@@ -125,14 +125,15 @@ function toAccount(w: ProductAdminAccountWire): ProductAdminAccount {
 /** A session from `POST <authBase>/session`; null is its 401, no session. */
 type SessionAnswer = { accessToken: string; expiresAt: unknown } | null
 
-// The one `POST <authBase>/session` in flight in this page, shared by every caller until it
-// answers. One site has one auth base, so one request serves every mount. It lives at module
-// scope, not in a mount, because the site's auth handlers ROTATE the
-// refresh cookie: a second POST sent before the first answers presents a cookie that has just
-// been spent, and the server takes that as a lost session. A StrictMode remount, or an unmount
-// and a new provider while a request is out, therefore joins this request; each mount decides for
-// itself (by its generation) whether to adopt what comes back.
-let sessionRequest: Promise<SessionAnswer> | null = null
+// The `POST <authBase>/session` in flight in this page, keyed by its URL and shared by every
+// caller for that URL until it answers. It lives at module scope, not in a mount, because the
+// site's auth handlers ROTATE the refresh cookie: a second POST sent before the first answers
+// presents a cookie that has just been spent, and the server takes that as a lost session. A
+// StrictMode remount, or an unmount and a new provider while a request is out, therefore joins
+// this request; each mount decides for itself (by its generation) whether to adopt what comes
+// back. A provider with a different auth base never joins another base's request: it sends its
+// own, after that one answers.
+const sessionRequests = new Map<string, Promise<SessionAnswer>>()
 
 /** The Web Lock every tab of the site takes around a request that spends the refresh cookie. */
 const PRODUCT_ADMIN_SESSION_LOCK = 'adh-product-admin-session'
@@ -155,9 +156,14 @@ function withSessionLock<T>(fn: () => Promise<T>): Promise<T> {
 }
 
 function requestSession(authBase: string): Promise<SessionAnswer> {
-  if (sessionRequest) return sessionRequest
   const url = `${authBase}/session`
+  const joined = sessionRequests.get(url)
+  if (joined) return joined
+  // Another base's request still out is waited for, so even without Web Locks no two
+  // cookie-spending requests from this page overlap.
+  const others = [...sessionRequests.values()].map((p) => p.catch(() => undefined))
   const req = (async (): Promise<SessionAnswer> => {
+    await Promise.all(others)
     const res = await withSessionLock(() =>
       fetch(url, { method: 'POST', credentials: 'include' }),
     )
@@ -169,9 +175,9 @@ function requestSession(authBase: string): Promise<SessionAnswer> {
     }
     return { accessToken: body.accessToken, expiresAt: body.expiresAt }
   })().finally(() => {
-    if (sessionRequest === req) sessionRequest = null
+    if (sessionRequests.get(url) === req) sessionRequests.delete(url)
   })
-  sessionRequest = req
+  sessionRequests.set(url, req)
   return req
 }
 
@@ -288,7 +294,7 @@ export function ProductAdminAuthProvider({ children, authBase: rawAuthBase, navi
     try {
       // Let that refresh finish at the server first, so <authBase>/signout revokes the refresh
       // cookie it rotated to rather than the one it spent.
-      await sessionRequest?.catch(() => undefined)
+      await sessionRequests.get(`${authBase}/session`)?.catch(() => undefined)
       await withSessionLock(() => fetch(`${authBase}/signout`, { method: 'POST', credentials: 'include' }))
     } finally {
       adopt(null)
