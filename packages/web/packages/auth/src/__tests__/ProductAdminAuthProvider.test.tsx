@@ -402,6 +402,34 @@ describe('ProductAdminAuthProvider', () => {
     ])
   })
 
+  it('drops a trailing slash on authBase from every URL it builds', async () => {
+    routes({
+      '/admin/auth/session': () => json(200, { accessToken: 'tok-1', expiresAt: Math.floor(Date.now() / 1000) + 3600 }),
+      '/api/v1/account': () => json(200, account(['admin'])),
+      '/admin/auth/signout': () => new Response(null, { status: 204 }),
+    })
+    render(
+      <ProductAdminAuthProvider authBase="/admin/auth/" navigate={navigate}>
+        <Probe />
+      </ProductAdminAuthProvider>,
+    )
+    await waitFor(() => expect(seen?.status).toBe('ready'))
+    act(() => seen!.stepUp('/admin/support'))
+    expect(navigate).toHaveBeenLastCalledWith(
+      '/admin/auth/signin?return=%2Fadmin%2Fsupport&prompt=login&max_age=600',
+    )
+    await act(async () => {
+      await seen?.signOut()
+    })
+    expect(navigate).toHaveBeenLastCalledWith('/admin/auth/signin')
+    expect(fetchMock.mock.calls.map(([u]) => u)).toEqual([
+      '/admin/auth/session',
+      '/api/v1/account',
+      '/admin/auth/signout',
+    ])
+    expect(stepUpSigninUrl('/admin/auth//', '/x')).toBe('/admin/auth/signin?return=%2Fx&prompt=login&max_age=600')
+  })
+
   it('reads as null outside the provider through the optional hook', () => {
     let optional: ProductAdminAuthValue | null | undefined
     function OptionalProbe() {

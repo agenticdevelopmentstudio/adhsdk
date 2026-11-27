@@ -60,18 +60,26 @@ export interface ProductAdminAuthValue {
   stepUp: (returnPath?: string) => void
 }
 
+/** `authBase` without its trailing slashes, so `/admin/auth/` builds `/admin/auth/session`, never
+ *  `/admin/auth//session`. Every URL built from an auth base goes through this. */
+function normalizeAuthBase(authBase: string): string {
+  return authBase.replace(/\/+$/, '')
+}
+
 /**
  * The sign-in URL for a step-up: `prompt=login` makes the login ask again even with a live
- * session, and `max_age=600` matches the backend's ten-minute window.
+ * session, and `max_age=600` matches the backend's ten-minute window. A trailing slash on
+ * `authBase` is dropped.
  */
 export function stepUpSigninUrl(authBase: string, returnPath: string): string {
-  return `${authBase}/signin?return=${encodeURIComponent(returnPath)}&prompt=login&max_age=600`
+  return `${normalizeAuthBase(authBase)}/signin?return=${encodeURIComponent(returnPath)}&prompt=login&max_age=600`
 }
 
 export interface ProductAdminAuthProviderProps {
   children: ReactNode
   /**
-   * Where the site's auth route handlers are mounted, e.g. `/admin/auth`. No trailing slash.
+   * Where the site's auth route handlers are mounted, e.g. `/admin/auth`. A trailing slash is
+   * dropped, so `/admin/auth/` means the same.
    * Required, not defaulted, so a host that forgets it fails to compile rather than calling the
    * wrong path.
    */
@@ -172,7 +180,9 @@ function currentPath(): string {
   return `${window.location.pathname}${window.location.search}`
 }
 
-export function ProductAdminAuthProvider({ children, authBase, navigate }: ProductAdminAuthProviderProps) {
+export function ProductAdminAuthProvider({ children, authBase: rawAuthBase, navigate }: ProductAdminAuthProviderProps) {
+  // Normalised once; every URL below is built from this. A string, so it is a stable dependency.
+  const authBase = normalizeAuthBase(rawAuthBase)
   // `navigate` is read through a ref, never as a dependency: a host that passes an inline arrow
   // hands in a new function every render, and since every refresh re-renders (it adopts a
   // token), a dependency on it would re-run the mount effect and refresh again, forever.
