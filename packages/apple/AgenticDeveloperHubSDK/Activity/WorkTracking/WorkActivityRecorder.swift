@@ -62,7 +62,7 @@ public final class WorkActivityRecorder {
     private let now: () -> Date
     private let timeZone: () -> TimeZone
     private let onWriteFailure: @Sendable (Error) -> Void
-    private let log = Logger(subsystem: "com.agentic-cookbook.toolkit", category: "work-activity")
+    private let log = Logger(subsystem: "com.agenticdevelopmentstudio.toolkit", category: "work-activity")
 
     private var builder = ActivitySpanBuilder()
     private var current: ActivitySpanDTO?

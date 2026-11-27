@@ -356,7 +356,7 @@ public final class WorkTrackingController {
         }
     }
 
-    private nonisolated static let logger = Logger(subsystem: "com.agentic-cookbook.toolkit",
+    private nonisolated static let logger = Logger(subsystem: "com.agenticdevelopmentstudio.toolkit",
                                                    category: "work-tracking")
 
     private nonisolated static func logFailure(_ what: String, _ error: Error) {

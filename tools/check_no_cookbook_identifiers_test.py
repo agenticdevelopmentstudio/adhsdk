@@ -1,7 +1,8 @@
 """No identifier in the toolkit may still say agentic-cookbook / agenticcookbook.
 
 Excluded: the cookbook's own domain and repo name (references to a different
-project), archived docs and session logs (history), the historical-bug fixtures
+project), Stenographer's pre-rename label (read to migrate an old install),
+recipe history rows that record the rename, archived docs and session logs (history), the historical-bug fixtures
 in tools/check_doc_subpaths*, docs/web/migrate-consumer.md (its "old" columns
 quote the pre-rename package scope on purpose), and the one real
 `LEGACY_THEME_ID` line in the adh themes module, which maps a persisted
@@ -20,6 +21,12 @@ ALLOWED = (
     re.compile(r"agenticdevelopmentstudio/agenticcookbook"),
     re.compile(r"Development/projects/agenticcookbook"),
     re.compile(r"\(agenticcookbook `cookr` branch"),
+    re.compile(r"agenticcookbook PR #\d+"),
+    # Stenographer's pre-rename label, still read so an old install's support,
+    # logs, launch agents and keychain items are found and migrated.
+    re.compile(r"com\.agentic-cookbook\.stenographer", re.IGNORECASE),
+    # Recipe history rows record the rename itself.
+    re.compile(r"renamed off agentic-cookbook"),
 )
 # Files that quote the old name on purpose (historical-bug fixtures).
 ALLOWED_FILE_PREFIXES = ("tools/check_doc_subpaths", "docs/web/migrate-consumer.md")

@@ -46,7 +46,7 @@ public final class SystemNotificationPresenter: NSObject, NoticePresenter, UNUse
     private var started = false
     private nonisolated(unsafe) var activeObserver: NSObjectProtocol?
     private let logger = Logger(
-        subsystem: "com.agentic-cookbook.AgenticDeveloperHubSDK", category: "SystemNotificationPresenter")
+        subsystem: "AgenticDeveloperHubSDK", category: "SystemNotificationPresenter")
 
     /// Called once per denial episode when Notification Center is off for the
     /// host app, so the host can say so.
@@ -63,7 +63,7 @@ public final class SystemNotificationPresenter: NSObject, NoticePresenter, UNUse
 
     /// The category every banner is posted under. It asks for the dismiss
     /// callback, so a banner the user clears comes back as a close.
-    static let categoryIdentifier = "com.agentic-cookbook.notice"
+    static let categoryIdentifier = "com.agenticdevelopmentstudio.notice"
 
     /// Posts through `UNUserNotificationCenter.current()`, which is touched
     /// only once the first notice is shown.

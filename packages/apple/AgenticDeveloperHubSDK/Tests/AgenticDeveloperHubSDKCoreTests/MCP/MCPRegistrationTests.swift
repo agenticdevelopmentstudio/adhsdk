@@ -28,7 +28,7 @@ final class MCPRegistrationTests: XCTestCase {
     }
 
     func testAPathWithSpacesIsOneShellWordInTheHelper() throws {
-        let path = "/Users/a/Library/Application Support/com.agentic-cookbook.adhd.dev/adhd"
+        let path = "/Users/a/Library/Application Support/com.agenticdevelopmentstudio.adhd.dev/adhd"
         let json = MCPRegistration.entryJSON(channel: .release, adhdPath: path)
         let entry = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(json.utf8)) as? [String: String])
         XCTAssertEqual(entry["headersHelper"], "'\(path)' mcp headers")
