@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 import { Button } from "@adh-sdk/ui/components/button";
 import { Card, CardContent } from "@adh-sdk/ui/components/card";
@@ -37,7 +37,7 @@ export function SettingRow({
   label: string;
   help: ReactNode;
   children: ReactNode;
-}) {
+}): ReactElement {
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
       <div className="min-w-0">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useMemo, useState, type FormEvent, type ReactElement, type ReactNode } from "react";
 import { TriangleAlert } from "lucide-react";
 
 import { revalidateResources, useResourceList } from "@adh-sdk/data";
@@ -90,7 +90,7 @@ export function ProductSitePane({
   productName?: string;
   /** The pane's blurb, shown when there is no product name to write the pane's own. */
   help?: ReactNode;
-}) {
+}): ReactElement {
   if (!ecosystemId) {
     return (
       <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6">

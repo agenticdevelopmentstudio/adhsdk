@@ -14,7 +14,13 @@
 // `{ error: { code, message } }`. ProductSiteError keeps the status, the code and that sentence,
 // so the pane shows what the backend wrote.
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseMutationResult,
+  type UseQueryResult,
+} from "@tanstack/react-query";
 import { authedJson, httpStatus, isNotFound, withV1Query } from "../http";
 
 export interface ProductSiteWire {
@@ -123,7 +129,9 @@ export const PRODUCT_SITE_KEY = (ecosystemId: string) => ["product-sites", ecosy
  * a retry only doubles the failed requests. The error is a ProductSiteError for an HTTP refusal,
  * or a plain Error when the request never got an answer (the network).
  */
-export function useProductSite(ecosystemId: string | null | undefined) {
+export function useProductSite(
+  ecosystemId: string | null | undefined,
+): UseQueryResult<ProductSite, ProductSiteError | Error> {
   return useQuery<ProductSite, ProductSiteError | Error>({
     queryKey: PRODUCT_SITE_KEY(ecosystemId ?? ""),
     queryFn: () => productSiteApi.get(ecosystemId as string),
@@ -136,7 +144,9 @@ export function useProductSite(ecosystemId: string | null | undefined) {
  * Change the site; writes the answer straight into the cache. The error is typed as in
  * `useProductSite`: a ProductSiteError, or a plain Error for a network failure.
  */
-export function useUpdateProductSite(ecosystemId: string) {
+export function useUpdateProductSite(
+  ecosystemId: string,
+): UseMutationResult<ProductSite, ProductSiteError | Error, ProductSiteUpdate> {
   const qc = useQueryClient();
   return useMutation<ProductSite, ProductSiteError | Error, ProductSiteUpdate>({
     mutationFn: (body) => productSiteApi.update(ecosystemId, body),
