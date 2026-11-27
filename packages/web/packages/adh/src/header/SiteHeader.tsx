@@ -276,12 +276,15 @@ export function SiteHeader({
   // the card; a `return_to` link means "bounce me back once recognized"). See
   // adh/docs/platform/login-and-return.md. Deterministic prod host on SSR/first render
   // (mirrors the hub hrefs above), env-aware once mounted. Skipped when the site
-  // drives auth itself (onLogin/onSignup handler) or overrides the href.
-  const selfReturn = hostname
-    ? siteUrl(siteId, siteHomePath(siteId), hostname)
-    : siteProdUrl(siteId, siteHomePath(siteId))
+  // drives auth itself (onLogin/onSignup handler) or overrides the href — skipped for real:
+  // the site's own URL is built only when a default href is, because a wildcard site (every
+  // product's own site) has no single URL and the registry refuses to name one.
+  const selfReturn = (): string =>
+    hostname
+      ? siteUrl(siteId, siteHomePath(siteId), hostname)
+      : siteProdUrl(siteId, siteHomePath(siteId))
   const hubAuthHref = (path: string): string =>
-    `${resolveHubHref(path)}?return_to=${encodeURIComponent(selfReturn)}`
+    `${resolveHubHref(path)}?return_to=${encodeURIComponent(selfReturn())}`
   const resolvedLoginHref = loginHref ?? (onLogin ? undefined : hubAuthHref('/login'))
   const resolvedSignupHref = signupHref ?? (onSignup ? undefined : hubAuthHref('/signup'))
 

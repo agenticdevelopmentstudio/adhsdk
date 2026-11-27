@@ -125,16 +125,42 @@ describe('SiteHeader', () => {
     }
   })
 
-  it('refuses a wildcard site loudly rather than render a header with no URL of its own', () => {
+  // The refusal is for the default Login / Sign up hrefs only, the one place the header needs
+  // the site's own URL (their return_to). A wildcard site that hands in its own auth, as hrefs
+  // or as handlers, renders: nothing else in the header needs that URL.
+  it('refuses a wildcard site loudly when it would need the site\'s own URL for Login', () => {
     const wildcards = SITES.filter((s) => isWildcardSite(s))
     expect(wildcards.length).toBeGreaterThan(0)
     const quiet = vi.spyOn(console, 'error').mockImplementation(() => undefined)
     try {
       for (const site of wildcards) {
         expect(() => render(<SiteHeader siteId={site.id} />)).toThrow(`${site.id} is a wildcard site; it has no single URL`)
+        expect(() => render(<SiteHeader siteId={site.id} loginHref="/login" />)).toThrow(
+          `${site.id} is a wildcard site; it has no single URL`,
+        )
       }
     } finally {
       quiet.mockRestore()
+    }
+  })
+
+  it('renders a wildcard site that brings its own Login and Sign up', () => {
+    for (const site of SITES.filter((s) => isWildcardSite(s))) {
+      const hrefs = render(<SiteHeader siteId={site.id} loginHref="/login" signupHref="/signup" />)
+      expect(headerProps.current?.loginHref).toBe('/login')
+      expect(headerProps.current?.signupHref).toBe('/signup')
+      expect(headerProps.current?.pageTitle).toBe(site.label)
+      hrefs.unmount()
+      // The handlers come from the site's auth source (onSignup could also be a prop).
+      const handlers = render(
+        <SiteHeader
+          siteId={site.id}
+          useAuthSource={(): HeaderAuthState => ({ user: null, onLogin: () => {}, onSignup: () => {} })}
+        />,
+      )
+      expect(headerProps.current?.loginHref).toBeUndefined()
+      expect(headerProps.current?.signupHref).toBeUndefined()
+      handlers.unmount()
     }
   })
 
