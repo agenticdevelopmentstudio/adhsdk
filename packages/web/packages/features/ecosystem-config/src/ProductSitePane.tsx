@@ -22,6 +22,7 @@ import { signupEmailError } from "./client-auth-model";
 import { ProductTotalsPane } from "./ProductTotalsPane";
 import { RoleHolders, isAdminRole } from "./ProductRolesPane";
 import { signupListKey } from "./SignupListPane";
+import { ProductDomainsSection } from "./ProductDomainsSection";
 
 /** The pane's one product-site write, shared by the handle and the console switch. */
 type SiteUpdate = ReturnType<typeof useUpdateProductSite>;
@@ -44,29 +45,39 @@ const wordsFor = (productName: string | undefined): ProductWords =>
     : { name: "this product", its: "this product's", Its: "This product's" };
 
 /**
- * The address a handle gives the product, on the base domain `primaryOrigin` is on:
+ * The address a handle gives the product, on the base domain `subdomainOrigin` is on:
  * `https://temporal.example.com` with handle `temporal` and `next` = `temporal-app` is
- * `https://temporal-app.example.com`. Null when the backend has no base domain.
+ * `https://temporal-app.example.com`. Null when the backend has no base domain. It reads the
+ * subdomain, not `primaryOrigin`, which is a custom domain once one is primary.
  */
-function originForHandle(site: Pick<ProductSite, "handle" | "primaryOrigin">, next: string): string | null {
+function originForHandle(site: Pick<ProductSite, "handle" | "subdomainOrigin">, next: string): string | null {
   const suffix = baseDomainSuffix(site);
-  if (suffix === null || site.primaryOrigin === null) return null;
-  const scheme = site.primaryOrigin.slice(0, site.primaryOrigin.indexOf("//") + 2);
+  if (suffix === null || site.subdomainOrigin === null) return null;
+  const scheme = site.subdomainOrigin.slice(0, site.subdomainOrigin.indexOf("//") + 2);
   return `${scheme}${next}${suffix}`;
 }
 
 /** `.example.com` for `https://temporal.example.com`: what follows the handle in the host. */
-function baseDomainSuffix(site: Pick<ProductSite, "handle" | "primaryOrigin">): string | null {
-  if (site.primaryOrigin === null) return null;
-  let host: string;
-  try {
-    host = new URL(site.primaryOrigin).host;
-  } catch {
-    return null;
-  }
+function baseDomainSuffix(site: Pick<ProductSite, "handle" | "subdomainOrigin">): string | null {
+  const host = hostOf(site.subdomainOrigin);
+  if (host === null) return null;
   const lead = `${site.handle}.`;
   return host.startsWith(lead) ? host.slice(site.handle.length) : null;
 }
+
+/** The host of an origin, or null for none or one that does not parse. */
+function hostOf(origin: string | null): string | null {
+  if (origin === null) return null;
+  try {
+    return new URL(origin).host;
+  } catch {
+    return null;
+  }
+}
+
+/** Whether a custom domain is primary: the primary is not the product's own subdomain. */
+const customPrimary = (site: Pick<ProductSite, "primaryOrigin" | "subdomainOrigin">): boolean =>
+  site.primaryOrigin !== null && site.subdomainOrigin !== null && site.primaryOrigin !== site.subdomainOrigin;
 
 /**
  * A product's PRODUCT SITE at the hub (product sites phase 5), for its managers: the address
@@ -135,6 +146,7 @@ function ProductSiteBody({
             {/* Keyed on the handle so a rename's answer starts the field afresh. */}
             <Handle key={site.handle} update={update} site={site} words={words} />
             <AdminConsole ecosystemId={ecosystemId} update={update} site={site} words={words} />
+            <ProductDomainsSection ecosystemId={ecosystemId} site={site} productName={productName} />
           </>
         )}
         <ProductAdmins ecosystemId={ecosystemId} words={words} />
@@ -168,6 +180,12 @@ function Address({ site, words }: { site: ProductSite; words: ProductWords }) {
         </a>
         .
       </p>
+      {customPrimary(site) && (
+        <p className="text-sm text-apt-text-muted">
+          {"Also at "}
+          <span className="font-mono">{site.subdomainOrigin}</span>.
+        </p>
+      )}
       <List>
         {links.map((link) => (
           <ListItem key={link.href}>
@@ -193,8 +211,10 @@ function Handle({ update, site, words }: { update: SiteUpdate; site: ProductSite
   const [confirming, setConfirming] = useState(false);
   const next = draft.trim().toLowerCase();
   const suffix = baseDomainSuffix(site);
-  const oldAddress = site.primaryOrigin ?? site.handle;
+  // The rename moves the product's own subdomain; a custom primary domain stays where it is.
+  const oldAddress = site.subdomainOrigin ?? site.handle;
   const newAddress = originForHandle(site, next) ?? next;
+  const primaryHost = customPrimary(site) ? hostOf(site.primaryOrigin) : null;
   const busy = update.isPending;
 
   const onCancel = () => {
@@ -271,6 +291,13 @@ function Handle({ update, site, words }: { update: SiteUpdate; site: ProductSite
             <span className="font-mono">{oldAddress}</span>
             {" answers “not found” at once. Nothing redirects from it: links, bookmarks, saved sign-in pages and support emails already sent all break. The new address is "}
             <span className="font-mono">{newAddress}</span>.
+            {primaryHost && (
+              <>
+                {" "}
+                <span className="font-mono">{primaryHost}</span>
+                {" stays the primary address."}
+              </>
+            )}
           </AlertDescription>
         </Alert>
       )}

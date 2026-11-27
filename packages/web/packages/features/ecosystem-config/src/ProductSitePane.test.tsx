@@ -54,6 +54,12 @@ vi.mock("@adh-sdk/data/product-sites", async (importOriginal) => {
   };
 });
 
+// The Custom domain section has its own tests and its own data; here it is a marker, so the pane's
+// tests see only where it sits.
+vi.mock("./ProductDomainsSection", () => ({
+  ProductDomainsSection: () => <div data-testid="product-domains-section" />,
+}));
+
 vi.mock("@adh-sdk/data/product-admin", () => ({
   useProductTotals: vi.fn(() => ({ data: undefined, error: null, isPending: true })),
 }));
@@ -82,6 +88,7 @@ const siteOf = (over: Partial<ProductSite> = {}): ProductSite => ({
   ecosystemId: eco(),
   handle: "temporal",
   primaryOrigin: ORIGIN,
+  subdomainOrigin: ORIGIN,
   adminEnabled: false,
   adminClientId: null,
   consoleLive: false,
@@ -194,7 +201,7 @@ describe("ProductSitePane", () => {
   });
 
   it("with no base domain: says the address is not configured, and shows no links", async () => {
-    api.get.mockResolvedValue(siteOf({ primaryOrigin: null }));
+    api.get.mockResolvedValue(siteOf({ primaryOrigin: null, subdomainOrigin: null }));
     renderPane(<ProductSitePane ecosystemId={eco()} productName="Temporal" />);
     expect(await screen.findByText(/The product sites address is not configured on this server/)).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /\/login$/ })).toBeNull();
@@ -203,7 +210,13 @@ describe("ProductSitePane", () => {
 
   // Mockup state 4.
   it("rename: the warning names both addresses, and the confirm sends the handle", async () => {
-    api.update.mockResolvedValue(siteOf({ handle: "temporal-app", primaryOrigin: "https://temporal-app.agenticdeveloperhub.com" }));
+    api.update.mockResolvedValue(
+      siteOf({
+        handle: "temporal-app",
+        primaryOrigin: "https://temporal-app.agenticdeveloperhub.com",
+        subdomainOrigin: "https://temporal-app.agenticdeveloperhub.com",
+      }),
+    );
     renderPane(<ProductSitePane ecosystemId={eco()} productName="Temporal" />);
     fireEvent.click(await screen.findByRole("button", { name: "Rename" }));
     fireEvent.change(screen.getByLabelText("Handle"), { target: { value: " Temporal-App " } });
@@ -217,6 +230,52 @@ describe("ProductSitePane", () => {
     await waitFor(() => expect(api.update).toHaveBeenCalledWith(eco(), { handle: "temporal-app" }));
     expect(await screen.findByRole("link", { name: "https://temporal-app.agenticdeveloperhub.com" })).toBeInTheDocument();
     await waitFor(() => expect(screen.queryByText("The old address stops working.")).toBeNull());
+  });
+
+  it("renders the Custom domain section once the site has loaded", async () => {
+    renderPane(<ProductSitePane ecosystemId={eco()} productName="Temporal" />);
+    expect(await screen.findByTestId("product-domains-section")).toBeInTheDocument();
+  });
+
+  describe("with a custom domain primary", () => {
+    const CUSTOM = "https://app.temporal.com";
+    beforeEach(() => {
+      api.get.mockResolvedValue(siteOf({ primaryOrigin: CUSTOM, subdomainOrigin: ORIGIN }));
+    });
+
+    it("the address links follow the custom domain, and the subdomain is named too", async () => {
+      renderPane(<ProductSitePane ecosystemId={eco()} productName="Temporal" />);
+      expect(await screen.findByRole("link", { name: CUSTOM })).toHaveAttribute("href", CUSTOM);
+      expect(screen.getByRole("link", { name: `${CUSTOM}/login` })).toBeInTheDocument();
+      expect(screen.getByText(/^Also at/)).toBeInTheDocument();
+      expect(screen.getByText(ORIGIN)).toBeInTheDocument();
+    });
+
+    it("the handle keeps the subdomain's suffix", async () => {
+      renderPane(<ProductSitePane ecosystemId={eco()} productName="Temporal" />);
+      expect(await screen.findByText(".agenticdeveloperhub.com")).toBeInTheDocument();
+    });
+
+    it("the rename warning names the subdomain, and says the custom domain stays primary", async () => {
+      renderPane(<ProductSitePane ecosystemId={eco()} productName="Temporal" />);
+      fireEvent.click(await screen.findByRole("button", { name: "Rename" }));
+      fireEvent.change(screen.getByLabelText("Handle"), { target: { value: "temporal-app" } });
+      expect(screen.getByText("The old address stops working.")).toBeInTheDocument();
+      // The subdomain twice: the Address group's "Also at" line and the warning's old address.
+      expect(screen.getAllByText(ORIGIN)).toHaveLength(2);
+      expect(screen.getByText("https://temporal-app.agenticdeveloperhub.com")).toBeInTheDocument();
+      expect(screen.getByText("app.temporal.com")).toBeInTheDocument();
+      expect(screen.getByText(/stays the primary address\./)).toBeInTheDocument();
+    });
+  });
+
+  it("with the subdomain primary, the warning says nothing of a primary staying", async () => {
+    renderPane(<ProductSitePane ecosystemId={eco()} productName="Temporal" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Rename" }));
+    fireEvent.change(screen.getByLabelText("Handle"), { target: { value: "temporal-app" } });
+    expect(screen.getByText("The old address stops working.")).toBeInTheDocument();
+    expect(screen.queryByText(/stays the primary address/)).toBeNull();
+    expect(screen.queryByText(/^Also at/)).toBeNull();
   });
 
   it("a cancelled rename confirm sends nothing", async () => {
