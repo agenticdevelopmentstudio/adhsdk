@@ -5,6 +5,7 @@ import { httpStatus } from "@adh-sdk/data";
 import {
   accessTable,
   grantState,
+  localDay,
   publicSupportApi,
   type SupportAccess,
   type SupportAdminGrant,
@@ -14,6 +15,7 @@ import { Input } from "@adh-sdk/ui/components/input";
 import { Label } from "@adh-sdk/ui/components/label";
 import { ErrorText } from "@adh-sdk/ui/components/error-text";
 import { hoursPhrase } from "./GrantCard";
+import { tableWords } from "./AccessLogList";
 
 /**
  * The body of the hosted support page, mounted by the hub's and each product site's `/support`:
@@ -81,14 +83,6 @@ function actionMessage(err: unknown, fallback: string): string {
     return "That code was not accepted. Check it, or send a new one.";
   }
   return fallback;
-}
-
-/** A local calendar day, `YYYY-MM-DD`, for grouping. */
-function localDay(iso: string): string {
-  const d = new Date(iso);
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${d.getFullYear()}-${mm}-${dd}`;
 }
 
 /** The reads grouped by the viewer's local day, newest day first and newest read first in each. */
@@ -172,7 +166,7 @@ function ReadLog({ reads }: { reads: readonly SupportAccess[] }): ReactElement {
                     {timeLabel(read.at)}
                     {" — "}
                     {read.granteeName ? `${read.granteeName} viewed ` : "Viewed "}
-                    {where ? where.table.replace(/_/g, " ") : "your account"}
+                    {where ? tableWords(where.table) : "your account"}
                   </li>
                 );
               })}

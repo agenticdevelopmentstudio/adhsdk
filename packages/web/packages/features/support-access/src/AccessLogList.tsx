@@ -34,7 +34,7 @@ export function dayPhrase(dayKey: string, now: Date = new Date()): string {
 }
 
 /** A table as a person reads it: `chat_messages` is "chat messages". */
-const tableWords = (table: string | null) => (table ? table.replace(/_/g, " ") : "content");
+export const tableWords = (table: string | null): string => (table ? table.replace(/_/g, " ") : "content");
 
 /** "Ana from Support viewed your notes, 3 times on Tuesday." */
 export function describeAccess(

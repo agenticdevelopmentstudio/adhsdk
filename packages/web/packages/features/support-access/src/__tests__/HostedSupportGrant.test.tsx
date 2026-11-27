@@ -249,6 +249,17 @@ describe("HostedSupportGrant", () => {
     expect(screen.getAllByTestId("support-read")).toHaveLength(1);
   });
 
+  it("the read log names a table in words, and a read with no table as your account", async () => {
+    const at = new Date(now - 10 * 60_000).toISOString();
+    const noTable = { ...read("r-2", at), path: "/support/grants/g-1/profile" };
+    api.get.mockResolvedValue({ grant: live(), reads: [read("r-1", at, "chat_messages"), noTable] });
+    render(<HostedSupportGrant grantId="g-1" token="tok" />);
+    await screen.findByText("Live");
+    const lines = screen.getAllByTestId("support-read").map((li) => li.textContent);
+    expect(lines.some((t) => t?.endsWith("Ana viewed chat messages"))).toBe(true);
+    expect(lines.some((t) => t?.endsWith("Ana viewed your account"))).toBe(true);
+  });
+
   it("an action refused for rate limiting keeps the state and says so in one line", async () => {
     api.get.mockResolvedValue({ grant: live(), reads: [] });
     api.revoke.mockRejectedValue(httpError(429, "rate_limited"));
