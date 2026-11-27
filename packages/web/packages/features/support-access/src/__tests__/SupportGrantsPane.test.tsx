@@ -184,12 +184,12 @@ describe("SupportGrantsPane: the request", () => {
     expect(hooks.request).not.toHaveBeenCalled();
   });
 
-  it("sends a step_up_required refusal through stepUp('/support')", async () => {
+  it("sends a step_up_required refusal through stepUp('/admin/support')", async () => {
     hooks.request.mockRejectedValueOnce(new AuthHttpError(403, "Sign in again", "step_up_required"));
     renderPane();
     fillForm();
     submit();
-    await waitFor(() => expect(hooks.stepUp).toHaveBeenCalledWith("/support"));
+    await waitFor(() => expect(hooks.stepUp).toHaveBeenCalledWith("/admin/support"));
     expect(within(form()).queryByRole("alert")).toBeNull();
   });
 

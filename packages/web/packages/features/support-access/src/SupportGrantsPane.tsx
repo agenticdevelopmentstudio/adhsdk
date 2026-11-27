@@ -45,7 +45,7 @@ const message = (err: unknown) => (err instanceof Error && err.message ? err.mes
 export interface SupportGrantsPaneProps {
   /** The product (ecosystem) uuid. */
   ecosystemId: string;
-  /** Where a step-up sign-in comes back to. Defaults to `/support`, the page this pane is. */
+  /** Where a step-up sign-in comes back to. Defaults to `/admin/support`, where the admin console serves this pane. */
   returnPath?: string;
   /** Overrides the step-up; by default the pane calls the ProductAdminAuthProvider's `stepUp`. */
   onStepUp?: (returnPath: string) => void;
@@ -60,7 +60,7 @@ export interface SupportGrantsPaneProps {
  */
 export function SupportGrantsPane({
   ecosystemId,
-  returnPath = "/support",
+  returnPath = "/admin/support",
   onStepUp,
 }: SupportGrantsPaneProps): ReactElement {
   const auth = useOptionalProductAdminAuth();
