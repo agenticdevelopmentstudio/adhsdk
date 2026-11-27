@@ -93,6 +93,12 @@ public final class EventStore: @unchecked Sendable {
     private static let indexes: [(name: String, sql: String)] = [
         ("events_session_time", "CREATE INDEX IF NOT EXISTS events_session_time ON events(provider, session_id, time)"),
         ("events_time", "CREATE INDEX IF NOT EXISTS events_time ON events(time)"),
+        // The event list (`claudeEvents`: one provider, newest first). Without it
+        // the planner seeks `provider` through `events_type_time` and sorts every
+        // row of the provider in a temp B-tree: 24 s for `limit=1` on a 13 GB store.
+        // The index's rowid tail gives `time DESC, id DESC` with no sort.
+        ("events_provider_time",
+         "CREATE INDEX IF NOT EXISTS events_provider_time ON events(provider, time)"),
         // The insights and rollup readers: one hook type over a time range.
         ("events_type_time",
          "CREATE INDEX IF NOT EXISTS events_type_time ON events(provider, provider_type, time)"),

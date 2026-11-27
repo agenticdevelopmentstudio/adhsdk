@@ -312,8 +312,25 @@ final class EventStoreTests: XCTestCase {
         XCTAssertEqual(try store.counts(), EventStoreCounts(sessions: 2, events: 2, turns: 2, messages: 2))
     }
 
-    private let indexNames = ["events_session_time", "events_time", "events_type_time", "turns_time",
-                              "turns_session", "messages_session_time", "messages_time"]
+    private let indexNames = ["events_session_time", "events_time", "events_provider_time", "events_type_time",
+                              "turns_time", "turns_session", "messages_session_time", "messages_time"]
+
+    /// The event list (`claudeEvents`, newest first for one provider) reads
+    /// `events_provider_time` in order. Without it the planner sorted every row of
+    /// the provider in a temp B-tree, which took 24 s on a 13 GB store.
+    func testTheEventListReadsInIndexOrderWithoutASort() throws {
+        _ = try makeStore()
+        let path = tmpDir.appendingPathComponent(EventStore.fileName).path
+        let queue = try DatabaseQueue(path: path)
+        let plan = try queue.read { conn in
+            try Row.fetchAll(conn, sql: """
+                EXPLAIN QUERY PLAN SELECT id FROM events WHERE provider = ?
+                ORDER BY time DESC, id DESC LIMIT 1 OFFSET 0
+                """, arguments: ["claude"]).map { ($0["detail"] as String?) ?? "" }
+        }
+        XCTAssertTrue(plan.contains { $0.contains("events_provider_time") }, "\(plan)")
+        XCTAssertFalse(plan.contains { $0.contains("TEMP B-TREE") }, "\(plan)")
+    }
 
     private func presentIndexes(_ path: String) throws -> Set<String> {
         let queue = try DatabaseQueue(path: path)
