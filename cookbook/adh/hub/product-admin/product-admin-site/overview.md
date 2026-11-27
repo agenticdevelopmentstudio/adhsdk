@@ -4,7 +4,7 @@ This is the feature layer of a product's admin console (phase 6) and the manager
 The pieces:
 
 - `@adh-sdk/product-admin` (`packages/web/packages/features/product-admin/src/`): `ProductUsersPane` and `PRODUCT_ADMIN_TOPICS`. The barrel is a client module; the topic list is also published at `@adh-sdk/product-admin/topics` so a server module can read it.
-- `@adh-sdk/ecosystem-config`: `ProductSitePane` (the manager's page: the product's address and its two links, the handle and its rename, the `/admin` console switch, the product's admins and its totals) and `ProductTotalsPane` (the eight figures, shown on the console's Totals page and at the foot of the Product site page).
+- `@adh-sdk/ecosystem-config`: `ProductSitePane` (the manager's page: the product's address and its two links, the handle and its rename, the `/admin` console switch, its custom domains while the `product_custom_domains` switch is on, the product's admins and its totals), `ProductDomainsSection` (the Custom domain section of that page, product sites phase 8) and `ProductTotalsPane` (the eight figures, shown on the console's Totals page and at the foot of the Product site page).
 - `@adh-sdk/adh-products` (`topics.ts`, `ProductsFeature.tsx`): the Product site topic row, `visibleProductTopics` and `runAtProductSite`, which hide the hub's people pages once the product's console is live.
 - `@adh-sdk/ecosystems`: the requests, pending and invites panes take `hideAdminRecords`.
 - `@adh-sdk/jobs` ([adhsdk.ingredient.adh.hub.jobs](cookbook:0bcb370d-a44f-48a8-a313-0266c2f86e51), phase 9): `JobStatusPane` and `JobTemplatesPane`, shown on the site's Jobs pages.

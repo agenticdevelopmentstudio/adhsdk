@@ -9,4 +9,8 @@
 - **A step-up refusal (MUST)**: a request or a revoke refused as `step_up_required` is handled as [support-step-up](#requirements/support-step-up) says.
 - **A product with no runs (MUST)**: `/admin/jobs` says there are no runs yet, and is not an error.
 - **Jobs off (MUST)**: a 404 from an `/admin/jobs` read while the `jobs_feature` switch is off says Jobs is not available, as the Jobs ingredient's switch-off-404 says.
+- **Custom domains off (MUST)**: a 404 `not_found` on the domain list hides the Custom domain section entirely, as [domains-section-hidden](#requirements/domains-section-hidden) says.
+- **A demoted domain (MUST)**: a verified domain the re-check moved back to pending shows the problem it found, and the Address group moves back to the subdomain because `primaryOrigin` does.
+- **A remove left half done (MUST)**: a domain left `removing` says so and keeps its Remove button.
+- **A custom domain is primary (MUST)**: the handle's suffix and the rename warning name the subdomain, which a rename changes, never the custom domain, which it does not.
 - **Support access off (MUST)**: a 404 on the grants read is handled as [support-switch-off](#requirements/support-switch-off) says.

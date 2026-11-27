@@ -4417,6 +4417,13 @@
           },
           "location": "packages/web/packages/features/ecosystem-config/src/ProductSitePane.tsx",
           "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/web/packages/features/ecosystem-config/src/ProductDomainsSection.tsx",
+          "platform": "web"
         }
       ],
       "kind": "ingredient",

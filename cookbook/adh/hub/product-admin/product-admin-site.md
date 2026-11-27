@@ -16,9 +16,9 @@ depends-on:
   - 2eff6ca4-5479-44b3-8636-04e455009a10
   - 150bf00e-6c6b-4f91-a323-d307ebd5700d
   - 3ea9329e-5acc-4c43-b5ce-bb8c50570104
-version: 3.0.0
+version: 3.1.0
 created: 2026-11-23
-modified: 2026-11-26
+modified: 2026-11-27
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -34,7 +34,7 @@ This is the feature layer of a product's admin console (phase 6) and the manager
 The pieces:
 
 - `@adh-sdk/product-admin` (`packages/web/packages/features/product-admin/src/`): `ProductUsersPane` and `PRODUCT_ADMIN_TOPICS`. The barrel is a client module; the topic list is also published at `@adh-sdk/product-admin/topics` so a server module can read it.
-- `@adh-sdk/ecosystem-config`: `ProductSitePane` (the manager's page: the product's address and its two links, the handle and its rename, the `/admin` console switch, the product's admins and its totals) and `ProductTotalsPane` (the eight figures, shown on the console's Totals page and at the foot of the Product site page).
+- `@adh-sdk/ecosystem-config`: `ProductSitePane` (the manager's page: the product's address and its two links, the handle and its rename, the `/admin` console switch, its custom domains while the `product_custom_domains` switch is on, the product's admins and its totals), `ProductDomainsSection` (the Custom domain section of that page, product sites phase 8) and `ProductTotalsPane` (the eight figures, shown on the console's Totals page and at the foot of the Product site page).
 - `@adh-sdk/adh-products` (`topics.ts`, `ProductsFeature.tsx`): the Product site topic row, `visibleProductTopics` and `runAtProductSite`, which hide the hub's people pages once the product's console is live.
 - `@adh-sdk/ecosystems`: the requests, pending and invites panes take `hideAdminRecords`.
 - `@adh-sdk/jobs` ([adhsdk.ingredient.adh.hub.jobs](cookbook:0bcb370d-a44f-48a8-a313-0266c2f86e51), phase 9): `JobStatusPane` and `JobTemplatesPane`, shown on the site's Jobs pages.
@@ -62,7 +62,37 @@ The pieces:
 - **product-site-rename**: Rename MUST open the handle field and a warning that the old address stops working and nothing redirects from it, naming both the old and the new address. Sending the rename MUST wait for the manager's confirmation in a warning-tone alert dialog and MUST send nothing when it is cancelled; the confirm sends `{ handle }` with the handle trimmed and lower-cased. An unchanged or empty handle MUST NOT be sendable. A refusal (400 for a malformed or reserved handle, 409 for another product's) MUST show the backend's sentence under the field and keep the field open with the draft; a success MUST close the field on the new handle.
 - **product-site-console-switch**: the "Admin console at /admin" switch MUST send `{ adminEnabled }` and show the answer; a refusal (409 `product_sites_unconfigured`, no base domain) MUST show the backend's sentence. Its help MUST say which of three states the console is in: off (the hub runs the users, roles, sign-up list and sets), on and live (the admins run them at the console's address and those rows have left the hub's rail), or on and not answering yet (the hub still runs them).
 - **product-site-admins**: the page MUST list the holders of the `admin` role, read on the ecosystem target, and MUST add an admin as a sign-up list entry carrying the admin role's id, saying the person becomes an admin the first time they sign in to the console with that address. An address already on the list MUST keep the set its entry grants; only the role changes. After the write the Sign-up list page's cached list MUST be read again, and no other list. An address that is not an email MUST be refused without a request. A product with no admin role MUST be told so.
+- **product-site-subdomain**: the handle field's suffix and the address a rename would give MUST be built from the site's `subdomainOrigin`, never from `primaryOrigin`, which is the custom domain once one is primary. The rename warning's old address MUST be `subdomainOrigin`, or the handle when it is null, and its new address the subdomain for the new handle, or the new handle when there is no base domain. When a custom domain is primary the warning MUST add "<primary host> stays the primary address."
+- **product-site-also-at**: the Address group MUST keep `primaryOrigin` for its sign-in and admin console links and the console switch's help, and when `primaryOrigin` differs from `subdomainOrigin` it MUST add the line "Also at <subdomainOrigin>."
 - **totals-pane**: `ProductTotalsPane` MUST show the eight totals (customers, new in 7 and 30 days, active in 7 and 30 days, storage, pending invitations, pending requests) for the product it is given, and MUST say when it is loading and when it could not load. It MUST also show the product's background jobs from `jobsByStatus`: a "Jobs" total, the sum of the statuses, then one count for each status in name order; when the map is empty it shows "Jobs" as 0 and no status count.
+
+### Custom domain section (manager)
+
+- **domains-section-placement**: `ProductSitePane` MUST render `ProductDomainsSection` for every product it shows, after the admin console section. The section MUST read `useProductDomains` of the product site client ([adhsdk.ingredient.adh.hub.product-sites.product-site-client](cookbook:1f689c5f-818d-4c64-918f-73bb9ec0be32)).
+- **domains-section-hidden**: while the list loads, and when it answers a 404 that `productDomainsAvailable` reads as the `product_custom_domains` switch being off, the section MUST render nothing at all, no heading, so a product without the switch never flashes one. Any other load failure MUST show the "Custom domain" heading and `ErrorText` with the human message ([domains-messages](#requirements/domains-messages)).
+- **domains-section-loaded**: once loaded the section MUST be a `FieldGroup` "Custom domain" holding, in order: the intro "<Name> can also answer at a domain you own. Its sign-in, admin console and support pages then work there too, and once the domain is verified you can make it <name>'s primary address." (the name from `wordsFor`), one box per domain, the add field when it is shown, and the guidance list.
+- **domains-add**: the add field MUST be a mono `Input` with placeholder `app.example.com` and `aria-label` "Domain", and an "Add domain" button disabled while the trimmed value is empty or an add is in flight; Enter submits. It MUST be shown while the product has fewer than five domains and none is verified. A success MUST clear the field; a refusal MUST show its human message under the field as `ErrorText`.
+- **domains-guidance**: under the boxes the section MUST always show a `List` of three items: use a subdomain such as app.example.com rather than the bare domain (one CNAME record, which every DNS provider supports; a bare domain needs an A record); on Cloudflare set the record to DNS only (the grey cloud), since the orange cloud stands in front of the domain and it can't be verified; and passkeys and security keys don't work on a custom domain, because a passkey belongs to one domain, so a customer who signs in with one there is asked for another way to sign in.
+- **domains-box**: each domain MUST be a bordered box with a globe icon, the host in mono and its badges, then the text for its state, then its records table when the state shows one, then its buttons, as this table says:
+
+  | Status | Badges | Text | Records | Buttons |
+  |---|---|---|---|---|
+  | pending | Pending (`orange`) | "Added <when>. Waiting for the records below." and the check line | yes | Check now, Remove |
+  | pending with `error` | Pending (`orange`) | "Added <when>. The last check found a problem: <error>. <Name> answers at <host> only once it is verified." and the check line | yes | Check now, Remove |
+  | verified | Verified (`success`) | "<Name> answers at https://<host>. Verified <when>. Its primary address is still <subdomain host>." | no | Make primary, Remove |
+  | verified and primary | Verified (`success`), Primary (`accent`) | "<host> is <name>'s primary address. Customers sign in there, the admin console signs in there, and support emails link there. <subdomain host> still works." | no | Remove |
+  | failed | Failed (`error`) | "The records below were not found within 7 days of adding the domain on <date>, so it is no longer checked by itself. Create them and choose Check now, or remove the domain.", then the error when there is one | yes | Check now, Remove |
+  | removing | Removing (`neutral`) | "Being removed. If this stays, choose Remove again." | no | Remove |
+
+- **domains-check-line**: a pending box's check line MUST read "Last checked <relative>; it is checked again every 10 minutes until <expiresAt date>.", and with a null `checkedAt` "It is checked every 10 minutes until <date>."
+- **domains-demoted**: a pending domain with an `error` (the 6-hourly re-check found a verified domain no longer pointing at Vercel, and moved it back to pending) MUST name the problem and MUST NOT say it is waiting for the records; its expiry date is the fresh one the backend set.
+- **domains-records**: a records table MUST have the columns Type, Name and Value, every name and value in mono with a `CopyButton` whose `getText` returns exactly the API string, with no trimming and no trailing dot added. Its last row is the ownership TXT `_adh-challenge.<host>` with `adh-domain-verification=<token>`, as the API answers it, and under the table the section MUST say "The TXT record named _adh-challenge proves the domain is yours." The table's lead MUST be "Create these records at the DNS provider for <parent>:", where the parent is the host minus its first label, or the host itself when it has two labels.
+- **domains-check**: Check now MUST call `useCheckProductDomain`, show busy and stay disabled while it runs, and show a refusal's human message under the box; the answer replaces the row, so the badges and text follow.
+- **domains-make-primary**: Make primary MUST call `useSetPrimaryProductDomain` with `primary: true`; the answer replaces the list, and a refusal shows under the box. No button sends `primary: false`.
+- **domains-remove**: Remove MUST open an `AlertModal` with `tone="error"` and `confirmVariant="destructive"`, titled "Remove <host>?". Its description MUST be, for the primary, "<Name> stops answering at <host> at once, and <subdomainOrigin> becomes its primary address again. Links to the custom domain stop working.", and otherwise "<Name> stops answering at <host> at once." The confirm, "Remove", MUST be busy while the remove runs, and nothing MUST be sent when the modal is cancelled. A refusal MUST show under the box after the modal closes.
+- **domains-times**: absolute times MUST be `toLocaleString` with day, month, hour and minute ("19 Nov, 14:05") and relative ones `Intl.RelativeTimeFormat`, each rendered as a text node.
+- **domains-text-only**: every API string (the host, each record's name and value, `error`) MUST be rendered as a React text child, never through `dangerouslySetInnerHTML`; the only link built from the API is the verified host's `https://<host>`, and only for a verified row.
+- **domains-messages**: one function, `domainErrorMessage(err, words)`, MUST map each refusal to the section's human message: `product_domain_invalid` "That isn't a domain name <name> can use. Enter one such as app.example.com."; `product_domain_local` "That name only works on a local network. Enter a public domain such as app.example.com."; `product_domain_ours` "That domain belongs to the hub. Enter a domain you own."; `product_domain_limit` "<Name> already has five domains, the most it can have. Remove one to add another."; `product_domain_taken` "Another product already uses that domain."; `product_domain_taken_elsewhere` "That domain is in use on another Vercel account, so it can't be added here."; `product_domain_vercel_unavailable` "The domain service didn't answer. Try again in a minute."; `product_domains_rate_limited` "Too many tries in the last hour. Try again later."; `product_domains_unconfigured` "Custom domains aren't set up on this server yet."; `product_domain_not_verified` "That domain isn't verified yet, so it can't be the primary address."; `product_domain_primary_race` "Another change to the primary address happened at the same time. Try again."; `product_domain_not_found` "That domain was already removed." (and the list is read again); an HTTP 403 "Only the product's managers can change its domains." Any other refusal MUST fall back to the backend's sentence, then to "Something went wrong. Try again."
 
 ### Support page
 
@@ -90,6 +120,7 @@ The users pane is a searchable table with a Previous and Next pager; each row ha
 
 - **Users pane**: loading, loaded, empty, and failed; a row is paused or active.
 - **Product site page**: no product selected; loading; failed to load; no base domain (address not configured); a site, with the console off, on and live, or on and not answering yet; the handle field closed, or open with the rename warning; and a refused handle or switch.
+- **Custom domain section**: hidden (loading, or the switch off); failed to load; loaded with no domain, or with domain boxes each pending, pending with an error, verified, verified and primary, failed or removing; the add field shown or not; a check, primary change or remove in flight; the remove confirmation open; and a refusal under the field or a box.
 - **Totals**: loading, loaded and failed.
 
 The Support page has four states: loading, loaded (grants listed), failed (the backend's message), and not available (the grants read answered 404 because consented access is off). A step-up refusal is not a state of the page: it leaves the page through the sign-in redirect and returns to `/support`.
@@ -101,7 +132,7 @@ Not applicable beyond the shared UI kit: the panes use its table, form, dialog a
 
 ## Conformance Test Vectors
 
-Vectors marked with a test name are asserted in `features/product-admin/src/__tests__/`, `features/ecosystem-config/src/ProductSitePane.test.tsx`, `features/ecosystem-config/src/ProductTotalsPane.test.tsx`, `features/adh-products/src/__tests__/topics.test.tsx` and `features/support-access/src/__tests__/SupportGrantsPane.test.tsx`. The others follow from the source.
+Vectors marked with a test name are asserted in `features/product-admin/src/__tests__/`, `features/ecosystem-config/src/ProductSitePane.test.tsx`, `features/ecosystem-config/src/ProductTotalsPane.test.tsx`, `features/ecosystem-config/src/ProductDomainsSection.test.tsx` (vectors 026 to 035, written from the phase 8 design), `features/adh-products/src/__tests__/topics.test.tsx` and `features/support-access/src/__tests__/SupportGrantsPane.test.tsx`. The others follow from the source.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -130,6 +161,17 @@ Vectors marked with a test name are asserted in `features/product-admin/src/__te
 | product-admin-site-023 | jobs-pages | The `/admin/jobs` and `/admin/jobs/templates` pages for a product (derived from the phase 9 design; the site's e2e `jobs.spec.ts`) | `/admin/jobs` mounts `JobStatusPane` and `/admin/jobs/templates` mounts `JobTemplatesPane`, each for that product; the rail has one Jobs row |
 | product-admin-site-024 | jobs-status-no-content | The `/admin/jobs` page over a product with a failed run | The run's status and error code show; no input, output or log is requested or shown |
 | product-admin-site-025 | topics-list | Every `PRODUCT_ADMIN_TOPICS` href (test: "keeps every page under /admin and off the console's auth routes") | Each starts with `/admin/` and none with `/admin/auth` |
+| product-admin-site-026 | domains-section-hidden | The list answered 404 `not_found`; then still loading; then a 500 | Nothing rendered, no "Custom domain" heading; nothing; the heading and the error message |
+| product-admin-site-027 | domains-box, domains-check-line | One domain in each status: pending with `checkedAt`, pending with a null `checkedAt`, verified, verified and primary, failed, removing | Each box shows the badges, text and buttons of its row in the table; the two check lines read as written |
+| product-admin-site-028 | domains-demoted | A pending domain with `error` "the domain's DNS no longer points at Vercel" | The text names that problem and does not say "Waiting for the records below" |
+| product-admin-site-029 | domains-records | A pending domain for `app.example.com` with a CNAME row and the `_adh-challenge.app.example.com` TXT row | The lead names `example.com`; the TXT row is last and the ownership sentence is under the table; each copy button copies the exact name or value |
+| product-admin-site-030 | domains-add | An add with an empty field; then `app.example.com` added; then an add refused with `product_domain_limit` | The button is disabled; the field clears on success; the limit message shows under the field |
+| product-admin-site-031 | domains-add | A product with a verified domain; then one with five pending domains | No add field in either |
+| product-admin-site-032 | domains-remove | Remove on the primary, then on another domain, then cancelled | The primary's description names the subdomain origin becoming the primary again; the other's names only the host; nothing is sent when cancelled |
+| product-admin-site-033 | domains-messages | Each refusal code in the table, an HTTP 403, an unknown code with a sentence, and one with no sentence | Each code's message; the managers message; the backend's sentence; "Something went wrong. Try again." |
+| product-admin-site-034 | domains-text-only | A domain whose `error` holds `<b>bad</b>` | The markup shows as text; no `b` element is rendered |
+| product-admin-site-035 | domains-check, domains-make-primary | Check now answered `verified`; then Make primary | The box becomes verified; a `PATCH` with `{ primary: true }` and the boxes follow the answered list |
+| product-admin-site-036 | product-site-subdomain, product-site-also-at | A site whose `primaryOrigin` is `https://app.example.com` and `subdomainOrigin` is `https://jots.<base>`, then a rename opened | The handle's suffix is the subdomain's; the links use the custom domain with "Also at https://jots.<base>."; the warning names the subdomain addresses and says app.example.com stays the primary address |
 ## Edge Cases
 
 - **No product selected (MUST)**: the Product site page and the totals page say so and make no request.
@@ -142,6 +184,10 @@ Vectors marked with a test name are asserted in `features/product-admin/src/__te
 - **A step-up refusal (MUST)**: a request or a revoke refused as `step_up_required` is handled as [support-step-up](#requirements/support-step-up) says.
 - **A product with no runs (MUST)**: `/admin/jobs` says there are no runs yet, and is not an error.
 - **Jobs off (MUST)**: a 404 from an `/admin/jobs` read while the `jobs_feature` switch is off says Jobs is not available, as the Jobs ingredient's switch-off-404 says.
+- **Custom domains off (MUST)**: a 404 `not_found` on the domain list hides the Custom domain section entirely, as [domains-section-hidden](#requirements/domains-section-hidden) says.
+- **A demoted domain (MUST)**: a verified domain the re-check moved back to pending shows the problem it found, and the Address group moves back to the subdomain because `primaryOrigin` does.
+- **A remove left half done (MUST)**: a domain left `removing` says so and keeps its Remove button.
+- **A custom domain is primary (MUST)**: the handle's suffix and the rename warning name the subdomain, which a rename changes, never the custom domain, which it does not.
 - **Support access off (MUST)**: a 404 on the grants read is handled as [support-switch-off](#requirements/support-switch-off) says.
 ## Configuration
 
@@ -201,6 +247,7 @@ Not applicable: no file contains a log call.
 | web | `packages/web/packages/features/adh-products/src/topics.ts` | confirmed (3.0.0) |
 | web | `packages/web/packages/features/ecosystems/src/EcosystemInvitationPanes.tsx` | confirmed (3.0.0) |
 | web | `packages/web/packages/features/ecosystem-config/src/ProductSitePane.tsx` | confirmed (3.0.0) |
+| web | `packages/web/packages/features/ecosystem-config/src/ProductDomainsSection.tsx` | planned |
 
 ## Design Decisions
 
@@ -229,6 +276,7 @@ The panes keep the data calls in the client and the page list in a plain module,
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 3.1.0 | 2026-11-27 | Mike Fullerton | Phase 8: the Custom domain section (ProductDomainsSection) and its human messages; the handle suffix and rename warning read subdomainOrigin; Also at the subdomain |
 | 3.0.0 | 2026-11-26 | Mike Fullerton | The manager's Admin site page becomes the Product site page: address, handle rename, console switch, admins; the rail follows consoleLive |
 | 2.2.0 | 2026-11-26 | Mike Fullerton | The console under /admin on each product's own site (the product-sites site): every topic href under /admin, the Jobs and Support pages' paths |
 | 2.1.0 | 2026-11-23 | Mike Fullerton | Phase 9: a Jobs row between Sets and Totals (ten pages); /jobs renders JobStatusPane and /jobs/templates JobTemplatesPane, status only. |
