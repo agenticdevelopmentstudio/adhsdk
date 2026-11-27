@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent, type ReactElement, type ReactNode } from "react";
+import { useEffect, useState, type FormEvent, type ReactElement, type ReactNode } from "react";
 import { Globe, Loader2, RefreshCw } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -127,16 +127,32 @@ const UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
   ["second", 1],
 ];
 
-/** "4 minutes ago", through `Intl.RelativeTimeFormat`. */
-function ago(iso: string | null | undefined, now = Date.now()): string | null {
+/**
+ * "4 minutes ago", through `Intl.RelativeTimeFormat`, relative to `now`. A time after `now` (the
+ * reader's clock behind the server's) is read as now, so it never says "in 30 seconds".
+ */
+function ago(iso: string | null | undefined, now: number): string | null {
   const d = parse(iso);
   if (!d) return null;
-  const seconds = Math.round((d.getTime() - now) / 1000);
+  const seconds = Math.round((Math.min(d.getTime(), now) - now) / 1000);
   const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
   for (const [unit, size] of UNITS) {
     if (Math.abs(seconds) >= size || unit === "second") return rtf.format(Math.round(seconds / size), unit);
   }
   return null;
+}
+
+/** How often the relative times are read again, so "Last checked 4 minutes ago" ages. */
+const TICK_MS = 60_000;
+
+/** The current time, read again every `TICK_MS`; the interval is cleared on unmount. */
+function useNow(): number {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), TICK_MS);
+    return () => clearInterval(id);
+  }, []);
+  return now;
 }
 
 // ── Hosts ─────────────────────────────────────────────────────────────────────
@@ -189,6 +205,7 @@ export function ProductDomainsSection({
   productName?: string;
 }): ReactElement | null {
   const { data: domains, error } = useProductDomains(ecosystemId);
+  const now = useNow();
   const words = wordsFor(productName);
 
   if (error && !productDomainsAvailable(error)) return null;
@@ -213,7 +230,7 @@ export function ProductDomainsSection({
       <p className="text-sm text-apt-text-muted">{intro}</p>
       {error ? <ErrorText error={`Couldn't refresh the custom domains: ${domainErrorMessage(error, words)}`} /> : null}
       {domains.map((domain) => (
-        <DomainBox key={domain.id} ecosystemId={ecosystemId} domain={domain} site={site} words={words} />
+        <DomainBox key={domain.id} ecosystemId={ecosystemId} domain={domain} site={site} words={words} now={now} />
       ))}
       {canAdd && <AddDomain ecosystemId={ecosystemId} words={words} />}
       <Guidance />
@@ -289,11 +306,14 @@ function DomainBox({
   domain,
   site,
   words,
+  now,
 }: {
   ecosystemId: string;
   domain: ProductDomain;
   site: ProductSite;
   words: DomainWords;
+  /** The section's ticking clock, for the relative "Last checked" time. */
+  now: number;
 }) {
   const qc = useQueryClient();
   const check = useCheckProductDomain(ecosystemId);
@@ -337,7 +357,7 @@ function DomainBox({
         <StatusBadges domain={domain} />
       </div>
       <p role="status" className="text-sm text-apt-text-muted">
-        <StateText domain={domain} site={site} words={words} />
+        <StateText domain={domain} site={site} words={words} now={now} />
       </p>
       {showRecords && <Records domain={domain} />}
       <div className="flex flex-wrap items-center gap-2">
@@ -426,16 +446,26 @@ function StatusBadges({ domain }: { domain: ProductDomain }) {
 }
 
 /** "Last checked 4 minutes ago; it is checked again every 10 minutes until 3 December." */
-function checkLine(domain: ProductDomain): string {
+function checkLine(domain: ProductDomain, now: number): string {
   const until = day(domain.expiresAt);
-  const checked = ago(domain.checkedAt);
+  const checked = ago(domain.checkedAt, now);
   const tail = until ? ` until ${until}` : "";
   return checked
     ? `Last checked ${checked}; it is checked again every 10 minutes${tail}.`
     : `It is checked every 10 minutes${tail}.`;
 }
 
-function StateText({ domain, site, words }: { domain: ProductDomain; site: ProductSite; words: DomainWords }): ReactNode {
+function StateText({
+  domain,
+  site,
+  words,
+  now,
+}: {
+  domain: ProductDomain;
+  site: ProductSite;
+  words: DomainWords;
+  now: number;
+}): ReactNode {
   const { host } = domain;
   const subdomainHost = hostOf(site.subdomainOrigin);
   const added = when(domain.createdAt);
@@ -446,8 +476,8 @@ function StateText({ domain, site, words }: { domain: ProductDomain; site: Produ
       // A pending row with an error is a domain the re-check demoted (or one whose last check
       // found a problem): it names the problem rather than "waiting" as if nothing had happened.
       return domain.error
-        ? `${addedLead}The last check found a problem: ${clause(domain.error)}. ${words.Name} answers at ${host} only once it is verified. ${checkLine(domain)}`
-        : `${addedLead}Waiting for the records below. ${checkLine(domain)}`;
+        ? `${addedLead}The last check found a problem: ${clause(domain.error)}. ${words.Name} answers at ${host} only once it is verified. ${checkLine(domain, now)}`
+        : `${addedLead}Waiting for the records below. ${checkLine(domain, now)}`;
 
     case "verified": {
       if (domain.isPrimary) {

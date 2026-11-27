@@ -5,7 +5,7 @@
 // the ownership TXT row and its exact copies; the remove confirm for a primary and not; and the
 // human message for every refusal code. Mocks only the data boundary.
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import type { ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -246,6 +246,33 @@ describe("ProductDomainsSection", () => {
     expect(screen.queryByRole("button", { name: `Make ${HOST} primary` })).not.toBeInTheDocument();
     // The add field stays while no domain is verified, for a second pending one.
     expect(screen.getByLabelText("Domain")).toBeInTheDocument();
+  });
+
+  it("the last-checked time ages once a minute, and the interval stops on unmount", async () => {
+    // Only the clock and the interval are faked, so react-query and findBy keep real timeouts.
+    vi.useFakeTimers({ toFake: ["Date", "setInterval", "clearInterval"] });
+    try {
+      vi.setSystemTime(new Date("2026-11-20T10:00:00.000Z"));
+      api.list.mockResolvedValue([domainOf({ checkedAt: "2026-11-20T09:56:00.000Z" })]);
+      const { unmount } = section();
+      expect(await screen.findByText(/Last checked 4 minutes ago;/)).toBeInTheDocument();
+      act(() => {
+        vi.advanceTimersByTime(60_000);
+      });
+      expect(screen.getByText(/Last checked 5 minutes ago;/)).toBeInTheDocument();
+      unmount();
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("a last-checked time in the future (clock skew) reads as now, never as in so many seconds", async () => {
+    api.list.mockResolvedValue([domainOf({ checkedAt: new Date(Date.now() + 30_000).toISOString() })]);
+    section();
+    const line = await screen.findByText(/Last checked /);
+    expect(line).toHaveTextContent(/Last checked now;/);
+    expect(line).not.toHaveTextContent(/Last checked in /);
   });
 
   it("pending and never checked: says how often it is checked, without a last-checked time", async () => {
