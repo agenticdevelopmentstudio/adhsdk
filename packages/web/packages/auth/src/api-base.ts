@@ -28,10 +28,39 @@ let base = SAME_ORIGIN_PREFIX
  * `https://api.example.com` (trailing slashes dropped), or `/api` to restore the default.
  * Call it once at bootstrap, before the first request; calling it again with the same value is a
  * no-op, so a component may call it on every render. An empty value restores the default.
+ *
+ * Throws on a base that is neither an absolute `http(s)://` URL nor a root-relative path: a
+ * schemeless `api.example.com` (a common env-var slip) would otherwise turn every data call into
+ * a page-relative URL that 404s far from here.
  */
 export function configureApiBase(apiBase: string | null | undefined): void {
   const trimmed = (apiBase ?? '').trim().replace(/\/+$/, '')
-  base = trimmed === '' ? SAME_ORIGIN_PREFIX : trimmed
+  if (trimmed === '') {
+    base = SAME_ORIGIN_PREFIX
+    return
+  }
+  if (!isAbsoluteHttpUrl(trimmed) && !isRootRelativePath(trimmed)) {
+    throw new Error(
+      `configureApiBase: "${trimmed}" is not an absolute http(s) URL or a root-relative path; ` +
+        'give the backend origin with its scheme, e.g. https://api.example.com',
+    )
+  }
+  base = trimmed
+}
+
+function isAbsoluteHttpUrl(value: string): boolean {
+  if (!/^https?:\/\//i.test(value)) return false
+  try {
+    new URL(value)
+    return true
+  } catch {
+    return false
+  }
+}
+
+/** `/backend`, never `//host` (scheme-relative, a different host in disguise). */
+function isRootRelativePath(value: string): boolean {
+  return value.startsWith('/') && !value.startsWith('//')
 }
 
 /** The configured base: `/api` unless a host configured another. */

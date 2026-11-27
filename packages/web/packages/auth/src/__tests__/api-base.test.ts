@@ -98,3 +98,22 @@ describe('requests follow the base', () => {
     expect(fetchMock.mock.calls[0]![0]).toBe('/api/v1/account/login_methods')
   })
 })
+
+describe('configureApiBase validates the base', () => {
+  it('refuses a schemeless or scheme-relative base and keeps the one it had', () => {
+    configureApiBase('https://api.example.test')
+    expect(() => configureApiBase('api.example.test')).toThrow(/absolute http\(s\) URL/)
+    expect(() => configureApiBase('//api.example.test')).toThrow(/absolute http\(s\) URL/)
+    expect(() => configureApiBase('ftp://api.example.test')).toThrow(/absolute http\(s\) URL/)
+    expect(apiBase()).toBe('https://api.example.test')
+  })
+
+  it('accepts an http(s) origin, one with a path, and a root-relative path', () => {
+    configureApiBase('http://localhost:8080')
+    expect(apiBase()).toBe('http://localhost:8080')
+    configureApiBase('https://api.example.test/prefix/')
+    expect(apiBase()).toBe('https://api.example.test/prefix')
+    configureApiBase('/backend')
+    expect(apiUrl('/api/v1/x')).toBe('/backend/v1/x')
+  })
+})
