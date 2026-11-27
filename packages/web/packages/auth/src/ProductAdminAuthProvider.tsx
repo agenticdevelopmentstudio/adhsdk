@@ -162,8 +162,10 @@ function requestSession(authBase: string): Promise<SessionAnswer> {
   if (joined) return joined
   // Another base's request still out is waited for, so even without Web Locks no two
   // cookie-spending requests from this page overlap. With none out, nothing is awaited, so the
-  // POST leaves during the mount that asked for it rather than a turn later: a StrictMode remount
-  // in that turn finds it in the map and joins it instead of sending a second one.
+  // request starts synchronously, in the call that asked for it: `fetch` itself where there are
+  // no Web Locks, the lock request where there are (the POST then leaves when the lock is
+  // granted). The await is not what keeps a StrictMode remount from sending a second POST; the
+  // map entry, set synchronously below, is.
   const others = [...sessionRequests.values()].map((p) => p.catch(() => undefined))
   const req = (async (): Promise<SessionAnswer> => {
     if (others.length > 0) await Promise.all(others)
