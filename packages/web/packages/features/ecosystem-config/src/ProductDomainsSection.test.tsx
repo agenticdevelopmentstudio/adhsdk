@@ -162,6 +162,39 @@ describe("ProductDomainsSection", () => {
     expect(screen.getByRole("alert")).toHaveTextContent("Couldn't load the custom domains: database unavailable");
   });
 
+  it("a failed refetch keeps the loaded list and says it could not be refreshed", async () => {
+    api.list.mockResolvedValue([domainOf()]);
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={client}>
+        <ProductDomainsSection ecosystemId={eco()} site={siteOf()} productName="Temporal" />
+      </QueryClientProvider>,
+    );
+    expect(await screen.findByText(HOST)).toBeInTheDocument();
+    api.list.mockRejectedValue(new ProductDomainError(500, "database unavailable", "internal"));
+    await client.refetchQueries();
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Couldn't refresh the custom domains: database unavailable",
+    );
+    expect(screen.getByText(HOST)).toBeInTheDocument();
+    expect(screen.getByRole("table", { name: `DNS records for ${HOST}` })).toBeInTheDocument();
+    expect(screen.queryByText(/Couldn't load the custom domains/)).not.toBeInTheDocument();
+  });
+
+  it("a refetch answering that the switch is off hides the whole section, list and all", async () => {
+    api.list.mockResolvedValue([domainOf()]);
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const { container } = render(
+      <QueryClientProvider client={client}>
+        <ProductDomainsSection ecosystemId={eco()} site={siteOf()} productName="Temporal" />
+      </QueryClientProvider>,
+    );
+    expect(await screen.findByText(HOST)).toBeInTheDocument();
+    api.list.mockRejectedValue(notFound());
+    await client.refetchQueries();
+    await waitFor(() => expect(container).toBeEmptyDOMElement());
+  });
+
   it("no domain yet: the intro naming the product, the add field and the guidance", async () => {
     section();
     expect(

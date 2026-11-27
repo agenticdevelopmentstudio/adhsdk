@@ -176,7 +176,9 @@ export function ProductDomainsSection({
 
   const intro = `${words.Name} can also answer at a domain you own. Its sign-in, admin console and support pages then work there too, and once the domain is verified you can make it ${words.its} primary address.`;
 
-  if (error || domains === undefined) {
+  // Only a list never loaded is replaced by the error: a failed background refetch keeps the
+  // list already on screen and says, under the intro, that it could not be refreshed.
+  if (domains === undefined) {
     return (
       <FieldGroup title="Custom domain">
         <ErrorText error={`Couldn't load the custom domains: ${domainErrorMessage(error, words)}`} />
@@ -189,6 +191,7 @@ export function ProductDomainsSection({
   return (
     <FieldGroup title="Custom domain">
       <p className="text-sm text-apt-text-muted">{intro}</p>
+      {error ? <ErrorText error={`Couldn't refresh the custom domains: ${domainErrorMessage(error, words)}`} /> : null}
       {domains.map((domain) => (
         <DomainBox key={domain.id} ecosystemId={ecosystemId} domain={domain} site={site} words={words} />
       ))}
