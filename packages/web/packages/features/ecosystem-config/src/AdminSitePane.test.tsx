@@ -133,9 +133,9 @@ describe("AdminSitePane", () => {
     fireEvent.change(screen.getByLabelText("Host"), { target: { value: " Admin.Example.com " } });
     fireEvent.click(screen.getByRole("button", { name: "Set up" }));
     await waitFor(() => expect(site.put).toHaveBeenCalledWith(eco(), "admin.example.com"));
-    expect(await screen.findByRole("link", { name: "https://admin.example.com" })).toHaveAttribute(
+    expect(await screen.findByRole("link", { name: "https://admin.example.com/admin" })).toHaveAttribute(
       "href",
-      "https://admin.example.com",
+      "https://admin.example.com/admin",
     );
     expect(screen.getByRole("button", { name: "Remove" })).toBeInTheDocument();
   });

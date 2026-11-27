@@ -21,7 +21,8 @@ const messageOf = (e: unknown) => (e instanceof Error ? e.message : "Something w
 /**
  * A product's ADMIN SITE at the hub (phase 6), for its managers: the host the product's own admins
  * sign in at (set up, change, remove), who holds the product's `admin` role and a form to add one,
- * the product's totals, and a link to the site.
+ * the product's totals, and a link to the site's admin console, at `/admin` on that host (the
+ * host's root is the product's public page).
  *
  * Adding an admin writes a sign-up list entry carrying the `admin` role: the person gets the role
  * the first time they prove the address, at the site's own sign-in. It is how the first admin is
@@ -125,8 +126,8 @@ function SiteHost({
       {host ? (
         <p className="text-sm text-apt-text">
           {`The admins of ${who} sign in at `}
-          <a className="font-mono underline" href={`https://${host}`} target="_blank" rel="noreferrer">
-            {`https://${host}`}
+          <a className="font-mono underline" href={`https://${host}/admin`} target="_blank" rel="noreferrer">
+            {`https://${host}/admin`}
           </a>
           .
         </p>
