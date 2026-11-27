@@ -86,8 +86,11 @@ export const PRODUCT_TOPICS = [
   // Product site (product sites phase 5): the product's own address, its handle, the switch for
   // its /admin console, its admins and its totals. It replaced the Admin site row. It names no
   // feature, so it is a STRUCTURAL row the feature manager always draws, like Settings: every
-  // product is given an address when it is made. PRODUCT_TOPIC_ALIASES sends `admin-site` here.
-  { id: "product-site", label: "Product site", dividerAfter: false },
+  // product is given an address when it is made. It is drawn for PRODUCTS only (`types`), because
+  // only a product has a product site: the backend answers 404 for any other ecosystem type, so
+  // on a personal, organization or container ecosystem the pane could never load.
+  // PRODUCT_TOPIC_ALIASES sends `admin-site` here.
+  { id: "product-site", label: "Product site", dividerAfter: false, types: ["product"] },
   // (Communities sat here, was removed for having no surface on any host, and came back below
   // with the rest of the hub's Products group — parked deliberately this time, because the
   // workspace rail offered it and moving that rail down whole is what dropping it would undo.)

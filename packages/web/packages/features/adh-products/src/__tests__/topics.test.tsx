@@ -207,9 +207,9 @@ describe("visibleProductTopics", () => {
 describe("the hub-data rows", () => {
   const HUB_IDS = ["notebook", "docs", "research", "projects", "narratives"];
 
-  it("are typed to personal and organization, and every other typed row is Teams", () => {
+  it("are typed to personal and organization, and every other typed row is Teams or Product site", () => {
     const typed = PRODUCT_TOPICS.filter((t) => "types" in t);
-    expect(typed.map((t) => t.id)).toEqual([...HUB_IDS, "teams"]);
+    expect(typed.map((t) => t.id)).toEqual([...HUB_IDS, "teams", "product-site"]);
     for (const t of typed.filter((t) => HUB_IDS.includes(t.id))) {
       expect("types" in t && [...t.types]).toEqual(["personal", "organization"]);
     }
@@ -222,6 +222,13 @@ describe("the hub-data rows", () => {
     expect(teams && "types" in teams && [...teams.types]).toEqual(["organization"]);
     expect(teams && "features" in teams && [...teams.features]).toEqual(["teams"]);
     expect(HOST_RENDERED_TOPIC_IDS as readonly string[]).toContain("teams");
+  });
+
+  // Only a product has a product site: the backend answers 404 for any other ecosystem type.
+  it("draw Product site for products only", () => {
+    const site = PRODUCT_TOPICS.find((t) => t.id === "product-site");
+    expect(site && "types" in site && [...site.types]).toEqual(["product"]);
+    expect(PRODUCT_TOPIC_CONFIGS.find((t) => t.id === "product-site")?.types).toEqual(["product"]);
   });
 
   it("stand on the catalog's keys, and reach the rail config with their types", () => {
