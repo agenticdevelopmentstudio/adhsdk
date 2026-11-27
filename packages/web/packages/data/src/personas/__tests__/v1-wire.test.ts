@@ -438,7 +438,7 @@ describe("persona grants and approvals", () => {
       read_only: false,
       allowed: true,
     };
-    respond({ object: "user_tool", tools: [ut] });
+    respond({ tools: [ut] });
     const tools = await personaUserToolsApi.setAllowed("p1", ["web"]);
     expect(urlOf(1)).toBe("/api/v1/personas/p1/user_tools");
     expect(initOf(1).method).toBe("POST");

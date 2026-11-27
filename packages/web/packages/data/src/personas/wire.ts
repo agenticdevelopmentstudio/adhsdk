@@ -679,9 +679,8 @@ export interface V1UserTool {
   allowed: boolean;
 }
 
-/** `POST /v1/personas/{id}/user_tools` answer. */
+/** `POST /v1/personas/{id}/user_tools` answer: the collection body, with no `object` stamped. */
 export interface V1UserToolsSet {
-  object?: "user_tool";
   tools: V1UserTool[];
 }
 
