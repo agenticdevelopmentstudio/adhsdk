@@ -24,9 +24,6 @@
       "name": "access"
     },
     {
-      "name": "admin-site"
-    },
-    {
       "name": "announcements"
     },
     {
@@ -17092,115 +17089,6 @@
           }
         }
       },
-      "AdminSite": {
-        "type": "object",
-        "required": [
-          "id",
-          "host",
-          "application_id",
-          "client_id",
-          "created",
-          "updated"
-        ],
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "host": {
-            "type": "string",
-            "description": "The lower-case host the site answers on."
-          },
-          "application_id": {
-            "type": "string",
-            "format": "uuid",
-            "description": "The product's staff `admin-site` application."
-          },
-          "client_id": {
-            "type": "string",
-            "description": "That application's login registration."
-          },
-          "created": {
-            "type": "integer",
-            "description": "Unix timestamp, in seconds."
-          },
-          "updated": {
-            "type": "integer",
-            "description": "Unix timestamp, in seconds."
-          }
-        }
-      },
-      "AdminSiteState": {
-        "type": "object",
-        "required": [
-          "site",
-          "enabled",
-          "content_gated"
-        ],
-        "properties": {
-          "site": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/AdminSite"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "enabled": {
-            "type": "boolean",
-            "description": "Whether the `product_admin_site` switch is on (sites answer and sign in)."
-          },
-          "content_gated": {
-            "type": "boolean",
-            "description": "Whether content enforcement is on (`app_rls.content_enforced()`): the hub reads only a product's house rows, never what its customers own."
-          }
-        }
-      },
-      "AdminSitePut": {
-        "type": "object",
-        "required": [
-          "host"
-        ],
-        "additionalProperties": false,
-        "properties": {
-          "host": {
-            "type": "string",
-            "maxLength": 253,
-            "description": "A DNS name with at least two labels; no scheme, port or path."
-          }
-        }
-      },
-      "ProductAdminSiteLookup": {
-        "type": "object",
-        "required": [
-          "ecosystem_id",
-          "name",
-          "client_id",
-          "issuer"
-        ],
-        "additionalProperties": false,
-        "properties": {
-          "ecosystem_id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string",
-            "description": "The product's name."
-          },
-          "client_id": {
-            "type": "string",
-            "description": "The client the site starts a sign-in with."
-          },
-          "issuer": {
-            "type": "string",
-            "nullable": true,
-            "description": "The Hydra issuer URL."
-          }
-        }
-      },
       "ProductSite": {
         "type": "object",
         "required": [
@@ -17208,7 +17096,9 @@
           "handle",
           "primary_origin",
           "admin_enabled",
-          "admin_client_id"
+          "admin_client_id",
+          "console_live",
+          "content_gated"
         ],
         "additionalProperties": false,
         "properties": {
@@ -17223,7 +17113,7 @@
           "primary_origin": {
             "type": "string",
             "nullable": true,
-            "description": "`https://<handle>.<base>`; null while PRODUCT_SITES_BASE_DOMAIN is unset."
+            "description": "`<scheme>://<handle>.<base>`: `http` only for a machine-local base (local development), `https` otherwise; null while PRODUCT_SITES_BASE_DOMAIN is unset."
           },
           "admin_enabled": {
             "type": "boolean",
@@ -17233,6 +17123,14 @@
             "type": "string",
             "nullable": true,
             "description": "The console's login registration, once one has been made. It stays when the console is turned off, so turning it back on is one write."
+          },
+          "console_live": {
+            "type": "boolean",
+            "description": "Read-only. Whether the console is live: the `product_admin_site` switch is on and `adminEnabled` is on with a client. The same rule the database uses to stop narrowing managers while the console answers."
+          },
+          "content_gated": {
+            "type": "boolean",
+            "description": "Read-only. Whether content enforcement is on for this deployment."
           }
         }
       },
@@ -17279,7 +17177,7 @@
           },
           "primary_origin": {
             "type": "string",
-            "description": "`https://<handle>.<base>`."
+            "description": "`<scheme>://<handle>.<base>`: `http` only for a machine-local base (local development), `https` otherwise."
           },
           "admin_client_id": {
             "type": "string",
@@ -28413,277 +28311,6 @@
         "x-adh-replaces": [
           "PUT /auth/ecosystems/{ecosystemId}/admin-notes",
           "PUT /system/admin-notes"
-        ]
-      }
-    },
-    "/v1/admin_site": {
-      "delete": {
-        "tags": [
-          "admin-site"
-        ],
-        "summary": "Take a product's admin site down",
-        "description": "Removes the site, soft-deletes its application and removes its registration.\n\nReplaces DELETE /ecosystem/admin-site.",
-        "operationId": "deleteV1AdminSite",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Deleted",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Deleted"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          }
-        },
-        "x-adh-object": "admin_site",
-        "x-adh-replaces": [
-          "DELETE /ecosystem/admin-site"
-        ]
-      },
-      "get": {
-        "tags": [
-          "admin-site"
-        ],
-        "summary": "A product's admin site and whether admin sites are switched on",
-        "description": "Replaces GET /ecosystem/admin-site.",
-        "operationId": "getV1AdminSite",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "expand[]",
-            "in": "query",
-            "required": false,
-            "description": "Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "style": "form",
-            "explode": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The site, or null when it has none",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "type": "object",
-                      "properties": {
-                        "object": {
-                          "type": "string",
-                          "const": "admin_site"
-                        }
-                      }
-                    },
-                    {
-                      "$ref": "#/components/schemas/AdminSiteState"
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          }
-        },
-        "x-adh-object": "admin_site",
-        "x-adh-replaces": [
-          "GET /ecosystem/admin-site"
-        ]
-      },
-      "post": {
-        "tags": [
-          "admin-site"
-        ],
-        "summary": "Set up or move a product's admin site",
-        "description": "Makes (or reuses, or revives) the product's staff `admin-site` application and gives it a login registration whose one return origin is `https://<host>` and whose one redirect is `https://<host>/auth/callback`. 409 when the product has its own `admin-site` application, or another product's site already uses the host.\n\nReplaces PUT /ecosystem/admin-site.",
-        "operationId": "postV1AdminSite",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AdminSitePut"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "The site after the change",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "type": "object",
-                      "properties": {
-                        "object": {
-                          "type": "string",
-                          "const": "admin_site"
-                        }
-                      }
-                    },
-                    {
-                      "$ref": "#/components/schemas/AdminSiteState"
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          }
-        },
-        "x-adh-object": "admin_site",
-        "x-adh-replaces": [
-          "PUT /ecosystem/admin-site"
         ]
       }
     },
@@ -138827,80 +138454,6 @@
         ]
       }
     },
-    "/v1/product_admin_sites/{host}": {
-      "get": {
-        "tags": [
-          "admin-site"
-        ],
-        "summary": "Which product an admin site host belongs to (unauthenticated)",
-        "description": "Replaces GET /public/product-admin-sites/{host}.",
-        "operationId": "getV1ProductAdminSitesByHost",
-        "security": [],
-        "parameters": [
-          {
-            "name": "host",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "expand[]",
-            "in": "query",
-            "required": false,
-            "description": "Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "style": "form",
-            "explode": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The product and the client to sign in with",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "type": "object",
-                      "properties": {
-                        "object": {
-                          "type": "string",
-                          "const": "product_admin_site"
-                        }
-                      }
-                    },
-                    {
-                      "$ref": "#/components/schemas/ProductAdminSiteLookup"
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StripeError"
-                }
-              }
-            }
-          }
-        },
-        "x-adh-object": "product_admin_site",
-        "x-adh-replaces": [
-          "GET /public/product-admin-sites/{host}"
-        ]
-      }
-    },
     "/v1/product_site": {
       "get": {
         "tags": [
@@ -139005,7 +138558,7 @@
           "product-site"
         ],
         "summary": "Rename a product's site or turn its console on or off",
-        "description": "Takes `handle`, `adminEnabled` or both, and nothing else. 400 for a malformed or reserved handle; 409 `product_site_handle_taken` when another product holds the handle; 409 `product_sites_unconfigured` when the console is turned on with no base domain set. Turning it on the first time makes the product's staff `admin-site` application and a login registration whose redirect is `https://<handle>.<base>/admin/auth/callback`; a rename re-registers it so the redirect follows the handle.\n\nReplaces PATCH /ecosystem/product-site.",
+        "description": "Takes `handle`, `adminEnabled` or both, and nothing else. 400 for a malformed or reserved handle; 409 `product_site_handle_taken` when another product holds the handle; 409 `product_sites_unconfigured` when the console is turned on with no base domain set. Turning it on the first time makes the product's staff `admin-site` application and a login registration whose redirect is `<scheme>://<handle>.<base>/admin/auth/callback` (`http` only for a machine-local base, `https` otherwise); a rename re-registers it so the redirect follows the handle.\n\nReplaces PATCH /ecosystem/product-site.",
         "operationId": "postV1ProductSite",
         "security": [
           {
