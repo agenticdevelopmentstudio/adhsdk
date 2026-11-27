@@ -23,6 +23,9 @@ import { ProductTotalsPane } from "./ProductTotalsPane";
 import { RoleHolders, isAdminRole } from "./ProductRolesPane";
 import { signupListKey } from "./SignupListPane";
 
+/** The pane's one product-site write, shared by the handle and the console switch. */
+type SiteUpdate = ReturnType<typeof useUpdateProductSite>;
+
 const messageOf = (e: unknown) => (e instanceof Error ? e.message : "Something went wrong.");
 
 /** How the pane's sentences name the product: "Temporal" / "Temporal's", or "this product". */
@@ -108,6 +111,9 @@ function ProductSiteBody({
   help?: ReactNode;
 }) {
   const { data: site, error: loadError } = useProductSite(ecosystemId);
+  // One write at a time for the whole pane: the rename and the switch share this, so a slower
+  // answer cannot land after a newer one and overwrite it in the cache.
+  const update = useUpdateProductSite(ecosystemId);
   const words = wordsFor(productName);
   // The intro names the product when the host knows its name; otherwise the host's blurb, which
   // says the same of "the product".
@@ -127,8 +133,8 @@ function ProductSiteBody({
           <>
             <Address site={site} words={words} />
             {/* Keyed on the handle so a rename's answer starts the field afresh. */}
-            <Handle key={site.handle} ecosystemId={ecosystemId} site={site} words={words} />
-            <AdminConsole ecosystemId={ecosystemId} site={site} words={words} />
+            <Handle key={site.handle} update={update} site={site} words={words} />
+            <AdminConsole ecosystemId={ecosystemId} update={update} site={site} words={words} />
           </>
         )}
         <ProductAdmins ecosystemId={ecosystemId} words={words} />
@@ -180,8 +186,7 @@ function Address({ site, words }: { site: ProductSite; words: ProductWords }) {
   );
 }
 
-function Handle({ ecosystemId, site, words }: { ecosystemId: string; site: ProductSite; words: ProductWords }) {
-  const update = useUpdateProductSite(ecosystemId);
+function Handle({ update, site, words }: { update: SiteUpdate; site: ProductSite; words: ProductWords }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(site.handle);
   const [error, setError] = useState<string | null>(null);
@@ -295,8 +300,17 @@ function Handle({ ecosystemId, site, words }: { ecosystemId: string; site: Produ
   );
 }
 
-function AdminConsole({ ecosystemId, site, words }: { ecosystemId: string; site: ProductSite; words: ProductWords }) {
-  const update = useUpdateProductSite(ecosystemId);
+function AdminConsole({
+  ecosystemId,
+  update,
+  site,
+  words,
+}: {
+  ecosystemId: string;
+  update: SiteUpdate;
+  site: ProductSite;
+  words: ProductWords;
+}) {
   const [error, setError] = useState<string | null>(null);
   const consoleAddress = site.primaryOrigin ? `${site.primaryOrigin}/admin` : "/admin";
   const id = `product-site-admin-console-${ecosystemId}`;
