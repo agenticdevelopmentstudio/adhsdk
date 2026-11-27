@@ -56,7 +56,7 @@ The row type `ProductDomain` carries `id`, `host`, `status` (`pending`, `verifie
 
 - **site-read**: `productSiteApi.get` MUST `GET` `/api/ecosystem/product-site?ecosystem=<uuid>` and return the body as a `ProductSite`: `ecosystemId`, `handle`, `primaryOrigin` (`null` when the body has none, the backend having no base domain), `adminEnabled` coerced to a boolean, `adminClientId` (`null` when absent), `consoleLive` and `contentGated`.
 - **site-read-older-backend**: a body without `consoleLive` or without `contentGated`, from a backend that predates it, MUST read as `false` for that field: not live, not gated.
-- **site-subdomain-origin**: the row MUST carry `subdomainOrigin`, the product's own `<scheme>://<handle>.<base>` address, read from the body with `?? null`: `null` when the backend has no base domain, and `null` from an older backend that does not answer the field. While no custom domain is primary it is the same string as `primaryOrigin`.
+- **site-subdomain-origin**: the row MUST carry `subdomainOrigin`, the product's own `<scheme>://<handle>.<base>` address, read from the body as is when the field is present (a string, or `null` when the backend has no base domain). From an older backend that does not answer the field (`undefined`) it MUST read as `primaryOrigin ?? null`: such a backend reports no custom domain, so its primary is the subdomain. While no custom domain is primary it is the same string as `primaryOrigin`.
 - **site-path-constant**: `PRODUCT_SITE_PATH` MUST be `/api/ecosystem/product-site`.
 
 ### Changing
@@ -116,7 +116,7 @@ Not applicable: this is a data client with no user interface; the panes that con
 | product-site-client-007 | site-hook-no-retry-404 | `useProductSite` over a 404, then over a 500 (tests: "asks once when the ecosystem answers 404", "still retries any other failure once") | One request for the 404; two for the 500 |
 | product-site-client-008 | site-hook-key | `useProductSite(null)` (test: "does not ask without an ecosystem") | No request is made |
 | product-site-client-009 | site-update-cache | `useUpdateProductSite("eco-1")` changing `adminEnabled` to `false`, then a refused change with code `product_sites_unconfigured` (tests: "writes the answer into the site's query", "leaves the query alone when refused") | The cache holds the answer after the first, with one request; the cache is unchanged after the second, and the error carries the code |
-| product-site-client-010 | site-subdomain-origin | `get("eco-1")` over a body with `subdomainOrigin`, then over a body without it | The row's `subdomainOrigin` is the body's string; then `null` |
+| product-site-client-010 | site-subdomain-origin | `get("eco-1")` over a body with `subdomainOrigin`; over a body without it and with a `primaryOrigin`; over a body without it and with `primaryOrigin: null`; over a body with `subdomainOrigin: null` and a `primaryOrigin` | The body's string; the `primaryOrigin`; `null`; `null` |
 | product-site-client-011 | domains-list, domains-path-constant, domains-row-mapper | `list("eco-1")` over `{ domains: [ <a domain with an extra field> ] }` | A `GET` of `/api/ecosystem/product-domains` with params `{ ecosystem: "eco-1" }`; one `ProductDomain` holding the twelve known fields and not the extra one |
 | product-site-client-012 | domains-add | `add("eco-1", "app.example.com")` | A `POST` of the path with body `{"host":"app.example.com"}`; the answer is one `ProductDomain` |
 | product-site-client-013 | domains-check | `check("eco-1", "dom-1")` | A `POST` of `/api/ecosystem/product-domains/dom-1/check` with the same params; the answer is one `ProductDomain` |
@@ -139,7 +139,7 @@ Vectors 001 to 009 are asserted in `packages/web/packages/data/src/product-sites
 - **Custom domains switched off (MUST)**: every domain route answers 404 `not_found`; `useProductDomains` asks once and `productDomainsAvailable` answers false, so the caller shows nothing.
 - **A remove the domain service did not finish (MUST)**: a 502 leaves the row `removing` on the backend; the hook reads the list again rather than dropping the row, so the caller can offer Remove again.
 - **A removed or changed primary (MUST)**: the product's address moves, so the site's query is read again and `primaryOrigin` follows.
-- **An older backend (MUST)**: a site body with no `subdomainOrigin` reads it as `null`.
+- **An older backend (MUST)**: a site body with no `subdomainOrigin` reads it as its `primaryOrigin` (or `null` when that is null too), so the handle's suffix and the rename warning's addresses still show; an explicit `null` stays `null`.
 
 ## Configuration
 

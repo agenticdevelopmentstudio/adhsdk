@@ -3,7 +3,7 @@
 
 - **site-read**: `productSiteApi.get` MUST `GET` `/api/ecosystem/product-site?ecosystem=<uuid>` and return the body as a `ProductSite`: `ecosystemId`, `handle`, `primaryOrigin` (`null` when the body has none, the backend having no base domain), `adminEnabled` coerced to a boolean, `adminClientId` (`null` when absent), `consoleLive` and `contentGated`.
 - **site-read-older-backend**: a body without `consoleLive` or without `contentGated`, from a backend that predates it, MUST read as `false` for that field: not live, not gated.
-- **site-subdomain-origin**: the row MUST carry `subdomainOrigin`, the product's own `<scheme>://<handle>.<base>` address, read from the body with `?? null`: `null` when the backend has no base domain, and `null` from an older backend that does not answer the field. While no custom domain is primary it is the same string as `primaryOrigin`.
+- **site-subdomain-origin**: the row MUST carry `subdomainOrigin`, the product's own `<scheme>://<handle>.<base>` address, read from the body as is when the field is present (a string, or `null` when the backend has no base domain). From an older backend that does not answer the field (`undefined`) it MUST read as `primaryOrigin ?? null`: such a backend reports no custom domain, so its primary is the subdomain. While no custom domain is primary it is the same string as `primaryOrigin`.
 - **site-path-constant**: `PRODUCT_SITE_PATH` MUST be `/api/ecosystem/product-site`.
 
 ### Changing

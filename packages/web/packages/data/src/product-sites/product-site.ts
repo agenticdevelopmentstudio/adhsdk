@@ -27,7 +27,10 @@ export interface ProductSiteWire {
   ecosystemId: string;
   handle: string;
   primaryOrigin: string | null;
-  /** Absent from a backend that predates it, which reads as null. */
+  /**
+   * Absent from a backend that predates it, which reads as `primaryOrigin`: such a backend reports
+   * no custom domain, so its primary is the subdomain. Present (a string or null), it is used as is.
+   */
   subdomainOrigin?: string | null;
   adminEnabled: boolean;
   adminClientId: string | null;
@@ -49,7 +52,8 @@ export interface ProductSite {
   primaryOrigin: string | null;
   /**
    * The product's own address, `https://<handle>.<base domain>`, whatever its primary is; null
-   * while the backend has no base domain, or from a backend that predates the field.
+   * while the backend has no base domain. From a backend that predates the field it is the
+   * primary origin, which on such a backend is always the subdomain.
    */
   subdomainOrigin: string | null;
   /** Whether the product's `/admin` console is switched on. */
@@ -86,7 +90,7 @@ export const toProductSite = (w: ProductSiteWire): ProductSite => ({
   ecosystemId: w.ecosystemId,
   handle: w.handle,
   primaryOrigin: w.primaryOrigin ?? null,
-  subdomainOrigin: w.subdomainOrigin ?? null,
+  subdomainOrigin: w.subdomainOrigin === undefined ? (w.primaryOrigin ?? null) : w.subdomainOrigin,
   adminEnabled: Boolean(w.adminEnabled),
   adminClientId: w.adminClientId ?? null,
   consoleLive: Boolean(w.consoleLive),

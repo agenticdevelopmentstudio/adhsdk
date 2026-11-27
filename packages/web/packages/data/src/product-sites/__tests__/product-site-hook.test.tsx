@@ -82,10 +82,23 @@ describe("productSiteApi", () => {
     expect(s.contentGated).toBe(false);
   });
 
-  it("reads a backend without subdomainOrigin as null", async () => {
+  it("reads a backend without subdomainOrigin as its primary origin", async () => {
     const { subdomainOrigin: _s, ...older } = wire;
-    mockedJson.mockResolvedValueOnce(older);
+    mockedJson.mockResolvedValueOnce({ ...older, primaryOrigin: "https://jots.agenticdeveloperhub.com" });
+    expect((await productSiteApi.get(ECO)).subdomainOrigin).toBe("https://jots.agenticdeveloperhub.com");
+  });
+
+  it("reads a backend without subdomainOrigin or a primary origin as null", async () => {
+    const { subdomainOrigin: _s, ...older } = wire;
+    mockedJson.mockResolvedValueOnce({ ...older, primaryOrigin: null });
     expect((await productSiteApi.get(ECO)).subdomainOrigin).toBeNull();
+  });
+
+  it("keeps an explicit null subdomainOrigin even when there is a primary origin", async () => {
+    mockedJson.mockResolvedValueOnce({ ...wire, subdomainOrigin: null });
+    const s = await productSiteApi.get(ECO);
+    expect(s.subdomainOrigin).toBeNull();
+    expect(s.primaryOrigin).toBe("https://notes.agenticdeveloperhub.com");
   });
 
   it("changes the site with PATCH and only the fields given", async () => {
