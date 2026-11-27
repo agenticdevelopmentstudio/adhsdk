@@ -26,7 +26,8 @@ describe("PRODUCT_ADMIN_TOPICS", () => {
   it("keeps every page under /admin and off the console's auth routes", () => {
     for (const t of PRODUCT_ADMIN_TOPICS) {
       expect(t.href.startsWith("/admin/"), t.href).toBe(true);
-      expect(t.href.startsWith("/admin/auth"), t.href).toBe(false);
+      // Match the /admin/auth segment exactly, so a page like /admin/authors still passes.
+      expect(t.href === "/admin/auth" || t.href.startsWith("/admin/auth/"), t.href).toBe(false);
     }
   });
 });

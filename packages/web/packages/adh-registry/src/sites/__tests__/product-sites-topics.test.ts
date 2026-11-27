@@ -48,9 +48,12 @@ describe("the product-sites console rail", () => {
     expect([...share]).toEqual([...share].sort());
   });
 
-  // The auth route handlers are not pages, so they are in no share.
+  // The auth route handlers are not pages, so they are in no share. The match is
+  // on the /admin/auth segment exactly, so a page like /admin/authors is allowed.
   it("has no page under /admin/auth", () => {
-    expect((SITE_ROUTES["product-sites"] ?? []).some((r) => r.startsWith("/admin/auth"))).toBe(false);
+    expect(
+      (SITE_ROUTES["product-sites"] ?? []).some((r) => r === "/admin/auth" || r.startsWith("/admin/auth/")),
+    ).toBe(false);
   });
 
   // site-registry-072: the operator's dead jobs are a section of AI Nodes, not a page.
