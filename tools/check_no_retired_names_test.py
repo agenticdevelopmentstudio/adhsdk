@@ -118,6 +118,18 @@ def test_the_toolkit_site_name_is_allowed_only_in_its_registry_row() -> None:
     check("fullLabel: 'Agentic Developer Toolkit'", True, "docs/guide.md")
 
 
+def test_the_adtoolkit_repo_is_allowed_only_in_its_named_files() -> None:
+    support = ("packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/"
+               "ClaudeHooks/StatusLineTestSupport.swift")
+    check("/// The adtoolkit checkout, which owns claudehelpers' status-line", False, support)
+    check("install adtoolkit (run ./install in its checkout, ~/.adtoolkitrc)", False, support)
+    # Every other retired name in that file, and the old URI scheme, is still caught.
+    check("/// adtoolkit's dispatcher, built by AgenticToolkit", True, support)
+    check("see adtoolkit://cookbook/ui/button", True, support)
+    # And the bare word anywhere else is still the retired SDK name.
+    check("/// The adtoolkit checkout, which owns claudehelpers' status-line", True, "docs/guide.md")
+
+
 def test_explicit_roots_scan_only_those() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         repo = Path(tmp)

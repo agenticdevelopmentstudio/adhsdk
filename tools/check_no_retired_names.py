@@ -37,6 +37,13 @@ What is NOT a retired name:
   * The toolkit site's own name, "Agentic Developer Toolkit", in its site-registry
     row (SITE_NAMES). The SDK took the hub-sdk name, but the toolkit site keeps its
     own (adhsdk 482f4f19); nothing else on that line, or in that file, is exempt.
+  * The adtoolkit repo, in the files in ADTOOLKIT_REPO_FILES. adtoolkit is now
+    the name of a different, live repo: the developer-workflow scripts and skills
+    that own claudehelpers and its status-line contract. The Claude status-line
+    type follows that contract and its tests read adtoolkit's checkout, so those
+    files have to name it. Only the bare word `adtoolkit` is allowed there, and
+    not as a URI scheme (`adtoolkit://`); every other retired name in them is
+    still caught.
   * Dated history in `docs/sessions/`, which records what was true at the time.
   * The guards themselves, and their self-tests, by filename only. A guard that
     hunts a string has to contain it.
@@ -99,6 +106,20 @@ SITE_NAMES = {
     ),
 }
 
+# Repo-relative files that name the adtoolkit repo, which is not this SDK (see the
+# docstring). The bare word is removed from each line before it is matched, so any
+# other retired name on the line, and `adtoolkit://`, is still caught.
+ADTOOLKIT_REPO_FILES = {
+    "cookbook/foundation/claude-hooks/claude-status-line.md",
+    "cookbook/foundation/claude-hooks/claude-status-line/conformance-test-vectors.md",
+    "cookbook/foundation/claude-hooks/claude-status-line/history.md",
+    "cookbook/foundation/claude-hooks/claude-status-line/overview.md",
+    "packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/ClaudeStatusLine.swift",
+    "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/ClaudeHooks/ClaudeStatusLineTests.swift",
+    "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/ClaudeHooks/StatusLineTestSupport.swift",
+}
+ADTOOLKIT_REPO = re.compile(r"\badtoolkit\b(?!:)", re.IGNORECASE)
+
 # Dated history: it records what was true when it was written.
 SKIP_PREFIXES = ("docs/sessions/",)
 
@@ -129,6 +150,8 @@ def _scan_lines(text: str, rel: str) -> list[str]:
         probe = line
         for fragment in allowed:
             probe = probe.replace(fragment, "")
+        if rel in ADTOOLKIT_REPO_FILES:
+            probe = ADTOOLKIT_REPO.sub("", probe)
         for label, pattern in PATTERNS.items():
             if pattern.search(probe):
                 hits.append(f"{rel}:{lineno}: {label}: {line.strip()}")
