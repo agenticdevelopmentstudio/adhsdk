@@ -279,6 +279,17 @@ describe("ProductDomainsSection", () => {
     expect(line).not.toHaveTextContent(/Last checked in /);
   });
 
+  it.each([
+    [3_590, "1 hour ago"],
+    [86_000, "yesterday"],
+    [59.6, "1 minute ago"],
+    [90 * 60, "2 hours ago"],
+  ])("the relative time picks its unit from the rounded value: %s seconds reads %s", async (seconds, phrase) => {
+    api.list.mockResolvedValue([domainOf({ checkedAt: new Date(Date.now() - seconds * 1000).toISOString() })]);
+    section();
+    expect(await screen.findByText(new RegExp(`Last checked ${phrase};`))).toBeInTheDocument();
+  });
+
   it("pending and never checked: says how often it is checked, without a last-checked time", async () => {
     api.list.mockResolvedValue([domainOf({ checkedAt: null })]);
     section();

@@ -130,11 +130,12 @@ const windowStart = (domain: ProductDomain): Date | null => {
   return expires ? new Date(expires.getTime() - CHECK_WINDOW_MS) : null;
 };
 
-const UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
-  ["day", 86_400],
-  ["hour", 3_600],
-  ["minute", 60],
-  ["second", 1],
+/** Each unit, smallest first, with its size in seconds and how many of it make the next unit. */
+const UNITS: [Intl.RelativeTimeFormatUnit, number, number][] = [
+  ["second", 1, 60],
+  ["minute", 60, 60],
+  ["hour", 3_600, 24],
+  ["day", 86_400, Infinity],
 ];
 
 /**
@@ -146,8 +147,13 @@ function ago(iso: string | null | undefined, now: number): string | null {
   if (!d) return null;
   const seconds = Math.round((Math.min(d.getTime(), now) - now) / 1000);
   const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
-  for (const [unit, size] of UNITS) {
-    if (Math.abs(seconds) >= size || unit === "second") return rtf.format(Math.round(seconds / size), unit);
+  // The unit is picked from the rounded value, so 3590 seconds is "1 hour ago", not "60 minutes
+  // ago": round in a unit, and move up while the rounded count reaches the next unit.
+  const sign = seconds < 0 ? -1 : 1;
+  const abs = Math.abs(seconds);
+  for (const [unit, size, next] of UNITS) {
+    const count = Math.round(abs / size);
+    if (count < next) return rtf.format(sign * count, unit);
   }
   return null;
 }
