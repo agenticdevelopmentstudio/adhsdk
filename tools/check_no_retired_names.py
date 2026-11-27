@@ -41,9 +41,12 @@ What is NOT a retired name:
     the name of a different, live repo: the developer-workflow scripts and skills
     that own claudehelpers and its status-line contract. The Claude status-line
     type follows that contract and its tests read adtoolkit's checkout, so those
-    files have to name it. Only the bare word `adtoolkit` is allowed there, and
-    not as a URI scheme (`adtoolkit://`); every other retired name in them is
-    still caught.
+    files have to name it. Only the bare, lowercase word `adtoolkit` is allowed
+    there (in prose, or ending a path such as `/nonexistent-adtoolkit`). Not
+    `AdToolkit` or `ADToolkit`, the retired SDK's casings; not as a URI scheme
+    (`adtoolkit://`), a scope (`@adtoolkit/`), a path segment (`adtoolkit/`), a
+    domain (`adtoolkit.dev`) or the head of a compound (`adtoolkit-web`). Every
+    other retired name in them is still caught.
   * Dated history in `docs/sessions/`, which records what was true at the time.
   * The guards themselves, and their self-tests, by filename only. A guard that
     hunts a string has to contain it.
@@ -108,7 +111,8 @@ SITE_NAMES = {
 
 # Repo-relative files that name the adtoolkit repo, which is not this SDK (see the
 # docstring). The bare word is removed from each line before it is matched, so any
-# other retired name on the line, and `adtoolkit://`, is still caught.
+# other retired name on the line, and every other spelling of this one, is still caught.
+# Case-sensitive on purpose: only the repo's own lowercase name is exempt.
 ADTOOLKIT_REPO_FILES = {
     "cookbook/foundation/claude-hooks/claude-status-line.md",
     "cookbook/foundation/claude-hooks/claude-status-line/conformance-test-vectors.md",
@@ -118,7 +122,7 @@ ADTOOLKIT_REPO_FILES = {
     "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/ClaudeHooks/ClaudeStatusLineTests.swift",
     "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/ClaudeHooks/StatusLineTestSupport.swift",
 }
-ADTOOLKIT_REPO = re.compile(r"\badtoolkit\b(?!:)", re.IGNORECASE)
+ADTOOLKIT_REPO = re.compile(r"(?<![@/.\w])adtoolkit(?!://|/|[.-]\w|\w)")
 
 # Dated history: it records what was true when it was written.
 SKIP_PREFIXES = ("docs/sessions/",)

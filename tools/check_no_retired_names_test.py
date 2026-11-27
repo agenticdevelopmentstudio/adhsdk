@@ -126,6 +126,15 @@ def test_the_adtoolkit_repo_is_allowed_only_in_its_named_files() -> None:
     # Every other retired name in that file, and the old URI scheme, is still caught.
     check("/// adtoolkit's dispatcher, built by AgenticToolkit", True, support)
     check("see adtoolkit://cookbook/ui/button", True, support)
+    # The exemption is the bare lowercase word, so prose punctuation around it is fine...
+    check("owned by adtoolkit: its install script", False, support)
+    check("the tests read adtoolkit's checkout.", False, support)
+    check('URL(fileURLWithPath: "/nonexistent-adtoolkit")', False, support)
+    # ...but no other casing or compound of it is.
+    for line in ("import ADToolkit", "built by AdToolkit", "ADTOOLKIT is retired",
+                 "import { x } from '@adtoolkit/ui'", "see adtoolkit.dev",
+                 "the adtoolkit-web package", "under adtoolkit/cookbook"):
+        check(line, True, support)
     # And the bare word anywhere else is still the retired SDK name.
     check("/// The adtoolkit checkout, which owns claudehelpers' status-line", True, "docs/guide.md")
 
