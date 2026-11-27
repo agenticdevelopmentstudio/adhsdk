@@ -291,4 +291,29 @@ with tempfile.TemporaryDirectory() as tmp:
     check("and it is the only one reported", "1 dangling doc path(s)" in out.stderr, True)
     check("named", "packages/link/gone.ts" in out.stderr, True)
 
-print("check_doc_links_test: 19 passed")
+    # (20) Only the repo's own .gitignore files excuse a path. A rule in
+    #      .git/info/exclude or in a global excludes file is that machine's, a negated
+    #      rule un-ignores, and a tracked file is never excused, even when a pattern
+    #      matches it.
+    root = Path(tmp) / "whose-rules"
+    (root / "docs").mkdir(parents=True)
+    (root / "packages").mkdir()
+    (root / "packages" / "tracked.log").write_text("x\n")
+    (root / ".gitignore").write_text("*.log\n!packages/kept.log\n")
+    subprocess.run(["git", "init", "-q", str(root)], check=True)
+    subprocess.run(["git", "-C", str(root), "add", "-f", "packages/tracked.log"], check=True)
+    (root / "packages" / "tracked.log").unlink()
+    (root / ".git" / "info").mkdir(exist_ok=True)
+    (root / ".git" / "info" / "exclude").write_text("packages/local.ts\n")
+    excludes = Path(tmp) / "global-excludes"
+    excludes.write_text("packages/mine.ts\n")
+    machine = {**os.environ, "GIT_CONFIG_GLOBAL": str(excludes.with_suffix(".cfg"))}
+    excludes.with_suffix(".cfg").write_text(f"[core]\n\texcludesFile = {excludes}\n")
+    for cited in ("packages/local.ts", "packages/mine.ts", "packages/kept.log",
+                  "packages/tracked.log"):
+        (root / "docs" / "guide.md").write_text(f"see `{cited}`\n")
+        check(f"{cited} is still checked", run(root, machine).returncode, 1)
+    (root / "docs" / "guide.md").write_text("see `packages/other.log`\n")
+    check("a .gitignore rule still excuses", run(root, machine).returncode, 0)
+
+print("check_doc_links_test: 20 passed")

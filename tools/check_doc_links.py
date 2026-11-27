@@ -36,9 +36,16 @@ A citation of a path this repo's `.gitignore` ignores is not dangling either. Si
 that says where they land (`docs/architecture/build-output-not-committed.md`) names
 paths a fresh checkout does not have yet, and this guard runs before install and build.
 Whether such a path exists says which steps this machine ran, not whether the doc is
-right. Asked of git (`check-ignore --no-index`), with the path also tried as a directory,
+right. Asked of git (`check-ignore -v`), with the path also tried as a directory,
 because an ignore pattern ending in `/` matches only a directory and a missing path is
-read as a file. Outside a git checkout nothing counts as ignored. The paths go to git
+read as a file. Only a rule in one of the repo's own `.gitignore` files counts: a
+developer's global excludes file and `.git/info/exclude` are that machine's, so a path
+they ignore is still checked, or the guard would pass on one machine and fail on the
+next. A tracked path is never excused either, a file or a directory with tracked files
+in it: a committed file that a pattern happens to match, deleted in the working tree,
+is still dangling. A typo under a glob or directory pattern (`routes.*.generated.ts`,
+`packages/apple/**/build/`) is excused like the path it misspells; the rule cannot tell
+them apart. Outside a git checkout nothing counts as ignored. The paths go to git
 NUL-separated, so a non-ASCII one is not C-quoted on the way back, and if git refuses
 one path (one beyond a symlink, say) the rest are asked one at a time, so that one is
 still checked and the others are still excused. git is asked about the
@@ -155,10 +162,11 @@ def _git_env() -> dict[str, str]:
 
 
 def _check_ignore(root: Path, queries: list[str]) -> list[str] | None:
-    """The queries git ignores, or None when git gives no answer for the batch."""
+    """The queries a rule in the repo's own .gitignore files ignores, or None when git
+    gives no answer for the batch."""
     try:
         r = subprocess.run(
-            ["git", "-C", str(root), "check-ignore", "--no-index", "-z", "--stdin"],
+            ["git", "-C", str(root), "check-ignore", "-v", "-z", "--stdin"],
             input="".join(q + "\0" for q in queries), capture_output=True, text=True,
             env=_git_env(),
         )
@@ -168,7 +176,31 @@ def _check_ignore(root: Path, queries: list[str]) -> list[str] | None:
     # git refuses, such as one beyond a symlink): no answer.
     if r.returncode not in (0, 1):
         return None
-    return [q for q in r.stdout.split("\0") if q]
+    # -v -z answers in fours: source, line number, pattern, path. A negated pattern
+    # (`!keep.log`) is reported too, and means the path is NOT ignored.
+    fields = r.stdout.split("\0")
+    ignored = []
+    for source, _line, pattern, path in zip(*[iter(fields)] * 4):
+        own = Path(source).name == ".gitignore" and not Path(source).is_absolute()
+        if own and not pattern.startswith("!"):
+            ignored.append(path)
+    return ignored
+
+
+def _tracked(root: Path, cited: list[str]) -> set[str]:
+    """The cited paths the index holds, as a file or as a directory with files in it."""
+    try:
+        r = subprocess.run(
+            ["git", "-C", str(root), "--literal-pathspecs", "ls-files", "-z", "--cached",
+             "--", *cited],
+            capture_output=True, text=True, env=_git_env(),
+        )
+    except OSError:
+        return set()
+    if r.returncode != 0:
+        return set()
+    files = [f for f in r.stdout.split("\0") if f]
+    return {c for c in cited if any(f == c or f.startswith(c + "/") for f in files)}
 
 
 def git_ignored(root: Path, cited: list[str]) -> set[str]:
@@ -185,7 +217,7 @@ def git_ignored(root: Path, cited: list[str]) -> set[str]:
         # fails the same way, and nothing is ignored. Only the candidates for "dangling"
         # are asked, so this is a handful of calls, not one per citation.
         answer = [q for q in asked if _check_ignore(root, [q])]
-    return {asked[q] for q in answer if q in asked}
+    return {asked[q] for q in answer if q in asked} - _tracked(root, cited)
 
 
 def main() -> None:
