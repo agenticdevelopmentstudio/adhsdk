@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Self-test for the doc-link resolve-check. Proves the failure path, not just the happy one."""
+import os
 import subprocess
 import sys
 import tempfile
@@ -8,10 +9,10 @@ from pathlib import Path
 GUARD = Path(__file__).resolve().parent / "check_doc_links.py"
 
 
-def run(root: Path) -> subprocess.CompletedProcess:
+def run(root: Path, env: dict | None = None) -> subprocess.CompletedProcess:
     return subprocess.run(
         [sys.executable, str(GUARD), "--root", str(root)],
-        capture_output=True, text=True,
+        capture_output=True, text=True, env=env,
     )
 
 
@@ -256,4 +257,16 @@ with tempfile.TemporaryDirectory() as tmp:
     (root / "docs" / "guide.md").write_text("see `packages/gone.ts`\n")
     check("a path the repo does not ignore still fails", run(root).returncode, 1)
 
-print("check_doc_links_test: 17 passed")
+    # (18) git is asked about the scanned root, not about whatever repo a hook's
+    #      GIT_DIR names. Here GIT_DIR points at the ignoring checkout from (17) while
+    #      the scanned root is not a checkout at all, so nothing in it is ignored.
+    other = Path(tmp) / "not-a-checkout"
+    (other / "docs").mkdir(parents=True)
+    (other / "packages").mkdir()
+    (other / "packages" / "keep.txt").write_text("x\n")
+    (other / ".gitignore").write_text("packages/gen/\n")
+    (other / "docs" / "guide.md").write_text("written to `packages/gen/`\n")
+    hooked = {**os.environ, "GIT_DIR": str(root / ".git"), "GIT_WORK_TREE": str(other)}
+    check("a hook's GIT_DIR does not make a path ignored", run(other, hooked).returncode, 1)
+
+print("check_doc_links_test: 18 passed")

@@ -38,7 +38,9 @@ paths a fresh checkout does not have yet, and this guard runs before install and
 Whether such a path exists says which steps this machine ran, not whether the doc is
 right. Asked of git (`check-ignore --no-index`), with the path also tried as a directory,
 because an ignore pattern ending in `/` matches only a directory and a missing path is
-read as a file. Outside a git checkout nothing counts as ignored.
+read as a file. Outside a git checkout nothing counts as ignored. git is asked about the
+scanned root alone: the `GIT_*` variables a hook runs with (`GIT_DIR`, `GIT_WORK_TREE`,
+`GIT_INDEX_FILE`, ...) are dropped first, or git would answer from the repo they name.
 
 The scope guard is a denylist and knows the private scope's name; this is the complement.
 It asks only whether a reader following the citation lands on a file, which is the property
@@ -50,6 +52,7 @@ from __future__ import annotations
 
 import argparse
 import re
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -143,6 +146,11 @@ def normalize_source_path(raw: str, rest: str, top_level: set[str]) -> str | Non
     return cited
 
 
+def _git_env() -> dict[str, str]:
+    """This process's environment without the variables that point git at another repo."""
+    return {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+
+
 def git_ignored(root: Path, cited: list[str]) -> set[str]:
     """The cited paths git ignores under `root` (see the docstring); empty outside a checkout."""
     if not cited:
@@ -152,6 +160,7 @@ def git_ignored(root: Path, cited: list[str]) -> set[str]:
         r = subprocess.run(
             ["git", "-C", str(root), "check-ignore", "--no-index", "--stdin"],
             input="\n".join(queries) + "\n", capture_output=True, text=True,
+            env=_git_env(),
         )
     except OSError:
         return set()
