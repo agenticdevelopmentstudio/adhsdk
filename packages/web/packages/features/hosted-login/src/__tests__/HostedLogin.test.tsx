@@ -168,4 +168,15 @@ describe("HostedLogin", () => {
     expect(html).not.toContain('value="constructor"');
     expect(html).toContain("Your account uses a passkey.");
   });
+
+  it("offers each repeated code method once, in first-seen order", async () => {
+    const html = await render({
+      backendUrl: BACKEND,
+      params: { login_challenge: "chal-1", mfa_token: "mfa-tok", mfa: "sms,totp,sms,totp" },
+    });
+
+    expect(html.match(/value="totp"/g)).toHaveLength(1);
+    expect(html.match(/value="sms"/g)).toHaveLength(1);
+    expect(html.indexOf('value="sms"')).toBeLessThan(html.indexOf('value="totp"'));
+  });
 });

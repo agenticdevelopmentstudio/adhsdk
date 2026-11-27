@@ -64,12 +64,18 @@ const CODE_METHOD_LABELS: Record<string, string> = {
 };
 
 function codeMethods(mfa: string | undefined): string[] {
-  return (mfa ?? "")
-    .split(",")
-    .map((m) => m.trim())
-    // Own keys only: `in` would also pass `__proto__`, `constructor` and the rest of
-    // Object.prototype, which a crafted `?mfa=` could name.
-    .filter((m) => Object.hasOwn(CODE_METHOD_LABELS, m));
+  // A Set keeps the first-seen order and drops repeats: `mfa=totp,totp` is one radio, not two
+  // sharing a React key.
+  return [
+    ...new Set(
+      (mfa ?? "")
+        .split(",")
+        .map((m) => m.trim())
+        // Own keys only: `in` would also pass `__proto__`, `constructor` and the rest of
+        // Object.prototype, which a crafted `?mfa=` could name.
+        .filter((m) => Object.hasOwn(CODE_METHOD_LABELS, m)),
+    ),
+  ];
 }
 
 /** The card for a sign-in link that reached the page without a `login_challenge`. */
