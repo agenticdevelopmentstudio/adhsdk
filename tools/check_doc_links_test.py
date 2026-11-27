@@ -269,4 +269,26 @@ with tempfile.TemporaryDirectory() as tmp:
     hooked = {**os.environ, "GIT_DIR": str(root / ".git"), "GIT_WORK_TREE": str(other)}
     check("a hook's GIT_DIR does not make a path ignored", run(other, hooked).returncode, 1)
 
-print("check_doc_links_test: 18 passed")
+    # (19) A non-ASCII ignored path is still excused (git C-quotes it unless asked
+    #      with -z), and one path git refuses outright, here one beyond a symlink,
+    #      neither excuses itself nor costs the other ignored paths their exemption.
+    root = Path(tmp) / "awkward"
+    (root / "docs").mkdir(parents=True)
+    (root / "packages" / "real").mkdir(parents=True)
+    (root / "packages" / "link").symlink_to(root / "packages" / "real")
+    (root / ".gitignore").write_text("packages/gen/\n*.generated.ts\n")
+    subprocess.run(["git", "init", "-q", str(root)], check=True)
+    (root / "docs" / "guide.md").write_text(
+        "written to `packages/gen/` and `packages/caf\u00e9.generated.ts`\n"
+    )
+    check("a non-ASCII ignored path is not dangling", run(root).returncode, 0)
+    (root / "docs" / "guide.md").write_text(
+        "written to `packages/gen/` and `packages/caf\u00e9.generated.ts`,"
+        " see `packages/link/gone.ts`\n"
+    )
+    out = run(root)
+    check("a path git refuses is still checked", out.returncode, 1)
+    check("and it is the only one reported", "1 dangling doc path(s)" in out.stderr, True)
+    check("named", "packages/link/gone.ts" in out.stderr, True)
+
+print("check_doc_links_test: 19 passed")

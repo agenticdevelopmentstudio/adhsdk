@@ -38,7 +38,10 @@ paths a fresh checkout does not have yet, and this guard runs before install and
 Whether such a path exists says which steps this machine ran, not whether the doc is
 right. Asked of git (`check-ignore --no-index`), with the path also tried as a directory,
 because an ignore pattern ending in `/` matches only a directory and a missing path is
-read as a file. Outside a git checkout nothing counts as ignored. git is asked about the
+read as a file. Outside a git checkout nothing counts as ignored. The paths go to git
+NUL-separated, so a non-ASCII one is not C-quoted on the way back, and if git refuses
+one path (one beyond a symlink, say) the rest are asked one at a time, so that one is
+still checked and the others are still excused. git is asked about the
 scanned root alone: the `GIT_*` variables a hook runs with (`GIT_DIR`, `GIT_WORK_TREE`,
 `GIT_INDEX_FILE`, ...) are dropped first, or git would answer from the repo they name.
 
@@ -151,23 +154,38 @@ def _git_env() -> dict[str, str]:
     return {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
 
 
+def _check_ignore(root: Path, queries: list[str]) -> list[str] | None:
+    """The queries git ignores, or None when git gives no answer for the batch."""
+    try:
+        r = subprocess.run(
+            ["git", "-C", str(root), "check-ignore", "--no-index", "-z", "--stdin"],
+            input="".join(q + "\0" for q in queries), capture_output=True, text=True,
+            env=_git_env(),
+        )
+    except OSError:
+        return None
+    # 0: some ignored, 1: none ignored, anything else (128: not a checkout, or a path
+    # git refuses, such as one beyond a symlink): no answer.
+    if r.returncode not in (0, 1):
+        return None
+    return [q for q in r.stdout.split("\0") if q]
+
+
 def git_ignored(root: Path, cited: list[str]) -> set[str]:
     """The cited paths git ignores under `root` (see the docstring); empty outside a checkout."""
     if not cited:
         return set()
-    queries = [q for c in cited for q in (c, c + "/")]
-    try:
-        r = subprocess.run(
-            ["git", "-C", str(root), "check-ignore", "--no-index", "--stdin"],
-            input="\n".join(queries) + "\n", capture_output=True, text=True,
-            env=_git_env(),
-        )
-    except OSError:
-        return set()
-    # 0: some ignored, 1: none ignored, anything else (128: not a checkout): no answer.
-    if r.returncode not in (0, 1):
-        return set()
-    return {line.rstrip("/") for line in r.stdout.splitlines() if line}
+    # NUL-separated both ways (`-z`), so a non-ASCII path comes back as it was sent
+    # rather than C-quoted, and each answer maps back to the citation it was asked for.
+    asked = {q: c for c in cited for q in (c, c + "/")}
+    answer = _check_ignore(root, list(asked))
+    if answer is None:
+        # One path git refuses fails the whole batch; ask path by path, so only that
+        # one goes unanswered (and so is still checked). Outside a checkout every query
+        # fails the same way, and nothing is ignored. Only the candidates for "dangling"
+        # are asked, so this is a handful of calls, not one per citation.
+        answer = [q for q in asked if _check_ignore(root, [q])]
+    return {asked[q] for q in answer if q in asked}
 
 
 def main() -> None:
