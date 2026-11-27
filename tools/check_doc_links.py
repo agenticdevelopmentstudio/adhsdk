@@ -36,21 +36,28 @@ A citation of a path this repo's `.gitignore` ignores is not dangling either. Si
 that says where they land (`docs/architecture/build-output-not-committed.md`) names
 paths a fresh checkout does not have yet, and this guard runs before install and build.
 Whether such a path exists says which steps this machine ran, not whether the doc is
-right. Asked of git (`check-ignore -v`), with the path also tried as a directory,
-because an ignore pattern ending in `/` matches only a directory and a missing path is
-read as a file. Only a rule in one of the repo's own `.gitignore` files counts: a
-developer's global excludes file and `.git/info/exclude` are that machine's, so a path
-they ignore is still checked, or the guard would pass on one machine and fail on the
-next. A tracked path is never excused either, a file or a directory with tracked files
-in it: a committed file that a pattern happens to match, deleted in the working tree,
-is still dangling. A typo under a glob or directory pattern (`routes.*.generated.ts`,
-`packages/apple/**/build/`) is excused like the path it misspells; the rule cannot tell
-them apart. Outside a git checkout nothing counts as ignored. The paths go to git
-NUL-separated, so a non-ASCII one is not C-quoted on the way back, and if git refuses
-one path (one beyond a symlink, say) the rest are asked one at a time, so that one is
-still checked and the others are still excused. git is asked about the
-scanned root alone: the `GIT_*` variables a hook runs with (`GIT_DIR`, `GIT_WORK_TREE`,
-`GIT_INDEX_FILE`, ...) are dropped first, or git would answer from the repo they name.
+right. Which paths count is narrow on purpose:
+
+  * Only when the scanned root is the top of a git checkout. Outside one nothing is
+    ignored, and a root that merely sits inside some other repo (a temp directory under
+    a checkout, say) borrows none of that repo's rules.
+  * Only a non-negated rule in one of the repo's own `.gitignore` files. A developer's
+    global excludes file and `.git/info/exclude` are that machine's, so a path they
+    ignore is still checked, or the guard would pass on one machine and fail on the next.
+  * Never a tracked path, a file or a directory with tracked files in it: a committed
+    file that a pattern happens to match, deleted in the working tree, is still dangling.
+  * A typo under a glob or directory pattern (`routes.*.generated.ts`,
+    `packages/apple/**/build/`) is excused like the path it misspells; the rule cannot
+    tell them apart.
+
+git answers (`check-ignore -v`) with the path also tried as a directory, because an
+ignore pattern ending in `/` matches only a directory and a missing path is read as a
+file. The paths go to git NUL-separated, so a non-ASCII one is not C-quoted on the way
+back, and if git refuses one path (one beyond a symlink, say) the rest are asked one at
+a time, so that one is still checked and the others are still excused. git is asked
+about the scanned root alone: the `GIT_*` variables a hook runs with (`GIT_DIR`,
+`GIT_WORK_TREE`, `GIT_INDEX_FILE`, ...) are dropped first, or git would answer from the
+repo they name.
 
 The scope guard is a denylist and knows the private scope's name; this is the complement.
 It asks only whether a reader following the citation lands on a file, which is the property
@@ -203,9 +210,21 @@ def _tracked(root: Path, cited: list[str]) -> set[str]:
     return {c for c in cited if any(f == c or f.startswith(c + "/") for f in files)}
 
 
+def _is_checkout_top(root: Path) -> bool:
+    """Whether `root` is the top of a git work tree (not just somewhere inside one)."""
+    try:
+        r = subprocess.run(
+            ["git", "-C", str(root), "rev-parse", "--show-toplevel"],
+            capture_output=True, text=True, env=_git_env(),
+        )
+    except OSError:
+        return False
+    return r.returncode == 0 and Path(r.stdout.strip()).resolve() == root.resolve()
+
+
 def git_ignored(root: Path, cited: list[str]) -> set[str]:
     """The cited paths git ignores under `root` (see the docstring); empty outside a checkout."""
-    if not cited:
+    if not cited or not _is_checkout_top(root):
         return set()
     # NUL-separated both ways (`-z`), so a non-ASCII path comes back as it was sent
     # rather than C-quoted, and each answer maps back to the citation it was asked for.

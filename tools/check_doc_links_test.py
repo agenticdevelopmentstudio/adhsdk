@@ -316,4 +316,17 @@ with tempfile.TemporaryDirectory() as tmp:
     (root / "docs" / "guide.md").write_text("see `packages/other.log`\n")
     check("a .gitignore rule still excuses", run(root, machine).returncode, 0)
 
-print("check_doc_links_test: 20 passed")
+    # (21) A root inside some other checkout is not a checkout of its own, so that
+    #      repo's rules (here, a .gitignore inside the scanned root, which git would
+    #      apply as a nested one) excuse nothing.
+    outer = Path(tmp) / "outer"
+    root = outer / "inner"
+    (root / "docs").mkdir(parents=True)
+    (root / "packages").mkdir()
+    (root / "packages" / "keep.txt").write_text("x\n")
+    (root / ".gitignore").write_text("packages/gen/\n")
+    (root / "docs" / "guide.md").write_text("written to `packages/gen/`\n")
+    subprocess.run(["git", "init", "-q", str(outer)], check=True)
+    check("a root inside another checkout borrows none of its rules", run(root).returncode, 1)
+
+print("check_doc_links_test: 21 passed")
