@@ -30,6 +30,13 @@ describe("the product-sites console rail", () => {
     expect(PRODUCT_ADMIN_TOPICS.map((t) => t.href).sort()).toEqual([...pages].sort());
   });
 
+  // An exemption for a page the site no longer has is a no-op that would later hide a rail
+  // topic at that path from the check above, so each one must name a real route.
+  it("exempts only routes the product-sites share has", () => {
+    const share = new Set(SITE_ROUTES["product-sites"] ?? []);
+    expect([...NOT_ON_THE_RAIL].filter((r) => !share.has(r))).toEqual([]);
+  });
+
   // Phase 7: the Support topic, a product admin's support grants, is a page of the site.
   it("has the Support topic's href in the product-sites share", () => {
     const support = PRODUCT_ADMIN_TOPICS.find((t) => t.id === "support");
