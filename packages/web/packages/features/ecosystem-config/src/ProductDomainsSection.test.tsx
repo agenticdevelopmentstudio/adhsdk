@@ -287,6 +287,28 @@ describe("ProductDomainsSection", () => {
     );
   });
 
+  it.each([
+    [
+      "a CNAME under a two-label public suffix",
+      "app.example.co.uk",
+      [{ type: "CNAME" as const, name: "app", value: "cname.vercel-dns.com" }],
+      "example.co.uk",
+    ],
+    [
+      "a CNAME several labels deep",
+      "a.b.example.com",
+      [{ type: "CNAME" as const, name: "a.b", value: "cname.vercel-dns.com" }],
+      "example.com",
+    ],
+    ["an apex A record", "example.co.uk", [{ type: "A" as const, name: "@", value: "76.76.21.21" }], "example.co.uk"],
+    ["no A or CNAME record: the first label dropped", "app.example.com", [CHALLENGE], "example.com"],
+  ])("the records lead names the zone the records give: %s", async (_label, host, records, zone) => {
+    api.list.mockResolvedValue([domainOf({ host, records })]);
+    section();
+    const lead = await screen.findByText(/^Create these records at the DNS provider for/);
+    expect(lead.textContent).toBe(`Create these records at the DNS provider for ${zone}:`);
+  });
+
   it("copy buttons copy the exact API strings", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.assign(navigator, { clipboard: { writeText } });

@@ -151,8 +151,16 @@ const hostOf = (origin: string | null | undefined): string | null => {
   }
 };
 
-/** Where the records are created: the host minus its first label, or the host at two labels. */
-const parentOf = (host: string): string => {
+/**
+ * Where the records are created: the DNS zone, read from the records the backend sent. An `A`
+ * record named `@` means the host is its own apex; a `CNAME` is named for the labels left of the
+ * apex, so `app` on `app.example.co.uk` gives `example.co.uk`. Only with neither does it guess:
+ * the host minus its first label, or the host at two labels.
+ */
+const zoneOf = ({ host, records }: Pick<ProductDomain, "host" | "records">): string => {
+  if (records.some((r) => r.type === "A" && r.name === "@")) return host;
+  const cname = records.find((r) => r.type === "CNAME" && r.name !== "" && host.startsWith(`${r.name}.`));
+  if (cname) return host.slice(cname.name.length + 1);
   const labels = host.split(".");
   return labels.length > 2 ? labels.slice(1).join(".") : host;
 };
@@ -495,7 +503,7 @@ function Records({ domain }: { domain: ProductDomain }) {
     <div className="flex flex-col gap-2">
       <p className="text-sm text-apt-text">
         {"Create these records at the DNS provider for "}
-        <span className="font-mono">{parentOf(domain.host)}</span>
+        <span className="font-mono">{zoneOf(domain)}</span>
         {":"}
       </p>
       <div className="overflow-x-auto">
