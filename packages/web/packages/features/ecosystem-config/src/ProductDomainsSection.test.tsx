@@ -238,7 +238,11 @@ describe("ProductDomainsSection", () => {
     section();
     expect(await screen.findByText("Pending")).toBeInTheDocument();
     const status = screen.getByRole("status");
-    expect(status).toHaveTextContent(/^Added .+\. Waiting for the records below\. Last checked .+; it is checked again every 10 minutes until .+\.$/);
+    expect(status).toHaveTextContent(/^Added .+\. Waiting for the records below\.$/);
+    // The check line follows the sentence in the same paragraph, outside the live region.
+    const paragraph = status.parentElement as HTMLElement;
+    expect(paragraph).toHaveTextContent(/^Added .+\. Waiting for the records below\. Last checked .+; it is checked again every 10 minutes until .+\.$/);
+    expect(status).not.toHaveTextContent("Last checked");
     expect(screen.getByRole("table", { name: `DNS records for ${HOST}` })).toBeInTheDocument();
     expect(screen.getByText("temporal.com")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: `Check ${HOST} now` })).toHaveTextContent("Check now");
@@ -279,8 +283,18 @@ describe("ProductDomainsSection", () => {
     api.list.mockResolvedValue([domainOf({ checkedAt: null })]);
     section();
     const status = await screen.findByRole("status");
-    expect(status).toHaveTextContent(/It is checked every 10 minutes until .+\.$/);
-    expect(status).not.toHaveTextContent("Last checked");
+    const paragraph = status.parentElement as HTMLElement;
+    expect(paragraph).toHaveTextContent(/It is checked every 10 minutes until .+\.$/);
+    expect(paragraph).not.toHaveTextContent("Last checked");
+    expect(status).not.toHaveTextContent("It is checked");
+  });
+
+  it("the ticking check line sits outside the live region, so only the state sentence is announced", async () => {
+    api.list.mockResolvedValue([domainOf()]);
+    section();
+    const line = await screen.findByText(/Last checked /);
+    expect(line.closest('[role="status"]')).toBeNull();
+    expect(screen.getByRole("status")).toHaveTextContent(/^Added .+\. Waiting for the records below\.$/);
   });
 
   it("a demoted domain (pending with an error) names the problem and never says waiting", async () => {

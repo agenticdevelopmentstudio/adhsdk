@@ -84,6 +84,7 @@ The pieces:
   | failed | Failed (`error`) | "The records below were not found within 7 days of adding the domain on <date>, so it is no longer checked by itself. Create them and choose Check now, or remove the domain.", then the error when there is one; when the window restarted (see [domains-failed-window](#requirements/domains-failed-window)) "within 7 days of <start date>, when it last went back to waiting" in place of "within 7 days of adding the domain on <date>" | yes | Check now, Remove |
   | removing | Removing (`neutral`) | "Being removed. If this stays, choose Remove again." | no | Remove |
 
+- **domains-live-region**: each box's state sentence MUST be its only live region (`role="status"`), so a Check now outcome is announced; the check line MUST follow it in the same paragraph but outside that region, so its once-a-minute tick is never announced.
 - **domains-check-line**: a pending box's check line MUST read "Last checked <relative>; it is checked again every 10 minutes until <expiresAt date>.", and with a null `checkedAt` "It is checked every 10 minutes until <date>." The relative time MUST be read against a clock the section reads again once a minute (an interval cleared on unmount), so it ages while the page is open, and a `checkedAt` after that clock (clock skew) MUST be read as now, never as a time to come.
 - **domains-failed-window**: a failed box's 7 days MUST be counted from `expiresAt` minus 7 days, not from `createdAt`: the backend starts a fresh 7 days on a demotion and on a Check now of a failed row. When that start falls on `createdAt`'s day the sentence names the day the domain was added; otherwise it names the start day, "when it last went back to waiting".
 - **domains-demoted**: a pending domain with an `error` (the 6-hourly re-check found a verified domain no longer pointing at Vercel, and moved it back to pending) MUST name the problem and MUST NOT say it is waiting for the records; its expiry date is the fresh one the backend set.
@@ -129,8 +130,7 @@ The Support page has four states: loading, loaded (grants listed), failed (the b
 The Jobs pages (phase 9) take their states from `JobStatusPane` and `JobTemplatesPane`: loading, loaded, empty (no runs, or no templates), failed (the backend's message), and not available (a 404 while the `jobs_feature` switch is off).
 ## Accessibility
 
-Not applicable beyond the shared UI kit: the panes use its table, form, dialog and stat card components and add no focus handling of their own.
-
+Not applicable beyond the shared UI kit: the panes use its table, form, dialog and stat card components and add no focus handling of their own. The Custom domain section adds one live region per domain box, the state sentence alone ([domains-live-region](#requirements/domains-live-region)).
 ## Conformance Test Vectors
 
 Vectors marked with a test name are asserted in `features/product-admin/src/__tests__/`, `features/ecosystem-config/src/ProductSitePane.test.tsx`, `features/ecosystem-config/src/ProductTotalsPane.test.tsx`, `features/ecosystem-config/src/ProductDomainsSection.test.tsx` (vectors 026 to 035, written from the phase 8 design), `features/adh-products/src/__tests__/topics.test.tsx` and `features/support-access/src/__tests__/SupportGrantsPane.test.tsx`. The others follow from the source.

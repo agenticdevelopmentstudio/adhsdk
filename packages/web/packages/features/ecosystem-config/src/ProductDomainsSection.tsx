@@ -356,8 +356,13 @@ function DomainBox({
         <span className="font-mono text-sm text-apt-text">{host}</span>
         <StatusBadges domain={domain} />
       </div>
-      <p role="status" className="text-sm text-apt-text-muted">
-        <StateText domain={domain} site={site} words={words} now={now} />
+      {/* The live region holds only the state sentence, so a Check now outcome is announced but
+          the check line, which ticks once a minute in every pending box, is not. */}
+      <p className="text-sm text-apt-text-muted">
+        <span role="status">
+          <StateText domain={domain} site={site} words={words} />
+        </span>
+        {domain.status === "pending" ? ` ${checkLine(domain, now)}` : null}
       </p>
       {showRecords && <Records domain={domain} />}
       <div className="flex flex-wrap items-center gap-2">
@@ -455,17 +460,7 @@ function checkLine(domain: ProductDomain, now: number): string {
     : `It is checked every 10 minutes${tail}.`;
 }
 
-function StateText({
-  domain,
-  site,
-  words,
-  now,
-}: {
-  domain: ProductDomain;
-  site: ProductSite;
-  words: DomainWords;
-  now: number;
-}): ReactNode {
+function StateText({ domain, site, words }: { domain: ProductDomain; site: ProductSite; words: DomainWords }): ReactNode {
   const { host } = domain;
   const subdomainHost = hostOf(site.subdomainOrigin);
   const added = when(domain.createdAt);
@@ -476,8 +471,8 @@ function StateText({
       // A pending row with an error is a domain the re-check demoted (or one whose last check
       // found a problem): it names the problem rather than "waiting" as if nothing had happened.
       return domain.error
-        ? `${addedLead}The last check found a problem: ${clause(domain.error)}. ${words.Name} answers at ${host} only once it is verified. ${checkLine(domain, now)}`
-        : `${addedLead}Waiting for the records below. ${checkLine(domain, now)}`;
+        ? `${addedLead}The last check found a problem: ${clause(domain.error)}. ${words.Name} answers at ${host} only once it is verified.`
+        : `${addedLead}Waiting for the records below.`;
 
     case "verified": {
       if (domain.isPrimary) {
