@@ -80,7 +80,7 @@ The pieces:
   | pending | Pending (`orange`) | "Added <when>. Waiting for the records below." and the check line | yes | Check now, Remove |
   | pending with `error` | Pending (`orange`) | "Added <when>. The last check found a problem: <error>. <Name> answers at <host> only once it is verified." and the check line | yes | Check now, Remove |
   | verified | Verified (`success`) | "<Name> answers at https://<host>. Verified <when>. Its primary address is still <primary host>.", the primary host being that of the site's `primaryOrigin` (another custom domain when one is primary), or the subdomain's when there is none | no | Make primary, Remove |
-  | verified and primary | Verified (`success`), Primary (`accent`) | "<host> is <name>'s primary address. Customers sign in there, the admin console signs in there, and support emails link there. <subdomain host> still works." | no | Remove |
+  | verified and primary | Verified (`success`), Primary (`accent`) | "<host> is <name>'s primary address. Customers sign in there, the admin console signs in there, and support emails link there. <subdomain host> still works.", both hosts in mono | no | Remove |
   | failed | Failed (`error`) | "The records below were not found within 7 days of adding the domain on <date>, so it is no longer checked by itself. Create them and choose Check now, or remove the domain.", then the error when there is one; when the window restarted (see [domains-failed-window](#requirements/domains-failed-window)) "within 7 days of <start date>, when it last went back to waiting" in place of "within 7 days of adding the domain on <date>" | yes | Check now, Remove |
   | removing | Removing (`neutral`) | "Being removed. If this stays, choose Remove again." | no | Remove |
 

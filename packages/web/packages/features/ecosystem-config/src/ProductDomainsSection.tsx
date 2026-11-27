@@ -476,7 +476,19 @@ function StateText({ domain, site, words }: { domain: ProductDomain; site: Produ
 
     case "verified": {
       if (domain.isPrimary) {
-        return `${host} is ${words.its} primary address. Customers sign in there, the admin console signs in there, and support emails link there.${subdomainHost ? ` ${subdomainHost} still works.` : ""}`;
+        return (
+          <>
+            <span className="font-mono">{host}</span>
+            {` is ${words.its} primary address. Customers sign in there, the admin console signs in there, and support emails link there.`}
+            {subdomainHost ? (
+              <>
+                {" "}
+                <span className="font-mono">{subdomainHost}</span>
+                {" still works."}
+              </>
+            ) : null}
+          </>
+        );
       }
       const verified = when(domain.verifiedAt);
       // The site's primary, which is another custom domain when two pending ones both verified

@@ -432,9 +432,13 @@ describe("ProductDomainsSection", () => {
     section(siteOf({ primaryOrigin: `https://${HOST}` }));
     expect(await screen.findByText("Primary")).toBeInTheDocument();
     expect(screen.getByText("Verified")).toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent(
+    const status = screen.getByRole("status");
+    expect(status).toHaveTextContent(
       "app.temporal.com is Temporal's primary address. Customers sign in there, the admin console signs in there, and support emails link there. temporal.agenticdeveloperhub.com still works.",
     );
+    // Both hosts are set in mono, as the mockup has them.
+    expect(within(status).getByText(HOST)).toHaveClass("font-mono");
+    expect(within(status).getByText("temporal.agenticdeveloperhub.com")).toHaveClass("font-mono");
     expect(screen.queryByRole("button", { name: `Make ${HOST} primary` })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: `Check ${HOST} now` })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: `Remove ${HOST}` })).toBeInTheDocument();
