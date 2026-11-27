@@ -10,8 +10,13 @@ import { SITE_ROUTES } from "../routes.generated";
 // sends a person on to /admin/users, /admin/no-access is where a signed-in person without the
 // admin role lands, and /admin/jobs/templates (with a template's own page) is reached from the
 // Jobs page (its own topic set, @adh-sdk/jobs' jobsProductAdminTopics), not from the rail.
+// /login, /signup and /support are the product's own public pages at its address (the
+// customer-domain work): its users' sign-in, sign-up and support link, outside the console.
 const NOT_ON_THE_RAIL = new Set([
   "/",
+  "/login",
+  "/signup",
+  "/support",
   "/admin",
   "/admin/no-access",
   "/admin/jobs/templates",
