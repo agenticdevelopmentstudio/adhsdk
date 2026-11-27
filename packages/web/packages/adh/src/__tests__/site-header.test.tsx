@@ -77,7 +77,7 @@ vi.mock('@adh-sdk/messaging/components/notification-bell', () => ({
 }))
 
 import { SiteHeader } from '../header/SiteHeader'
-import { getSite, siteHeaderTitle, SITES } from '@adh-sdk/adh-registry'
+import { getSite, isWildcardSite, siteHeaderTitle, SITES } from '@adh-sdk/adh-registry'
 import type { HeaderAuthSourceOptions, HeaderAuthState } from '@adh-sdk/adh/header-auth'
 import { SettingsOverlayProvider } from '@adh-sdk/adh/settings'
 
@@ -113,12 +113,28 @@ describe('SiteHeader', () => {
   // also pins that no site falls through to the raw id — `site?.label ?? siteId` prints
   // an id for anything the registry has lost, which reads as a bug in the header rather
   // than as the missing entry it is.
+  // A wildcard site (product-sites, every product's own site) has no single URL, so it has no
+  // header of this kind: the header builds its Login return from the site's own URL, and the
+  // registry refuses to name one (adhsdk 744025e07). Every other site is checked.
   it('centres a registry name on every site in the fleet, never a bare id', () => {
-    for (const site of SITES) {
+    for (const site of SITES.filter((s) => !isWildcardSite(s))) {
       const { unmount } = render(<SiteHeader siteId={site.id} />)
       expect(headerProps.current?.pageTitle).toBe(site.label)
       expect(headerProps.current?.pageTitle).not.toBe(site.id)
       unmount()
+    }
+  })
+
+  it('refuses a wildcard site loudly rather than render a header with no URL of its own', () => {
+    const wildcards = SITES.filter((s) => isWildcardSite(s))
+    expect(wildcards.length).toBeGreaterThan(0)
+    const quiet = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    try {
+      for (const site of wildcards) {
+        expect(() => render(<SiteHeader siteId={site.id} />)).toThrow(`${site.id} is a wildcard site; it has no single URL`)
+      }
+    } finally {
+      quiet.mockRestore()
     }
   })
 
