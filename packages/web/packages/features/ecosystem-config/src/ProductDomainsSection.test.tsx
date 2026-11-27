@@ -468,6 +468,27 @@ describe("ProductDomainsSection", () => {
     expect(status).not.toHaveTextContent("adding the domain");
   });
 
+  it("pending with no records yet: no table, and the text never points at records below", async () => {
+    api.list.mockResolvedValue([domainOf({ records: [] })]);
+    section();
+    const status = await screen.findByRole("status");
+    expect(status).toHaveTextContent(/^Added .+\. Waiting for the DNS records, which appear here after the next check\.$/);
+    expect(status).not.toHaveTextContent("below");
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+  });
+
+  it("failed with no records: no table, and the text says they appear after the next check", async () => {
+    api.list.mockResolvedValue([domainOf({ status: "failed", records: [] })]);
+    section();
+    const status = await screen.findByRole("status");
+    expect(status).toHaveTextContent(
+      /^The DNS records were not found within 7 days of adding the domain on .+, so it is no longer checked by itself\. They appear here after the next check: choose Check now, then create them, or remove the domain\.$/,
+    );
+    expect(status).not.toHaveTextContent("below");
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: `Check ${HOST} now` })).toBeInTheDocument();
+  });
+
   it("failed with an error: adds the problem", async () => {
     api.list.mockResolvedValue([domainOf({ status: "failed", error: "no CNAME found." })]);
     section();

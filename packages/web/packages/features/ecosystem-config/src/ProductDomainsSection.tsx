@@ -476,6 +476,9 @@ function StateText({ domain, site, words }: { domain: ProductDomain; site: Produ
   const subdomainHost = hostOf(site.subdomainOrigin);
   const added = when(domain.createdAt);
   const addedLead = added ? `Added ${added}. ` : "";
+  // The records table shows only when the backend sent records; without them no sentence may
+  // point at "the records below".
+  const hasRecords = domain.records.length > 0;
 
   switch (domain.status) {
     case "pending":
@@ -483,7 +486,9 @@ function StateText({ domain, site, words }: { domain: ProductDomain; site: Produ
       // found a problem): it names the problem rather than "waiting" as if nothing had happened.
       return domain.error
         ? `${addedLead}The last check found a problem: ${clause(domain.error)}. ${words.Name} answers at ${host} only once it is verified.`
-        : `${addedLead}Waiting for the records below.`;
+        : hasRecords
+          ? `${addedLead}Waiting for the records below.`
+          : `${addedLead}Waiting for the DNS records, which appear here after the next check.`;
 
     case "verified": {
       if (domain.isPrimary) {
@@ -534,7 +539,9 @@ function StateText({ domain, site, words }: { domain: ProductDomain; site: Produ
         started && started !== addedDay
           ? `within 7 days of ${started}, when it last went back to waiting`
           : `within 7 days of adding the domain${addedDay ? ` on ${addedDay}` : ""}`;
-      const base = `The records below were not found ${within}, so it is no longer checked by itself. Create them and choose Check now, or remove the domain.`;
+      const base = hasRecords
+        ? `The records below were not found ${within}, so it is no longer checked by itself. Create them and choose Check now, or remove the domain.`
+        : `The DNS records were not found ${within}, so it is no longer checked by itself. They appear here after the next check: choose Check now, then create them, or remove the domain.`;
       return domain.error ? `${base} The last check found a problem: ${clause(domain.error)}.` : base;
     }
 
