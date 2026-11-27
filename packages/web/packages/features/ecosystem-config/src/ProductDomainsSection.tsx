@@ -104,9 +104,21 @@ const parse = (iso: string | null | undefined): Date | null => {
 const when = (iso: string | null | undefined): string | null =>
   parse(iso)?.toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) ?? null;
 
-/** "19 November" (in the reader's locale). */
-const day = (iso: string | null | undefined): string | null =>
-  parse(iso)?.toLocaleDateString(undefined, { day: "numeric", month: "long" }) ?? null;
+/** "19 November" (in the reader's locale), for an ISO string or a Date. */
+const day = (at: string | Date | null | undefined): string | null =>
+  (at instanceof Date ? at : parse(at))?.toLocaleDateString(undefined, { day: "numeric", month: "long" }) ?? null;
+
+/** How long the sweep checks a pending domain before failing it (the backend's 7 days). */
+const CHECK_WINDOW_MS = 7 * 86_400_000;
+
+/**
+ * When the domain's current 7-day window began: `expiresAt` minus 7 days. The backend starts a
+ * fresh window on a demotion and on a Check now of a failed row, so this is not always `createdAt`.
+ */
+const windowStart = (domain: ProductDomain): Date | null => {
+  const expires = parse(domain.expiresAt);
+  return expires ? new Date(expires.getTime() - CHECK_WINDOW_MS) : null;
+};
 
 const UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
   ["day", 86_400],
@@ -458,8 +470,15 @@ function StateText({ domain, site, words }: { domain: ProductDomain; site: Produ
     }
 
     case "failed": {
-      const on = day(domain.createdAt);
-      const base = `The records below were not found within 7 days of adding the domain${on ? ` on ${on}` : ""}, so it is no longer checked by itself. Create them and choose Check now, or remove the domain.`;
+      const addedDay = day(domain.createdAt);
+      const started = day(windowStart(domain));
+      // The window restarted after the domain was added (a demotion, or Check now on a failed
+      // row): name the day it last went back to waiting, not the day it was added.
+      const within =
+        started && started !== addedDay
+          ? `within 7 days of ${started}, when it last went back to waiting`
+          : `within 7 days of adding the domain${addedDay ? ` on ${addedDay}` : ""}`;
+      const base = `The records below were not found ${within}, so it is no longer checked by itself. Create them and choose Check now, or remove the domain.`;
       return domain.error ? `${base} The last check found a problem: ${clause(domain.error)}.` : base;
     }
 

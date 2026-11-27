@@ -388,6 +388,19 @@ describe("ProductDomainsSection", () => {
     expect(screen.getByRole("button", { name: `Check ${HOST} now` })).toBeInTheDocument();
   });
 
+  it("failed after its 7 days restarted: names the day it last went back to waiting, not the day it was added", async () => {
+    // Added 19 November; demoted (or checked again after failing) on 24 November, so the
+    // backend's fresh 7 days end on 1 December.
+    api.list.mockResolvedValue([domainOf({ status: "failed", expiresAt: "2026-12-01T09:00:00.000Z" })]);
+    section();
+    const restarted = new Date("2026-11-24T09:00:00.000Z").toLocaleDateString(undefined, { day: "numeric", month: "long" });
+    const status = await screen.findByRole("status");
+    expect(status).toHaveTextContent(
+      `The records below were not found within 7 days of ${restarted}, when it last went back to waiting, so it is no longer checked by itself. Create them and choose Check now, or remove the domain.`,
+    );
+    expect(status).not.toHaveTextContent("adding the domain");
+  });
+
   it("failed with an error: adds the problem", async () => {
     api.list.mockResolvedValue([domainOf({ status: "failed", error: "no CNAME found." })]);
     section();
