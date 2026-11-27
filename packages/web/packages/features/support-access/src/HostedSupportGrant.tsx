@@ -87,7 +87,8 @@ function actionMessage(err: unknown, fallback: string): string {
 
 /** The reads grouped by the viewer's local day, newest day first and newest read first in each. */
 export function readsByDay(reads: readonly SupportAccess[]): { day: string; reads: SupportAccess[] }[] {
-  const sorted = [...reads].sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
+  // A read whose time does not parse would break the sort and head an "Invalid Date" day: drop it.
+  const sorted = reads.filter((r) => !Number.isNaN(Date.parse(r.at))).sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
   const days: { day: string; reads: SupportAccess[] }[] = [];
   for (const read of sorted) {
     const day = localDay(read.at);

@@ -355,6 +355,14 @@ describe("readsByDay", () => {
     expect(groups[1]?.reads.map((r) => r.id)).toEqual(["c", "a"]);
   });
 
+  it("drops a read whose time does not parse", () => {
+    const ok = new Date(2026, 10, 20, 9, 0).toISOString();
+    const groups = readsByDay([read("bad", ""), read("ok", ok)]);
+    expect(groups).toHaveLength(1);
+    expect(groups[0]?.day).toBe("2026-11-20");
+    expect(groups[0]?.reads.map((r) => r.id)).toEqual(["ok"]);
+  });
+
   it("is empty for no reads", () => {
     expect(readsByDay([])).toEqual([]);
   });
