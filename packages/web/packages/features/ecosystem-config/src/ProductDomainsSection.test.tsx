@@ -306,6 +306,18 @@ describe("ProductDomainsSection", () => {
     expect(screen.queryByLabelText("Domain")).not.toBeInTheDocument();
   });
 
+  it("verified while another custom domain is primary: names that domain as the primary, not the subdomain", async () => {
+    api.list.mockResolvedValue([
+      domainOf({ id: "d2", host: "www.temporal.com", status: "verified", isPrimary: true, records: [] }),
+      domainOf({ status: "verified", records: [], verifiedAt: "2026-11-19T14:32:00.000Z" }),
+    ]);
+    section(siteOf({ primaryOrigin: "https://www.temporal.com" }));
+    expect(await screen.findByRole("link", { name: `https://${HOST}` })).toBeInTheDocument();
+    const statuses = screen.getAllByRole("status");
+    expect(statuses[1]).toHaveTextContent(/Its primary address is still www\.temporal\.com\.$/);
+    expect(statuses[1]).not.toHaveTextContent("temporal.agenticdeveloperhub.com");
+  });
+
   it("Make primary sends primary: true, and the answered list replaces the domains", async () => {
     const verified = domainOf({ status: "verified", records: [], verifiedAt: "2026-11-19T14:32:00.000Z" });
     api.list.mockResolvedValue([verified]);

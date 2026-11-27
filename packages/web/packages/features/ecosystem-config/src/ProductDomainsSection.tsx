@@ -431,7 +431,9 @@ function StateText({ domain, site, words }: { domain: ProductDomain; site: Produ
         return `${host} is ${words.its} primary address. Customers sign in there, the admin console signs in there, and support emails link there.${subdomainHost ? ` ${subdomainHost} still works.` : ""}`;
       }
       const verified = when(domain.verifiedAt);
-      const primaryHost = subdomainHost ?? hostOf(site.primaryOrigin);
+      // The site's primary, which is another custom domain when two pending ones both verified
+      // and one was made primary; the subdomain only when the site names no primary.
+      const primaryHost = hostOf(site.primaryOrigin) ?? subdomainHost;
       return (
         <>
           {`${words.Name} answers at `}
