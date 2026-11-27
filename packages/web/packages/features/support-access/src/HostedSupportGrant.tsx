@@ -18,9 +18,9 @@ import { ErrorText } from "@adh-sdk/ui/components/error-text";
  * The body of the hosted support page, mounted by the hub's and each product site's `/support`:
  * one grant, reached by the link in a support notice email (`/support?grant=<id>&token=<token>`,
  * built by the backend's `supportPageLink`). There is no session here; the token is the only
- * credential. It arrives in the URL, lives on in this
- * component's props, and is taken out of the address bar as soon as the load starts; it is never
- * put in storage.
+ * credential. It arrives in the URL, is held by this component from its first props for the life
+ * of the mount, and is taken out of the address bar as soon as the load starts; it is never put
+ * in storage.
  *
  * Deny and Revoke take the link alone, because refusing access is the easy direction. Approve
  * first asks the backend to email a code to the person's own verified address, and sends the
@@ -209,8 +209,7 @@ async function fetchView(id: string | null, tok: string | null, ecosystemId: str
 }
 
 /**
- * Takes `token` out of the address bar and the history entry once the component holds it in
- * props. Left there, anyone who later opens that browser profile's history, or a synced one,
+ * Takes `token` out of the address bar and the history entry once the component holds it. Left there, anyone who later opens that browser profile's history, or a synced one,
  * could reopen the link, read who asked and the read log, and deny or revoke without any further
  * proof. `grant` stays, so the address still says which request this is. A reload after this
  * shows the invalid-link sentence; the email's link opens the page again.
@@ -223,6 +222,10 @@ function dropTokenFromAddress(): void {
   window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
 }
 
+/**
+ * Read once, at mount: a change to any of these after the first render is ignored, so a host
+ * keys the component by the link to show another grant.
+ */
 export interface HostedSupportGrantProps {
   /** The `grant` query value; null or empty shows the invalid-link sentence with no request. */
   grantId: string | null;
@@ -237,10 +240,19 @@ export interface HostedSupportGrantProps {
   ecosystemId?: string | null;
 }
 
+/**
+ * The link is read once per mount: the id, token and ecosystem are captured from the first props
+ * and later props are ignored, because the page takes the token out of the address bar and a host
+ * that reads it from the live query would otherwise re-render with no token and leave every
+ * action silently dead. To show another grant, a host keys the component by the link
+ * (`key={`${grantId}|${token}`}`), as the hub's and the product sites' `/support` both do.
+ */
 export function HostedSupportGrant({ grantId, token, ecosystemId }: HostedSupportGrantProps): ReactElement {
-  const id = grantId?.trim() || null;
-  const tok = token?.trim() || null;
-  const eco = ecosystemId?.trim() || null;
+  const [{ id, tok, eco }] = useState(() => ({
+    id: grantId?.trim() || null,
+    tok: token?.trim() || null,
+    eco: ecosystemId?.trim() || null,
+  }));
   const [view, setView] = useState<View>(() => (id && tok ? { kind: "loading" } : { kind: "invalid" }));
   const [busy, setBusy] = useState<Busy>(null);
   const [codeOpen, setCodeOpen] = useState(false);

@@ -122,9 +122,23 @@ describe("HostedSupportGrant", () => {
     const params = new URLSearchParams(window.location.search);
     expect(params.has("token")).toBe(false);
     expect(params.get("grant")).toBe("g-1");
-    // The props still carry it: the actions work after the address is cleaned.
+    // The component still holds it: the actions work after the address is cleaned.
     expect(api.get).toHaveBeenCalledWith("g-1", "tok");
     window.history.replaceState(null, "", "/");
+  });
+
+  it("keeps the link it mounted with when a host re-renders it without the token", async () => {
+    api.get.mockResolvedValue({ grant: pending(), reads: [] });
+    api.deny.mockResolvedValue(grant({ decision: "denied", decidedAt: new Date().toISOString() }));
+    const { rerender } = render(<HostedSupportGrant grantId="g-1" token="tok" />);
+    await screen.findByText("Pending");
+
+    // A host reading the live query sees the token gone once the address is cleaned.
+    rerender(<HostedSupportGrant grantId="g-1" token={null} />);
+    fireEvent.click(screen.getByRole("button", { name: "Deny" }));
+
+    await screen.findByText("Denied");
+    expect(api.deny).toHaveBeenCalledWith("g-1", "tok");
   });
 
   it("shows who asked, why, for how long, the state and the empty log", async () => {
