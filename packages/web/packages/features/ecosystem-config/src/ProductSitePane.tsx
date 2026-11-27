@@ -257,7 +257,7 @@ function Handle({ ecosystemId, site, words }: { ecosystemId: string; site: Produ
         </div>
       )}
       <ErrorText error={error} />
-      {editing && (
+      {editing && next !== "" && next !== site.handle && (
         <Alert variant="warning">
           <TriangleAlert aria-hidden />
           <AlertTitle>The old address stops working.</AlertTitle>
