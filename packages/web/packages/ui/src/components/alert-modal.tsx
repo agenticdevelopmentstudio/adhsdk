@@ -17,7 +17,7 @@ import {
 import { DialogActions } from "./dialog-actions"
 import type { DialogRoot } from "@base-ui/react/dialog"
 
-export type AlertModalTone = "info" | "success" | "error"
+export type AlertModalTone = "info" | "success" | "warning" | "error"
 
 type KeyAction = "confirm" | "cancel"
 
@@ -26,6 +26,8 @@ type KeyAction = "confirm" | "cancel"
 const TONES: Record<AlertModalTone, { Icon: LucideIcon; className: string }> = {
   info: { Icon: Info, className: "text-apt-blue" },
   success: { Icon: CheckCircle2, className: "text-apt-green" },
+  // A consequential-but-not-destructive confirm, beside the Button's `warning` treatment.
+  warning: { Icon: TriangleAlert, className: "text-apt-orange" },
   error: { Icon: TriangleAlert, className: "text-apt-red" },
 }
 

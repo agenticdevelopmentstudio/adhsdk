@@ -30,9 +30,8 @@ import {
   ShieldCheck,
   ListChecks,
   Layers,
-  UserCog,
 } from "lucide-react";
-import { useAdminSite } from "@adh-sdk/data/product-admin";
+import { useProductSite } from "@adh-sdk/data/product-sites";
 import { useDetailTitle } from "@adh-sdk/ui/blocks/detail-title";
 import type { TopicLeaf } from "@adh-sdk/resource";
 import {
@@ -58,7 +57,7 @@ import {
   ProductRolesPane,
   SignupListPane,
   SetsPane,
-  AdminSitePane,
+  ProductSitePane,
 } from "@adh-sdk/ecosystem-config";
 import { AccessPane } from "@adh-sdk/authentication";
 import { helpFor } from "@adh-sdk/adh/help/store";
@@ -114,8 +113,8 @@ const ICONS: Record<string, ReactNode> = {
   roles: <ShieldCheck size={16} aria-hidden />,
   "signup-list": <ListChecks size={16} aria-hidden />,
   sets: <Layers size={16} aria-hidden />,
-  // The glyph the hub's `/admin-site` row has (menu-icons).
-  "admin-site": <UserCog size={16} aria-hidden />,
+  // The glyph the hub's `/product-site` row has (menu-icons): the product's address.
+  "product-site": <Globe size={16} aria-hidden />,
   gaming: <Gamepad2 size={16} aria-hidden />,
   gamification: <Trophy size={16} aria-hidden />,
   "feature-flags": <Flag size={16} aria-hidden />,
@@ -348,14 +347,16 @@ export function productTopicPaneRenderer({
             help={helpFor("ecosystems/sets")}
           />
         );
-      case "admin-site":
-        // The product's own admin site: its address, its admins and its totals. The pane answers
-        // "No product selected." itself before the id resolves, so the claim holds without one.
+      case "product-site":
+        // The product's own site: its address, its handle, its /admin console, its admins and its
+        // totals. The pane answers "No product selected." itself before the id resolves, so the
+        // claim holds without one.
         return (
-          <AdminSitePane
+          <ProductSitePane
             key={ctx.ecosystemId}
             ecosystemId={ctx.ecosystemId}
-            help={helpFor("ecosystems/admin-site")}
+            productName={ctx.ecosystemName}
+            help={helpFor("ecosystems/product-site")}
           />
         );
       // Users ▸ Authentication: the ecosystem's client auth — how its customers sign in and sign up.
@@ -451,16 +452,14 @@ export function ProductsFeature({
     () => productTopicPaneRenderer({ workspaceSlug, renderTransfer, basePath }),
     [workspaceSlug, renderTransfer, basePath],
   );
-  // The open product's admin site decides which rows the hub keeps (visibleProductTopics). Until
-  // it answers, or if it fails with no answer, every pane stays and the Admin site row waits —
-  // unless the URL names Admin site, whose row is kept so a deep link or reload still opens it.
-  const { data: adminSite } = useAdminSite(activeEcoId);
-  const known = adminSite !== undefined;
-  const enabled = adminSite?.enabled ?? false;
-  const hasSite = adminSite?.site != null;
+  // The open product's site decides which rows the hub keeps (visibleProductTopics): once its
+  // /admin console is live, the people rows leave for it. Until the site answers, or if it fails
+  // with no answer, every pane stays. The Product site row is drawn either way.
+  const { data: productSite } = useProductSite(activeEcoId);
+  const consoleLive = productSite?.consoleLive;
   const topics = useMemo(
-    () => visibleProductTopics(PRODUCT_TOPIC_CONFIGS, known ? { enabled, hasSite } : undefined, activeTopic),
-    [known, enabled, hasSite, activeTopic],
+    () => visibleProductTopics(PRODUCT_TOPIC_CONFIGS, consoleLive === undefined ? undefined : { consoleLive }),
+    [consoleLive],
   );
   return (
     <EcosystemsFeature

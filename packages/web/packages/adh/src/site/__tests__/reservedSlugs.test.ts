@@ -15,10 +15,11 @@ describe('reservedWorkspaceSlugs', () => {
     expect(reserved.has('organization')).toBe(true)
   })
 
-  it('reserves the product knobs that are hub routes: roles, sets, the sign-up list and the admin site', () => {
-    // `/<workspace>/admin-site` (phase 6) is a hub route, so no workspace may take the word.
+  it('reserves the product knobs that are hub routes: roles, sets, the sign-up list and the product site', () => {
+    // `/<workspace>/product-site` is a hub route, so no workspace may take the word; `admin-site`,
+    // the route it replaced, stays held back so a stale link resolves predictably.
     const reserved = reservedWorkspaceSlugs()
-    for (const slug of ['roles', 'sets', 'signup-list', 'admin-site']) {
+    for (const slug of ['roles', 'sets', 'signup-list', 'product-site', 'admin-site']) {
       expect(reserved.has(slug)).toBe(true)
     }
   })

@@ -20,7 +20,7 @@ export {
   useApplicationClientAuth,
   type ApplicationClientAuthState,
 } from "./ApplicationClientAuthSection";
-export { ClientAuthPolicyFields, LoginRegistrationFields } from "./ClientAuthFields";
+export { ClientAuthPolicyFields, LoginRegistrationFields, SettingRow } from "./ClientAuthFields";
 export { FeatureFlagsPane, FlagDialog } from "./FeatureFlagsPane";
 export { ServerBagsPane, BagDialog } from "./ServerBagsPane";
 export { StorageTokensPanel } from "./StorageTokensPanel";
@@ -33,8 +33,9 @@ export { SetsPane } from "./SetsPane";
 // Who is editing through those three: a manager in the hub, or a product admin on the product's
 // own admin site (phase 6), which mounts the same panes.
 export type { PaneCaller } from "./pane-caller";
-// The hub's Admin site pane for a product (phase 6), and the totals it and the admin site share.
-export { AdminSitePane } from "./AdminSitePane";
+// The hub's Product site pane (product sites phase 5): the product's address, its handle, the
+// switch for its /admin console, its admins; and the totals it and the console share.
+export { ProductSitePane } from "./ProductSitePane";
 export { ProductTotalsPane } from "./ProductTotalsPane";
 export {
   useSyncTables,

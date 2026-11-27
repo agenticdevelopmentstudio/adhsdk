@@ -95,6 +95,8 @@ export interface EcosystemsTopicConfig {
  *  closure already has `helpFor` in scope, so it resolves its own help key per pane). */
 export interface RenderTopicPaneCtx {
   ecosystemId?: string;
+  /** The ecosystem's own name, once the list has it, for a pane whose sentences name it. */
+  ecosystemName?: string;
   title?: ReactNode;
   leaf?: TopicLeaf;
   /** Cedes the NEXT url segment to a group member, for a host that renders its OWN
@@ -668,6 +670,7 @@ export function EcosystemsFeature({
       // renderProductTopicPane claims none of these ids — behaves exactly as before.
       const hostPane = renderTopicPane(t.id, {
         ecosystemId: ecoId,
+        ecosystemName: scopedItems?.find((e) => e.id === ecoId)?.name,
         title: titleFor(t.label),
         leaf,
         subLeafFor,

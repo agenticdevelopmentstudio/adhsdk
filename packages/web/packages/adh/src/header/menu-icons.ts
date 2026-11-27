@@ -154,7 +154,6 @@ const ICONS: Record<string, LucideIcon> = {
   // segments that are a SITE's implementation mounted in the hub — is folded in from
   // the registry below, so a site added to HUB_FEATURE_SEGMENT arrives with the glyph
   // its own menu row already wears instead of an empty slot.
-  '/admin-site': UserCog,
   '/ai-settings': Sparkles,
   '/all-data': Database,
   '/applications': AppWindow,
@@ -165,6 +164,7 @@ const ICONS: Record<string, LucideIcon> = {
   '/llm-providers': Boxes,
   '/members': BookUser,
   '/persona-services': Boxes,
+  '/product-site': Globe,
   '/roles': ShieldCheck,
   '/server-bags': Server,
   '/sets': Layers,

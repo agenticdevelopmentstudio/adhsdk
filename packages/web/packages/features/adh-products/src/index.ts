@@ -27,8 +27,9 @@ export {
   PRODUCT_TOPICS,
   HOST_RENDERED_TOPIC_IDS,
   visibleProductTopics,
-  runAtAdminSite,
-  ADMIN_SITE_KEPT_USERS_MEMBERS,
-  type AdminSiteRailState,
+  runAtProductSite,
+  CONSOLE_MOVED_TOPIC_IDS,
+  CONSOLE_KEPT_USERS_MEMBERS,
+  type ProductSiteRailState,
   type ProductTopicId,
 } from "./topics";

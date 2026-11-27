@@ -6,8 +6,9 @@ import {
   PRODUCT_MEMBER_MOVES,
   PRODUCT_TOPIC_ALIASES,
   visibleProductTopics,
-  runAtAdminSite,
-  ADMIN_SITE_KEPT_USERS_MEMBERS,
+  runAtProductSite,
+  CONSOLE_MOVED_TOPIC_IDS,
+  CONSOLE_KEPT_USERS_MEMBERS,
 } from "../topics";
 import { PRODUCT_TOPIC_CONFIGS, productTopicPaneRenderer } from "../ProductsFeature";
 
@@ -124,11 +125,15 @@ describe("the rows' features", () => {
     expect(named.filter((k) => INCLUDED.includes(k))).toEqual([]);
   });
 
-  it("gives every row but Settings exactly one", () => {
+  // Settings and Product site are STRUCTURAL rows: they name no feature, so the feature manager
+  // draws them for every product. Every product has settings, and every product has an address.
+  it("gives every row but Settings and Product site exactly one", () => {
+    const STRUCTURAL = ["product-site", "settings"];
     const wrong = PRODUCT_TOPICS.filter(
-      (t) => t.id !== "settings" && (!("features" in t) || t.features?.length !== 1),
+      (t) => !STRUCTURAL.includes(t.id) && (!("features" in t) || t.features?.length !== 1),
     ).map((t) => t.id);
     expect(wrong).toEqual([]);
+    expect(PRODUCT_TOPICS.filter((t) => !("features" in t)).map((t) => t.id)).toEqual(STRUCTURAL);
   });
 });
 
@@ -140,6 +145,8 @@ describe("the old addresses", () => {
       for (const to of Object.values(moves)) if (to) expect(topicIds.has(to), to).toBe(true);
     }
     expect(PRODUCT_TOPIC_ALIASES["signin-apps"]).toBe("applications");
+    // The Admin site row became Product site (product sites phase 5).
+    expect(PRODUCT_TOPIC_ALIASES["admin-site"]).toBe("product-site");
     // Users ▸ Authentication is an in-package member now: EcosystemsFeature places `auth` itself.
     expect(PRODUCT_TOPIC_ALIASES.auth).toBeUndefined();
     expect(PRODUCT_MEMBER_MOVES.invitations).toBeUndefined();
@@ -148,73 +155,51 @@ describe("the old addresses", () => {
   });
 });
 
-// A product's admin site (phase 6) takes the people rows off the hub once it exists, and the
-// Admin site row is drawn only while the switch is on.
+// A product's /admin console takes the people rows off the hub once it is live (product sites
+// phase 5); the Product site row is drawn whatever the console's state.
 describe("visibleProductTopics", () => {
-  const ids = (state: { enabled: boolean; hasSite: boolean }) =>
+  const ids = (state: { consoleLive: boolean } | undefined) =>
     visibleProductTopics(PRODUCT_TOPICS, state).map((t) => t.id);
   const MOVED = ["invitations", "roles", "signup-list", "sets"];
   const all = PRODUCT_TOPICS.map((t) => t.id);
 
-  it("switch off, no site: every pane but the Admin site row", () => {
-    expect(ids({ enabled: false, hasSite: false })).toEqual(all.filter((id) => id !== "admin-site"));
+  it("not known yet: every pane, the Product site row among them", () => {
+    expect(ids(undefined)).toEqual(all);
+    expect(ids(undefined)).toContain("product-site");
   });
 
-  it("switch off, a site: still every pane but the Admin site row", () => {
-    expect(ids({ enabled: false, hasSite: true })).toEqual(all.filter((id) => id !== "admin-site"));
+  it("console not live: every pane, the Product site row among them", () => {
+    expect(ids({ consoleLive: false })).toEqual(all);
   });
 
-  it("switch on, no site yet: every pane, and the Admin site row to set one up", () => {
-    expect(ids({ enabled: true, hasSite: false })).toEqual(all);
-  });
-
-  it("switch on and a site: the people rows leave for the site, the Admin site row stays", () => {
-    const shown = ids({ enabled: true, hasSite: true });
+  it("console live: the people rows leave for the console, the Product site row stays", () => {
+    const shown = ids({ consoleLive: true });
     expect(shown).toEqual(all.filter((id) => id === "invitations" || !MOVED.includes(id)));
-    expect(shown).toContain("admin-site");
+    expect(shown).toContain("product-site");
   });
 
-  // The admin site runs the people but has no page for Email Signup or Authentication, so the
-  // Users row stays on the hub with those two members alone.
-  it("switch on and a site: Users keeps Email Signup and Authentication, and nothing else", () => {
-    const users = visibleProductTopics(PRODUCT_TOPICS, { enabled: true, hasSite: true }).find(
-      (t) => t.id === "invitations",
-    );
+  // The console runs the people but has no page for Email Signup or Authentication, so the Users
+  // row stays on the hub with those two members alone.
+  it("console live: Users keeps Email Signup and Authentication, and nothing else", () => {
+    const users = visibleProductTopics(PRODUCT_TOPICS, { consoleLive: true }).find((t) => t.id === "invitations");
     expect(users?.members).toEqual(["email-signup", "auth"]);
-    expect([...ADMIN_SITE_KEPT_USERS_MEMBERS]).toEqual(["email-signup", "auth"]);
+    expect([...CONSOLE_KEPT_USERS_MEMBERS]).toEqual(["email-signup", "auth"]);
+    expect([...CONSOLE_MOVED_TOPIC_IDS]).toEqual(MOVED);
   });
 
-  it("leaves the Users row whole until a site is up", () => {
-    for (const state of [
-      { enabled: false, hasSite: false },
-      { enabled: false, hasSite: true },
-      { enabled: true, hasSite: false },
-    ]) {
+  it("leaves the Users row whole until the console is live", () => {
+    for (const state of [undefined, { consoleLive: false }]) {
       expect(visibleProductTopics(PRODUCT_TOPICS, state).find((t) => t.id === "invitations")?.members).toBeUndefined();
     }
   });
 
   // For a host that answers one topic at a time (the hub's /<slug>/<topic> routes).
-  it("runAtAdminSite: the moved topics, only with the switch on and a site", () => {
-    const on = { enabled: true, hasSite: true };
-    for (const id of MOVED) expect(runAtAdminSite(id, on)).toBe(true);
-    for (const id of ["auth", "email-signup", "admin-site", "storage"]) expect(runAtAdminSite(id, on)).toBe(false);
-    expect(runAtAdminSite("roles", { enabled: true, hasSite: false })).toBe(false);
-    expect(runAtAdminSite("roles", { enabled: false, hasSite: true })).toBe(false);
-    expect(runAtAdminSite("roles", undefined)).toBe(false);
-  });
-
-  it("not known yet: every pane, and no Admin site row unless the URL names it", () => {
-    const unknown = (routed?: string) => visibleProductTopics(PRODUCT_TOPICS, undefined, routed).map((t) => t.id);
-    expect(unknown()).toEqual(all.filter((id) => id !== "admin-site"));
-    expect(unknown("storage")).toEqual(all.filter((id) => id !== "admin-site"));
-    // A deep link or reload on Admin site keeps its row while the read is out, or after it failed.
-    expect(unknown("admin-site")).toEqual(all);
-  });
-
-  it("a known switch-off drops the Admin site row even when the URL names it", () => {
-    expect(visibleProductTopics(PRODUCT_TOPICS, { enabled: false, hasSite: false }, "admin-site").map((t) => t.id))
-      .toEqual(all.filter((id) => id !== "admin-site"));
+  it("runAtProductSite: the moved topics, only while the console is live", () => {
+    const live = { consoleLive: true };
+    for (const id of MOVED) expect(runAtProductSite(id, live)).toBe(true);
+    for (const id of ["auth", "email-signup", "product-site", "storage"]) expect(runAtProductSite(id, live)).toBe(false);
+    expect(runAtProductSite("roles", { consoleLive: false })).toBe(false);
+    expect(runAtProductSite("roles", undefined)).toBe(false);
   });
 });
 

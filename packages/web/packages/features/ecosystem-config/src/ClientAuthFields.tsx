@@ -25,8 +25,9 @@ const SIGNUP_MODES: { value: SignupMode; label: string; help: string }[] = [
   { value: "closed", label: "Closed", help: "No new accounts can be created." },
 ];
 
-/** One labelled row with its control on the right. */
-function SettingRow({
+/** One labelled row with its control on the right. Exported for the other panes that draw a
+ *  labelled switch (ProductSitePane's admin console), so the row has one treatment. */
+export function SettingRow({
   id,
   label,
   help,

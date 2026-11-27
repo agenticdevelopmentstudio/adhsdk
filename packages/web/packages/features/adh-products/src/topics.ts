@@ -83,9 +83,11 @@ export const PRODUCT_TOPICS = [
   // Sets (phase 5): bundles of the product's permissions and limits its customers hold, through
   // an offer, the sign-up list or a direct grant. On `users`, as its holders are the product's.
   { id: "sets", label: "Sets", dividerAfter: false, features: ["users"] },
-  // Admin site (phase 6): the product's own admin site, where its admins run its users, roles,
-  // sign-up list and sets. Set up here by a manager; see visibleProductTopics for when it shows.
-  { id: "admin-site", label: "Admin site", dividerAfter: false, features: ["users"] },
+  // Product site (product sites phase 5): the product's own address, its handle, the switch for
+  // its /admin console, its admins and its totals. It replaced the Admin site row. It names no
+  // feature, so it is a STRUCTURAL row the feature manager always draws, like Settings: every
+  // product is given an address when it is made. PRODUCT_TOPIC_ALIASES sends `admin-site` here.
+  { id: "product-site", label: "Product site", dividerAfter: false },
   // (Communities sat here, was removed for having no surface on any host, and came back below
   // with the rest of the hub's Products group — parked deliberately this time, because the
   // workspace rail offered it and moving that rail down whole is what dropping it would undo.)
@@ -125,69 +127,54 @@ export const PRODUCT_TOPICS = [
 
 export type ProductTopicId = (typeof PRODUCT_TOPICS)[number]["id"];
 
-/** The rows a product's own admin site takes over from the hub once the site is up. Users
- *  (`invitations`) is one of them only in part: see {@link ADMIN_SITE_KEPT_USERS_MEMBERS}. */
-export const ADMIN_SITE_MOVED_TOPIC_IDS = ["invitations", "roles", "signup-list", "sets"] as const;
+/** The rows a product's admin console takes over from the hub once it is live. Users
+ *  (`invitations`) is one of them only in part: see {@link CONSOLE_KEPT_USERS_MEMBERS}. */
+export const CONSOLE_MOVED_TOPIC_IDS = ["invitations", "roles", "signup-list", "sets"] as const;
 
 /**
- * The members of the Users group the hub keeps once a site is up: Email Signup's waitlists and
- * Authentication (sign-in, sign-up mode, OAuth providers). The admin site runs the people — the
+ * The members of the Users group the hub keeps once the console is live: Email Signup's waitlists
+ * and Authentication (sign-in, sign-up mode, OAuth providers). The console runs the people — the
  * roster, requests, pending users and invites — and has no page for either of these, so dropping
- * the whole Users row left them nowhere.
+ * the whole Users row would leave them nowhere.
  */
-export const ADMIN_SITE_KEPT_USERS_MEMBERS = ["email-signup", "auth"] as const;
+export const CONSOLE_KEPT_USERS_MEMBERS = ["email-signup", "auth"] as const;
 
-/**
- * Whether the product's admin site runs this topic instead of the hub: the switch is on, a site is
- * set up, and the topic is one of {@link ADMIN_SITE_MOVED_TOPIC_IDS}. For a host that answers a
- * single topic (the hub's workspace-level `/<slug>/<topic>` routes) rather than drawing the rail:
- * there `invitations` is the roster alone, which the site does run.
- */
-export function runAtAdminSite(topicId: string, site: AdminSiteRailState | undefined): boolean {
-  return (
-    site !== undefined &&
-    site.enabled &&
-    site.hasSite &&
-    (ADMIN_SITE_MOVED_TOPIC_IDS as readonly string[]).includes(topicId)
-  );
-}
-
-/** A product's admin site as the rail reads it: the `product_admin_site` switch, and whether the
- *  product has a site set up. */
-export interface AdminSiteRailState {
-  enabled: boolean;
-  hasSite: boolean;
+/** A product's site as the rail reads it: whether its `/admin` console is LIVE — switched on and
+ *  answering at the product's address (`consoleLive` in `@adh-sdk/data/product-sites`). */
+export interface ProductSiteRailState {
+  consoleLive: boolean;
 }
 
 /**
- * The rail for one product, given its admin site (phase 6): `enabled` is the
- * `product_admin_site` switch, `hasSite` whether the product has a site set up.
+ * Whether the product's admin console runs this topic instead of the hub: the console is live and
+ * the topic is one of {@link CONSOLE_MOVED_TOPIC_IDS}. For a host that answers a single topic (the
+ * hub's workspace-level `/<slug>/<topic>` routes) rather than drawing the rail: there
+ * `invitations` is the roster alone, which the console does run.
+ */
+export function runAtProductSite(topicId: string, site: ProductSiteRailState | undefined): boolean {
+  return site !== undefined && site.consoleLive && (CONSOLE_MOVED_TOPIC_IDS as readonly string[]).includes(topicId);
+}
+
+/**
+ * The rail for one product, given its product site (product sites phase 5).
  *
  * - Not known yet (`site` undefined: the read is in flight, or failed with no answer): the hub
- *   keeps every pane and the Admin site row waits, unless the URL names it (`routed`). A deep link
- *   or a reload on Admin site keeps its row while the read is out, the way heldTopics keeps a
- *   routed feature row; dropping it left the pane on "Select a topic to view." for good when the
- *   read failed.
- * - Switch off: no Admin site row, and the hub keeps every pane.
- * - Switch on, no site yet: the Admin site row is drawn, so a manager can set the site up, and the
- *   hub keeps every pane (add before remove: nothing moves until the site exists).
- * - Switch on and a site: Product roles, Sign-up list and Sets leave the hub for the site, and
- *   the Users row stays narrowed to the members the site does not run
- *   ({@link ADMIN_SITE_KEPT_USERS_MEMBERS}, through the row's `members`). The Admin site row stays,
- *   as the place the site is changed or taken down.
+ *   keeps every pane.
+ * - Console not live (off, or on and not answering yet): the hub keeps every pane.
+ * - Console live: Product roles, Sign-up list and Sets leave the hub for the console, and the
+ *   Users row stays narrowed to the members the console does not run
+ *   ({@link CONSOLE_KEPT_USERS_MEMBERS}, through the row's `members`).
+ *
+ * The Product site row is drawn in every case: every product has an address.
  */
 export function visibleProductTopics<T extends { id: string }>(
   topics: readonly T[],
-  site: AdminSiteRailState | undefined,
-  routed?: string,
+  site: ProductSiteRailState | undefined,
 ): (T & { members?: readonly string[] })[] {
-  if (site === undefined) return topics.filter((t) => t.id !== "admin-site" || t.id === routed);
-  const { enabled, hasSite } = site;
-  if (!enabled) return topics.filter((t) => t.id !== "admin-site");
-  if (!hasSite) return [...topics];
+  if (site === undefined || !site.consoleLive) return [...topics];
   return topics.flatMap((t) => {
-    if (t.id === "invitations") return [{ ...t, members: ADMIN_SITE_KEPT_USERS_MEMBERS }];
-    return runAtAdminSite(t.id, site) ? [] : [t];
+    if (t.id === "invitations") return [{ ...t, members: CONSOLE_KEPT_USERS_MEMBERS }];
+    return runAtProductSite(t.id, site) ? [] : [t];
   });
 }
 
@@ -202,6 +189,8 @@ export function visibleProductTopics<T extends { id: string }>(
  */
 export const PRODUCT_TOPIC_ALIASES: Record<string, string> = {
   "signin-apps": "applications",
+  // The Admin site row became Product site (product sites phase 5): an old product URL lands.
+  "admin-site": "product-site",
 };
 
 /**
