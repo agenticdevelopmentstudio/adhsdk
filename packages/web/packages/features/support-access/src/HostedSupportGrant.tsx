@@ -192,9 +192,11 @@ async function fetchView(id: string | null, tok: string | null, ecosystemId: str
   if (!id || !tok) return { kind: "invalid" };
   try {
     const { grant, reads } = await publicSupportApi.get(id, tok);
-    // Another product's grant on this host: the same sentence as a bad link, and no action.
-    if (ecosystemId && grant.ecosystemId.toLowerCase() !== ecosystemId.toLowerCase()) {
-      return { kind: "invalid" };
+    // Another product's grant on this host: the same sentence as a bad link, and no action. A
+    // grant that names no ecosystem fails closed the same way, whatever the wire type promises.
+    if (ecosystemId) {
+      const grantEco = typeof grant.ecosystemId === "string" ? grant.ecosystemId.toLowerCase() : "";
+      if (grantEco !== ecosystemId.toLowerCase()) return { kind: "invalid" };
     }
     return { kind: "grant", grant, reads };
   } catch (err) {

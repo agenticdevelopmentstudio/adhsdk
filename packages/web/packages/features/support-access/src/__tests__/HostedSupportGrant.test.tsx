@@ -282,6 +282,19 @@ describe("HostedSupportGrant on a product site (ecosystemId)", () => {
     expect(screen.queryByText("Ana, Support at Acme")).toBeNull();
   });
 
+  it.each([
+    ["undefined", undefined],
+    ["null", null],
+  ])("a grant whose ecosystem is %s fails closed to the invalid-link sentence", async (_name, eco) => {
+    const g = { ...pending(), ecosystemId: eco } as unknown as SupportAdminGrant;
+    api.get.mockResolvedValue({ grant: g, reads: [] });
+    render(<HostedSupportGrant grantId="g-1" token="tok" ecosystemId="eco-1" />);
+    await screen.findByText(INVALID_LINK);
+    expect(screen.queryByRole("button", { name: "Deny" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Approve" })).toBeNull();
+    expect(screen.queryByText(/connection/)).toBeNull();
+  });
+
   it("no ecosystemId renders a grant of any ecosystem, as on the hub", async () => {
     api.get.mockResolvedValue({ grant: grant({ ecosystemId: "eco-9" }), reads: [] });
     render(<HostedSupportGrant grantId="g-1" token="tok" />);
