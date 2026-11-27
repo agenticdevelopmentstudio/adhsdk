@@ -1,0 +1,45 @@
+{
+  "name": "@adh-sdk/hosted-login",
+  "version": "0.1.0",
+  "description": "The hosted Hydra login page's body, mounted by the hub and the product site.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "comment:exports": "`development` → src for `next dev` (HMR); prod skips it → dist. No `./sources.css`: the body uses no Tailwind class, only the `auth-card*` classes the host loads from `@adh-sdk/auth/styles.css`.",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "development": "./src/index.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup && pnpm run build:types",
+    "build:types": "tsc --emitDeclarationOnly -p tsconfig.build.json",
+    "dev": "tsup --watch",
+    "clean": "rm -rf dist",
+    "lint": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "next": ">=15",
+    "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^16.3.2",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.3",
+    "esbuild-plugin-preserve-directives": "^0.0.11",
+    "jsdom": "^29.0.2",
+    "next": "^15.1.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2",
+    "vitest": "^4.1.4"
+  }
+}
