@@ -147,7 +147,8 @@ describe("HostedSupportGrant", () => {
     await screen.findByText("Pending");
     expect(screen.getByText("Ana, Support at Acme")).toBeTruthy();
     expect(screen.getByText("Checking why your export failed")).toBeTruthy();
-    expect(screen.getByText("1 day")).toBeTruthy();
+    // Worded by the shared hoursPhrase, as in the panes.
+    expect(screen.getByText("24 hours")).toBeTruthy();
     expect(screen.getByText(NO_READS)).toBeTruthy();
     expect(api.get).toHaveBeenCalledTimes(1);
   });
@@ -319,7 +320,7 @@ describe("HostedSupportGrant on a product site (ecosystemId)", () => {
 });
 
 describe("stateLabel", () => {
-  it("names each state with the shared labels", () => {
+  it("names each state the hosted page can show", () => {
     expect(stateLabel(pending())).toBe("Pending");
     expect(stateLabel(live())).toBe("Live");
     expect(stateLabel(grant({ decision: "denied" }))).toBe("Denied");

@@ -13,6 +13,7 @@ import { Button } from "@adh-sdk/ui/components/button";
 import { Input } from "@adh-sdk/ui/components/input";
 import { Label } from "@adh-sdk/ui/components/label";
 import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { hoursPhrase } from "./GrantCard";
 
 /**
  * The body of the hosted support page, mounted by the hub's and each product site's `/support`:
@@ -43,7 +44,11 @@ export const NO_READS = "No reads yet.";
 
 export type SupportStateLabel = "Pending" | "Live" | "Denied" | "Revoked" | "Expired";
 
-/** The one set of state labels every support surface uses. "Ended" is never shown. */
+/**
+ * The hosted page's state labels. "Ended" is never shown. There is no "Lapsed", unlike the panes'
+ * `endedLabel`: a request left undecided until it lapses never reaches this page, because GET
+ * answers it with 410 and the page shows the invalid-link sentence.
+ */
 export function stateLabel(grant: SupportAdminGrant, now: Date = new Date()): SupportStateLabel {
   if (grant.revokedAt) return "Revoked";
   if (grant.decision === "denied") return "Denied";
@@ -112,14 +117,6 @@ const timeLabel = (iso: string): string =>
 
 const whenLabel = (iso: string): string =>
   new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
-
-function durationLabel(hours: number): string {
-  if (hours % 24 === 0 && hours >= 24) {
-    const days = hours / 24;
-    return days === 1 ? "1 day" : `${days} days`;
-  }
-  return hours === 1 ? "1 hour" : `${hours} hours`;
-}
 
 function Card({ children }: { children: ReactNode }): ReactElement {
   return (
@@ -434,7 +431,7 @@ export function HostedSupportGrant({ grantId, token, ecosystemId }: HostedSuppor
         <div>
           <dt style={{ color: "var(--color-on-surface-variant)" }}>For how long</dt>
           <dd>
-            {durationLabel(grant.requestedFor)}
+            {hoursPhrase(grant.requestedFor)}
             {label === "Live" && grant.expiresAt ? `, until ${whenLabel(grant.expiresAt)}` : null}
           </dd>
         </div>
