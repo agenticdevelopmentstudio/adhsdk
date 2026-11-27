@@ -154,7 +154,9 @@
 - **wildcard-site-has-no-single-url**: Cross-site link construction, the cross-site URL
   builder, the production URL builder and the local-origin builder MUST throw
   `"<id> is a wildcard site; it has no single URL"` for a wildcard site, in every env,
-  rather than answer a host nothing serves. The local-server check MUST answer false for a
+  rather than answer a host nothing serves, and so MUST the SEO helpers that state a site's
+  production origin (`siteIdentity`, and `siteMetadata` and `siteSitemap`, which take their
+  origin from it). The local-server check MUST answer false for a
   wildcard site whatever `NEXT_PUBLIC_LOCAL_SITES` names, since the local suite serves one
   host per child and no wildcard host.
 - **build-site-href-env-aware**: Cross-site link construction MUST classify the
