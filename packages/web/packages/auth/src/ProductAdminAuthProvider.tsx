@@ -24,6 +24,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type ReactElement,
   type ReactNode,
 } from 'react'
 import { authedJson } from './client'
@@ -186,7 +187,7 @@ function currentPath(): string {
   return `${window.location.pathname}${window.location.search}`
 }
 
-export function ProductAdminAuthProvider({ children, authBase: rawAuthBase, navigate }: ProductAdminAuthProviderProps) {
+export function ProductAdminAuthProvider({ children, authBase: rawAuthBase, navigate }: ProductAdminAuthProviderProps): ReactElement {
   // Normalised once; every URL below is built from this. A string, so it is a stable dependency.
   const authBase = normalizeAuthBase(rawAuthBase)
   // `navigate` is read through a ref, never as a dependency: a host that passes an inline arrow
