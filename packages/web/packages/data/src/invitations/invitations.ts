@@ -29,7 +29,9 @@ export interface RegisterWithInviteInput {
  * Client for the public `/join` acceptance flow. Preview + verify are anonymous
  * (`fetch` to the public /v1 routes); accept is authed (`authedJson`); register is the
  * existing signup POST with the invite token attached. The hub rewrites `/api/*`
- * onto the backend (stripping the `/api` prefix).
+ * onto the backend (stripping the `/api` prefix). Preview, verify and accept are data
+ * calls and follow a configured API base (`apiUrl`); register is a session route and,
+ * like every other `/api/v1/auth/*` sign-in call, stays same-origin (see api-base.ts).
  */
 export const invitationsApi = {
   /** Read an invitation's public state by its raw token. Never throws: a non-2xx
@@ -78,7 +80,10 @@ export const invitationsApi = {
    *  non-2xx the backend's message is surfaced (e.g. a 403 when the entered email
    *  doesn't match the address the invitation was sent to). */
   async registerWithInvite(input: RegisterWithInviteInput): Promise<RegisterWithInviteResult> {
-    const res = await fetch(apiUrl("/api/v1/auth/registrations"), {
+    // Same-origin on purpose, never `apiUrl`: this is AuthProvider's own signup endpoint
+    // (`context.tsx` posts the same path), a session route of the hub's same-origin cookie
+    // session, so it goes where login, refresh and revoke go.
+    const res = await fetch("/api/v1/auth/registrations", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(input),

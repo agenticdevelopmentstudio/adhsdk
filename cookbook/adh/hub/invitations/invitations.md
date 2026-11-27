@@ -2,11 +2,11 @@
 id: 7e0508b5-cf96-42da-9902-51fbe31b432f
 title: "Hub Domain: Invitations"
 type: ingredient
-version: 1.1.2
+version: 1.1.3
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-11-14
+modified: 2026-11-27
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -468,7 +468,7 @@ a shared notes sub-rail, and a web HTTP client, not a visual component.
 | `token` | `string` (web) | none, required | Passed to every one of `preview`, `verify`, `accept`, and `registerWithInvite`; identifies which invite the call concerns. Carried in the URL query string for `preview`, in the request body for the other three. |
 | `code` | `string` (web) | none, required | Passed to `verify` alongside `token`; the recipient-entered verification code. |
 | `input: RegisterWithInviteInput` (`email`, `password`, `name`, `invite`) | object (web) | none, required | Passed to `registerWithInvite`; forwarded to the backend verbatim with no client-side shaping. |
-| Endpoint base path | implicit (web) | `/api/*` | Every `fetch`/`authedJson` call in `invitations.ts` targets a relative `/api/...` path; there is no injected base URL or client instance — the host application's own rewrite of `/api/*` onto the backend (noted in the source's own comment) determines where these requests actually land. |
+| Endpoint base path | `configureApiBase` (web, `@adh-sdk/data`) | `/api` | Every call in `invitations.ts` names a relative `/api/...` path. `preview` and `verify` resolve it through `apiUrl` and `accept` goes through `authedJson`, so all three follow a configured API base: unchanged (`/api/...`, the host's own `/api/*` rewrite) by default, `<base>/...` on a host that configured one. `registerWithInvite` never does: it posts the same-origin `/api/v1/auth/registrations`, a session route of the hub's cookie session like login, refresh and revoke. |
 
 ## Deep Linking
 
@@ -711,6 +711,7 @@ four methods.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.3 | 2026-11-27 | Mike Fullerton | Endpoint base path: preview, verify and accept follow a configured API base; registerWithInvite stays same-origin |
 | 1.1.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (invitations.test.ts, 5 of 5 web vectors 020-024; 001-019 are covered by the existing Apple tests; vector text for 022-024 corrected to the real signatures); unit-test-coverage now passed. |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Swift-only constructs in normative sections restated as platform-neutral behavior; the Apple mechanism is in Platform Notes. |
 | 1.1.0 | 2026-10-04 | Mike Fullerton | Resolve open-question markers against the code; restate unimplemented behavior as current behavior with pending Decisions; make normative text platform-neutral. |
