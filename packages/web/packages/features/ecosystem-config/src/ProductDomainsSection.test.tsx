@@ -379,8 +379,10 @@ describe("ProductDomainsSection", () => {
     const odd = { type: "CNAME" as const, name: "app ", value: "cname.vercel-dns.com." };
     api.list.mockResolvedValue([domainOf({ records: [odd, CHALLENGE] })]);
     section();
-    fireEvent.click(await screen.findByRole("button", { name: "Copy the CNAME record name app " }));
-    fireEvent.click(screen.getByRole("button", { name: "Copy the CNAME record value for app " }));
+    // An accessible name is trimmed (accname), so the buttons are found without the record's
+    // trailing space; what they copy is still the untrimmed string, asserted below.
+    fireEvent.click(await screen.findByRole("button", { name: "Copy the CNAME record name app" }));
+    fireEvent.click(screen.getByRole("button", { name: "Copy the CNAME record value for app" }));
     fireEvent.click(screen.getByRole("button", { name: `Copy the TXT record value for ${CHALLENGE.name}` }));
     await waitFor(() => expect(writeText).toHaveBeenCalledTimes(3));
     expect(writeText).toHaveBeenNthCalledWith(1, "app ");
