@@ -201,9 +201,10 @@ async function fetchView(id: string | null, tok: string | null, ecosystemId: str
 }
 
 /**
- * Takes `token` out of the address bar and the history entry once the component holds it. Left there, anyone who later opens that browser profile's history, or a synced one,
- * could reopen the link, read who asked and the read log, and deny or revoke without any further
- * proof. `grant` stays, so the address still says which request this is. A reload after this
+ * Takes `token` out of the address bar and the history entry once the component holds it. Left
+ * there, anyone who later opens that browser profile's history, or a synced one, could reopen
+ * the link, read who asked and the read log, and deny or revoke without any further proof.
+ * `grant` stays, so the address still says which request this is. A reload after this
  * shows the invalid-link sentence; the email's link opens the page again.
  */
 function dropTokenFromAddress(): void {
