@@ -39,7 +39,11 @@ export interface ProductSite {
   ecosystemId: string;
   /** The product's handle: the first label of its address. */
   handle: string;
-  /** `https://<handle>.<base domain>`, or null while the backend has no base domain. */
+  /**
+   * The product's primary address: `https://<host>` for its verified primary custom domain while
+   * the backend's `product_custom_domains` switch is on, else `https://<handle>.<base domain>`;
+   * null while the backend has no base domain. Not always `<handle>.`-prefixed.
+   */
   primaryOrigin: string | null;
   /** Whether the product's `/admin` console is switched on. */
   adminEnabled: boolean;
