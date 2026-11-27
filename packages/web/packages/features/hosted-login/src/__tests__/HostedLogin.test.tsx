@@ -144,4 +144,28 @@ describe("HostedLogin", () => {
     expect(url).toBe(`${BACKEND}/auth/oidc/login/context?login_challenge=chal-1`);
     expect(html).toContain("Sign in to Acme");
   });
+
+  it.each(["__proto__", "constructor", "toString"])(
+    "falls back to the generic message for ?error=%s",
+    async (error) => {
+      const html = await render({
+        backendUrl: BACKEND,
+        params: { login_challenge: "chal-1", error },
+        context: null,
+      });
+
+      expect(html).toContain("Sign in failed. Please try again.");
+    },
+  );
+
+  it("offers no inherited Object.prototype key as a code method", async () => {
+    const html = await render({
+      backendUrl: BACKEND,
+      params: { login_challenge: "chal-1", mfa_token: "mfa-tok", mfa: "__proto__,constructor" },
+    });
+
+    expect(html).not.toContain('value="__proto__"');
+    expect(html).not.toContain('value="constructor"');
+    expect(html).toContain("Your account uses a passkey.");
+  });
 });

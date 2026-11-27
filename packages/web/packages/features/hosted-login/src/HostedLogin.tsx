@@ -67,7 +67,9 @@ function codeMethods(mfa: string | undefined): string[] {
   return (mfa ?? "")
     .split(",")
     .map((m) => m.trim())
-    .filter((m) => m in CODE_METHOD_LABELS);
+    // Own keys only: `in` would also pass `__proto__`, `constructor` and the rest of
+    // Object.prototype, which a crafted `?mfa=` could name.
+    .filter((m) => Object.hasOwn(CODE_METHOD_LABELS, m));
 }
 
 /** The card for a sign-in link that reached the page without a `login_challenge`. */
@@ -145,8 +147,11 @@ export async function HostedLogin({
     return <MissingChallengeCard />;
   }
 
+  // Own keys only: a bare index would hand `?error=__proto__` Object.prototype (React then
+  // throws rendering it) and `?error=constructor` a function (an empty alert).
   const errorMessage = error
-    ? (ERROR_MESSAGES[error] ?? "Sign in failed. Please try again.")
+    ? ((Object.hasOwn(ERROR_MESSAGES, error) ? ERROR_MESSAGES[error] : undefined) ??
+      "Sign in failed. Please try again.")
     : null;
 
   // Second-factor step: the backend challenged this account and bounced back with a
