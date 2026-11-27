@@ -17317,7 +17317,7 @@
             "type": "string",
             "format": "date-time",
             "nullable": true,
-            "description": "When Vercel and DNS were last asked about it; null before the first check."
+            "description": "When its state was last refreshed from Vercel's answers (the add, a check or the sweep's re-check); a check Vercel does not answer leaves it as it was. Null before the first."
           }
         }
       },
