@@ -11,6 +11,7 @@ import { dirname, resolve } from 'node:path'
 // accessor is where that widening is supposed to live — see its doc comment in registry.ts.
 import type { SiteId } from '../sites/registry'
 import { SITES, LISTED_SITES, FOOTER_SITES, MAIN_SITE_IDS, MARKETING_SITE_IDS, SITE_CATEGORIES, groupSitesByCategory, getSite, detectEnv, buildSiteHref, siteUrl, ssoReturnOrigins, HUB_FEATURE_SEGMENT, hubFeatureSegment, SITE_FOR_HUB_SEGMENT, HUB_WORKSPACE_SEGMENTS, siteWorkspaceHref, siteWorkspaceSlug, SITE_LANDING_SEGMENTS, HUB_ROUTE_SEGMENTS, siteIdForDir, ADMIN_SITE_IDS, HUB_EXTRA_FEATURE_SEGMENTS, isWildcardSite, hostForEnv, siteProdUrl } from '../sites/registry'
+import { siteIdentity, siteMetadata, siteSitemap } from '../seo/metadata'
 // The generated route map — imported ONLY here. `registry.ts` keeps its landing-segment
 // set as a hand-written literal so the always-loaded header never pulls the family's
 // whole route inventory into its bundle; this is the oracle that keeps the two equal.
@@ -415,6 +416,10 @@ describe('SITES registry', () => {
       expect(() => buildSiteHref(site, host, '/'), host).toThrow(refusal)
     }
     expect(() => siteProdUrl('product-sites', '/')).toThrow(refusal)
+    // The SEO helpers state a production origin, so they refuse one too.
+    expect(() => siteIdentity('product-sites')).toThrow(refusal)
+    expect(() => siteMetadata('product-sites', { title: 't', description: 'd' })).toThrow(refusal)
+    expect(() => siteSitemap('product-sites', [{ path: '/' }])).toThrow(refusal)
   })
 
   it('still refuses a wildcard site when the local list names it', () => {

@@ -19,7 +19,7 @@
  */
 import type { Metadata, MetadataRoute } from 'next'
 
-import { getSite, type SiteId } from '../sites/registry'
+import { getSite, isWildcardSite, type SiteId } from '../sites/registry'
 import { DEV_BUILD } from '../deployment-env'
 
 /** The one size every unfurler accepts, and the size `assets/logo/generate.py`
@@ -79,16 +79,23 @@ const NOINDEX_BUILD = DEV_BUILD
 
 /** A site's brand name and production origin, as every block below states them: the
  *  registry's full label (or its label), and `https://<prodHost>`. Unknown ids fall back to
- *  the hub, as they always have here. The origin has no trailing slash. */
+ *  the hub, as they always have here. The origin has no trailing slash.
+ *
+ *  Throws for a wildcard site, like every single-URL helper in the registry: its `prodHost` is
+ *  only a folder's name that nothing serves, so an origin built from it would point nowhere.
+ *  `siteMetadata` and `siteSitemap` take their origin from here, so they throw for one too; a
+ *  wildcard site states its per-product origin itself. */
 export function siteIdentity(id: SiteId): { name: string; url: string } {
   const site = getSite(id)
+  if (site && isWildcardSite(site)) throw new Error(`${site.id} is a wildcard site; it has no single URL`)
   return {
     name: site ? (site.fullLabel ?? site.label) : 'Agentic Developer Hub',
     url: `https://${site?.prodHost ?? 'agenticdeveloperhub.com'}`,
   }
 }
 
-/** The full metadata block for a site, given only its id and its own copy.
+/** The full metadata block for a site, given only its id and its own copy. Throws for a
+ *  wildcard site (see `siteIdentity`).
  *
  *  Sites that ship a bespoke social card (devteam, myagenticteams,
  *  personaregistry) should keep their hand-written `openGraph.images` — spread
@@ -238,7 +245,8 @@ export interface SiteRoute {
   lastModified?: Date
 }
 
-/** sitemap.xml for a site, from a list of paths.
+/** sitemap.xml for a site, from a list of paths. Throws for a wildcard site (see
+ *  `siteIdentity`).
  *
  *  `lastModified` defaults to the BUILD time, not a literal date: static
  *  marketing pages are compiled from source, so a deploy is the modification. A
