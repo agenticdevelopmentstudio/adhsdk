@@ -23,7 +23,7 @@
 
 ### Custom domains
 
-- **domains-path-constant**: `PRODUCT_DOMAINS_PATH` MUST be `/api/ecosystem/product-domains`. Every domain call MUST carry `?ecosystem=<uuid>` through `withV1Query` and MUST go through `authedJson` (the bearer token, never cookies).
+- **domains-path-constant**: `PRODUCT_DOMAINS_PATH` MUST be `/api/ecosystem/product-domains`. Every domain call MUST carry `?ecosystem=<uuid>` through `withV1Query` and MUST go through the bearer SDK transport: `authedJson` for every call that answers a body, and `authedRequest` for the `DELETE`, whose answer is a 204 that `authedJson` would refuse. Both send the same bearer token, never cookies.
 - **domains-row-mapper**: a domain MUST be mapped to a `ProductDomain` by copying only the fields it knows (`id`, `host`, `status`, `isPrimary`, `records`, `misconfigured`, `vercelVerified`, `error`, `createdAt`, `verifiedAt`, `checkedAt`, `expiresAt`), never by spreading the wire object; the answer is already camelCase.
 - **domains-list**: `productDomainsApi.list(id)` MUST `GET` the path and return the body's `domains` as `ProductDomain[]`.
 - **domains-add**: `productDomainsApi.add(id, host)` MUST `POST` the path with the JSON body `{ host }` and return the answer as one `ProductDomain`.
