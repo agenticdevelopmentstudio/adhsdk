@@ -17,7 +17,7 @@
 // poll → a poll tick refreshes the token and re-opens live SSE). Each caller supplies
 // only its url, event name, payload handler and poll action (SRP).
 
-import { readAccessToken } from '@adh-sdk/auth/client'
+import { apiUrl, readAccessToken } from '@adh-sdk/auth/client'
 
 /** Default poll cadence (ms) for the SSE fallback — one place, every caller. */
 export const DEFAULT_SSE_POLL_INTERVAL_MS = 20_000
@@ -132,7 +132,7 @@ export function connectSse(opts: ConnectSseOptions): SseHandle {
     const token = readAccessToken()
     if (!token) return false
     const sep = opts.url.includes('?') ? '&' : '?'
-    const s = new EventSource(`${opts.url}${sep}access_token=${encodeURIComponent(token)}`)
+    const s = new EventSource(`${apiUrl(opts.url)}${sep}access_token=${encodeURIComponent(token)}`)
     listen(s)
     // Only a permanent close (CLOSED) triggers the fallback — e.g. a 401 on reconnect
     // once the token expired. A transient blip (CONNECTING) is left to the browser's

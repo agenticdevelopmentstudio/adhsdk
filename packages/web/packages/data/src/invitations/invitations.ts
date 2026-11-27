@@ -1,4 +1,4 @@
-import { authedJson, extractErrorMessage } from "../http";
+import { apiUrl, authedJson, extractErrorMessage } from "../http";
 import type {
   AcceptResultRow,
   AcceptResultWire,
@@ -37,7 +37,7 @@ export const invitationsApi = {
    *  render a single "this link doesn't work" pane. */
   async preview(token: string): Promise<InvitePreview> {
     const res = await fetch(
-      `/api/v1/invitations/preview?token=${encodeURIComponent(token)}`,
+      apiUrl(`/api/v1/invitations/preview?token=${encodeURIComponent(token)}`),
       { cache: "no-store" },
     );
     if (!res.ok) return { state: "invalid", ecosystemName: null, maskedDestination: null };
@@ -52,7 +52,7 @@ export const invitationsApi = {
   /** Complete an invite-backed account by verifying its emailed code. Throws on a
    *  non-2xx (expired 410 / invalid 400) so the verify page can show its error state. */
   async verify(code: string): Promise<VerifyResult> {
-    const res = await fetch("/api/v1/invitation_requests/verify", {
+    const res = await fetch(apiUrl("/api/v1/invitation_requests/verify"), {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ code }),
@@ -78,7 +78,7 @@ export const invitationsApi = {
    *  non-2xx the backend's message is surfaced (e.g. a 403 when the entered email
    *  doesn't match the address the invitation was sent to). */
   async registerWithInvite(input: RegisterWithInviteInput): Promise<RegisterWithInviteResult> {
-    const res = await fetch("/api/v1/auth/registrations", {
+    const res = await fetch(apiUrl("/api/v1/auth/registrations"), {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(input),

@@ -1,5 +1,6 @@
 'use client'
 
+import { apiUrl } from './api-base'
 import { asEndpoint } from './asBase'
 import { refreshAccessToken } from './refresh'
 import { readAccessToken, tokensFromResponse, type BackendTokenFields } from './tokens'
@@ -15,6 +16,8 @@ export {
 } from './tokens'
 // The same subject as a hook — provider-agnostic sign-in for shared components.
 export { useTokenSubject } from './use-token-subject'
+
+export { apiBase, apiUrl, configureApiBase } from './api-base'
 
 export {
   listAllV1,
@@ -204,7 +207,9 @@ async function rawFetch(
   // as the post-refresh retry that paid the auth waterfall.
   const finalInit: RequestInit = { ...init, headers }
   if (retried) markRetriedRequest(finalInit)
-  return fetch(url, finalInit)
+  // `/api/...` goes to the configured API base (api-base.ts): unchanged by default, the
+  // backend's own origin on a host with no `/api` rewrite.
+  return fetch(apiUrl(url), finalInit)
 }
 
 /**

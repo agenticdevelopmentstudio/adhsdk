@@ -13,6 +13,7 @@
 // needs every row calls it rather than looping `starting_after` itself.
 
 import { authedJson, responseError } from './client'
+import { apiUrl } from './api-base'
 
 /** The /v1 collection envelope. */
 export interface V1List<T> {
@@ -132,7 +133,7 @@ export async function publicJson<T>(url: string, init: RequestInit = {}): Promis
   // A public read never carries a bearer, not even one a caller passed in by hand.
   headers.delete('authorization')
   if (init.body != null && !headers.has('content-type')) headers.set('content-type', 'application/json')
-  const res = await fetch(url, { ...init, headers })
+  const res = await fetch(apiUrl(url), { ...init, headers })
   if (!res.ok) throw await responseError(res, `HTTP ${res.status}`)
   if (res.status === 204) throw new Error('Unexpected empty response (204 No Content); publicJson is for endpoints that return a body')
   return (await res.json()) as T

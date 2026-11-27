@@ -6,6 +6,9 @@
 export {
   authedJson,
   authedRequest,
+  apiBase,
+  apiUrl,
+  configureApiBase,
   extractErrorMessage,
   readErrorMessage,
   tokensFromResponse,
