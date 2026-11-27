@@ -7,6 +7,7 @@ import {
   type EventProps,
 } from './analytics'
 import { scrubPath } from '@adh-sdk/analytics'
+import { toolkitPath } from '@adh-sdk/auth/client'
 
 // A single wrapper around window.fetch times EVERY browser request — authenticated and
 // unauthenticated alike — so we get one real-user latency dataset with no per-call-site
@@ -128,7 +129,9 @@ interface RecordInput {
 function record(o: RecordInput): void {
   try {
     const props: EventProps = {
-      path: scrubPath(o.url),
+      // In the toolkit's `/api/...` shape whether the call went through a site's `/api` rewrite
+      // or straight to a configured API base, so the same call groups under one path either way.
+      path: scrubPath(toolkitPath(o.url)),
       method: o.method,
       status: o.status,
       ok: o.ok,

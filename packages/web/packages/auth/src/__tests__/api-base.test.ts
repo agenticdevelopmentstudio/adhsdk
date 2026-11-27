@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { configureAuth } from '../config'
 import { writeTokens } from '../tokens'
 import { invalidateRefresh } from '../refresh'
-import { apiBase, apiUrl, configureApiBase, resetApiBaseForTests } from '../api-base'
+import { apiBase, apiUrl, configureApiBase, resetApiBaseForTests, toolkitPath } from '../api-base'
 import { authedJson, linkProvider, publicJson } from '../client'
 
 // The configurable API base (api-base.ts): the default leaves every path as it is, so the hub
@@ -130,5 +130,20 @@ describe('apiUrl is idempotent under every accepted base', () => {
       const once = apiUrl('/api/v1/x?y=1')
       expect(apiUrl(once)).toBe(once)
     }
+  })
+})
+
+describe('toolkitPath', () => {
+  it('is the identity under the default base', () => {
+    expect(toolkitPath('/api/v1/x')).toBe('/api/v1/x')
+    expect(toolkitPath('https://api.example.test/v1/x')).toBe('https://api.example.test/v1/x')
+  })
+
+  it('gives a URL under the base back in its /api shape, and leaves the rest alone', () => {
+    configureApiBase('https://api.example.test')
+    expect(toolkitPath(apiUrl('/api/v1/workspaces?limit=5'))).toBe('/api/v1/workspaces?limit=5')
+    expect(toolkitPath('https://api.example.test')).toBe('/api')
+    expect(toolkitPath('https://api.example.test:8443/v1/x')).toBe('https://api.example.test:8443/v1/x')
+    expect(toolkitPath('/admin/auth/session')).toBe('/admin/auth/session')
   })
 })

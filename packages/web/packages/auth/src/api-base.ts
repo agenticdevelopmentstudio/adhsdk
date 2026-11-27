@@ -90,6 +90,20 @@ export function apiUrl(path: string): string {
   return path
 }
 
+/**
+ * The inverse of {@link apiUrl}: a URL the toolkit sent under the configured base, given back in
+ * the same-origin `/api/...` shape every client names (`https://api.example.com/v1/x?y` becomes
+ * `/api/v1/x?y`). Anything not under the base is returned unchanged, and under the default base
+ * this is the identity. For a reader that groups requests by path (the fetch telemetry), so a
+ * host with a base and a host with the rewrite record the same call the same way.
+ */
+export function toolkitPath(url: string): string {
+  if (base === SAME_ORIGIN_PREFIX || !url.startsWith(base)) return url
+  const rest = url.slice(base.length)
+  if (rest === '' || rest[0] === '/' || rest[0] === '?' || rest[0] === '#') return `${SAME_ORIGIN_PREFIX}${rest}`
+  return url
+}
+
 /** Test-only: back to the default. */
 export function resetApiBaseForTests(): void {
   base = SAME_ORIGIN_PREFIX

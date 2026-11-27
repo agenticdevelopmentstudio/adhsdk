@@ -17,7 +17,7 @@ export {
 // The same subject as a hook — provider-agnostic sign-in for shared components.
 export { useTokenSubject } from './use-token-subject'
 
-export { apiBase, apiUrl, configureApiBase } from './api-base'
+export { apiBase, apiUrl, configureApiBase, toolkitPath } from './api-base'
 
 export {
   listAllV1,
