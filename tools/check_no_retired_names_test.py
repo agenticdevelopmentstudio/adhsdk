@@ -51,6 +51,16 @@ def test_retired_names_are_caught_in_every_spelling() -> None:
         check(line, True)
 
 
+def test_adtoolkit_is_caught_inside_an_identifier() -> None:
+    for line in ("ADTOOLKIT_THEME_DIR=1", "adtoolkit_checkout = 1", "let adtoolkitRoot = x",
+                 "requireAdtoolkit()", "import ADToolkitCore", "AdtoolkitMissing()"):
+        check(line, True)
+    # A lowercase letter after it makes another word: the adtoolkit repo's rc file, and
+    # the adtoolkitwebsite repo.
+    for line in ("in ~/.adtoolkitrc", "from adtoolkitwebsite's tree", "content/adtoolkit/help"):
+        check(line, False)
+
+
 def test_current_names_pass() -> None:
     for line in (
         "import { x } from '@adh-sdk/model'",
@@ -134,6 +144,16 @@ def test_the_adtoolkit_repo_is_allowed_only_in_its_named_files() -> None:
     for line in ("import ADToolkit", "built by AdToolkit", "ADTOOLKIT is retired",
                  "import { x } from '@adtoolkit/ui'", "see adtoolkit.dev",
                  "the adtoolkit-web package", "under adtoolkit/cookbook"):
+        check(line, True, support)
+    # The repo's own identifiers, built on the lowercase-toolkit spelling, are allowed.
+    for line in ("static var adtoolkitRoot: URL? {", "read as `adtoolkit_checkout`",
+                 "StatusLineTestSupport.adtoolkitContractVersion",
+                 "try StatusLineTestSupport.requireAdtoolkit(url)",
+                 "throw AdtoolkitMissing(path: url.path)",
+                 'environment["ADTOOLKIT_CHECKOUT"]'):
+        check(line, False, support)
+    # The retired casings and any other env var are not.
+    for line in ("import ADToolkitCore", "ADTOOLKIT_THEME_DIR=1", "AdToolkitView()"):
         check(line, True, support)
     # And the bare word anywhere else is still the retired SDK name.
     check("/// The adtoolkit checkout, which owns claudehelpers' status-line", True, "docs/guide.md")

@@ -25,7 +25,9 @@ Patterns:
   retired SDK name        AgenticToolkit, Agentic Developer Toolkit, adtoolkit and
                           PersonaToolkit, in any case and with any separator,
                           which covers module names, bundle IDs, env vars, paths
-                          and prose.
+                          and prose. adtoolkit is caught as one part of an
+                          identifier too (`ADTOOLKIT_X`, `adtoolkitRoot`,
+                          `requireAdtoolkit`), not only as a word.
 
 What is NOT a retired name:
 
@@ -41,9 +43,11 @@ What is NOT a retired name:
     the name of a different, live repo: the developer-workflow scripts and skills
     that own claudehelpers and its status-line contract. The Claude status-line
     type follows that contract and its tests read adtoolkit's checkout, so those
-    files have to name it. Only the bare, lowercase word `adtoolkit` is allowed
-    there (in prose, or ending a path such as `/nonexistent-adtoolkit`). Not
-    `AdToolkit` or `ADToolkit`, the retired SDK's casings; not as a URI scheme
+    files have to name it. Allowed there: the bare, lowercase word `adtoolkit`
+    (in prose, or ending a path such as `/nonexistent-adtoolkit`); identifiers
+    built on it with a lowercase `toolkit` (`adtoolkitRoot`, `adtoolkit_checkout`,
+    `requireAdtoolkit`, `AdtoolkitMissing`); and its `ADTOOLKIT_CHECKOUT` variable.
+    Not `AdToolkit` or `ADToolkit`, the retired SDK's casings; not as a URI scheme
     (`adtoolkit://`), a scope (`@adtoolkit/`), a path segment (`adtoolkit/`), a
     domain (`adtoolkit.dev`) or the head of a compound (`adtoolkit-web`). Every
     other retired name in them is still caught.
@@ -67,7 +71,10 @@ PATTERNS = {
     "retired package scope": re.compile(r"@agentic-toolkit\b|@agenticdevelopertoolkit\b", re.IGNORECASE),
     "retired SDK name": re.compile(
         r"agentic[-_ ]?(?:developer[-_ ]?)?toolkit(?!\.(?:com|dev)\b)"
-        r"|(?<!content/)\badtoolkit\b"
+        # adtoolkit as a word or as one part of an identifier: `ADTOOLKIT_X`,
+        # `adtoolkit_x`, `adtoolkitRoot`, `requireAdtoolkit`, `ADToolkitCore`. A
+        # lowercase letter after it (`.adtoolkitrc`, `adtoolkitwebsite`) is another word.
+        r"|(?<!content/)(?:(?<![a-z0-9])|(?-i:(?=A)))adtoolkit(?-i:(?![a-z]))"
         r"|(?<!agentic )\bpersona[-_ ]?toolkit",
         re.IGNORECASE,
     ),
@@ -120,9 +127,16 @@ ADTOOLKIT_REPO_FILES = {
     "cookbook/foundation/claude-hooks/claude-status-line/overview.md",
     "packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/ClaudeStatusLine.swift",
     "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/ClaudeHooks/ClaudeStatusLineTests.swift",
+    "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/ClaudeHooks/HookInstallerTests.swift",
     "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/ClaudeHooks/StatusLineTestSupport.swift",
 }
-ADTOOLKIT_REPO = re.compile(r"(?<![@/.\w])adtoolkit(?!://|/|[.-]\w|\w)")
+ADTOOLKIT_REPO = re.compile(
+    r"(?<![@/.\w])adtoolkit(?!://|/|[.-]\w|\w)"  # the word
+    r"|(?<![@/\w])adtoolkit(?=[A-Z_])\w*"         # (Support.)adtoolkitRoot, adtoolkit_checkout
+    r"|(?<!\w)Adtoolkit(?=[A-Z])\w*"              # AdtoolkitMissing
+    r"|(?<=[a-z])Adtoolkit(?![a-z])"               # requireAdtoolkit
+    r"|\bADTOOLKIT_CHECKOUT\b"
+)
 
 # Dated history: it records what was true when it was written.
 SKIP_PREFIXES = ("docs/sessions/",)
