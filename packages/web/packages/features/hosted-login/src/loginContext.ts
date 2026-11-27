@@ -28,6 +28,13 @@ export interface HostedLoginContext {
   providers: HostedLoginProvider[];
 }
 
+/** `url` without its trailing slashes, so a base written as `https://api.example.com/` builds
+ *  `https://api.example.com/auth/...`, never `//auth/...`. Every backend URL this package builds
+ *  goes through it. */
+export function trimTrailingSlashes(url: string): string {
+  return url.replace(/\/+$/, "");
+}
+
 /**
  * Fetch the login context for a Hydra `login_challenge`, server-side (this is a Node
  * fetch from the page's Server Component, not a browser call), from the backend at
@@ -50,7 +57,7 @@ export async function fetchHostedLoginContext(
 ): Promise<HostedLoginContext | null> {
   try {
     const res = await fetch(
-      `${backendUrl}/auth/oidc/login/context?login_challenge=${encodeURIComponent(challenge)}`,
+      `${trimTrailingSlashes(backendUrl)}/auth/oidc/login/context?login_challenge=${encodeURIComponent(challenge)}`,
       { cache: "no-store", signal: AbortSignal.timeout(3000) },
     );
     if (!res.ok) return null;

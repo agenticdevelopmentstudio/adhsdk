@@ -1,5 +1,9 @@
 import type { ReactElement } from "react";
-import { fetchHostedLoginContext, type HostedLoginContext } from "./loginContext";
+import {
+  fetchHostedLoginContext,
+  trimTrailingSlashes,
+  type HostedLoginContext,
+} from "./loginContext";
 
 /** The hosted login page's query string, as Hydra and the backend's redirects set it. */
 export interface HostedLoginParams {
@@ -128,7 +132,7 @@ export async function HostedLogin({
   params,
   context,
 }: {
-  /** The backend the forms post to and the context is read from. */
+  /** The backend the forms post to and the context is read from. Trailing slashes are dropped. */
   backendUrl: string;
   params: HostedLoginParams;
   /** Omitted: the component fetches it itself, after the MFA and code steps, as today. */
@@ -146,6 +150,9 @@ export async function HostedLogin({
     verify_token: verifyToken,
     code_sent: codeSent,
   } = params;
+
+  // Trimmed once, so a configured `https://api.example.com/` never builds `//auth/...`.
+  const backend = trimTrailingSlashes(backendUrl);
 
   if (!challenge) {
     // Reached without a challenge: the flow was entered out of band (Hydra always
@@ -184,7 +191,7 @@ export async function HostedLogin({
         ) : (
           <form
             method="post"
-            action={`${backendUrl}/auth/oidc/login/mfa`}
+            action={`${backend}/auth/oidc/login/mfa`}
             className="auth-card__form"
           >
             <input type="hidden" name="login_challenge" value={challenge} />
@@ -228,7 +235,7 @@ export async function HostedLogin({
         {methods.includes("sms") && (
           <form
             method="post"
-            action={`${backendUrl}/auth/oidc/login/mfa/send`}
+            action={`${backend}/auth/oidc/login/mfa/send`}
             className="auth-card__mfa-resend"
           >
             <input type="hidden" name="login_challenge" value={challenge} />
@@ -259,7 +266,7 @@ export async function HostedLogin({
 
         <form
           method="post"
-          action={`${backendUrl}/auth/oidc/signup/verify`}
+          action={`${backend}/auth/oidc/signup/verify`}
           className="auth-card__form"
         >
           <input type="hidden" name="login_challenge" value={challenge} />
@@ -285,7 +292,7 @@ export async function HostedLogin({
 
         <form
           method="post"
-          action={`${backendUrl}/auth/oidc/signup/verify/send`}
+          action={`${backend}/auth/oidc/signup/verify/send`}
           className="auth-card__mfa-resend"
         >
           <input type="hidden" name="login_challenge" value={challenge} />
@@ -302,7 +309,7 @@ export async function HostedLogin({
   // unreachable backend) falls back to the plain, realm-agnostic form below — exactly
   // today's hub-realm rendering.
   // A caller that already read the context (the product site) passes it; the hub passes none.
-  context = context === undefined ? await fetchHostedLoginContext(backendUrl, challenge) : context;
+  context = context === undefined ? await fetchHostedLoginContext(backend, challenge) : context;
   // Narrowed once so the fields below don't each re-litigate `context`'s nullability.
   const customer = context?.realm === "customer" ? context : null;
   const clientSlug = customer?.clientSlug ?? null;
@@ -362,7 +369,7 @@ export async function HostedLogin({
 
         <form
           method="post"
-          action={`${backendUrl}/auth/oidc/signup`}
+          action={`${backend}/auth/oidc/signup`}
           className="auth-card__form"
         >
           {errorBanner}
@@ -436,7 +443,7 @@ export async function HostedLogin({
             {providers.map((p) => (
               <a
                 key={p.slug}
-                href={`${backendUrl}/oauth/signin/start?clientId=${encodeURIComponent(clientSlug)}&providerId=${encodeURIComponent(p.slug)}&login_challenge=${encodeURIComponent(challenge)}`}
+                href={`${backend}/oauth/signin/start?clientId=${encodeURIComponent(clientSlug)}&providerId=${encodeURIComponent(p.slug)}&login_challenge=${encodeURIComponent(challenge)}`}
                 className="auth-card__provider-btn"
               >
                 Continue with {p.name}
@@ -458,7 +465,7 @@ export async function HostedLogin({
       {passwordEnabled && (
       <form
         method="post"
-        action={`${backendUrl}/auth/oidc/login`}
+        action={`${backend}/auth/oidc/login`}
         className="auth-card__form"
       >
         {errorBanner}

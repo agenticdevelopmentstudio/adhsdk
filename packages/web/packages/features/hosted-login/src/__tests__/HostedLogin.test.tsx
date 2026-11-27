@@ -179,4 +179,16 @@ describe("HostedLogin", () => {
     expect(html.match(/value="sms"/g)).toHaveLength(1);
     expect(html.indexOf('value="sms"')).toBeLessThan(html.indexOf('value="totp"'));
   });
+
+  it("drops a trailing slash on backendUrl from every URL it builds", async () => {
+    fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => CUSTOMER });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const html = await render({ backendUrl: `${BACKEND}//`, params: { login_challenge: "chal-1" } });
+
+    const [url] = fetchMock.mock.calls[0] as [string, unknown];
+    expect(url).toBe(`${BACKEND}/auth/oidc/login/context?login_challenge=chal-1`);
+    expect(html).toContain(`action="${BACKEND}/auth/oidc/login"`);
+    expect(html).not.toContain(`${BACKEND}//`);
+  });
 });
