@@ -143,7 +143,9 @@ SKIP_PREFIXES = ("docs/sessions/",)
 
 SKIP_DIRS = {"node_modules", "dist", ".turbo", ".git", "coverage", ".next",
              # Git-ignored scratch and other checkouts of this repo.
-             ".superpowers", "worktrees"}
+             ".superpowers", "worktrees",
+             # Tool caches the repo's own test runs write (pytest records test ids).
+             ".pytest_cache", ".ruff_cache", "__pycache__"}
 
 # A lockfile names whatever the manifests name and is regenerated, not edited.
 SKIP_NAMES = {
