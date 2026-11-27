@@ -24,7 +24,7 @@ import { CopyButton } from "@adh-sdk/ui/components/copy-button";
 import { ErrorText } from "@adh-sdk/ui/components/error-text";
 import { Input } from "@adh-sdk/ui/components/input";
 import { List, ListItem } from "@adh-sdk/ui/components/list";
-import { wordsFor, type ProductWords } from "./product-words";
+import { hostOf, wordsFor, type ProductWords } from "./product-words";
 
 /** The most domains a product can have; the backend refuses a sixth (`product_domain_limit`). */
 const DOMAIN_LIMIT = 5;
@@ -155,16 +155,6 @@ function useNow(): number {
 }
 
 // ── Hosts ─────────────────────────────────────────────────────────────────────
-
-/** `temporal.example.com` for `https://temporal.example.com`; null when there is none. */
-const hostOf = (origin: string | null | undefined): string | null => {
-  if (!origin) return null;
-  try {
-    return new URL(origin).host;
-  } catch {
-    return null;
-  }
-};
 
 /**
  * Where the records are created: the DNS zone, read from the records the backend sent. An `A`

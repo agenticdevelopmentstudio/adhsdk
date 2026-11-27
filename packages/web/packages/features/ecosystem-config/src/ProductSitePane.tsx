@@ -23,7 +23,7 @@ import { ProductTotalsPane } from "./ProductTotalsPane";
 import { RoleHolders, isAdminRole } from "./ProductRolesPane";
 import { signupListKey } from "./SignupListPane";
 import { ProductDomainsSection } from "./ProductDomainsSection";
-import { wordsFor, type ProductWords } from "./product-words";
+import { hostOf, wordsFor, type ProductWords } from "./product-words";
 
 /** The pane's one product-site write, shared by the handle and the console switch. */
 type SiteUpdate = ReturnType<typeof useUpdateProductSite>;
@@ -49,16 +49,6 @@ function baseDomainSuffix(site: Pick<ProductSite, "handle" | "subdomainOrigin">)
   if (host === null) return null;
   const lead = `${site.handle}.`;
   return host.startsWith(lead) ? host.slice(site.handle.length) : null;
-}
-
-/** The host of an origin, or null for none or one that does not parse. */
-function hostOf(origin: string | null): string | null {
-  if (origin === null) return null;
-  try {
-    return new URL(origin).host;
-  } catch {
-    return null;
-  }
 }
 
 /** Whether a custom domain is primary: the primary is not the product's own subdomain. */

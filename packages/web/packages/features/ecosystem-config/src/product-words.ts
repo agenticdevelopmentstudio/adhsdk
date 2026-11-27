@@ -1,4 +1,5 @@
-// How the Product site pane and its Custom domain section name the product in their sentences.
+// What the Product site pane and its Custom domain section both need to word their sentences:
+// how they name the product, and the host of an address.
 
 /** The product's name in each place a sentence needs it: "Temporal", or "this product". */
 export interface ProductWords {
@@ -17,3 +18,13 @@ export const wordsFor = (productName: string | undefined): ProductWords =>
   productName
     ? { name: productName, Name: productName, its: `${productName}'s`, Its: `${productName}'s` }
     : { name: "this product", Name: "This product", its: "this product's", Its: "This product's" };
+
+/** The host of an origin (`temporal.example.com` for `https://temporal.example.com`), or null for none or one that does not parse. */
+export const hostOf = (origin: string | null | undefined): string | null => {
+  if (!origin) return null;
+  try {
+    return new URL(origin).host;
+  } catch {
+    return null;
+  }
+};
