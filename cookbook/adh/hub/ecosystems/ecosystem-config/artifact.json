@@ -4,11 +4,11 @@
     "id": "87ca0139-6cd0-46dd-a9fb-40ad3406f175",
     "title": "Ecosystem Config",
     "type": "ingredient",
-    "version": "2.3.0",
+    "version": "2.3.1",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-11-23",
+    "modified": "2026-11-26",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -36,7 +36,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "cee06250155cea79",
+  "synced": "f9d6a8c2eaca9d05",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

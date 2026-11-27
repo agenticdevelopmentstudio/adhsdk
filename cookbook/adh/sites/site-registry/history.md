@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 3.0.0 | 2026-11-26 | Mike Fullerton | The product-site hub segment replaces admin-site |
 | 2.0.0 | 2026-11-26 | Mike Fullerton | Breaking: the 'product-admin' SiteId is renamed 'product-sites': the wildcard site (wildcardHost, env after the handle, hostForEnv patterns, single-URL helpers and siteIdentity refuse it, no SSO origin), not admin-gated and unlisted; its share under /admin |
 | 1.6.1 | 2026-11-24 | Mike Fullerton | workspace-route-not-derived-from-has-home names myagenticdevteam: hasHome true, no workspace route |
 | 1.6.0 | 2026-11-23 | Mike Fullerton | Phase 9: jobs hub segment and route line (templates and environments are sub-paths), the product admin Jobs pages in its share, jobs in the universal reserved list. |

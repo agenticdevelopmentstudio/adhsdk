@@ -4,5 +4,4 @@
 - **Quota above the default (MUST NOT validate)**: the client sends any byte count; the 403 for a value above `DEFAULT_QUOTA_BYTES` is the backend's, and the panes check the ceiling themselves before sending.
 - **A pause that fails (MUST)**: a refusal is rethrown unchanged to the caller, and the roster is not invalidated.
 - **A manager calling the roster (MUST NOT recover)**: the backend answers a manager 403; the client does not retry or fall back.
-- **A set-up that conflicts (MUST)**: the 409 from the admin site route reaches the caller as the transport's error, carrying the backend's message.
 

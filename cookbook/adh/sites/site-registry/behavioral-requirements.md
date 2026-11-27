@@ -33,7 +33,7 @@
   entry MUST be excluded from the footer site list.
 - **support-routes-in-shares**: The hub's generated route shares MUST list the hosted `/support` page in the `hub` share, the console's `/admin/support` topic in the `product-sites` share, and the operator admin site's three pages, `/break-glass`, `/support-access` and `/support-grants`, in the `admin` share, each in the sorted place [route-list-per-site-is-normalized](#requirements/route-list-per-site-is-normalized) gives it.
 - **ai-settings-extra-segment**: The hub-only extra segments MUST include `ai-settings`, the hub knob that holds the workspace's AI Settings (services and their models).
-- **ai-settings-hub-route-line**: The hub route share MUST carry one workspace line for `ai-settings`, `/[workspace]/ai-settings/[[...path]]`, matching its one `llm-providers` workspace line, in sorted place (after `/[workspace]/admin-site/[[...path]]`). The share MUST keep its `/[workspace]/llm-providers/[[...path]]` and `/[workspace]/persona-services/[[...path]]` lines, which serve the redirects (legacy-provider-segments-redirect-only).
+- **ai-settings-hub-route-line**: The hub route share MUST carry one workspace line for `ai-settings`, `/[workspace]/ai-settings/[[...path]]`, matching its one `llm-providers` workspace line, in sorted place (after `/[workspace]/academy/[[...path]]`). The share MUST keep its `/[workspace]/llm-providers/[[...path]]` and `/[workspace]/persona-services/[[...path]]` lines, which serve the redirects (legacy-provider-segments-redirect-only).
 - **admin-share-no-ai-settings**: The admin route share MUST NOT gain an `ai-settings` line. Its `/llm-providers` line is the operator console's own provider page, whose identifier stays.
 - **legacy-provider-segments-redirect-only**: `llm-providers` and `persona-services` MUST stay in the hub-only extra segments as redirect-only segments, so a stored link to either still resolves as a hub workspace segment. This module MUST NOT redirect them; the hub site does the redirect to `ai-settings`, keeping the sub-path.
 - **jobs-extra-segment**: The hub-only extra segments MUST include `jobs` (phase 9), the hub knob that holds the workspace's jobs, templates and environments.
@@ -233,7 +233,7 @@
   segments MUST name a hub workspace feature with no corresponding registry site (a
   hub-only knob, such as an ecosystem's member list, the persona-data management
   surface, or the workspace's `ai-settings` and `jobs`; a product knob with a row on the product rail, such as `roles`,
-  `signup-list`, `sets`, or `admin-site`; or a bespoke rail route such as `email-signup`); a feature that is some site's own implementation MUST be keyed in the
+  `signup-list`, `sets`, or `product-site`; or a bespoke rail route such as `email-signup`); a feature that is some site's own implementation MUST be keyed in the
   feature-segment map by that site's identifier instead.
 
 ### Workspace routing

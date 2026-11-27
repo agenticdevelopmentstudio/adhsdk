@@ -5,7 +5,7 @@
 - **show-tone-icon-by-default**: The component MUST render the tone icon leading the title when `showIcon` is `true`, which is the default.
 - **hide-tone-icon-when-disabled**: The component MUST omit the tone icon when `showIcon` is `false`.
 - **mark-tone-icon-decorative**: The component MUST render the tone icon with `aria-hidden`.
-- **map-tone-to-icon-and-color**: The component MUST render the `Info` icon with `text-apt-blue` for `tone="info"`, the `CheckCircle2` icon with `text-apt-green` for `tone="success"`, and the `TriangleAlert` icon with `text-apt-red` for `tone="error"`.
+- **map-tone-to-icon-and-color**: The component MUST render the `Info` icon with `text-apt-blue` for `tone="info"`, the `CheckCircle2` icon with `text-apt-green` for `tone="success"`, the `TriangleAlert` icon with `text-apt-orange` for `tone="warning"` (a consequential but not destructive confirm), and the `TriangleAlert` icon with `text-apt-red` for `tone="error"`.
 - **force-error-tone-when-destructive**: The component MUST use the `"error"` tone's icon and color whenever `destructive` is `true`, regardless of the value of the `tone` prop.
 - **render-alert-mode-when-no-cancel-label**: The component MUST render a single, full-width confirm button in the footer (alert mode) whenever `cancelLabel` is `null` or `undefined`.
 - **render-confirm-mode-when-cancel-label-set**: The component MUST render `DialogActions`, with both a cancel and a confirm button, whenever `cancelLabel` is not `null`/`undefined`.

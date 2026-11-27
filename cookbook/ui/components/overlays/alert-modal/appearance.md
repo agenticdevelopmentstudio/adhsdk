@@ -3,7 +3,7 @@
 - **Padding**: Not applicable — owned by `DialogContent` via the Dialog ingredient.
 - **Font**: Title weight/size are inherited from `DialogTitle` (unmodified here); `AlertModal` only overrides the title's text color and adds a leading-icon layout (`flex items-center gap-2 text-apt-gold`).
 - **Background**: Not applicable — owned by `DialogContent` via the Dialog ingredient.
-- **Foreground/Text**: Title text is `text-apt-gold`. Tone icon color is `text-apt-blue` (info), `text-apt-green` (success), or `text-apt-red` (error/destructive). Busy spinner (alert mode) is `text-apt-text-muted`.
+- **Foreground/Text**: Title text is `text-apt-gold`. Tone icon color is `text-apt-blue` (info), `text-apt-green` (success), `text-apt-orange` (warning), or `text-apt-red` (error/destructive). Busy spinner (alert mode) is `text-apt-text-muted`.
 - **Border**: Not applicable — owned by `DialogContent` via the Dialog ingredient.
 - **Shadow**: Not applicable — owned by `DialogContent` via the Dialog ingredient.
 - **Min/Max size**: Not applicable — sizing is owned by `DialogContent` and can be overridden via the `contentClassName` prop.

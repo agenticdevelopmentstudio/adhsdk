@@ -403,8 +403,8 @@ replaces the allow-list field the client-auth form used to carry.
   the holders afterward, run one at a time, and show a failure in the pane.
 - **pane-caller**: the sign-up list, product roles and sets panes MUST accept an
   optional caller, either `manager` (the default: a workspace manager in the hub)
-  or `product_admin` (a product's own admin on its admin site, phase 6), so the
-  admin site mounts the same panes the hub does. A caller narrows only what the
+  or `product_admin` (a product's own admin in its admin console, phase 6), so the
+  console mounts the same panes the hub does. A caller narrows only what the
   backend would refuse that caller anyway. The sign-up list pane behaves the same
   for both.
 - **product-roles-admin-seats-protected**: for the `product_admin` caller, the

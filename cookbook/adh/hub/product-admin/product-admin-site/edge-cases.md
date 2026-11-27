@@ -1,10 +1,10 @@
 
-- **No product selected (MUST)**: the Admin site page and the totals page say so and make no request.
-- **A site that cannot be set (MUST)**: a host another product's site uses, or a product with its own admin application, is refused by the backend with a sentence; the page shows it.
-- **Switch on, no site (MUST)**: no page leaves the hub, so the manager keeps every page until the site is set up.
-- **Site not known yet, or its read failed (MUST)**: every page stays, and Admin site stays only when the URL names it.
-- **Switch on and a site (MUST)**: Users ▸ Email Signup and Users ▸ Authentication stay on the hub; the admin site has no page for them.
-- **A cancelled confirmation (MUST NOT)**: nothing is sent.
+- **No product selected (MUST)**: the Product site page and the totals page say so and make no request.
+- **A handle or switch that cannot be set (MUST)**: a taken or reserved handle, or a console switched on with no base domain on the server, is refused by the backend with a sentence; the page shows it and keeps the draft.
+- **Console on, not live yet (MUST)**: no page leaves the hub, so the manager keeps every page until the console answers; the Product site page says so.
+- **Site not known yet, or its read failed (MUST)**: every page stays, the Product site row among them.
+- **Console live (MUST)**: Users ▸ Email Signup and Users ▸ Authentication stay on the hub; the console has no page for them.
+- **A cancelled confirmation (MUST NOT)**: nothing is sent, for a pause, a quota change, a delete or a rename.
 - **Quota above the default (MUST NOT send)**: refused before any request.
 - **A step-up refusal (MUST)**: a request or a revoke refused as `step_up_required` is handled as [support-step-up](#requirements/support-step-up) says.
 - **A product with no runs (MUST)**: `/admin/jobs` says there are no runs yet, and is not an error.

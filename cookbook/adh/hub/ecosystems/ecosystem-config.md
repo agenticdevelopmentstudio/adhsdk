@@ -2,11 +2,11 @@
 id: 87ca0139-6cd0-46dd-a9fb-40ad3406f175
 title: "Ecosystem Config"
 type: ingredient
-version: 2.3.0
+version: 2.3.1
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-11-23
+modified: 2026-11-26
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -459,8 +459,8 @@ replaces the allow-list field the client-auth form used to carry.
   the holders afterward, run one at a time, and show a failure in the pane.
 - **pane-caller**: the sign-up list, product roles and sets panes MUST accept an
   optional caller, either `manager` (the default: a workspace manager in the hub)
-  or `product_admin` (a product's own admin on its admin site, phase 6), so the
-  admin site mounts the same panes the hub does. A caller narrows only what the
+  or `product_admin` (a product's own admin in its admin console, phase 6), so the
+  console mounts the same panes the hub does. A caller narrows only what the
   backend would refuse that caller anyway. The sign-up list pane behaves the same
   for both.
 - **product-roles-admin-seats-protected**: for the `product_admin` caller, the
@@ -873,8 +873,11 @@ kind.
   `setEntryFeaturesFor` (the catalog entries a caller may edit),
   `USAGE_TIER_LIMIT_KEY` and `STORAGE_QUOTA_LIMIT_KEY`, importing the quota ceiling
   `DEFAULT_QUOTA_BYTES` from `@adh-sdk/data/product-admin`. `ProductRolesPane.tsx`
-  exports `isAdminRole`. The phase-6 `AdminSitePane` and `ProductTotalsPane` are in
-  the product admin site recipe.
+  exports `isAdminRole`. `ClientAuthFields.tsx` also exports `SettingRow`, the one
+  labelled row with its control on the right, which the Product site pane draws its
+  admin console switch with. The `ProductSitePane` (product sites phase 5, replacing
+  the phase-6 `AdminSitePane`) and `ProductTotalsPane` are in the product admin site
+  recipe.
   The phase-5 panes are `SignupListPane.tsx`, `ProductRolesPane.tsx` (with
   `RoleHolders`), `SetsPane.tsx` (with `refusalText` and `valuesOfDraft`) and
   `BillingPane.tsx`, each taking `{ ecosystemId, title, help }` so a host renders
@@ -1023,6 +1026,7 @@ console already sits above it. The owner approved this in the Temporal plan on 2
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 2.3.1 | 2026-11-26 | Mike Fullerton | ProductSitePane replaces AdminSitePane; SettingRow is exported |
 | 2.3.0 | 2026-11-23 | Mike Fullerton | Phase 7: consented support access |
 | 2.2.0 | 2026-11-23 | Mike Fullerton | Phase 6: a pane caller for the sign-up list, roles and sets panes; admin seats protected, usage tier hidden, storage quota capped for a product admin |
 | 2.1.0 | 2026-11-22 | Mike Fullerton | Phase 5: sign-up list, product roles, sets, billing placeholder and workspace gate panes; the login allow-list is now a switch whose emails live in the sign-up list; client-auth updates are POSTs; passwordEnabled |

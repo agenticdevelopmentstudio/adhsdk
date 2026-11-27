@@ -1879,15 +1879,6 @@
         },
         {
           "conformance": {
-            "hash": "sha256:ae54ddcdfd1ecb300d79f02d7ddae4e3850d4d08b896e1bcf96e99dcd11331b7",
-            "state": "confirmed",
-            "version": "1.1.0"
-          },
-          "location": "packages/web/packages/data/src/product-admin/admin-site.ts",
-          "platform": "web"
-        },
-        {
-          "conformance": {
             "hash": "sha256:184602b316c899f22792390e4355b8727aca9e96033f044a63749b46f7db7a7c",
             "state": "confirmed",
             "version": "1.1.0"
@@ -3184,6 +3175,22 @@
       "path": "status/service/monitor/live-view",
       "rdid": "adhsdk.ingredient.status.service.monitor.live-view"
     },
+    "1f689c5f-818d-4c64-918f-73bb9ec0be32": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:92dbbae7efef088110ebfc7da8b28149a9a0e611a275dafd1cd00c260100f4dc",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/web/packages/data/src/product-sites/",
+          "platform": "web"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "adh/hub/product-sites/product-site-client",
+      "rdid": "adhsdk.ingredient.adh.hub.product-sites.product-site-client"
+    },
     "1f80f43d-5aa4-42cf-bc3e-fb742662b615": {
       "implementations": [
         {
@@ -4368,36 +4375,27 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:97c79661ad8ef04b5c89f71835c4ee99951d108abaccf68e017fe59d8f5b116c",
+            "hash": "sha256:21b9a1e10b1edd5730bd40551776875933601669be2ec614156a41d80d6ef002",
             "state": "confirmed",
-            "version": "2.1.0"
+            "version": "3.0.0"
           },
           "location": "packages/web/packages/features/product-admin/src/",
           "platform": "web"
         },
         {
           "conformance": {
-            "hash": "sha256:c84dd07d5be51a859a69bfe053e9007a12bcbaf72b509aaadc666307d35cbaed",
-            "state": "confirmed",
-            "version": "2.1.0"
-          },
-          "location": "packages/web/packages/features/ecosystem-config/src/AdminSitePane.tsx",
-          "platform": "web"
-        },
-        {
-          "conformance": {
             "hash": "sha256:ecf6e02f258a6adabcb49559f6af9874a98cffec4ab08fdcf948f3d857db6eb0",
             "state": "confirmed",
-            "version": "2.1.0"
+            "version": "3.0.0"
           },
           "location": "packages/web/packages/features/ecosystem-config/src/ProductTotalsPane.tsx",
           "platform": "web"
         },
         {
           "conformance": {
-            "hash": "sha256:1f4aa53c1a46a707d3167468c8eedc9bf72c9641dd3c4fd40a0c563cd00e413e",
+            "hash": "sha256:3689740e155e189c0ee5785d0e2017fbc8a975e3ec15e33713cb9e98f9774e6e",
             "state": "confirmed",
-            "version": "2.1.0"
+            "version": "3.0.0"
           },
           "location": "packages/web/packages/features/adh-products/src/topics.ts",
           "platform": "web"
@@ -4406,9 +4404,18 @@
           "conformance": {
             "hash": "sha256:5fc22bd97221bfc083e8e00d7dafa9cca64679a184bd27d2f9335fa449e1774b",
             "state": "confirmed",
-            "version": "2.1.0"
+            "version": "3.0.0"
           },
           "location": "packages/web/packages/features/ecosystems/src/EcosystemInvitationPanes.tsx",
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:deb4abeff4cc22baa8d9890def0920a81794d98ade6311867d9ba80ff6174beb",
+            "state": "confirmed",
+            "version": "3.0.0"
+          },
+          "location": "packages/web/packages/features/ecosystem-config/src/ProductSitePane.tsx",
           "platform": "web"
         }
       ],
@@ -13731,9 +13738,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:b50ca9b0087d88a3385f58df8a53147bf3310e5d69f32bd312e73f05390d2b4b",
+            "hash": "sha256:8faab3e75654c3dac27bc35f5b0cbd0984cf937504a1e2eb28ec6e8fa3bb3fbd",
             "state": "confirmed",
-            "version": "2.0.0"
+            "version": "3.0.0"
           },
           "location": "packages/web/packages/adh-registry/src/sites/",
           "platform": "web"
@@ -21284,9 +21291,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:7223715804a71fe73a975559d223a59b6a75db29a79d197304818d25410ac322",
+            "hash": "sha256:7c0e171afa4d126215d4ed827368757fd376c313d0d7f99c457e04bec2ab7f8b",
             "state": "confirmed",
-            "version": "1.1.2"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/ui/src/components/alert-modal.tsx",
           "platform": "web"

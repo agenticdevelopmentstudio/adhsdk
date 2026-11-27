@@ -108,8 +108,11 @@
   `setEntryFeaturesFor` (the catalog entries a caller may edit),
   `USAGE_TIER_LIMIT_KEY` and `STORAGE_QUOTA_LIMIT_KEY`, importing the quota ceiling
   `DEFAULT_QUOTA_BYTES` from `@adh-sdk/data/product-admin`. `ProductRolesPane.tsx`
-  exports `isAdminRole`. The phase-6 `AdminSitePane` and `ProductTotalsPane` are in
-  the product admin site recipe.
+  exports `isAdminRole`. `ClientAuthFields.tsx` also exports `SettingRow`, the one
+  labelled row with its control on the right, which the Product site pane draws its
+  admin console switch with. The `ProductSitePane` (product sites phase 5, replacing
+  the phase-6 `AdminSitePane`) and `ProductTotalsPane` are in the product admin site
+  recipe.
   The phase-5 panes are `SignupListPane.tsx`, `ProductRolesPane.tsx` (with
   `RoleHolders`), `SetsPane.tsx` (with `refusalText` and `valuesOfDraft`) and
   `BillingPane.tsx`, each taking `{ ecosystemId, title, help }` so a host renders

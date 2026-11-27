@@ -15,9 +15,9 @@ tags:
 depends-on:
   - 870c182f-1a80-4254-8fec-3eb35c8f13f7
   - 3ea9329e-5acc-4c43-b5ce-bb8c50570104
-version: 1.1.0
+version: 2.0.0
 created: 2026-11-23
-modified: 2026-11-23
+modified: 2026-11-26
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -28,9 +28,9 @@ references: []
 
 ## Overview
 
-This is the web client for a product's admin site (phase 6). A product is an ecosystem; its admin site is a separate host where the product's own admins, signed in with the product's customer login, read the product's totals and roster and pause, re-quota or delete a customer. The hub's managers use the same client to set that site up and to read the totals. The backend owns every rule; this code builds requests, maps `snake_case` wire rows to `camelCase` rows, and wraps each call in a React Query hook.
+This is the web client for a product's admin console (phase 6). A product is an ecosystem; its console is the `/admin` part of the product's own site, where the product's own admins, signed in with the product's customer login, read the product's totals and roster and pause, re-quota or delete a customer. The hub's managers use the same client to read the totals. The product's site itself (its handle, address and console switch) is read and changed by the product site client ([adhsdk.ingredient.adh.hub.product-sites.product-site-client](cookbook:1f689c5f-818d-4c64-918f-73bb9ec0be32)), not here. The backend owns every rule; this code builds requests, maps `snake_case` wire rows to `camelCase` rows, and wraps each call in a React Query hook.
 
-The component is four files in `packages/web/packages/data/src/product-admin/`, published as `@adh-sdk/data/product-admin`. `product-totals.ts` reads a product's counts. `product-customers.ts` reads and changes the roster. `admin-site.ts` reads, sets up, moves and takes down the site. `index.ts` re-exports all three and declares `DEFAULT_QUOTA_BYTES`, the most storage a product admin may give one customer: 5 GiB (5,368,709,120 bytes), mirroring the backend's own default. Every request goes through `authedJson` or `authedRequest`, with query strings built by `withV1Query`, from the shared /v1 conventions ([adhsdk.ingredient.data.services.auth.v1](cookbook:870c182f-1a80-4254-8fec-3eb35c8f13f7)) and the authentication client ([adhsdk.ingredient.data.services.auth.auth-client](cookbook:3ea9329e-5acc-4c43-b5ce-bb8c50570104)); nothing here reads a token or a base URL itself.
+The component is three files in `packages/web/packages/data/src/product-admin/`, published as `@adh-sdk/data/product-admin`. `product-totals.ts` reads a product's counts. `product-customers.ts` reads and changes the roster. `index.ts` re-exports the two and declares `DEFAULT_QUOTA_BYTES`, the most storage a product admin may give one customer: 5 GiB (5,368,709,120 bytes), mirroring the backend's own default. Every request goes through `authedJson` or `authedRequest`, with query strings built by `withV1Query`, from the shared /v1 conventions ([adhsdk.ingredient.data.services.auth.v1](cookbook:870c182f-1a80-4254-8fec-3eb35c8f13f7)) and the authentication client ([adhsdk.ingredient.data.services.auth.auth-client](cookbook:3ea9329e-5acc-4c43-b5ce-bb8c50570104)); nothing here reads a token or a base URL itself.
 
 Every call carries the product's ecosystem uuid in an `ecosystem` query parameter, never an rdid, because the backend compares it exactly.
 
@@ -41,7 +41,6 @@ Every call carries the product's ecosystem uuid in an `ecosystem` query paramete
 | `/api/v1/product_admin/customers/{id}` | DELETE | `productAdminApi.deleteCustomer`, `useDeleteCustomer` |
 | `/api/v1/product_admin/customers/{id}/pause` | POST, DELETE | `productAdminApi.pause` and `unpause`, `usePauseCustomer` and `useUnpauseCustomer` |
 | `/api/v1/product_admin/customers/{id}/quota` | POST | `productAdminApi.setQuota`, `useSetCustomerQuota` |
-| `/api/v1/admin_site` | GET, POST, DELETE | `adminSiteApi.get`, `put` and `remove`, with `useAdminSite`, `usePutAdminSite` and `useRemoveAdminSite` |
 
 ## Behavioral Requirements
 
@@ -62,14 +61,6 @@ Every call carries the product's ecosystem uuid in an `ecosystem` query paramete
 - **customer-id-encoded**: the customer id MUST be URL-encoded into the path.
 - **roster-writes-invalidate**: every roster write hook (`usePauseCustomer`, `useUnpauseCustomer`, `useSetCustomerQuota`, `useDeleteCustomer`) MUST, on success, invalidate both the roster queries and the totals query of that ecosystem, because they count the same people.
 - **admin-seat-protected**: `isAdminSeatProtected` MUST return true only for an error whose HTTP status is 422 and whose `code`, or whose body's `error.code`, is `admin_seat_protected` (the backend's refusal to pause or delete yourself or another holder of `admin`), and MUST return false for any other error.
-
-### Admin site
-
-- **admin-site-read**: `adminSiteApi.get` MUST `GET` `/api/v1/admin_site?ecosystem=<uuid>` and map the body to `{ site, enabled, contentGated }`. `enabled` is whether the `product_admin_site` switch is on, coerced to a boolean. `contentGated` is the body's `content_gated` (content enforcement is on, so the hub reads only the product's house rows), coerced to a boolean; a body without it, from a backend that predates it, MUST read as `false`, not gated. `site` is `null` when the product has none, else `{ id, host, applicationId, clientId, createdAt, updatedAt }` from `host`, `application_id`, `client_id` and the epoch-seconds `created` and `updated`.
-- **admin-site-put**: `adminSiteApi.put` MUST `POST` `{ host }` to the same path, which sets the site up or moves it, and return the new state. The backend answers 409 when the product already has its own `admin-site` application or another product's site uses the host; the error is left for the caller to show.
-- **admin-site-remove**: `adminSiteApi.remove` MUST `DELETE` the same path and return nothing.
-- **admin-site-hooks**: `useAdminSite` MUST be disabled while there is no ecosystem id and read under the key `["product-admin", <id>, "admin-site"]`. It MUST NOT retry a 404, which an ecosystem with no admin site answers every time; any other failure is retried once, as the provider's default does. `usePutAdminSite` MUST, on success, write the returned state straight into that cache entry. `useRemoveAdminSite` MUST, on success, invalidate it.
-
 ## Appearance
 
 Not applicable: this is a data client with mappers, types and hooks, not a visual component.
@@ -96,13 +87,10 @@ Vectors marked with a test name are asserted in `packages/web/packages/data/src/
 | product-admin-client-006 | quota | `setQuota("eco-1", "u1", 1073741824)` answered `{ quota_bytes: 1073741824 }` (test: "sets the quota with POST (the backend's PUT) and reads quota_bytes back") | A `POST` of `.../u1/quota?ecosystem=eco-1` with `{"bytes":1073741824}`; the result is `{ quotaBytes: 1073741824 }` |
 | product-admin-client-007 | delete-customer, customer-id-encoded | `deleteCustomer("eco-1", "u1")` (test: "deletes a customer with DELETE"), and the id `a/b` | A `DELETE` of `.../customers/u1?ecosystem=eco-1`; the second id appears as `a%2Fb` |
 | product-admin-client-008 | admin-seat-protected | A 422 error whose body is `{ error: { code: "admin_seat_protected" } }`, then a 422 with another code, then a 403 carrying that code (test: "recognizes the 422 admin_seat_protected body" and "refuses any other error") | True, false, false |
-| product-admin-client-009 | admin-site-read | `get("eco-1")` over a body with a site and `enabled: true`, then over `{ site: null, enabled: false }` (tests: "reads the site and the switch", "reads no site") | The first maps the site's fields camel-cased; the second is `{ site: null, enabled: false, contentGated: false }`, a body without `content_gated` reading as not gated |
-| product-admin-client-010 | admin-site-put, admin-site-remove | `put("eco-1", "admin.example.com")`, then `remove("eco-1")` (tests: "sets the site up with POST and the host", "takes the site down with DELETE") | A `POST` of `/api/v1/admin_site?ecosystem=eco-1` with `{"host":"admin.example.com"}`; then a `DELETE` of the same path |
 | product-admin-client-011 | roster-writes-invalidate | Any roster write succeeding for "eco-1" | The roster queries and the totals query of "eco-1" are invalidated |
-| product-admin-client-012 | totals-hook, customers-hook, admin-site-hooks | Each read hook given `null`, `undefined` or `""` | No request is made |
+| product-admin-client-012 | totals-hook, customers-hook | Each read hook given `null`, `undefined` or `""` | No request is made |
 | product-admin-client-013 | quota | The constant `DEFAULT_QUOTA_BYTES` (test: "is the backend's 5 GiB") | 5368709120 |
 | product-admin-client-014 | totals-jobs | `fetchProductTotals("eco-1")` over a body with `jobs_by_status: { failed: 2, done: 9 }`, then over one without it | `jobsByStatus` is `{ failed: 2, done: 9 }`, then `{}` |
-| product-admin-client-015 | admin-site-read | `get("eco-1")` over a body with `content_gated: true`, then over one without the field (tests: "reads content enforcement as contentGated (phase 7)", "reads a backend without content_gated as not gated") | `contentGated` is `true`, then `false` |
 ## Edge Cases
 
 - **Empty and absent ids (MUST)**: the read hooks are disabled for an empty, null or undefined ecosystem id and make no request; a hook given no id still builds a stable query key from an empty string.
@@ -110,7 +98,6 @@ Vectors marked with a test name are asserted in `packages/web/packages/data/src/
 - **Quota above the default (MUST NOT validate)**: the client sends any byte count; the 403 for a value above `DEFAULT_QUOTA_BYTES` is the backend's, and the panes check the ceiling themselves before sending.
 - **A pause that fails (MUST)**: a refusal is rethrown unchanged to the caller, and the roster is not invalidated.
 - **A manager calling the roster (MUST NOT recover)**: the backend answers a manager 403; the client does not retry or fall back.
-- **A set-up that conflicts (MUST)**: the 409 from the admin site route reaches the caller as the transport's error, carrying the backend's message.
 
 ## Configuration
 
@@ -120,7 +107,7 @@ Vectors marked with a test name are asserted in `packages/web/packages/data/src/
 | `opts.q` | string | none | On the roster read, filters email and name. |
 | `opts.cursor` | string | none | On the roster read, the `nextCursor` of the page before. |
 | `DEFAULT_QUOTA_BYTES` | number | `5368709120` | The most storage a product admin may give one customer. |
-| `PRODUCT_TOTALS_PATH`, `PRODUCT_CUSTOMERS_PATH`, `ADMIN_SITE_PATH` | string constants | `/api/v1/product_admin/totals`, `/api/v1/product_admin/customers`, `/api/v1/admin_site` | The base routes. |
+| `PRODUCT_TOTALS_PATH`, `PRODUCT_CUSTOMERS_PATH` | string constants | `/api/v1/product_admin/totals`, `/api/v1/product_admin/customers` | The base routes. |
 | Transport | injected module imports | `authedJson`, `authedRequest`, `httpStatus`, `unixToIso`, `withV1Query` from `../http`, and `enc` from `../client-helpers` | The caller's environment supplies the token and base URL; this module reads no environment variable or setting. |
 
 ## Deep Linking
@@ -137,7 +124,7 @@ Not applicable: this is a data client with no visual output.
 
 ## Feature Flags
 
-Not applicable: the module reads no flag. Whether admin sites are on for a product is the backend's `product_admin_site` switch, reported as `enabled` in the admin site answer.
+Not applicable: the module reads no flag. Whether a product's admin console is on is the backend's product site switch, read by the product site client, not here.
 
 ## Analytics
 
@@ -168,7 +155,6 @@ Not applicable: no file contains a log call; a failure surfaces only as a thrown
 |----------|----------|-------------|
 | web | `packages/web/packages/data/src/product-admin/product-totals.ts` | confirmed (1.1.0) |
 | web | `packages/web/packages/data/src/product-admin/product-customers.ts` | confirmed (1.1.0) |
-| web | `packages/web/packages/data/src/product-admin/admin-site.ts` | confirmed (1.1.0) |
 | web | `packages/web/packages/data/src/product-admin/index.ts` | confirmed (1.1.0) |
 
 ## Design Decisions
@@ -196,11 +182,12 @@ Not applicable: no file contains a log call; a failure surfaces only as a thrown
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
 
-The module keeps wire types, mapping and routes apart from transport, which it delegates wholly to the shared HTTP layer, so separation of concerns passes. Unit-test coverage is partial: the tests assert routes, bodies, mapping, the seat-protected check and the admin site calls, but not the hooks' cache invalidation or disabled states.
+The module keeps wire types, mapping and routes apart from transport, which it delegates wholly to the shared HTTP layer, so separation of concerns passes. Unit-test coverage is partial: the tests assert routes, bodies, mapping, the seat-protected check, but not the hooks' cache invalidation or disabled states.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 2.0.0 | 2026-11-26 | Mike Fullerton | The admin site client is removed; totals and customers stay, and the site's data layer is the product site client |
 | 1.1.0 | 2026-11-23 | Mike Fullerton | Phase 7: consented support access |
 | 1.0.0 | | | Initial creation |

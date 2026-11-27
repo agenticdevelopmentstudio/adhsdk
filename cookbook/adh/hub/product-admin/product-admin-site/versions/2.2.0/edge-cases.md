@@ -1,0 +1,12 @@
+
+- **No product selected (MUST)**: the Admin site page and the totals page say so and make no request.
+- **A site that cannot be set (MUST)**: a host another product's site uses, or a product with its own admin application, is refused by the backend with a sentence; the page shows it.
+- **Switch on, no site (MUST)**: no page leaves the hub, so the manager keeps every page until the site is set up.
+- **Site not known yet, or its read failed (MUST)**: every page stays, and Admin site stays only when the URL names it.
+- **Switch on and a site (MUST)**: Users ▸ Email Signup and Users ▸ Authentication stay on the hub; the admin site has no page for them.
+- **A cancelled confirmation (MUST NOT)**: nothing is sent.
+- **Quota above the default (MUST NOT send)**: refused before any request.
+- **A step-up refusal (MUST)**: a request or a revoke refused as `step_up_required` is handled as [support-step-up](#requirements/support-step-up) says.
+- **A product with no runs (MUST)**: `/admin/jobs` says there are no runs yet, and is not an error.
+- **Jobs off (MUST)**: a 404 from an `/admin/jobs` read while the `jobs_feature` switch is off says Jobs is not available, as the Jobs ingredient's switch-off-404 says.
+- **Support access off (MUST)**: a 404 on the grants read is handled as [support-switch-off](#requirements/support-switch-off) says.

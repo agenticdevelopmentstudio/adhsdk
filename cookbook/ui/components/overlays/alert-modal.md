@@ -2,11 +2,11 @@
 id: e26e765d-2caa-40f8-a668-661ed2b0632c
 title: "AlertModal"
 type: ingredient
-version: 1.1.3
+version: 2.0.0
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-11-23
+modified: 2026-11-26
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -43,7 +43,7 @@ primitive. It renders one primary button (**alert mode**) when no
 `cancelLabel` is supplied, or a primary + secondary pair via `DialogActions`
 (**confirm mode**) when `cancelLabel` is supplied. Visibility is fully
 controlled by the parent through the `open` prop. A leading tone icon
-(`info`/`success`/`error`) can be shown in the title, the footer can be
+(`info`/`success`/`warning`/`error`) can be shown in the title, the footer can be
 replaced by a busy spinner, dismissal (Escape/✕ — backdrop/outside clicks never
 dismiss the modal at all; see **ignore-pointer-dismissal**) can be disabled entirely, and the
 keyboard shortcut policy (`Enter`/`Escape`) is configurable
@@ -58,7 +58,7 @@ disables keyboard shortcuts.
 - **show-tone-icon-by-default**: The component MUST render the tone icon leading the title when `showIcon` is `true`, which is the default.
 - **hide-tone-icon-when-disabled**: The component MUST omit the tone icon when `showIcon` is `false`.
 - **mark-tone-icon-decorative**: The component MUST render the tone icon with `aria-hidden`.
-- **map-tone-to-icon-and-color**: The component MUST render the `Info` icon with `text-apt-blue` for `tone="info"`, the `CheckCircle2` icon with `text-apt-green` for `tone="success"`, and the `TriangleAlert` icon with `text-apt-red` for `tone="error"`.
+- **map-tone-to-icon-and-color**: The component MUST render the `Info` icon with `text-apt-blue` for `tone="info"`, the `CheckCircle2` icon with `text-apt-green` for `tone="success"`, the `TriangleAlert` icon with `text-apt-orange` for `tone="warning"` (a consequential but not destructive confirm), and the `TriangleAlert` icon with `text-apt-red` for `tone="error"`.
 - **force-error-tone-when-destructive**: The component MUST use the `"error"` tone's icon and color whenever `destructive` is `true`, regardless of the value of the `tone` prop.
 - **render-alert-mode-when-no-cancel-label**: The component MUST render a single, full-width confirm button in the footer (alert mode) whenever `cancelLabel` is `null` or `undefined`.
 - **render-confirm-mode-when-cancel-label-set**: The component MUST render `DialogActions`, with both a cancel and a confirm button, whenever `cancelLabel` is not `null`/`undefined`.
@@ -98,7 +98,7 @@ disables keyboard shortcuts.
 - **Padding**: Not applicable — owned by `DialogContent` via the Dialog ingredient.
 - **Font**: Title weight/size are inherited from `DialogTitle` (unmodified here); `AlertModal` only overrides the title's text color and adds a leading-icon layout (`flex items-center gap-2 text-apt-gold`).
 - **Background**: Not applicable — owned by `DialogContent` via the Dialog ingredient.
-- **Foreground/Text**: Title text is `text-apt-gold`. Tone icon color is `text-apt-blue` (info), `text-apt-green` (success), or `text-apt-red` (error/destructive). Busy spinner (alert mode) is `text-apt-text-muted`.
+- **Foreground/Text**: Title text is `text-apt-gold`. Tone icon color is `text-apt-blue` (info), `text-apt-green` (success), `text-apt-orange` (warning), or `text-apt-red` (error/destructive). Busy spinner (alert mode) is `text-apt-text-muted`.
 - **Border**: Not applicable — owned by `DialogContent` via the Dialog ingredient.
 - **Shadow**: Not applicable — owned by `DialogContent` via the Dialog ingredient.
 - **Min/Max size**: Not applicable — sizing is owned by `DialogContent` and can be overridden via the `contentClassName` prop.
@@ -141,6 +141,7 @@ disables keyboard shortcuts.
 | T7b | map-tone-to-icon-and-color | `tone="info"` | `Info` renders with `text-apt-blue` |
 | T7c | map-tone-to-icon-and-color | `tone="error"` | `TriangleAlert` renders with `text-apt-red` |
 | T7d | default-tone-info | `tone` omitted | `Info` renders with `text-apt-blue` |
+| T7e | map-tone-to-icon-and-color | `tone="warning"` | `TriangleAlert` renders with `text-apt-orange`, not the error red |
 | T8 | force-error-tone-when-destructive | `tone="info"`, `destructive={true}` | `TriangleAlert` renders with `text-apt-red`, not the info icon |
 | T9 | render-alert-mode-when-no-cancel-label | `cancelLabel` omitted | one full-width confirm button, no cancel button |
 | T10 | render-confirm-mode-when-cancel-label-set | `cancelLabel="Cancel"` | `DialogActions` renders cancel + confirm |
@@ -197,7 +198,7 @@ disables keyboard shortcuts.
 | `open` | `boolean` | — (required) | Controlled visibility, owned by the parent. |
 | `title` | `string` | — (required) | Heading line. |
 | `description` | `React.ReactNode` | — | Body copy; omitted renders no `DialogDescription`. |
-| `tone` | `"info" \| "success" \| "error"` | `"info"` | Sets the leading icon + accent color. |
+| `tone` | `"info" \| "success" \| "warning" \| "error"` | `"info"` | Sets the leading icon + accent color. |
 | `confirmLabel` | `string` | `"OK"` | Primary button label. |
 | `confirmVariant` | `Button["variant"]` | `undefined` (→ Button's `"default"`) | Visual variant of the primary button in alert mode when not destructive. |
 | `onConfirm` | `() => void` | — (required) | Primary action; also the effective dismiss action in alert mode. |
@@ -251,7 +252,7 @@ Not applicable — `AlertModal` is a presentational component and issues no log 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/alert-modal.tsx` | confirmed (1.1.2) |
+| web | `packages/web/packages/ui/src/components/alert-modal.tsx` | confirmed (2.0.0) |
 
 ## Design Decisions
 
@@ -292,6 +293,7 @@ Statuses rest on: `alert-modal.tsx`'s extensive Enter/Escape/pointer requirement
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 2.0.0 | 2026-11-26 | Mike Fullerton | Add the warning tone |
 | 1.1.3 | 2026-11-23 | Mike Fullerton | Repoint the Platform Design Languages guideline link to its surviving adc artifact after adc folded the duplicate copy. |
 | 1.1.2 | 2026-11-14 | Mike Fullerton | Clarified pointer dismissal, tone default and busy-label requirements, added tone and busy test vectors, trimmed the summary, and corrected WinUI, reduced-motion and terminology text. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Renamed pointer-dismissal requirement to route-close-button-regardless-of-keyboard-policy; corrected backdrop-never-dismisses behavior and test vectors. Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: passed). |

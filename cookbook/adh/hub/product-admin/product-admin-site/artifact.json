@@ -6,7 +6,7 @@
     "type": "ingredient",
     "status": "review",
     "language": "en",
-    "summary": "The product admin site's feature layer: the users pane, the page list, the manager's Admin site page, the totals pane, the Support and Jobs pages, and the rule for which hub pages move to the site.",
+    "summary": "The product admin site's feature layer: the users pane, the page list, the manager's Product site page, the totals pane, the Support and Jobs pages, and the rule for which hub pages move to the site.",
     "platforms": [
       "typescript",
       "web"
@@ -21,7 +21,7 @@
       "150bf00e-6c6b-4f91-a323-d307ebd5700d",
       "3ea9329e-5acc-4c43-b5ce-bb8c50570104"
     ],
-    "version": "2.2.0",
+    "version": "3.0.0",
     "created": "2026-11-23",
     "modified": "2026-11-26",
     "author": "Mike Fullerton",
@@ -30,7 +30,7 @@
     "related": [],
     "references": []
   },
-  "synced": "71ac49c28762d811",
+  "synced": "ab57408aac803775",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

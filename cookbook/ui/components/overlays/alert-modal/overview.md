@@ -5,7 +5,7 @@ primitive. It renders one primary button (**alert mode**) when no
 `cancelLabel` is supplied, or a primary + secondary pair via `DialogActions`
 (**confirm mode**) when `cancelLabel` is supplied. Visibility is fully
 controlled by the parent through the `open` prop. A leading tone icon
-(`info`/`success`/`error`) can be shown in the title, the footer can be
+(`info`/`success`/`warning`/`error`) can be shown in the title, the footer can be
 replaced by a busy spinner, dismissal (Escape/✕ — backdrop/outside clicks never
 dismiss the modal at all; see **ignore-pointer-dismissal**) can be disabled entirely, and the
 keyboard shortcut policy (`Enter`/`Escape`) is configurable

@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 2.0.0 | 2026-11-26 | Mike Fullerton | Add the warning tone |
 | 1.1.3 | 2026-11-23 | Mike Fullerton | Repoint the Platform Design Languages guideline link to its surviving adc artifact after adc folded the duplicate copy. |
 | 1.1.2 | 2026-11-14 | Mike Fullerton | Clarified pointer dismissal, tone default and busy-label requirements, added tone and busy test vectors, trimmed the summary, and corrected WinUI, reduced-motion and terminology text. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Renamed pointer-dismissal requirement to route-close-button-regardless-of-keyboard-policy; corrected backdrop-never-dismisses behavior and test vectors. Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: passed). |

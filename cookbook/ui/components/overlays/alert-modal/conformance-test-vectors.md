@@ -11,6 +11,7 @@
 | T7b | map-tone-to-icon-and-color | `tone="info"` | `Info` renders with `text-apt-blue` |
 | T7c | map-tone-to-icon-and-color | `tone="error"` | `TriangleAlert` renders with `text-apt-red` |
 | T7d | default-tone-info | `tone` omitted | `Info` renders with `text-apt-blue` |
+| T7e | map-tone-to-icon-and-color | `tone="warning"` | `TriangleAlert` renders with `text-apt-orange`, not the error red |
 | T8 | force-error-tone-when-destructive | `tone="info"`, `destructive={true}` | `TriangleAlert` renders with `text-apt-red`, not the info icon |
 | T9 | render-alert-mode-when-no-cancel-label | `cancelLabel` omitted | one full-width confirm button, no cancel button |
 | T10 | render-confirm-mode-when-cancel-label-set | `cancelLabel="Cancel"` | `DialogActions` renders cancel + confirm |

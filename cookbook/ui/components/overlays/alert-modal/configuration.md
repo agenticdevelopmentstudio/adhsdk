@@ -4,7 +4,7 @@
 | `open` | `boolean` | — (required) | Controlled visibility, owned by the parent. |
 | `title` | `string` | — (required) | Heading line. |
 | `description` | `React.ReactNode` | — | Body copy; omitted renders no `DialogDescription`. |
-| `tone` | `"info" \| "success" \| "error"` | `"info"` | Sets the leading icon + accent color. |
+| `tone` | `"info" \| "success" \| "warning" \| "error"` | `"info"` | Sets the leading icon + accent color. |
 | `confirmLabel` | `string` | `"OK"` | Primary button label. |
 | `confirmVariant` | `Button["variant"]` | `undefined` (→ Button's `"default"`) | Visual variant of the primary button in alert mode when not destructive. |
 | `onConfirm` | `() => void` | — (required) | Primary action; also the effective dismiss action in alert mode. |
