@@ -2,6 +2,7 @@
 // product site's `/login` both mount. No "use client": it renders native forms that post
 // straight to the backend.
 export { HostedLogin, MissingChallengeCard, type HostedLoginParams } from "./HostedLogin";
+export { toHostedLoginParams, type NextSearchParams } from "./searchParams";
 export {
   fetchHostedLoginContext,
   type HostedLoginContext,
