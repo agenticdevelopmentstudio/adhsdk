@@ -115,7 +115,13 @@ function documentFromWire(w: PaperWire): MarkdownDocument {
   }
 }
 
-/** The default fetcher: GET /api/v1/papers/:id through the host app's forwarder. */
+/**
+ * The default fetcher: GET /api/v1/papers/:id through the host app's same-origin `/api`
+ * forwarder. It does not follow `@adh-sdk/auth`'s configured API base (`configureApiBase`):
+ * this package sits below the auth tier and has no dependency on it. A host with no `/api`
+ * rewrite passes its own `fetcher` (to `useMarkdownDocument` or `MarkdownViewer`), e.g. one
+ * that fetches `apiUrl('/api/v1/papers/<id>')`.
+ */
 export const defaultMarkdownFetcher: MarkdownFetcher = async (id, signal) => {
   const res = await fetch(`/api/v1/papers/${encodeURIComponent(id)}`, {
     credentials: 'same-origin',

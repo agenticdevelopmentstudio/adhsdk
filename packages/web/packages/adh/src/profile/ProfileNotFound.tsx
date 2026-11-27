@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, type FormEvent, type ReactElement } from "react";
 import Link from "next/link";
 import { Search } from "lucide-react";
+import { apiUrl } from "@adh-sdk/auth/client";
 import { Avatar, AvatarImage, AvatarFallback } from "@adh-sdk/ui/components/avatar";
 import { Input } from "@adh-sdk/ui/components/input";
 import { Button } from "@adh-sdk/ui/components/button";
@@ -81,7 +82,7 @@ export function ProfileNotFound(): ReactElement {
     setSearch({ status: "loading" });
     try {
       const res = await fetch(
-        `/api/v1/users/search?q=${encodeURIComponent(trimmed)}`,
+        apiUrl(`/api/v1/users/search?q=${encodeURIComponent(trimmed)}`),
         { signal: controller.signal },
       );
       if (!res.ok) throw new Error(`Search failed (${res.status})`);

@@ -2,11 +2,11 @@
 id: 9f938c20-ea6e-42d7-9ddf-9531a96e3ad0
 title: "Markdown Core"
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-11-16
+modified: 2026-11-27
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -235,7 +235,7 @@ Not applicable — markdown-core renders no interactive UI; the HTML string `pro
 
 | Option | Type | Default | Description |
 |---|---|---|---|
-| `fetcher` | `MarkdownFetcher` | `defaultMarkdownFetcher` | `useMarkdownDocument` option overriding how the document is retrieved; held in a ref so an unmemoized inline function does not re-trigger the fetch effect. |
+| `fetcher` | `MarkdownFetcher` | `defaultMarkdownFetcher` | `useMarkdownDocument` option overriding how the document is retrieved; held in a ref so an unmemoized inline function does not re-trigger the fetch effect. The default always fetches the same-origin `/api/v1/papers/{id}` and does not follow `@adh-sdk/auth`'s `configureApiBase` (this package does not depend on the auth tier), so a host with no `/api` rewrite passes its own fetcher. |
 | `timeoutMs` | `number` | `15000` (`DEFAULT_TIMEOUT_MS`) | `useMarkdownDocument` option controlling how long to wait before aborting the fetch with reason `'mdv-timeout'`. |
 | `MarkdownText.excerptLines` | `Int` (constant) | `4` | Apple-side constant capping the number of lines `deriveExcerpt` collects; not exposed as a runtime option. |
 | `MarkdownText.excerptLineCharacters` | `Int` (constant) | `160` | Apple-side constant capping each excerpt line, in UTF-16 code units. |
@@ -345,3 +345,4 @@ Not applicable — no source file in this ingredient writes to a log, console, o
 | 1.0.2 | 2026-09-24 | Claude | Added a WinUI 3 Platform Notes bullet with .NET type, regex, line-splitting, YAML-frontmatter, JSON, hashing, byte-identical, and concurrency guidance for a C# port. |
 | 1.0.3 | 2026-09-25 | Mike Fullerton | Fixed byte-exact-round-trip/mdc-006/WinUI to prefix+body (block is substring of prefix, not concatenated); stale-response-suppression to show late timeout resolves as success; sanitize-allowlist scoped style-only, className stays global; write-path-never-touches-name allows reading name via deriveDocumentTitle; real-yaml-parser-for-frontmatter notes silent logLevel recovers malformed YAML instead of nulling. |
 | 1.1.0 | 2026-11-16 | Mike Fullerton | Sanitize keeps shiki's tabindex on pre (mdc-063) |
+| 1.1.1 | 2026-11-27 | Mike Fullerton | fetcher: the default is same-origin and does not follow a configured API base |

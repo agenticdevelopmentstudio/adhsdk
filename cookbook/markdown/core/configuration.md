@@ -1,7 +1,7 @@
 
 | Option | Type | Default | Description |
 |---|---|---|---|
-| `fetcher` | `MarkdownFetcher` | `defaultMarkdownFetcher` | `useMarkdownDocument` option overriding how the document is retrieved; held in a ref so an unmemoized inline function does not re-trigger the fetch effect. |
+| `fetcher` | `MarkdownFetcher` | `defaultMarkdownFetcher` | `useMarkdownDocument` option overriding how the document is retrieved; held in a ref so an unmemoized inline function does not re-trigger the fetch effect. The default always fetches the same-origin `/api/v1/papers/{id}` and does not follow `@adh-sdk/auth`'s `configureApiBase` (this package does not depend on the auth tier), so a host with no `/api` rewrite passes its own fetcher. |
 | `timeoutMs` | `number` | `15000` (`DEFAULT_TIMEOUT_MS`) | `useMarkdownDocument` option controlling how long to wait before aborting the fetch with reason `'mdv-timeout'`. |
 | `MarkdownText.excerptLines` | `Int` (constant) | `4` | Apple-side constant capping the number of lines `deriveExcerpt` collects; not exposed as a runtime option. |
 | `MarkdownText.excerptLineCharacters` | `Int` (constant) | `160` | Apple-side constant capping each excerpt line, in UTF-16 code units. |

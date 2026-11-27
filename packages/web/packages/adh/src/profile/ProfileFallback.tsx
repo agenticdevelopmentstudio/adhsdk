@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, type ReactElement, type ReactNode } from 'react'
 import type { SiteId } from '@adh-sdk/adh-registry'
+import { apiUrl } from '@adh-sdk/auth/client'
 import { principalFromOrgCard, principalFromUserCard, type OrgCardBody, type UserCardBody } from './normalize'
 import { ProfileNotFound } from './ProfileNotFound'
 import { PROFILE_FRAME_CLASS } from './frame'
@@ -92,7 +93,7 @@ export function ProfileFallback({ slug, siteId, section }: ProfileFallbackProps)
     void (async () => {
       try {
         const encoded = encodeURIComponent(slug)
-        const users = await fetch(`/api/v1/users?handle=${encoded}`)
+        const users = await fetch(apiUrl(`/api/v1/users?handle=${encoded}`))
         if (cancelled) return
         if (users.ok) {
           const body = (await users.json()) as UserCardBody
@@ -101,7 +102,7 @@ export function ProfileFallback({ slug, siteId, section }: ProfileFallbackProps)
         }
         if (users.status !== 404) return setState({ status: 'error' })
 
-        const orgs = await fetch(`/api/v1/organizations?slug=${encoded}`)
+        const orgs = await fetch(apiUrl(`/api/v1/organizations?slug=${encoded}`))
         if (cancelled) return
         if (orgs.ok) {
           const body = (await orgs.json()) as OrgCardBody
