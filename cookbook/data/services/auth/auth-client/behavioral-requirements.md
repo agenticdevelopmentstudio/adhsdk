@@ -1,6 +1,6 @@
 
 - **default-runtime-config**: the runtime configuration MUST default to
-  `{ storageKey: 'auth_tokens', refreshPath: '/api/auth/refresh' }` before it
+  `{ storageKey: 'auth_tokens', refreshPath: '/api/v1/auth/sessions/refresh' }` before it
   has ever been reconfigured.
 - **configure-auth-merges**: reconfiguring auth with a partial update MUST
   shallow-merge that update onto the current configuration, leaving any field

@@ -42,6 +42,7 @@ export function refreshAccessToken(): Promise<string | null> {
 async function doRefresh(startGen: number): Promise<string | null> {
   const startAccessToken = readTokens()?.accessToken ?? null
   try {
+    // Same-origin, never `apiUrl`: the refresh cookie lives on this origin (see `refreshPath`).
     const res = await fetch(authConfig().refreshPath, {
       method: 'POST',
       credentials: 'include',
