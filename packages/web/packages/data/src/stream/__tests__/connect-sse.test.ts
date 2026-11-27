@@ -11,7 +11,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const token = vi.hoisted(() => ({ read: vi.fn(() => 'tok') }))
-vi.mock('@adh-sdk/auth/client', () => ({
+// Only the token is faked: the rest of the module (apiUrl, which resolves the stream's
+// `/api/...` path against the configured API base) is the real one, at its default base.
+vi.mock('@adh-sdk/auth/client', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@adh-sdk/auth/client')>()),
   readAccessToken: token.read,
 }))
 
