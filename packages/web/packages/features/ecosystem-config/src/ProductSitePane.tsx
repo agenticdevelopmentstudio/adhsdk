@@ -321,8 +321,9 @@ function AdminConsole({
     update.mutate({ adminEnabled }, { onError: (err) => setError(messageOf(err)) });
   };
 
-  // The rail moves the four rows only once the console is LIVE (`consoleLive`), which can trail
-  // the switch while its login registration is made, so "on" says which of the two it is.
+  // The rail moves the four rows only once the console is LIVE (`consoleLive`), so "on" says which
+  // of the two it is. The backend registers the console's login in the same request that turns the
+  // switch on, so on-but-not-live means the server's own `product_admin_site` switch is off.
   const help = !site.adminEnabled ? (
     <>
       {"Off. "}
