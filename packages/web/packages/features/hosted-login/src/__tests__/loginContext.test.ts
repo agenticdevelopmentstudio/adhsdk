@@ -132,25 +132,37 @@ describe("fetchHostedLoginContext", () => {
   });
 
   // A hung backend (accepts the connection, never answers) must not hang the whole
-  // login page — the 3s AbortSignal.timeout() is what bounds that. The mock fetch
-  // here never resolves on its own; it only rejects once the real signal aborts,
-  // exercising the actual timeout wired into fetchHostedLoginContext (not a fake one).
-  it(
-    "returns null when the fetch never resolves until the timeout aborts it",
-    async () => {
-      vi.stubGlobal(
-        "fetch",
-        vi.fn().mockImplementation((_url: string, init?: { signal?: AbortSignal }) => {
+  // login page — the 3s AbortSignal.timeout() is what bounds that. AbortSignal.timeout
+  // is stubbed so the test doesn't wait 3 real seconds: it hands back a signal we
+  // abort by hand, the way the real timeout would. The mock fetch never resolves on
+  // its own; it only rejects once that signal aborts.
+  it("returns null when the fetch never resolves until the timeout aborts it", async () => {
+    const controller = new AbortController();
+    const timeoutSpy = vi.spyOn(AbortSignal, "timeout").mockReturnValue(controller.signal);
+    try {
+      const fetchMock = vi
+        .fn()
+        .mockImplementation((_url: string, init?: { signal?: AbortSignal }) => {
           return new Promise((_resolve, reject) => {
             init?.signal?.addEventListener("abort", () => {
-              reject(new DOMException("The operation was aborted.", "TimeoutError"));
+              reject(init.signal?.reason);
             });
           });
-        }),
-      );
+        });
+      vi.stubGlobal("fetch", fetchMock);
 
-      await expect(fetchHostedLoginContext(BACKEND, "chal-123")).resolves.toBeNull();
-    },
-    6000,
-  );
+      const pending = fetchHostedLoginContext(BACKEND, "chal-123");
+
+      await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+      expect(timeoutSpy).toHaveBeenCalledWith(3000);
+      const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect(init.signal).toBe(controller.signal);
+
+      controller.abort(new DOMException("The operation was aborted.", "TimeoutError"));
+
+      await expect(pending).resolves.toBeNull();
+    } finally {
+      timeoutSpy.mockRestore();
+    }
+  });
 });
