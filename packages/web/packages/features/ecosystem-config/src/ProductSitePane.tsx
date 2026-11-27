@@ -272,6 +272,9 @@ function Handle({ ecosystemId, site, words }: { ecosystemId: string; site: Produ
       <AlertModal
         open={confirming}
         tone="warning"
+        // An empty map: Enter does not confirm a rename that breaks the old address at once, and
+        // Escape still cancels, because the dialog's own close handling owns it.
+        keyboard={{}}
         title={`Rename ${words.its} address?`}
         description={
           <>
