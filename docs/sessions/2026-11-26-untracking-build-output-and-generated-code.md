@@ -68,4 +68,4 @@ stayed on disk. The design and the list of known breakages are in
 - [build-output-not-committed](../architecture/build-output-not-committed.md):
   what is ignored, why, and what breaks.
 - adhsdk PR #55, commit `b95e5fe87`.
-- adtoolkit development-playbook 0.1.32, `tools/development-playbook/skill/scripts/playbook_scope.py`.
+- adtoolkit development-playbook 0.1.32, `adtoolkit/tools/development-playbook/skill/scripts/playbook_scope.py` (in the adtoolkit repo).
