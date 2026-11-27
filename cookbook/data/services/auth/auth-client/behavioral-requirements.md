@@ -444,8 +444,9 @@ MUST NOT mount the other.
   URL it requests or navigates to MUST be built from it: `<authBase>/session`, `<authBase>/signout`, `<authBase>/signin` and
   `<authBase>/signin?return=...`, with no request to any other auth path. It is required,
   not defaulted, so a host that forgets it fails to compile rather than calling the wrong
-  path. The one in-flight session request at module scope is shared by every mount, since
-  one site has one auth base.
+  path. The in-flight session request at module scope MUST be keyed by its URL: a mount
+  joins only the request for its own `<authBase>/session`, and a request for another auth
+  base MUST wait for the ones already out before it is sent, never join them.
 - **product-admin-session-start**: on mount the provider MUST install a token
   source (a ref-held in-memory token, never storage or a URL) before any child's
   first effect runs, so a child's first request never reads a stored hub token,
