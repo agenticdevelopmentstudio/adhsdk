@@ -16,12 +16,14 @@ const HUB_DATA_TYPES = ["personal", "organization"] as const;
  * is one that COMES WITH its row's feature (`includedWith`): the Manage features dialog does not
  * list it, and holding the row's feature is holding it (Mike, 2026-09-29).
  *
- * `features` names the catalog feature behind each row, and every row but Settings MUST name
- * one — a feature the Manage features dialog lists, never one that comes with another: the
- * feature manager (`featureRowState` in @adh-sdk/data/ecosystems) draws a row only while
- * the product holds it, so every row drawn is a ticked row in the dialog, and a new product —
- * which holds nothing — shows Settings alone. A row with one feature is drawn with the catalog's
- * label for it, never a copy of its own.
+ * `features` names the catalog feature behind each row, and every row but Settings and Product
+ * site MUST name one — a feature the Manage features dialog lists, never one that comes with
+ * another: the feature manager (`featureRowState` in @adh-sdk/data/ecosystems) draws a row only
+ * while the product holds it, so every row drawn is a ticked row in the dialog, and a new product
+ * — which holds nothing — shows Settings and Product site alone. Those two are the STRUCTURAL
+ * rows, named for no feature: every product has settings, and every product is given an address,
+ * so each is drawn for every product. A row with one feature is drawn with the catalog's label
+ * for it, never a copy of its own.
  *
  * These rows are all scoped to the OPEN PRODUCT's ecosystem. Several of them name a surface
  * that ALSO exists at workspace level, scoped to the workspace's default ecosystem instead —
@@ -35,7 +37,8 @@ const HUB_DATA_TYPES = ["personal", "organization"] as const;
  * none), and still only while the ecosystem holds its feature, so a container that somehow holds
  * `notes` draws no Notes row. Their panes are the host's: see {@link HOST_RENDERED_TOPIC_IDS}.
  * The ids are the hub's own feature ids (`notebook`, `docs`, `projects`) so a deep link to
- * `/<slug>/notebook` lands on the same row; the `features` key is the catalog's.
+ * `/<slug>/notebook` lands on the same row; the `features` key is the catalog's. Product site is the
+ * one row typed the other way, to `product` alone: only a product has a product site.
  *
  * A plain data module, and its own package entry (`@adh-sdk/adh-products/topics`), so a
  * Server Component that only needs an id or a label does not drag the feature onto the client.
