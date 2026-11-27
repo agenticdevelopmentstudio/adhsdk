@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { CrudDataBrowser, type CrudShell } from "@adh-sdk/crud";
 import { EmptyState } from "@adh-sdk/ui/components/empty-state";
-import { useAdminSite } from "@adh-sdk/data/product-admin";
+import { useProductSite } from "@adh-sdk/data/product-sites";
 
 /** The one line All Data shows above the browser while a product's content is gated. */
 export const HOUSE_ROWS_NOTICE =
@@ -44,10 +44,10 @@ export const HOUSE_ROWS_NOTICE =
  * HOUSE ROWS (phase 7) — while content enforcement is on, a product's All Data shows the
  * product's own rows and none its customers own, and one line above the browser says so.
  * `contentGated` is that answer when the host already has it. Left undefined, the pane asks
- * `GET /v1/admin_site?ecosystem=` itself (the cache ProductsFeature already fills): that route
- * answers only for a product, so an answer means "a product" and its `contentGated` the rest, and
- * a 404 (a workspace's own ecosystem) leaves the notice off. Every host gets the same rule this
- * way, including the ones that mount the pane without passing anything.
+ * `GET /ecosystem/product-site?ecosystem=` itself (the cache the product's panes already fill):
+ * that route answers only for a product, so an answer means "a product" and its `contentGated`
+ * the rest, and a 404 (a workspace's own ecosystem) leaves the notice off. Every host gets the
+ * same rule this way, including the ones that mount the pane without passing anything.
  */
 export function AllDataPane({
   shell,
@@ -63,8 +63,8 @@ export function AllDataPane({
   const [schema, setSchema] = useState<string | null>(null);
   const [table, setTable] = useState<string | null>(null);
   // Asked only when the host did not say: a host's own answer is never second-guessed.
-  const { data: adminSite } = useAdminSite(contentGated === undefined ? ecosystemId : null);
-  const gated = contentGated ?? adminSite?.contentGated ?? false;
+  const { data: productSite } = useProductSite(contentGated === undefined ? ecosystemId : null);
+  const gated = contentGated ?? productSite?.contentGated ?? false;
   if (!ecosystemId) return <EmptyState title="Loading…" />;
   const browser = (
     <CrudDataBrowser

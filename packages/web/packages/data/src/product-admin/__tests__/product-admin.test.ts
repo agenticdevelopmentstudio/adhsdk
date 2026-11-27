@@ -11,7 +11,6 @@ vi.mock("../../http", async (importOriginal) => ({
 
 import { AuthHttpError } from "@adh-sdk/auth/client";
 import {
-  adminSiteApi,
   DEFAULT_QUOTA_BYTES,
   fetchProductTotals,
   isAdminSeatProtected,
@@ -185,60 +184,5 @@ describe("isAdminSeatProtected", () => {
     expect(isAdminSeatProtected(new AuthHttpError(422, "no", "other"))).toBe(false);
     expect(isAdminSeatProtected(new AuthHttpError(403, "no", "admin_seat_protected"))).toBe(false);
     expect(isAdminSeatProtected(new Error("x"))).toBe(false);
-  });
-});
-
-describe("adminSiteApi", () => {
-  const siteWire = {
-    id: "as1",
-    host: "admin.example.test",
-    application_id: "app1",
-    client_id: "cl1",
-    created: 1_700_000_000,
-    updated: 1_700_000_100,
-  };
-
-  it("reads the site and the switch", async () => {
-    mockedJson.mockResolvedValueOnce({ site: siteWire, enabled: true, content_gated: false });
-    const s = await adminSiteApi.get(ECO);
-    const c = call(mockedJson);
-    expect(c.path).toBe("/api/v1/admin_site");
-    expect(c.params).toEqual({ ecosystem: ECO });
-    expect(s.enabled).toBe(true);
-    expect(s.contentGated).toBe(false);
-    expect(s.site).toMatchObject({ host: "admin.example.test", applicationId: "app1", clientId: "cl1" });
-  });
-
-  it("reads no site", async () => {
-    mockedJson.mockResolvedValueOnce({ site: null, enabled: false, content_gated: false });
-    expect(await adminSiteApi.get(ECO)).toEqual({ site: null, enabled: false, contentGated: false });
-  });
-
-  it("reads content enforcement as contentGated (phase 7)", async () => {
-    mockedJson.mockResolvedValueOnce({ site: null, enabled: true, content_gated: true });
-    expect((await adminSiteApi.get(ECO)).contentGated).toBe(true);
-  });
-
-  it("reads a backend without content_gated as not gated", async () => {
-    mockedJson.mockResolvedValueOnce({ site: null, enabled: true });
-    expect((await adminSiteApi.get(ECO)).contentGated).toBe(false);
-  });
-
-  it("sets the site up with POST and the host", async () => {
-    mockedJson.mockResolvedValueOnce({ site: siteWire, enabled: true });
-    await adminSiteApi.put(ECO, "admin.example.test");
-    const c = call(mockedJson);
-    expect(c.path).toBe("/api/v1/admin_site");
-    expect(c.params).toEqual({ ecosystem: ECO });
-    expect(c.init?.method).toBe("POST");
-    expect(JSON.parse(String(c.init?.body))).toEqual({ host: "admin.example.test" });
-  });
-
-  it("takes the site down with DELETE", async () => {
-    await adminSiteApi.remove(ECO);
-    const c = call(mockedRequest);
-    expect(c.path).toBe("/api/v1/admin_site");
-    expect(c.params).toEqual({ ecosystem: ECO });
-    expect(c.init?.method).toBe("DELETE");
   });
 });

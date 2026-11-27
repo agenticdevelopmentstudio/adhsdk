@@ -11,11 +11,11 @@ vi.mock("@adh-sdk/crud", () => ({
   ),
 }));
 
-// The admin-site read, stubbed at the hook: `null` is "the route has not answered" (or answered
+// The product-site read, stubbed at the hook: `null` is "the route has not answered" (or answered
 // 404, which is how it treats an ecosystem that is not a product), an object is its answer.
-const useAdminSite = vi.fn();
-vi.mock("@adh-sdk/data/product-admin", () => ({
-  useAdminSite: (ecosystemId: string | null | undefined) => useAdminSite(ecosystemId),
+const useProductSite = vi.fn();
+vi.mock("@adh-sdk/data/product-sites", () => ({
+  useProductSite: (ecosystemId: string | null | undefined) => useProductSite(ecosystemId),
 }));
 
 import { AllDataPane, HOUSE_ROWS_NOTICE } from "../AllDataPane";
@@ -23,12 +23,20 @@ import { AllDataPane, HOUSE_ROWS_NOTICE } from "../AllDataPane";
 const ECO = "0b9c4a52-6c3e-4d7e-9a1f-2f4c1d2e3a4b";
 
 const answered = (contentGated: boolean) => ({
-  data: { site: null, enabled: true, contentGated },
+  data: {
+    ecosystemId: ECO,
+    handle: "notes",
+    primaryOrigin: null,
+    adminEnabled: true,
+    adminClientId: null,
+    consoleLive: false,
+    contentGated,
+  },
 });
 
 beforeEach(() => {
-  useAdminSite.mockReset();
-  useAdminSite.mockReturnValue({ data: undefined });
+  useProductSite.mockReset();
+  useProductSite.mockReturnValue({ data: undefined });
 });
 
 afterEach(cleanup);
@@ -56,27 +64,27 @@ describe("AllDataPane — the house-rows notice", () => {
     expect(screen.getByText(`Browser for acme / ${ECO}`)).toBeInTheDocument();
   });
 
-  it("does not ask the admin site when the host has answered", () => {
+  it("does not ask the product site when the host has answered", () => {
     render(<AllDataPane workspace="acme" ecosystemId={ECO} contentGated />);
-    for (const [arg] of useAdminSite.mock.calls) expect(arg).toBeNull();
+    for (const [arg] of useProductSite.mock.calls) expect(arg).toBeNull();
   });
 
-  it("a host's false wins over an admin site that says gated", () => {
-    useAdminSite.mockReturnValue(answered(true));
+  it("a host's false wins over a product site that says gated", () => {
+    useProductSite.mockReturnValue(answered(true));
     render(<AllDataPane workspace="acme" ecosystemId={ECO} contentGated={false} />);
     expect(screen.queryByText(HOUSE_ROWS_NOTICE)).not.toBeInTheDocument();
   });
 
-  it("left to itself, asks the admin site for this ecosystem and shows the line when gated", () => {
-    useAdminSite.mockReturnValue(answered(true));
+  it("left to itself, asks the product site for this ecosystem and shows the line when gated", () => {
+    useProductSite.mockReturnValue(answered(true));
     render(<AllDataPane workspace="acme" ecosystemId={ECO} />);
-    expect(useAdminSite).toHaveBeenCalledWith(ECO);
+    expect(useProductSite).toHaveBeenCalledWith(ECO);
     expect(screen.getByText(HOUSE_ROWS_NOTICE)).toBeInTheDocument();
     expect(screen.getByText(`Browser for acme / ${ECO}`)).toBeInTheDocument();
   });
 
   it("left to itself, shows no line when the product is not gated", () => {
-    useAdminSite.mockReturnValue(answered(false));
+    useProductSite.mockReturnValue(answered(false));
     render(<AllDataPane workspace="acme" ecosystemId={ECO} />);
     expect(screen.queryByText(HOUSE_ROWS_NOTICE)).not.toBeInTheDocument();
     expect(screen.getByText(`Browser for acme / ${ECO}`)).toBeInTheDocument();
@@ -90,7 +98,7 @@ describe("AllDataPane — the house-rows notice", () => {
   });
 
   it("still shows Loading… and no line until the ecosystem resolves", () => {
-    useAdminSite.mockReturnValue(answered(true));
+    useProductSite.mockReturnValue(answered(true));
     render(<AllDataPane workspace="acme" ecosystemId={undefined} />);
     expect(screen.getByText("Loading…")).toBeInTheDocument();
     expect(screen.queryByText(HOUSE_ROWS_NOTICE)).not.toBeInTheDocument();

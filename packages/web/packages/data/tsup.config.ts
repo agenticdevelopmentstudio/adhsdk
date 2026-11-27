@@ -28,6 +28,7 @@ export default defineConfig({
     'src/sets/index.ts',
     'src/jobs/index.ts',
     'src/product-admin/index.ts',
+    'src/product-sites/index.ts',
     'src/support/index.ts',
   ],
   outDir: 'dist',

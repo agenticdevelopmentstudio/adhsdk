@@ -137,6 +137,11 @@
       "development": "./src/product-admin/index.ts",
       "import": "./dist/product-admin/index.js"
     },
+    "./product-sites": {
+      "types": "./dist/product-sites/index.d.ts",
+      "development": "./src/product-sites/index.ts",
+      "import": "./dist/product-sites/index.js"
+    },
     "./support": {
       "types": "./dist/support/index.d.ts",
       "development": "./src/support/index.ts",
