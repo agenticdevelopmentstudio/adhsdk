@@ -237,4 +237,23 @@ with tempfile.TemporaryDirectory() as tmp:
     (root / "recipes" / "guide.md").write_text("see **packages/x/gone.ts** here\n")
     check("a bold-wrapped dangling citation still fails", run(root).returncode, 1)
 
-print("check_doc_links_test: 16 passed")
+    # (17) A path the checkout's .gitignore ignores is build output or generated code,
+    #      which a fresh checkout has not produced yet, so citing it is not dangling. A
+    #      directory pattern (`gen/`) covers a missing directory too. A path the repo
+    #      does not ignore is still checked, and outside a git checkout nothing is
+    #      ignored.
+    root = Path(tmp) / "ignored"
+    (root / "docs").mkdir(parents=True)
+    (root / "packages").mkdir()
+    (root / "packages" / "keep.txt").write_text("x\n")
+    (root / ".gitignore").write_text("packages/gen/\npackages/schema.ts\n")
+    (root / "docs" / "guide.md").write_text(
+        "written to `packages/gen/` and `packages/schema.ts`\n"
+    )
+    check("outside a git checkout an ignored-looking path still fails", run(root).returncode, 1)
+    subprocess.run(["git", "init", "-q", str(root)], check=True)
+    check("ignored paths are not dangling", run(root).returncode, 0)
+    (root / "docs" / "guide.md").write_text("see `packages/gone.ts`\n")
+    check("a path the repo does not ignore still fails", run(root).returncode, 1)
+
+print("check_doc_links_test: 17 passed")

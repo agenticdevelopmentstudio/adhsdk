@@ -31,6 +31,15 @@ Three shapes are skipped even under a real top-level directory, because none of 
 a coordinate anyone can follow or fix: a `...` elision segment, a `*` glob, and a `..`
 parent hop.
 
+A citation of a path this repo's `.gitignore` ignores is not dangling either. Since
+`b95e5fe87` the build output and generated code are produced on each machine, so a doc
+that says where they land (`docs/architecture/build-output-not-committed.md`) names
+paths a fresh checkout does not have yet, and this guard runs before install and build.
+Whether such a path exists says which steps this machine ran, not whether the doc is
+right. Asked of git (`check-ignore --no-index`), with the path also tried as a directory,
+because an ignore pattern ending in `/` matches only a directory and a missing path is
+read as a file. Outside a git checkout nothing counts as ignored.
+
 The scope guard is a denylist and knows the private scope's name; this is the complement.
 It asks only whether a reader following the citation lands on a file, which is the property
 that actually matters and the one that survives the private repo being renamed.
@@ -41,6 +50,7 @@ from __future__ import annotations
 
 import argparse
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -133,6 +143,24 @@ def normalize_source_path(raw: str, rest: str, top_level: set[str]) -> str | Non
     return cited
 
 
+def git_ignored(root: Path, cited: list[str]) -> set[str]:
+    """The cited paths git ignores under `root` (see the docstring); empty outside a checkout."""
+    if not cited:
+        return set()
+    queries = [q for c in cited for q in (c, c + "/")]
+    try:
+        r = subprocess.run(
+            ["git", "-C", str(root), "check-ignore", "--no-index", "--stdin"],
+            input="\n".join(queries) + "\n", capture_output=True, text=True,
+        )
+    except OSError:
+        return set()
+    # 0: some ignored, 1: none ignored, anything else (128: not a checkout): no answer.
+    if r.returncode not in (0, 1):
+        return set()
+    return {line.rstrip("/") for line in r.stdout.splitlines() if line}
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--root", default=str(Path(__file__).resolve().parent.parent))
@@ -194,6 +222,9 @@ def main() -> None:
         print(f"check_doc_links: scanned NOTHING under {root} — wrong root, or the "
               f"skip list ate the tree. Not a pass.", file=sys.stderr)
         sys.exit(2)
+
+    for cited in git_ignored(root, list(hits)):
+        hits.pop(cited, None)
 
     if hits:
         for cited, where in sorted(hits.items(), key=lambda kv: -len(kv[1])):
