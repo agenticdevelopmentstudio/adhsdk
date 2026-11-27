@@ -191,4 +191,20 @@ describe("HostedLogin", () => {
     expect(html).toContain(`action="${BACKEND}/auth/oidc/login"`);
     expect(html).not.toContain(`${BACKEND}//`);
   });
+
+  it.each([
+    ["providers is an object", { ...CUSTOMER, providers: {} }],
+    ["loginEnabled is missing", { ...CUSTOMER, loginEnabled: undefined }],
+    ["signupMode is unknown", { ...CUSTOMER, signupMode: "sometimes" }],
+    ["a provider lacks a name", { ...CUSTOMER, providers: [{ slug: "github" }] }],
+  ])("renders the plain form when the fetched context is malformed (%s)", async (_why, body) => {
+    fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => body });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const html = await render({ backendUrl: BACKEND, params: { login_challenge: "chal-1" } });
+
+    expect(html).toContain(">Sign in</h1>");
+    expect(html).toContain(`action="${BACKEND}/auth/oidc/login"`);
+    expect(html).not.toContain("limited to administrators");
+  });
 });

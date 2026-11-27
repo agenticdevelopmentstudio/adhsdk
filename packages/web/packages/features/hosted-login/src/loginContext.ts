@@ -28,6 +28,42 @@ export interface HostedLoginContext {
   providers: HostedLoginProvider[];
 }
 
+const SIGNUP_MODES: readonly string[] = ["open", "invite_only", "closed"] satisfies HostedLoginSignupMode[];
+
+function isStringOrNull(v: unknown): v is string | null {
+  return v === null || typeof v === "string";
+}
+
+function isProvider(v: unknown): v is HostedLoginProvider {
+  if (typeof v !== "object" || v === null) return false;
+  const p = v as Record<string, unknown>;
+  return typeof p.slug === "string" && typeof p.name === "string";
+}
+
+/**
+ * Whether a parsed `login/context` body has the {@link HostedLoginContext} shape. The page
+ * trusts every field it reads — `providers.map`, a `loginEnabled` that gates the whole form — so
+ * a body that is JSON but not this shape (a proxy's error page, a backend from another version)
+ * must count as no context at all, not be cast and read.
+ */
+export function isHostedLoginContext(v: unknown): v is HostedLoginContext {
+  if (typeof v !== "object" || v === null) return false;
+  const c = v as Record<string, unknown>;
+  return (
+    (c.realm === "hub" || c.realm === "customer") &&
+    isStringOrNull(c.ecosystemId) &&
+    isStringOrNull(c.clientSlug) &&
+    isStringOrNull(c.clientName) &&
+    isStringOrNull(c.ecosystemName) &&
+    typeof c.loginEnabled === "boolean" &&
+    typeof c.passwordEnabled === "boolean" &&
+    typeof c.signupMode === "string" &&
+    SIGNUP_MODES.includes(c.signupMode) &&
+    Array.isArray(c.providers) &&
+    c.providers.every(isProvider)
+  );
+}
+
 /** `url` without its trailing slashes, so a base written as `https://api.example.com/` builds
  *  `https://api.example.com/auth/...`, never `//auth/...`. Every backend URL this package builds
  *  goes through it. */
@@ -40,8 +76,9 @@ export function trimTrailingSlashes(url: string): string {
  * fetch from the page's Server Component, not a browser call), from the backend at
  * `backendUrl`.
  *
- * Returns `null` on ANY failure — a network error, a non-2xx, an unparseable body, or
- * the 3s timeout below — and NEVER throws. The page's fallback for `null` is today's
+ * Returns `null` on ANY failure — a network error, a non-2xx, an unparseable body, a body
+ * that isn't a {@link HostedLoginContext} (see {@link isHostedLoginContext}), or the 3s
+ * timeout below — and NEVER throws. The page's fallback for `null` is today's
  * plain, realm-agnostic form: this context call is a convenience (social buttons, the
  * "Create account" link, the "Sign in to <App>" heading), not something the login
  * page's core function (submitting credentials to the backend with the challenge) can
@@ -61,7 +98,8 @@ export async function fetchHostedLoginContext(
       { cache: "no-store", signal: AbortSignal.timeout(3000) },
     );
     if (!res.ok) return null;
-    return (await res.json()) as HostedLoginContext;
+    const body: unknown = await res.json();
+    return isHostedLoginContext(body) ? body : null;
   } catch {
     // Covers a network error, a timeout abort, and a non-JSON body alike.
     return null;
