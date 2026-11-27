@@ -120,10 +120,11 @@ export const PRODUCT_SITE_KEY = (ecosystemId: string) => ["product-sites", ecosy
 /**
  * The product's site. Disabled until there is an id to ask about. A 404 is not retried: an
  * ecosystem that is not a product (a workspace's, asked by AllDataPane) answers it every time, so
- * a retry only doubles the failed requests.
+ * a retry only doubles the failed requests. The error is a ProductSiteError for an HTTP refusal,
+ * or a plain Error when the request never got an answer (the network).
  */
 export function useProductSite(ecosystemId: string | null | undefined) {
-  return useQuery<ProductSite, ProductSiteError>({
+  return useQuery<ProductSite, ProductSiteError | Error>({
     queryKey: PRODUCT_SITE_KEY(ecosystemId ?? ""),
     queryFn: () => productSiteApi.get(ecosystemId as string),
     enabled: Boolean(ecosystemId),
@@ -131,10 +132,13 @@ export function useProductSite(ecosystemId: string | null | undefined) {
   });
 }
 
-/** Change the site; writes the answer straight into the cache. */
+/**
+ * Change the site; writes the answer straight into the cache. The error is typed as in
+ * `useProductSite`: a ProductSiteError, or a plain Error for a network failure.
+ */
 export function useUpdateProductSite(ecosystemId: string) {
   const qc = useQueryClient();
-  return useMutation<ProductSite, ProductSiteError, ProductSiteUpdate>({
+  return useMutation<ProductSite, ProductSiteError | Error, ProductSiteUpdate>({
     mutationFn: (body) => productSiteApi.update(ecosystemId, body),
     onSuccess: (site) => {
       qc.setQueryData(PRODUCT_SITE_KEY(ecosystemId), site);
