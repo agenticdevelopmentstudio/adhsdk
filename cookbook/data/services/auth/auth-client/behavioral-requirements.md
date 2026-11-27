@@ -198,15 +198,18 @@
   message/code extracted from the parsed body, with fallback message
   `'Sign-in failed'`.
 - **link-provider-routes-to-as-host**: the provider-link request MUST
-  resolve its target via AS endpoint resolution for `/auth/link-provider` —
+  resolve its target via AS endpoint resolution for `/v1/account/login_methods` —
   the authorization server directly, never a hard-coded same-origin path —
-  falling back to `/api/auth/link-provider` only when no AS base is
-  configured.
+  falling back to `/api/v1/account/login_methods` only when no AS base is
+  configured. The resolved URL MUST be sent as it is: it MUST NOT follow the
+  configured API base, so a host whose API base names the data backend still
+  sends the same-origin fallback to its own origin, never to the data backend.
 - **link-provider-authed-post**: the provider-link request MUST `POST` its
-  input (`clientSlug`, `providerSlug`, `code`, `redirectUri`) as JSON through
-  the body-discarding authenticated request helper (Bearer-authed, with the
-  same one-refresh-then-retry waterfall as any other authenticated call), and
-  MUST resolve on success or throw a typed HTTP error on failure.
+  input (`clientSlug`, `providerSlug`, `code`, `redirectUri`) as JSON with the
+  wire body `{ type: 'provider', client_slug, provider_slug, code, redirect_uri }`
+  through the same Bearer-authed one-refresh-then-retry waterfall as any other
+  authenticated call, and MUST resolve on success or throw a typed HTTP error
+  on failure.
 - **retry-marker-hook**: the retry-marker hook MUST register a callback to be
   invoked with the exact request-options object handed to the underlying
   request step for a retried request — a post-refresh retry in the base

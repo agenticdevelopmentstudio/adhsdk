@@ -189,10 +189,17 @@ export async function responseError(res: Response, fallback: string): Promise<Au
   return new AuthHttpError(res.status, message, extractErrorCode(body), body)
 }
 
+/** Where a Bearer request is sent: `apiUrl` for a data call (it follows the configured API
+ *  base), the identity for an authorization-server call (`asEndpoint` already chose its host). */
+type ResolveUrl = (url: string) => string
+
+const asIs: ResolveUrl = (url) => url
+
 async function rawFetch(
   url: string,
   init: RequestInit,
   token: string | null,
+  resolve: ResolveUrl,
   retried = false,
 ): Promise<Response> {
   const headers: Record<string, string> = {
@@ -207,9 +214,9 @@ async function rawFetch(
   // as the post-refresh retry that paid the auth waterfall.
   const finalInit: RequestInit = { ...init, headers }
   if (retried) markRetriedRequest(finalInit)
-  // `/api/...` goes to the configured API base (api-base.ts): unchanged by default, the
-  // backend's own origin on a host with no `/api` rewrite.
-  return fetch(apiUrl(url), finalInit)
+  // A data call's `/api/...` goes to the configured API base (api-base.ts): unchanged by
+  // default, the backend's own origin on a host with no `/api` rewrite.
+  return fetch(resolve(url), finalInit)
 }
 
 /**
@@ -230,14 +237,20 @@ async function rawFetch(
  * defined `init`, and unlocks the sites that were not.
  */
 export async function authedFetch(url: string, init: RequestInit = {}): Promise<Response> {
-  let res = await rawFetch(url, init, readAccessToken())
+  return bearerFetch(url, init, apiUrl)
+}
+
+/** {@link authedFetch} with the destination rule passed in: the one 401 waterfall both data
+ *  calls and authorization-server calls share. */
+async function bearerFetch(url: string, init: RequestInit, resolve: ResolveUrl): Promise<Response> {
+  let res = await rawFetch(url, init, readAccessToken(), resolve)
 
   if (res.status === 401) {
     // One refresh + one retry only. If the retried request also 401s, the
     // session is unrecoverable (the refresh token was rejected too) — fall
     // through to the !res.ok throw below rather than looping on refresh.
     const refreshed = await refreshAccessToken()
-    if (refreshed) res = await rawFetch(url, init, refreshed, true)
+    if (refreshed) res = await rawFetch(url, init, refreshed, resolve, true)
   }
 
   if (!res.ok) {
@@ -276,14 +289,16 @@ export interface LinkProviderInput {
  *  them: the site's proxy reaches this worktree's own backend while the AS is the
  *  shared auth service. Sent there, the link is written into the wrong database.
  *  `asEndpoint` keeps the same-origin `/api/v1/account/login_methods` shape when no AS base
- *  is configured, so an unconfigured build behaves exactly as before. */
+ *  is configured, so an unconfigured build behaves exactly as before. That fallback is sent
+ *  as it is, never through `apiUrl`: a configured API base names the data backend, and
+ *  rewriting the fallback onto it would send the link to the data backend after all. */
 export async function linkProvider(
   input: LinkProviderInput,
   /** AS base; defaults to `NEXT_PUBLIC_AUTH_API_URL`. Separate from the wire body,
    *  which is sent verbatim — a base in `input` would be POSTed to the server. */
   opts: { authApiBase?: string } = {},
 ): Promise<void> {
-  await authedRequest(asEndpoint('/v1/account/login_methods', opts.authApiBase), {
+  await bearerFetch(asEndpoint('/v1/account/login_methods', opts.authApiBase), {
     method: 'POST',
     body: JSON.stringify({
       type: 'provider',
@@ -292,5 +307,5 @@ export async function linkProvider(
       code: input.code,
       redirect_uri: input.redirectUri,
     }),
-  })
+  }, asIs)
 }

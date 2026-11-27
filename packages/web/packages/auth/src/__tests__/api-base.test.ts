@@ -3,7 +3,7 @@ import { configureAuth } from '../config'
 import { writeTokens } from '../tokens'
 import { invalidateRefresh } from '../refresh'
 import { apiBase, apiUrl, configureApiBase, resetApiBaseForTests } from '../api-base'
-import { authedJson, publicJson } from '../client'
+import { authedJson, linkProvider, publicJson } from '../client'
 
 // The configurable API base (api-base.ts): the default leaves every path as it is, so the hub
 // and every site with an `/api` rewrite are unchanged; a configured base sends `/api/...` to
@@ -87,5 +87,14 @@ describe('requests follow the base', () => {
     )
     await publicJson('/api/v1/public/x')
     expect(fetchMock.mock.calls[0]![0]).toBe('/api/v1/public/x')
+  })
+
+  it('linkProvider never follows the base: its same-origin AS fallback is the AS, not the data API', async () => {
+    delete process.env.NEXT_PUBLIC_AUTH_API_URL
+    writeTokens({ accessToken: 'tok', refreshToken: '' })
+    configureApiBase('https://api.example.test')
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 204 }))
+    await linkProvider({ clientSlug: 'adh', providerSlug: 'github', code: 'c', redirectUri: 'https://x.test/cb' })
+    expect(fetchMock.mock.calls[0]![0]).toBe('/api/v1/account/login_methods')
   })
 })

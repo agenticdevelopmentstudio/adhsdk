@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 3.0.1 | 2026-11-27 | Mike Fullerton | link-provider: the AS fallback never follows the configured API base; current login_methods path |
 | 3.0.0 | 2026-11-26 | Mike Fullerton | Breaking: ProductAdminAuthProvider takes a required authBase prop that builds every auth URL (<authBase>/session, /signin, /signout), with trailing slashes dropped; stepUpSigninUrl(authBase, returnPath) gained a leading argument; the in-flight session request is keyed by its URL |
 | 2.1.1 | 2026-11-23 | Mike Fullerton | The public reads use the shared token-free publicJson from the Auth v1 Wire Conventions; behaviour unchanged. |
 | 2.1.0 | 2026-11-23 | Mike Fullerton | Phase 7: consented support access |

@@ -2,11 +2,11 @@
 id: 3ea9329e-5acc-4c43-b5ce-bb8c50570104
 title: "Authentication Client"
 type: ingredient
-version: 3.0.0
+version: 3.0.1
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-11-26
+modified: 2026-11-27
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -266,15 +266,18 @@ The client entry point (`client.ts`, published as `@adh-sdk/auth/client`) also r
   message/code extracted from the parsed body, with fallback message
   `'Sign-in failed'`.
 - **link-provider-routes-to-as-host**: the provider-link request MUST
-  resolve its target via AS endpoint resolution for `/auth/link-provider` —
+  resolve its target via AS endpoint resolution for `/v1/account/login_methods` —
   the authorization server directly, never a hard-coded same-origin path —
-  falling back to `/api/auth/link-provider` only when no AS base is
-  configured.
+  falling back to `/api/v1/account/login_methods` only when no AS base is
+  configured. The resolved URL MUST be sent as it is: it MUST NOT follow the
+  configured API base, so a host whose API base names the data backend still
+  sends the same-origin fallback to its own origin, never to the data backend.
 - **link-provider-authed-post**: the provider-link request MUST `POST` its
-  input (`clientSlug`, `providerSlug`, `code`, `redirectUri`) as JSON through
-  the body-discarding authenticated request helper (Bearer-authed, with the
-  same one-refresh-then-retry waterfall as any other authenticated call), and
-  MUST resolve on success or throw a typed HTTP error on failure.
+  input (`clientSlug`, `providerSlug`, `code`, `redirectUri`) as JSON with the
+  wire body `{ type: 'provider', client_slug, provider_slug, code, redirect_uri }`
+  through the same Bearer-authed one-refresh-then-retry waterfall as any other
+  authenticated call, and MUST resolve on success or throw a typed HTTP error
+  on failure.
 - **retry-marker-hook**: the retry-marker hook MUST register a callback to be
   invoked with the exact request-options object handed to the underlying
   request step for a retried request — a post-refresh retry in the base
@@ -1181,6 +1184,7 @@ honestly-reported gap in the source, not a hidden one.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 3.0.1 | 2026-11-27 | Mike Fullerton | link-provider: the AS fallback never follows the configured API base; current login_methods path |
 | 3.0.0 | 2026-11-26 | Mike Fullerton | Breaking: ProductAdminAuthProvider takes a required authBase prop that builds every auth URL (<authBase>/session, /signin, /signout), with trailing slashes dropped; stepUpSigninUrl(authBase, returnPath) gained a leading argument; the in-flight session request is keyed by its URL |
 | 2.1.1 | 2026-11-23 | Mike Fullerton | The public reads use the shared token-free publicJson from the Auth v1 Wire Conventions; behaviour unchanged. |
 | 2.1.0 | 2026-11-23 | Mike Fullerton | Phase 7: consented support access |
