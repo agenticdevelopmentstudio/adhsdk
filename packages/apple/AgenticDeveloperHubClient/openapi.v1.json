@@ -17098,6 +17098,7 @@
           "ecosystem_id",
           "handle",
           "primary_origin",
+          "subdomain_origin",
           "admin_enabled",
           "admin_client_id",
           "console_live",
@@ -17117,6 +17118,11 @@
             "type": "string",
             "nullable": true,
             "description": "The product's primary address: `https://<host>` for its verified primary custom domain while the `product_custom_domains` switch is on, else `<scheme>://<handle>.<base>` (`http` only for a machine-local base, local development, `https` otherwise); null while PRODUCT_SITES_BASE_DOMAIN is unset."
+          },
+          "subdomain_origin": {
+            "type": "string",
+            "nullable": true,
+            "description": "The product's own `<scheme>://<handle>.<base>`, whatever is primary; null while PRODUCT_SITES_BASE_DOMAIN is unset."
           },
           "admin_enabled": {
             "type": "boolean",
@@ -17246,7 +17252,8 @@
           "error",
           "created",
           "verified_at",
-          "expires_at"
+          "expires_at",
+          "checked_at"
         ],
         "additionalProperties": false,
         "properties": {
@@ -17305,6 +17312,12 @@
             "type": "string",
             "format": "date-time",
             "description": "When a pending domain becomes `failed`: 7 days after it was added, or after the check that took it from `failed` back to `pending`."
+          },
+          "checked_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "When Vercel and DNS were last asked about it; null before the first check."
           }
         }
       },
