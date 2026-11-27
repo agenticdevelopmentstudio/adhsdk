@@ -291,6 +291,17 @@ describe("ProductDomainsSection", () => {
     expect(await screen.findByText(new RegExp(`Last checked ${phrase};`))).toBeInTheDocument();
   });
 
+  it("five pending domains, the most a product can have: no add field", async () => {
+    api.list.mockResolvedValue(
+      [1, 2, 3, 4, 5].map((i) => domainOf({ id: `d${i}`, host: `app${i}.temporal.com` })),
+    );
+    section();
+    expect(await screen.findByText("app5.temporal.com")).toBeInTheDocument();
+    expect(screen.getAllByText("Pending")).toHaveLength(5);
+    expect(screen.queryByLabelText("Domain")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Add domain" })).not.toBeInTheDocument();
+  });
+
   it("pending and never checked: says how often it is checked, without a last-checked time", async () => {
     api.list.mockResolvedValue([domainOf({ checkedAt: null })]);
     section();
