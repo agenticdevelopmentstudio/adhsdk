@@ -68,6 +68,9 @@ const verified: ProductDomain = {
   verifiedAt: "2026-11-26T11:00:00.000Z",
 };
 
+/** The backend's 502 sentence when Vercel does not let a removed domain go. */
+const REMOVE_502 = "Vercel did not let the domain go; it is being removed, try again in a minute";
+
 /** The error the transport throws for a non-ok response with this JSON body. */
 const refusal = (status: number, body: unknown) =>
   responseError(new Response(JSON.stringify(body), { status }), `HTTP ${status}`);
@@ -181,11 +184,15 @@ describe("productDomainsApi", () => {
 
   it("surfaces a refused DELETE as a ProductDomainError", async () => {
     mockedRequest.mockRejectedValueOnce(
-      await refusal(502, { error: { code: "vercel_unavailable", message: "try again" } }),
+      await refusal(502, { error: { code: "product_domain_vercel_unavailable", message: REMOVE_502 } }),
     );
     const err = await productDomainsApi.remove(ECO, D1).catch((e: unknown) => e);
     expect(err).toBeInstanceOf(ProductDomainError);
-    expect(err).toMatchObject({ status: 502, code: "vercel_unavailable", message: "try again" });
+    expect(err).toMatchObject({
+      status: 502,
+      code: "product_domain_vercel_unavailable",
+      message: REMOVE_502,
+    });
   });
 
   it("passes a failure with no status through unchanged", async () => {
@@ -305,7 +312,7 @@ describe("useRemoveProductDomain", () => {
 
   it("invalidates the list on a 502, since the row is left removing", async () => {
     mockedRequest.mockRejectedValueOnce(
-      await refusal(502, { error: { code: "vercel_unavailable", message: "try again" } }),
+      await refusal(502, { error: { code: "product_domain_vercel_unavailable", message: REMOVE_502 } }),
     );
     const { qc, wrapper } = setup();
     qc.setQueryData(PRODUCT_DOMAINS_KEY(ECO), [verified, wireDomain]);
