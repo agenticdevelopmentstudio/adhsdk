@@ -8,9 +8,22 @@
 // The asking side: SupportGrantsPane is a product admin's (ask, list, open, revoke) with the
 // read-only SupportViewer; AdminGrantCard draws one grant for a product admin or an operator, and
 // the operator site's panes in @adh-sdk/adh-admin reuse it.
+//
+// HostedSupportGrant is the hosted support page's body (one grant, reached by a notice email's
+// link), mounted by the hub's and each product site's `/support`; a product site passes its
+// ecosystemId so another product's grant shows only the invalid-link sentence.
 export { SupportAccessPane } from "./SupportAccessPane";
 export { GrantCard, endedLabel, grantTime, hoursPhrase, type GrantAction } from "./GrantCard";
 export { AccessLogList, dayPhrase, describeAccess } from "./AccessLogList";
 export { AdminGrantCard } from "./AdminGrantCard";
 export { SupportGrantsPane, type SupportGrantsPaneProps } from "./SupportGrantsPane";
 export { SupportViewer } from "./SupportViewer";
+export {
+  HostedSupportGrant,
+  INVALID_LINK,
+  NO_READS,
+  readsByDay,
+  stateLabel,
+  type HostedSupportGrantProps,
+  type SupportStateLabel,
+} from "./HostedSupportGrant";
