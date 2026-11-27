@@ -17331,7 +17331,7 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 253,
-            "description": "A domain the manager owns, such as `app.example.com`. Trimmed, lower-cased, a trailing dot dropped and an international name converted to `xn--` form first."
+            "description": "A domain the manager owns, such as `app.example.com`. Trimmed, lower-cased, a trailing dot dropped first. ASCII only: give an international name in its `xn--` form."
           }
         }
       },
