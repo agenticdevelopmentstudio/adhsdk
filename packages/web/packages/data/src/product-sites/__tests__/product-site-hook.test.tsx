@@ -32,6 +32,7 @@ const wire = {
   ecosystemId: ECO,
   handle: "notes",
   primaryOrigin: "https://notes.agenticdeveloperhub.com",
+  subdomainOrigin: "https://notes.agenticdeveloperhub.com",
   adminEnabled: true,
   adminClientId: "cl1",
   consoleLive: true,
@@ -79,6 +80,12 @@ describe("productSiteApi", () => {
     const s = await productSiteApi.get(ECO);
     expect(s.consoleLive).toBe(false);
     expect(s.contentGated).toBe(false);
+  });
+
+  it("reads a backend without subdomainOrigin as null", async () => {
+    const { subdomainOrigin: _s, ...older } = wire;
+    mockedJson.mockResolvedValueOnce(older);
+    expect((await productSiteApi.get(ECO)).subdomainOrigin).toBeNull();
   });
 
   it("changes the site with PATCH and only the fields given", async () => {

@@ -27,6 +27,8 @@ export interface ProductSiteWire {
   ecosystemId: string;
   handle: string;
   primaryOrigin: string | null;
+  /** Absent from a backend that predates it, which reads as null. */
+  subdomainOrigin?: string | null;
   adminEnabled: boolean;
   adminClientId: string | null;
   /** Absent from a backend that predates it, which reads as not live. */
@@ -45,6 +47,11 @@ export interface ProductSite {
    * null while the backend has no base domain. Not always `<handle>.`-prefixed.
    */
   primaryOrigin: string | null;
+  /**
+   * The product's own address, `https://<handle>.<base domain>`, whatever its primary is; null
+   * while the backend has no base domain, or from a backend that predates the field.
+   */
+  subdomainOrigin: string | null;
   /** Whether the product's `/admin` console is switched on. */
   adminEnabled: boolean;
   /** The console's login registration, once it has one. */
@@ -79,6 +86,7 @@ export const toProductSite = (w: ProductSiteWire): ProductSite => ({
   ecosystemId: w.ecosystemId,
   handle: w.handle,
   primaryOrigin: w.primaryOrigin ?? null,
+  subdomainOrigin: w.subdomainOrigin ?? null,
   adminEnabled: Boolean(w.adminEnabled),
   adminClientId: w.adminClientId ?? null,
   consoleLive: Boolean(w.consoleLive),
