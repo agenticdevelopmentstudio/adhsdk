@@ -117,3 +117,18 @@ describe('configureApiBase validates the base', () => {
     expect(apiUrl('/api/v1/x')).toBe('/backend/v1/x')
   })
 })
+
+describe('apiUrl is idempotent under every accepted base', () => {
+  it('refuses a base under /api/, the one that would resolve its own output again', () => {
+    expect(() => configureApiBase('/api/backend')).toThrow(/under \/api\//)
+    expect(apiBase()).toBe('/api')
+  })
+
+  it('resolving twice gives the same URL', () => {
+    for (const b of ['https://api.example.test', 'https://api.example.test/api', '/backend', '/apiary']) {
+      configureApiBase(b)
+      const once = apiUrl('/api/v1/x?y=1')
+      expect(apiUrl(once)).toBe(once)
+    }
+  })
+})

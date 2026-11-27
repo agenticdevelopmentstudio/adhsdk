@@ -31,7 +31,9 @@ let base = SAME_ORIGIN_PREFIX
  *
  * Throws on a base that is neither an absolute `http(s)://` URL nor a root-relative path: a
  * schemeless `api.example.com` (a common env-var slip) would otherwise turn every data call into
- * a page-relative URL that 404s far from here.
+ * a page-relative URL that 404s far from here. Throws too on a path under `/api/`, the one base
+ * that would make `apiUrl` non-idempotent; every accepted base is, so a path already resolved
+ * through `apiUrl` can be handed to `authedJson` and resolved again safely.
  */
 export function configureApiBase(apiBase: string | null | undefined): void {
   const trimmed = (apiBase ?? '').trim().replace(/\/+$/, '')
@@ -43,6 +45,14 @@ export function configureApiBase(apiBase: string | null | undefined): void {
     throw new Error(
       `configureApiBase: "${trimmed}" is not an absolute http(s) URL or a root-relative path; ` +
         'give the backend origin with its scheme, e.g. https://api.example.com',
+    )
+  }
+  if (trimmed.startsWith(`${SAME_ORIGIN_PREFIX}/`)) {
+    // A base under `/api/` would make `apiUrl` rewrite its own output (`/api/backend/v1/x`
+    // becomes `/api/backend/backend/v1/x` on a second pass), and the rewrite already forwards
+    // every `/api/...` path, so such a base buys nothing.
+    throw new Error(
+      `configureApiBase: "${trimmed}" is under ${SAME_ORIGIN_PREFIX}/; use ${SAME_ORIGIN_PREFIX} itself or a path outside it`,
     )
   }
   base = trimmed
