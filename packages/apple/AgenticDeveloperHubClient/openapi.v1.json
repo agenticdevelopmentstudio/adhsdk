@@ -129,6 +129,9 @@
       "name": "product-admin"
     },
     {
+      "name": "product-domains"
+    },
+    {
       "name": "product-site"
     },
     {
@@ -17113,7 +17116,7 @@
           "primary_origin": {
             "type": "string",
             "nullable": true,
-            "description": "`<scheme>://<handle>.<base>`: `http` only for a machine-local base (local development), `https` otherwise; null while PRODUCT_SITES_BASE_DOMAIN is unset."
+            "description": "The product's primary address: `https://<host>` for its verified primary custom domain while the `product_custom_domains` switch is on, else `<scheme>://<handle>.<base>` (`http` only for a machine-local base, local development, `https` otherwise); null while PRODUCT_SITES_BASE_DOMAIN is unset."
           },
           "admin_enabled": {
             "type": "boolean",
@@ -17157,6 +17160,7 @@
           "name",
           "handle",
           "primary_origin",
+          "passkeys_offered",
           "admin_client_id",
           "admin_enabled",
           "admin_console_available",
@@ -17173,11 +17177,16 @@
             "description": "The product's name."
           },
           "handle": {
-            "type": "string"
+            "type": "string",
+            "description": "The site's own handle, whether the subdomain or a custom domain was asked."
           },
           "primary_origin": {
             "type": "string",
-            "description": "`<scheme>://<handle>.<base>`: `http` only for a machine-local base (local development), `https` otherwise."
+            "description": "The product's primary address, whichever host was asked: `https://<host>` for its verified primary custom domain while the `product_custom_domains` switch is on, else `<scheme>://<handle>.<base>` (`http` only for a machine-local base, local development, `https` otherwise)."
+          },
+          "passkeys_offered": {
+            "type": "boolean",
+            "description": "Whether this host can offer passkeys: true on `<handle>.<base>`, false on a custom domain, where the passkeys' RP ID (our registrable domain) cannot be used."
           },
           "admin_client_id": {
             "type": "string",
@@ -17195,6 +17204,147 @@
             "type": "string",
             "nullable": true,
             "description": "The Hydra issuer URL."
+          }
+        }
+      },
+      "ProductDomainRecord": {
+        "type": "object",
+        "required": [
+          "type",
+          "name",
+          "value"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "`A`, `CNAME` or `TXT`."
+          },
+          "name": {
+            "type": "string",
+            "description": "The record's name: `@` for a domain that is its own apex, the labels left of the apex for a CNAME, the full name for a TXT challenge."
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      },
+      "ProductDomain": {
+        "type": "object",
+        "required": [
+          "id",
+          "host",
+          "status",
+          "is_primary",
+          "records",
+          "misconfigured",
+          "vercel_verified",
+          "error",
+          "created",
+          "verified_at",
+          "expires_at"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "host": {
+            "type": "string",
+            "description": "The domain, lower-cased, with no trailing dot."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "verified",
+              "failed",
+              "removing"
+            ],
+            "description": "`pending` until Vercel accepts the domain and sees its DNS pointing at Vercel, then `verified`; `failed` once a pending domain is 7 days old (it can be checked again); `removing` while a removal finishes. Only a verified domain is served."
+          },
+          "is_primary": {
+            "type": "boolean",
+            "description": "Whether this is the product's primary address. Only a verified domain can be."
+          },
+          "records": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductDomainRecord"
+            },
+            "description": "The DNS records to create at the domain’s DNS provider."
+          },
+          "misconfigured": {
+            "type": "boolean",
+            "description": "Vercel's last answer: true while the domain's DNS does not point at Vercel."
+          },
+          "vercel_verified": {
+            "type": "boolean",
+            "description": "Vercel's last answer: whether it accepts the domain as this project's."
+          },
+          "error": {
+            "type": "string",
+            "nullable": true,
+            "description": "Vercel's last refusal, such as why a verification failed."
+          },
+          "created": {
+            "type": "integer",
+            "description": "Unix timestamp, in seconds."
+          },
+          "verified_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "`createdAt` plus 7 days: when a pending domain becomes `failed`."
+          }
+        }
+      },
+      "ProductDomainList": {
+        "type": "object",
+        "required": [
+          "domains"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "domains": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductDomain"
+            },
+            "description": "The product's custom domains, oldest first."
+          }
+        }
+      },
+      "ProductDomainCreate": {
+        "type": "object",
+        "required": [
+          "host"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "host": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 253,
+            "description": "A domain the manager owns, such as `app.example.com`. Trimmed, lower-cased, a trailing dot dropped and an international name converted to `xn--` form first."
+          }
+        }
+      },
+      "ProductDomainPatch": {
+        "type": "object",
+        "required": [
+          "primary"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "primary": {
+            "type": "boolean",
+            "description": "true makes this verified domain the product's primary address; false on the primary domain puts the subdomain back."
           }
         }
       },
@@ -138454,6 +138604,629 @@
         ]
       }
     },
+    "/v1/product_domains": {
+      "get": {
+        "tags": [
+          "product-domains"
+        ],
+        "summary": "A product's custom domains",
+        "description": "Answers 404 `not_found` while the `product_custom_domains` switch is off.\n\nReplaces GET /ecosystem/product-domains.",
+        "operationId": "getV1ProductDomains",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Page size, 1–100 (default 10).",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          {
+            "name": "starting_after",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page after it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ending_before",
+            "in": "query",
+            "required": false,
+            "description": "Cursor: an object id; returns the page before it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expand[]",
+            "in": "query",
+            "required": false,
+            "description": "Related objects to return in full instead of as an id. Up to four levels, e.g. `ecosystem_id`; on a list, `data.<field>`.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "style": "form",
+            "explode": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The product's custom domains",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "object",
+                    "data",
+                    "has_more",
+                    "url"
+                  ],
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "const": "list"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "allOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "object": {
+                                "type": "string",
+                                "const": "product_domain"
+                              }
+                            }
+                          },
+                          {
+                            "$ref": "#/components/schemas/ProductDomain"
+                          }
+                        ]
+                      }
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "product_domain",
+        "x-adh-replaces": [
+          "GET /ecosystem/product-domains"
+        ]
+      },
+      "post": {
+        "tags": [
+          "product-domains"
+        ],
+        "summary": "Attach a custom domain to a product",
+        "description": "Answers 404 `not_found` while the `product_custom_domains` switch is off. Adds the domain to the product sites' Vercel project, answers it `pending` with the DNS records to create, and checks it once, so a domain whose DNS is already in place comes back `verified`. 400 `product_domain_invalid` or `product_domain_local`; 409 `product_domain_ours`, `product_domain_taken`, `product_domain_taken_elsewhere` or `product_domain_limit` (5 a product); 429 `product_domains_rate_limited` (10 adds an hour); 502 `product_domain_vercel_unavailable`; 503 `product_domains_unconfigured` while the server has no Vercel configuration.\n\nReplaces POST /ecosystem/product-domains.",
+        "operationId": "postV1ProductDomains",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductDomainCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The domain as added",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "const": "product_domain"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/ProductDomain"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "product_domain",
+        "x-adh-replaces": [
+          "POST /ecosystem/product-domains"
+        ]
+      }
+    },
+    "/v1/product_domains/{id}": {
+      "delete": {
+        "tags": [
+          "product-domains"
+        ],
+        "summary": "Remove a custom domain from a product",
+        "description": "Answers 404 `not_found` while the `product_custom_domains` switch is off. The domain stops being served at once. 502 `product_domain_vercel_unavailable` when Vercel did not let it go: it stays `removing`, and a retry or the background sweep finishes it. 503 `product_domains_unconfigured` while the server has no Vercel configuration.\n\nReplaces DELETE /ecosystem/product-domains/{id}.",
+        "operationId": "deleteV1ProductDomainsById",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Deleted"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "product_domain",
+        "x-adh-replaces": [
+          "DELETE /ecosystem/product-domains/{id}"
+        ]
+      },
+      "post": {
+        "tags": [
+          "product-domains"
+        ],
+        "summary": "Make a custom domain the product's primary address, or put the subdomain back",
+        "description": "Answers 404 `not_found` while the `product_custom_domains` switch is off. Answers every domain of the product, so each one's badge redraws. 409 `product_domain_not_verified` for a domain that is not verified; 409 `product_domain_primary_race` when another change happened at the same time (safe to retry).\n\nReplaces PATCH /ecosystem/product-domains/{id}.",
+        "operationId": "postV1ProductDomainsById",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductDomainPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The product's custom domains after the change",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "const": "product_domain"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/ProductDomainList"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "product_domain",
+        "x-adh-replaces": [
+          "PATCH /ecosystem/product-domains/{id}"
+        ]
+      }
+    },
+    "/v1/product_domains/{id}/check": {
+      "post": {
+        "tags": [
+          "product-domains"
+        ],
+        "summary": "Check a custom domain now",
+        "description": "Answers 404 `not_found` while the `product_custom_domains` switch is off. Asks Vercel where the domain stands and stores the answer; a domain Vercel accepts and whose DNS points at Vercel becomes `verified`. A verified or removing domain is answered unchanged. 429 `product_domains_rate_limited` (30 checks an hour); 502 `product_domain_vercel_unavailable` when Vercel did not answer. 503 `product_domains_unconfigured` while the server has no Vercel configuration.\n\nReplaces POST /ecosystem/product-domains/{id}/check.",
+        "operationId": "postV1ProductDomainsByIdCheck",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The domain after the check",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "const": "product_domain"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/ProductDomain"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeError"
+                }
+              }
+            }
+          }
+        },
+        "x-adh-object": "product_domain",
+        "x-adh-replaces": [
+          "POST /ecosystem/product-domains/{id}/check"
+        ]
+      }
+    },
     "/v1/product_site": {
       "get": {
         "tags": [
@@ -138558,7 +139331,7 @@
           "product-site"
         ],
         "summary": "Rename a product's site or turn its console on or off",
-        "description": "Takes `handle`, `adminEnabled` or both, and nothing else. 400 for a malformed or reserved handle; 409 `product_site_handle_taken` when another product holds the handle; 409 `product_sites_unconfigured` when the console is turned on with no base domain set. Turning it on the first time makes the product's staff `admin-site` application and a login registration whose redirect is `<scheme>://<handle>.<base>/admin/auth/callback` (`http` only for a machine-local base, `https` otherwise); a rename re-registers it so the redirect follows the handle.\n\nReplaces PATCH /ecosystem/product-site.",
+        "description": "Takes `handle`, `adminEnabled` or both, and nothing else. 400 for a malformed or reserved handle; 409 `product_site_handle_taken` when another product holds the handle; 409 `product_sites_unconfigured` when the console is turned on with no base domain set. Turning it on the first time makes the product's staff `admin-site` application and a login registration whose redirect is `<scheme>://<handle>.<base>/admin/auth/callback` (`http` only for a machine-local base, `https` otherwise), plus `https://<host>/admin/auth/callback` for each verified custom domain; a rename re-registers it so the redirect follows the handle.\n\nReplaces PATCH /ecosystem/product-site.",
         "operationId": "postV1ProductSite",
         "security": [
           {
