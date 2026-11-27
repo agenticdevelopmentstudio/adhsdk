@@ -23,26 +23,12 @@ import { ProductTotalsPane } from "./ProductTotalsPane";
 import { RoleHolders, isAdminRole } from "./ProductRolesPane";
 import { signupListKey } from "./SignupListPane";
 import { ProductDomainsSection } from "./ProductDomainsSection";
+import { wordsFor, type ProductWords } from "./product-words";
 
 /** The pane's one product-site write, shared by the handle and the console switch. */
 type SiteUpdate = ReturnType<typeof useUpdateProductSite>;
 
 const messageOf = (e: unknown) => (e instanceof Error ? e.message : "Something went wrong.");
-
-/** How the pane's sentences name the product: "Temporal" / "Temporal's", or "this product". */
-interface ProductWords {
-  /** Mid-sentence: "Temporal" or "this product". */
-  name: string;
-  /** Mid-sentence possessive: "Temporal's" or "this product's". */
-  its: string;
-  /** Sentence-initial possessive: "Temporal's" or "This product's". */
-  Its: string;
-}
-
-const wordsFor = (productName: string | undefined): ProductWords =>
-  productName
-    ? { name: productName, its: `${productName}'s`, Its: `${productName}'s` }
-    : { name: "this product", its: "this product's", Its: "This product's" };
 
 /**
  * The address a handle gives the product, on the base domain `subdomainOrigin` is on:

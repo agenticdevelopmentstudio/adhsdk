@@ -24,30 +24,13 @@ import { CopyButton } from "@adh-sdk/ui/components/copy-button";
 import { ErrorText } from "@adh-sdk/ui/components/error-text";
 import { Input } from "@adh-sdk/ui/components/input";
 import { List, ListItem } from "@adh-sdk/ui/components/list";
+import { wordsFor, type ProductWords } from "./product-words";
 
 /** The most domains a product can have; the backend refuses a sixth (`product_domain_limit`). */
 const DOMAIN_LIMIT = 5;
 
 /** The ownership challenge's record name starts with this label (`_adh-challenge.<host>`). */
 const CHALLENGE_LABEL = "_adh-challenge";
-
-/**
- * How the section's sentences name the product. A copy of `ProductSitePane`'s file-local
- * `wordsFor`, plus `Name` for the sentence-initial form the domain messages need.
- */
-export interface DomainWords {
-  /** Mid-sentence: "Temporal" or "this product". */
-  name: string;
-  /** Sentence-initial: "Temporal" or "This product". */
-  Name: string;
-  /** Mid-sentence possessive: "Temporal's" or "this product's". */
-  its: string;
-}
-
-const wordsFor = (productName: string | undefined): DomainWords =>
-  productName
-    ? { name: productName, Name: productName, its: `${productName}'s` }
-    : { name: "this product", Name: "This product", its: "this product's" };
 
 const FALLBACK = "Something went wrong. Try again.";
 
@@ -56,7 +39,7 @@ const FALLBACK = "Something went wrong. Try again.";
  * backend sends has its own; a 403 says who may change the domains; anything else falls back to
  * the backend's sentence, then to a generic one. Always plain text.
  */
-export function domainErrorMessage(err: unknown, words: DomainWords = wordsFor(undefined)): string {
+export function domainErrorMessage(err: unknown, words: ProductWords = wordsFor(undefined)): string {
   const code = typeof (err as { code?: unknown } | null)?.code === "string" ? (err as { code: string }).code : undefined;
   switch (code) {
     case "product_domain_invalid":
@@ -254,7 +237,7 @@ export function ProductDomainsSection({
   );
 }
 
-function AddDomain({ ecosystemId, words }: { ecosystemId: string; words: DomainWords }) {
+function AddDomain({ ecosystemId, words }: { ecosystemId: string; words: ProductWords }) {
   const add = useAddProductDomain(ecosystemId);
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -327,7 +310,7 @@ function DomainBox({
   ecosystemId: string;
   domain: ProductDomain;
   site: ProductSite;
-  words: DomainWords;
+  words: ProductWords;
   /** The section's ticking clock, for the relative "Last checked" time. */
   now: number;
 }) {
@@ -441,7 +424,7 @@ function DomainBox({
   );
 }
 
-function removeDescription(domain: ProductDomain, site: ProductSite, words: DomainWords): string {
+function removeDescription(domain: ProductDomain, site: ProductSite, words: ProductWords): string {
   const gone = `${words.Name} stops answering at ${domain.host} at once`;
   if (!domain.isPrimary) return `${gone}.`;
   return site.subdomainOrigin
@@ -477,7 +460,7 @@ function checkLine(domain: ProductDomain, now: number): string {
     : `It is checked every 10 minutes${tail}.`;
 }
 
-function StateText({ domain, site, words }: { domain: ProductDomain; site: ProductSite; words: DomainWords }): ReactNode {
+function StateText({ domain, site, words }: { domain: ProductDomain; site: ProductSite; words: ProductWords }): ReactNode {
   const { host } = domain;
   const subdomainHost = hostOf(site.subdomainOrigin);
   const added = when(domain.createdAt);

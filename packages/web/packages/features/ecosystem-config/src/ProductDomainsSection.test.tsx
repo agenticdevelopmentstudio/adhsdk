@@ -73,6 +73,7 @@ import {
   type ProductSite,
 } from "@adh-sdk/data/product-sites";
 import { ProductDomainsSection, domainErrorMessage } from "./ProductDomainsSection";
+import { wordsFor } from "./product-words";
 
 const api = vi.mocked(productDomainsApi);
 
@@ -606,7 +607,7 @@ describe("ProductDomainsSection", () => {
 });
 
 describe("domainErrorMessage", () => {
-  const words = { name: "Temporal", Name: "Temporal", its: "Temporal's" };
+  const words = wordsFor("Temporal");
   const refusal = (code: string, status = 400) => new ProductDomainError(status, "backend sentence", code);
 
   it.each([
