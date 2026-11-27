@@ -539,6 +539,28 @@ describe("ProductDomainsSection", () => {
     await waitFor(() => expect(api.list).toHaveBeenCalledTimes(2));
   });
 
+  it.each([
+    ["product_domain_not_verified", "That domain isn't verified yet, so it can't be the primary address."],
+    ["product_domain_primary_race", "Another change to the primary address happened at the same time. Try again."],
+  ])("a Make primary refused with %s says so and reads the list again", async (code, message) => {
+    api.list.mockResolvedValue([domainOf({ status: "verified", records: [], verifiedAt: "2026-11-19T14:32:00.000Z" })]);
+    api.setPrimary.mockRejectedValue(new ProductDomainError(409, "backend sentence", code));
+    section();
+    fireEvent.click(await screen.findByRole("button", { name: `Make ${HOST} primary` }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(message);
+    await waitFor(() => expect(api.list).toHaveBeenCalledTimes(2));
+  });
+
+  it("a refusal that leaves the list current does not read it again", async () => {
+    api.list.mockResolvedValue([domainOf()]);
+    api.check.mockRejectedValue(new ProductDomainError(429, "slow down", "product_domains_rate_limited"));
+    section();
+    fireEvent.click(await screen.findByRole("button", { name: `Check ${HOST} now` }));
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
+    await new Promise((r) => setTimeout(r, 0));
+    expect(api.list).toHaveBeenCalledTimes(1);
+  });
+
   it("an error holding markup renders as text, never as HTML", async () => {
     const markup = '<img src=x onerror="alert(1)"><b>bold</b>';
     api.list.mockResolvedValue([domainOf({ error: markup, host: "<i>evil</i>.example.com" })]);

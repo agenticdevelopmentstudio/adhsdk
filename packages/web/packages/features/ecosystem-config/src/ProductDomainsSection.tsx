@@ -90,7 +90,17 @@ export function domainErrorMessage(err: unknown, words: DomainWords = wordsFor(u
   return FALLBACK;
 }
 
-const isGone = (err: unknown) => (err as { code?: unknown } | null)?.code === "product_domain_not_found";
+/**
+ * The refusals that mean the list on screen is out of date, so it is read again: the domain was
+ * removed elsewhere, the sweep demoted it before Make primary landed, or another primary change
+ * won the race.
+ */
+const STALE_LIST_CODES = new Set(["product_domain_not_found", "product_domain_not_verified", "product_domain_primary_race"]);
+
+const listIsStale = (err: unknown) => {
+  const code = (err as { code?: unknown } | null)?.code;
+  return typeof code === "string" && STALE_LIST_CODES.has(code);
+};
 
 // ── Times ─────────────────────────────────────────────────────────────────────
 
@@ -324,10 +334,11 @@ function DomainBox({
   const { host } = domain;
   const busy = check.isPending || setPrimary.isPending || remove.isPending;
 
-  // A domain already removed elsewhere: say so, and read the list again so the row goes.
+  // A refusal that means the list is out of date (removed elsewhere, demoted, a primary race):
+  // say so, and read the list again so the boxes follow.
   const onError = (err: unknown) => {
     setError(domainErrorMessage(err, words));
-    if (isGone(err)) void qc.invalidateQueries({ queryKey: PRODUCT_DOMAINS_KEY(ecosystemId) });
+    if (listIsStale(err)) void qc.invalidateQueries({ queryKey: PRODUCT_DOMAINS_KEY(ecosystemId) });
   };
 
   const onCheck = () => {
