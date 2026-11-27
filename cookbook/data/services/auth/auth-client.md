@@ -2,7 +2,7 @@
 id: 3ea9329e-5acc-4c43-b5ce-bb8c50570104
 title: "Authentication Client"
 type: ingredient
-version: 2.2.0
+version: 3.0.0
 status: review
 language: en
 created: 2026-09-23
@@ -506,13 +506,15 @@ is a sibling of the hub's session provider, not a mode of it: a page under one
 MUST NOT mount the other.
 
 - **product-admin-session-auth-base**: the provider MUST take a required `authBase`
-  prop, the path where the site's auth route handlers are mounted, with no trailing slash
-  (the product site passes `/admin/auth`). Every auth URL it requests or navigates to MUST be
-  built from it: `<authBase>/session`, `<authBase>/signout`, `<authBase>/signin` and
+  prop, the path where the site's auth route handlers are mounted (the product site passes
+  `/admin/auth`). Trailing slashes on it MUST be dropped once, before any URL is built, so
+  `/admin/auth/` means the same as `/admin/auth`; `stepUpSigninUrl` drops them too. Every auth
+  URL it requests or navigates to MUST be built from it: `<authBase>/session`, `<authBase>/signout`, `<authBase>/signin` and
   `<authBase>/signin?return=...`, with no request to any other auth path. It is required,
   not defaulted, so a host that forgets it fails to compile rather than calling the wrong
-  path. The one in-flight session request at module scope is shared by every mount, since
-  one site has one auth base.
+  path. The in-flight session request at module scope MUST be keyed by its URL: a mount
+  joins only the request for its own `<authBase>/session`, and a request for another auth
+  base MUST wait for the ones already out before it is sent, never join them.
 - **product-admin-session-start**: on mount the provider MUST install a token
   source (a ref-held in-memory token, never storage or a URL) before any child's
   first effect runs, so a child's first request never reads a stored hub token,
@@ -753,6 +755,8 @@ component.
 | auth-client-131 | product-admin-session-step-up | `stepUp('/support')` called from a signed-in product admin, the provider mounted with `authBase` `/admin/auth` | One navigation to `/admin/auth/signin?return=%2Fsupport&prompt=login&max_age=600`; the token and account are kept and nothing is posted |
 | auth-client-132 | product-admin-session-step-up, product-admin-session-auth-base | `stepUpSigninUrl('/admin/auth', '/admin/support?x=1')`, then `stepUpSigninUrl('/auth', '/support')` (traced to "builds the step-up URL on its own, from the auth base it is given") | `'/admin/auth/signin?return=%2Fadmin%2Fsupport%3Fx%3D1&prompt=login&max_age=600'`, then `'/auth/signin?return=%2Fsupport&prompt=login&max_age=600'` |
 | auth-client-133 | product-admin-session-auth-base | The provider mounted with `authBase` `/elsewhere/auth` for an admin; then `stepUp('/admin/support')`; then sign-out (traced to "takes every URL from authBase, with no request to any other auth path") | Step-up navigates to `/elsewhere/auth/signin?return=%2Fadmin%2Fsupport&prompt=login&max_age=600`; sign-out navigates to `/elsewhere/auth/signin`; the only requests are `/elsewhere/auth/session`, `/api/v1/account` and `/elsewhere/auth/signout`, in that order |
+| auth-client-134 | product-admin-session-auth-base | The provider mounted with `authBase` `/admin/auth/` for an admin; then `stepUp('/admin/support')`; then sign-out; and `stepUpSigninUrl('/admin/auth//', '/x')` (traced to "drops a trailing slash on authBase from every URL it builds") | Step-up navigates to `/admin/auth/signin?return=%2Fadmin%2Fsupport&prompt=login&max_age=600`; sign-out navigates to `/admin/auth/signin`; the only requests are `/admin/auth/session`, `/api/v1/account` and `/admin/auth/signout`, in that order; the helper answers `'/admin/auth/signin?return=%2Fx&prompt=login&max_age=600'` |
+| auth-client-135 | product-admin-session-auth-base | A provider mounted with `authBase` `/a/auth` whose `POST /a/auth/session` is still out, unmounted, then a provider mounted with `authBase` `/b/auth` (traced to "never joins an in-flight request for another auth base; it sends its own after that one answers") | No `/b/auth/session` request before `/a/auth/session` answers; then exactly one, and the second provider holds its own token (`tok-b`) |
 ## Edge Cases
 
 - **Null/empty input**: token extraction from `{}` (neither field present) —
@@ -823,7 +827,7 @@ component.
 | The error-reporter hook | injected hook | none | Host-supplied sink for error reporting; none means console-only |
 | The retry-marker hook | injected hook | none | Host-supplied callback tagging the exact request options of a retried request |
 | Session-change subscription | injected subscription | n/a | Caller-registered callback invoked on every token write/clear |
-| `authBase` (`ProductAdminAuthProvider` prop) | string, no trailing slash | required, no default | Where the site's auth route handlers are mounted (the product site passes `/admin/auth`); every session, sign-in, sign-out and step-up URL the provider uses is built from it |
+| `authBase` (`ProductAdminAuthProvider` prop) | string; trailing slashes are dropped | required, no default | Where the site's auth route handlers are mounted (the product site passes `/admin/auth`); every session, sign-in, sign-out and step-up URL the provider uses is built from it |
 ## Deep Linking
 
 Not applicable in the sense of a registered URL scheme or platform deep-link
@@ -1177,7 +1181,7 @@ honestly-reported gap in the source, not a hidden one.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 2.2.0 | 2026-11-26 | Mike Fullerton | ProductAdminAuthProvider: the required authBase prop builds every auth URL (<authBase>/session, /signin, /signout); stepUpSigninUrl(authBase, returnPath) |
+| 3.0.0 | 2026-11-26 | Mike Fullerton | Breaking: ProductAdminAuthProvider takes a required authBase prop that builds every auth URL (<authBase>/session, /signin, /signout), with trailing slashes dropped; stepUpSigninUrl(authBase, returnPath) gained a leading argument; the in-flight session request is keyed by its URL |
 | 2.1.1 | 2026-11-23 | Mike Fullerton | The public reads use the shared token-free publicJson from the Auth v1 Wire Conventions; behaviour unchanged. |
 | 2.1.0 | 2026-11-23 | Mike Fullerton | Phase 7: consented support access |
 | 2.0.0 | 2026-11-23 | Mike Fullerton | Phase 6: the access-token source seam and ProductAdminAuthProvider, the product admin site's in-memory session |

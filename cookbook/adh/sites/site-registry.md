@@ -2,7 +2,7 @@
 id: 9069ccf9-0357-4311-9671-91ee2793adae
 title: "Site Registry"
 type: ingredient
-version: 1.7.0
+version: 2.0.0
 status: review
 language: en
 created: 2026-09-24
@@ -221,7 +221,9 @@ router, and a downstream OAuth-return-origin sync process.
 - **wildcard-site-has-no-single-url**: Cross-site link construction, the cross-site URL
   builder, the production URL builder and the local-origin builder MUST throw
   `"<id> is a wildcard site; it has no single URL"` for a wildcard site, in every env,
-  rather than answer a host nothing serves. The local-server check MUST answer false for a
+  rather than answer a host nothing serves, and so MUST the SEO helpers that state a site's
+  production origin (`siteIdentity`, and `siteMetadata` and `siteSitemap`, which take their
+  origin from it). The local-server check MUST answer false for a
   wildcard site whatever `NEXT_PUBLIC_LOCAL_SITES` names, since the local suite serves one
   host per child and no wildcard host.
 - **build-site-href-env-aware**: Cross-site link construction MUST classify the
@@ -566,7 +568,7 @@ Not applicable: this is the site family's data registry and routing-resolution m
 | site-registry-074 | detect-env-classification | `acme.staging.agenticdeveloperhub.com`, `acme.testing.agenticdeveloperhub.com`, `ACME.Staging.agenticdeveloperhub.com:443`, `testing.staging.agenticdeveloperhub.com`, `acme.agenticdeveloperhub.com`, `acme.staging.example.com` (traced to "classifies a wildcard site's env by the label after the handle") | `staging`, `testing`, `staging`, `staging`, `production`, `production` |
 | site-registry-075 | single-wildcard-site | The wildcard sites in the roster (traced to "is the only wildcard site, and no single-host site is one") | Exactly `['product-sites']`; `hub` is not a wildcard site |
 | site-registry-076 | host-for-env-wildcard-pattern | `hostForEnv` for `product-sites` in production, staging, testing and local (traced to "gives a wildcard site its host pattern per env, the env after the `*.`") | `*.agenticdeveloperhub.com`, `*.staging.agenticdeveloperhub.com`, `*.testing.agenticdeveloperhub.com`, `*.agenticdeveloperhub.com`; none contains the site's `prodHost` |
-| site-registry-077 | wildcard-site-has-no-single-url | Cross-site link construction, the cross-site URL builder and the production URL builder for `product-sites`, in every env, including local with `NEXT_PUBLIC_LOCAL_SITES` naming it (traced to "refuses a single URL for a wildcard site, in every env" and "still refuses a wildcard site when the local list names it") | Each throws `product-sites is a wildcard site; it has no single URL` |
+| site-registry-077 | wildcard-site-has-no-single-url | Cross-site link construction, the cross-site URL builder and the production URL builder for `product-sites`, in every env, and `siteIdentity`, `siteMetadata` and `siteSitemap` for it, including local with `NEXT_PUBLIC_LOCAL_SITES` naming it (traced to "refuses a single URL for a wildcard site, in every env" and "still refuses a wildcard site when the local list names it") | Each throws `product-sites is a wildcard site; it has no single URL` |
 | site-registry-078 | sso-return-origins-partitioned-by-env | The return-origin list in production, staging and testing (traced to "never allows a wildcard site origin, nor any `*`, in any env") | No origin contains `*` or `product-sites.agenticdeveloperhub.com`; the production list has one origin per site that is not external, not `nativeApp` and not a wildcard site |
 ## Edge Cases
 
@@ -629,7 +631,7 @@ Not applicable: this is the site family's data registry and routing-resolution m
 | The environment (the OAuth return-origin allowlist) | one of `'production'`, `'staging'`, `'testing'` | caller-supplied; required | Which deploy environment's OAuth-return-origin allowlist to compute. |
 | The build configuration table | optional build configuration entry per site identifier | fixed at build time | Per-site build behavior flags read by the shared build-configuration package; not caller-configurable at runtime. |
 
-| A site's `wildcardHost` (site definition field) | host pattern string, `*.<domain>` | absent, meaning a single-host site | Marks a wildcard site, one app serving every `<handle>.<domain>` host (today only `product-sites`, `*.agenticdeveloperhub.com`). Its env hosts put the env after the `*.`, its `prodHost` becomes only its folder's name, and every single-URL helper refuses it. |
+| A site's `wildcardHost` (site definition field) | host pattern string, `*.<domain>` | absent, meaning a single-host site | Marks a wildcard site, one app serving every `<handle>.<domain>` host (today only `product-sites`, `*.agenticdeveloperhub.com`). Its env hosts put the env after the `*.`, its `prodHost` becomes only its folder's name, and every single-URL helper refuses it, the SEO helpers' `siteIdentity` included. |
 ## Deep Linking
 
 Not applicable: this component defines no URL scheme, route handler, or navigation target of its own. It is the data other code reads to build one; the two legal paths are names the hub mounts, not routes this component serves.
@@ -771,7 +773,7 @@ an empty result, or the input path unchanged) with no side channel.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/adh-registry/src/sites/` | confirmed (1.7.0) |
+| web | `packages/web/packages/adh-registry/src/sites/` | confirmed (2.0.0) |
 
 ## Design Decisions
 
@@ -889,7 +891,7 @@ the page it sends the reader to.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.7.0 | 2026-11-26 | Mike Fullerton | product-sites: the wildcard site (wildcardHost, env after the handle, hostForEnv patterns, single-URL helpers refuse it, no SSO origin), not admin-gated and unlisted; its share under /admin |
+| 2.0.0 | 2026-11-26 | Mike Fullerton | Breaking: the 'product-admin' SiteId is renamed 'product-sites': the wildcard site (wildcardHost, env after the handle, hostForEnv patterns, single-URL helpers and siteIdentity refuse it, no SSO origin), not admin-gated and unlisted; its share under /admin |
 | 1.6.1 | 2026-11-24 | Mike Fullerton | workspace-route-not-derived-from-has-home names myagenticdevteam: hasHome true, no workspace route |
 | 1.6.0 | 2026-11-23 | Mike Fullerton | Phase 9: jobs hub segment and route line (templates and environments are sub-paths), the product admin Jobs pages in its share, jobs in the universal reserved list. |
 | 1.5.0 | 2026-11-23 | Mike Fullerton | Phase 8: added ai-settings-extra-segment, ai-settings-hub-route-line, admin-share-no-ai-settings and legacy-provider-segments-redirect-only, and the Design Decision that keeps the old segments redirect-only until a later cleanup |
