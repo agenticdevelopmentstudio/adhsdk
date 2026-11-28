@@ -67,9 +67,10 @@
 /* Big-indicator atmosphere (Overview tab). Glows use the semantic state tokens
    (down=red, ok=green, warn=gold) via color-mix so they track the theme.
    Only "down" pulses. An animated `filter` cannot run on the compositor, so
-   it repaints the page on every frame for as long as it runs; "ok" and
+   it repaints the indicator on every frame for as long as it runs; "ok" and
    "warn" are the states the page sits in for days, and their glows are
-   fixed so an idle page draws once and then stops. */
+   fixed so the indicator adds no per-frame repaint. (The page still redraws
+   once a second for its countdowns.) */
 @keyframes adh-stop-glow {
   0%, 100% { filter: drop-shadow(0 0 14px color-mix(in srgb, var(--color-apt-red) 40%, transparent)); }
   50%      { filter: drop-shadow(0 0 32px color-mix(in srgb, var(--color-apt-red) 85%, transparent)); }
