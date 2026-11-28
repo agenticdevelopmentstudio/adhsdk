@@ -65,6 +65,15 @@ public final class SystemNotificationPresenter: NSObject, NoticePresenter, UNUse
     /// callback, so a banner the user clears comes back as a close.
     static let categoryIdentifier = "com.agenticdevelopmentstudio.notice"
 
+    /// The category banners were posted under before the rename. A banner
+    /// still in Notification Center from an older build keeps it, so it is
+    /// registered too, or clearing that banner would never come back as a close.
+    static let legacyCategoryIdentifier = "com.agentic-cookbook.notice"
+
+    /// Every category registered with the dismiss callback: the current one,
+    /// which new banners use, and the legacy one, for banners already posted.
+    static let registeredCategoryIdentifiers = [categoryIdentifier, legacyCategoryIdentifier]
+
     /// Posts through `UNUserNotificationCenter.current()`, which is touched
     /// only once the first notice is shown.
     /// - Parameter playsSound: read per notice; `false` posts silently.
@@ -318,9 +327,10 @@ private final class UserNotificationCenterPoster: SystemNotificationPosting {
     func becomeDelegate() {
         let center = UNUserNotificationCenter.current()
         center.delegate = delegate
-        center.setNotificationCategories([UNNotificationCategory(
-            identifier: SystemNotificationPresenter.categoryIdentifier, actions: [], intentIdentifiers: [],
-            options: [.customDismissAction])])
+        center.setNotificationCategories(Set(SystemNotificationPresenter.registeredCategoryIdentifiers.map {
+            UNNotificationCategory(
+                identifier: $0, actions: [], intentIdentifiers: [], options: [.customDismissAction])
+        }))
     }
 
     func isAuthorizationDenied(_ completion: @escaping @MainActor (Bool) -> Void) {

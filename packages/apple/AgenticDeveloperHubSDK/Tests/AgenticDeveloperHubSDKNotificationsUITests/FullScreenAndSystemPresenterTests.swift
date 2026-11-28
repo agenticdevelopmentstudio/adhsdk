@@ -263,6 +263,16 @@ final class FullScreenAndSystemPresenterTests: XCTestCase {
         presenter.handleTap(identifier: "unknown")
         XCTAssertEqual(recorder.acts, ["a"], "a banner this presenter no longer tracks does nothing")
     }
+
+    func testBothTheCurrentAndThePreRenameCategoryAreRegistered() {
+        XCTAssertEqual(
+            SystemNotificationPresenter.registeredCategoryIdentifiers,
+            ["com.agenticdevelopmentstudio.notice", "com.agentic-cookbook.notice"])
+        XCTAssertEqual(
+            SystemNotificationPresenter.registeredCategoryIdentifiers.first,
+            SystemNotificationPresenter.categoryIdentifier,
+            "new banners are posted under the current category")
+    }
 }
 
 /// Finding 7: `replace` keeps a card in place only when the rules still put

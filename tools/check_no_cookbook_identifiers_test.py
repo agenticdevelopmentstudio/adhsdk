@@ -2,6 +2,7 @@
 
 Excluded: the cookbook's own domain and repo name (references to a different
 project), Stenographer's pre-rename label (read to migrate an old install),
+the pre-rename notification category (registered for banners already posted),
 recipe history rows that record the rename, archived docs and session logs (history), the historical-bug fixtures
 in tools/check_doc_subpaths*, docs/web/migrate-consumer.md (its "old" columns
 quote the pre-rename package scope on purpose), and the one real
@@ -25,6 +26,9 @@ ALLOWED = (
     # Stenographer's pre-rename label, still read so an old install's support,
     # logs, launch agents and keychain items are found and migrated.
     re.compile(r"com\.agentic-cookbook\.stenographer", re.IGNORECASE),
+    # The notification category banners posted before the rename still carry,
+    # registered so clearing one of them still reaches the presenter.
+    re.compile(r"com\.agentic-cookbook\.notice"),
     # Recipe history rows record the rename itself.
     re.compile(r"renamed off agentic-cookbook"),
 )
